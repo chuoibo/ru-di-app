@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
-import { MediaSlot, type Attribution } from "../../ui/MediaSlot";
+import { MediaSlot, cauGhiCong, type Attribution } from "../../ui/MediaSlot";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 
@@ -120,6 +120,12 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {/* One text node: a row of several short texts keeps its first
               measurement when the row wraps and strands one word alone. */}
           {facts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{facts}</Text> : null}
+          {/* The thumbnail is a licensed photograph, so its credit is a line
+              of this row (ADR-0017 §2.5) -- two lines, since a long author
+              name has to wrap rather than end in an ellipsis. */}
+          {dd.photo && dd.attribution ? (
+            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
+          ) : null}
           {dd.badge ? <Stamp label={dd.badge} style={styles.rowBadge} tone="ai" /> : null}
         </View>
       </Pressable>

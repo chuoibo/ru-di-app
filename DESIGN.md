@@ -926,8 +926,10 @@ không phải gì.
   ba sự thật với icon 16 (`label inkSoft`); nút lưu `IconButton` phải.
 - **`PlaceRow`**: thumbnail bo 10 (`accentSoft` khi chưa có ảnh), tên `title`
   hai dòng, mô tả `caption inkSoft` một dòng, sự thật `caption inkFaint` một
-  dòng, `Stamp` tím dưới cùng khi có; nút tim phải; đệm dọc 10, gap 8, kẻ
-  tóc dưới. Hàng nằm trên giấy, **không thẻ**; ở tablet hai cột
+  dòng, ghi công `caption inkFaint` tối đa hai dòng («Ảnh quanh đây: tác giả ·
+  giấy phép», cùng câu với `MediaSlot` qua `cauGhiCong`) khi thumbnail là ảnh
+  có giấy phép, `Stamp` tím dưới cùng khi có; nút tim phải; đệm dọc 10, gap 8,
+  kẻ tóc dưới. Hàng nằm trên giấy, **không thẻ**; ở tablet hai cột
   (`tablet-light-explore`).
 
 ### Lịch trình (`HangChang`)

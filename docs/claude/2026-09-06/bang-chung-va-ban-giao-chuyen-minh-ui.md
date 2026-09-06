@@ -101,9 +101,44 @@ Chưa làm trong đợt 8 (cần API sống hoặc quyết định riêng): skel
 |---|---|---|---|
 | 1 (23:18) | `b74b8c10` | 3/15 xanh | flow ghim theo màn mới (22/26 cuộn tới địa điểm ghim vì Khám phá sống dẫn bằng một địa điểm lớn; 24 «… · 1 nhóm · …»; 27; 35 cuộn); flow 36 cần số CHƯA đăng nhập → harness cấp `OTP_PHONE_E`; **hai lỗi UI thật**: nút bước của Chia bill live bị editor món đẩy dưới nếp gấp → nút chính từng bước thành `footer`; chat live: tin mới nhất bị ô soạn che khi bàn phím mở → danh sách bám đầu mới khi có hàng mới/bàn phím mở (chỉ khi đang ở cuối) |
 | 2 (23:50) | `8e4b3267` | 9/15 xanh | 27 ghim nhầm cả hai chỗ (chi tiết «1 chặng», danh sách «một người · 1 chặng»); 26 khẳng định số nơi trước khi cuộn; chat: thông báo «AI chưa nối được mô hình» là header của danh sách đảo nên `maintainVisibleContentPosition` để nó dưới ô soạn → kéo về đầu khi thông báo đổi; 28 và 32 đỏ vì lượt vắt qua nửa đêm (kèo lập 06/09 thành «đã kết thúc», check-in 00:0x ngoài ngày kèo); 35 đỏ vì `/destinations` của stack chỉ có hai nơi có địa điểm (điều kiện dữ liệu máy chủ) |
-| 3 (00:16) | `f5e4ac0b` | **[BANG_LIVE_3]** | |
+| 3 (00:16) | `f5e4ac0b` | 12/15 xanh | 26 đỏ ở `tapOn "Cafe"` (chip lọc nằm ngoài màn sau ảnh dẫn → cuộn tới chip trước khi bấm); 30 và 35 như lượt 2 |
+| 4 (00:42) | `4eb70163` | 13/15 xanh | 30 vẫn đỏ (xem 4f); 35 là điều kiện dữ liệu máy chủ (stack chỉ có hai điểm đến có địa điểm, flow ghim «Hội An») — không phải lỗi màn |
 
 Ảnh `takeScreenshot` của từng flow live nằm ở `.impeccable/review/native/<lượt>/` (ngoài Git): đây là bằng chứng native đầu tiên của các màn live sau đợt chuyển mình.
+
+## 4e. Đặt lane frontend lên `origin/main`
+
+`origin/main` đã nhận M12 (PR #570–#572: ảnh địa điểm có giấy phép, ảnh nhóm, «nên làm gì ở đây») sau khi nhánh Codex `bd32e4d` tách ra. Nhánh Codex mang ba commit backend (`c29c54f4` phiên bản lịch trình, `2fb215f8` kho ảnh địa điểm, `5d853f44` nhập ảnh Commons) **chưa lên main** và va thẳng với M12: `place_photos` định nghĩa hai lần trong `models.py`, hai migration cùng id `c9d0e1f2a3b4`; `e2e_slice` dựng từ cây merge chết ngay ở alembic. Backend là lane Codex nên tôi không hoà giải hộ.
+
+Cách làm: merge thử để lấy bản hoà giải của các file lane mình (cấy M12 vào bố cục mới: `anhBiaThe` cho thẻ và ảnh dẫn, dải ảnh có credit và ảnh nhóm ở màn địa điểm, «nên làm gì», đăng ảnh gắn địa điểm, `MediaSlot prefix` + dòng «Chưa tải được ảnh»), lưu ra ngoài, huỷ merge, tạo nhánh mới từ `origin/main` và chép đúng danh sách file lane frontend (bỏ `services/api` trừ `app/web` và `tests/web`). Kết quả: `claude/p0-w-ui2-chuyen-minh-tren-main`, một commit `73b13add`; lịch sử từng đợt vẫn ở nhánh cũ.
+
+Lưu ý cho client khi backend của Codex chưa lên main: `timeline_revision`/`expected_revision` (khoá ghi lịch trình) do nền UI của Codex thêm vào client; API main không có trường này, client chỉ gửi `expected_revision` khi có giá trị nên không vướng `extra=forbid`, và không có xung đột giả vì hai phía cùng `undefined`. Khi Codex land phiên bản lịch trình, client đã sẵn.
+
+Kiểm trên nhánh mới: tsc sạch, detector `[]` trên `src/rudi`, npm test 688/688, cổng pytest gốc repo + web chỉ còn ca đỏ sẵn `test_without_the_debt_file_the_real_tree_is_red`, repo guard staged qua. Bảng trên nhánh mới, cùng máy `rudi-qa3` (emulator-5560), dấu vân `73b13add`:
+
+| Bảng | Giờ | Kết quả |
+|---|---|---|
+| Fixture (10 flow) lần 7, sau `pm clear` | 01:25 | **XANH**, NEO 2b cắn, canary đỏ đúng bước cuối |
+| Live OTP (15 flow, API 47789 từ `e2e_slice --keep` + `make demo-rudi`) lần 5 | 01:45 | 14/15 xanh — **flow 30 xanh** sau sửa ở 4f (ảnh `30-ai-im-lang-that.png`: bong bóng trọn, thẻ «Rủ Đi AI chưa nối được mô hình» ngay trên ô soạn); DB stack xác nhận nhóm «Hoi QA» có 5 tin chữ, 1 thẻ bình chọn, 1 ảnh, 1 ❤; 35 đỏ vì stack seed chỉ có hai điểm đến |
+| Mini-bảng 24→25→26→35 (D phải có nhóm trước 35) sau khi thêm hàng `d-hoi-an` (từ `destinations_vn`) vào DB dùng một lần | 02:12 | **4/4 xanh**; máy chủ xác nhận «3 điểm đến, Hội An có trong danh sách và trả đúng 0 địa điểm»; canary OTP không chạy vì thư mục mini thiếu flow 22 (lỗi dựng mini-bảng, không phải app) — lượt live đầy đủ lần 6 chạy lại trên commit này |
+
+Flow 38 (`--anh`) không chạy: xem 4f.
+
+Bẫy gặp trong bước này (đã ghi memory): bảng fixture chạy ngay sau bảng live thì phiên live còn trên máy, flow 00 thấy Explore sống thay vì bìa → `pm clear` trước; `git stash` ở repo dùng chung lấy nhầm stash của phiên khác → chép file ra ngoài thay vì stash.
+
+## 4f. Flow 30: vì sao câu «Rủ Đi AI chưa nối được mô hình» không hiện, và cách chữa
+
+Bốn lượt live đỏ cùng một chỗ. Ảnh lúc đỏ (`30-chat-that-FAILED.png`): bong bóng vừa gửi bị ô soạn che nửa dưới, câu thông báo (header của danh sách đảo, tức nằm dưới bong bóng) ngoài màn. Máy chủ không có lỗi: tái hiện bằng HTTP trên chính API 47789 (số mới, nhóm mới, `POST /contexts/{id}/messages` với «@Ru Di goi y quan an») trả `intent: mention`, `companion: {spoke: false, reason: "unavailable"}` — đúng thứ `cauYDinh` cần để in câu ấy. Vậy `thongBao` có được đặt; danh sách chỉ không về offset 0.
+
+Gốc rễ nằm ở tổ hợp `maintainVisibleContentPosition` với chính các phép «bám cuối» thêm ở lượt 1–2:
+
+- Native (`MaintainVisibleScrollPositionHelper.kt`, RN 0.86): mỗi lần nội dung đổi, helper giữ ô đầu tiên còn thấy rồi `reactSmoothScrollTo(0)` khi trước đó ở gần đầu; hai lần đổi liền nhau (hàng mới, rồi header đổi từ «Đang gửi» sang thông báo) biến cuộn mượt thứ nhất thành một cú fling dở dang qua `scrollToPreservingMomentum`, dừng ở vị trí lưng chừng.
+- JS (`VirtualizedList.getDerivedStateFromProps`): có prop này thì hàng mới ở đầu KHÔNG được render cho tới khi một sự kiện cuộn quay lại (`pendingScrollUpdateCount`).
+- `scrollEventThrottle={64}` trên Android là **bỏ** sự kiện trong cửa sổ, không phải dồn; sự kiện cuối «đã về 0» bị bỏ nên `ganCuoi` kẹt ở `false`, và mọi nhánh bám cuối (`onContentSizeChange`, effect `thongBao`, bàn phím) đều không chạy.
+
+Chữa (commit sau `73b13add`): neo vị trí **chỉ khi đang đọc lịch sử** (`maintainVisibleContentPosition={oCuoi ? undefined : {minIndexForVisible: 0}}`) — ở cuối, danh sách đảo có offset 0 *là* đầu mới, hàng mới và header rơi vào tầm nhìn mà không cần cuộn; `scrollEventThrottle={16}` (dưới ngưỡng 17 ms nên Android không bỏ sự kiện) cùng `onMomentumScrollEnd`/`onScrollEndDrag` ghi lại vị trí; sau khi gửi thì đặt cờ «ở cuối» rồi nhảy về 0 không animation trước khi hàng được commit. Kết quả đo ở bảng live lần 5 (mục 4e).
+
+Cũng trong commit này: `PlaceRow` in dòng ghi công dưới ảnh nhỏ (ADR-0017 §2.5 — ảnh có giấy phép không xuất hiện ở đâu mà không nêu tác giả), và `hienThiDiaDiem` gắn tiền tố «Ảnh quanh đây: » vào credit của ảnh dẫn (cùng `TIEN_TO_ANH` với màn chi tiết, đúng điều flow 38 ghim). Flow 38 không chạy được trên stack demo: 8 địa điểm seed là dữ liệu bịa, importer main từ chối gắn ảnh thật (`1c52531b`), nên bảng chạy không `--anh`.
 
 ## 5. Chưa kiểm, còn nợ
 

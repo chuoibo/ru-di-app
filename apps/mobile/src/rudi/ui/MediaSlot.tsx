@@ -23,6 +23,14 @@ export interface Attribution {
   prefix?: string;
 }
 
+/**
+ * The credit as one sentence: qualifier, author, licence, source. The row
+ * thumbnail and the slot print the same words because they call this.
+ */
+export function cauGhiCong(a: Attribution): string {
+  return `${a.prefix ?? ""}${a.author} · ${a.license}${a.source ? ` · ${a.source}` : ""}`;
+}
+
 export interface MediaSlotProps {
   /** An authenticated source from `nguonAnh`, or null when there is no photo. */
   source: ImageSource | null;
@@ -113,9 +121,7 @@ export function MediaSlot({
           numberOfLines={2}
           style={[typography.caption, { color: colors.inkFaint, marginTop: space.xs }]}
         >
-          {attribution.prefix ?? ""}
-          {attribution.author} · {attribution.license}
-          {attribution.source ? ` · ${attribution.source}` : ""}
+          {cauGhiCong(attribution)}
         </Text>
       ) : null}
     </View>

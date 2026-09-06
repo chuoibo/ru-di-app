@@ -28,6 +28,8 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   StyleSheet,
@@ -147,6 +149,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // the keyboard opening both pull the list back to the end only then; a
   // reader up in the history keeps their place.
   const ganCuoi = useRef(true);
+  // The same fact as state, because it decides a prop: the list anchors the
+  // reader's place only while they are up in the history.
+  const [oCuoi, setOCuoi] = useState(true);
+  const ghiViTri = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const gan = e.nativeEvent.contentOffset.y <= 120;
+    ganCuoi.current = gan;
+    setOCuoi(gan);
+  }, []);
   const soHang = useRef(chat.tin.length);
   useEffect(() => {
     if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -175,7 +185,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     setThongBao(null);
     try {
       const daGui = await chat.gui(body);
-      danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+      // Back to the end before the row lands, and say so: with the anchor off
+      // the new row and the notice under it sit at offset 0 by construction.
+      ganCuoi.current = true;
+      setOCuoi(true);
+      danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
       const cau = cauYDinh(daGui);
       const tuAi = daGui.companion !== null && daGui.companion !== undefined && !daGui.companion.spoke;
       setThongBao(cau === null ? null : { tu: tuAi ? "Rủ Đi AI" : "Rủ Đi", cau, luc: new Date().toISOString() });
@@ -466,23 +480,32 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
           ) : null
         }
-        // Hold the reader's place while older pages load above, but when they
-        // are within a bubble of the newest end, new rows (own sends, the AI's
-        // answer, a friend's message) scroll into view instead of landing
-        // under the composer.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 120 }}
+        // Hold the reader's place while they are up in the history and rows
+        // arrive at the newest end. Off while they are at the end: in an
+        // inverted list offset 0 *is* the newest end, so a new row, the
+        // pending bubble and the notice header land in view with no scroll at
+        // all. Keeping the anchor on there was the flow-30 red: the native
+        // helper answers every content change with a smooth scroll of its
+        // own, the JS side holds the render window until a scroll event comes
+        // back, and the throttle dropped the event that would have said «at
+        // the end again» -- the sent bubble ended half under the composer and
+        // the notice below it, off screen.
+        maintainVisibleContentPosition={oCuoi ? undefined : { minIndexForVisible: 0 }}
         // Content grows at the newest end (a row, the pending bubble, the
-        // notice header): while the reader is at the end, stay at the end.
+        // notice header): within a bubble of the end, stay at the end.
         onContentSizeChange={() => {
           if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
         }}
         onEndReached={() => void chat.napCuHon()}
         onEndReachedThreshold={0.6}
-        onScroll={(e) => {
-          ganCuoi.current = e.nativeEvent.contentOffset.y <= 120;
-        }}
+        onMomentumScrollEnd={ghiViTri}
+        onScroll={ghiViTri}
+        onScrollEndDrag={ghiViTri}
         renderItem={renderItem}
-        scrollEventThrottle={64}
+        // Every event: Android drops (not delays) events inside the throttle
+        // window, and a dropped last event leaves `ganCuoi` pointing at the
+        // wrong end of the list.
+        scrollEventThrottle={16}
         testID="chat-list"
       />
       {chat.loi ? (

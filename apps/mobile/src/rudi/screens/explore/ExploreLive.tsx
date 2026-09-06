@@ -28,6 +28,7 @@ import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
+  TIEN_TO_ANH,
   anhBiaThe,
   bieuTuongLoai,
   boLuuDiaDiem,
@@ -87,7 +88,9 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     glyph: bieuTuongLoai(place.category),
     // The picture comes with its credit or not at all (ADR-0017 §2.5).
     photo: bia === null ? null : bia.nguon,
-    attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense },
+    // «Quanh đây» travels with the credit: the importer geosearched within
+    // 250 m, so the picture is from around here, not of this business.
+    attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
     badge: hop !== null && hop.real ? hop.text : null,
   };
 }
