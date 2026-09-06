@@ -869,7 +869,10 @@ def _wire_message(
         card=record.card,
         created_at=record.created_at,
         cursor=encode_cursor(record.created_at, record.id),
-        reactions=reactions or [],
+        # A deleted row carries no reactions at the wire whatever the table
+        # holds: `add_reaction` refuses them under a lock, and this keeps a
+        # stray row (should one ever exist) from failing the whole feed.
+        reactions=[] if record.kind == "deleted" else (reactions or []),
         reply_to=reply_to,
         deleted_at=record.deleted_at,
     )
@@ -3409,12 +3412,28 @@ class ApiService:
             actor,
             {"is_group_member": self.repository.is_member(context_id, actor.id)},
         )
-        self._message_in_context(context_id, message_id)
+        message = self._message_in_context(context_id, message_id)
+        if message.kind == "deleted":
+            raise ApiProblem(
+                409, "message_deleted", "Tin nhắn đã bị xoá, không phản ứng được."
+            )
         # Idempotent on purpose: two taps are one heart, and the answer is the
-        # same list either way.
-        self.repository.add_reaction(
-            message_id=message_id, person_id=actor.id, kind=request.kind, now=_now()
-        )
+        # same list either way. The repository re-reads the kind under a lock,
+        # so a tap racing a deletion is refused the same way.
+        try:
+            self.repository.add_reaction(
+                message_id=message_id, person_id=actor.id, kind=request.kind, now=_now()
+            )
+        except RepositoryConflict as exc:
+            if exc.code == "MESSAGE_DELETED":
+                raise ApiProblem(
+                    409, "message_deleted", "Tin nhắn đã bị xoá, không phản ứng được."
+                ) from exc
+            if exc.code == "MESSAGE_NOT_FOUND":
+                raise ApiProblem(
+                    404, "message_not_found", "Message does not exist"
+                ) from exc
+            raise
         return self._reactions_response(message_id, actor)
 
     def unreact_to_message(
@@ -4291,7 +4310,17 @@ class ApiService:
             actor,
             {"is_group_member": True, "is_author": True},
         )
-        if self.repository.soft_delete_message(message.id, now=_now()) is None:
+        try:
+            deleted = self.repository.soft_delete_message(message.id, now=_now())
+        except RepositoryConflict as exc:
+            # Two taps on «Xoá» in the same instant: the second one lost the
+            # row lock and finds it already flipped.
+            if exc.code == "MESSAGE_ALREADY_DELETED":
+                raise ApiProblem(
+                    409, "message_already_deleted", "Tin này đã bị xoá rồi."
+                ) from exc
+            raise
+        if deleted is None:
             raise ApiProblem(404, "message_not_found", "Message does not exist")
 
     def act_on_message_intent(

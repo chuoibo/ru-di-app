@@ -21,8 +21,10 @@ Bốn thay đổi trên hai bảng, không thay đổi nào chạm tiền:
 `text|image|sticker` của chính mình mới xoá được (ADR-0021 §2.3).
 
 Xuống được: tin `sticker`/`deleted` phải được đưa về dạng cũ trước khi CHECK
-cũ quay lại — ở đây chọn xoá hàng `deleted` (nội dung đã không còn) và đổi
-`sticker` thành `text` với thân là id, để không mất một tin nào có nội dung.
+cũ quay lại — `sticker` thành `text` với thân là id (không mất tin nào có nội
+dung); `deleted` thành `text` với thân «Tin nhắn đã bị xoá» chứ KHÔNG xoá
+hàng: `context_read_marks.last_read_message_id` có thể đang trỏ vào nó, và
+xoá hàng làm downgrade đổ ở khoá ngoại ấy (review PR #574).
 """
 
 from collections.abc import Sequence
@@ -128,9 +130,16 @@ def downgrade() -> None:
     op.drop_constraint(op.f("uq_messages_id_context"), "messages", type_="unique")
     op.drop_column("messages", "reply_to_id")
 
-    # Rows the old CHECK cannot hold: a deleted message has no content left to
-    # keep; a sticker keeps its words by becoming text that names the id.
-    op.execute("DELETE FROM messages WHERE kind = 'deleted'")
+    # Rows the old CHECK cannot hold. A sticker keeps its words by becoming
+    # text that names the id. A deleted message becomes text that says so:
+    # deleting the row would break `fk_context_read_marks_message` for any
+    # reader whose mark stopped on it, and a placeholder is what they saw.
+    # `deleted_at` goes in the same statement: the timestamp CHECK below is
+    # still standing while this runs, and it refuses a `text` row with one.
+    op.execute(
+        "UPDATE messages SET kind = 'text', body = 'Tin nhắn đã bị xoá', "
+        "deleted_at = NULL WHERE kind = 'deleted'"
+    )
     op.execute("UPDATE messages SET kind = 'text' WHERE kind = 'sticker'")
     op.drop_constraint(
         op.f("ck_messages_deleted_state_matches_timestamp"), "messages", type_="check"

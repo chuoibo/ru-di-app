@@ -17,6 +17,8 @@ import uuid
 
 import pytest
 
+from app.api.errors import RepositoryConflict
+
 from .helpers import actor_headers
 from .test_chat_intents import (
     CONTEXT_ID,
@@ -350,3 +352,78 @@ def test_a_conversation_list_row_reads_sticker_and_deletion_as_labels():
     assert _message_preview("sticker", "di-thoi", None) == "[Sticker]"
     assert _message_preview("deleted", None, None) == "Tin nhắn đã bị xoá"
     assert _message_preview("text", "Đẹp quá", None) == "Đẹp quá"
+
+
+# --- reactions and deletion do not cross (review PR #574, blocker B1) --------
+
+
+def test_a_reaction_on_a_deleted_message_is_refused_and_the_thread_still_lists(
+    client, repository
+):
+    posted = _text(client, "sẽ xoá").json()
+    deleted = client.delete(
+        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}",
+        headers=actor_headers(actor_id=MEMBER_ID),
+    )
+    assert deleted.status_code == 204, deleted.text
+
+    reacted = client.post(
+        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}/reactions",
+        json={"kind": "heart"},
+        headers=actor_headers(actor_id=OTHER_MEMBER_ID),
+    )
+    assert reacted.status_code == 409, reacted.text
+    assert reacted.json()["code"] == "message_deleted"
+    assert repository.reactions == {}, "không có hàng phản ứng lạc"
+
+    (row,) = _list(client, actor=OTHER_MEMBER_ID)
+    assert row["kind"] == "deleted" and row["reactions"] == []
+
+
+def test_a_tap_that_loses_the_race_to_a_deletion_is_the_same_409(client, repository):
+    """The repository re-reads the kind under a lock and answers with a
+    conflict; the service turns it into the same 409 as the plain case."""
+    posted = _text(client, "đua với xoá").json()
+
+    def lost_the_race(**kwargs):
+        raise RepositoryConflict("MESSAGE_DELETED")
+
+    repository.add_reaction = lost_the_race
+    reacted = client.post(
+        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}/reactions",
+        json={"kind": "heart"},
+        headers=actor_headers(actor_id=MEMBER_ID),
+    )
+    assert reacted.status_code == 409, reacted.text
+    assert reacted.json()["code"] == "message_deleted"
+
+
+def test_a_stray_reaction_on_a_deleted_row_never_fails_the_feed(client, repository):
+    """Should a reaction row ever survive next to a deleted message, the feed
+    still lists (the wire shows none) -- one bad row must not 500 the group."""
+    posted = _text(client, "hàng lạc").json()
+    client.delete(
+        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}",
+        headers=actor_headers(actor_id=MEMBER_ID),
+    )
+    repository.reactions[(uuid.UUID(posted["id"]), OTHER_MEMBER_ID, "heart")] = (
+        repository.clock
+    )
+
+    (row,) = _list(client)
+    assert row["kind"] == "deleted" and row["reactions"] == []
+
+
+def test_the_second_of_two_simultaneous_deletions_is_a_conflict(client, repository):
+    posted = _text(client, "xoá hai tay").json()
+
+    def already_flipped(message_id, *, now):
+        raise RepositoryConflict("MESSAGE_ALREADY_DELETED")
+
+    repository.soft_delete_message = already_flipped
+    response = client.delete(
+        f"/contexts/{CONTEXT_ID}/messages/{posted['id']}",
+        headers=actor_headers(actor_id=MEMBER_ID),
+    )
+    assert response.status_code == 409, response.text
+    assert response.json()["code"] == "message_already_deleted"

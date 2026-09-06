@@ -19,6 +19,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.errors import RepositoryConflict
+from app.api.repository import SqlAlchemyApiRepository
 from app.db.models import (
     Context,
     Membership,
@@ -264,3 +266,85 @@ def test_theme_is_checked_by_the_database_and_persisted_over_http(
     assert read.json()["theme"] == "bien-dem"
     assert read.json()["display_name"] == "Nhóm biển đêm"
     assert postgres_session.get(Context, group.id).theme == "bien-dem"
+
+
+# --- reactions and deletion do not cross (review PR #574, blocker B1) --------
+
+
+def test_a_reaction_on_a_deleted_message_is_refused_over_http_and_the_feed_lists(
+    postgres_session, monkeypatch
+):
+    group, owner = _group(postgres_session)
+    friend = _join(postgres_session, group, "Thu Trang")
+    app = _app(postgres_session, monkeypatch)
+    posted = _call(
+        app,
+        "POST",
+        f"/contexts/{group.id}/messages",
+        headers=_headers(owner, group),
+        json={"kind": "text", "body": "sẽ xoá"},
+    )
+    message_id = posted.json()["id"]
+    deleted = _call(
+        app,
+        "DELETE",
+        f"/contexts/{group.id}/messages/{message_id}",
+        headers=_headers(owner, group),
+    )
+    assert deleted.status_code == 204, deleted.text
+
+    reacted = _call(
+        app,
+        "POST",
+        f"/contexts/{group.id}/messages/{message_id}/reactions",
+        headers=_headers(friend, group),
+        json={"kind": "heart"},
+    )
+    assert reacted.status_code == 409, reacted.text
+    assert reacted.json()["code"] == "message_deleted"
+    assert (
+        postgres_session.scalars(
+            select(MessageReaction).where(
+                MessageReaction.message_id == uuid.UUID(message_id)
+            )
+        ).all()
+        == []
+    )
+    listed = _call(
+        app, "GET", f"/contexts/{group.id}/messages", headers=_headers(friend, group)
+    )
+    assert listed.status_code == 200, listed.text
+    (wire,) = listed.json()["messages"]
+    assert wire["kind"] == "deleted" and wire["reactions"] == []
+
+
+def test_the_repository_refuses_under_the_lock_what_the_service_refuses_before_it(
+    postgres_session,
+):
+    """The race the HTTP test cannot stage: the kind is re-read under the row
+    lock, so a tap that lost to a deletion, and a second deletion, both
+    surface as conflicts instead of writing."""
+    group, owner = _group(postgres_session)
+    repo = SqlAlchemyApiRepository(postgres_session)
+    row = _message(postgres_session, group, owner, "một lần")
+
+    flipped = repo.soft_delete_message(row.id, now=NOW)
+    assert flipped is not None and flipped.kind == "deleted"
+    with pytest.raises(RepositoryConflict) as second:
+        repo.soft_delete_message(row.id, now=NOW)
+    assert second.value.code == "MESSAGE_ALREADY_DELETED"
+
+    with pytest.raises(RepositoryConflict) as refused:
+        repo.add_reaction(message_id=row.id, person_id=owner.id, kind="heart", now=NOW)
+    assert refused.value.code == "MESSAGE_DELETED"
+    with pytest.raises(RepositoryConflict) as absent:
+        repo.add_reaction(
+            message_id=uuid.uuid4(), person_id=owner.id, kind="heart", now=NOW
+        )
+    assert absent.value.code == "MESSAGE_NOT_FOUND"
+    assert (
+        postgres_session.scalars(
+            select(MessageReaction).where(MessageReaction.message_id == row.id)
+        ).all()
+        == []
+    )

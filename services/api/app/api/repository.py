@@ -87,6 +87,7 @@ from app.domain.capability import capability_scope
 from app.domain.friendship import Decision, FriendshipError
 from app.domain.friendship import decide as decide_friendship
 from app.domain.ledger import obligation_status
+from app.domain.message_edit import deleted_shape
 from app.places.activities import doc_hoat_dong
 
 # A trip's `starts_on`/`ends_on` are wall-clock Vietnamese calendar days; an
@@ -3558,7 +3559,21 @@ class SqlAlchemyApiRepository:
     def add_reaction(
         self, *, message_id: uuid.UUID, person_id: uuid.UUID, kind: str, now: datetime
     ) -> bool:
-        """True when a row was added; False when this reaction already stood."""
+        """True when a row was added; False when this reaction already stood.
+
+        The message row is locked first and its kind read again under the
+        lock (ADR-0021 §2.3): a tap racing a deletion would otherwise leave a
+        heart on «Tin nhắn đã bị xoá» -- a row the wire refuses to serialise,
+        and one stray tap turned into a 500 for the whole group's feed.
+        `soft_delete_message` takes the same lock, so the two serialise.
+        """
+        message = self.session.execute(
+            select(Message).where(Message.id == message_id).with_for_update()
+        ).scalar_one_or_none()
+        if message is None:
+            raise RepositoryConflict("MESSAGE_NOT_FOUND")
+        if message.kind == MessageKind.DELETED:
+            raise RepositoryConflict("MESSAGE_DELETED")
         row = MessageReaction(
             message_id=message_id, person_id=person_id, kind=kind, created_at=now
         )
@@ -4285,21 +4300,27 @@ class SqlAlchemyApiRepository:
     ) -> MessageRecord | None:
         """Flip the row to `deleted` and drop its reactions, one transaction.
 
-        The row is locked first so two taps on «Xoá» cannot both pass the
-        service's `check_deletable` and both write; the second finds `deleted`
-        and is answered 409 by the caller. Reactions go with the payload: a
-        heart on «Tin nhắn đã bị xoá» would count a message nobody can read.
+        The row is locked first and its kind read again under the lock, so two
+        taps on «Xoá» cannot both pass the service's `check_deletable` and both
+        write: the second finds `deleted` here and surfaces as
+        `MESSAGE_ALREADY_DELETED` for the caller's 409. The shape of the row
+        afterwards is the domain's (`deleted_shape`), not this method's.
+        Reactions go with the payload: a heart on «Tin nhắn đã bị xoá» would
+        count a message nobody can read.
         """
         message = self.session.execute(
             select(Message).where(Message.id == message_id).with_for_update()
         ).scalar_one_or_none()
         if message is None:
             return None
-        message.kind = MessageKind.DELETED
-        message.body = None
-        message.image_url = None
-        message.card = None
-        message.deleted_at = now
+        if message.kind == MessageKind.DELETED:
+            raise RepositoryConflict("MESSAGE_ALREADY_DELETED")
+        shape = deleted_shape({"kind": message.kind.value}, now)
+        message.kind = MessageKind(shape["kind"])
+        message.body = shape["body"]
+        message.image_url = shape["image_url"]
+        message.card = shape["card"]
+        message.deleted_at = shape["deleted_at"]
         self.session.execute(
             delete(MessageReaction).where(MessageReaction.message_id == message_id)
         )
