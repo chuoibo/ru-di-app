@@ -74,6 +74,7 @@ from app.api.repository import (
     ReceiptTarget,
     SavedPlaceRecord,
     StoredGuestLink,
+    StoryRecord,
     UploadedImageRecord,
 )
 from app.domain.capability import capability_scope
@@ -277,6 +278,9 @@ class FakeRepository(SeedCatalogueReads):
         self.post_reactions: dict[uuid.UUID, PostReactionRecord] = {}
         self.post_comments: dict[uuid.UUID, PostCommentRecord] = {}
         self.uploaded_images: dict[uuid.UUID, UploadedImageRecord] = {}
+        # ADR-0022 §2.3: stories and who has seen which.
+        self.stories: dict[uuid.UUID, StoryRecord] = {}
+        self.story_views: dict[tuple[uuid.UUID, uuid.UUID], datetime] = {}
         self.memories: dict[uuid.UUID, MemoryRecord] = {}
         self.account_sessions: dict[uuid.UUID, AccountSessionRecord] = {}
         self.invited_memberships: set[tuple[uuid.UUID, uuid.UUID]] = set()
@@ -635,12 +639,70 @@ class FakeRepository(SeedCatalogueReads):
             return None
         return record
 
-    def person_image_visible_to(self, person_id, image_id, reader_id):
+    def person_image_visible_to(self, person_id, image_id, reader_id, *, now):
         url = f"/people/{person_id}/photos/{image_id}"
-        return any(
+        shown_by_post = any(
             post.image_url == url and self._post_visible_to(post, reader_id)
             for post in self.posts.values()
         )
+        shown_by_story = any(
+            story.image_url == url and self._story_visible_to(story, reader_id, now)
+            for story in self.stories.values()
+        )
+        return shown_by_post or shown_by_story
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+    #
+    # The same hand-written re-implementation of `_story_readable_by` as the
+    # post predicate above, for the same reason: tests/api proves the service.
+    # The SQL has its own live cases in tests/postgres/test_stories_postgres.py.
+
+    def _story_visible_to(self, record, reader_id, now):
+        if record.author_id == reader_id:
+            return True
+        if record.expires_at <= now:
+            return False
+        return self.are_friends(reader_id, record.author_id)
+
+    def create_story(self, *, author_id, image_url, caption, audience, now, expires_at):
+        person = self.people.get(author_id)
+        record = StoryRecord(
+            id=uuid.uuid4(),
+            author_id=author_id,
+            author_display_name="" if person is None else person.display_name,
+            image_url=image_url,
+            caption=caption,
+            audience=audience,
+            created_at=now,
+            expires_at=expires_at,
+            seen=False,
+        )
+        self.stories[record.id] = record
+        return record
+
+    def get_story(self, story_id):
+        return self.stories.get(story_id)
+
+    def list_live_stories_for(self, reader_id, *, now):
+        rows = [
+            record
+            for record in self.stories.values()
+            if record.expires_at > now
+            and self._story_visible_to(record, reader_id, now)
+        ]
+        rows.sort(key=lambda r: (r.author_id.bytes, r.created_at, r.id.bytes))
+        return tuple(
+            replace(record, seen=(record.id, reader_id) in self.story_views)
+            for record in rows
+        )
+
+    def mark_story_seen(self, story_id, viewer_id, *, now):
+        return self.story_views.setdefault((story_id, viewer_id), now)
+
+    def delete_story(self, story_id):
+        self.stories.pop(story_id, None)
+        for key in [key for key in self.story_views if key[0] == story_id]:
+            del self.story_views[key]
 
     def list_memories(
         self,

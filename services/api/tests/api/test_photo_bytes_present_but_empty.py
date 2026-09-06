@@ -126,8 +126,8 @@ class StubRepository(SeedCatalogueReads):
         del person_id, image_id
         return StoredImage()
 
-    def person_image_visible_to(self, person_id, image_id, reader_id):
-        del person_id, image_id, reader_id
+    def person_image_visible_to(self, person_id, image_id, reader_id, *, now):
+        del person_id, image_id, reader_id, now
         return True
 
     def get_place_photo(self, place_id, photo_id):

@@ -52,6 +52,7 @@ from app.api.repository import (
     ReactionRecord,
     RecapOutingRecord,
     StopCheckinRecord,
+    StoryRecord,
     UploadedImageRecord,
     VoteRecord,
     _message_preview,
@@ -191,6 +192,12 @@ from app.api.schemas import (
     SettlementTransferProposal,
     SocialMapResponse,
     StopCheckinResponse,
+    StoryAuthor,
+    StoryAuthorFeed,
+    StoryCreateRequest,
+    StoryFeedResponse,
+    StoryResponse,
+    StorySeenResponse,
     SuggestionBasis,
     SuggestionStop,
     UnavailableLayer,
@@ -207,7 +214,7 @@ from app.api.schemas import (
     WidgetResponse,
 )
 from app.api.sms import SmsDeliveryError, SmsSender
-from app.domain import permissions, post_audience
+from app.domain import permissions, post_audience, story_visibility
 from app.domain.album import build_album
 from app.domain.allocator import allocate
 from app.domain.bill import BillError, allocator_input_from_bill
@@ -259,6 +266,7 @@ from app.domain.otp import DEFAULT_LIMITS as OTP_LIMITS
 from app.domain.otp import generate_code, plan_request, plan_verify
 from app.domain.photo_ref import (
     OWNER_CONTEXT,
+    OWNER_PERSON,
     PhotoUrlError,
     parse_photo_url,
     person_photo_url,
@@ -496,6 +504,29 @@ def _post_dict(record: PostRecord) -> dict:
         "audience": record.audience,
         "context_id": None if record.context_id is None else str(record.context_id),
     }
+
+
+def _story_dict(record: StoryRecord) -> dict:
+    """The three facts `story_visibility.can_view` reads, as the domain wants them."""
+    return {
+        "author_id": str(record.author_id),
+        "audience": record.audience,
+        "expires_at": record.expires_at,
+    }
+
+
+def _wire_story(record: StoryRecord) -> StoryResponse:
+    return StoryResponse(
+        id=record.id,
+        author_id=record.author_id,
+        author_display_name=record.author_display_name,
+        image_url=record.image_url,
+        caption=record.caption,
+        audience=record.audience,
+        created_at=record.created_at,
+        expires_at=record.expires_at,
+        seen=record.seen,
+    )
 
 
 def _wire_post_comment(record: PostCommentRecord) -> PostCommentResponse:
@@ -1720,13 +1751,14 @@ class ApiService:
     ) -> tuple[bytes, str]:
         """The one gate for personal photographs (ADR-0022 §2.1).
 
-        The owner always; anybody else exactly when a post showing the photo
-        is readable by them -- decided by the same SQL the feed is fetched by.
-        Every refusal is 404 `photo_not_found`, never 403: a 403 would say the
-        photo exists, and the whole point of the gate is that it does not.
+        The owner always; anybody else exactly when a post, or a live story
+        (§2.3), showing the photo is readable by them -- decided by the same
+        SQL the feed and the rail are fetched by. Every refusal is 404
+        `photo_not_found`, never 403: a 403 would say the photo exists, and
+        the whole point of the gate is that it does not.
         """
         addressee = actor.id == person_id or self.repository.person_image_visible_to(
-            person_id, photo_id, actor.id
+            person_id, photo_id, actor.id, now=_now()
         )
         try:
             _require_permission(
@@ -1744,6 +1776,132 @@ class ApiService:
             message="Photo does not exist",
         )
         return content, record.content_type
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+    #
+    # Same two-check shape as posts: the repository fetches by
+    # `_story_readable_by`, and `story_visibility.can_view` judges every row
+    # again here with facts read now. A story the actor may not see answers
+    # 404, never 403, for the reason `read_post` gives.
+
+    def _story_facts(self, record: StoryRecord, reader_id: uuid.UUID) -> dict:
+        return {
+            "is_friend": self._is_friend(reader_id, record.author_id),
+            # Blocking arrives with L5 (ADR-0023); until then nobody is. The
+            # argument is required by the domain so the L5 rule cannot be
+            # forgotten here.
+            "is_blocked": False,
+        }
+
+    def _viewable_story_or_404(self, story_id: uuid.UUID, actor: Actor) -> StoryRecord:
+        """The story, or 404 -- for «no such story» and «not for you» alike.
+        The one place `view_story` is proved; every route with `{story_id}`
+        goes through here first."""
+        record = self.repository.get_story(story_id)
+        if record is None:
+            raise ApiProblem(404, "story_not_found", "Story does not exist")
+        may_view = story_visibility.can_view(
+            _story_dict(record),
+            reader_id=str(actor.id),
+            now=_now(),
+            **self._story_facts(record, actor.id),
+        )
+        try:
+            _require_permission("view_story", actor, {"may_view_story": may_view})
+        except ApiProblem as denied:
+            raise ApiProblem(404, "story_not_found", "Story does not exist") from denied
+        return record
+
+    def create_story(self, request: StoryCreateRequest, actor: Actor) -> StoryResponse:
+        """One of one's own photographs, to one's friends, for 24 hours from now."""
+        _require_permission("create_story", actor, {"is_self": True})
+        try:
+            ref = parse_photo_url(request.image_url)
+        except PhotoUrlError as exc:
+            raise ApiProblem(
+                422, "photo_url_invalid", "image_url is not a photo of this product"
+            ) from exc
+        if ref.owner_kind != OWNER_PERSON or ref.owner_id != str(actor.id):
+            raise ApiProblem(
+                403, "permission_denied", "Chỉ đăng được ảnh của chính mình."
+            )
+        if self.repository.get_person_image(actor.id, uuid.UUID(ref.photo_id)) is None:
+            raise ApiProblem(404, "photo_not_found", "Photo does not exist")
+        caption = request.caption or None
+        try:
+            story_visibility.check_caption(caption)
+        except story_visibility.StoryError as exc:
+            raise ApiProblem(
+                422, exc.code.lower(), "Chú thích dài quá 200 ký tự."
+            ) from exc
+        now = _now()
+        record = self.repository.create_story(
+            author_id=actor.id,
+            image_url=ref.url,
+            caption=caption,
+            audience=story_visibility.DEFAULT_STORY_AUDIENCE,
+            now=now,
+            expires_at=story_visibility.expires_at_for(now),
+        )
+        return _wire_story(record)
+
+    def list_stories(self, actor: Actor) -> StoryFeedResponse:
+        """Every live story this actor may see, grouped by author and ordered
+        by the domain: one's own, then unseen, then the rest."""
+        now = _now()
+        rows = self.repository.list_live_stories_for(actor.id, now=now)
+        friends: dict[uuid.UUID, bool] = {}
+        groups: dict[uuid.UUID, dict] = {}
+        for record in rows:
+            if record.author_id not in friends:
+                friends[record.author_id] = self._is_friend(actor.id, record.author_id)
+            if not story_visibility.can_view(
+                _story_dict(record),
+                reader_id=str(actor.id),
+                is_friend=friends[record.author_id],
+                is_blocked=False,
+                now=now,
+            ):
+                continue
+            group = groups.setdefault(
+                record.author_id,
+                {
+                    "author": StoryAuthor(
+                        id=record.author_id, display_name=record.author_display_name
+                    ),
+                    "stories": [],
+                    "mine": record.author_id == actor.id,
+                    "all_seen": True,
+                    "latest_at": record.created_at,
+                },
+            )
+            group["stories"].append(_wire_story(record))
+            group["all_seen"] = group["all_seen"] and record.seen
+            group["latest_at"] = max(group["latest_at"], record.created_at)
+        return StoryFeedResponse(
+            authors=[
+                StoryAuthorFeed(
+                    author=group["author"],
+                    stories=group["stories"],
+                    all_seen=group["all_seen"],
+                )
+                for group in story_visibility.order_authors(list(groups.values()))
+            ]
+        )
+
+    def mark_story_seen(self, story_id: uuid.UUID, actor: Actor) -> StorySeenResponse:
+        record = self._viewable_story_or_404(story_id, actor)
+        seen_at = self.repository.mark_story_seen(record.id, actor.id, now=_now())
+        return StorySeenResponse(story_id=record.id, seen_at=seen_at)
+
+    def delete_story(self, story_id: uuid.UUID, actor: Actor) -> None:
+        """The author takes it down; a friend who may view it gets 403, a
+        stranger the same 404 as everywhere else."""
+        record = self._viewable_story_or_404(story_id, actor)
+        _require_permission(
+            "delete_own_story", actor, {"is_author": record.author_id == actor.id}
+        )
+        self.repository.delete_story(record.id)
 
     def post_context_memory(
         self,

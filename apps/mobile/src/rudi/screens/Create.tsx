@@ -10,6 +10,7 @@ const ACTIONS: { icon: IconName; title: string; detail: string; href: string; to
   { icon: "calendar-outline", title: "Tạo cuộc hẹn", detail: "Chốt thời gian, nơi đi và hội bạn", href: "/outings/new", tone: mauSang.accent },
   { icon: "receipt-outline", title: "Chia hóa đơn", detail: "Xem lại ảnh bill và gán món", href: "/smart-split/xom-leo/review", tone: mauSang.split },
   { icon: "images-outline", title: "Đăng kỷ niệm", detail: "Chia sẻ ảnh vào tường nhóm", href: "/moments/new", tone: mauSang.ai },
+  { icon: "aperture-outline", title: "Đăng story", detail: "Một tấm ảnh 24 giờ, chỉ bạn bè thấy", href: "/stories/new", tone: mauSang.accent },
 ];
 
 /** Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route. */

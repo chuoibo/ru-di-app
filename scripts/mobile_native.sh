@@ -1098,6 +1098,136 @@ else:
   echo "canary 42 đỏ đúng chỗ: người ngoài mở ảnh → 404 một câu, tường đóng → 403 và can_comment=false"
 }
 
+# PNG 96×96 một màu, sinh tại chỗ để không có byte ảnh nào nằm trong repo.
+# Dùng cho 42 (ảnh bài) và 43 (ảnh story). In đường dẫn file tạm; người gọi xoá.
+tao_png_tam() {
+  local anh
+  anh="$(mktemp --suffix=.png)"
+  python3 - "$anh" <<'PYPNG'
+import struct, sys, zlib
+
+w = h = 96
+# Teal, so the picture reads as a picture over the indigo cover of the viewer.
+raw = b"".join(b"\x00" + bytes([0x0F, 0x76, 0x6E]) * w for _ in range(h))
+
+def khoi(ten, than):
+    return struct.pack(">I", len(than)) + ten + than + struct.pack(">I", zlib.crc32(ten + than) & 0xFFFFFFFF)
+
+png = b"\x89PNG\r\n\x1a\n"
+png += khoi(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+png += khoi(b"IDAT", zlib.compress(raw, 9))
+png += khoi(b"IEND", b"")
+open(sys.argv[1], "wb").write(png)
+PYPNG
+  printf '%s' "$anh"
+}
+
+# Trước flow 43: NGƯỜI KIA (bạn của người lái) đăng một story bằng đường sản
+# phẩm — ảnh cá nhân qua `POST /people/me/photos` rồi `POST /stories` — để dải
+# story trên máy có một vòng «chưa xem» thật. Người lái là C nếu 37 đã chạy.
+chuan_bi_story_cho_43() {
+  local goc kia body tok anh url rc
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then kia="$OTP_PHONE_D"; else kia="$OTP_PHONE_C"; fi
+  body="$(dang_nhap_curl "$kia")" || hong "trước flow 43: người kia không đăng nhập được qua curl."
+  tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  [ -n "$tok" ] || hong "trước flow 43: thân phiên không có token."
+  anh="$(tao_png_tam)"
+  url="$(curl -sS -X POST "$goc/people/me/photos" -H "Authorization: Bearer $tok" \
+      -F "file=@$anh;type=image/png" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("url",""))')"
+  rm -f "$anh"
+  case "$url" in
+    /people/*/photos/*) : ;;
+    *) hong "trước flow 43: tải ảnh cá nhân không trả về địa chỉ ảnh (nhận «$url»)." ;;
+  esac
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/stories" -H "Authorization: Bearer $tok" \
+      -H "Content-Type: application/json" -H "Idempotency-Key: qa-story-$$-$RANDOM" \
+      -d "{\"image_url\":\"$url\",\"caption\":\"Story QA\"}")"
+  [ "$rc" = "201" ] || hong "trước flow 43: đăng story nhận HTTP $rc, mong 201."
+  echo "trước flow 43: người kia đã đăng một story «Story QA» (ảnh cá nhân, bạn bè, 24 giờ)"
+}
+
+# Sau flow 43: người lái vừa xem story của người kia trên máy. Hỏi máy chủ:
+# `GET /stories` của người lái có nhóm của người kia với all_seen = true và đúng
+# chú thích. Canary: B (không phải bạn) không thấy tác giả ấy và mở ảnh story →
+# 404 cùng câu với ảnh không tồn tại. Rồi tua story qua hạn THẲNG TRONG DB
+# (cần MOBILE_DATABASE_URL của stack dùng-một-lần; không có thì đỏ, vì «không
+# đo được» không phải xanh) → GET /stories của cả hai không còn nó → flow _43b
+# mở lại app và dải không còn vòng.
+kiem_may_chu_sau_43() {
+  local goc lai kia body_lai body_kia tok_lai tok_kia id_kia ket story_id anh_url da_xem chu_thich body_b tok_b rc than rc_flow
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 43: người lái không đăng nhập được qua curl."
+  body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 43: người kia không đăng nhập được qua curl."
+  tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  tok_kia="$(printf '%s' "$body_kia" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  id_kia="$(printf '%s' "$body_kia" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
+  [ -n "$tok_lai" ] && [ -n "$tok_kia" ] && [ -n "$id_kia" ] || hong "sau flow 43: thân phiên thiếu token/person_id."
+  ket="$(curl -sS "$goc/stories" -H "Authorization: Bearer $tok_lai" | python3 -c '
+import json, sys
+kia = sys.argv[1]
+nhom = [n for n in json.load(sys.stdin).get("authors", []) if n["author"]["id"] == kia]
+if not nhom or not nhom[0]["stories"]:
+    print("|||")
+else:
+    s = nhom[0]["stories"][0]
+    print("%s|%s|%s|%s" % (s["id"], s["image_url"], str(nhom[0]["all_seen"]).lower(), s.get("caption") or ""))' "$id_kia")"
+  IFS='|' read -r story_id anh_url da_xem chu_thich <<< "$ket"
+  [ -n "$story_id" ] || hong "sau flow 43: người lái không thấy story của người kia trong GET /stories."
+  [ "$da_xem" = "true" ] || hong "sau flow 43: all_seen của nhóm người kia là «$da_xem», mong true (máy đã mở story)."
+  [ "$chu_thich" = "Story QA" ] || hong "sau flow 43: chú thích là «$chu_thich», mong «Story QA»."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_lai")"
+  [ "$rc" = "200" ] || hong "sau flow 43: người lái (bạn) mở ảnh story nhận HTTP $rc, mong 200."
+  echo "máy chủ xác nhận: người lái thấy story «Story QA» của người kia, all_seen=true, ảnh 200"
+  # Canary 1: B không phải bạn → không thấy tác giả, ảnh 404 cùng câu với ảnh không tồn tại.
+  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 43: B không đăng nhập được qua curl."
+  tok_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  ket="$(curl -sS "$goc/stories" -H "Authorization: Bearer $tok_b" | python3 -c '
+import json, sys
+print("co" if any(n["author"]["id"] == sys.argv[1] for n in json.load(sys.stdin).get("authors", [])) else "khong")' "$id_kia")"
+  [ "$ket" = "khong" ] || hong "canary 43: B (không phải bạn) thấy story của người kia."
+  than="$(mktemp)"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_b")"
+  [ "$rc" = "404" ] || { rm -f "$than"; hong "canary 43: người không phải bạn mở ảnh story nhận HTTP $rc, mong 404."; }
+  ket="$(cat "$than")"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc/people/$id_kia/photos/0a0a0a0a-0a0a-4a0a-8a0a-0a0a0a0a0a0a" -H "Authorization: Bearer $tok_b")"
+  [ "$rc" = "404" ] && [ "$(cat "$than")" = "$ket" ] || { rm -f "$than"; hong "canary 43: ảnh không tồn tại và ảnh bị từ chối không cùng một câu."; }
+  rm -f "$than"
+  echo "canary 43 đỏ đúng chỗ: người ngoài không thấy story, mở ảnh → 404 một câu"
+  # Hết hạn: tua thẳng trong DB rồi hỏi lại. Không có URL DB thì KHÔNG đo được.
+  [ -n "${MOBILE_DATABASE_URL:-}" ] || hong "sau flow 43: cần MOBILE_DATABASE_URL (stack --keep in ra) để tua story qua hạn; không đo được không phải xanh."
+  ( cd "$REPO/services/api" && MOBILE_DATABASE_URL="$MOBILE_DATABASE_URL" python3 - "$story_id" <<'PYDB'
+import os, sys, uuid
+from sqlalchemy import create_engine, text
+engine = create_engine(os.environ["MOBILE_DATABASE_URL"])
+with engine.begin() as conn:
+    n = conn.execute(
+        # Both timestamps, a day back: the CHECK `expires_at > created_at`
+        # refuses a deadline set before the writing.
+        text(
+            "UPDATE stories SET created_at = now() - interval '25 hours', "
+            "expires_at = now() - interval '1 hour' WHERE id = :id"
+        ),
+        {"id": uuid.UUID(sys.argv[1])},
+    ).rowcount
+assert n == 1, n
+PYDB
+  ) || hong "sau flow 43: không tua được story qua hạn trong DB."
+  for ai in "$tok_lai" "$tok_kia"; do
+    ket="$(curl -sS "$goc/stories" -H "Authorization: Bearer $ai" | python3 -c '
+import json, sys
+print("co" if any(n["author"]["id"] == sys.argv[1] for n in json.load(sys.stdin).get("authors", [])) else "khong")' "$id_kia")"
+    [ "$ket" = "khong" ] || hong "sau flow 43: story đã qua hạn vẫn còn trong GET /stories."
+  done
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_lai")"
+  [ "$rc" = "404" ] || hong "sau flow 43: story hết hạn mà bạn vẫn mở được ảnh (HTTP $rc)."
+  echo "máy chủ xác nhận: qua hạn thì story rời GET /stories của cả hai và ảnh đóng lại (404)"
+  set +e; chay_flow "$FLOWS/_43b-story-het-han.yaml"; rc_flow=$?; set -e
+  [ "$rc_flow" -eq 0 ] || hong "sau flow 43: máy vẫn vẽ vòng story đã hết hạn (flow _43b đỏ, rc=$rc_flow)."
+  echo "máy xác nhận: mở lại app sau khi story qua hạn, dải không còn vòng của người kia"
+}
+
 kiem_may_chu_sau_30() {
   local goc body tok ctx ket
   goc="http://127.0.0.1:$API_PORT"
@@ -1632,7 +1762,7 @@ for f in "$FLOWS"/*.yaml; do
     # môi trường chứ không phải vì app sai. `--live` chạy đúng và chỉ nhóm này.
     20-*)        [ "$LIVE" = 1 ] || continue ;;
     21-*)        [ "$DANG_NHAP" = 1 ] || continue ;;
-    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*) [ "$OTP" = 1 ] || continue ;;
+    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*) [ "$OTP" = 1 ] || continue ;;
     # Under the keyboard negative control the composer is meant to be covered,
     # so a flow that has to tap it (30, 40) would only fail for the reason the
     # probe already measures. The table for --tat-kav is the sign-in leg + 31.
@@ -1647,6 +1777,7 @@ for f in "$FLOWS"/*.yaml; do
   case "$ten" in
     34-*) chuan_bi_anh_cho_34 ;;
     42-*) chuan_bi_bai_cho_42 ;;
+    43-*) chuan_bi_story_cho_43 ;;
     38-*) chuan_bi_anh_nhom_cho_38 ;;
   esac
   DA_CHAY=$((DA_CHAY + 1))
@@ -1748,6 +1879,7 @@ if [ "$OTP" = 1 ]; then
   da_chay 39 && kiem_can_25 kiem_may_chu_sau_39 && kiem_may_chu_sau_39
   da_chay 41 && kiem_can_25 kiem_may_chu_sau_41 && kiem_may_chu_sau_41
   da_chay 42 && kiem_can_25 kiem_may_chu_sau_42 && kiem_may_chu_sau_42
+  da_chay 43 && kiem_can_25 kiem_may_chu_sau_43 && kiem_may_chu_sau_43
   { [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
   [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
   canary_otp

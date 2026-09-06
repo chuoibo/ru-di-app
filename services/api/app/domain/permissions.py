@@ -450,6 +450,21 @@ _TABLE: dict[str, dict] = {
         "roles": {"group_admin", "member"},
         "requires": ("is_photo_addressee",),
     },
+    # ADR-0022 §2.3. A story is written by its author only; viewing is proved
+    # by `story_visibility.can_view` (the 404 gate, run before `view_story`);
+    # taking one down early is the author's alone.
+    "create_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_self",),
+    },
+    "view_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("may_view_story",),
+    },
+    "delete_own_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_author",),
+    },
     "create_post": {"roles": {"group_admin", "member"}, "requires": ()},
     # F42, and the only audience that needs a second permission. `create_post`
     # says the actor may write; this says they may point that writing at *this*

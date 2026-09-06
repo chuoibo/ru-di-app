@@ -155,6 +155,16 @@ export default function RootLayout() {
             name="moments/new"
             options={{ animation: "slide_from_bottom", presentation: "modal" }}
           />
+          <Stack.Screen
+            name="stories/new"
+            options={{ animation: "slide_from_bottom", presentation: "modal" }}
+          />
+          {/* The viewer is its own root so the hardware Back closes it and
+              `check_screens_reachable` finds it; full screen over the cover. */}
+          <Stack.Screen
+            name="stories/[personId]"
+            options={{ animation: "fade", presentation: "fullScreenModal" }}
+          />
         </Stack>
       </RudiSessionProvider>
     </SafeAreaProvider>
