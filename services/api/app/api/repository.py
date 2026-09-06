@@ -14,6 +14,7 @@ from datetime import date, datetime
 from typing import Protocol
 
 from sqlalchemy import Date, and_, cast, delete, func, or_, select, tuple_
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
@@ -75,8 +76,12 @@ from app.db.models import (
     PlacePhoto,
     Post,
     PostAudience,
+    PostComment,
+    PostReaction,
     ReceiptConfirmation,
     SavedPlace,
+    Story,
+    StoryView,
     UploadedImage,
     VerificationScope,
     Vote,
@@ -120,6 +125,8 @@ class PersonRecord:
     city: str | None = None
     #: Band id from `app.domain.interests`, or None for «did not answer» (M11).
     budget_band: str | None = None
+    #: ADR-0022 §2.2; defaulted so a fake that predates it still builds.
+    wall_comment_policy: str = "readers"
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,6 +225,36 @@ class PostRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class PostReactionRecord:
+    id: uuid.UUID
+    post_id: uuid.UUID
+    person_id: uuid.UUID
+    kind: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PostCommentRecord:
+    id: uuid.UUID
+    post_id: uuid.UUID
+    author_id: uuid.UUID
+    author_display_name: str
+    body: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PostSocialCounts:
+    """Reactions per kind, comments, and what the viewer left, for one page
+    of posts. Counted by separate GROUP BYs, never by a joined feed query
+    (ADR-0022 §2.2: «3 hearts × 2 comments must not read 6»)."""
+
+    reactions: dict[uuid.UUID, dict[str, int]]
+    comments: dict[uuid.UUID, int]
+    mine: dict[uuid.UUID, frozenset[str]]
+
+
+@dataclass(frozen=True, slots=True)
 class MemoryReactionRecord:
     """One heart. Carries no body, because a heart says nothing but itself."""
 
@@ -255,6 +292,24 @@ class UploadedImageRecord:
     width: int
     height: int
     created_at: datetime
+    #: ADR-0022 §2.1: `group`, `avatar` or `personal`.
+    purpose: str = "group"
+
+
+@dataclass(frozen=True, slots=True)
+class StoryRecord:
+    """One story as the rail and the viewer need it (ADR-0022 §2.3). `seen`
+    is relative to a reader and False on a record fetched by id."""
+
+    id: uuid.UUID
+    author_id: uuid.UUID
+    author_display_name: str
+    image_url: str
+    caption: str | None
+    audience: str
+    created_at: datetime
+    expires_at: datetime
+    seen: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1346,6 +1401,7 @@ class ApiRepository(Protocol):
         width: int,
         height: int,
         now: datetime,
+        purpose: str = "group",
     ) -> UploadedImageRecord: ...
 
     def get_context_image(
@@ -1353,6 +1409,44 @@ class ApiRepository(Protocol):
     ) -> UploadedImageRecord | None: ...
 
     def get_latest_avatar(self, person_id: uuid.UUID) -> UploadedImageRecord | None: ...
+
+    def get_person_image(
+        self, person_id: uuid.UUID, image_id: uuid.UUID
+    ) -> UploadedImageRecord | None: ...
+
+    def person_image_visible_to(
+        self,
+        person_id: uuid.UUID,
+        image_id: uuid.UUID,
+        reader_id: uuid.UUID,
+        *,
+        now: datetime,
+    ) -> bool: ...
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+
+    def create_story(
+        self,
+        *,
+        author_id: uuid.UUID,
+        image_url: str,
+        caption: str | None,
+        audience: str,
+        now: datetime,
+        expires_at: datetime,
+    ) -> StoryRecord: ...
+
+    def get_story(self, story_id: uuid.UUID) -> StoryRecord | None: ...
+
+    def list_live_stories_for(
+        self, reader_id: uuid.UUID, *, now: datetime
+    ) -> tuple[StoryRecord, ...]: ...
+
+    def mark_story_seen(
+        self, story_id: uuid.UUID, viewer_id: uuid.UUID, *, now: datetime
+    ) -> datetime: ...
+
+    def delete_story(self, story_id: uuid.UUID) -> None: ...
 
     def create_memory(
         self,
@@ -1486,6 +1580,34 @@ class ApiRepository(Protocol):
     def list_person_posts_visible_to(
         self, person_id: uuid.UUID, reader_id: uuid.UUID, *, limit: int
     ) -> tuple[PostRecord, ...]: ...
+
+    def post_social_counts(
+        self, post_ids: tuple[uuid.UUID, ...], *, viewer_id: uuid.UUID
+    ) -> PostSocialCounts: ...
+
+    def add_post_reaction(
+        self, *, post_id: uuid.UUID, person_id: uuid.UUID, kind: str, now: datetime
+    ) -> PostReactionRecord: ...
+
+    def remove_post_reaction(
+        self, *, post_id: uuid.UUID, person_id: uuid.UUID, kind: str
+    ) -> bool: ...
+
+    def create_post_comment(
+        self, *, post_id: uuid.UUID, author_id: uuid.UUID, body: str, now: datetime
+    ) -> PostCommentRecord: ...
+
+    def get_post_comment(self, comment_id: uuid.UUID) -> PostCommentRecord | None: ...
+
+    def delete_post_comment(self, comment_id: uuid.UUID) -> bool: ...
+
+    def list_post_comments(
+        self,
+        post_id: uuid.UUID,
+        *,
+        limit: int,
+        after: tuple[datetime, uuid.UUID] | None = None,
+    ) -> tuple[PostCommentRecord, ...]: ...
 
     def create_message(
         self,
@@ -1792,6 +1914,7 @@ class SqlAlchemyApiRepository:
             width=image.width,
             height=image.height,
             created_at=image.created_at,
+            purpose=image.purpose,
         )
 
     @staticmethod
@@ -1908,6 +2031,7 @@ class SqlAlchemyApiRepository:
             bio=person.bio,
             city=person.city,
             budget_band=person.budget_band,
+            wall_comment_policy=person.wall_comment_policy,
         )
 
     @staticmethod
@@ -3870,6 +3994,7 @@ class SqlAlchemyApiRepository:
         width: int,
         height: int,
         now: datetime,
+        purpose: str = "group",
     ) -> UploadedImageRecord:
         image = UploadedImage(
             storage_key=storage_key,
@@ -3881,6 +4006,7 @@ class SqlAlchemyApiRepository:
             width=width,
             height=height,
             created_at=now,
+            purpose=purpose,
         )
         self.session.add(image)
         self.session.flush()
@@ -3898,13 +4024,199 @@ class SqlAlchemyApiRepository:
         return None if image is None else self._uploaded_image_record(image)
 
     def get_latest_avatar(self, person_id: uuid.UUID) -> UploadedImageRecord | None:
+        # `purpose = 'avatar'` and not merely «owned by this person»: a
+        # photograph posted to the wall is owned by its author too, and without
+        # this filter the newest one would become their face (ADR-0022 §2.1).
         image = self.session.scalar(
             select(UploadedImage)
-            .where(UploadedImage.owner_person_id == person_id)
+            .where(
+                UploadedImage.owner_person_id == person_id,
+                UploadedImage.purpose == "avatar",
+            )
             .order_by(UploadedImage.created_at.desc(), UploadedImage.id.desc())
             .limit(1)
         )
         return None if image is None else self._uploaded_image_record(image)
+
+    def get_person_image(
+        self, person_id: uuid.UUID, image_id: uuid.UUID
+    ) -> UploadedImageRecord | None:
+        image = self.session.scalar(
+            select(UploadedImage).where(
+                UploadedImage.owner_person_id == person_id,
+                UploadedImage.id == image_id,
+                UploadedImage.purpose == "personal",
+            )
+        )
+        return None if image is None else self._uploaded_image_record(image)
+
+    def person_image_visible_to(
+        self,
+        person_id: uuid.UUID,
+        image_id: uuid.UUID,
+        reader_id: uuid.UUID,
+        *,
+        now: datetime,
+    ) -> bool:
+        """ADR-0022 §2.1: a personal photograph is readable by somebody other
+        than its owner exactly when a post that shows it is readable by them,
+        or (§2.3) a live story that shows it is. The post rule is
+        `_readable_by` and the story rule `_story_readable_by` -- the same SQL
+        the feed and the rail are fetched by -- so what is not for this reader
+        cannot open its picture either."""
+        url = f"/people/{person_id}/photos/{image_id}"
+        shown_by_post = (
+            select(Post.id)
+            .where(Post.image_url == url, self._readable_by(reader_id))
+            .limit(1)
+        )
+        shown_by_story = (
+            select(Story.id)
+            .where(Story.image_url == url, self._story_readable_by(reader_id, now))
+            .limit(1)
+        )
+        return (
+            self.session.scalar(shown_by_post) is not None
+            or self.session.scalar(shown_by_story) is not None
+        )
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+
+    @staticmethod
+    def _story_readable_by(reader_id: uuid.UUID, now: datetime):
+        """`story_visibility.can_view`, spelled in SQL.
+
+        Same duplication, same reason, as `_readable_by`: the domain function
+        judges each row the service is about to return, and this keeps the
+        rows it would refuse from being fetched at all. `now` is a bind
+        parameter from the service, never `func.now()`, so a test can stand on
+        either side of the deadline. Blocking (`is_blocked`) arrives with L5.
+        Change either and change both.
+        """
+        friendship = (
+            select(FriendRequest.id)
+            .where(
+                FriendRequest.state == FriendRequestState.ACCEPTED,
+                or_(
+                    and_(
+                        FriendRequest.requester_id == reader_id,
+                        FriendRequest.addressee_id == Story.author_id,
+                    ),
+                    and_(
+                        FriendRequest.addressee_id == reader_id,
+                        FriendRequest.requester_id == Story.author_id,
+                    ),
+                ),
+            )
+            .exists()
+        )
+        return or_(
+            Story.author_id == reader_id,
+            and_(Story.audience == "friends", Story.expires_at > now, friendship),
+        )
+
+    def _story_record(
+        self, story: Story, *, author_name: str, seen: bool
+    ) -> StoryRecord:
+        return StoryRecord(
+            id=story.id,
+            author_id=story.author_id,
+            author_display_name=author_name,
+            image_url=story.image_url,
+            caption=story.caption,
+            audience=story.audience,
+            created_at=story.created_at,
+            expires_at=story.expires_at,
+            seen=seen,
+        )
+
+    def create_story(
+        self,
+        *,
+        author_id: uuid.UUID,
+        image_url: str,
+        caption: str | None,
+        audience: str,
+        now: datetime,
+        expires_at: datetime,
+    ) -> StoryRecord:
+        story = Story(
+            id=uuid.uuid4(),
+            author_id=author_id,
+            image_url=image_url,
+            caption=caption,
+            audience=audience,
+            created_at=now,
+            expires_at=expires_at,
+        )
+        self.session.add(story)
+        self.session.flush()
+        names = self._display_names({author_id})
+        return self._story_record(
+            story, author_name=names.get(author_id, ""), seen=False
+        )
+
+    def get_story(self, story_id: uuid.UUID) -> StoryRecord | None:
+        story = self.session.get(Story, story_id)
+        if story is None:
+            return None
+        names = self._display_names({story.author_id})
+        return self._story_record(
+            story, author_name=names.get(story.author_id, ""), seen=False
+        )
+
+    def list_live_stories_for(
+        self, reader_id: uuid.UUID, *, now: datetime
+    ) -> tuple[StoryRecord, ...]:
+        """Every live story this reader may see, oldest first within an
+        author, each with whether this reader has seen it. Liveness applies to
+        the reader's own stories too: the rail shows what is up, and an
+        author's expired story is reachable only by id, to delete it."""
+        rows = self.session.execute(
+            select(Story, StoryView.seen_at)
+            .outerjoin(
+                StoryView,
+                and_(StoryView.story_id == Story.id, StoryView.viewer_id == reader_id),
+            )
+            .where(self._story_readable_by(reader_id, now), Story.expires_at > now)
+            .order_by(Story.author_id, Story.created_at, Story.id)
+        ).all()
+        names = self._display_names({story.author_id for story, _ in rows})
+        return tuple(
+            self._story_record(
+                story,
+                author_name=names.get(story.author_id, ""),
+                seen=seen_at is not None,
+            )
+            for story, seen_at in rows
+        )
+
+    def mark_story_seen(
+        self, story_id: uuid.UUID, viewer_id: uuid.UUID, *, now: datetime
+    ) -> datetime:
+        """The first look is the one recorded; a second answers the first's
+        time. The primary key is the rule, and `ON CONFLICT DO NOTHING` lets
+        the database apply it in one statement -- asking first and inserting
+        second is this same code with a race inside it."""
+        self.session.execute(
+            pg_insert(StoryView)
+            .values(story_id=story_id, viewer_id=viewer_id, seen_at=now)
+            .on_conflict_do_nothing(constraint="pk_story_views")
+        )
+        seen_at = self.session.scalar(
+            select(StoryView.seen_at).where(
+                StoryView.story_id == story_id, StoryView.viewer_id == viewer_id
+            )
+        )
+        if seen_at is None:  # pragma: no cover - the row was just written
+            raise RuntimeError("story view vanished between insert and read")
+        return seen_at
+
+    def delete_story(self, story_id: uuid.UUID) -> None:
+        story = self.session.get(Story, story_id)
+        if story is not None:
+            self.session.delete(story)
+            self.session.flush()
 
     def create_memory(
         self,
@@ -4379,6 +4691,160 @@ class SqlAlchemyApiRepository:
             .limit(limit)
         )
         return tuple(self._post_record(row) for row in rows)
+
+    # --- post reactions and comments (ADR-0022 §2.2) --------------------
+
+    def post_social_counts(
+        self, post_ids: tuple[uuid.UUID, ...], *, viewer_id: uuid.UUID
+    ) -> PostSocialCounts:
+        """Three grouped queries over one page, never a joined feed query --
+        joining two children to one parent multiplies their rows together and
+        the bug reads as a plausible number (see `_memory_social_counts`)."""
+        if not post_ids:
+            return PostSocialCounts({}, {}, {})
+        reactions: dict[uuid.UUID, dict[str, int]] = {}
+        for post_id, kind, total in self.session.execute(
+            select(PostReaction.post_id, PostReaction.kind, func.count(PostReaction.id))
+            .where(PostReaction.post_id.in_(post_ids))
+            .group_by(PostReaction.post_id, PostReaction.kind)
+        ):
+            reactions.setdefault(post_id, {})[kind] = int(total)
+        comments = {
+            post_id: int(total)
+            for post_id, total in self.session.execute(
+                select(PostComment.post_id, func.count(PostComment.id))
+                .where(PostComment.post_id.in_(post_ids))
+                .group_by(PostComment.post_id)
+            )
+        }
+        mine: dict[uuid.UUID, set[str]] = {}
+        for post_id, kind in self.session.execute(
+            select(PostReaction.post_id, PostReaction.kind).where(
+                PostReaction.post_id.in_(post_ids),
+                PostReaction.person_id == viewer_id,
+            )
+        ):
+            mine.setdefault(post_id, set()).add(kind)
+        return PostSocialCounts(
+            reactions, comments, {k: frozenset(v) for k, v in mine.items()}
+        )
+
+    def add_post_reaction(
+        self, *, post_id: uuid.UUID, person_id: uuid.UUID, kind: str, now: datetime
+    ) -> PostReactionRecord:
+        """Idempotent: the unique key decides, and a second tap of the same
+        kind reads the row the first tap wrote rather than failing."""
+        reaction = PostReaction(
+            post_id=post_id, person_id=person_id, kind=kind, created_at=now
+        )
+        try:
+            with self.session.begin_nested():
+                self.session.add(reaction)
+                self.session.flush()
+        except IntegrityError as exc:
+            constraint = getattr(
+                getattr(exc.orig, "diag", None), "constraint_name", None
+            )
+            if constraint != "uq_post_reactions_one_per_kind":
+                raise
+            existing = self.session.scalar(
+                select(PostReaction).where(
+                    PostReaction.post_id == post_id,
+                    PostReaction.person_id == person_id,
+                    PostReaction.kind == kind,
+                )
+            )
+            assert existing is not None
+            reaction = existing
+        return PostReactionRecord(
+            id=reaction.id,
+            post_id=reaction.post_id,
+            person_id=reaction.person_id,
+            kind=reaction.kind,
+            created_at=reaction.created_at,
+        )
+
+    def remove_post_reaction(
+        self, *, post_id: uuid.UUID, person_id: uuid.UUID, kind: str
+    ) -> bool:
+        reaction = self.session.scalar(
+            select(PostReaction).where(
+                PostReaction.post_id == post_id,
+                PostReaction.person_id == person_id,
+                PostReaction.kind == kind,
+            )
+        )
+        if reaction is None:
+            return False
+        self.session.delete(reaction)
+        self.session.flush()
+        return True
+
+    def _post_comment_record(self, comment: PostComment) -> PostCommentRecord:
+        name = self._display_names({comment.author_id})[comment.author_id]
+        return PostCommentRecord(
+            id=comment.id,
+            post_id=comment.post_id,
+            author_id=comment.author_id,
+            author_display_name=name,
+            body=comment.body,
+            created_at=comment.created_at,
+        )
+
+    def create_post_comment(
+        self, *, post_id: uuid.UUID, author_id: uuid.UUID, body: str, now: datetime
+    ) -> PostCommentRecord:
+        comment = PostComment(
+            post_id=post_id, author_id=author_id, body=body, created_at=now
+        )
+        self.session.add(comment)
+        self.session.flush()
+        return self._post_comment_record(comment)
+
+    def get_post_comment(self, comment_id: uuid.UUID) -> PostCommentRecord | None:
+        comment = self.session.get(PostComment, comment_id)
+        return None if comment is None else self._post_comment_record(comment)
+
+    def delete_post_comment(self, comment_id: uuid.UUID) -> bool:
+        comment = self.session.get(PostComment, comment_id)
+        if comment is None:
+            return False
+        self.session.delete(comment)
+        self.session.flush()
+        return True
+
+    def list_post_comments(
+        self,
+        post_id: uuid.UUID,
+        *,
+        limit: int,
+        after: tuple[datetime, uuid.UUID] | None = None,
+    ) -> tuple[PostCommentRecord, ...]:
+        """Oldest first, one page, keyset on `(created_at, id)`: a conversation
+        under a post runs forward, unlike the feed above it."""
+        query = select(PostComment).where(PostComment.post_id == post_id)
+        if after is not None:
+            query = query.where(
+                tuple_(PostComment.created_at, PostComment.id)
+                > tuple_(after[0], after[1])
+            )
+        rows = list(
+            self.session.scalars(
+                query.order_by(PostComment.created_at, PostComment.id).limit(limit)
+            )
+        )
+        names = self._display_names({row.author_id for row in rows})
+        return tuple(
+            PostCommentRecord(
+                id=row.id,
+                post_id=row.post_id,
+                author_id=row.author_id,
+                author_display_name=names[row.author_id],
+                body=row.body,
+                created_at=row.created_at,
+            )
+            for row in rows
+        )
 
     def create_message(
         self,

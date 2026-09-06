@@ -27,6 +27,7 @@ import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, typ
 import { xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
+import { StoryRail } from "../story/StoryRail";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
@@ -124,6 +125,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
             title is reachable on the build we test on. */}
         <RudiButton compact full={false} icon="add" label="Tạo nhóm" onPress={() => router.push("/groups/new")} variant="outline" />
       </View>
+      {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
+      <StoryRail personId={phien.person_id} />
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup>
           <SkeletonRow leading={44} />

@@ -61,6 +61,16 @@ class PhotoStorage:
     def read(self, key: str) -> bytes:
         return self._path_for(key).read_bytes()
 
+    def delete(self, key: str) -> bool:
+        """Remove one stored file. Answers whether there was one: by the time
+        anybody calls this the row that named the file is already gone, so a
+        missing file is housekeeping already done, not an error."""
+        try:
+            self._path_for(key).unlink()
+        except FileNotFoundError:
+            return False
+        return True
+
     def _path_for(self, key: str) -> pathlib.Path:
         if not isinstance(key, str) or _STORAGE_KEY.fullmatch(key) is None:
             raise ValueError(

@@ -20,15 +20,21 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.api.deps import Actor, get_actor, get_repository
 from app.api.repository import ApiRepository
 from app.api.schemas import (
     ErrorResponse,
     PersonPostListResponse,
+    PostCommentCreateRequest,
+    PostCommentListResponse,
+    PostCommentResponse,
     PostCreateRequest,
     PostListResponse,
+    PostReactionKind,
+    PostReactionRequest,
+    PostReactionsResponse,
     PostResponse,
 )
 from app.api.service import ApiService
@@ -109,3 +115,98 @@ def read_post(
     """One post, or 404 -- including when it exists and is not for you."""
 
     return ApiService(repository).read_post(post_id, actor)
+
+
+# --- reactions and comments (ADR-0022 §2.2) ----------------------------------
+#
+# Every route below goes through `_readable_post_or_404` first: a post the
+# actor may not read answers 404 here exactly as `read_post` does, so none of
+# these becomes the oracle `read_post` refuses to be.
+
+
+@router.post(
+    "/posts/{post_id}/reactions",
+    response_model=PostReactionsResponse,
+    responses=ERRORS,
+)
+def react_to_post(
+    post_id: UUID,
+    request: PostReactionRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> PostReactionsResponse:
+    """One reaction of one kind; the same tap twice is one row. 200 with the
+    recounted totals both times."""
+
+    return ApiService(repository).react_to_post(post_id, request, actor)
+
+
+@router.delete(
+    "/posts/{post_id}/reactions/{kind}",
+    response_model=PostReactionsResponse,
+    responses=ERRORS,
+)
+def unreact_to_post(
+    post_id: UUID,
+    kind: PostReactionKind,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> PostReactionsResponse:
+    """Take back one's own reaction. 200 with the totals rather than 204, so
+    the screen redraws from the server's count and not from its own."""
+
+    return ApiService(repository).unreact_to_post(post_id, kind, actor)
+
+
+@router.get(
+    "/posts/{post_id}/comments",
+    response_model=PostCommentListResponse,
+    responses=ERRORS,
+)
+def list_post_comments(
+    post_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    after: Annotated[str | None, Query()] = None,
+) -> PostCommentListResponse:
+    """Oldest first, one page; `after` continues forward."""
+
+    return ApiService(repository).list_post_comments(
+        post_id, actor, limit=limit, after=after
+    )
+
+
+@router.post(
+    "/posts/{post_id}/comments",
+    response_model=PostCommentResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=ERRORS,
+)
+def post_comment(
+    post_id: UUID,
+    request: PostCommentCreateRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> PostCommentResponse:
+    """Say something under a post one may read. 403 `comments_closed` when the
+    wall owner's policy shuts the composer for this reader."""
+
+    return ApiService(repository).post_comment(post_id, request, actor)
+
+
+@router.delete(
+    "/posts/{post_id}/comments/{comment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=ERRORS,
+)
+def delete_post_comment(
+    post_id: UUID,
+    comment_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> Response:
+    """The comment's author or the post's author; nobody else."""
+
+    ApiService(repository).delete_post_comment(post_id, comment_id, actor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

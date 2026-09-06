@@ -422,6 +422,49 @@ _TABLE: dict[str, dict] = {
     # of the four F42 audiences address people rather than a group, and
     # requiring group membership to write an `only_me` note would make the
     # narrowest level the one hardest to reach.
+    # ADR-0022 §2.2. Reading a post is proved by `post_audience.can_read`
+    # (the 404 gate, run before any of these); reacting needs nothing more.
+    # Commenting folds the wall owner's policy into `may_comment` through
+    # `post_audience.can_comment`; deleting a comment is for its author or the
+    # post's author (`can_delete_comment`).
+    "react_to_post": {
+        "roles": {"group_admin", "member"},
+        "requires": ("may_read_post",),
+    },
+    "comment_on_post": {
+        "roles": {"group_admin", "member"},
+        "requires": ("may_comment",),
+    },
+    "delete_post_comment": {
+        "roles": {"group_admin", "member"},
+        "requires": ("may_delete_comment",),
+    },
+    # ADR-0022 §2.1. A personal photograph is uploaded only by its owner and
+    # read by the owner or by somebody who may read a post that shows it --
+    # the service proves `is_photo_addressee` from the posts table.
+    "upload_personal_photo": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_self",),
+    },
+    "view_person_photo": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_photo_addressee",),
+    },
+    # ADR-0022 §2.3. A story is written by its author only; viewing is proved
+    # by `story_visibility.can_view` (the 404 gate, run before `view_story`);
+    # taking one down early is the author's alone.
+    "create_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_self",),
+    },
+    "view_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("may_view_story",),
+    },
+    "delete_own_story": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_author",),
+    },
     "create_post": {"roles": {"group_admin", "member"}, "requires": ()},
     # F42, and the only audience that needs a second permission. `create_post`
     # says the actor may write; this says they may point that writing at *this*

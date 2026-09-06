@@ -33,7 +33,7 @@ Backend do Claude làm theo uỷ quyền ADR-0016 §2.3; charter không đổi.
 4. Story quá hạn vẫn nằm trong bảng cho tới khi script vận hành `scripts/purge_expired_stories.py` xoá (hàng quá hạn > 7 ngày, kèm file ảnh không còn ai trỏ tới). Không có job nền trong request; không có `pg_cron`/trigger.
 
 ### 2.4 Chỗ đặt trên app
-Dải story ở đầu tab Tin nhắn (ô đầu là «Story của bạn»); trình xem là một route toàn màn (`fullScreenModal`) có thanh tiến trình, tự chuyển 5 giây (tôn trọng Reduce Motion), vuốt xuống đóng, gọi «đã xem» khi ảnh hiện. Bài có màn chi tiết `/posts/{id}` với bình luận theo cursor. Đăng bài và đăng story chọn ảnh từ thư viện, nén như ảnh nhóm (`nenLai`), **tải byte trước rồi mới tạo bài/story**.
+Dải story ở đầu tab Tin nhắn (ô đầu là «Đăng story», luôn có mặt kể cả khi dải rỗng hay lỗi; vòng «Story của bạn» chỉ hiện khi mình có story còn hạn); trình xem là một route toàn màn (`fullScreenModal`) có thanh tiến trình, tự chuyển 5 giây giữa các story của một tác giả (tôn trọng Reduce Motion) và dừng ở story cuối chứ không tự đóng; nút «Đóng story», Back hoặc chạm phải trên story cuối mới đóng; chạm phải/trái chuyển; gọi «đã xem» khi ảnh hiện. Bài có màn chi tiết `/posts/{id}` với bình luận theo cursor. Đăng bài và đăng story chọn ảnh từ thư viện, nén như ảnh nhóm (`nenLai`), **tải byte trước rồi mới tạo bài/story**.
 
 ## 3. Hệ quả
 
@@ -67,5 +67,5 @@ Dải story ở đầu tab Tin nhắn (ô đầu là «Story của bạn»); tr�
 - Postgres: unique phản ứng; hai `GROUP BY` không nhân bản; gate ảnh cá nhân qua `_readable_by` thật (người lạ 404, bạn 200, **cùng ảnh sau khi bài bị xoá → 404**); backfill `purpose` và `get_latest_avatar` không trả ảnh `personal`; story: `_now` giả +24h+1s → rỗng; story của người không phải bạn «không rời DB»; gate ảnh qua story còn hạn 200 / hết hạn 404; PK `story_views`.
 - API: mọi route có `{post_id}` hoặc `{story_id}` với người lạ chỉ trả 404/422, không bao giờ 403 (duyệt `app.routes`, không liệt kê tay); kỷ niệm/tin nhắn từ chối URL cá nhân 422.
 - E2E node: `story-het-han.test.mjs` đăng story rồi `UPDATE expires_at` thẳng vào DB dùng-một-lần của lượt đo → `GET /stories` rỗng (biến `MOBILE_E2E_DATABASE_URL` thêm vào `e2e_slice.sh`). Không có route chỉ-dev để tua thời gian.
-- Emulator: flow 42 (bình luận, tim, ảnh trên bài, đổi policy → ô soạn biến mất), flow 43 (dải story, xem, đã xem; 43b mở lại sau khi hết hạn qua `--db-url`), canary curl (người lạ đọc ảnh → 404; policy `nobody` → 403 và `can_comment=false`).
+- Emulator: flow 42 (bình luận, tim, ảnh trên bài, đổi policy → ô soạn biến mất), flow 43 (dải story, xem, đã xem; `_43b` mở lại sau khi `kiem_may_chu_sau_43` tua story qua hạn thẳng trong DB qua `MOBILE_DATABASE_URL` của stack dùng-một-lần; thiếu URL thì bảng đỏ, không phải bỏ qua), canary curl (người lạ đọc ảnh → 404; policy `nobody` → 403 và `can_comment=false`).
 - Đột biến phải đỏ: bỏ `NOT EXISTS`/EXISTS trong gate ảnh → ca người lạ đỏ; đổi 404 thành 403 ở `read_post` → ca «không bao giờ 403» đỏ; thêm `server_default` cho `expires_at` → test AST đỏ; bỏ lọc `purpose` ở `get_latest_avatar` → ca avatar đỏ.

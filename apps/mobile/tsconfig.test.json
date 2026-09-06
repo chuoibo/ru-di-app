@@ -294,6 +294,14 @@
     "src/rudi/chat/nhom-cai-dat.ts",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
+    // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
+    // wall owner's comment policy -- pure copy and the six routes.
+    "src/rudi/tuong/bai-chi-tiet.ts",
+    "src/rudi/nguoi/anh-ca-nhan.ts",
+    "src/rudi/nguoi/chinh-sach-tuong.ts",
+    // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
+    // deadline check that must be strict at the exact second like the server.
+    "src/rudi/story/story.ts",
     // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
     // reuses. Compiled so the test can prove they go through the bearer.
     "src/screens/quan-tri/quan-tri.ts"

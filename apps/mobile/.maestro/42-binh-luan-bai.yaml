@@ -1,0 +1,80 @@
+# Bình luận, phản ứng và ảnh trên bài đăng (L3, ADR-0022 §2.1–2.2) trên API prod.
+#
+# Chạy SAU flow 41 trong cùng lượt, với người đang đăng nhập (C nếu 37 đã chạy,
+# D nếu không). Harness đã chuẩn bị bằng curl cho đúng người ấy (chuan_bi_bai_cho_42):
+# một ảnh cá nhân tải lên `POST /people/me/photos` và một bài «Bai co anh QA»
+# mức «Bạn bè» trỏ vào ảnh ấy. Flow: Cá nhân → «Bài bạn đã đăng và ai đọc được»
+# → «Mở bài: Bai co anh QA» → màn chi tiết có «Ảnh bài đăng» (không phải khung
+# «Chưa tải được ảnh») → bấm «Thích» → chip đọc «❤️ 1» → viết «Binh luan QA» →
+# «Gửi bình luận» → bình luận hiện → chụp → quay lại → dòng «… · 1 tim · 1 bình
+# luận» → trên tường của mình đổi «Ai được bình luận tường tôi» sang «Không ai»
+# rồi trả về «Ai đọc được bài» → «Đăng bài mới» có nút «Chọn ảnh» (không lái
+# bộ chọn ảnh của hệ thống).
+#
+# Harness kiểm máy chủ sau flow (kiem_may_chu_sau_42): người kia đọc bài thấy
+# comment_count ≥ 1, ❤ ≥ 1, can_comment = true và mở được ảnh (200); B (không
+# phải bạn) mở ảnh → 404; canary: chủ tường đặt «nobody» → người kia bình luận
+# → 403 và can_comment = false; rồi trả lại «readers».
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Cá nhân"
+- extendedWaitUntil:
+    visible: "Bài bạn đã đăng và ai đọc được"
+    timeout: 30000
+- tapOn: "Bài bạn đã đăng và ai đọc được"
+- extendedWaitUntil:
+    visible: "Mở bài: Bai co anh QA"
+    timeout: 60000
+- tapOn: "Mở bài: Bai co anh QA"
+- extendedWaitUntil:
+    visible: "Ảnh bài đăng"
+    timeout: 60000
+- assertNotVisible: "Chưa tải được ảnh"
+- assertVisible: "Ô viết bình luận"
+- tapOn: "Thích"
+- extendedWaitUntil:
+    visible: "❤️ 1"
+    timeout: 30000
+- tapOn: "Ô viết bình luận"
+- inputText: "Binh luan QA"
+- hideKeyboard
+- tapOn: "Gửi bình luận"
+- extendedWaitUntil:
+    visible: "Binh luan QA"
+    timeout: 30000
+- assertVisible: "1 tim · 1 bình luận"
+- takeScreenshot: 42-chi-tiet-bai
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Hồ sơ của bạn"
+    timeout: 30000
+- assertVisible: ".* · 1 tim · 1 bình luận"
+# Chính sách bình luận của tường mình: đổi rồi trả lại (canary curl đo phần máy chủ).
+- tapOn: "Bình luận: Không ai"
+- extendedWaitUntil:
+    visible: "Tường chỉ để kể; không ai bình luận, kể cả bạn bè."
+    timeout: 30000
+- takeScreenshot: 42-chinh-sach
+- tapOn: "Bình luận: Ai đọc được bài"
+- extendedWaitUntil:
+    visible: "Ai đọc được bài thì bình luận được."
+    timeout: 30000
+- tapOn: "Đăng bài mới"
+- extendedWaitUntil:
+    visible: "Ai đọc được?"
+    timeout: 30000
+- assertVisible: "Chọn ảnh"
+- takeScreenshot: 42-dang-bai-co-anh

@@ -1585,6 +1585,16 @@ export async function taiAnhDaiDien(
   return guiAnhLen(`/people/${personId}/avatar`, photo, headers);
 }
 
+/**
+ * A photograph of one's own, for a post (ADR-0022 §2.1). `me` on purpose: the
+ * owner is the session. The answer's `url` is what `POST /posts` takes; nobody
+ * but the owner can read it until a post that shows it is readable.
+ */
+export async function taiAnhCaNhanLen(photo: { uri: string }, actorId: string): Promise<AnhDaTai> {
+  const { "Content-Type": _dropped, ...headers } = actorHeaders(actorId, "member");
+  return guiAnhLen("/people/me/photos", photo, headers);
+}
+
 /** Where a person's avatar lives, whether or not one has been uploaded.
  *
  * Always the same string for the same person. A 404 is the ordinary answer for

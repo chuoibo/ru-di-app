@@ -37,6 +37,30 @@ RelativePhotoUrl = Annotated[
         )
     ),
 ]
+_UUID_RE = (
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+#: ADR-0022 §2.1. A person's own photograph, read behind «may this reader
+#: read a post that shows it». `RelativePhotoUrl` above stays group-only on
+#: purpose: memories, chat and albums never accept this shape.
+PersonPhotoUrl = Annotated[
+    StrictStr, Field(pattern=rf"\A/people/{_UUID_RE}/photos/{_UUID_RE}\z")
+]
+#: What a post may show: a personal photograph, or a group's photograph on a
+#: post addressed to that same group (checked in the service).
+PostPhotoUrl = Annotated[
+    StrictStr,
+    Field(
+        pattern=(
+            rf"\A(/contexts/{_UUID_RE}/photos/{_UUID_RE}"
+            rf"|/people/{_UUID_RE}/photos/{_UUID_RE})\z"
+        )
+    ),
+]
+#: ADR-0022 §2.2: the wall owner's choice of who may comment. The CHECK on
+#: `people.wall_comment_policy` and `post_audience.COMMENT_POLICIES` spell
+#: the same three words.
+WallCommentPolicy = Literal["readers", "friends", "nobody"]
 
 
 class ApiModel(BaseModel):
@@ -732,6 +756,9 @@ class ProfileResponse(ApiModel):
     #: response: `PublicPersonResponse` deliberately does not carry them.
     interests: list[StrictStr]
     budget_band: StrictStr | None
+    #: ADR-0022 §2.2. The person's own setting; `PublicPersonResponse`
+    #: deliberately does not carry it.
+    wall_comment_policy: WallCommentPolicy = "readers"
 
 
 class InterestTagResponse(ApiModel):
@@ -804,10 +831,16 @@ class ProfileUpdateRequest(ApiModel):
     )
     bio: Annotated[StrictStr, Field(max_length=500)] | None = None
     city: Annotated[StrictStr, Field(max_length=120)] | None = None
+    wall_comment_policy: WallCommentPolicy | None = None
 
     @model_validator(mode="after")
     def _something_to_change(self) -> ProfileUpdateRequest:
-        if self.display_name is None and self.bio is None and self.city is None:
+        if (
+            self.display_name is None
+            and self.bio is None
+            and self.city is None
+            and self.wall_comment_policy is None
+        ):
             raise ValueError("cần ít nhất một trường để sửa")
         if self.display_name is not None and not self.display_name.strip():
             raise ValueError("tên hiển thị không được rỗng")
@@ -1156,6 +1189,61 @@ class UploadedImageResponse(ApiModel):
     created_at: datetime
 
 
+# --- 24-hour stories (ADR-0022 §2.3) ----------------------------------------
+
+StoryAudience = Literal["friends"]
+
+
+class StoryCreateRequest(ApiModel):
+    """One of one's own photographs, to one's friends, for 24 hours.
+
+    No `author_id`, no `expires_at`, no audience: the author is the actor,
+    the deadline is `story_visibility.expires_at_for`, and the audience is the
+    one word the product has. A caption is optional and short; the length is
+    the same 200 the CHECK on the table states.
+    """
+
+    image_url: PersonPhotoUrl
+    caption: Annotated[StrictStr, Field(max_length=200)] | None = None
+
+
+class StoryResponse(ApiModel):
+    id: UUID
+    author_id: UUID
+    author_display_name: str
+    image_url: str
+    caption: str | None
+    audience: StoryAudience
+    created_at: datetime
+    expires_at: datetime
+    #: Whether THIS reader has seen it, from `story_views`. Server-decided.
+    seen: bool
+
+
+class StoryAuthor(ApiModel):
+    id: UUID
+    display_name: str
+
+
+class StoryAuthorFeed(ApiModel):
+    author: StoryAuthor
+    stories: list[StoryResponse]
+    all_seen: bool
+
+
+class StoryFeedResponse(ApiModel):
+    """One's own first, then authors with something unseen, then the rest --
+    in `story_visibility.order_authors`'s order, so the rail draws the
+    server's order and never its own."""
+
+    authors: list[StoryAuthorFeed]
+
+
+class StorySeenResponse(ApiModel):
+    story_id: UUID
+    seen_at: datetime
+
+
 class MemoryCreateRequest(ApiModel):
     """A photograph onto the group's wall, optionally naming where it was taken.
 
@@ -1339,6 +1427,55 @@ class MemoryCommentListResponse(ApiModel):
     comments: list[MemoryCommentResponse]
 
 
+#: ADR-0022 §2.2: the same six kinds as a chat message.
+PostReactionKind = Literal["heart", "haha", "like", "wow", "sad", "fire"]
+
+
+class PostReactionCount(ApiModel):
+    kind: PostReactionKind
+    count: Annotated[int, Field(strict=True, ge=0)]
+
+
+class PostReactionRequest(ApiModel):
+    kind: PostReactionKind
+
+
+class PostReactionsResponse(ApiModel):
+    """The reactions under one post after a write, recounted from the rows."""
+
+    post_id: UUID
+    reactions: list[PostReactionCount]
+    my_reactions: list[PostReactionKind]
+
+
+class PostCommentCreateRequest(ApiModel):
+    """One field. No `author_id`: the writer is the actor the gateway proved."""
+
+    body: Annotated[StrictStr, Field(min_length=1, max_length=2000)]
+
+
+class PostCommentResponse(ApiModel):
+    """A comment as it goes to somebody who may read the post it sits under.
+    The body leaves the server only here and on the list below, both behind
+    the post's own `can_read`."""
+
+    id: UUID
+    post_id: UUID
+    author_id: UUID
+    author_display_name: StrictStr
+    body: StrictStr
+    created_at: datetime
+
+
+class PostCommentListResponse(ApiModel):
+    """Oldest first; `next_cursor` continues forward (newer)."""
+
+    post_id: UUID
+    comments: list[PostCommentResponse]
+    next_cursor: StrictStr | None
+    has_more: bool
+
+
 class PostCreateRequest(ApiModel):
     """F39/F42. What a person said, and who they addressed it to.
 
@@ -1365,7 +1502,9 @@ class PostCreateRequest(ApiModel):
     #: here is a claim; membership of it is checked server-side against the
     #: roster, never against the caller's `X-Actor-Contexts` header.
     context_id: UUID | None = None
-    image_url: RelativePhotoUrl | None = None
+    #: A personal photograph of the author's, or a group photograph when and
+    #: only when the post is addressed to that group (ADR-0022 §2.1).
+    image_url: PostPhotoUrl | None = None
 
 
 class PostResponse(ApiModel):
@@ -1384,6 +1523,14 @@ class PostResponse(ApiModel):
     body: str
     image_url: str | None
     created_at: datetime
+    #: ADR-0022 §2.2, all counted from the rows on every read and never stored.
+    #: `can_comment` is decided by the server for THIS reader from the wall
+    #: owner's policy; the client draws the composer from it and nothing else.
+    author_display_name: StrictStr = ""
+    reactions: list[PostReactionCount] = []
+    my_reactions: list[PostReactionKind] = []
+    comment_count: Annotated[int, Field(strict=True, ge=0)] = 0
+    can_comment: bool = False
 
 
 class PostListResponse(ApiModel):

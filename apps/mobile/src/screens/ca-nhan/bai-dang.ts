@@ -143,12 +143,17 @@ export async function layTuong(personId: string): Promise<Bai[]> {
 /** Write one post as this person. The actor is `personId`, never a body field. */
 export async function guiBai(
   personId: string,
-  form: FormDang,
+  form: FormDang & { imageUrl?: string | null },
   attempt: Attempt,
 ): Promise<Bai> {
   try {
     return await dangBai(
-      { body: form.body.trim(), audience: form.audience, contextId: form.contextId },
+      {
+        body: form.body.trim(),
+        audience: form.audience,
+        contextId: form.contextId,
+        imageUrl: form.imageUrl ?? null,
+      },
       personId,
       attempt,
     );

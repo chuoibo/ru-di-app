@@ -13,8 +13,9 @@
  * which would be a claim about the other person's wall this app cannot make.
  * `cauTuongRong` says only what is true: nothing here for you to read.
  */
-import { ApiError, docTuongNguoi, translatedAsActor, type PostWire } from "../../api";
+import { ApiError, docTuongNguoi, translatedAsActor } from "../../api";
 import { MUC_NGUOI_DOC, type Audience } from "../../screens/ca-nhan/bai-dang";
+import type { BaiWire } from "../tuong/bai-chi-tiet";
 
 /** What `GET /people/{id}` returns: no counts, no login methods, no phone. */
 export type HoSoNguoi = {
@@ -28,7 +29,8 @@ export type HoSoNguoi = {
 
 export type QuanHe = "self" | "friend" | "groupmate";
 
-export type Bai = PostWire;
+/** A post on a wall; the L3 keys (reactions, comment_count, can_comment) are absent on an older server. */
+export type Bai = BaiWire;
 
 /**
  * Refusals in words that name the next move.

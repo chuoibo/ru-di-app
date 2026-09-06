@@ -381,6 +381,8 @@ export type HoSoToi = {
     memories: number;
   };
   login_methods: string[];
+  /** ADR-0022 §2.2: who may comment on my posts; absent on a server older than L3. */
+  wall_comment_policy?: string;
 };
 
 const LOI_HO_SO: Record<string, string> = {

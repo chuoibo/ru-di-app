@@ -56,6 +56,7 @@ from app.api.routes import (
     screenshots,
     sessions,
     social_map,
+    stories,
     suggestions,
     votes,
 )
@@ -216,6 +217,7 @@ def create_app(
     application.include_router(screenshots.router)
     application.include_router(suggestions.router)
     application.include_router(social_map.router)
+    application.include_router(stories.router)
     application.include_router(votes.router)
     application.include_router(albums.router)
     application.include_router(preferences.router)

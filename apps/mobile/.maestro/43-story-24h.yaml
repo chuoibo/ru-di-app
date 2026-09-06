@@ -1,0 +1,64 @@
+# Story 24 giờ (L4, ADR-0022 §2.3) trên API prod.
+#
+# Chạy SAU flow 42 trong cùng lượt, với người đang đăng nhập (C nếu 37 đã chạy,
+# D nếu không). Harness đã chuẩn bị bằng curl cho NGƯỜI KIA (bạn của người lái,
+# chuan_bi_story_cho_43): một ảnh cá nhân tải lên `POST /people/me/photos` rồi
+# `POST /stories {caption: "Story QA"}`. Flow: Tin nhắn → dải story có vòng
+# «Story của <tên người kia>, chưa xem» → bấm → viewer hiện ảnh («Ảnh story») và
+# chú thích «Story QA» → chụp → Back → vòng đọc «…, đã xem» → «Đăng story mới» →
+# màn soạn có «Ô chú thích» và «Chọn ảnh» (không lái bộ chọn ảnh hệ thống) →
+# chụp → Back.
+#
+# Tên người kia là «An QA» (C) hay «Ban QA» (D) tuỳ người lái, nên khớp bằng
+# regex trọn node.
+#
+# Harness kiểm máy chủ sau flow (kiem_may_chu_sau_43): người lái GET /stories
+# thấy nhóm của người kia all_seen = true; B (không phải bạn) GET /stories không
+# có tác giả ấy và mở ảnh story → 404 cùng câu với ảnh không tồn tại; rồi tua
+# hết hạn thẳng trong DB (--db-url) → GET /stories của người lái không còn tác
+# giả ấy → flow _43b mở lại app và dải không còn vòng.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Đăng story"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Story của (An|Ban) QA, chưa xem"
+    timeout: 60000
+- takeScreenshot: 43-dai-story
+- tapOn: "Story của (An|Ban) QA, chưa xem"
+- extendedWaitUntil:
+    visible: "Ảnh story"
+    timeout: 60000
+- assertVisible: "Story QA"
+- assertVisible: "Đóng story"
+- takeScreenshot: 43-xem-story
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Story của (An|Ban) QA, đã xem"
+    timeout: 30000
+- tapOn: "Đăng story mới"
+- extendedWaitUntil:
+    visible: "Ô chú thích"
+    timeout: 30000
+- assertVisible: "Chọn ảnh"
+- assertVisible: "Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ."
+- takeScreenshot: 43-soan-story
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Đăng story"
+    timeout: 30000
