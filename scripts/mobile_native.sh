@@ -310,6 +310,14 @@ except Exception: print("(không phải JSON)")' "$tep" 2>/dev/null)"
   return 1
 }
 
+# Flow NN đã chạy trong lượt này chưa. Định nghĩa Ở ĐÂY, trước vòng lặp flow:
+# bash chỉ biết một hàm từ dòng định nghĩa nó trở đi, và `chuan_bi_bai_cho_42`
+# gọi hàm này TRONG vòng lặp — khi định nghĩa còn nằm sau vòng lặp, `if da_chay
+# 37` là «command not found» bị `if` nuốt im lặng và người lái của flow 42 thành
+# người D (lượt 2026-09-06: bảng L3 đỏ «Mở bài: Bai co anh QA» vì bài được đăng
+# cho D trong khi máy đang là C).
+da_chay() { case "$DA_CHAY_TEN" in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
+
 # Sau flow 20 (--live): người seed vừa xem «Team Đà Lạt» trên máy. Hỏi máy chủ
 # với tư cách người đó — nhóm 8 người, phần và khoản sẽ nhận đúng bill Xóm Lèo chia 8, một đợt thu
 # đã phát với 7 nghĩa vụ — chứ không đọc từ màn hình. Contexts hỏi lại bằng token
@@ -677,6 +685,10 @@ def tuong(chu_so_huu, token):
 
 BAI_BAN = "Chuyen QA cho ban be"
 BAI_RIENG = "Chi minh toi QA"
+# Flow 42's harness posts one more «Bạn bè» post for the same author (a photo
+# post the screen needs). It is legitimately visible to the other person and is
+# not what this check is about, so it is left out of the count.
+BAI_ANH_42 = "Bai co anh QA"
 nguoi = {"C": (os.environ["MC_ID_C"], os.environ["MC_TOK_C"]), "D": (os.environ["MC_ID_D"], os.environ["MC_TOK_D"])}
 
 tac_gia = None
@@ -694,7 +706,7 @@ else:
     print("%s|%s|%d|%d|%d" % (
         tac_gia,
         nguoi_kia,
-        len(than_kia),
+        len([b for b in than_kia if b != BAI_ANH_42]),
         1 if BAI_BAN in than_kia else 0,
         1 if BAI_RIENG in than_kia else 0,
     ))
@@ -706,7 +718,7 @@ PYCHECK
   IFS='|' read -r tac_gia nguoi_kia so_bai thay_ban thay_rieng <<< "$ket"
   [ "$thay_ban" = "1" ] || hong "sau flow 33: $nguoi_kia không đọc được bài «Bạn bè» của $tac_gia."
   [ "$thay_rieng" = "0" ] || hong "sau flow 33: $nguoi_kia ĐỌC ĐƯỢC bài «Chỉ mình tôi» của $tac_gia — mức người đọc thủng."
-  [ "$so_bai" = "1" ] || hong "sau flow 33: $nguoi_kia thấy $so_bai bài trên tường $tac_gia, mong đúng 1."
+  [ "$so_bai" = "1" ] || hong "sau flow 33: $nguoi_kia thấy $so_bai bài trên tường $tac_gia (không kể bài ảnh của flow 42), mong đúng 1."
   echo "máy chủ xác nhận: $tac_gia đăng hai bài; $nguoi_kia đọc được đúng bài «Bạn bè» và không đọc được bài «Chỉ mình tôi»"
 }
 
@@ -985,6 +997,105 @@ print(len([m for m in ms if m.get("kind") == "text" and m.get("body") == "Chao r
       -H "Authorization: Bearer $tok_lai" -H "Idempotency-Key: canary-leave-$ctx")"
   [ "$rc" = "409" ] || hong "canary 41: rời cặp nhận HTTP $rc, mong 409."
   echo "canary 41 đỏ đúng chỗ: DM với người chưa là bạn → 404 một câu, đổi tên/rời cặp → 409"
+}
+
+# Trước flow 42 (L3, ADR-0022): người đang lái (C nếu 37 đã chạy, D nếu không)
+# cần một bài «Bai co anh QA» mức «Bạn bè» có ảnh cá nhân. Flow không lái được
+# bộ chọn ảnh của hệ thống, nên ảnh đi lên bằng curl: một PNG sinh tại chỗ →
+# `POST /people/me/photos` → `POST /posts` trỏ vào url ấy.
+chuan_bi_bai_cho_42() {
+  local goc lai body tok anh url rc
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then lai="$OTP_PHONE_C"; else lai="$OTP_PHONE_D"; fi
+  body="$(dang_nhap_curl "$lai")" || hong "trước flow 42: người lái không đăng nhập được qua curl."
+  tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  [ -n "$tok" ] || hong "trước flow 42: thân phiên không có token."
+  anh="$(mktemp --suffix=.png)"
+  python3 - "$anh" <<'PYPNG'
+import struct, sys, zlib
+
+# 96x96 solid coral PNG, built here so no image bytes live in the repo.
+w = h = 96
+raw = b"".join(b"\x00" + bytes([0xC9, 0x39, 0x00]) * w for _ in range(h))
+
+def khoi(ten, than):
+    return struct.pack(">I", len(than)) + ten + than + struct.pack(">I", zlib.crc32(ten + than) & 0xFFFFFFFF)
+
+png = b"\x89PNG\r\n\x1a\n"
+png += khoi(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+png += khoi(b"IDAT", zlib.compress(raw, 9))
+png += khoi(b"IEND", b"")
+open(sys.argv[1], "wb").write(png)
+PYPNG
+  url="$(curl -sS -X POST "$goc/people/me/photos" -H "Authorization: Bearer $tok" \
+      -F "file=@$anh;type=image/png" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("url",""))')"
+  rm -f "$anh"
+  case "$url" in
+    /people/*/photos/*) : ;;
+    *) hong "trước flow 42: tải ảnh cá nhân không trả về địa chỉ ảnh (nhận «$url»)." ;;
+  esac
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/posts" -H "Authorization: Bearer $tok" \
+      -H "Content-Type: application/json" -H "Idempotency-Key: qa-bai-anh-$$-$RANDOM" \
+      -d "{\"body\":\"Bai co anh QA\",\"audience\":\"friends\",\"image_url\":\"$url\"}")"
+  [ "$rc" = "201" ] || hong "trước flow 42: đăng bài có ảnh nhận HTTP $rc, mong 201."
+  echo "trước flow 42: đã tải một ảnh cá nhân và đăng «Bai co anh QA» (bạn bè) cho người lái"
+}
+
+# Sau flow 42: người lái vừa thích, bình luận và đổi chính sách rồi trả lại.
+# Hỏi máy chủ với NGƯỜI KIA (bạn của người lái): đọc được bài, thấy ≥1 ❤ và ≥1
+# bình luận, can_comment = true, mở được ảnh (200). B (không phải bạn) mở ảnh →
+# 404 cùng câu với ảnh không tồn tại. Canary: chủ tường đặt «nobody» → người kia
+# bình luận → 403 comments_closed và can_comment = false; trả lại «readers».
+kiem_may_chu_sau_42() {
+  local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket bai_id anh_url so_bl so_tim co_bl body_b tok_b rc than
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 42: người lái không đăng nhập được qua curl."
+  body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 42: người kia không đăng nhập được qua curl."
+  tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  id_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
+  tok_kia="$(printf '%s' "$body_kia" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  [ -n "$tok_lai" ] && [ -n "$id_lai" ] && [ -n "$tok_kia" ] || hong "sau flow 42: thân phiên thiếu token/person_id."
+  ket="$(curl -sS "$goc/people/$id_lai/posts?limit=50" -H "Authorization: Bearer $tok_kia" | python3 -c '
+import json, sys
+ps = [p for p in json.load(sys.stdin).get("posts", []) if p.get("body") == "Bai co anh QA"]
+if not ps:
+    print("||0|0|false")
+else:
+    p = ps[0]
+    tim = sum(r.get("count", 0) for r in p.get("reactions", []) if r.get("kind") == "heart")
+    print("%s|%s|%d|%d|%s" % (p["id"], p.get("image_url") or "", p.get("comment_count", 0), tim, str(p.get("can_comment")).lower()))')"
+  IFS='|' read -r bai_id anh_url so_bl so_tim co_bl <<< "$ket"
+  [ -n "$bai_id" ] || hong "sau flow 42: người kia không đọc được bài «Bai co anh QA» của người lái (bạn bè)."
+  [ "${so_bl:-0}" -ge 1 ] || hong "sau flow 42: bài có $so_bl bình luận, mong ≥ 1."
+  [ "${so_tim:-0}" -ge 1 ] || hong "sau flow 42: bài có $so_tim ❤, mong ≥ 1."
+  [ "$co_bl" = "true" ] || hong "sau flow 42: can_comment của người kia là «$co_bl», mong true (chính sách đã trả về readers)."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_kia")"
+  [ "$rc" = "200" ] || hong "sau flow 42: người kia (bạn) mở ảnh bài nhận HTTP $rc, mong 200."
+  echo "máy chủ xác nhận: người kia đọc bài «Bai co anh QA» thấy $so_tim ❤, $so_bl bình luận, can_comment=true, ảnh 200"
+  # Canary 1: B (flow 23, không phải bạn) mở ảnh → 404, cùng câu với ảnh không tồn tại.
+  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 42: B không đăng nhập được qua curl."
+  tok_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  than="$(mktemp)"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_b")"
+  [ "$rc" = "404" ] || { rm -f "$than"; hong "canary 42: người không phải bạn mở ảnh nhận HTTP $rc, mong 404."; }
+  ket="$(cat "$than")"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc/people/$id_lai/photos/0a0a0a0a-0a0a-4a0a-8a0a-0a0a0a0a0a0a" -H "Authorization: Bearer $tok_b")"
+  [ "$rc" = "404" ] && [ "$(cat "$than")" = "$ket" ] || { rm -f "$than"; hong "canary 42: ảnh không tồn tại và ảnh bị từ chối không cùng một câu."; }
+  rm -f "$than"
+  # Canary 2: chủ tường đóng tường → người kia bình luận 403 và can_comment=false; rồi mở lại.
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$goc/people/me" -H 'Content-Type: application/json' \
+      -H "Authorization: Bearer $tok_lai" -H "Idempotency-Key: canary-policy-nobody-$bai_id" -d '{"wall_comment_policy":"nobody"}')"
+  [ "$rc" = "200" ] || hong "canary 42: đặt chính sách nobody nhận HTTP $rc."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$goc/posts/$bai_id/comments" -H 'Content-Type: application/json' \
+      -H "Authorization: Bearer $tok_kia" -H "Idempotency-Key: canary-comment-$bai_id" -d '{"body":"canary"}')"
+  [ "$rc" = "403" ] || hong "canary 42: bình luận khi tường đóng nhận HTTP $rc, mong 403."
+  co_bl="$(curl -sS "$goc/posts/$bai_id" -H "Authorization: Bearer $tok_kia" | python3 -c 'import json,sys;print(str(json.load(sys.stdin).get("can_comment")).lower())')"
+  [ "$co_bl" = "false" ] || hong "canary 42: can_comment khi tường đóng là «$co_bl», mong false."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$goc/people/me" -H 'Content-Type: application/json' \
+      -H "Authorization: Bearer $tok_lai" -H "Idempotency-Key: canary-policy-readers-$bai_id" -d '{"wall_comment_policy":"readers"}')"
+  [ "$rc" = "200" ] || hong "canary 42: trả chính sách về readers nhận HTTP $rc."
+  echo "canary 42 đỏ đúng chỗ: người ngoài mở ảnh → 404 một câu, tường đóng → 403 và can_comment=false"
 }
 
 kiem_may_chu_sau_30() {
@@ -1521,7 +1632,7 @@ for f in "$FLOWS"/*.yaml; do
     # môi trường chứ không phải vì app sai. `--live` chạy đúng và chỉ nhóm này.
     20-*)        [ "$LIVE" = 1 ] || continue ;;
     21-*)        [ "$DANG_NHAP" = 1 ] || continue ;;
-    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*) [ "$OTP" = 1 ] || continue ;;
+    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*) [ "$OTP" = 1 ] || continue ;;
     # Under the keyboard negative control the composer is meant to be covered,
     # so a flow that has to tap it (30, 40) would only fail for the reason the
     # probe already measures. The table for --tat-kav is the sign-in leg + 31.
@@ -1535,6 +1646,7 @@ for f in "$FLOWS"/*.yaml; do
   # + tin nhắn kind=image) qua curl.
   case "$ten" in
     34-*) chuan_bi_anh_cho_34 ;;
+    42-*) chuan_bi_bai_cho_42 ;;
     38-*) chuan_bi_anh_nhom_cho_38 ;;
   esac
   DA_CHAY=$((DA_CHAY + 1))
@@ -1603,8 +1715,6 @@ fi
 # Chỉ kiểm những flow ĐÃ chạy. Trên bảng đầy đủ đây là mọi phép kiểm, không đổi
 # gì; trên bảng mini nó là khác nhau giữa «đo được cái vừa lái» và một câu đỏ về
 # một flow không có mặt (lượt 2026-09-06: bảng 22+26+38 đỏ ở kiem_may_chu_sau_24).
-da_chay() { case "$DA_CHAY_TEN" in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
-
 # Bảy phép kiểm dưới đây hỏi máy chủ về NGƯỜI D, còn flow của chúng lại chạy
 # trên phiên đang sống. Hai thứ ấy chỉ là một khi flow 25 đã đổi phiên sang D
 # — flow 22 đăng nhập bằng OTP_PHONE, không phải OTP_PHONE_D. Trên bảng đầy đủ
@@ -1637,6 +1747,7 @@ if [ "$OTP" = 1 ]; then
   da_chay 37 && kiem_can_25 kiem_may_chu_sau_37 && kiem_may_chu_sau_37
   da_chay 39 && kiem_can_25 kiem_may_chu_sau_39 && kiem_may_chu_sau_39
   da_chay 41 && kiem_can_25 kiem_may_chu_sau_41 && kiem_may_chu_sau_41
+  da_chay 42 && kiem_can_25 kiem_may_chu_sau_42 && kiem_may_chu_sau_42
   { [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
   [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
   canary_otp

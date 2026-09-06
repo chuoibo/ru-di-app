@@ -959,6 +959,14 @@ class Person(Base):
     """
 
     __tablename__ = "people"
+    __table_args__ = (
+        # ADR-0022 §2.2: who may comment on this person's posts. The other
+        # spelling of `app.domain.post_audience.COMMENT_POLICIES`.
+        CheckConstraint(
+            "wall_comment_policy IN ('readers', 'friends', 'nobody')",
+            name="wall_comment_policy_known",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -974,6 +982,12 @@ class Person(Base):
     # the midpoint of an odd range is half a đồng. NULL is «did not answer»,
     # which is not the cheapest band -- nothing is assumed from silence.
     budget_band: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Who may comment on this person's posts (ADR-0022 §2.2): `readers`
+    #: (anyone who may read the post), `friends`, or `nobody`. The person's
+    #: own setting; `GET /people/{id}` never carries it.
+    wall_comment_policy: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="readers", default="readers"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -1425,11 +1439,29 @@ class UploadedImage(Base):
             desc("created_at"),
             postgresql_where=text("context_id IS NOT NULL"),
         ),
+        # ADR-0022 §2.1: what a person's photograph is FOR. Without it the
+        # newest owner-attached image is the avatar, so posting a picture
+        # would silently change one's face. Group photographs are `group`
+        # and only they carry a `context_id`.
+        CheckConstraint(
+            "purpose IN ('group', 'avatar', 'personal')",
+            name="image_purpose_known",
+        ),
+        CheckConstraint(
+            "(purpose = 'group') = (context_id IS NOT NULL)",
+            name="image_purpose_matches_owner",
+        ),
         Index(
             "ix_uploaded_images_avatar",
             "owner_person_id",
             desc("created_at"),
-            postgresql_where=text("owner_person_id IS NOT NULL"),
+            postgresql_where=text("owner_person_id IS NOT NULL AND purpose = 'avatar'"),
+        ),
+        Index(
+            "ix_uploaded_images_personal",
+            "owner_person_id",
+            desc("created_at"),
+            postgresql_where=text("purpose = 'personal'"),
         ),
     )
 
@@ -1451,6 +1483,9 @@ class UploadedImage(Base):
         UUID(as_uuid=True),
         ForeignKey("people.id", name="fk_uploaded_images_uploaded_by"),
         nullable=False,
+    )
+    purpose: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="group", default="group"
     )
     content_type: Mapped[str] = mapped_column(Text, nullable=False)
     byte_size: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -2119,6 +2154,81 @@ class PostAudience(StrEnum):
     PUBLIC = "public"
 
 
+class PostReaction(Base):
+    """ADR-0022 §2.2. One person's reaction of one kind to one post.
+
+    Same six kinds as a chat message, and the same shape as `MemoryReaction`
+    with a `kind` added: `(post_id, person_id, kind)` is unique, so a double
+    tap is a no-op held by the database rather than by an `if exists`. No
+    count is stored anywhere; the wall counts the rows on every read.
+    """
+
+    __tablename__ = "post_reactions"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('heart', 'haha', 'like', 'wow', 'sad', 'fire')",
+            name="post_reaction_kind_known",
+        ),
+        UniqueConstraint(
+            "post_id", "person_id", "kind", name="uq_post_reactions_one_per_kind"
+        ),
+        Index("ix_post_reactions_post", "post_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("posts.id", name="fk_post_reactions_post", ondelete="CASCADE"),
+        nullable=False,
+    )
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("people.id", name="fk_post_reactions_person"),
+        nullable=False,
+    )
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PostComment(Base):
+    """ADR-0022 §2.2. What somebody said under a post.
+
+    The body is at the rank of a chat message: it goes out only on the
+    comment routes, which sit behind the post's own `can_read`, and it never
+    reaches a log line or an error. No edit and no soft delete, for the
+    reason `MemoryComment` gives.
+    """
+
+    __tablename__ = "post_comments"
+    __table_args__ = (
+        CheckConstraint("body <> ''", name="post_comment_body_not_blank"),
+        # «This post's comments, oldest first»: a conversation runs forward.
+        Index("ix_post_comments_post", "post_id", "created_at", "id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    post_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("posts.id", name="fk_post_comments_post", ondelete="CASCADE"),
+        nullable=False,
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("people.id", name="fk_post_comments_author"),
+        nullable=False,
+    )
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class Post(Base):
     """F39. One thing a person said, addressed to one audience.
 
@@ -2154,6 +2264,13 @@ class Post(Base):
         ),
         # "This person's wall, newest first" -- the profile read.
         Index("ix_posts_author_feed", "author_id", desc("created_at"), desc("id")),
+        # ADR-0022 §2.1: «is there a post showing this photograph that the
+        # reader may read» is the lookup that opens a personal photo.
+        Index(
+            "ix_posts_image_url",
+            "image_url",
+            postgresql_where=text("image_url IS NOT NULL"),
+        ),
         # "What may I read", answered per audience. The partial predicate keeps
         # the three non-group audiences out of an index that only serves the
         # group one, and `only_me` rows out of both: they are reachable by

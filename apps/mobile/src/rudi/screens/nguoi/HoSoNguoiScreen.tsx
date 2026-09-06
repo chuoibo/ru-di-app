@@ -12,11 +12,15 @@
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { Image } from "expo-image";
 
 import { attemptFor, type Attempt } from "../../../api";
-import { ganDanhSachNhom } from "../../../phien";
+import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
 import { chuDau } from "../../../screens/ca-nhan/ban-be";
+import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
+import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import {
   cauNgayVao,
   cauQuanHe,
@@ -31,6 +35,7 @@ import {
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
+import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
 import { Card, Chip, Divider, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 type TrangHoSo =
@@ -59,6 +64,35 @@ export function HoSoNguoiScreen() {
   const [dangMoChat, setDangMoChat] = useState(false);
   const [loiChat, setLoiChat] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  // ADR-0022 §2.2: on one's own wall, who may comment. Read from `/people/me`
+  // (the public profile never carries it) and written with one PATCH.
+  const [chinhSach, setChinhSach] = useState<ChinhSachBinhLuan | null>(null);
+  const [dangDoiChinhSach, setDangDoiChinhSach] = useState(false);
+  const [loiChinhSach, setLoiChinhSach] = useState<string | null>(null);
+
+  const napChinhSach = useCallback(async () => {
+    if (phien === null || personId !== phien.person_id) return;
+    try {
+      const toi = await docHoSoToi(phien.person_id);
+      setChinhSach(laChinhSach(toi.wall_comment_policy) ? toi.wall_comment_policy : "readers");
+    } catch {
+      // The wall still draws; the chips wait for the next focus.
+    }
+  }, [personId, phien]);
+
+  const doiChinhSach = async (moi: ChinhSachBinhLuan) => {
+    if (phien === null || dangDoiChinhSach || moi === chinhSach) return;
+    setDangDoiChinhSach(true);
+    setLoiChinhSach(null);
+    try {
+      const sau = await datChinhSachBinhLuan(moi, phien.person_id, attemptFor(attempts.current, `chinh-sach:${moi}`));
+      setChinhSach(sau.wall_comment_policy);
+    } catch (error) {
+      setLoiChinhSach(loiRaChu(error));
+    } finally {
+      setDangDoiChinhSach(false);
+    }
+  };
 
   const nhanTin = async () => {
     if (phien === null || personId === "" || dangMoChat) return;
@@ -99,7 +133,8 @@ export function HoSoNguoiScreen() {
     useCallback(() => {
       void napHoSo();
       void napTuong();
-    }, [napHoSo, napTuong]),
+      void napChinhSach();
+    }, [napHoSo, napTuong, napChinhSach]),
   );
 
   if (!phienDaDoc) return null;
@@ -160,6 +195,26 @@ export function HoSoNguoiScreen() {
                 />
               </View>
             ) : null}
+            {hoSo.hoSo.relation === "self" ? (
+              <View style={[styles.khoangTren, styles.chinhSach]}>
+                <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
+                <View accessibilityRole="radiogroup" style={styles.chips}>
+                  {CHINH_SACH.map((c) => (
+                    <Chip
+                      accessibilityLabel={`Bình luận: ${c.nhan}`}
+                      key={c.id}
+                      label={c.nhan}
+                      onPress={() => void doiChinhSach(c.id)}
+                      selected={chinhSach === c.id}
+                    />
+                  ))}
+                </View>
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                  {CHINH_SACH.find((c) => c.id === chinhSach)?.giaiThich ?? "Đang đọc cài đặt của tường…"}
+                </Text>
+                {loiChinhSach ? <Text style={[typography.caption, { color: colors.warn }]}>{loiChinhSach}</Text> : null}
+              </View>
+            ) : null}
             {hoSo.hoSo.relation === "friend" ? (
               <View style={[styles.khoangTren, styles.khoiChat]}>
                 <RudiButton
@@ -210,12 +265,25 @@ export function HoSoNguoiScreen() {
               {tuong.bai.map((bai, i) => (
                 <View key={bai.id}>
                   {i > 0 ? <Divider /> : null}
-                  <View style={styles.bai}>
+                  <Pressable
+                    accessibilityLabel={`Mở bài: ${bai.body}`}
+                    accessibilityRole="button"
+                    onPress={() => router.push(`/posts/${bai.id}` as never)}
+                    style={styles.bai}
+                  >
                     <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
+                    {bai.image_url ? (
+                      <Image
+                        accessibilityLabel="Ảnh bài đăng"
+                        contentFit="cover"
+                        source={nguonAnhBai(bai.image_url, phien?.person_id ?? "")}
+                        style={[styles.anhBai, { borderRadius: 12 }]}
+                      />
+                    ) : null}
                     <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                      {dongPhuBai(bai)}
+                      {dongPhuBai(bai)} · {cauTuongTacBai(bai)}
                     </Text>
-                  </View>
+                  </Pressable>
                 </View>
               ))}
             </Card>
@@ -235,4 +303,6 @@ const styles = StyleSheet.create({
   bai: { gap: 6, paddingVertical: 10 },
   khoangTren: { marginTop: 4 },
   khoiChat: { gap: 6 },
+  chinhSach: { gap: 8 },
+  anhBai: { width: "100%", aspectRatio: 4 / 3 },
 });

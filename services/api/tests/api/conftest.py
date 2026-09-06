@@ -63,7 +63,10 @@ from app.api.repository import (
     PersonRecord,
     PlacePhotoRecord,
     PlaceRecord,
+    PostCommentRecord,
+    PostReactionRecord,
     PostRecord,
+    PostSocialCounts,
     ProfileCounts,
     PublishObligation,
     ReadMarkRecord,
@@ -71,6 +74,7 @@ from app.api.repository import (
     ReceiptTarget,
     SavedPlaceRecord,
     StoredGuestLink,
+    UploadedImageRecord,
 )
 from app.domain.capability import capability_scope
 from app.domain.direct import display_name_for
@@ -268,6 +272,11 @@ class FakeRepository(SeedCatalogueReads):
         self.outing_invite_ids_by_digest: dict[bytes, uuid.UUID] = {}
         self.friend_edges: dict[uuid.UUID, dict] = {}
         self.posts: dict[uuid.UUID, PostRecord] = {}
+        # ADR-0022: reactions and comments under posts, and the images a
+        # person or a group uploaded (with their `purpose`).
+        self.post_reactions: dict[uuid.UUID, PostReactionRecord] = {}
+        self.post_comments: dict[uuid.UUID, PostCommentRecord] = {}
+        self.uploaded_images: dict[uuid.UUID, UploadedImageRecord] = {}
         self.memories: dict[uuid.UUID, MemoryRecord] = {}
         self.account_sessions: dict[uuid.UUID, AccountSessionRecord] = {}
         self.invited_memberships: set[tuple[uuid.UUID, uuid.UUID]] = set()
@@ -482,6 +491,156 @@ class FakeRepository(SeedCatalogueReads):
             if record.author_id == person_id
             and self._post_visible_to(record, reader_id)
         )[:limit]
+
+    # --- ADR-0022: reactions and comments under posts, personal photos ----
+    #
+    # A dict cannot express `uq_post_reactions_one_per_kind` under a race nor
+    # the CASCADE from `posts`; tests/postgres/test_post_social_postgres.py
+    # exists for those. The visibility predicate here re-implements
+    # `_readable_by` by the same hand -- the Postgres gate test is the proof.
+
+    def post_social_counts(self, post_ids, *, viewer_id):
+        wanted = set(post_ids)
+        reactions: dict = {}
+        comments: dict = {}
+        mine: dict = {}
+        for reaction in self.post_reactions.values():
+            if reaction.post_id not in wanted:
+                continue
+            per_kind = reactions.setdefault(reaction.post_id, {})
+            per_kind[reaction.kind] = per_kind.get(reaction.kind, 0) + 1
+            if reaction.person_id == viewer_id:
+                mine.setdefault(reaction.post_id, set()).add(reaction.kind)
+        for comment in self.post_comments.values():
+            if comment.post_id in wanted:
+                comments[comment.post_id] = comments.get(comment.post_id, 0) + 1
+        return PostSocialCounts(
+            reactions, comments, {k: frozenset(v) for k, v in mine.items()}
+        )
+
+    def add_post_reaction(self, *, post_id, person_id, kind, now):
+        for reaction in self.post_reactions.values():
+            if (reaction.post_id, reaction.person_id, reaction.kind) == (
+                post_id,
+                person_id,
+                kind,
+            ):
+                return reaction
+        record = PostReactionRecord(
+            id=uuid.uuid4(),
+            post_id=post_id,
+            person_id=person_id,
+            kind=kind,
+            created_at=now,
+        )
+        self.post_reactions[record.id] = record
+        return record
+
+    def remove_post_reaction(self, *, post_id, person_id, kind):
+        for reaction_id, reaction in list(self.post_reactions.items()):
+            if (reaction.post_id, reaction.person_id, reaction.kind) == (
+                post_id,
+                person_id,
+                kind,
+            ):
+                del self.post_reactions[reaction_id]
+                return True
+        return False
+
+    def create_post_comment(self, *, post_id, author_id, body, now):
+        author = self.people.get(author_id)
+        record = PostCommentRecord(
+            id=uuid.uuid4(),
+            post_id=post_id,
+            author_id=author_id,
+            author_display_name=(
+                author.display_name if author is not None else str(author_id)
+            ),
+            body=body,
+            created_at=now,
+        )
+        self.post_comments[record.id] = record
+        return record
+
+    def get_post_comment(self, comment_id):
+        return self.post_comments.get(comment_id)
+
+    def delete_post_comment(self, comment_id):
+        return self.post_comments.pop(comment_id, None) is not None
+
+    def list_post_comments(self, post_id, *, limit, after=None):
+        rows = sorted(
+            (c for c in self.post_comments.values() if c.post_id == post_id),
+            key=lambda c: (c.created_at, c.id.bytes),
+        )
+        if after is not None:
+            rows = [
+                c
+                for c in rows
+                if (c.created_at, c.id.bytes) > (after[0], after[1].bytes)
+            ]
+        return tuple(rows[:limit])
+
+    def create_uploaded_image(
+        self,
+        *,
+        storage_key,
+        context_id,
+        owner_person_id,
+        uploaded_by_id,
+        content_type,
+        byte_size,
+        width,
+        height,
+        now,
+        purpose="group",
+    ):
+        record = UploadedImageRecord(
+            id=uuid.uuid4(),
+            storage_key=storage_key,
+            context_id=context_id,
+            owner_person_id=owner_person_id,
+            uploaded_by_id=uploaded_by_id,
+            content_type=content_type,
+            byte_size=byte_size,
+            width=width,
+            height=height,
+            created_at=now,
+            purpose=purpose,
+        )
+        self.uploaded_images[record.id] = record
+        return record
+
+    def get_context_image(self, context_id, image_id):
+        record = self.uploaded_images.get(image_id)
+        if record is None or record.context_id != context_id:
+            return None
+        return record
+
+    def get_latest_avatar(self, person_id):
+        rows = [
+            r
+            for r in self.uploaded_images.values()
+            if r.owner_person_id == person_id and r.purpose == "avatar"
+        ]
+        return max(rows, key=lambda r: (r.created_at, r.id.bytes), default=None)
+
+    def get_person_image(self, person_id, image_id):
+        record = self.uploaded_images.get(image_id)
+        if (
+            record is None
+            or record.owner_person_id != person_id
+            or record.purpose != "personal"
+        ):
+            return None
+        return record
+
+    def person_image_visible_to(self, person_id, image_id, reader_id):
+        url = f"/people/{person_id}/photos/{image_id}"
+        return any(
+            post.image_url == url and self._post_visible_to(post, reader_id)
+            for post in self.posts.values()
+        )
 
     def list_memories(
         self,
@@ -1105,6 +1264,10 @@ class FakeRepository(SeedCatalogueReads):
     def share_active_context(self, a, b):
         mine = {cid for (cid, pid) in self.active_memberships if pid == a}
         return any(cid in mine for (cid, pid) in self.active_memberships if pid == b)
+
+    def shares_active_context(self, viewer_id, subject_id):
+        # The avatar gate asks by this name; same fact as the line above.
+        return self.share_active_context(viewer_id, subject_id)
 
     # --- ảnh địa điểm có giấy phép (M12) ----------------------------------
 
