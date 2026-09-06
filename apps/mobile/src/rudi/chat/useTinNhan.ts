@@ -25,9 +25,12 @@ import {
   docTrangTin,
   gopTin,
   guiAnh,
+  guiSticker,
   guiTin,
   thayPhanUng,
+  thayTinDaXoa,
   themPhanUng,
+  xoaTin,
   type LoaiPhanUng,
   type Tin,
   type TinDaGui,
@@ -134,8 +137,8 @@ export function useTinNhan(contextId: string, personId: string) {
   }, [trang.tin, contextId, personId]);
 
   const gui = useCallback(
-    async (body: string): Promise<TinDaGui> => {
-      const daGui = await guiTin(contextId, personId, body, newAttempt());
+    async (body: string, replyToId: string | null = null): Promise<TinDaGui> => {
+      const daGui = await guiTin(contextId, personId, body, newAttempt(), { replyToId });
       const them: Tin[] = [daGui];
       if (daGui.companion?.message) them.push(daGui.companion.message);
       if (daGui.expense_card) them.push(daGui.expense_card);
@@ -164,6 +167,31 @@ export function useTinNhan(contextId: string, personId: string) {
     [contextId, personId, dat, napMoi],
   );
 
+  /** One sticker, by id; the server refuses an id outside the vocabulary. */
+  const guiStickerMoi = useCallback(
+    async (stickerId: string, replyToId: string | null = null): Promise<TinDaGui> => {
+      const daGui = await guiSticker(contextId, personId, stickerId, newAttempt(), { replyToId });
+      dat(gopTin(tinRef.current, [daGui]), { loi: null });
+      void napMoi();
+      return daGui;
+    },
+    [contextId, personId, dat, napMoi],
+  );
+
+  /**
+   * Take back one's own message. The held row flips at once from the 204
+   * (`thayTinDaXoa`), then the next poll confirms the server's row; a refusal
+   * surfaces as the server's sentence and the row stays as it was.
+   */
+  const xoaTinCuaToi = useCallback(
+    async (messageId: string): Promise<void> => {
+      await xoaTin(contextId, messageId, personId);
+      dat(thayTinDaXoa(tinRef.current, messageId, new Date().toISOString()), { loi: null });
+      void napMoi();
+    },
+    [contextId, personId, dat, napMoi],
+  );
+
   const doiPhanUng = useCallback(
     async (messageId: string, kind: LoaiPhanUng, dangCoCuaToi: boolean) => {
       const ket = dangCoCuaToi
@@ -174,5 +202,5 @@ export function useTinNhan(contextId: string, personId: string) {
     [contextId, personId, dat],
   );
 
-  return { ...trang, napCuHon, napMoi, gui, guiAnhMoi, doiPhanUng, taiLai: napDau };
+  return { ...trang, napCuHon, napMoi, gui, guiAnhMoi, guiSticker: guiStickerMoi, xoaTin: xoaTinCuaToi, doiPhanUng, taiLai: napDau };
 }

@@ -111,6 +111,8 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             "34-anh-trong-chat.yaml",
             "35-diem-den.yaml",
             "36-so-thich.yaml",
+            "37-chat-sticker-tra-loi-xoa.yaml",
+            "39-cai-dat-nhom.yaml",
             "40-ai-plan.yaml",
         ):
             text = (FLOWS / name).read_text(encoding="utf-8")
@@ -118,7 +120,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             # the number and the code still have to come from the harness.
             for helper in re.findall(r"file: (_[\w-]+\.yaml)", text):
                 text += (FLOWS / helper).read_text(encoding="utf-8")
-            self.assertRegex(text, r"\$\{OTP_PHONE(_[BCD])?\}", name)
+            self.assertRegex(text, r"\$\{OTP_PHONE(_[BCDE])?\}", name)
             self.assertIn("${OTP_CODE}", text, name)
             # A phone number in a flow file is a phone number in Git.
             self.assertIsNone(
@@ -152,7 +154,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertNotIn("EXPO_PUBLIC_RUDI_ACTOR=", script)
         self.assertIn("canary_otp", script)
         self.assertIn(
-            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*)"
+            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*)"
             ' [ "$OTP" = 1 ] || continue',
             script,
         )

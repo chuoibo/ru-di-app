@@ -37,17 +37,29 @@ export function glyphPhanUng(kind: string): string {
 
 export type PhanUngTomTat = { kind: LoaiPhanUng; count: number; mine: boolean };
 
+export type LoaiTin = "text" | "image" | "ai_card" | "sticker" | "deleted";
+
+/** The quoted message as the server reduced it (ADR-0021 §2.2): one line, no fetch. */
+export type TrichDan = {
+  id: string;
+  kind: LoaiTin;
+  author_id: string | null;
+  preview: string;
+};
+
 export type Tin = {
   id: string;
   context_id: string;
   author_id: string | null;
-  kind: "text" | "image" | "ai_card";
+  kind: LoaiTin;
   body: string | null;
   image_url: string | null;
   card: unknown | null;
   created_at: string;
   cursor: string;
   reactions?: PhanUngTomTat[];
+  reply_to?: TrichDan | null;
+  deleted_at?: string | null;
 };
 
 export type TrangTin = {
@@ -84,6 +96,12 @@ const LOI_CHAT: Record<string, string> = {
   message_not_found: "Tin nhắn này không còn.",
   card_ungrounded: "Thẻ này không hợp lệ.",
   invalid_cursor: "Danh sách tin bị lệch, kéo để tải lại.",
+  sticker_unknown: "Sticker này bản app chưa có.",
+  reply_target_deleted: "Tin bạn muốn trả lời đã bị xoá.",
+  reply_target_not_quotable: "Không trả lời được một thẻ; hãy trả lời một tin nhắn.",
+  message_already_deleted: "Tin này đã bị xoá rồi.",
+  message_kind_not_deletable: "Chỉ xoá được tin nhắn, ảnh hoặc sticker của chính bạn.",
+  message_deleted: "Tin này đã bị xoá.",
 };
 
 const QUYEN = "group_admin,member";
@@ -110,14 +128,45 @@ export async function guiTin(
   personId: string,
   body: string,
   attempt: Attempt,
+  opts: { replyToId?: string | null } = {},
 ): Promise<TinDaGui> {
   return translatedAsActor<TinDaGui>(LOI_CHAT, `/contexts/${contextId}/messages`, {
     method: "POST",
-    body: { kind: "text", body, image_url: null, card: null },
+    // `reply_to_id` only when there is one: a server older than L1 refuses an
+    // unknown key (`extra=forbid`), and an ordinary message has no reply.
+    body: { kind: "text", body, image_url: null, card: null, ...(opts.replyToId ? { reply_to_id: opts.replyToId } : {}) },
     actorId: personId,
     roles: QUYEN,
     contexts: contextId,
     attempt,
+  });
+}
+
+/** Send one sticker by id (ADR-0021 §2.1). The picture lives on the phone; only the id travels. */
+export async function guiSticker(
+  contextId: string,
+  personId: string,
+  stickerId: string,
+  attempt: Attempt,
+  opts: { replyToId?: string | null } = {},
+): Promise<TinDaGui> {
+  return translatedAsActor<TinDaGui>(LOI_CHAT, `/contexts/${contextId}/messages`, {
+    method: "POST",
+    body: { kind: "sticker", body: stickerId, image_url: null, card: null, ...(opts.replyToId ? { reply_to_id: opts.replyToId } : {}) },
+    actorId: personId,
+    roles: QUYEN,
+    contexts: contextId,
+    attempt,
+  });
+}
+
+/** Take back one's own message (ADR-0021 §2.3). 204: the row stays as «đã xoá». */
+export async function xoaTin(contextId: string, messageId: string, personId: string): Promise<void> {
+  await translatedAsActor<unknown>(LOI_CHAT, `/contexts/${contextId}/messages/${messageId}`, {
+    method: "DELETE",
+    actorId: personId,
+    roles: QUYEN,
+    contexts: contextId,
   });
 }
 
@@ -219,6 +268,41 @@ export function cursorCuNhat(tin: Tin[]): string | null {
 /** Replace one message's reactions after the server answered. */
 export function thayPhanUng(tin: Tin[], messageId: string, reactions: PhanUngTomTat[]): Tin[] {
   return tin.map((t) => (t.id === messageId ? { ...t, reactions } : t));
+}
+
+/**
+ * The held list after the server said 204 to a deletion: the row flips to
+ * `deleted` with no payload and no reactions, and every quote of it now reads
+ * as the deletion -- the same shape the next poll will confirm.
+ */
+export function thayTinDaXoa(tin: Tin[], messageId: string, deletedAt: string): Tin[] {
+  return tin.map((t) => {
+    if (t.id === messageId) {
+      return { ...t, kind: "deleted", body: null, image_url: null, card: null, reactions: [], deleted_at: deletedAt };
+    }
+    if (t.reply_to && t.reply_to.id === messageId) {
+      return { ...t, reply_to: { ...t.reply_to, kind: "deleted", preview: "Tin nhắn đã bị xoá" } };
+    }
+    return t;
+  });
+}
+
+/** What a conversation row shows for the newest message; labels for what has no words. */
+export function xemTruocTinCuoi(cuoi: { kind: string; preview: string }): string {
+  if (cuoi.kind === "sticker") return "Đã gửi một sticker";
+  if (cuoi.kind === "deleted") return "Tin nhắn đã bị xoá";
+  return cuoi.preview;
+}
+
+/** The quote strip drawn while composing a reply: who said it, one short line. */
+export function trichTu(tin: Tin, tenNguoi: (id: string | null) => string): TrichDan {
+  let preview: string;
+  if (tin.kind === "image") preview = tin.body ? `Ảnh: ${tin.body}` : "Ảnh";
+  else if (tin.kind === "sticker") preview = "Sticker";
+  else if (tin.kind === "deleted") preview = "Tin nhắn đã bị xoá";
+  else preview = (tin.body ?? "").replace(/\s+/g, " ").trim();
+  if (preview.length > 80) preview = preview.slice(0, 79) + "…";
+  return { id: tin.id, kind: tin.kind, author_id: tin.author_id, preview: preview || tenNguoi(tin.author_id) };
 }
 
 export type HangHienThi =

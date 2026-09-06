@@ -314,6 +314,20 @@ _TABLE: dict[str, dict] = {
         "roles": {"group_admin", "member"},
         "requires": ("is_group_member",),
     },
+    # ADR-0021 §2.3. Taking a message back is the author's act and nobody
+    # else's -- not even a group admin's. `is_author` is proved by the service
+    # from the stored row, never from a body field naming a writer.
+    "delete_own_message": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_group_member", "is_author"),
+    },
+    # ADR-0021 §2.4. Renaming a group or choosing its theme is something any
+    # active member may do, the way a messenger lets any participant retitle
+    # a conversation. Roster changes stay behind `set_member_role`.
+    "edit_context": {
+        "roles": {"group_admin", "member"},
+        "requires": ("is_group_member",),
+    },
     # F32. A proactive suggestion is built from this group's own history --
     # where they went, what it cost, what kind of place they keep choosing --
     # so reading one is reading the group's past. Same ACTIVE gate as the

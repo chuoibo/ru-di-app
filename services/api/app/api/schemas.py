@@ -21,6 +21,8 @@ from pydantic import (
     model_validator,
 )
 
+from app.domain.stickers import is_sticker
+
 MoneyVnd = Annotated[int, Field(strict=True)]
 PositiveMoneyVnd = Annotated[int, Field(strict=True, gt=0)]
 NonNegativeMoneyVnd = Annotated[int, Field(strict=True, ge=0)]
@@ -381,11 +383,38 @@ class ContextCreateRequest(ApiModel):
     display_name: Annotated[StrictStr, Field(min_length=1, max_length=200)]
 
 
+#: ADR-0021 §2.4. Written out rather than built from `chat_theme.THEMES` so the
+#: OpenAPI document lists the slugs; `tests/api/test_context_settings.py` pins
+#: that the two spellings agree.
+ChatTheme = Literal["mac-dinh", "hoang-hon", "bien-dem", "rung-thong", "ruc-ro"]
+
+
+class ContextUpdateRequest(ApiModel):
+    """What any active member may change about a group (ADR-0021 §2.4): its
+    name and its chat theme. A partial update: at least one field, and no
+    field this model does not name (`extra=forbid`). Roster changes are not
+    here on purpose -- they have their own routes and their own rules."""
+
+    display_name: Annotated[StrictStr, Field(min_length=1, max_length=200)] | None = (
+        None
+    )
+    theme: ChatTheme | None = None
+
+    @model_validator(mode="after")
+    def _something_to_change(self) -> ContextUpdateRequest:
+        if self.display_name is None and self.theme is None:
+            raise ValueError("cần ít nhất một trường để sửa")
+        if self.display_name is not None and not self.display_name.strip():
+            raise ValueError("tên nhóm không được rỗng")
+        return self
+
+
 class ContextResponse(ApiModel):
     id: UUID
     display_name: StrictStr
     created_by_id: UUID
     created_at: datetime
+    theme: ChatTheme = "mac-dinh"
 
 
 class OutingCreateRequest(ApiModel):
@@ -603,11 +632,14 @@ class OutingInviteAcceptResponse(ApiModel):
     membership_state: Literal["invited", "active"]
 
 
+MessageKindWire = Literal["text", "image", "ai_card", "sticker", "deleted"]
+
+
 class ContextLastMessage(ApiModel):
     """The newest message of a group, reduced to what a list row shows."""
 
     id: UUID
-    kind: Literal["text", "image", "ai_card"]
+    kind: MessageKindWire
     preview: StrictStr
     author_id: UUID | None
     author_display_name: StrictStr | None
@@ -634,6 +666,7 @@ class ContextSummary(ApiModel):
     joined_at: datetime | None
     last_message: ContextLastMessage | None
     unread_count: Annotated[int, Field(strict=True, ge=0)]
+    theme: ChatTheme = "mac-dinh"
 
 
 class PersonContextListResponse(ApiModel):
@@ -1353,10 +1386,16 @@ class PersonPostListResponse(ApiModel):
 
 
 class MessageCreateRequest(ApiModel):
-    kind: Literal["text", "image", "ai_card"]
+    """`deleted` is not a kind a client may send: a deletion is a DELETE on the
+    message, never a message of its own (ADR-0021 §2.3)."""
+
+    kind: Literal["text", "image", "ai_card", "sticker"]
     body: Annotated[StrictStr, Field(max_length=4000)] | None = None
     image_url: RelativePhotoUrl | None = None
     card: dict | None = None
+    #: The message this one quotes; must be a live human message of the same
+    #: group. Checked by the service AND by a composite foreign key.
+    reply_to_id: UUID | None = None
 
 
 class MessageQuery(ApiModel):
@@ -1386,17 +1425,54 @@ class MessageReactionsResponse(ApiModel):
     reactions: list[ReactionSummary]
 
 
+class MessageReplyPreview(ApiModel):
+    """The quoted message as a bubble shows it: who, what kind, one line.
+
+    Server-built so a client never fetches the parent to draw a quote, and so
+    a deleted parent reads «Tin nhắn đã bị xoá» rather than its old words.
+    """
+
+    id: UUID
+    kind: MessageKindWire
+    author_id: UUID | None
+    preview: StrictStr
+
+
 class MessageResponse(ApiModel):
     id: UUID
     context_id: UUID
     author_id: UUID | None
-    kind: Literal["text", "image", "ai_card"]
+    kind: MessageKindWire
     body: str | None
     image_url: str | None
     card: dict | None
     created_at: datetime
     cursor: str
     reactions: list[ReactionSummary] = []
+    reply_to: MessageReplyPreview | None = None
+    deleted_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def _payload_matches_kind_at_the_wire(self) -> MessageResponse:
+        """Third spelling of the payload CHECK (ADR-0021 §2.3), at the boundary
+        where a row becomes JSON: a deleted message that still carried its text
+        would be a leak the database could not see."""
+        if self.kind == "deleted":
+            if (
+                self.body is not None
+                or self.image_url is not None
+                or self.card is not None
+            ):
+                raise ValueError("a deleted message must not carry a payload")
+            if self.deleted_at is None:
+                raise ValueError("a deleted message must say when")
+            if self.reactions:
+                raise ValueError("a deleted message keeps no reactions")
+        elif self.deleted_at is not None:
+            raise ValueError("only a deleted message has deleted_at")
+        if self.kind == "sticker" and not is_sticker(self.body):
+            raise ValueError("a sticker message must name a known sticker")
+        return self
 
 
 class ChatExpenseDraft(ApiModel):

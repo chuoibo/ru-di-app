@@ -274,6 +274,20 @@
     // Sở thích cá nhân (M11): compile để test chứng minh câu dưới nút nói đúng
     // sự thật ở cả hai trạng thái — giữ «Chưa gửi lên máy chủ» sau khi đã nối
     // route là đúng cái lời nói dối mà luật vỏ sinh ra để cấm.
-    "src/rudi/nguoi/so-thich-song.ts"
+    "src/rudi/nguoi/so-thich-song.ts",
+    // L1 (ADR-0021). Stickers are a closed vocabulary written three times
+    // (server, packages/shared, here) and every `d` is parsed by Java at mount:
+    // an unknown id must draw «khac» and never throw, and only node can run the
+    // shape table against the Java grammar. See `tests/rudi-chat-sticker.test.mjs`.
+    "src/rudi/chat/sticker.ts",
+    // Five chat themes × two schemes must all exist and clear 4.5:1, and an
+    // unknown slug must fall back to the default rather than to nothing.
+    "src/rudi/mau-chat.ts",
+    // The PATCH body carries only the keys the person changed; a screen that
+    // renames must not reset the theme. Provable without a renderer.
+    "src/rudi/chat/nhom-cai-dat.ts",
+    // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
+    // reuses. Compiled so the test can prove they go through the bearer.
+    "src/screens/quan-tri/quan-tri.ts"
   ]
 }

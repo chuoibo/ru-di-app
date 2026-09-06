@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, cast, func, or_, select, tuple_
+from sqlalchemy import Date, and_, cast, delete, func, or_, select, tuple_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
@@ -87,6 +87,7 @@ from app.domain.capability import capability_scope
 from app.domain.friendship import Decision, FriendshipError
 from app.domain.friendship import decide as decide_friendship
 from app.domain.ledger import obligation_status
+from app.domain.message_edit import deleted_shape
 from app.places.activities import doc_hoat_dong
 
 # A trip's `starts_on`/`ends_on` are wall-clock Vietnamese calendar days; an
@@ -126,6 +127,8 @@ class ContextRecord:
     display_name: str
     created_by_id: uuid.UUID
     created_at: datetime
+    #: ADR-0021 §2.4; defaulted so a fake that predates themes still builds.
+    theme: str = "mac-dinh"
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,6 +406,9 @@ class MessageRecord:
     image_url: str | None
     card: dict | None
     created_at: datetime
+    #: ADR-0021 §2.2/§2.3. Defaulted so every existing construction still holds.
+    reply_to_id: uuid.UUID | None = None
+    deleted_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -442,6 +448,7 @@ class PersonContextSummaryRecord:
     joined_at: datetime | None
     last_message: LastMessageRecord | None
     unread_count: int
+    theme: str = "mac-dinh"
 
 
 @dataclass(frozen=True, slots=True)
@@ -982,6 +989,10 @@ class ApiRepository(Protocol):
 
     def get_context(self, context_id: uuid.UUID) -> ContextRecord | None: ...
 
+    def update_context(
+        self, context_id: uuid.UUID, *, changes: dict[str, object]
+    ) -> ContextRecord | None: ...
+
     def add_member(
         self,
         context_id: uuid.UUID,
@@ -1466,9 +1477,18 @@ class ApiRepository(Protocol):
         image_url: str | None,
         card: dict | None,
         now: datetime,
+        reply_to_id: uuid.UUID | None = None,
     ) -> MessageRecord: ...
 
     def get_message(self, message_id: uuid.UUID) -> MessageRecord | None: ...
+
+    def get_messages_by_ids(
+        self, message_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, MessageRecord]: ...
+
+    def soft_delete_message(
+        self, message_id: uuid.UUID, *, now: datetime
+    ) -> MessageRecord | None: ...
 
     def list_messages(
         self,
@@ -1659,6 +1679,10 @@ def _message_preview(kind, body, card) -> str:
     kind_value = kind.value if hasattr(kind, "value") else str(kind)
     if kind_value == "image":
         return "[Ảnh]"
+    if kind_value == "sticker":
+        return "[Sticker]"
+    if kind_value == "deleted":
+        return "Tin nhắn đã bị xoá"
     if kind_value == "ai_card":
         card_kind = (card or {}).get("kind") if isinstance(card, dict) else None
         labels = {
@@ -1851,6 +1875,8 @@ class SqlAlchemyApiRepository:
             image_url=message.image_url,
             card=message.card,
             created_at=message.created_at,
+            reply_to_id=message.reply_to_id,
+            deleted_at=message.deleted_at,
         )
 
     @staticmethod
@@ -2011,23 +2037,39 @@ class SqlAlchemyApiRepository:
         context = Context(display_name=display_name, created_by_id=created_by_id)
         self.session.add(context)
         self.session.flush()
+        return self._context_record(context)
+
+    @staticmethod
+    def _context_record(context: Context) -> ContextRecord:
         return ContextRecord(
             id=context.id,
             display_name=context.display_name,
             created_by_id=context.created_by_id,
             created_at=context.created_at,
+            theme=context.theme,
         )
 
     def get_context(self, context_id: uuid.UUID) -> ContextRecord | None:
         context = self.session.get(Context, context_id)
         if context is None:
             return None
-        return ContextRecord(
-            id=context.id,
-            display_name=context.display_name,
-            created_by_id=context.created_by_id,
-            created_at=context.created_at,
-        )
+        return self._context_record(context)
+
+    def update_context(
+        self, context_id: uuid.UUID, *, changes: dict[str, object]
+    ) -> ContextRecord | None:
+        """Apply the settings a member may change (ADR-0021 §2.4). Only the
+        keys present are touched; the CHECK on `theme` is the second spelling
+        of `chat_theme.THEMES`, so an unknown slug fails here too."""
+        context = self.session.get(Context, context_id)
+        if context is None:
+            return None
+        if "display_name" in changes:
+            context.display_name = str(changes["display_name"])
+        if "theme" in changes:
+            context.theme = str(changes["theme"])
+        self.session.flush()
+        return self._context_record(context)
 
     def add_member(
         self,
@@ -2962,6 +3004,7 @@ class SqlAlchemyApiRepository:
                     joined_at=membership.joined_at,
                     last_message=last_by_context.get(context.id),
                     unread_count=self.count_unread_messages(context.id, person_id),
+                    theme=context.theme,
                 )
             )
         # Newest conversation first; groups with no message yet sort last, then
@@ -3516,7 +3559,21 @@ class SqlAlchemyApiRepository:
     def add_reaction(
         self, *, message_id: uuid.UUID, person_id: uuid.UUID, kind: str, now: datetime
     ) -> bool:
-        """True when a row was added; False when this reaction already stood."""
+        """True when a row was added; False when this reaction already stood.
+
+        The message row is locked first and its kind read again under the
+        lock (ADR-0021 §2.3): a tap racing a deletion would otherwise leave a
+        heart on «Tin nhắn đã bị xoá» -- a row the wire refuses to serialise,
+        and one stray tap turned into a 500 for the whole group's feed.
+        `soft_delete_message` takes the same lock, so the two serialise.
+        """
+        message = self.session.execute(
+            select(Message).where(Message.id == message_id).with_for_update()
+        ).scalar_one_or_none()
+        if message is None:
+            raise RepositoryConflict("MESSAGE_NOT_FOUND")
+        if message.kind == MessageKind.DELETED:
+            raise RepositoryConflict("MESSAGE_DELETED")
         row = MessageReaction(
             message_id=message_id, person_id=person_id, kind=kind, created_at=now
         )
@@ -4208,6 +4265,7 @@ class SqlAlchemyApiRepository:
         image_url: str | None,
         card: dict | None,
         now: datetime,
+        reply_to_id: uuid.UUID | None = None,
     ) -> MessageRecord:
         message = Message(
             context_id=context_id,
@@ -4217,6 +4275,7 @@ class SqlAlchemyApiRepository:
             image_url=image_url,
             card=card,
             created_at=now,
+            reply_to_id=reply_to_id,
         )
         self.session.add(message)
         self.session.flush()
@@ -4225,6 +4284,48 @@ class SqlAlchemyApiRepository:
     def get_message(self, message_id: uuid.UUID) -> MessageRecord | None:
         message = self.session.get(Message, message_id)
         return None if message is None else self._message_record(message)
+
+    def get_messages_by_ids(
+        self, message_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, MessageRecord]:
+        """One query for every quoted message of a page (ADR-0021 §2.2)."""
+        wanted = [message_id for message_id in message_ids if message_id is not None]
+        if not wanted:
+            return {}
+        rows = self.session.scalars(select(Message).where(Message.id.in_(wanted)))
+        return {row.id: self._message_record(row) for row in rows}
+
+    def soft_delete_message(
+        self, message_id: uuid.UUID, *, now: datetime
+    ) -> MessageRecord | None:
+        """Flip the row to `deleted` and drop its reactions, one transaction.
+
+        The row is locked first and its kind read again under the lock, so two
+        taps on «Xoá» cannot both pass the service's `check_deletable` and both
+        write: the second finds `deleted` here and surfaces as
+        `MESSAGE_ALREADY_DELETED` for the caller's 409. The shape of the row
+        afterwards is the domain's (`deleted_shape`), not this method's.
+        Reactions go with the payload: a heart on «Tin nhắn đã bị xoá» would
+        count a message nobody can read.
+        """
+        message = self.session.execute(
+            select(Message).where(Message.id == message_id).with_for_update()
+        ).scalar_one_or_none()
+        if message is None:
+            return None
+        if message.kind == MessageKind.DELETED:
+            raise RepositoryConflict("MESSAGE_ALREADY_DELETED")
+        shape = deleted_shape({"kind": message.kind.value}, now)
+        message.kind = MessageKind(shape["kind"])
+        message.body = shape["body"]
+        message.image_url = shape["image_url"]
+        message.card = shape["card"]
+        message.deleted_at = shape["deleted_at"]
+        self.session.execute(
+            delete(MessageReaction).where(MessageReaction.message_id == message_id)
+        )
+        self.session.flush()
+        return self._message_record(message)
 
     def list_messages(
         self,

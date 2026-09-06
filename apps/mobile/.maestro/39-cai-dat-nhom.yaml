@@ -1,0 +1,101 @@
+# Cài đặt nhóm (L1, ADR-0021 §2.4): đổi tên, chọn theme, rời nhóm — trên API prod.
+#
+# Tự tạo một nhóm bỏ đi «Nhom Cai Dat QA» bằng phiên đang sống (C sau flow 37;
+# nếu app đang ở màn chào thì đăng nhập D). Mở chat → pill «Cài đặt» → sheet:
+# đổi tên thành «Nhom Da Doi Ten» → «Lưu tên» → tiêu đề đổi ngay; chọn «Theme
+# Hoàng hôn» → chụp. Tắt app mở lại → tab Tin nhắn hiện «Nhom Da Doi Ten» (tên
+# đọc từ máy chủ, không phải state) → mở → «Cài đặt» → «Rời nhóm» → xác nhận →
+# về tab Tin nhắn và nhóm không còn trong danh sách.
+#
+# Harness kiểm máy chủ sau flow (kiem_may_chu_sau_39): danh sách nhóm của người
+# đó không còn «Nhom Da Doi Ten»; theme của «Hoi QA» vẫn là mac-dinh (đổi theme
+# một nhóm không lây sang nhóm khác).
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Tạo nhóm"
+    timeout: 60000
+- tapOn: "Tạo nhóm"
+- extendedWaitUntil:
+    visible: "Ô tên nhóm"
+    timeout: 30000
+- tapOn: "Ô tên nhóm"
+- inputText: "Nhom Cai Dat QA"
+- hideKeyboard
+- tapOn: "Mở nhóm"
+- extendedWaitUntil:
+    visible: "Khám phá|Tin nhắn"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Nhom Cai Dat QA"
+    timeout: 60000
+- tapOn: "Nhom Cai Dat QA"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+# Đổi tên từ sheet cài đặt.
+- tapOn: "Cài đặt nhóm"
+- extendedWaitUntil:
+    visible: "Màu bong bóng"
+    timeout: 15000
+- tapOn: "Ô tên nhóm"
+- eraseText: 40
+- inputText: "Nhom Da Doi Ten"
+- hideKeyboard
+- tapOn: "Lưu tên"
+- extendedWaitUntil:
+    visible: "Nhom Da Doi Ten"
+    timeout: 30000
+# Chọn theme: cả nhóm thấy cùng một màu, chữ dưới bảng nói tên theme.
+- tapOn: "Theme Hoàng hôn"
+- extendedWaitUntil:
+    visible: "Hoàng hôn. Cả nhóm thấy cùng một màu."
+    timeout: 30000
+- takeScreenshot: 39-theme
+- tapOn: "Đóng"
+# Tắt mở lại: tên mới đến từ máy chủ.
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 150000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Nhom Da Doi Ten"
+    timeout: 60000
+- assertNotVisible: "Nhom Cai Dat QA"
+- tapOn: "Nhom Da Doi Ten"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+# Rời nhóm: xác nhận trong sheet, không có hộp thoại hệ thống.
+- tapOn: "Cài đặt nhóm"
+- extendedWaitUntil:
+    visible: "Rời nhóm"
+    timeout: 15000
+- tapOn: "Rời nhóm"
+- extendedWaitUntil:
+    visible: "Rời nhóm này?.*"
+    timeout: 15000
+- tapOn: "Rời nhóm"
+- extendedWaitUntil:
+    visible: "Tạo nhóm"
+    timeout: 60000
+- assertNotVisible: "Nhom Da Doi Ten"
+- takeScreenshot: 39-da-roi

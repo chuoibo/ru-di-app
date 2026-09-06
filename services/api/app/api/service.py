@@ -52,6 +52,7 @@ from app.api.repository import (
     StopCheckinRecord,
     UploadedImageRecord,
     VoteRecord,
+    _message_preview,
 )
 from app.api.schemas import (
     AlbumListResponse,
@@ -91,6 +92,7 @@ from app.api.schemas import (
     ContextResponse,
     ContextSummary,
     ContextualSuggestionResponse,
+    ContextUpdateRequest,
     ConversationBasis,
     ExpenseConfirmationRequest,
     ExpenseConfirmationResponse,
@@ -132,6 +134,7 @@ from app.api.schemas import (
     MessageListResponse,
     MessageQuery,
     MessageReactionsResponse,
+    MessageReplyPreview,
     MessageResponse,
     MyInterestsResponse,
     ObligationResponse,
@@ -203,6 +206,7 @@ from app.domain.budget import build_group_budget
 from app.domain.capability import CapabilityScopeError, capability_scope
 from app.domain.chat_expense import ChatExpenseError
 from app.domain.chat_intent import parse_intent, parse_vote
+from app.domain.chat_theme import is_theme
 from app.domain.collection import CollectionError, transition, unmet_publish_gates
 from app.domain.companion import CompanionError, ground_card, plan_turn
 from app.domain.contract import AllocationError
@@ -235,10 +239,16 @@ from app.domain.ledger import (
     obligations_from_allocations,
     settlement_plan,
 )
+from app.domain.message_edit import (
+    MessageEditError,
+    check_deletable,
+    check_reply_target,
+)
 from app.domain.otp import DEFAULT_LIMITS as OTP_LIMITS
 from app.domain.otp import generate_code, plan_request, plan_verify
 from app.domain.preferences import build_preference_profile
 from app.domain.reel import ReelError, ground_reel
+from app.domain.stickers import is_sticker
 from app.domain.suggestion import (
     SuggestionError,
     ground_suggestion,
@@ -370,6 +380,7 @@ def _context_summary(record: PersonContextSummaryRecord) -> ContextSummary:
             created_at=last.created_at,
         ),
         unread_count=record.unread_count,
+        theme=record.theme,
     )
 
 
@@ -844,7 +855,9 @@ def _wire_outing_invite(
 
 
 def _wire_message(
-    record: MessageRecord, reactions: list[ReactionSummary] | None = None
+    record: MessageRecord,
+    reactions: list[ReactionSummary] | None = None,
+    reply_to: MessageReplyPreview | None = None,
 ) -> MessageResponse:
     return MessageResponse(
         id=record.id,
@@ -856,8 +869,33 @@ def _wire_message(
         card=record.card,
         created_at=record.created_at,
         cursor=encode_cursor(record.created_at, record.id),
-        reactions=reactions or [],
+        # A deleted row carries no reactions at the wire whatever the table
+        # holds: `add_reaction` refuses them under a lock, and this keeps a
+        # stray row (should one ever exist) from failing the whole feed.
+        reactions=[] if record.kind == "deleted" else (reactions or []),
+        reply_to=reply_to,
+        deleted_at=record.deleted_at,
     )
+
+
+def _reply_preview(target: MessageRecord) -> MessageReplyPreview:
+    """The quoted message reduced to one line, built from the stored row."""
+    return MessageReplyPreview(
+        id=target.id,
+        kind=target.kind,
+        author_id=target.author_id,
+        preview=_message_preview(target.kind, target.body, target.card),
+    )
+
+
+def _message_facts(record: MessageRecord) -> dict:
+    """A stored message as the pure domain reads it."""
+    return {
+        "id": str(record.id),
+        "context_id": str(record.context_id),
+        "author_id": None if record.author_id is None else str(record.author_id),
+        "kind": record.kind,
+    }
 
 
 def _summarise_reactions(
@@ -1196,6 +1234,42 @@ class ApiService:
             display_name=context.display_name,
             created_by_id=context.created_by_id,
             created_at=context.created_at,
+            theme=context.theme,
+        )
+
+    def update_context(
+        self, context_id: uuid.UUID, request: ContextUpdateRequest, actor: Actor
+    ) -> ContextResponse:
+        """Rename a group or pick its chat theme (ADR-0021 §2.4).
+
+        Any active member may; membership is proved from the roster before the
+        row is read, so a stranger gets the same 403 whether or not the id is
+        real. The theme slug is checked here (422 with a sentence) and again by
+        the CHECK on `contexts.theme`.
+        """
+        _require_permission(
+            "edit_context",
+            actor,
+            {"is_group_member": self.repository.is_member(context_id, actor.id)},
+        )
+        changes: dict[str, object] = {}
+        if request.display_name is not None:
+            changes["display_name"] = request.display_name.strip()
+        if request.theme is not None:
+            if not is_theme(request.theme):
+                raise ApiProblem(
+                    422, "theme_unknown", "Bộ màu này không có trong bộ của Rủ Đi."
+                )
+            changes["theme"] = request.theme
+        record = self.repository.update_context(context_id, changes=changes)
+        if record is None:
+            raise ApiProblem(404, "context_not_found", "Context does not exist")
+        return ContextResponse(
+            id=record.id,
+            display_name=record.display_name,
+            created_by_id=record.created_by_id,
+            created_at=record.created_at,
+            theme=record.theme,
         )
 
     def invite_context_member(
@@ -1309,6 +1383,7 @@ class ApiService:
             display_name=record.display_name,
             created_by_id=record.created_by_id,
             created_at=record.created_at,
+            theme=record.theme,
         )
 
     def list_context_members(
@@ -3337,12 +3412,28 @@ class ApiService:
             actor,
             {"is_group_member": self.repository.is_member(context_id, actor.id)},
         )
-        self._message_in_context(context_id, message_id)
+        message = self._message_in_context(context_id, message_id)
+        if message.kind == "deleted":
+            raise ApiProblem(
+                409, "message_deleted", "Tin nhắn đã bị xoá, không phản ứng được."
+            )
         # Idempotent on purpose: two taps are one heart, and the answer is the
-        # same list either way.
-        self.repository.add_reaction(
-            message_id=message_id, person_id=actor.id, kind=request.kind, now=_now()
-        )
+        # same list either way. The repository re-reads the kind under a lock,
+        # so a tap racing a deletion is refused the same way.
+        try:
+            self.repository.add_reaction(
+                message_id=message_id, person_id=actor.id, kind=request.kind, now=_now()
+            )
+        except RepositoryConflict as exc:
+            if exc.code == "MESSAGE_DELETED":
+                raise ApiProblem(
+                    409, "message_deleted", "Tin nhắn đã bị xoá, không phản ứng được."
+                ) from exc
+            if exc.code == "MESSAGE_NOT_FOUND":
+                raise ApiProblem(
+                    404, "message_not_found", "Message does not exist"
+                ) from exc
+            raise
         return self._reactions_response(message_id, actor)
 
     def unreact_to_message(
@@ -4095,6 +4186,12 @@ class ApiService:
                 and request.image_url is None
                 and request.body is None
             )
+            or (
+                request.kind == "sticker"
+                and request.body is not None
+                and request.image_url is None
+                and request.card is None
+            )
         )
         if not payload_is_valid:
             raise ApiProblem(
@@ -4102,6 +4199,45 @@ class ApiService:
                 "message_payload_invalid",
                 "Message payload does not match its kind",
             )
+        if request.kind == "sticker" and not is_sticker(request.body):
+            # The vocabulary is the ceiling (ADR-0021 §2.1); the CHECK's regex
+            # is only the floor. A stale client with a newer sticker id learns
+            # so here, in a sentence, not from a database error.
+            raise ApiProblem(
+                422, "sticker_unknown", "Sticker này không có trong bộ của Rủ Đi."
+            )
+        # A card quotes nothing; only words, pictures and stickers may reply.
+        if request.reply_to_id is not None and request.kind == "ai_card":
+            raise ApiProblem(
+                422,
+                "message_payload_invalid",
+                "Message payload does not match its kind",
+            )
+        reply_to: MessageReplyPreview | None = None
+        if request.reply_to_id is not None:
+            target = self.repository.get_message(request.reply_to_id)
+            try:
+                check_reply_target(
+                    None if target is None else _message_facts(target),
+                    str(context_id),
+                )
+            except MessageEditError as refused:
+                if refused.code == "REPLY_NOT_FOUND":
+                    # Same answer for absent and cross-group (ADR-0021 §2.2).
+                    raise ApiProblem(
+                        404, "message_not_found", "Message does not exist"
+                    ) from refused
+                if refused.code == "REPLY_TO_DELETED":
+                    raise ApiProblem(
+                        409, "reply_target_deleted", "Tin bạn muốn trả lời đã bị xoá."
+                    ) from refused
+                raise ApiProblem(
+                    422,
+                    "reply_target_not_quotable",
+                    "Không trả lời được một thẻ; hãy trả lời một tin nhắn.",
+                ) from refused
+            assert target is not None
+            reply_to = _reply_preview(target)
 
         _require_photo_url_context(context_id, request.image_url)
         card = request.card
@@ -4130,8 +4266,62 @@ class ApiService:
             image_url=request.image_url,
             card=card,
             now=_now(),
+            reply_to_id=request.reply_to_id,
         )
-        return _wire_message(record)
+        return _wire_message(record, reply_to=reply_to)
+
+    def delete_own_message(
+        self, context_id: uuid.UUID, message_id: uuid.UUID, actor: Actor
+    ) -> None:
+        """Take back one's own text, picture or sticker (ADR-0021 §2.3).
+
+        Membership on the group is decided before the row is read, so a
+        stranger holding a message id learns nothing (403 either way). Then the
+        pure rule decides -- already deleted, not yours, a card -- and the
+        repository flips the row and drops its reactions in one transaction.
+        """
+        _require_permission(
+            "view_group_messages",
+            actor,
+            {"is_group_member": self.repository.is_member(context_id, actor.id)},
+        )
+        message = self._message_in_context(context_id, message_id)
+        try:
+            check_deletable(_message_facts(message), str(actor.id))
+        except MessageEditError as refused:
+            if refused.code == "ALREADY_DELETED":
+                raise ApiProblem(
+                    409, "message_already_deleted", "Tin này đã bị xoá rồi."
+                ) from refused
+            if refused.code == "NOT_AUTHOR":
+                _require_permission(
+                    "delete_own_message",
+                    actor,
+                    {"is_group_member": True, "is_author": False},
+                )
+                raise  # pragma: no cover - _require_permission raised above
+            raise ApiProblem(
+                409,
+                "message_kind_not_deletable",
+                "Chỉ xoá được tin nhắn, ảnh hoặc sticker của chính bạn.",
+            ) from refused
+        _require_permission(
+            "delete_own_message",
+            actor,
+            {"is_group_member": True, "is_author": True},
+        )
+        try:
+            deleted = self.repository.soft_delete_message(message.id, now=_now())
+        except RepositoryConflict as exc:
+            # Two taps on «Xoá» in the same instant: the second one lost the
+            # row lock and finds it already flipped.
+            if exc.code == "MESSAGE_ALREADY_DELETED":
+                raise ApiProblem(
+                    409, "message_already_deleted", "Tin này đã bị xoá rồi."
+                ) from exc
+            raise
+        if deleted is None:
+            raise ApiProblem(404, "message_not_found", "Message does not exist")
 
     def act_on_message_intent(
         self,
@@ -4349,8 +4539,24 @@ class ApiService:
             self.repository.list_reactions([record.id for record in page.messages]),
             actor.id,
         )
+        # And one for every quoted parent (ADR-0021 §2.2), built server-side.
+        # Skipped entirely when nothing on the page quotes anything: no query,
+        # and a repository that predates replies is never asked for them.
+        quoted_ids = [
+            record.reply_to_id
+            for record in page.messages
+            if record.reply_to_id is not None
+        ]
+        quoted = self.repository.get_messages_by_ids(quoted_ids) if quoted_ids else {}
         messages = [
-            _wire_message(record, summaries.get(record.id)) for record in page.messages
+            _wire_message(
+                record,
+                summaries.get(record.id),
+                None
+                if record.reply_to_id is None or record.reply_to_id not in quoted
+                else _reply_preview(quoted[record.reply_to_id]),
+            )
+            for record in page.messages
         ]
         return MessageListResponse(
             context_id=context_id,
@@ -4384,6 +4590,8 @@ class ApiService:
             # real context, author, or text would turn a guessed UUID into a
             # window on another group's conversation.
             raise ApiProblem(404, "message_not_found", "Message does not exist")
+        if message.kind == "deleted":
+            raise ApiProblem(409, "message_deleted", "Tin này đã bị xoá.")
         if message.author_id is None:
             raise ApiProblem(
                 422,
@@ -4502,6 +4710,9 @@ class ApiService:
                 "created_at": message.created_at.isoformat(),
             }
             for message in messages
+            # A taken-back message still counts for the cadence (it happened)
+            # but has no words to hand the model (ADR-0021 §2.3).
+            if message.kind != "deleted"
         ]
         members = []
         for membership in self.repository.list_members(context_id):
