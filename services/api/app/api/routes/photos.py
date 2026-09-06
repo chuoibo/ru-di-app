@@ -117,3 +117,48 @@ def read_person_avatar(
         media_type=content_type,
         headers=_PRIVATE_CACHE_HEADERS,
     )
+
+
+# --- personal photographs (ADR-0022 §2.1) ------------------------------------
+
+
+@router.post(
+    "/people/me/photos",
+    response_model=UploadedImageResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=ERRORS,
+)
+async def upload_personal_photo(
+    file: Annotated[UploadFile, File()],
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    photo_storage: Annotated[PhotoStorage, Depends(get_photo_storage)],
+) -> UploadedImageResponse:
+    """A photograph of one's own, for a post. `me` on purpose: the owner is
+    the session, and a person id in the path would be a claim."""
+    raw = await _read_upload(file)
+    return ApiService(repository, photo_storage=photo_storage).upload_personal_photo(
+        raw, actor
+    )
+
+
+@router.get(
+    "/people/{person_id}/photos/{photo_id}",
+    responses=ERRORS,
+)
+def read_person_photo(
+    person_id: UUID,
+    photo_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    photo_storage: Annotated[PhotoStorage, Depends(get_photo_storage)],
+) -> Response:
+    """The owner, or a reader of a post that shows it; every refusal 404."""
+    content, content_type = ApiService(
+        repository, photo_storage=photo_storage
+    ).read_person_photo(person_id, photo_id, actor)
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers=_PRIVATE_CACHE_HEADERS,
+    )

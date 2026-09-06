@@ -74,7 +74,7 @@ from app.api.deps import get_photo_storage, get_repository
 from app.api.main import create_app
 from app.media.storage import PhotoStorage
 
-from .conftest import SeedCatalogueReads, ASGITestClient
+from .conftest import ASGITestClient, SeedCatalogueReads
 
 CONTEXT_ID = uuid.UUID("1aa00000-aaaa-4aaa-8aaa-0000a0000434")
 PHOTO_ID = uuid.UUID("2bb00000-bbbb-4bbb-8bbb-0000b0000434")
@@ -122,6 +122,14 @@ class StubRepository(SeedCatalogueReads):
         del person_id
         return StoredImage()
 
+    def get_person_image(self, person_id, image_id):
+        del person_id, image_id
+        return StoredImage()
+
+    def person_image_visible_to(self, person_id, image_id, reader_id):
+        del person_id, image_id, reader_id
+        return True
+
     def get_place_photo(self, place_id, photo_id):
         """A licensed place photograph whose file storage cannot produce (M12).
 
@@ -151,6 +159,10 @@ ROUTES: dict[str, dict[str, str]] = {
     "read_person_avatar": {
         "path": f"/people/{SUBJECT_ID}/avatar",
         "not_found_code": "avatar_not_found",
+    },
+    "read_person_photo": {
+        "path": f"/people/{SUBJECT_ID}/photos/{PHOTO_ID}",
+        "not_found_code": "photo_not_found",
     },
     "read_place_photo": {
         "path": f"/places/{PLACE_ID}/photos/{PHOTO_ID}",

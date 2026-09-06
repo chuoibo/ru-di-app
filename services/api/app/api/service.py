@@ -47,6 +47,7 @@ from app.api.repository import (
     PersonFinanceSummary,
     PersonRecord,
     PlacePhotoRecord,
+    PostCommentRecord,
     PostRecord,
     ReactionRecord,
     RecapOutingRecord,
@@ -155,9 +156,15 @@ from app.api.schemas import (
     PersonContextListResponse,
     PersonMatchResponse,
     PersonPostListResponse,
+    PostCommentCreateRequest,
+    PostCommentListResponse,
+    PostCommentResponse,
     PostCreateRequest,
     PostedMessageResponse,
     PostListResponse,
+    PostReactionCount,
+    PostReactionRequest,
+    PostReactionsResponse,
     PostResponse,
     PreferenceProfileResponse,
     PreferenceSection,
@@ -250,6 +257,12 @@ from app.domain.message_edit import (
 )
 from app.domain.otp import DEFAULT_LIMITS as OTP_LIMITS
 from app.domain.otp import generate_code, plan_request, plan_verify
+from app.domain.photo_ref import (
+    OWNER_CONTEXT,
+    PhotoUrlError,
+    parse_photo_url,
+    person_photo_url,
+)
 from app.domain.preferences import build_preference_profile
 from app.domain.reel import ReelError, ground_reel
 from app.domain.stickers import is_sticker
@@ -476,14 +489,22 @@ def _photo_url_context_id(image_url: str) -> uuid.UUID:
     return context_id
 
 
-def _wire_post(record: PostRecord) -> PostResponse:
-    return PostResponse(
+def _post_dict(record: PostRecord) -> dict:
+    """The shape `app.domain.post_audience` judges: ids as strings."""
+    return {
+        "author_id": str(record.author_id),
+        "audience": record.audience,
+        "context_id": None if record.context_id is None else str(record.context_id),
+    }
+
+
+def _wire_post_comment(record: PostCommentRecord) -> PostCommentResponse:
+    return PostCommentResponse(
         id=record.id,
+        post_id=record.post_id,
         author_id=record.author_id,
-        audience=record.audience,
-        context_id=record.context_id,
+        author_display_name=record.author_display_name,
         body=record.body,
-        image_url=record.image_url,
         created_at=record.created_at,
     )
 
@@ -1580,6 +1601,7 @@ class ApiService:
         context_id: uuid.UUID | None,
         owner_person_id: uuid.UUID | None,
         uploaded_by_id: uuid.UUID,
+        purpose: str = "group",
     ) -> UploadedImageRecord:
         try:
             sanitized = sanitize_image(raw)
@@ -1598,6 +1620,7 @@ class ApiService:
             width=sanitized.width,
             height=sanitized.height,
             now=_now(),
+            purpose=purpose,
         )
 
     def upload_context_photo(
@@ -1650,6 +1673,7 @@ class ApiService:
             context_id=None,
             owner_person_id=person_id,
             uploaded_by_id=actor.id,
+            purpose="avatar",
         )
         return _uploaded_image_response(record, f"/people/{person_id}/avatar")
 
@@ -1673,6 +1697,51 @@ class ApiService:
             record.storage_key,
             code="avatar_not_found",
             message="Avatar does not exist",
+        )
+        return content, record.content_type
+
+    def upload_personal_photo(self, raw: bytes, actor: Actor) -> UploadedImageResponse:
+        """A photograph of one's own, for a post (ADR-0022 §2.1). Readable by
+        nobody but the owner until a post that shows it is readable."""
+        _require_permission("upload_personal_photo", actor, {"is_self": True})
+        record = self._store_uploaded_image(
+            raw,
+            context_id=None,
+            owner_person_id=actor.id,
+            uploaded_by_id=actor.id,
+            purpose="personal",
+        )
+        return _uploaded_image_response(
+            record, person_photo_url(str(actor.id), str(record.id))
+        )
+
+    def read_person_photo(
+        self, person_id: uuid.UUID, photo_id: uuid.UUID, actor: Actor
+    ) -> tuple[bytes, str]:
+        """The one gate for personal photographs (ADR-0022 §2.1).
+
+        The owner always; anybody else exactly when a post showing the photo
+        is readable by them -- decided by the same SQL the feed is fetched by.
+        Every refusal is 404 `photo_not_found`, never 403: a 403 would say the
+        photo exists, and the whole point of the gate is that it does not.
+        """
+        addressee = actor.id == person_id or self.repository.person_image_visible_to(
+            person_id, photo_id, actor.id
+        )
+        try:
+            _require_permission(
+                "view_person_photo", actor, {"is_photo_addressee": addressee}
+            )
+        except ApiProblem as denied:
+            raise ApiProblem(404, "photo_not_found", "Photo does not exist") from denied
+        record = self.repository.get_person_image(person_id, photo_id)
+        if record is None:
+            raise ApiProblem(404, "photo_not_found", "Photo does not exist")
+        content = _stored_image_bytes(
+            self.photo_storage,
+            record.storage_key,
+            code="photo_not_found",
+            message="Photo does not exist",
         )
         return content, record.content_type
 
@@ -1752,7 +1821,7 @@ class ApiService:
     ) -> list[PostResponse]:
         friends: dict[uuid.UUID, bool] = {}
         members: dict[uuid.UUID, bool] = {}
-        readable = []
+        readable: list[tuple[PostRecord, bool, bool]] = []
         for record in records:
             if record.author_id not in friends:
                 friends[record.author_id] = self._is_friend(reader_id, record.author_id)
@@ -1760,22 +1829,87 @@ class ApiService:
                 members[record.context_id] = self.repository.is_member(
                     record.context_id, reader_id
                 )
+            is_friend = friends[record.author_id]
+            is_group_member = (
+                record.context_id is not None and members[record.context_id]
+            )
             if post_audience.can_read(
-                {
-                    "author_id": str(record.author_id),
-                    "audience": record.audience,
-                    "context_id": (
-                        None if record.context_id is None else str(record.context_id)
-                    ),
-                },
+                _post_dict(record),
                 reader_id=str(reader_id),
-                is_friend=friends[record.author_id],
-                is_group_member=(
-                    record.context_id is not None and members[record.context_id]
-                ),
+                is_friend=is_friend,
+                is_group_member=is_group_member,
             ):
-                readable.append(_wire_post(record))
-        return readable
+                readable.append((record, is_friend, is_group_member))
+        return self._wire_posts(readable, reader_id)
+
+    def _wire_posts(
+        self, rows: list[tuple[PostRecord, bool, bool]], reader_id: uuid.UUID
+    ) -> list[PostResponse]:
+        """Serialise posts this reader may read, with what the wall shows next
+        to each (ADR-0022 §2.2): counts from the rows, the reader's own
+        reactions, the author's name, and `can_comment` decided HERE for this
+        reader from the author's policy. The client re-derives none of it.
+        """
+        if not rows:
+            return []
+        counts = self.repository.post_social_counts(
+            tuple(record.id for record, _, _ in rows), viewer_id=reader_id
+        )
+        authors: dict[uuid.UUID, PersonRecord | None] = {}
+        out: list[PostResponse] = []
+        for record, is_friend, is_group_member in rows:
+            if record.author_id not in authors:
+                authors[record.author_id] = self.repository.get_person(record.author_id)
+            author = authors[record.author_id]
+            # A post whose author row is gone has nobody to grant comments.
+            policy = "nobody" if author is None else author.wall_comment_policy
+            per_kind = counts.reactions.get(record.id, {})
+            out.append(
+                PostResponse(
+                    id=record.id,
+                    author_id=record.author_id,
+                    audience=record.audience,
+                    context_id=record.context_id,
+                    body=record.body,
+                    image_url=record.image_url,
+                    created_at=record.created_at,
+                    author_display_name="" if author is None else author.display_name,
+                    reactions=[
+                        PostReactionCount(kind=kind, count=per_kind[kind])
+                        for kind in sorted(per_kind)
+                    ],
+                    my_reactions=sorted(counts.mine.get(record.id, frozenset())),
+                    comment_count=counts.comments.get(record.id, 0),
+                    can_comment=post_audience.can_comment(
+                        _post_dict(record),
+                        policy=policy,
+                        reader_id=str(reader_id),
+                        is_friend=is_friend,
+                        is_group_member=is_group_member,
+                    ),
+                )
+            )
+        return out
+
+    def _readable_post_or_404(
+        self, post_id: uuid.UUID, actor: Actor
+    ) -> tuple[PostRecord, dict]:
+        """The post and the two facts it was judged by -- or 404, never 403.
+
+        A 403 would be an oracle: it says «this id names a real post», and an
+        attacker holding a session and a list of candidate ids learns which of
+        them exist inside groups and private walls they have no part in. Every
+        route with `{post_id}` in it goes through here first.
+        """
+        record = self.repository.get_post(post_id)
+        if record is None:
+            raise ApiProblem(404, "post_not_found", "Post does not exist")
+        facts = self._post_facts(record, actor.id)
+        if not post_audience.can_read(
+            _post_dict(record), reader_id=str(actor.id), **facts
+        ):
+            raise ApiProblem(404, "post_not_found", "Post does not exist")
+        return record, facts
 
     def create_post(self, request: PostCreateRequest, actor: Actor) -> PostResponse:
         """F39. Write one post, addressed to one of F42's four audiences."""
@@ -1800,21 +1934,9 @@ class ApiService:
                 },
             )
 
+        image_url = None
         if request.image_url is not None:
-            # A photo lives in a group's storage and is read back through a
-            # membership-gated route. Attaching one from a group the author is
-            # not in would put another group's context and photo ids into a
-            # body that, at `public`, anybody can read.
-            photo_context_id = _photo_url_context_id(request.image_url)
-            _require_permission(
-                "address_post_to_group",
-                actor,
-                {
-                    "is_group_member": self.repository.is_member(
-                        photo_context_id, actor.id
-                    )
-                },
-            )
+            image_url = self._post_photo_url(request, actor)
 
         record = self.repository.create_post(
             # The author is the proven actor. There is no request field that
@@ -1823,10 +1945,49 @@ class ApiService:
             audience=request.audience,
             context_id=request.context_id,
             body=request.body,
-            image_url=request.image_url,
+            image_url=image_url,
             now=_now(),
         )
-        return _wire_post(record)
+        return self._wire_posts([(record, False, False)], actor.id)[0]
+
+    def _post_photo_url(self, request: PostCreateRequest, actor: Actor) -> str:
+        """The canonical url a post may show (ADR-0022 §2.1).
+
+        A group photograph is read behind that group's membership, so it may
+        only illustrate a post addressed to that same group: at `friends` or
+        `public` it would carry the group's photo past the group's gate. A
+        personal photograph must be the author's own and must exist.
+        """
+        try:
+            ref = parse_photo_url(request.image_url)
+        except PhotoUrlError as exc:
+            raise ApiProblem(
+                422, "photo_url_invalid", "image_url is not a photo of this product"
+            ) from exc
+        if ref.owner_kind == OWNER_CONTEXT:
+            if request.audience != "group" or str(request.context_id) != ref.owner_id:
+                raise ApiProblem(
+                    422,
+                    "photo_not_addressable",
+                    "Ảnh của nhóm chỉ đăng được cho chính nhóm đó.",
+                )
+            _require_permission(
+                "address_post_to_group",
+                actor,
+                {
+                    "is_group_member": self.repository.is_member(
+                        uuid.UUID(ref.owner_id), actor.id
+                    )
+                },
+            )
+            return ref.url
+        if ref.owner_id != str(actor.id):
+            raise ApiProblem(
+                403, "permission_denied", "Chỉ đăng được ảnh của chính mình."
+            )
+        if self.repository.get_person_image(actor.id, uuid.UUID(ref.photo_id)) is None:
+            raise ApiProblem(404, "photo_not_found", "Photo does not exist")
+        return ref.url
 
     def read_post(self, post_id: uuid.UUID, actor: Actor) -> PostResponse:
         """One post, or 404.
@@ -1838,23 +1999,129 @@ class ApiService:
         indistinguishable rather than merely both refused.
         """
 
-        record = self.repository.get_post(post_id)
-        if record is None:
-            raise ApiProblem(404, "post_not_found", "Post does not exist")
-        facts = self._post_facts(record, actor.id)
-        if not post_audience.can_read(
+        record, facts = self._readable_post_or_404(post_id, actor)
+        return self._wire_posts(
+            [(record, facts["is_friend"], facts["is_group_member"])], actor.id
+        )[0]
+
+    # --- reactions and comments under a post (ADR-0022 §2.2) --------------
+
+    def _post_reactions_response(
+        self, post_id: uuid.UUID, reader_id: uuid.UUID
+    ) -> PostReactionsResponse:
+        counts = self.repository.post_social_counts((post_id,), viewer_id=reader_id)
+        per_kind = counts.reactions.get(post_id, {})
+        return PostReactionsResponse(
+            post_id=post_id,
+            reactions=[
+                PostReactionCount(kind=kind, count=per_kind[kind])
+                for kind in sorted(per_kind)
+            ],
+            my_reactions=sorted(counts.mine.get(post_id, frozenset())),
+        )
+
+    def react_to_post(
+        self, post_id: uuid.UUID, request: PostReactionRequest, actor: Actor
+    ) -> PostReactionsResponse:
+        """Leave one reaction of one kind. A second tap of the same kind finds
+        the row the first one wrote (idempotent, 200 both times); the count
+        answered is recounted from the rows, never incremented."""
+        record, _facts = self._readable_post_or_404(post_id, actor)
+        _require_permission("react_to_post", actor, {"may_read_post": True})
+        self.repository.add_post_reaction(
+            post_id=record.id, person_id=actor.id, kind=request.kind, now=_now()
+        )
+        return self._post_reactions_response(record.id, actor.id)
+
+    def unreact_to_post(
+        self, post_id: uuid.UUID, kind: str, actor: Actor
+    ) -> PostReactionsResponse:
+        """Take back one's own reaction of one kind, and only one's own."""
+        record, _facts = self._readable_post_or_404(post_id, actor)
+        _require_permission("react_to_post", actor, {"may_read_post": True})
+        self.repository.remove_post_reaction(
+            post_id=record.id, person_id=actor.id, kind=kind
+        )
+        return self._post_reactions_response(record.id, actor.id)
+
+    def post_comment(
+        self, post_id: uuid.UUID, request: PostCommentCreateRequest, actor: Actor
+    ) -> PostCommentResponse:
+        """Say something under a post the actor may read.
+
+        Readable first (404 otherwise), then the wall owner's policy. A closed
+        wall is a 403 with a sentence: the reader already has the post, so
+        this refusal reveals nothing they did not already hold.
+        """
+        record, facts = self._readable_post_or_404(post_id, actor)
+        author = self.repository.get_person(record.author_id)
+        policy = "nobody" if author is None else author.wall_comment_policy
+        allowed = post_audience.can_comment(
+            _post_dict(record), policy=policy, reader_id=str(actor.id), **facts
+        )
+        try:
+            _require_permission("comment_on_post", actor, {"may_comment": allowed})
+        except ApiProblem as denied:
+            raise ApiProblem(
+                403, "comments_closed", "Chủ tường không cho bình luận bài này."
+            ) from denied
+        comment = self.repository.create_post_comment(
+            post_id=record.id, author_id=actor.id, body=request.body, now=_now()
+        )
+        return _wire_post_comment(comment)
+
+    def list_post_comments(
+        self,
+        post_id: uuid.UUID,
+        actor: Actor,
+        *,
+        limit: int = 50,
+        after: str | None = None,
+    ) -> PostCommentListResponse:
+        record, _facts = self._readable_post_or_404(post_id, actor)
+        cursor = None
+        if after is not None:
+            try:
+                cursor = decode_cursor(after)
+            except CursorError as exc:
+                raise ApiProblem(
+                    422, "invalid_cursor", "Comment cursor is invalid"
+                ) from exc
+        rows = self.repository.list_post_comments(
+            record.id, limit=limit + 1, after=cursor
+        )
+        page = rows[:limit]
+        has_more = len(rows) > limit
+        return PostCommentListResponse(
+            post_id=record.id,
+            comments=[_wire_post_comment(row) for row in page],
+            next_cursor=(
+                encode_cursor(page[-1].created_at, page[-1].id) if has_more else None
+            ),
+            has_more=has_more,
+        )
+
+    def delete_post_comment(
+        self, post_id: uuid.UUID, comment_id: uuid.UUID, actor: Actor
+    ) -> None:
+        """The comment's author or the post's author, nobody else. A comment
+        of another post under this id is «not here» (404), not a hint."""
+        record, _facts = self._readable_post_or_404(post_id, actor)
+        comment = self.repository.get_post_comment(comment_id)
+        if comment is None or comment.post_id != record.id:
+            raise ApiProblem(404, "comment_not_found", "Comment does not exist")
+        _require_permission(
+            "delete_post_comment",
+            actor,
             {
-                "author_id": str(record.author_id),
-                "audience": record.audience,
-                "context_id": (
-                    None if record.context_id is None else str(record.context_id)
-                ),
+                "may_delete_comment": post_audience.can_delete_comment(
+                    {"author_id": str(comment.author_id)},
+                    _post_dict(record),
+                    str(actor.id),
+                )
             },
-            reader_id=str(actor.id),
-            **facts,
-        ):
-            raise ApiProblem(404, "post_not_found", "Post does not exist")
-        return _wire_post(record)
+        )
+        self.repository.delete_post_comment(comment.id)
 
     def list_posts(self, actor: Actor, *, limit: int = 50) -> PostListResponse:
         return PostListResponse(
@@ -3316,6 +3583,8 @@ class ApiService:
             changes["bio"] = request.bio.strip() or None
         if request.city is not None:
             changes["city"] = request.city.strip() or None
+        if request.wall_comment_policy is not None:
+            changes["wall_comment_policy"] = request.wall_comment_policy
         person = self.repository.update_person_profile(actor.id, changes=changes)
         if person is None:
             raise ApiProblem(
@@ -3406,6 +3675,7 @@ class ApiService:
                 self.repository.list_person_interests(person.id)
             ),
             budget_band=person.budget_band,
+            wall_comment_policy=person.wall_comment_policy,
         )
 
     def get_person_profile(

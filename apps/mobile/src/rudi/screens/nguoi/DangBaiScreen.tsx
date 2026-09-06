@@ -10,11 +10,14 @@
  * only members of that group may read, so an image on a `friends` or `public`
  * post would be an address most readers cannot open.
  */
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { newAttempt } from "../../../api";
+import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
+import { taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import {
   AUDIENCES,
   MAC_DINH_NGUOI_DOC,
@@ -40,6 +43,29 @@ export function DangBaiScreen() {
   const [nhomChon, setNhomChon] = useState<string | null>(null);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
+  // ADR-0022 §2.1: a picture of one's own goes up first, as a personal
+  // photograph nobody may read yet; the post that shows it comes second.
+  const [anh, setAnh] = useState<TempPhoto | null>(null);
+  const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
+
+  const chonAnhMoi = async () => {
+    if (dangGui) return;
+    setLoi(null);
+    try {
+      const daChon = await chonAnh();
+      if (daChon === null) return;
+      if (anh !== null) await boAnh(anh);
+      setAnh(daChon);
+    } catch (error) {
+      setLoi(loiRaChu(error));
+    }
+  };
+
+  const boAnhDaChon = async () => {
+    if (anh === null || dangGui) return;
+    await boAnh(anh);
+    setAnh(null);
+  };
 
   useEffect(() => {
     if (phien === null) return;
@@ -79,14 +105,23 @@ export function DangBaiScreen() {
     setDangGui(true);
     setLoi(null);
     try {
-      await guiBai(phien.person_id, form, newAttempt());
+      let imageUrl: string | null = null;
+      if (anh !== null) {
+        const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+        imageUrl = daTai.url;
+        setAnh(null);
+      }
+      await guiBai(phien.person_id, { ...form, imageUrl }, newAttempt());
       router.replace(`/people/${phien.person_id}`);
     } catch (error) {
       setLoi(loiRaChu(error));
     } finally {
+      setGiaiDoan(null);
       setDangGui(false);
     }
   };
+
+  const cauGiaiDoan = giaiDoan === "chuan-bi-anh" ? "Đang chuẩn bị ảnh…" : giaiDoan === "dang-gui" ? "Đang tải ảnh lên…" : null;
 
   return (
     <RudiScreen testID="dang-bai-screen">
@@ -100,6 +135,18 @@ export function DangBaiScreen() {
           placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
           value={than}
         />
+      </Card>
+      <Card style={styles.khungAnh}>
+        {anh === null ? (
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>Một tấm ảnh, nếu muốn. Ai đọc được bài thì xem được ảnh.</Text>
+        ) : (
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anhXem, { borderRadius: radius.small }]} />
+        )}
+        <View style={styles.chips}>
+          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
+          {anh !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
+        </View>
+        {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       </Card>
       <Heading subtitle="Chọn ai đọc được bài này. Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau." title="Ai đọc được?" />
       <Card style={styles.danhSach}>
@@ -174,4 +221,6 @@ const styles = StyleSheet.create({
   hang: { minHeight: 56, justifyContent: "center", paddingHorizontal: 10, paddingVertical: 8 },
   hangChu: { gap: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  khungAnh: { gap: 10 },
+  anhXem: { width: "100%", aspectRatio: 4 / 3 },
 });

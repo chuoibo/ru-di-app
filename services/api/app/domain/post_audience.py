@@ -48,6 +48,13 @@ AUDIENCES = ("only_me", "friends", "group", "public")
 #: re-posts, and the cost of guessing too wide cannot be taken back.
 DEFAULT_AUDIENCE = "only_me"
 
+#: ADR-0022 §2.2: who may comment on a person's posts, chosen by that person.
+#: `readers` is everyone `can_read` lets in; `friends` narrows that to friends;
+#: `nobody` closes the composer for everyone but the author. The CHECK on
+#: `people.wall_comment_policy` is the second spelling of this tuple.
+COMMENT_POLICIES = ("readers", "friends", "nobody")
+DEFAULT_COMMENT_POLICY = "readers"
+
 
 class AudienceError(Exception):
     def __init__(self, code: str):
@@ -77,6 +84,48 @@ def check_writable(audience: str, context_id: object | None) -> None:
         # A `only_me` post carrying a group id is a row that looks group-scoped
         # to every future query written by someone who did not read this file.
         raise AudienceError("CONTEXT_NOT_ADDRESSABLE")
+
+
+def is_comment_policy(value: object) -> bool:
+    return isinstance(value, str) and value in COMMENT_POLICIES
+
+
+def can_comment(
+    post: dict,
+    *,
+    policy: str,
+    reader_id: str,
+    is_friend: bool,
+    is_group_member: bool,
+) -> bool:
+    """Whether one reader may comment under one post (ADR-0022 §2.2).
+
+    Reading comes first: nobody comments on what they cannot see. Then the
+    wall owner's policy -- the author's own, never the commenter's -- with the
+    author exempt from their own setting. A policy word this module does not
+    know closes the composer, for the same reason `can_read` fails closed on
+    an audience it does not know.
+    """
+    if not can_read(
+        post,
+        reader_id=reader_id,
+        is_friend=is_friend,
+        is_group_member=is_group_member,
+    ):
+        return False
+    if reader_id == post.get("author_id"):
+        return True
+    if policy == "readers":
+        return True
+    if policy == "friends":
+        return bool(is_friend)
+    return False
+
+
+def can_delete_comment(comment: dict, post: dict, actor_id: str) -> bool:
+    """The comment's author may take it back; the post's author may sweep
+    their own wall. Nobody else -- there is no moderator role."""
+    return actor_id == comment.get("author_id") or actor_id == post.get("author_id")
 
 
 def can_read(

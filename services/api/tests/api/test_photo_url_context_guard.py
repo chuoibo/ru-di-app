@@ -30,6 +30,9 @@ MALFORMED = (
     "https://tracker.example/pixel.png",
     "javascript:alert(1)",
     "/contexts/../../etc/passwd",
+    # ADR-0022 §2.1: a personal photograph is not a group photograph, and a
+    # memory or a chat message never takes one.
+    "/people/1aa00000-aaaa-4aaa-8aaa-0000a0000001/photos/2bb00000-bbbb-4bbb-8bbb-0000b0000001",
 )
 
 
