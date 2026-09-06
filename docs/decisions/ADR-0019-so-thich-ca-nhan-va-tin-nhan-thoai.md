@@ -1,6 +1,6 @@
 # ADR-0019 — Sở thích cá nhân được lưu và dùng thật; tin nhắn thoại chỉ ghi và nghe lại
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-05 — chờ Lead đánh ĐÃ CHẤP NHẬN. Mã M11 và M14 không merge trước khi dòng này đổi.
+- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-05 — chờ Lead đánh ĐÃ CHẤP NHẬN. M11 (#563, #564, #565) đã merge ngày 2026-09-05 theo lệnh merge trực tiếp của Lead cùng ngày (tiền lệ ADR-0020); M14 (tin nhắn thoại) chưa làm. Lát L6 của social v1.1 (ADR-0021 §2.6) dựa trên §2.1–2.2 nên không merge trước khi Lead đổi dòng này.
 - **Quyết định bởi:** Lead (phiên 2026-09-05: cá nhân hoá để AI gợi ý hợp gu; «tin nhắn thoại: ghi + nghe lại», không phụ đề AI).
 - **Mở một quyền hệ điều hành đang bị chặn** (`RECORD_AUDIO`). Đọc trước khi sửa `app.json`.
 
