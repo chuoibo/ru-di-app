@@ -932,6 +932,27 @@ không phải gì.
   kẻ tóc dưới. Hàng nằm trên giấy, **không thẻ**; ở tablet hai cột
   (`tablet-light-explore`).
 
+### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
+- **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
+  danh sách với `packages/shared/stickers.json` và máy chủ), vẽ bằng
+  `ui/stickers/Sticker` cỡ 120 trong hàng, không nền không viền; giữ lâu mở
+  cùng `MenuTin` như bong bóng chữ. Không GIF, không ảnh raster.
+- **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
+  `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
+  dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
+  ngay trên ô soạn, có nút «Bỏ trả lời».
+- **Tin đã xoá** là bong bóng giấy (`card`/`line`) với `caption` nghiêng
+  `inkFaint` «Tin nhắn đã bị xoá»; không trích dẫn, không giữ lâu.
+- **Theme bong bóng** (`mau-chat.ts`, 5 bảng trong `tokens.json` khoá
+  `chatTheme`, `mac-dinh` = accent của scheme) chỉ tô bong bóng của người gửi
+  và viền chip phản ứng của mình; tông dẫn của màn vẫn là accent thương hiệu.
+- **Pill dưới tiêu đề**: hàng hai pill cân giữa (`pills`), «N thành viên ·
+  xem và mời ›» (cặp: «Xem hồ sơ ›») và «Cài đặt» (mở `CaiDatNhomSheet`);
+  cùng `caption inkSoft` + icon 15 `inkFaint`, cao 40, không viền.
+- **Cặp (nhắn riêng)** dùng nguyên màn chat với tên người kia làm tiêu đề;
+  ở Conversations là chữ cái đầu (`Avatar` 44) thay glyph nhóm, dòng phụ
+  «Nhắn riêng».
+
 ### Lịch trình (`HangChang`)
 Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 với nút
 12 và đường 2dp, thân phải (`label ink` tiêu đề, `caption` dòng phụ với
