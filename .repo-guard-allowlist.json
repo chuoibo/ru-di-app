@@ -493,6 +493,14 @@
         "controlled-artifact"
       ],
       "reason": "Ô chất liệu 256×256 nền trong suốt «mực in» cho con dấu (UI v2, ADR-0020): sinh bằng scripts/sinh_chat_lieu_ui_v2.py (Python random seed 20260905, chạy lại ra đúng từng byte), không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG (tEXt Comment + imp embed-prompt). Ghim digest để đổi một byte phải review lại."
+    },
+    {
+      "path": "services/api/app/media/fonts/BricolageGrotesque-Bold.ttf",
+      "sha256": "96b4e880f78318631a573954986c368bfcaa9896e0c0383f917d9ce3fd2b3259",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bản chép nguyên byte của apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf (SIL OFL 1.1, cùng digest) để image API dựng thước phim MP4 vẽ chữ bằng Pillow (ADR-0025 §2.1): Docker build context là services/api nên font của mobile không vào image. Giấy phép kèm ở OFL-BricolageGrotesque.txt cùng thư mục. Path và digest ghim để mọi thay đổi byte phải review lại."
     }
   ]
 }
