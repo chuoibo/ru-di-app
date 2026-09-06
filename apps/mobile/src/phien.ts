@@ -413,6 +413,18 @@ export async function xacMinhOtp(
   return phien;
 }
 
+/** Exchange the provider proof for our own session; the server owns account linkage. */
+export async function dangNhapGoogle(idToken: string, kho?: KhoAnToan): Promise<Phien> {
+  const wire = await translatedAnonymous<Phien>({}, "/auth/google", {
+    method: "POST",
+    body: { id_token: idToken },
+    attempt: newAttempt(),
+  });
+  const phien = chonNhomMacDinh(wire);
+  await ghiNho(phien, kho);
+  return phien;
+}
+
 export async function ghiNho(phien: Phien, kho?: KhoAnToan): Promise<void> {
   datTokenPhien(phien.token);
   const store = kho ?? (await khoAnToanMacDinh());

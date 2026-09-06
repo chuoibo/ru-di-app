@@ -13,7 +13,11 @@
  *
  * On the fixture build (`cheDo !== "live"`) the tab still renders the fixture
  * chat, unchanged, so the default Maestro table keeps its ground.
+ *
+ * UI v2: rows on the paper with a hairline between them; unread is a mark
+ * and a number; loading is the list's own shape; errors keep the list.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -22,7 +26,10 @@ import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Heading, RudiButton, RudiScreen } from "../../ui";
+import { Heading, RudiButton, RudiScreen } from "../../ui";
+import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -43,7 +50,7 @@ function tenTacGia(tin: { author_id: string | null; author_display_name: string 
 
 export function ConversationsScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const { datPhien } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangBam, setDangBam] = useState<string | null>(null);
@@ -101,80 +108,93 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
 
   return (
     <RudiScreen bottomInset={112} testID="conversations-screen">
-      <View style={styles.top}>
-        <View>
-          <Text style={[typography.h1, { color: colors.ink }]}>Tin nhắn</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Nhóm của bạn trên máy chủ</Text>
+      <View style={styles.dau}>
+        <View style={styles.flex}>
+          <Heading title="Tin nhắn" subtitle="Nhóm của bạn trên máy chủ" />
         </View>
+        {/* Not in the top-right corner: on the development build the
+            dev-launcher's floating gear covers it. A compact button beside the
+            title is reachable on the build we test on. */}
+        <RudiButton compact full={false} icon="add" label="Tạo nhóm" onPress={() => router.push("/groups/new")} variant="outline" />
       </View>
-      {/* Not in the top-right corner: on the development build the
-          dev-launcher's floating gear covers it, so a tap there opens the dev
-          menu instead of this. A full row under the title is reachable on the
-          build we test on and reads as the tab's one action. */}
-      <RudiButton icon="add" label="Tạo nhóm" onPress={() => router.push("/groups/new")} variant="soft" />
       {trang.pha === "dang-doc" ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc danh sách nhóm...</Text>
+        <SkeletonGroup>
+          <SkeletonRow leading={44} />
+          <SkeletonRow leading={44} />
+          <SkeletonRow leading={44} />
+        </SkeletonGroup>
       ) : null}
-      {trang.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-          <RudiButton label="Thử lại" onPress={() => void nap()} variant="outline" />
-        </Card>
-      ) : null}
+      {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách nhóm" /> : null}
       {trang.pha === "xong" && trang.nhom.length === 0 ? (
-        <Heading
+        <EmptyState
+          action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
+          body="Mở một nhóm mới, hoặc nhận lời mời của người đã ở trong nhóm."
+          kind="first-use"
+          layout="inline"
+          secondary={{ label: "Tôi có lời mời", onPress: () => router.push("/moi") }}
           title="Chưa có nhóm nào"
-          subtitle="Mở một nhóm mới, hoặc nhận lời mời của người đã ở trong nhóm."
         />
       ) : null}
-      {trang.pha === "xong"
-        ? trang.nhom.map((nhom) => (
-            <Card key={nhom.id} style={styles.hang}>
-              <Pressable
-                accessibilityRole="button"
-                disabled={nhom.my_state !== "active" || dangBam !== null}
-                onPress={() => void moNhom(nhom)}
-                style={styles.hangChinh}
-              >
-                <View style={styles.hangChu}>
-                  <Text style={[typography.title, { color: colors.ink }]}>{nhom.display_name}</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {nhom.member_count} thành viên
-                    {nhom.my_role === "admin" ? " · bạn quản trị" : ""}
-                    {nhom.my_state === "invited" ? " · bạn được mời" : ""}
-                  </Text>
-                  <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
-                    {nhom.last_message
-                      ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${nhom.last_message.preview}`
-                      : "Chưa có tin nhắn nào."}
-                  </Text>
-                </View>
-                {nhom.unread_count > 0 ? (
-                  <View style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
-                    <Text style={[typography.caption, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+      {trang.pha === "xong" ? (
+        <View>
+          {trang.nhom.map((nhom) => {
+            const duocMoi = nhom.my_state === "invited";
+            return (
+              <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
+                <Pressable
+                  accessibilityLabel={`Mở nhóm ${nhom.display_name}`}
+                  accessibilityRole="button"
+                  disabled={nhom.my_state !== "active" || dangBam !== null}
+                  onPress={() => void moNhom(nhom)}
+                  style={({ pressed }) => [styles.hangChinh, pressed && styles.bam]}
+                >
+                  <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
+                    <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />
                   </View>
+                  <View style={styles.hangChu}>
+                    <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{nhom.display_name}</Text>
+                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
+                      {nhom.member_count} thành viên
+                      {nhom.my_role === "admin" ? " · bạn quản trị" : ""}
+                      {duocMoi ? " · bạn được mời" : ""}
+                    </Text>
+                    <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
+                      {nhom.last_message
+                        ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${nhom.last_message.preview}`
+                        : "Chưa có tin nhắn nào."}
+                    </Text>
+                  </View>
+                  {nhom.unread_count > 0 ? (
+                    <View accessibilityLabel={`${nhom.unread_count} tin chưa đọc`} style={[styles.chuaDoc, { backgroundColor: colors.accent }]}>
+                      <Text style={[typography.caption, { color: colors.accentInk }]}>{nhom.unread_count}</Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+                {duocMoi ? (
+                  <RudiButton
+                    compact
+                    disabled={dangBam !== null}
+                    label="Đồng ý vào nhóm"
+                    loading={dangBam === nhom.id}
+                    onPress={() => void dongY(nhom)}
+                  />
                 ) : null}
-              </Pressable>
-              {nhom.my_state === "invited" ? (
-                <RudiButton
-                  compact
-                  disabled={dangBam !== null}
-                  label="Đồng ý vào nhóm"
-                  loading={dangBam === nhom.id}
-                  onPress={() => void dongY(nhom)}
-                />
-              ) : null}
-            </Card>
-          ))
-        : null}
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  hang: { gap: 10 },
-  hangChinh: { flexDirection: "row", alignItems: "center", gap: 12 },
+  flex: { flex: 1 },
+  dau: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangChinh: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
+  hinh: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   hangChu: { flex: 1, gap: 2 },
   chuaDoc: { minWidth: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
+  bam: { opacity: 0.7 },
 });

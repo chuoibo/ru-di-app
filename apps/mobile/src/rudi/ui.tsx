@@ -4,12 +4,14 @@ import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { createContext, useContext, useState, type ComponentProps, type ReactNode } from "react";
+import { Children, createContext, useContext, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import {
   type LayoutChangeEvent,
   ActivityIndicator,
   DimensionValue,
   GestureResponderEvent,
+  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -19,7 +21,6 @@ import {
   TextInput,
   TextInputProps,
   TextStyle,
-  useWindowDimensions,
   View,
   ViewStyle,
 } from "react-native";
@@ -29,8 +30,10 @@ import { DemoPerson } from "./fixtures";
 import { useRudiSession } from "./session";
 import { cardShadow, lopPhu, mucTrenAnh, nenAnhTrong, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Grain } from "./ui/Grain";
+import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
+import { gridFor } from "./adaptive";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -46,6 +49,15 @@ type ScreenProps = {
   /** `cover` when the first child is a CoverBand: the status-bar area is indigo, not paper. */
   surface?: "page" | "cover";
   testID?: string;
+  /** Only opt in when this screen owns the composer; live chat owns its own IME. */
+  avoidKeyboard?: boolean;
+  scrollEnabled?: boolean;
+  /** A sheet or scrim laid over the whole screen, outside the scroll box (a `Sheet` inside the content would scroll away with it). */
+  overlay?: ReactNode;
+  /** A thread reads from its end: keep the scroll at the bottom as content grows. */
+  keepEnd?: boolean;
+  /** Stays above the scroll box: a chat's top bar and pinned outing, which `keepEnd` would otherwise scroll away. */
+  header?: ReactNode;
 };
 
 export function RudiScreen({
@@ -59,9 +71,22 @@ export function RudiScreen({
   contentStyle,
   surface = "page",
   testID,
+  avoidKeyboard = false,
+  scrollEnabled = true,
+  overlay,
+  keepEnd = false,
+  header,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const cuon = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (!avoidKeyboard) return;
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
+    return () => { show.remove(); hide.remove(); };
+  }, [avoidKeyboard]);
   const tablet = layout.sizeClass !== "compact";
   const inner = [
     styles.screenInner,
@@ -87,10 +112,19 @@ export function RudiScreen({
       <View pointerEvents="none" style={[styles.paper, { backgroundColor: colors.ground }]}>
         <Grain material="giayTrang" opacity={dark ? 0.3 : 0.45} />
       </View>
+      <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      {header ? (
+        // A keyline under the fixed header: content scrolling beneath it reads
+        // as paper under a rule, not as a rendering fault.
+        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, tablet && styles.tabletInner]}>{header}</View>
+      ) : null}
       {scroll ? (
         <ScrollView
+          ref={cuon}
+          scrollEnabled={scrollEnabled}
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
+          onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : undefined}
           showsVerticalScrollIndicator={false}
           style={styles.flex}
         >
@@ -103,14 +137,15 @@ export function RudiScreen({
         <View
           style={[
             styles.screenFooter,
-            { paddingHorizontal: tablet ? space.lg : space.md, paddingBottom: footerInset },
+            { paddingHorizontal: tablet ? space.lg : space.md, paddingBottom: keyboardOpen ? 8 : footerInset },
             tablet && styles.tabletInner,
           ]}
         >
           {footer}
         </View>
       ) : null}
-      {Platform.OS === "web" && dark ? null : null}
+      </KeyboardAvoidingView>
+      {overlay}
     </SafeAreaView>
   );
 }
@@ -162,7 +197,9 @@ export function TopBar({
             quiet
           />
         ) : (
-          <Logo compact />
+          // The wordmark alone: the gradient tile repeated in every tab header
+          // was the app icon wearing itself as a hat (finish review, taste note).
+          <Wordmark color={colors.ink} height={18} />
         )}
         </View>
       </View>
@@ -398,11 +435,15 @@ export function RudiButton({
   );
 
   return (
-    <Pressable
+    // Press feedback is a spring on the UI thread (scale 1 -> 0.98), the
+    // `instant` step of the motion vocabulary; the old opacity dim ran on the
+    // JS thread and could not honour Reduce Motion.
+    <PressScale
       accessibilityRole="button"
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [base, pressed && !disabled && styles.buttonPressed]}
+      pressedScale={0.98}
+      style={base}
     >
       {solid ? (
         <LinearGradient
@@ -417,7 +458,7 @@ export function RudiButton({
         />
       ) : null}
       {body}
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -462,7 +503,7 @@ export function IconButton({
         ? colors.inkFaint
         : colors.ink;
   return (
-    <Pressable
+    <PressScale
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       aria-busy={loading}
@@ -471,14 +512,14 @@ export function IconButton({
       disabled={disabled || loading}
       hitSlop={4}
       onPress={onPress}
-      style={({ pressed }) => [
+      pressedScale={0.94}
+      style={[
         styles.iconButton,
         { backgroundColor: background, borderColor: quiet || dim || solid ? "transparent" : colors.line },
-        pressed && !disabled && styles.buttonPressed,
       ]}
     >
       {loading ? <ActivityIndicator color={glyph} size="small" /> : <Ionicons color={glyph} name={icon} size={22} />}
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -520,7 +561,7 @@ export function Field({
   );
 }
 
-export function SearchField({ placeholder = "Tìm địa điểm, món ăn...", ...props }: TextInputProps) {
+export function SearchField({ placeholder = "Tìm quán, món...", ...props }: TextInputProps) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 
@@ -625,12 +666,13 @@ export function Chip({
     );
   }
   return (
-    <Pressable
+    <PressScale
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       aria-pressed={selected}
       onPress={onPress}
-      style={({ pressed }) => [
+      pressedScale={0.96}
+      style={[
         styles.chip,
         {
           backgroundColor: selected ? toneSoftColor(colors, tone) : colors.card,
@@ -639,7 +681,6 @@ export function Chip({
           borderColor: selected ? toneColor(colors, tone) : colors.lineStrong,
           borderRadius: radius.pill,
         },
-        pressed && styles.pressed,
       ]}
     >
       {/* Selected is said twice: fill and a check, so it does not rest on color alone. */}
@@ -648,7 +689,7 @@ export function Chip({
       <Text numberOfLines={1} style={[typography.caption, { color: foreground }]}>
         {label}
       </Text>
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -705,6 +746,7 @@ export function AvatarStack({ people, max = 4 }: { people: DemoPerson[]; max?: n
 export function Photo({
   source,
   height = 190,
+  ratio,
   radius = 20,
   overlay,
   style,
@@ -712,13 +754,15 @@ export function Photo({
 }: {
   source: ImageSource;
   height?: number;
+  /** Width-driven frame (aspect ratio) instead of a fixed height, so a tile stays square in any column width. */
+  ratio?: number;
   radius?: number;
   overlay?: ReactNode;
   style?: StyleProp<ViewStyle>;
   contentFit?: "cover" | "contain";
 }) {
   return (
-    <View style={[styles.photo, { height, borderRadius: radius }, style]}>
+    <View style={[styles.photo, ratio !== undefined ? { aspectRatio: ratio } : { height }, { borderRadius: radius }, style]}>
       <Image contentFit={contentFit} source={source} style={StyleSheet.absoluteFill} transition={180} />
       {overlay}
     </View>
@@ -757,24 +801,26 @@ export function Stat({
           <Ionicons color={toneColor(colors, tone)} name={icon} size={19} />
         </View>
       ) : null}
-      <Text adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1} style={[typography.money, { color: colors.ink }]}>
-        {value}
-      </Text>
+      {/* Never shrunk to fit: a figure that does not fit wraps to its own line (report §7.1). */}
+      <Text style={[typography.money, { color: colors.ink }]}>{value}</Text>
       <Text style={[typography.caption, { color: colors.inkFaint }]}>{label}</Text>
     </View>
   );
 }
 
+/**
+ * A note in the margin, in violet ink: what the assistant would add, said in
+ * one sentence and signed. No fill and no label over the sentence (a kicker):
+ * a hairline above and below in the AI tone marks it as an aside on the page.
+ */
 export function AiNote({ children }: { children: ReactNode }) {
   const { colors } = useRudiTheme();
   return (
-    <View style={[styles.aiNote, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-      <View style={[styles.aiIcon, { backgroundColor: colors.ai }]}>
-        <Ionicons color={colors.aiInk} name="sparkles" size={17} />
-      </View>
+    <View style={[styles.aiNote, { borderColor: colors.ai }]}>
+      <Ionicons color={colors.ai} name="sparkles" size={17} style={styles.aiIcon} />
       <View style={styles.flex}>
-        <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI gợi ý</Text>
         <Text style={[typography.label, styles.aiText, { color: colors.ink }]}>{children}</Text>
+        <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI gợi ý</Text>
       </View>
     </View>
   );
@@ -848,10 +894,12 @@ export function ListRow({
 }) {
   const { colors } = useRudiTheme();
   return (
-    <Pressable
+    <PressScale
       accessibilityRole={onPress ? "button" : undefined}
+      disabled={onPress === undefined}
       onPress={onPress}
-      style={({ pressed }) => [styles.listRow, pressed && styles.pressed]}
+      pressedScale={0.985}
+      style={styles.listRow}
     >
       <View style={[styles.listIcon, { backgroundColor: toneSoftColor(colors, tone) }]}>
         <Ionicons color={toneColor(colors, tone)} name={icon} size={20} />
@@ -861,7 +909,7 @@ export function ListRow({
         {subtitle ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{subtitle}</Text> : null}
       </View>
       {trailing ?? (onPress ? <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} /> : null)}
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -882,14 +930,23 @@ export function ResponsiveRow({
   children,
   minItemWidth = 250,
   gap = 12,
+  maxColumns = 3,
 }: {
   children: ReactNode;
   minItemWidth?: number;
   gap?: number;
+  /** Most items per row; thumbnails may go past the three-card default. */
+  maxColumns?: number;
 }) {
-  const { width } = useWindowDimensions();
-  const column = width < minItemWidth * 2 + 64;
-  return <View style={[styles.responsiveRow, { gap }, column && styles.responsiveColumn]}>{children}</View>;
+  const [width, setWidth] = useState(0);
+  const { itemWidth } = gridFor(width, minItemWidth, gap, maxColumns);
+  return (
+    <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)} style={{ flexDirection: "row", flexWrap: "wrap", gap }}>
+      {Children.toArray(children).map((child, index) => (
+        <View key={typeof child === "object" && child !== null && "key" in child ? child.key ?? index : index} style={{ width: width > 0 ? itemWidth : "100%", minWidth: 0 }}>{child}</View>
+      ))}
+    </View>
+  );
 }
 
 export function Divider() {
@@ -942,6 +999,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, overflow: "hidden" },
   paper: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   screenInner: { width: "100%", gap: 18, paddingTop: 8 },
+  screenHeader: { borderBottomWidth: StyleSheet.hairlineWidth },
   screenFooter: { width: "100%", paddingTop: 8, zIndex: 2 },
   tabletInner: { alignSelf: "center", maxWidth: 960, paddingTop: 22 },
   topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
@@ -993,7 +1051,7 @@ const styles = StyleSheet.create({
   photoShade: { justifyContent: "flex-end", padding: 16 },
   stat: { flex: 1, minWidth: 88, alignItems: "center", gap: 4, paddingVertical: 5 },
   statIcon: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", marginBottom: 2 },
-  aiNote: { flexDirection: "row", gap: 11, borderLeftWidth: 3, borderRadius: 14, padding: 13 },
+  aiNote: { flexDirection: "row", gap: 11, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   aiIcon: { width: 32, height: 32, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   aiText: { marginTop: 2 },
   progressTrack: { height: 8, borderRadius: 999, overflow: "hidden" },

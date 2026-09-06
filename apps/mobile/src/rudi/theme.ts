@@ -64,8 +64,8 @@ export const typography = {
     letterSpacing: -0.15,
   } satisfies TextStyle,
   body: {
-    fontSize: 16,
-    lineHeight: 23,
+    fontSize: tokens.type.body.size,
+    lineHeight: 24,
     fontWeight: "400",
   } satisfies TextStyle,
   label: {
@@ -74,8 +74,8 @@ export const typography = {
     fontWeight: "600",
   } satisfies TextStyle,
   caption: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: tokens.type.micro.size,
+    lineHeight: 18,
     fontWeight: "600",
   } satisfies TextStyle,
   /** Stamp lettering: condensed caps on tickets and status seals. */

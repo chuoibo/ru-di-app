@@ -16,17 +16,7 @@ import {
 import { NGAN_SACH, SO_THICH, doiMuc } from "../../screens/vao-cua/so-thich";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import {
-  Card,
-  Chip,
-  Heading,
-  Inline,
-  ProgressBar,
-  RudiButton,
-  RudiScreen,
-  Spacer,
-  TopBar,
-} from "../ui";
+import { Chip, Heading, Inline, ResponsiveRow, RudiButton, RudiScreen, TopBar } from "../ui";
 
 /** One icon per taste word the SERVER knows. The words themselves come from
  *  `so-thich.ts`, which `tests/test_interest_vocabulary_matches_client.py`
@@ -42,6 +32,20 @@ const BIEU_TUONG: Record<string, keyof typeof Ionicons.glyphMap> = {
   game: "game-controller-outline",
 };
 
+const TOI_THIEU = 3;
+
+/**
+ * The one question the product asks about the person, on paper.
+ *
+ * The first cut wrapped eight tiles in a card and gave each an icon box, a
+ * full progress bar for a single step, and a button called «Tạo không gian
+ * của tôi» -- a registration form wearing the journal's colours (2026-09-06
+ * review §8.3). Here the choices sit directly on the page in two airy columns,
+ * the count says out loud why the button is still waiting («Đã chọn 2/3»),
+ * and the button names the thing it does: save, or simply continue when there
+ * is no account to save into. The words and their ids are the server's
+ * vocabulary and are not edited here.
+ */
 export function PersonalizationScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
@@ -99,6 +103,11 @@ export function PersonalizationScreen() {
     setMuc(doiMuc(muc, id));
   };
 
+  // Skipping from the fixture door (no session) goes into the fixture app, not
+  // back to the cover: `manDau(null)` is Welcome, which the Maestro board
+  // caught as a loop on 2026-09-06.
+  const boQua = () => router.replace(personId === null ? "/explore" : manDau(session.phien));
+
   const xong = async () => {
     setLoi(null);
     if (personId === null) {
@@ -120,57 +129,72 @@ export function PersonalizationScreen() {
     }
   };
 
+  const duDieuKien = muc.length >= TOI_THIEU;
+  const demChon =
+    muc.length === 0
+      ? `Chọn ít nhất ${TOI_THIEU} để tiếp tục.`
+      : duDieuKien
+        ? `Đã chọn ${muc.length}.`
+        : `Đã chọn ${muc.length}/${TOI_THIEU}.`;
+  const nhanNut = dangLuu ? "Đang lưu…" : personId === null ? "Tiếp tục" : "Lưu sở thích";
+
   return (
     <RudiScreen contentStyle={styles.personalization} testID="personalization-screen">
       <TopBar
         right={
-          <Pressable accessibilityRole="button" onPress={() => router.replace(manDau(session.phien))}>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={boQua} style={({ pressed }) => [styles.boQua, pressed && styles.pressed]}>
             {/* Not a gate. The step is editable forever from Cá nhân, and a
                 required question on the first screen of a new account is a
                 toll booth, not a personalization. */}
-            <Text style={[typography.label, { color: colors.inkFaint }]}>Bỏ qua</Text>
+            <Text style={[typography.label, { color: colors.inkSoft }]}>Bỏ qua</Text>
           </Pressable>
         }
       />
-      <ProgressBar value={100} />
       <Heading
         title="Cho Rủ Đi biết gu của bạn"
-        subtitle="Chọn ít nhất 3 sở thích. Rủ Đi xếp gợi ý theo đúng những gì bạn chọn."
+        subtitle="Rủ Đi xếp gợi ý theo đúng những gì bạn chọn. Sửa lại bất cứ lúc nào ở Cá nhân."
       />
-      <Card style={styles.preferenceCard}>
-        <Text style={[typography.title, { color: colors.ink }]}>Bạn thường mê gì?</Text>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Chọn mọi thứ khiến bạn muốn xách balo lên.</Text>
-        <View style={styles.interestGrid}>
+      <View style={styles.block}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Đi chơi, bạn thường mê gì?</Text>
+        <ResponsiveRow minItemWidth={140} gap={10}>
           {danhSach.map((m) => {
             const selected = muc.includes(m.id);
             return (
               <Pressable
                 key={m.id}
+                accessibilityLabel={m.nhan}
                 accessibilityRole="checkbox"
+                accessibilityState={{ checked: selected }}
                 aria-checked={selected}
                 onPress={() => doiMucChon(m.id)}
                 style={({ pressed }) => [
-                  styles.interest,
+                  styles.tile,
                   {
                     backgroundColor: selected ? colors.accentSoft : colors.card,
-                    borderColor: selected ? colors.accent : colors.line,
+                    borderColor: selected ? colors.accent : colors.lineStrong,
                   },
                   pressed && styles.pressed,
                 ]}
               >
-                <View style={[styles.interestIcon, { backgroundColor: selected ? colors.accent : colors.ground }]}>
-                  <Ionicons color={selected ? colors.accentInk : colors.inkSoft} name={BIEU_TUONG[m.id] ?? "sparkles-outline"} size={23} />
-                </View>
-                <Text style={[typography.label, { color: selected ? colors.accent : colors.ink }]}>{m.nhan}</Text>
-                {selected ? <Ionicons color={colors.accent} name="checkmark-circle" size={18} /> : null}
+                <Ionicons color={selected ? colors.accent : colors.inkSoft} name={BIEU_TUONG[m.id] ?? "sparkles-outline"} size={22} />
+                <Text style={[typography.label, styles.tileLabel, { color: colors.ink }]}>{m.nhan}</Text>
+                {/* Chosen is said twice: the fill and a check, never colour alone. */}
+                <Ionicons
+                  color={selected ? colors.accent : colors.lineStrong}
+                  name={selected ? "checkmark-circle" : "ellipse-outline"}
+                  size={20}
+                />
               </Pressable>
             );
           })}
-        </View>
-      </Card>
-      <View style={styles.vibeBlock}>
-        <Text style={[typography.title, { color: colors.ink }]}>Mỗi lần đi chơi bạn tiêu khoảng</Text>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
+        </ResponsiveRow>
+        <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: duDieuKien ? colors.inkSoft : colors.ink }]}>
+          {demChon}
+        </Text>
+      </View>
+      <View style={styles.block}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Mỗi lần đi chơi bạn tiêu khoảng</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>
           Bỏ qua cũng được. Rủ Đi để trống chỗ này chứ không đoán thay bạn.
         </Text>
         <Inline gap={8} wrap>
@@ -179,14 +203,8 @@ export function PersonalizationScreen() {
           ))}
         </Inline>
       </View>
-      <Spacer size={4} />
-      {loi !== null ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <RudiButton
-        disabled={muc.length < 3 || dangLuu}
-        icon="sparkles"
-        label={dangLuu ? "Đang lưu…" : "Tạo không gian của tôi"}
-        onPress={() => void xong()}
-      />
+      {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      <RudiButton disabled={!duDieuKien || dangLuu} label={nhanNut} loading={dangLuu} onPress={() => void xong()} />
       <Text style={[typography.caption, styles.privacyText, { color: colors.inkFaint }]}>
         {cauLuuTru(personId !== null)}
       </Text>
@@ -196,11 +214,10 @@ export function PersonalizationScreen() {
 
 const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
-  personalization: { maxWidth: 760 },
+  personalization: { maxWidth: 640 },
+  boQua: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
+  block: { gap: 12 },
+  tile: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, borderWidth: 1 },
+  tileLabel: { flex: 1, flexShrink: 1 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },
-  preferenceCard: { gap: 8 },
-  interestGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 7 },
-  interest: { minHeight: 62, minWidth: "47%", flexGrow: 1, flexBasis: 150, borderRadius: 16, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 9, padding: 10 },
-  interestIcon: { width: 39, height: 39, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  vibeBlock: { gap: 11 },
 });

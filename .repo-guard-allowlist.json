@@ -2,6 +2,42 @@
   "version": 1,
   "artifacts": [
     {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-assignment.png",
+      "sha256": "523e16086bce722595e01bf004c6d3ba624209211bc8e16868106fb1cacad789",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-create-dark.png",
+      "sha256": "c4e9e06378be5a137b0c1020f423d59698c8219a6857d4009a8632e6452fdba6",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-assignment-dark.png",
+      "sha256": "dff72c54b06601ec40483a51e01eb4748489614e41223b2a7a2fa2ac7dc7fc7c",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-create-dark.png",
+      "sha256": "38832c91a7838af266b7aebee7e2778797ea3f0bc3d7853ba6065bf14b15dfe4",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-explore.png",
+      "sha256": "c1f184b4432e2ec989fef5234fa3c7f81002f0d2d9393828f31c961451fae097",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android fixture với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh địa điểm thật hoặc người tham gia; README nêu ranh giới."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-viewer-resize.png",
+      "sha256": "9670ea5f667c1f30d6ccd0f4d026c8106f2594601ea34281474e6403116a0cb6",
+      "rules": ["controlled-artifact"],
+      "reason": "Ảnh Android probe với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh người tham gia; README nêu ranh giới."
+    },
+    {
       "path": "apps/mobile/assets/android-icon-background.png",
       "sha256": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d",
       "rules": [
@@ -91,7 +127,7 @@
     },
     {
       "path": "apps/mobile/package-lock.json",
-      "sha256": "dba8e36c677699b9ba234f7b8862b2f2032ba84667aca4ee9a5cc0392345bc2a",
+      "sha256": "5e8d591ae2b0eb0da057dc523b8427e604781e3cf4a14c391609a14711824ea0",
       "rules": [
         "aggregate-base64-fragments",
         "long-number"

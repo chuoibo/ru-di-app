@@ -67,6 +67,8 @@ OTP_PHONE=""
 OTP_PHONE_B=""
 OTP_PHONE_C=""
 OTP_PHONE_D=""
+# Flow 36 cần một số CHƯA đăng nhập bao giờ (bước cá nhân hoá chỉ hiện cho tài khoản mới); B đã qua flow 23.
+OTP_PHONE_E=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -602,9 +604,9 @@ print("%d|%s" % (len(a), a[0].get("checkin_count") if a else ""))')"
 kiem_may_chu_sau_36() {
   local goc body tok ket
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE_B")"
+  body="$(dang_nhap_curl "$OTP_PHONE_E")"
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("token",""))')"
-  [ -n "$tok" ] || hong "sau flow 36: không đăng nhập được bằng số B để kiểm."
+  [ -n "$tok" ] || hong "sau flow 36: không đăng nhập được bằng số E để kiểm."
   ket="$(curl -sS -H "Authorization: Bearer $tok" "$goc/people/me" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
@@ -991,8 +993,8 @@ canary_otp() {
   local ra so rc dong
   ra="$(mktemp)"; so="$(sinh_so_di_dong)"
   set +e
-  maestro test -e TREE_FINGERPRINT="$DAU_VAN" -e OTP_PHONE="$so" -e OTP_PHONE_B="$so" \
-    -e OTP_PHONE_C="$so" -e OTP_PHONE_D="$so" -e OTP_CODE="999999" \
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" -e OTP_PHONE="$so" -e OTP_PHONE_B="$so" \
+    -e OTP_PHONE_C="$so" -e OTP_PHONE_D="$so" -e OTP_PHONE_E="$so" -e OTP_CODE="999999" \
     "$FLOWS/22-dang-nhap-otp.yaml" > "$ra" 2>&1
   rc=$?
   set -e
@@ -1322,7 +1324,7 @@ chay_flow() {
   # Số và mã chỉ đi qua -e, không bao giờ nằm trong file flow.
   if [ "$OTP" = 1 ] || [ "$LIVE" = 1 ]; then
     them=(-e OTP_PHONE="$OTP_PHONE" -e OTP_PHONE_B="$OTP_PHONE_B"
-          -e OTP_PHONE_C="$OTP_PHONE_C" -e OTP_PHONE_D="$OTP_PHONE_D" -e OTP_CODE="$OTP_CODE")
+          -e OTP_PHONE_C="$OTP_PHONE_C" -e OTP_PHONE_D="$OTP_PHONE_D" -e OTP_PHONE_E="$OTP_PHONE_E" -e OTP_CODE="$OTP_CODE")
   fi
   # Flow 30 rẽ theo AI: có khoá thì chờ thẻ của Rủ Đi AI, không thì câu nói thật.
   them+=(-e AI="$AI")
@@ -1333,7 +1335,7 @@ chay_flow() {
   # Đo 2026-09-04 (M3 lượt 3: flow 30 đỏ, 31 và 40 biến mất, «đã chạy N flow»
   # không có). Người gọi tự `set -e` lại sau khi đọc rc.
   set +e
-  maestro test -e TREE_FINGERPRINT="$DAU_VAN" "${them[@]}" --test-output-dir "$ANH_DIR" "$f" > "$ra" 2>&1
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" "${them[@]}" --test-output-dir "$ANH_DIR" "$f" > "$ra" 2>&1
   rc=$?
   cat "$ra"
   if [ "$rc" -ne 0 ] && grep -qE "$LOI_HA_TANG" "$ra"; then
@@ -1354,6 +1356,7 @@ if [ "$OTP" = 1 ]; then
   rm -rf "$PHIEN_CURL_DIR"; PHIEN_CURL_DIR="$(mktemp -d)"
   OTP_PHONE="$(sinh_so_di_dong)"; OTP_PHONE_B="$(sinh_so_di_dong)"
   OTP_PHONE_C="$(sinh_so_di_dong)"; OTP_PHONE_D="$(sinh_so_di_dong)"
+  OTP_PHONE_E="$(sinh_so_di_dong)"
 elif [ "$LIVE" = 1 ]; then
   # The seeded person already exists: one fixed number, a fresh curl-session
   # cache per lap so the server check after flow 20 asks the server, not the cache.
@@ -1429,7 +1432,7 @@ echo "đã chạy $DA_CHAY flow"
 if [ "$LIVE" = 0 ] && [ "$DANG_NHAP" = 0 ] && [ "$OTP" = 0 ]; then
   RA_2B="$(mktemp)"
   set +e
-  maestro test -e TREE_FINGERPRINT="KHONG_CO_DAU_VAN_NAY" "$FLOWS/00-smoke-deeplink.yaml" > "$RA_2B" 2>&1
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="KHONG_CO_DAU_VAN_NAY" "$FLOWS/00-smoke-deeplink.yaml" > "$RA_2B" 2>&1
   RC_2B=$?
   set -e
   DONG_2B="$(grep -n 'FAILED' "$RA_2B" | head -1 || true)"
@@ -1499,7 +1502,7 @@ if [ "$DANG_NHAP" = 1 ]; then
   # Sau pm clear, dev client về launcher: nạp lại bundle rồi mới chạy canary.
   mo_link "$(url_metro)"; cho_bundle || true; sleep 2
 fi
-set +e; maestro test -e TREE_FINGERPRINT="$DAU_VAN" "$FLOWS/09-canary-phai-do.yaml" 2>&1 | tee "$RA_CANARY"; CANARY=${PIPESTATUS[0]}; set -e
+set +e; maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" "$FLOWS/09-canary-phai-do.yaml" 2>&1 | tee "$RA_CANARY"; CANARY=${PIPESTATUS[0]}; set -e
 
 # NEO 3. Canary xanh nghĩa là phép đo không phân biệt được đúng với sai, nên cả
 # bảng xanh ở trên không chứng minh gì.

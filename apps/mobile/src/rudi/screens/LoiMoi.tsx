@@ -31,7 +31,7 @@
  */
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../api";
 import { doiLoiMoiLayPhien, vaoNhom, type Phien } from "../../phien";
@@ -39,7 +39,7 @@ import { cauSauKhiNhan } from "../loi-moi-den";
 import { layLoiMoiDen } from "../loi-moi-den";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import { Card, Field, Heading, RudiButton, RudiScreen, TopBar } from "../ui";
+import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../ui";
 
 type Trang =
   | { pha: "cho-ma" }
@@ -148,7 +148,7 @@ export function LoiMoiScreen() {
         title="Bạn được rủ đi"
         subtitle="Dán mã trong lời mời. Rủ Đi chỉ vào được bằng lời mời của một người đã ở trong nhóm."
       />
-      <Card>
+      <View style={styles.form}>
         <Field
           autoCapitalize="none"
           autoCorrect={false}
@@ -165,9 +165,9 @@ export function LoiMoiScreen() {
           onPress={() => void nhan()}
         />
         {trang.pha === "hong" ? (
-          <Text style={[typography.caption, { color: colors.warn }]}>{trang.loi}</Text>
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
         ) : null}
-      </Card>
+      </View>
       <View>
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
           Chưa có lời mời? Nhờ một người trong nhóm gửi cho bạn. Đây là chủ ý, không phải thiếu sót:
@@ -182,3 +182,7 @@ export function LoiMoiScreen() {
     </RudiScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  form: { gap: 14 },
+});

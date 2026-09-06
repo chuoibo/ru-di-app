@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 import { Linking, LogBox, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { diemVaoTuUrl, manDau } from "../src/rudi/duong-vao";
 import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
@@ -26,7 +27,7 @@ LogBox.ignoreAllLogs();
  *            the invitation, pages for the work; it refuses the category default
  *            of sunset photo + white cards + coral pill.
  * OWN-WORLD -- Indigo cloth cover (Persuade surfaces, story headers), bright
- *            paper pages (Operate surfaces), three saturated washi tapes with
+ *            paper pages (Operate surfaces), three semantic accents with
  *            meaning (orange = the ask, teal = money, violet = AI) laid only on
  *            the region that matters now; status is an ink stamp, photos are
  *            Instax frames with their provenance line, plans are one continuous
@@ -42,7 +43,7 @@ LogBox.ignoreAllLogs();
  *            carrying "AI đi chơi, chia bill thông minh", the CTA
  *            "Rủ Đi thôi!" as a large stamp at the bottom; pressing it opens
  *            the cover onto the bright Login page.
- * FORM    -- expo-router stack + 4 tabs + create sheet; 48dp targets, 12sp
+ * FORM    -- expo-router stack + 4 tabs + create sheet; 48dp targets, 13sp
  *            floor, tabular money; motion instant 100 / standard 200 /
  *            shared 300 / celebrate 550 once per event, Reduce Motion to zero.
  *            Signature interaction: the cover opening, and a stamp landing when
@@ -131,6 +132,7 @@ export default function RootLayout() {
   // screen, native 44pt targets, real text, restrained motion, and no visual
   // treatment that could blur the boundary between demo and live money data.
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
         <StatusBar style={dark ? "light" : "dark"} />
@@ -145,7 +147,9 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
           <Stack.Screen
             name="create"
-            options={{ animation: "slide_from_bottom", presentation: "transparentModal" }}
+            // The route only fades and paints nothing: the screen underneath stays
+            // visible under the scrim, and the kit Sheet inside springs the panel.
+            options={{ animation: "fade", contentStyle: { backgroundColor: "transparent" }, presentation: "transparentModal" }}
           />
           <Stack.Screen
             name="check-ins/new"
@@ -158,5 +162,6 @@ export default function RootLayout() {
         </Stack>
       </RudiSessionProvider>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, type DimensionValue, type StyleProp, type ViewS
 
 import { MOTION_MS } from "../motion";
 import { nenAnhTrong, typography, useRudiTheme } from "../theme";
+import { useMotion } from "./useMotion";
 
 export interface Attribution {
   /** Photographer or uploader, as the licence requires it to be named. */
@@ -47,16 +48,14 @@ export interface MediaSlotProps {
 /**
  * The one place a photograph may appear in the shell.
  *
- * The rule in DESIGN.md is blunt: a stock photo standing in for a real place is
- * a fabrication. This slot exists so that rule can be kept *and* the layout can
- * be image-led: the frame is the same whether or not there is a picture, the
- * fallback is authored artwork from the visual world, and a licensed photograph
- * drops into that frame with its author and licence printed beneath it --
- * never a photo without its provenance. Since M12 the catalogue actually sends
- * them: `docAnhDiaDiem` for a place's gallery, `anhBiaThe` for a card's cover,
- * and both refuse a URL that arrived without a credit. Group photos
- * (`nguonAnh`) come with request headers; a URL from anywhere else is refused
- * by that helper before it reaches here.
+ * Today live screens have no images on the wire, and the rule in DESIGN.md is
+ * blunt: a stock photo standing in for a real place is a fabrication. This slot
+ * exists so that rule can be kept *and* the layout can already be image-led:
+ * the frame is drawn now, the fallback is authored artwork from the visual
+ * world, and when M12 delivers licensed photos they drop into the same frame
+ * with the author and licence printed beneath -- never a photo without its
+ * provenance. Group photos (`nguonAnh`) come with request headers; a URL from
+ * anywhere else is refused by that helper before it reaches here.
  */
 export function MediaSlot({
   source,
@@ -73,6 +72,7 @@ export function MediaSlot({
   testID,
 }: MediaSlotProps) {
   const { colors, radius: r, space } = useRudiTheme();
+  const motion = useMotion();
   // A picture that fails to load leaves the frame drawn and empty, which reads
   // as «this place looks like nothing» rather than as a broken address. It
   // stayed invisible for a whole board run: the credit under the frame was
@@ -90,7 +90,7 @@ export function MediaSlot({
             source={source}
             contentFit={contentFit}
             onError={() => setHong(true)}
-            transition={MOTION_MS.standard}
+            transition={motion.reduced ? 0 : MOTION_MS.standard}
             style={StyleSheet.absoluteFill}
           />
         ) : (

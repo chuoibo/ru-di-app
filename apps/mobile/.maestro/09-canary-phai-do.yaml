@@ -15,7 +15,9 @@ appId: com.lakiet.rudi
     centerElement: true
     timeout: 30000
 - tapOn: "Tài chính của tôi"
+# Câu tổng của Tài chính là phụ đề dòng sổ đầu (đợt chuyển mình 06/09). Canary
+# phải đi tới ĐÚNG bước cuối rồi mới đỏ; đỏ sớm ở bước chờ này là đỏ nhầm lý do.
 - extendedWaitUntil:
-    visible: "Cả chuyến 3.840.000đ · một bill Xóm Lèo 1.280.000đ. Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ."
+    visible: "Cả chuyến 3.840.000đ · một bill Xóm Lèo 1.280.000đ"
     timeout: 30000
 - assertVisible: "KHONG_BAO_GIO_CO_CHUOI_NAY_TREN_MAN"

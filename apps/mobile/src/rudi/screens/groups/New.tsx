@@ -16,7 +16,7 @@
  */
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
@@ -24,7 +24,7 @@ import { taoNhom } from "../../../screens/vao-cua/cong-api";
 import { manDau } from "../../duong-vao";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string };
 
@@ -72,7 +72,7 @@ export function GroupNewScreen() {
         title="Đặt tên cho hội"
         subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau, bằng lời mời đích danh hoặc link."
       />
-      <Card style={styles.card}>
+      <View style={styles.form}>
         <Field
           accessibilityLabel="Ô tên nhóm"
           autoFocus
@@ -86,16 +86,16 @@ export function GroupNewScreen() {
           returnKeyType="done"
           value={ten}
         />
-        <RudiButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} />
         {trang.pha === "hong" ? (
-          <Text style={[typography.caption, { color: colors.warn }]}>{trang.loi}</Text>
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
         ) : null}
-      </Card>
+        <RudiButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} />
+      </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20 },
-  card: { gap: 14 },
+  screen: { gap: 20, maxWidth: 560 },
+  form: { gap: 14 },
 });

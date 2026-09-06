@@ -11,7 +11,16 @@
  *
  * Keyboard: `KeyboardAvoidingView` with `padding`; the geometry is measured on
  * the emulator (flow 30 + `scripts/do_ban_phim.py`), not assumed from a prop.
+ *
+ * UI v2 (đợt 5): consecutive messages from one person read as one run --
+ * the name once at the top of the run, the initial once at its foot -- so a
+ * conversation is a conversation and not a column of identical rows. The
+ * header is a title and one line of roster; the AI answers as a sheet of
+ * paper in the thread (`TheAi.tsx`), never as a violet advert. Reaction
+ * targets are 48dp. The inverted list, paging, pending row and position
+ * holding are unchanged: they are the behaviour the review said to keep.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,7 +38,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   PHAN_UNG,
@@ -49,7 +57,9 @@ import { nguonAnh } from "../../ky-niem/ky-niem";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, IconButton, TopBar } from "../../ui";
+import { IconButton, TopBar } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { EmptyState } from "../../ui/EmptyState";
 import { TheAiView } from "./TheAi";
 
 const LENH = [
@@ -132,6 +142,29 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // newest end (see autoscrollToTopThreshold); a message you just sent must
   // always come into view, so the send jumps there explicitly.
   const danhSachRef = useRef<FlatList<HangHienThi>>(null);
+  // Whether the reader is at the newest end (within a bubble of offset 0 of
+  // the inverted list). A new row (the model's answer, a friend's message) and
+  // the keyboard opening both pull the list back to the end only then; a
+  // reader up in the history keeps their place.
+  const ganCuoi = useRef(true);
+  const soHang = useRef(chat.tin.length);
+  useEffect(() => {
+    if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+    soHang.current = chat.tin.length;
+  }, [chat.tin.length]);
+  // The notice under the newest bubble (why the model stayed quiet, a send
+  // error) is a list header, not a row: `maintainVisibleContentPosition` keeps
+  // row 0 in place and leaves the header under the composer, so it is pulled
+  // into view the same way a new row is.
+  useEffect(() => {
+    if (thongBao !== null && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [thongBao]);
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidShow", () => {
+      if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+    });
+    return () => sub.remove();
+  }, []);
 
   const gui = async () => {
     const body = nhap.trim();
@@ -218,7 +251,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
   };
 
-  const renderItem = ({ item }: { item: HangHienThi }) => {
+  /** Same human author as the neighbour row (not the AI, not a day divider). */
+  const cungNguoi = (a: HangHienThi | undefined, b: HangHienThi | undefined) =>
+    a !== undefined && b !== undefined && a.loai === "tin" && b.loai === "tin" &&
+    a.tin.kind !== "ai_card" && b.tin.kind !== "ai_card" &&
+    a.tin.author_id !== null && a.tin.author_id === b.tin.author_id;
+
+  const renderItem = ({ item, index }: { item: HangHienThi; index: number }) => {
     if (item.loai === "ngay") {
       return (
         <View style={styles.ngay}>
@@ -232,6 +271,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const cuaToi = tin.author_id === personId;
     const laAi = tin.kind === "ai_card";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
+    // Inverted list: index + 1 is the older neighbour, index - 1 the newer.
+    const dauChuoi = !cungNguoi(item, hang[index + 1]);
+    const cuoiChuoi = !cungNguoi(item, hang[index - 1]);
     return (
       <View
         style={[
@@ -243,12 +285,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ]}
       >
         {!cuaToi && !laAi ? (
-          <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-            <Text style={[typography.caption, { color: colors.accent }]}>{chuDau(tenNguoi(tin.author_id))}</Text>
-          </View>
+          cuoiChuoi ? <Avatar name={tenNguoi(tin.author_id)} size={30} /> : <View style={styles.choChuDau} />
         ) : null}
         <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
-          {!cuaToi && !laAi ? (
+          {!cuaToi && !laAi && dauChuoi ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
           ) : null}
           {laAi ? (
@@ -355,21 +395,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           accessibilityLabel="Thành viên nhóm"
           accessibilityRole="button"
           onPress={() => router.push(`/groups/${contextId}/members` as never)}
-          style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+          style={({ pressed }) => [styles.thanhVien, pressed && styles.mo]}
         >
+          <Ionicons color={colors.inkFaint} name="people-outline" size={15} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
             {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
           </Text>
+          <Ionicons color={colors.inkFaint} name="chevron-forward" size={14} />
         </Pressable>
       </View>
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. */}
       {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null ? (
         <View style={[styles.rong, { paddingHorizontal: space.md }]}>
-          <Text style={[typography.title, { color: colors.ink }]}>Chưa có tin nhắn nào</Text>
-          <Text style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
-            Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào.
-          </Text>
+          <EmptyState body="Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào." kind="first-use" layout="inline" title="Chưa có tin nhắn nào" />
         </View>
       ) : null}
       <FlatList
@@ -384,10 +423,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           dangGuiThan === null && thongBao !== null ? (
             <View style={styles.hang}>
               <View style={[styles.khoi, styles.khoiAi]}>
-                <Card tone="ai" style={styles.choAi}>
-                  <Text style={[typography.caption, { color: colors.ai }]}>{thongBao.tu}</Text>
+                <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
+                  <View style={styles.dauAi}>
+                    <Ionicons color={colors.ai} name="sparkles" size={15} />
+                    <Text style={[typography.caption, { color: colors.ai }]}>{thongBao.tu}</Text>
+                  </View>
                   <Text style={[typography.body, { color: colors.ink }]}>{thongBao.cau}</Text>
-                </Card>
+                </View>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioPhut(thongBao.luc)}</Text>
               </View>
             </View>
@@ -404,12 +446,15 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               {goiMoHinh(dangGuiThan) ? (
                 <View style={styles.hang}>
                   <View style={[styles.khoi, styles.khoiAi]}>
-                    <Card tone="ai" style={styles.choAi}>
-                      <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                    <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
+                      <View style={styles.dauAi}>
+                        <Ionicons color={colors.ai} name="sparkles" size={15} />
+                        <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                      </View>
                       <Text style={[typography.caption, { color: colors.inkSoft }]}>
                         Câu trả lời sẽ hiện ở đây trong vài giây, hoặc lý do nó không trả lời.
                       </Text>
-                    </Card>
+                    </View>
                   </View>
                 </View>
               ) : null}
@@ -426,9 +471,18 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         // answer, a friend's message) scroll into view instead of landing
         // under the composer.
         maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 120 }}
+        // Content grows at the newest end (a row, the pending bubble, the
+        // notice header): while the reader is at the end, stay at the end.
+        onContentSizeChange={() => {
+          if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+        }}
         onEndReached={() => void chat.napCuHon()}
         onEndReachedThreshold={0.6}
+        onScroll={(e) => {
+          ganCuoi.current = e.nativeEvent.contentOffset.y <= 120;
+        }}
         renderItem={renderItem}
+        scrollEventThrottle={64}
         testID="chat-list"
       />
       {chat.loi ? (
@@ -494,7 +548,7 @@ const styles = StyleSheet.create({
   man: { flex: 1 },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
-  thanhVien: { alignSelf: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginTop: -6 },
+  thanhVien: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, minHeight: 40, paddingHorizontal: 8, marginTop: -8 },
   danhSach: { paddingVertical: 12, gap: 12 },
   ngay: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   duong: { flex: 1, height: StyleSheet.hairlineWidth },
@@ -504,18 +558,19 @@ const styles = StyleSheet.create({
   khoi: { maxWidth: "82%", gap: 4 },
   khoiToi: { alignItems: "flex-end" },
   khoiAi: { maxWidth: "100%", flex: 1 },
-  chuDau: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  choChuDau: { width: 30, height: 30 },
   bong: { borderWidth: 1, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  chip: { minHeight: 32, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  chip: { minHeight: 36, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   thanhPhanUng: { flexDirection: "row", gap: 4, borderWidth: 1, borderRadius: 999, padding: 4, alignSelf: "flex-start" },
-  nutPhanUng: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  nutPhanUng: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
   glyph: { fontSize: 20 },
   dau: { paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  rong: { alignItems: "center", gap: 6, paddingVertical: 40 },
+  rong: { paddingVertical: 24 },
   choGui: { gap: 12 },
   mo: { opacity: 0.62 },
-  choAi: { gap: 4 },
+  choAi: { gap: 6, padding: 14, borderWidth: 1 },
+  dauAi: { flexDirection: "row", alignItems: "center", gap: 6 },
   giua: { textAlign: "center", paddingVertical: 8 },
   lenh: { borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { paddingHorizontal: 10, paddingVertical: 8, gap: 1 },

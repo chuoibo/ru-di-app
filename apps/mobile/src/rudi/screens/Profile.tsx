@@ -1,41 +1,64 @@
+/**
+ * Cá nhân, Tài chính and Thành tích: the person's own pages.
+ *
+ * On a real session the profile card is `HoSoSong` (the server's words and
+ * counts), the finance page is `GET /people/{id}/finance` printed, and the
+ * achievements live in `ky-niem/AchievementsLive.tsx`. The fixture build
+ * keeps Team Đà Lạt's story under a demo badge.
+ *
+ * UI v2 (đợt 7): a footprint, not a trophy page. The hero gradient, the
+ * level badge and the three-number card are gone; what is left is the
+ * person, one line about them, the next appointment (with a real countdown)
+ * and a plain list of doors. Money pages answer «bạn đã chi bao nhiêu» first,
+ * separate sums from ledger lines, and draw no chart for decoration.
+ */
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { BILL_ITEMS, MEMORY_PHOTOS } from "../fixtures";
+import { DongTien } from "../ui/DongTien";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, demoAssets, formatVnd } from "../fixtures";
+import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
 import { BASE_URL } from "../../api";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
 import { layTaiChinh, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
+import { dauLich, homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
 import { useRudiSession } from "../session";
-import { bangMauFixture, lopPhu, mauSang, mauThuongHieu, mucTrenAnh, phuMau, typography, useRudiTheme } from "../theme";
+import { displayFace, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong } from "./profile/HoSoSong";
 import {
-  Avatar,
-  Card,
-  Chip,
   DemoBadge,
   Field,
   Heading,
   IconButton,
   Inline,
   ListRow,
-  Photo,
-  PhotoShade,
-  ProgressBar,
   RudiButton,
   RudiScreen,
   SectionHeader,
   TopBar,
-  widthPercent,
+  type IconName,
 } from "../ui";
+import { Avatar } from "../ui/Avatar";
+import { ErrorState } from "../ui/ErrorState";
+import { Money } from "../ui/Money";
+import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
+import { Stamp } from "../ui/Stamp";
+
+/** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
+function isoTu(ddmmyyyy: string): string {
+  const [d, m, y] = ddmmyyyy.split("/");
+  if (!d || !m || !y) return ddmmyyyy;
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "settings" | "account" | "edit" | "saved">("home");
   // Read once so the row below keeps the narrowing inside its own callback.
@@ -60,13 +83,14 @@ export function ProfileScreen() {
   if (panel === "settings") {
     return (
       <RudiScreen bottomInset={112} testID="profile-screen">
-        <Inline>
-          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => setPanel("home")} />
-          <Text style={[typography.title, { color: colors.ink }]}>Cài đặt</Text>
-        </Inline>
+        <TopBar onBack={() => setPanel("home")} title="Cài đặt" />
         <Heading
-          title="Bản trải nghiệm"
-          subtitle="Không có thông báo đẩy, không có sinh trắc, không có tài khoản máy chủ. Đây không phải cài đặt production."
+          title={session.phien !== null ? "Bản này còn ít cài đặt" : "Bản trải nghiệm"}
+          subtitle={
+            session.phien !== null
+              ? "Chưa có thông báo đẩy hay sinh trắc để bật tắt. Phiên của bạn nằm trên máy chủ; đăng nhập và đăng xuất ở mục Tài khoản."
+              : "Không có thông báo đẩy, không có sinh trắc, không có tài khoản máy chủ. Đây không phải cài đặt production."
+          }
         />
         <RudiButton label="Xong" onPress={() => setPanel("home")} />
       </RudiScreen>
@@ -75,10 +99,7 @@ export function ProfileScreen() {
   if (panel === "account") {
     return (
       <RudiScreen bottomInset={112} testID="profile-screen">
-        <Inline>
-          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => setPanel("home")} />
-          <Text style={[typography.title, { color: colors.ink }]}>Tài khoản</Text>
-        </Inline>
+        <TopBar onBack={() => setPanel("home")} title="Tài khoản" />
         <Text style={[typography.body, { color: colors.ink }]}>
           Đang xem với tư cách {session.phien?.profile?.display_name ?? session.displayName}.
         </Text>
@@ -104,11 +125,8 @@ export function ProfileScreen() {
   }
   if (panel === "edit") {
     return (
-      <RudiScreen bottomInset={112} testID="profile-screen">
-        <Inline>
-          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => setPanel("home")} />
-          <Text style={[typography.title, { color: colors.ink }]}>Chỉnh hồ sơ</Text>
-        </Inline>
+      <RudiScreen bottomInset={112} contentStyle={styles.form} testID="profile-screen">
+        <TopBar onBack={() => setPanel("home")} title="Chỉnh hồ sơ" />
         <Field label="Tên" onChangeText={session.setDisplayName} value={session.displayName} />
         <Field label="Bio" multiline onChangeText={session.setBio} value={session.bio} />
         <RudiButton label="Xong" onPress={() => setPanel("home")} />
@@ -118,10 +136,7 @@ export function ProfileScreen() {
   if (panel === "saved") {
     return (
       <RudiScreen bottomInset={112} testID="profile-screen">
-        <Inline>
-          <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => setPanel("home")} />
-          <Text style={[typography.title, { color: colors.ink }]}>Đã lưu</Text>
-        </Inline>
+        <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
           title={`${session.savedPlaceIds.length} địa điểm`}
           subtitle={`Danh sách ${noiLuu(session.luuTruSong)}. Mở Khám phá để thêm.`}
@@ -131,20 +146,22 @@ export function ProfileScreen() {
     );
   }
 
+  const nhip = nhanNhip(nhipKeo(isoTu(session.startDate), isoTu(session.endDate), homNay()));
+  const dau = dauLich(isoTu(session.startDate));
+
   return (
     <RudiScreen bottomInset={112} testID="profile-screen">
       <View style={styles.profileTop}>
-        <View>
-          <Text style={[typography.h1, { color: colors.ink }]}>Cá nhân</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Không gian của riêng bạn</Text>
+        <View style={styles.flex}>
+          <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
         </View>
         <Inline gap={8}>
           <DemoBadge />
-          <IconButton accessibilityLabel="Cài đặt" icon="settings-outline" onPress={() => setPanel("settings")} />
+          <IconButton accessibilityLabel="Cài đặt" icon="settings-outline" onPress={() => setPanel("settings")} quiet />
         </Inline>
       </View>
       {session.profileNotice ? (
-        <Text style={[typography.caption, { color: colors.accent }]}>{session.profileNotice}</Text>
+        <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.accent }]}>{session.profileNotice}</Text>
       ) : null}
       {session.phien !== null ? (
         // A real session: the server's profile and counts. The fixture hero
@@ -152,151 +169,127 @@ export function ProfileScreen() {
         // person as if it were theirs.
         <HoSoSong phien={session.phien} />
       ) : (
-        <>
-          <Card style={styles.profileHero}>
-            <LinearGradient
-              colors={[phuMau(mauThuongHieu.glow, 0.16), phuMau(mauThuongHieu.violet, 0.12)]}
-              end={{ x: 1, y: 1 }}
-              start={{ x: 0, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.avatarLarge}>
-              <Avatar person={PEOPLE[0]} ring size={86} />
-              <View style={[styles.levelBadge, { backgroundColor: colors.accent }]}>
-                <Ionicons color={colors.accentInk} name="sparkles" size={12} />
-                <Text style={styles.levelText}>12</Text>
-              </View>
+        <View style={styles.hero}>
+          <View style={styles.heroDau}>
+            <Avatar name={session.displayName} ring size={72} />
+            <View style={styles.flex}>
+              <Text style={[typography.h1, { color: colors.ink }]}>{session.displayName}</Text>
+              <Text style={[typography.body, { color: colors.inkSoft }]}>{session.bio}</Text>
             </View>
-            <Text style={[typography.h1, { color: colors.ink }]}>{session.displayName}</Text>
-            <Text style={[typography.body, { color: colors.inkSoft }]}>{session.bio}</Text>
-            <Inline gap={7} wrap>
-              <Chip icon="location-outline" label="TP. Hồ Chí Minh" />
-              <Chip icon="calendar-outline" label="Thành viên từ 2026" />
-            </Inline>
-            <RudiButton
-              compact
-              full={false}
-              icon="create-outline"
-              label="Chỉnh hồ sơ"
-              onPress={() => setPanel("edit")}
-              variant="outline"
-            />
-          </Card>
-          <Card style={styles.profileStats}>
-            <View style={styles.statItem}>
-              <Text style={[typography.money, { color: colors.accent }]}>1</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>chuyến đi</Text>
-            </View>
-            <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-            <View style={styles.statItem}>
-              <Text style={[typography.money, { color: colors.ai }]}>{String(session.savedPlaceIds.length)}</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>đã lưu</Text>
-            </View>
-            <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-            <View style={styles.statItem}>
-              <Text style={[typography.money, { color: colors.split }]}>{String(session.photoCount)}</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>ảnh</Text>
-            </View>
-          </Card>
-        </>
+          </View>
+          {/* The counts as one sentence: a footprint, not a scoreboard. */}
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+            1 chuyến đi · {session.savedPlaceIds.length} đã lưu · {session.photoCount} ảnh
+          </Text>
+          <RudiButton
+            compact
+            full={false}
+            icon="create-outline"
+            label="Chỉnh hồ sơ"
+            onPress={() => setPanel("edit")}
+            variant="outline"
+          />
+        </View>
       )}
       {session.phien === null ? (
         // The fixture trip. A real session has no outing yet until M4 reads
         // `/outings`; showing Team Đà Lạt's weekend to a signed-in stranger is
         // the exact lie this tab used to tell.
-          <View>
-            <SectionHeader title="Sắp tới" />
-            <View style={styles.sectionGap} />
-            <Card onPress={() => router.push(session.tripPath("/timeline") as never)} style={styles.upcoming}>
-              <Photo
-                height={155}
-                radius={17}
-                source={demoAssets.road}
-                overlay={
-                  <PhotoShade>
-                    <Text style={styles.upcomingTitle}>{session.tripName}</Text>
-                    <Text style={styles.upcomingMeta}>17–19/10/2026 · Team Đà Lạt</Text>
-                  </PhotoShade>
-                }
-              />
-              <View style={styles.countdown}>
-                <Text style={[typography.money, { color: colors.accent }]}>46</Text>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>ngày nữa</Text>
-              </View>
-            </Card>
-          </View>
+        <View>
+          <SectionHeader title="Sắp tới" />
+          <Pressable
+            accessibilityLabel={`Mở chuyến ${session.tripName}`}
+            accessibilityRole="button"
+            onPress={() => router.push(session.tripPath("/timeline") as never)}
+            style={({ pressed }) => [styles.upcoming, { backgroundColor: colors.accentSoft, borderRadius: radius.base }, pressed && styles.pressed]}
+          >
+            <View style={styles.dauLich}>
+              <Text style={[styles.ngay, { color: colors.ink }]}>{dau?.ngay ?? "?"}</Text>
+              <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dau?.thang ?? ""}</Text>
+            </View>
+            <View style={styles.flex}>
+              {nhip ? <Stamp label={nhip} tilt={-2} /> : null}
+              <Text style={[typography.h2, { color: colors.ink }]}>{session.tripName}</Text>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                {DEMO_GROUP.name} · {nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
+              </Text>
+            </View>
+            <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
+          </Pressable>
+        </View>
       ) : null}
-      <Card style={styles.menuCard}>
+      <View>
         {session.phien !== null ? (
           <>
-            <ListRow
-              icon="people-outline"
-              onPress={() => router.push("/friends")}
-              subtitle="Bạn bè, lời mời đã nhận và đã gửi"
-              title="Bạn bè"
-            />
-            <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
-            <ListRow
-              icon="newspaper-outline"
-              onPress={() => duongTuongToi && router.push(duongTuongToi)}
-              subtitle="Bài bạn đã đăng và ai đọc được"
-              title="Tường của tôi"
-            />
-            <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
-            <ListRow
-              icon="sparkles-outline"
-              onPress={() => router.push("/personalization")}
-              subtitle={tomTat(soThich)}
-              title="Sở thích"
-            />
-            <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
+            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+              <ListRow
+                icon="people-outline"
+                onPress={() => router.push("/friends")}
+                subtitle="Bạn bè, lời mời đã nhận và đã gửi"
+                title="Bạn bè"
+              />
+            </View>
+            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+              <ListRow
+                icon="newspaper-outline"
+                onPress={() => duongTuongToi && router.push(duongTuongToi)}
+                subtitle="Bài bạn đã đăng và ai đọc được"
+                title="Tường của tôi"
+              />
+            </View>
+            <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+              <ListRow
+                icon="sparkles-outline"
+                onPress={() => router.push("/personalization")}
+                subtitle={tomTat(soThich)}
+                title="Sở thích"
+              />
+            </View>
           </>
         ) : null}
-        <ListRow
-          icon="wallet-outline"
-          onPress={() => router.push("/finance")}
-          subtitle="Chi tiêu, công nợ và lịch sử"
-          title="Tài chính của tôi"
-          tone="split"
-        />
-        {session.phien !== null ? (
-          <>
-            <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <ListRow
+            icon="wallet-outline"
+            onPress={() => router.push("/finance")}
+            subtitle="Chi tiêu, công nợ và lịch sử"
+            title="Tài chính của tôi"
+            tone="split"
+          />
+        </View>
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          {session.phien !== null ? (
             <ListRow
               icon="ribbon-outline"
               onPress={() => router.push("/achievements")}
               subtitle="Cấp và huy hiệu tính từ sổ của bạn"
               title="Thành tích"
             />
-          </>
-        ) : null}
-        {session.phien === null ? (
-          <>
-            <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
+          ) : (
             <ListRow
-              icon="trophy-outline"
+              icon="ribbon-outline"
               onPress={() => router.push("/achievements")}
-              subtitle="12 huy hiệu đã mở khóa"
+              subtitle={nhanHuyHieuDaMo()}
               title="Thành tích"
-              tone="ai"
             />
-          </>
-        ) : null}
-        <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
-        <ListRow
-          icon="bookmark-outline"
-          onPress={() => setPanel("saved")}
-          subtitle={`${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`}
-          title="Đã lưu"
-        />
-        <View style={[styles.rowLine, { backgroundColor: colors.line }]} />
-        <ListRow
-          icon="shield-checkmark-outline"
-          onPress={() => setPanel("account")}
-          subtitle="Quyền riêng tư và đăng xuất bản trải nghiệm"
-          title="Tài khoản"
-        />
-      </Card>
+          )}
+        </View>
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <ListRow
+            icon="bookmark-outline"
+            onPress={() => setPanel("saved")}
+            subtitle={`${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`}
+            title="Đã lưu"
+          />
+        </View>
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <ListRow
+            icon="shield-checkmark-outline"
+            onPress={() => setPanel("account")}
+            subtitle="Quyền riêng tư và đăng xuất bản trải nghiệm"
+            title="Tài khoản"
+          />
+        </View>
+      </View>
     </RudiScreen>
   );
 }
@@ -327,12 +320,14 @@ export function FinanceScreen() {
  */
 function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
+  const [lan, setLan] = useState(0);
 
   useEffect(() => {
     let song = true;
+    setLoi(null);
     void layTaiChinh(actorId)
       .then((ketQua) => {
         if (song) setDu(ketQua);
@@ -344,16 +339,13 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
     return () => {
       song = false;
     };
-  }, [actorId]);
+  }, [actorId, lan]);
 
   if (loi !== null) {
     return (
       <RudiScreen tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
-        <Card>
-          <Text style={[typography.title, { color: colors.warn }]}>Chưa đọc được sổ</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{loi}</Text>
-        </Card>
+        <ErrorState body={loi} onRetry={() => setLan((n) => n + 1)} title="Chưa đọc được sổ" />
       </RudiScreen>
     );
   }
@@ -361,351 +353,204 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
     return (
       <RudiScreen tone="split" testID="finance-screen">
         <TopBar title="Tài chính của tôi" />
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc sổ…</Text>
+        <SkeletonGroup style={styles.khung}>
+          <SkeletonLines lastWidth="50%" lineHeight={28} lines={2} />
+          <SkeletonRow leading={0} />
+        </SkeletonGroup>
       </RudiScreen>
     );
   }
   return (
     <RudiScreen tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" />
-      <Card style={styles.financeHero} tone="split">
-        <View style={styles.financeHeroTop}>
-          <View>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>Bạn đã chi</Text>
-            <Text style={[styles.financeMoney, { color: colors.ink }]}>{formatVnd(du.spend_vnd)}</Text>
-          </View>
-          <View style={[styles.walletIcon, { backgroundColor: colors.split }]}>
-            <Ionicons color={colors.splitInk} name="wallet" size={25} />
-          </View>
-        </View>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          {du.expense_count} khoản chi trong {du.group_count} nhóm. Máy chủ tính lại từ sổ mỗi lần hỏi.
-        </Text>
-      </Card>
-      <Inline gap={10}>
-        <Card style={styles.financeMini}>
-          <View style={[styles.miniIcon, { backgroundColor: colors.accentSoft }]}>
-            <Ionicons color={colors.accent} name="arrow-up" size={19} />
-          </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Còn phải trả</Text>
-          <Text style={[typography.money, { color: colors.warn }]}>{formatVnd(du.outstanding_vnd)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Đã trả {formatVnd(du.settled_vnd)}</Text>
-        </Card>
-        <Card style={styles.financeMini}>
-          <View style={[styles.miniIcon, { backgroundColor: colors.splitSoft }]}>
-            <Ionicons color={colors.split} name="arrow-down" size={19} />
-          </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Sẽ nhận</Text>
-          <Text style={[typography.money, { color: colors.split }]}>{formatVnd(du.receivable_vnd)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Bạn đã ứng trước</Text>
-        </Card>
-      </Inline>
+      {/* The one answer first, as the first line of a ledger: what this person's share of everything has come to. */}
       <View>
-        <SectionHeader
-          action="Xem quyết toán"
-          onAction={() => router.push(("/settlements/" + contextId) as never)}
-          title="Chi theo nhóm"
-        />
+        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Máy chủ tính lại từ sổ mỗi lần hỏi.`} tone="split" vnd={du.spend_vnd} />
+        <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
+        <DongTien nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
       </View>
-      <Card style={styles.financeFootnote}>
+      <SectionHeader
+        action="Xem quyết toán"
+        onAction={() => router.push(("/settlements/" + contextId) as never)}
+        title="Chi theo nhóm"
+      />
+      <View style={styles.ghiChu}>
         <Ionicons color={colors.split} name="calculator-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           {tinhTrangNo(du).cau} Số này đọc từ sổ cái, không phải số dư ngân hàng.
         </Text>
-      </Card>
+      </View>
     </RudiScreen>
   );
 }
 
 function TaiChinhNhap() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const picture = session.money;
   const mine = picture.spent[COLLECTOR_INDEX];
   const budget = DEMO_GROUP.budgetPerPersonVnd;
-  // Bar width only, never a sentence. ADR-0009 decision 4 and the Lead note of
-  // 2026-08-29 ban telling somebody a percentage of their own money; they do not
-  // ban drawing one. `tests/receipt.test.mjs` reads copy for an interpolated
-  // percent sign, which is the distinction, and it went red on the version that
-  // printed this number as a sentence.
-  const budgetPct = budget === 0 ? 0 : (mine * 100 - ((mine * 100) % budget)) / budget;
   const owe = picture.transfers
     .filter((row) => row.fromIndex === COLLECTOR_INDEX)
     .reduce((sum, row) => sum + row.amount, 0);
   const receive = picture.collectorReceives;
   const unpaid = picture.transfers.filter((row) => !session.paidFromIndexes.includes(row.fromIndex)).length;
-  const transactions = [
+  const transactions: { icon: IconName; title: string; detail: string; amount: number }[] = [
     {
-      icon: "restaurant-outline" as const,
+      icon: "restaurant-outline",
       title: "Tiệm Nướng Xóm Lèo",
       detail: "Phần bạn trong bill, cùng số với Quyết toán",
       amount: -picture.shares[COLLECTOR_INDEX],
-      tone: bangMauFixture.cam,
     },
     {
-      icon: "home-outline" as const,
+      icon: "home-outline",
       title: "Homestay + xăng",
       detail: "Phần bạn trong phần còn lại của chuyến",
       amount: -picture.otherShares[COLLECTOR_INDEX],
-      tone: mauSang.ai,
     },
     {
-      icon: "arrow-down-circle-outline" as const,
+      icon: "arrow-down-circle-outline",
       title: `${PEOPLE[COLLECTOR_INDEX].name} sẽ thu (bill)`,
       detail: "Nháp, chưa confirm sổ",
       amount: receive,
-      tone: mauSang.split,
     },
   ];
 
   return (
     <RudiScreen tone="split" testID="finance-screen">
       <TopBar title="Tài chính của tôi" right={<DemoBadge />} />
-      <Card style={styles.financeHero} tone="split">
-        <View style={styles.financeHeroTop}>
-          <View>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>Chi của bạn trong chuyến này</Text>
-            <Text style={[styles.financeMoney, { color: colors.ink }]}>{formatVnd(mine)}</Text>
-          </View>
-          <View style={[styles.walletIcon, { backgroundColor: colors.split }]}>
-            <Ionicons color={colors.splitInk} name="wallet" size={25} />
-          </View>
-        </View>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          Cả chuyến {formatVnd(picture.tripTotal)} · một bill Xóm Lèo {formatVnd(picture.billTotal)}. Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ.
-        </Text>
-        <View style={styles.budgetCopy}>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>So với ngân sách vui chơi</Text>
-          <Text style={[typography.caption, styles.budgetValue, { color: colors.split }]}>
-            {mine <= budget
-              ? `Còn ${formatVnd(budget - mine)} trong ${formatVnd(budget)}`
-              : `Vượt ${formatVnd(mine - budget)} so với ${formatVnd(budget)}`}
-          </Text>
-        </View>
-        <ProgressBar tone="split" value={budgetPct} />
-      </Card>
-      <Inline gap={10}>
-        <Card style={styles.financeMini}>
-          <View style={[styles.miniIcon, { backgroundColor: colors.accentSoft }]}>
-            <Ionicons color={colors.accent} name="arrow-up" size={19} />
-          </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Cần trả (bill)</Text>
-          <Text style={[typography.money, { color: colors.warn }]}>{formatVnd(owe)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Bạn là người thu</Text>
-        </Card>
-        <Card style={styles.financeMini}>
-          <View style={[styles.miniIcon, { backgroundColor: colors.splitSoft }]}>
-            <Ionicons color={colors.split} name="arrow-down" size={19} />
-          </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Sẽ nhận (bill)</Text>
-          <Text style={[typography.money, { color: colors.split }]}>{formatVnd(receive)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>{String(unpaid)} người chưa trả</Text>
-        </Card>
-      </Inline>
+      {/* A ledger, not a dashboard: every sum is a row, the tone lands on the number only. */}
+      <View>
+        <DongTien dam nhan="Chi của bạn trong chuyến này" phu={`Cả chuyến ${formatVnd(picture.tripTotal)} · một bill Xóm Lèo ${formatVnd(picture.billTotal)}`} tone="split" vnd={mine} />
+        <DongTien
+          nhan="Ngân sách vui chơi"
+          phu={mine <= budget ? `Còn ${formatVnd(budget - mine)} chưa dùng` : `Vượt ${formatVnd(mine - budget)}`}
+          vnd={budget}
+        />
+        <DongTien nhan="Cần trả (bill)" phu="Bạn là người thu" tone={owe > 0 ? "warn" : "ink"} vnd={owe} />
+        <DongTien nhan="Sẽ nhận (bill)" phu={`${String(unpaid)} người chưa trả`} tone="split" vnd={receive} />
+      </View>
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ.</Text>
       <View>
         <SectionHeader
           action="Xem quyết toán"
           onAction={() => router.push(("/settlements/" + DEMO_GROUP.id) as never)}
           title="Chi theo nhóm"
         />
-        <View style={styles.sectionGap} />
-        <Card style={styles.groupSpend}>
-          <View style={styles.spendRow}>
-            <View style={styles.spendTitle}>
-              <Text style={[typography.label, { color: colors.ink }]}>Team Đà Lạt</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>{formatVnd(picture.tripTotal)}</Text>
-            </View>
-            <View style={[styles.spendTrack, { backgroundColor: colors.line }]}>
-              <View style={[styles.spendFill, { backgroundColor: colors.accent, width: widthPercent(100) }]} />
-            </View>
-          </View>
-        </Card>
+        <View style={[styles.hangSo, { borderBottomColor: colors.line }]}>
+          <Text style={[typography.label, styles.flex, { color: colors.ink }]}>Team Đà Lạt</Text>
+          <Money size="label" vnd={picture.tripTotal} />
+        </View>
       </View>
       <View>
         <SectionHeader title="Giao dịch gần đây" />
-        <View style={styles.sectionGap} />
-        <Card style={styles.transactions}>
-          {transactions.map((transaction, index) => (
-            <View key={transaction.title}>
-              <View style={styles.transaction}>
-                <View style={[styles.transactionIcon, { backgroundColor: transaction.tone + "18" }]}>
-                  <Ionicons color={transaction.tone} name={transaction.icon} size={20} />
-                </View>
-                <View style={styles.flex}>
-                  <Text style={[typography.label, { color: colors.ink }]}>{transaction.title}</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>{transaction.detail}</Text>
-                </View>
-                <Text style={[typography.label, { color: transaction.amount > 0 ? colors.split : colors.ink }]}>
-                  {transaction.amount > 0 ? "+" : "−"}
-                  {formatVnd(transaction.amount > 0 ? transaction.amount : -transaction.amount)}
-                </Text>
-              </View>
-              {index < transactions.length - 1 ? <View style={[styles.rowLine, { backgroundColor: colors.line }]} /> : null}
+        {transactions.map((transaction) => (
+          <View key={transaction.title} style={[styles.hangSo, { borderBottomColor: colors.line }]}>
+            <View style={[styles.transactionIcon, { backgroundColor: transaction.amount > 0 ? colors.splitSoft : colors.card, borderColor: colors.line }]}>
+              <Ionicons color={transaction.amount > 0 ? colors.split : colors.inkSoft} name={transaction.icon} size={20} />
             </View>
-          ))}
-        </Card>
+            <View style={styles.flex}>
+              <Text style={[typography.label, { color: colors.ink }]}>{transaction.title}</Text>
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>{transaction.detail}</Text>
+            </View>
+            <Money sign="always" size="label" tone={transaction.amount > 0 ? "split" : "ink"} vnd={transaction.amount} />
+          </View>
+        ))}
       </View>
-      <Card style={styles.financeFootnote}>
+      <View style={styles.ghiChu}>
         <Ionicons color={colors.split} name="calculator-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           Số trên màn này và Quyết toán cùng một phép tính nháp. Chưa confirm sổ cái. Đây không phải số dư ngân hàng.
         </Text>
-      </Card>
+      </View>
     </RudiScreen>
   );
 }
 
-const BADGES = [
-  ["airplane", "Chân đi", "Hoàn thành 10 chuyến", bangMauFixture.cam, true],
-  ["people", "Kết nối", "Đi cùng 25 người bạn", mauSang.ai, true],
-  ["restaurant", "Foodie", "Thử 20 món local", bangMauFixture.do, true],
-  ["camera", "Ký ức", "Đăng 100 khoảnh khắc", bangMauFixture.xanhTroi, true],
-  ["leaf", "Xanh", "5 chuyến ngoài trời", bangMauFixture.xanhLa, true],
-  ["map", "Nhà thám hiểm", "Ghé 15 tỉnh thành", mauSang.accent, false],
-] as const;
+/**
+ * Badges counted from what the fixture actually holds: one outing, seven
+ * companions, six dishes on one bill, four photographs, one province. The
+ * first cut declared five of six unlocked («Hoàn thành 10 chuyến» beside a
+ * profile that says «1 chuyến đi»), which is exactly the invented number the
+ * story forbids. Nothing is unlocked yet; every rule shows how far it has come.
+ */
+const SU_THAT = { chuyen: 1, ban: PEOPLE.length - 1, mon: BILL_ITEMS.length, anh: MEMORY_PHOTOS.length, ngoaiTroi: 1, tinh: 1 } as const;
+
+const HUY_HIEU: readonly { icon: IconName; ten: string; luat: string; can: number; co: number; donVi: string }[] = [
+  { icon: "airplane", ten: "Chân đi", luat: "Hoàn thành 10 chuyến", can: 10, co: SU_THAT.chuyen, donVi: "chuyến" },
+  { icon: "people", ten: "Kết nối", luat: "Đi cùng 25 người bạn", can: 25, co: SU_THAT.ban, donVi: "người" },
+  { icon: "restaurant", ten: "Foodie", luat: "Thử 20 món local", can: 20, co: SU_THAT.mon, donVi: "món" },
+  { icon: "camera", ten: "Ký ức", luat: "Đăng 100 khoảnh khắc", can: 100, co: SU_THAT.anh, donVi: "ảnh" },
+  { icon: "leaf", ten: "Xanh", luat: "5 chuyến ngoài trời", can: 5, co: SU_THAT.ngoaiTroi, donVi: "chuyến" },
+  { icon: "map", ten: "Nhà thám hiểm", luat: "Ghé 15 tỉnh thành", can: 15, co: SU_THAT.tinh, donVi: "tỉnh" },
+];
+
+function huyHieuDaMo() {
+  return HUY_HIEU.filter((h) => h.co >= h.can);
+}
+
+// Built here, not inline in ProfileScreen: the actor-header gate reads every
+// template literal with a slash inside a component that calls the API as a
+// URL it cannot resolve, and «0/6» is a count, not a route.
+function nhanHuyHieuDaMo(): string {
+  return `${huyHieuDaMo().length}/${HUY_HIEU.length} huy hiệu đã mở`;
+}
 
 export function AchievementsScreen() {
   const { colors } = useRudiTheme();
+  const daMo = huyHieuDaMo();
+  // The badge nearest its rule, named with what is still missing; no bar, no percent.
+  const ganNhat = [...HUY_HIEU].filter((h) => h.co < h.can).sort((a, b) => b.co / b.can - a.co / a.can)[0];
 
   return (
-    <RudiScreen tone="ai" testID="achievements-screen">
+    <RudiScreen testID="achievements-screen">
       <TopBar title="Thành tích" right={<DemoBadge />} />
-      <Card style={styles.levelHero}>
-        <LinearGradient
-          colors={[mauSang.ai, mauSang.accentEnd]}
-          end={{ x: 1, y: 1 }}
-          start={{ x: 0, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.levelHeroTop}>
-          <View style={styles.levelSeal}>
-            <Ionicons color={mauSang.ai} name="sparkles" size={27} />
-            <Text style={styles.levelNumber}>12</Text>
-          </View>
-          <View style={styles.flex}>
-            <Text style={styles.levelKicker}>NHÀ THÁM HIỂM</Text>
-            <Text style={styles.levelTitle}>Minh Anh · Cấp 12</Text>
-            <Text style={styles.levelSubtitle}>1.240 XP nữa để lên cấp 13</Text>
-          </View>
-        </View>
-        <View style={styles.levelTrack}>
-          <View style={styles.levelFill} />
-        </View>
-        <View style={styles.levelProgressText}>
-          <Text style={styles.levelSmall}>3.760 XP</Text>
-          <Text style={styles.levelSmall}>5.000 XP</Text>
-        </View>
-      </Card>
-      <Card style={styles.achievementStats}>
-        <View style={styles.statItem}>
-          <Text style={[typography.money, { color: colors.ai }]}>12</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>huy hiệu</Text>
-        </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.statItem}>
-          <Text style={[typography.money, { color: colors.accent }]}>8</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>hiếm</Text>
-        </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.statItem}>
-          <Text style={[typography.money, { color: colors.split }]}>68%</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>bộ sưu tập</Text>
-        </View>
-      </Card>
-      <SectionHeader action="12/18 đã mở" title="Huy hiệu của bạn" />
-      <View style={styles.badgeGrid}>
-        {BADGES.map(([icon, name, detail, color, unlocked]) => (
-          <Card key={name} style={[styles.badgeCard, !unlocked && styles.badgeLocked]}>
-            <View style={[styles.badgeIcon, { backgroundColor: color + "18", borderColor: color + "36" }]}>
-              <Ionicons color={unlocked ? color : colors.inkFaint} name={unlocked ? icon : "lock-closed"} size={27} />
+      <SectionHeader action={`${daMo.length}/${HUY_HIEU.length} đã mở`} title="Huy hiệu của bạn" />
+      <View>
+        {HUY_HIEU.map((h) => {
+          const mo = h.co >= h.can;
+          return (
+            <View key={h.ten} style={[styles.hangSo, { borderBottomColor: colors.line }]}>
+              <View style={[styles.transactionIcon, { backgroundColor: mo ? colors.accentSoft : colors.card, borderColor: mo ? colors.accentSoft : colors.line }]}>
+                <Ionicons color={mo ? colors.accent : colors.inkFaint} name={mo ? h.icon : "lock-closed-outline"} size={20} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={[typography.label, { color: colors.ink }]}>{h.ten}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{h.luat}</Text>
+              </View>
+              {mo ? <Stamp label="Đã mở" /> : <Text style={[typography.caption, styles.tienDo, { color: colors.inkSoft }]}>{`${h.co}/${h.can} ${h.donVi}`}</Text>}
             </View>
-            <Text style={[typography.title, styles.badgeName, { color: colors.ink }]}>{name}</Text>
-            <Text style={[typography.caption, styles.badgeDetail, { color: colors.inkFaint }]}>{detail}</Text>
-            {unlocked ? (
-              <View style={[styles.unlocked, { backgroundColor: color + "18" }]}>
-                <Ionicons color={color} name="checkmark-circle" size={13} />
-                <Text style={[styles.unlockedText, { color }]}>Đã mở khóa</Text>
-              </View>
-            ) : (
-              <View style={[styles.unlocked, { backgroundColor: colors.ground }]}>
-                <Text style={[styles.unlockedText, { color: colors.inkFaint }]}>12/15 tỉnh</Text>
-              </View>
-            )}
-          </Card>
-        ))}
+          );
+        })}
       </View>
-      <Card style={styles.nextQuest} tone="ai">
-        <View style={[styles.questIcon, { backgroundColor: colors.ai }]}>
-          <Ionicons color={colors.aiInk} name="flag" size={23} />
+      {ganNhat ? (
+        <View style={styles.thuThach}>
+          <Text style={[typography.h2, { color: colors.ink }]}>Gần nhất</Text>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>
+            «{ganNhat.ten}»: còn {ganNhat.can - ganNhat.co} {ganNhat.donVi} nữa. Số này đếm từ những gì bạn đã làm trong Rủ Đi.
+          </Text>
         </View>
-        <View style={styles.flex}>
-          <Text style={[typography.title, { color: colors.ink }]}>Thử thách tiếp theo</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Check-in thêm 3 tỉnh để mở “Nhà thám hiểm”.</Text>
-          <View style={styles.questProgress}><ProgressBar tone="ai" value={80} /></View>
-        </View>
-      </Card>
+      ) : null}
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  profileTop: { minHeight: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  profileHero: { alignItems: "center", overflow: "hidden", gap: 8, paddingVertical: 23 },
-  avatarLarge: { position: "relative" },
-  levelBadge: { position: "absolute", right: -7, bottom: 1, minWidth: 37, height: 24, borderRadius: 999, borderWidth: 2, borderColor: mucTrenAnh, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 2, paddingHorizontal: 5 },
-  levelText: { color: mucTrenAnh, fontSize: 10, fontWeight: "900" },
-  profileStats: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8 },
-  statItem: { flex: 1, alignItems: "center", gap: 3, paddingVertical: 5 },
-  verticalLine: { width: StyleSheet.hairlineWidth, height: 38 },
-  sectionGap: { height: 10 },
-  upcoming: { padding: 7, position: "relative" },
-  upcomingTitle: { color: mucTrenAnh, fontSize: 19, lineHeight: 24, fontWeight: "900" },
-  upcomingMeta: { color: lopPhu.trang(0.8), fontSize: 11, fontWeight: "700" },
-  countdown: { position: "absolute", right: 15, top: 15, minWidth: 74, alignItems: "center", padding: 8, borderRadius: 15, backgroundColor: lopPhu.trang(0.93) },
-  menuCard: { paddingVertical: 5 },
-  rowLine: { height: StyleSheet.hairlineWidth, marginLeft: 52 },
-  financeHero: { gap: 13 },
-  financeHeroTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  financeMoney: { fontSize: 34, lineHeight: 41, fontWeight: "900", letterSpacing: -0.9, fontVariant: ["tabular-nums"] },
-  walletIcon: { width: 50, height: 50, borderRadius: 17, alignItems: "center", justifyContent: "center" },
-  // At font scale 1.3 the value ran past the card edge: it must wrap and shrink, the label must not.
-  budgetValue: { flexShrink: 1, textAlign: "right" },
-  budgetCopy: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  financeMini: { flex: 1, gap: 5 },
-  miniIcon: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", marginBottom: 3 },
-  groupSpend: { gap: 14 },
-  spendRow: { gap: 7 },
-  spendTitle: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  spendTrack: { height: 9, overflow: "hidden", borderRadius: 999 },
-  spendFill: { height: "100%", borderRadius: 999 },
-  transactions: { paddingVertical: 5 },
-  // Rows grow with sp: at font 1.3 a two-line subtitle used to meet the divider above.
-  transaction: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 10 },
-  transactionIcon: { width: 41, height: 41, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  financeFootnote: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
-  levelHero: { overflow: "hidden", gap: 14, padding: 19 },
-  levelHeroTop: { flexDirection: "row", alignItems: "center", gap: 14 },
-  levelSeal: { width: 72, height: 72, borderRadius: 23, backgroundColor: mucTrenAnh, alignItems: "center", justifyContent: "center" },
-  levelNumber: { color: mauSang.ai, fontSize: 17, fontWeight: "900", marginTop: -3 },
-  levelKicker: { color: lopPhu.trang(0.72), fontSize: 10, fontWeight: "900", letterSpacing: 1 },
-  levelTitle: { color: mucTrenAnh, fontSize: 22, lineHeight: 27, fontWeight: "900" },
-  levelSubtitle: { color: lopPhu.trang(0.79), fontSize: 11, lineHeight: 16, fontWeight: "600" },
-  levelTrack: { height: 9, borderRadius: 999, backgroundColor: lopPhu.trang(0.24), overflow: "hidden" },
-  levelFill: { width: "75%", height: "100%", borderRadius: 999, backgroundColor: mucTrenAnh },
-  levelProgressText: { flexDirection: "row", justifyContent: "space-between" },
-  levelSmall: { color: lopPhu.trang(0.82), fontSize: 10, fontWeight: "800" },
-  achievementStats: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8 },
-  badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  badgeCard: { flexGrow: 1, flexBasis: 145, alignItems: "center", gap: 6, padding: 14 },
-  badgeLocked: { opacity: 0.62 },
-  badgeIcon: { width: 61, height: 61, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  badgeName: { textAlign: "center" },
-  badgeDetail: { textAlign: "center", minHeight: 32 },
-  unlocked: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
-  unlockedText: { fontSize: 9, lineHeight: 12, fontWeight: "900" },
-  nextQuest: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
-  questIcon: { width: 44, height: 44, borderRadius: 15, alignItems: "center", justifyContent: "center" },
-  questProgress: { marginTop: 9 },
+  form: { maxWidth: 560 },
+  khung: { gap: 14 },
+  profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  hero: { gap: 10 },
+  heroDau: { flexDirection: "row", alignItems: "center", gap: 14 },
+  upcoming: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, marginTop: 10 },
+  dauLich: { minWidth: 64, alignItems: "center" },
+  ngay: { fontFamily: displayFace.extraBold, fontSize: 32, lineHeight: 36, letterSpacing: -1, fontVariant: ["tabular-nums"] },
+  pressed: { opacity: 0.75 },
+  hangMenu: { borderBottomWidth: StyleSheet.hairlineWidth },
+  hangSo: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  transactionIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
+  tienDo: { fontVariant: ["tabular-nums"] },
+  thuThach: { gap: 8, paddingTop: 4 },
 });

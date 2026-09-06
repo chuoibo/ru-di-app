@@ -1,26 +1,26 @@
 {
-  "_": "Sidecar of DESIGN.md v2. Generated blocks (color, brand, type, motion, radius, space, contrast) come from packages/shared/tokens.json via scripts/sinh_token_ui_v2.py; descriptive keys (world, materials, kit, surfaces, narrative, shippedV2) are measured from the shipped artifact at d168b63.",
+  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8. Giữ cấu trúc hiện có để tương thích script.",
   "source": "packages/shared/tokens.json",
-  "measuredFrom": "UI v2 (2026-09-05): tokens.json sinh bởi scripts/sinh_token_ui_v2.py; bìa sổ indigo + trang giấy sáng; đo lại từ artifact ở lát UI-8",
+  "measuredFrom": "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. Các tỷ lệ token không thay thế bằng chứng native của từng component.",
   "color": {
     "light": {
       "ground": "#f7f3ec",
       "card": "#ffffff",
       "line": "#e6dfd3",
-      "lineStrong": "#a7825d",
+      "lineStrong": "#777580",
       "ink": "#1f2230",
       "inkSoft": "#4e5563",
       "inkFaint": "#676e7b",
-      "accent": "#c93900",
-      "accentEnd": "#c9344a",
+      "accent": "#ba3e20",
+      "accentEnd": "#ba3e20",
       "accentInk": "#ffffff",
       "accentSoft": "#fff0ea",
       "split": "#00756b",
       "splitInk": "#ffffff",
-      "splitSoft": "#d5f5f0",
-      "ai": "#7d49ef",
+      "splitSoft": "#e6f2ee",
+      "ai": "#7356a6",
       "aiInk": "#ffffff",
-      "aiSoft": "#f5f1ff",
+      "aiSoft": "#f1ebf7",
       "warn": "#c2410c",
       "cover": "#1d2140",
       "coverInk": "#f7f3ec",
@@ -37,15 +37,15 @@
       "inkSoft": "#c4c2cf",
       "inkFaint": "#9b9aae",
       "accent": "#fb693e",
-      "accentEnd": "#e75262",
+      "accentEnd": "#fb693e",
       "accentInk": "#1c0d06",
       "accentSoft": "#3d1a10",
-      "split": "#02a498",
+      "split": "#74cec0",
       "splitInk": "#04201d",
-      "splitSoft": "#0d2f30",
-      "ai": "#a27dff",
+      "splitSoft": "#153734",
+      "ai": "#c7b1e5",
       "aiInk": "#150a30",
-      "aiSoft": "#251b4a",
+      "aiSoft": "#30273f",
       "warn": "#e8734b",
       "cover": "#0f1126",
       "coverInk": "#f4f1ea",
@@ -58,6 +58,7 @@
     "_": "Tầng nhận diện: giữ nguyên số đo từ logo, KHÔNG chỉnh theo contrast. Chỉ dùng làm mảng lớn (logo, hero, nền trang trí). Cấm đặt chữ nhỏ hoặc icon lên nó: đo được cam #fb693e với chữ trắng chỉ 2.92:1, dưới cả ngưỡng 3:1 của thành phần giao diện. Cần chữ thì dùng gradient của actionGradient.",
     "glow": "#fc7b37",
     "coral": "#fb693e",
+    "coralInk": "#1f2230",
     "rose": "#e75262",
     "violet": "#8350f6",
     "teal": "#04a89d",
@@ -119,17 +120,17 @@
       "tracking": -0.3
     },
     "body": {
-      "size": 16,
+      "size": 17,
       "weight": "400",
       "tracking": 0
     },
     "label": {
-      "size": 13,
-      "weight": "400",
+      "size": 14,
+      "weight": "600",
       "tracking": 0
     },
     "micro": {
-      "size": 12,
+      "size": 13,
       "weight": "600",
       "tracking": 0.3
     }
@@ -171,7 +172,7 @@
   "contrast": {
     "method": "WCAG 2.1 relative luminance, sRGB",
     "pairsChecked": 50,
-    "min": 4.61,
+    "min": 4.64,
     "max": 16.5,
     "allPassAA": true,
     "light": [
@@ -220,30 +221,30 @@
       {
         "fg": "accent",
         "bg": "card",
-        "fgHex": "#c93900",
+        "fgHex": "#ba3e20",
         "bgHex": "#ffffff",
-        "ratio": 5.16
+        "ratio": 5.53
       },
       {
         "fg": "accent",
         "bg": "ground",
-        "fgHex": "#c93900",
+        "fgHex": "#ba3e20",
         "bgHex": "#f7f3ec",
-        "ratio": 4.67
+        "ratio": 5.0
       },
       {
         "fg": "accentInk",
         "bg": "accent",
         "fgHex": "#ffffff",
-        "bgHex": "#c93900",
-        "ratio": 5.16
+        "bgHex": "#ba3e20",
+        "ratio": 5.53
       },
       {
         "fg": "accent",
         "bg": "accentSoft",
-        "fgHex": "#c93900",
+        "fgHex": "#ba3e20",
         "bgHex": "#fff0ea",
-        "ratio": 4.65
+        "ratio": 4.98
       },
       {
         "fg": "split",
@@ -270,36 +271,36 @@
         "fg": "split",
         "bg": "splitSoft",
         "fgHex": "#00756b",
-        "bgHex": "#d5f5f0",
-        "ratio": 4.83
+        "bgHex": "#e6f2ee",
+        "ratio": 4.87
       },
       {
         "fg": "ai",
         "bg": "card",
-        "fgHex": "#7d49ef",
+        "fgHex": "#7356a6",
         "bgHex": "#ffffff",
-        "ratio": 5.16
+        "ratio": 5.82
       },
       {
         "fg": "ai",
         "bg": "ground",
-        "fgHex": "#7d49ef",
+        "fgHex": "#7356a6",
         "bgHex": "#f7f3ec",
-        "ratio": 4.66
+        "ratio": 5.26
       },
       {
         "fg": "aiInk",
         "bg": "ai",
         "fgHex": "#ffffff",
-        "bgHex": "#7d49ef",
-        "ratio": 5.16
+        "bgHex": "#7356a6",
+        "ratio": 5.82
       },
       {
         "fg": "ai",
         "bg": "aiSoft",
-        "fgHex": "#7d49ef",
-        "bgHex": "#f5f1ff",
-        "ratio": 4.64
+        "fgHex": "#7356a6",
+        "bgHex": "#f1ebf7",
+        "ratio": 4.98
       },
       {
         "fg": "warn",
@@ -326,15 +327,15 @@
         "fg": "ink",
         "bg": "splitSoft",
         "fgHex": "#1f2230",
-        "bgHex": "#d5f5f0",
-        "ratio": 13.65
+        "bgHex": "#e6f2ee",
+        "ratio": 13.76
       },
       {
         "fg": "ink",
         "bg": "aiSoft",
         "fgHex": "#1f2230",
-        "bgHex": "#f5f1ff",
-        "ratio": 14.22
+        "bgHex": "#f1ebf7",
+        "ratio": 13.51
       },
       {
         "fg": "coverInk",
@@ -425,58 +426,58 @@
       {
         "fg": "split",
         "bg": "card",
-        "fgHex": "#02a498",
+        "fgHex": "#74cec0",
         "bgHex": "#1f2340",
-        "ratio": 4.93
+        "ratio": 8.26
       },
       {
         "fg": "split",
         "bg": "ground",
-        "fgHex": "#02a498",
+        "fgHex": "#74cec0",
         "bgHex": "#151830",
-        "ratio": 5.61
+        "ratio": 9.4
       },
       {
         "fg": "splitInk",
         "bg": "split",
         "fgHex": "#04201d",
-        "bgHex": "#02a498",
-        "ratio": 5.5
+        "bgHex": "#74cec0",
+        "ratio": 9.22
       },
       {
         "fg": "split",
         "bg": "splitSoft",
-        "fgHex": "#02a498",
-        "bgHex": "#0d2f30",
-        "ratio": 4.61
+        "fgHex": "#74cec0",
+        "bgHex": "#153734",
+        "ratio": 6.96
       },
       {
         "fg": "ai",
         "bg": "card",
-        "fgHex": "#a27dff",
+        "fgHex": "#c7b1e5",
         "bgHex": "#1f2340",
-        "ratio": 5.04
+        "ratio": 7.9
       },
       {
         "fg": "ai",
         "bg": "ground",
-        "fgHex": "#a27dff",
+        "fgHex": "#c7b1e5",
         "bgHex": "#151830",
-        "ratio": 5.74
+        "ratio": 9.0
       },
       {
         "fg": "aiInk",
         "bg": "ai",
         "fgHex": "#150a30",
-        "bgHex": "#a27dff",
-        "ratio": 6.18
+        "bgHex": "#c7b1e5",
+        "ratio": 9.7
       },
       {
         "fg": "ai",
         "bg": "aiSoft",
-        "fgHex": "#a27dff",
-        "bgHex": "#251b4a",
-        "ratio": 5.18
+        "fgHex": "#c7b1e5",
+        "bgHex": "#30273f",
+        "ratio": 7.29
       },
       {
         "fg": "warn",
@@ -503,15 +504,15 @@
         "fg": "ink",
         "bg": "splitSoft",
         "fgHex": "#f4f1ea",
-        "bgHex": "#0d2f30",
-        "ratio": 12.7
+        "bgHex": "#153734",
+        "ratio": 11.44
       },
       {
         "fg": "ink",
         "bg": "aiSoft",
         "fgHex": "#f4f1ea",
-        "bgHex": "#251b4a",
-        "ratio": 13.95
+        "bgHex": "#30273f",
+        "ratio": 12.51
       },
       {
         "fg": "coverInk",
@@ -538,33 +539,33 @@
         {
           "fg": "lineStrong",
           "bg": "ground",
-          "fgHex": "#ac7f56",
-          "bgHex": "#feeee0",
-          "ratio": 3.13,
+          "fgHex": "#777580",
+          "bgHex": "#f7f3ec",
+          "ratio": 4.09,
           "role": "control boundary on the page ground"
         },
         {
           "fg": "lineStrong",
           "bg": "card",
-          "fgHex": "#ac7f56",
+          "fgHex": "#777580",
           "bgHex": "#ffffff",
-          "ratio": 3.54,
+          "ratio": 4.53,
           "role": "control boundary on a card"
         },
         {
           "fg": "line",
           "bg": "ground",
-          "fgHex": "#e7dace",
-          "bgHex": "#feeee0",
-          "ratio": 1.21,
+          "fgHex": "#e6dfd3",
+          "bgHex": "#f7f3ec",
+          "ratio": 1.2,
           "role": "decorative card edge, below 3:1 on purpose"
         },
         {
           "fg": "line",
           "bg": "card",
-          "fgHex": "#e7dace",
+          "fgHex": "#e6dfd3",
           "bgHex": "#ffffff",
-          "ratio": 1.37,
+          "ratio": 1.32,
           "role": "decorative divider, below 3:1 on purpose"
         }
       ],
@@ -572,40 +573,40 @@
         {
           "fg": "lineStrong",
           "bg": "ground",
-          "fgHex": "#716962",
-          "bgHex": "#17120f",
-          "ratio": 3.45,
+          "fgHex": "#7d82a9",
+          "bgHex": "#151830",
+          "ratio": 4.68,
           "role": "control boundary on the page ground"
         },
         {
           "fg": "lineStrong",
           "bg": "card",
-          "fgHex": "#716962",
-          "bgHex": "#221c18",
-          "ratio": 3.13,
+          "fgHex": "#7d82a9",
+          "bgHex": "#1f2340",
+          "ratio": 4.11,
           "role": "control boundary on a card"
         },
         {
           "fg": "line",
           "bg": "ground",
-          "fgHex": "#413c38",
-          "bgHex": "#17120f",
-          "ratio": 1.71,
+          "fgHex": "#363b5e",
+          "bgHex": "#151830",
+          "ratio": 1.61,
           "role": "decorative card edge, below 3:1 on purpose"
         },
         {
           "fg": "line",
           "bg": "card",
-          "fgHex": "#413c38",
-          "bgHex": "#221c18",
-          "ratio": 1.55,
+          "fgHex": "#363b5e",
+          "bgHex": "#1f2340",
+          "ratio": 1.42,
           "role": "decorative divider, below 3:1 on purpose"
         }
       ],
       "controls": {
         "light": {
-          "lineStrong/ground": 3.17,
-          "lineStrong/card": 3.5,
+          "lineStrong/ground": 4.09,
+          "lineStrong/card": 4.53,
           "coverLineStrong/cover": 5.19
         },
         "dark": {
@@ -618,7 +619,7 @@
   },
   "toneRule": "Ba tông mang nghĩa, không phải trang trí. accent (cam) = thương hiệu và hành động chính. split (teal) = chia bill, tiền, quyết toán. ai (tím) = thứ do máy sinh ra và người còn sửa được. Một màn hình chỉ có MỘT tông dẫn; hai tông dẫn cùng lúc là lỗi, không phải lựa chọn.",
   "shipped": {
-    "_": "Đo lại từ artifact đã ship (apps/mobile/src/rudi/ui.tsx, theme.ts). Chỉ chuỗi mô tả; số vẫn ở tokens.json và các khối trên.",
+    "_": "Mốc lịch sử 2026-09-04, không phải trạng thái hiện tại. Typography(app) được đồng bộ để tránh đưa thang cũ vào màn mới; xem implementationCheckpoint và kit cho thay đổi sau mốc này.",
     "date": "2026-09-04",
     "commit": "86a55fb",
     "components": {
@@ -636,7 +637,7 @@
       "Divider": "hairlineWidth màu line",
       "DemoBadge": "viền line, chữ 10/700 inkFaint, flask-outline; render rỗng ở chế độ live",
       "TabBar+FAB": "tab bar 62 + insets.bottom, nhãn 10/700, active accent / inactive inkFaint; FAB 58 bo 21 nền brand.coral glyph accentInk vòng 4px ground; rail trái 104 khi ≥700dp",
-      "typography(app)": "display 34/39/800/-1.1 · h1 28/34/800/-0.65 · h2 21/27/700/-0.3 · title 17/23/700/-0.15 · body 16/23/400 · label 14/19/600 · caption 12/16/600 · money 21/27/800 tabular-nums (theme.ts; khối `type` ở trên là thang của guest.css)"
+      "typography(app)": "display 34/39/800/-1.1 · h1 28/34/800/-0.65 · h2 21/27/700/-0.3 · title 17/23/700/-0.15 · body 17/24/400 · label 14/19/600 · caption 13/18/600 · money 21/27/800 tabular-nums; body.size/micro.size đọc từ tokens.json; các bậc native còn lại theo theme.ts; tab override 12/14, Stamp 12/14, DemoBadge 10/12"
     },
     "notes": [
       "Một tông dẫn mỗi màn: accent mặc định; split ở chia bill / đợt thu / quyết toán; ai chỉ ở thành phần khi có nguồn thật.",
@@ -648,7 +649,7 @@
     ]
   },
   "shippedV2": {
-    "_": "UI v2, lát UI-0 + UI-1, đo từ artifact ở head d168b63 (2026-09-05); finish reviewer trả ship cho phạm vi đã chấm trên phone light 1.0, phone dark 1.3, tablet light.",
+    "_": "Mốc lịch sử UI v2, lát UI-0 + UI-1, head d168b63 (2026-09-05); verdict ship chỉ cho phạm vi đã chấm trên phone light 1.0, phone dark 1.3, tablet light; không áp tự động cho implementationCheckpoint.",
     "commit": "d168b63",
     "date": "2026-09-05",
     "fullyV2": [
@@ -668,7 +669,7 @@
       "keo/*",
       "nhom"
     ],
-    "pendingSlices": "UI-2 đến UI-8; DESIGN.md đo lại sau UI-8",
+    "pendingSlices": "Kế hoạch tại mốc lịch sử: UI-2 đến UI-8. Checkpoint hiện tại ghi riêng, không xác nhận mọi màn đã chuyển trọn v2.",
     "directionContract": {
       "file": "apps/mobile/app/_layout.tsx",
       "seed": "c8e88116",
@@ -690,10 +691,15 @@
       "ai": "brand.violet",
       "rule": "chỉ dán lên vùng đang quan trọng; fillOpacity 0.9; chữ trên coral dùng mauSang.ink tĩnh (5.41:1 cả hai scheme)"
     },
-    "status": "con dấu (Stamp): viền mực 2px, chữ stamp CondensedBold 12 IN HOA, bo 6",
-    "plan": "RouteLine: đường S nét 3, chặng r16 (glyph), chặng đang ở tô coral r21",
+    "status": "con dấu (Stamp) cho trạng thái ĐÃ đúng: viền 2 màu tông, chữ stamp CondensedBold 12 IN HOA +0.8, bo 6, luôn mang một chữ; nháp là nét chì đứt (HangChang phac) + nhãn «Nháp»",
+    "plan": "một đường mực liên tục: HangChang trục 14, đường 2 lineStrong, nút 12 (đã tới tô split); trên bìa RouteLine đường S nét 3, chặng r16, chặng đang ở coral r21",
     "displayFace": "Bricolage Grotesque (OFL), 4 instance tĩnh; body system",
-    "wordmark": "SVG từ outline Baloo 2 ExtraBold nghiêng 9°, tỉ lệ 2.8804"
+    "wordmark": "SVG từ outline Baloo 2 ExtraBold nghiêng 9°, tỉ lệ 2.8804",
+    "money": "sổ: DongTien tên trái / Money phải / kẻ tóc dưới; tông đậu trên số (split, warn khi > 0), không tô khối; một câu chân nói số này chưa phải sổ cái",
+    "photo": "bản in: KhungAnh giấy card bo 10, đệm 8/8/14, cardShadow mềm, dòng xuất xứ «ai · ở đâu · khi nào»; MediaSlot + Attribution cho ảnh có giấy phép; ô lưới trần",
+    "ai": "AiNote ghi chú lề (sparkles 17 tím, kẻ tóc trên/dưới, ký «Rủ Đi AI gợi ý» dưới câu); ToGiay tờ card viền line bo 20 ký ở chân, không nhãn trên đầu",
+    "lists": "hàng thẳng trên giấy, kẻ tóc line; không thẻ, không thẻ lồng thẻ",
+    "leadingTone": "một tông dẫn mỗi màn: cam = lời rủ (Welcome/Login/OTP), teal = tiền (Quyết toán, Tài chính), tím = AI (Lịch trình AI, thẻ AI)"
   },
   "materials": {
     "_": "assets/textures/*.png 256x256, seed 20260905, Pillow; trải bằng ui/Grain.tsx (lưới Image, <= 60 ô), không resizeMode=repeat.",
@@ -716,32 +722,101 @@
     }
   },
   "kit": {
-    "StampButton": "coral fill, viền 2px ink 0.88 + viền trong 1px ink 0.32 lùi 4, Grain mucIn 0.26, bo 14, minHeight 56, nhãn Bricolage Bold 18/22 mauSang.ink, icon 22, tilt -1.5 bìa / 0 form, PressScale 0.97 haptic impact, disabled 0.55, không bóng",
-    "CoverButton": "trong suốt, viền 1px coverLineStrong, bo 14, minHeight 50, label coverInk, icon 18, haptic select",
-    "CoverBand": "nền cover + Grain vaiBia 0.3, bo dưới 28, paddingTop md (+insets.top khi underStatusBar), paddingBottom lg, bleed = lề màn; back tròn 48 coverInk 0.08, PressScale 0.92 scale-only",
+    "StampButton": "rộng bằng chữ (alignSelf center); một vành SVG duongVienDau(w,h,r,amp 1.3) nét 2 mực 0.88, tô brand.coral, Grain mucIn 0.26 clip lùi 3; không vành trong, không mũi tên, không bóng; lon: minHeight 60 / pad 30 / Bricolage Bold 21/26 / bo 16; vua: 52 / 24 / 17/22 / bo 14; letterSpacing 0.4; chữ mauSang.ink tĩnh; tilt -3 bìa, -1 form, 0 bảng; PressScale 0.97 haptic impact; loading spinner mực; disabled 0.55; khung đầu trước onLayout tô coral phẳng",
+    "CoverButton": "outline: trong suốt, viền 1 coverLineStrong, bo 14, minHeight 50, pad 18, label coverInk, icon 18, haptic select. link: không viền, rộng bằng chữ, minHeight 48, pad 12; lựa chọn phụ dưới con dấu (Welcome «Tìm hiểu thêm»)",
+    "CoverBand": "nền cover + Grain vaiBia 0.3, bo dưới 28, paddingTop md (+insets.top khi underStatusBar), paddingBottom lg, bleed = lề màn; compact rút vải khi bàn phím mở; back tròn 48 coverInk 0.08, PressScale 0.92 scale-only",
     "Washi": "SVG mép xé, cao 30 (40 dưới wordmark), paddingHorizontal 18, minWidth 120, tilt ±1/±2, vạch sáng card 0.35 1.5px",
     "Wordmark": "SVG, height mặc định 28; Welcome 118 compact / 150 medium+ / 72 short; coverInk trên bìa",
     "RouteLine": "stroke 3, stops 2..5, glyph r16 (active r21), activeColor brand.coral + activeInk mauSang.ink, opacity 0.82 trên bìa, maxWidth 560",
-    "Stamp": "viền 2 màu tông, bo 6, đệm 8/4, minHeight 26, typography.stamp; outline mặc định, ink hiếm",
+    "Stamp": "viền 2 màu tông, bo 6, đệm 8/4, minHeight 26, typography.stamp; outline mặc định, ink hiếm; accessibilityLabel = nhãn, không role; nen = miếng giấy card dưới con dấu viền khi đặt trên ảnh (HỢP GU, GỢI Ý); dong = cú đóng dấu: lao 130ms Easing.in(quad) scale 1.35→1 mực 25% (roi), chạm 60ms mực 25→100% + haptic.success (muc), lún 1→0.97→1 spring.press (lun, shared value riêng); Reduce Motion gập thành tĩnh; chỉ truyền cho hàng vừa bấm (Bill «Đã trả», Outing «Đã tới», DotThuLive sau máy chủ xác nhận); ship 12 màn",
     "Money": "typography.money 21/27 EB tabular; sizes display/money/body/label/caption; countUp chỉ khi domainStateValid (moneyCountUpMs)",
-    "RudiTabBar": "card + hairline line, cao 64 + max(insets.bottom,10), tab minHeight 48, icon 24, caption 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78",
-    "PressScale": "scale-only; 0.97 mặc định, 0.94 FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact",
-    "Sheet": "card, bo trên 20, tay nắm 40x4 lineStrong, scrim lopPhu.toi(0.42), spring settle vào / standard ra, back Android đóng",
+    "RudiTabBar": "card + hairline line, cao 64 + max(insets.bottom,10), tab minHeight 48, icon 24, caption override 12/14, active accent / inactive inkFaint, chỉ báo băng 28x4 accent trượt standard; FAB 56 coral glyph brand.coralInk tĩnh vòng 4px ground nhô 22 elevation 6 PressScale 0.94; rail 104 ở >=600dp, mục 72, vạch 4px accent; iOS BlurView 78 chỉ đọc từ mã",
+    "PressScale": "scale-only trên UI thread; 0.97 mặc định (con dấu CTA), 0.98 RudiButton, 0.985 ListRow/khay tạo, 0.96 Chip, 0.94 IconButton/FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact; đợt 8 thay mọi nhánh pressed mờ trong kit (RudiButton, IconButton, Chip, ListRow), màn feature còn nhánh mờ riêng",
+    "Sheet": "card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), maxHeight 82% cửa sổ, ScrollView; scrim lopPhu.toi(0.42), spring vào / standard ra; back Android và scrim đóng; onClosed sau khi tấm rời; tay cầm là vùng nắm minHeight 36 rộng cả tấm, vạch 40x4 lineStrong, label «Tay cầm» hint «Kéo xuống để đóng»; Gesture.Pan activeOffsetY 6, tấm theo ngón tay, thả > 90dp hoặc > 900dp/s đóng, ngắn hơn spring về; scrim = progress × (1 − kéo/480); đặt qua RudiScreen overlay hoặc route trong suốt",
     "Skeleton": "xương line bo 10, băng card 0.55 1400ms, tắt dưới Reduce Motion",
     "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline",
-    "useAdaptiveLayout": "compact <600 (1 cột, gutter 16, tab đáy) / medium 600..839 (2 cột, 24, rail) / expanded >=840 (3 cột, 36, rail, twoPane, maxContent 1200); short <480"
+    "useAdaptiveLayout": "helper compact <600 (columns 1, gutter 16, tab đáy, maxContent width) / medium 600..839 (columns 2, gutter 24, rail, maxContent 960, twoPane khi cao >=480) / expanded >=840 (columns 3, gutter 36, rail, twoPane, maxContent 1200); short <480. Đây là khả năng helper, không tự áp bố cục cho mọi màn.",
+    "RudiScreen": "page = ground + Grain giayTrang; cover không top inset (CoverBand underStatusBar). Lề 16 compact / 24 medium+, maxWidth 960 tablet, gap 18, bottomInset 32 (112 dưới tab). footer ghim đáy (đệm về 8 khi bàn phím mở); overlay ngoài hộp cuộn; keepEnd scrollToEnd khi nội dung dài ra; avoidKeyboard theo màn; header (đợt 8) đứng trên hộp cuộn, kẻ tóc line dưới, dùng cho TopBar + dòng ghim chuyến ở chat",
+    "RudiButton": "minHeight 52 (48 compact), bo 14, label 14/19 một dòng; solid dùng LinearGradient với hai đầu cùng màu tông nên nền phẳng, nhãn <tone>Ink theo scheme; outline card/lineStrong với accent, viền màu tông với split/ai; soft nền <tone>Soft; ghost trong suốt; nhấn PressScale 0.98, không mờ",
+    "ResponsiveRow": "onLayout đo vùng nội dung thật; gridFor(width, minItemWidth 250, gap 12, maxColumns 3) → itemWidth floor dp nguyên; album maxColumns 6 minItemWidth 104 gap 6; RosterPicker 130/8/3",
+    "CreateSheet": "screens/Create.tsx là kit Sheet trong route create trong suốt (app/_layout.tsx: animation fade, contentStyle transparent, transparentModal), tab dưới nguyên dưới scrim; nội dung maxWidth 560 gap 18, Heading h2 + phụ đề, DemoBadge chỉ khi chưa có phiên; ba hành động PressScale 0.985 minHeight 72 icon 48 bo 16 <tone>Soft, kẻ tóc; onClose → onClosed → router.back(); app/create.tsx mở lạnh replace /explore rồi push lại (chỉ đọc từ mã)",
+    "PhotoViewer": "Modal toàn màn nền cover, safe area, Đóng minHeight 48, bộ đếm, caption tối đa 4 dòng. Pager theo width đo thực, remount tại currentIndex đã chặn biên khi width đổi và reset zoom. Pinch 1..4x, double tap 1/2x; pan chỉ khi zoom, offset chặn theo viewport/scale cả khi pinch thu nhỏ; zoom khoá paging, rời ảnh reset. Image contain, cachePolicy none, source do adapter có xác thực cấp; FlatList initial 1/batch 2/window 3. Reduce Motion bỏ modal fade và settle duration. Chưa có shared-element/focal zoom/tải nền.",
+    "ReorderList": "Tay nắm min 48x56, giữ 250ms rồi kéo; tâm/chiều cao hàng đo thật quyết định đích thả. role adjustable có increment/decrement và thông báo vị trí; disabled chặn đổi; callback onDragging và settle standard.",
+    "RosterPicker": "Checkbox minHeight 48, selected/disabled semantics; tên ink xuống dòng, chưa chọn card/lineStrong, chọn splitSoft/split + check. ResponsiveRow minItemWidth 130 gap 8 max 3 cột; không giảm opacity trạng thái chưa chọn.",
+    "useMotion": "Đọc isReduceMotionEnabled và nghe reduceMotionChanged trong phiên; cleanup gỡ listener. instant 100 giữ nguyên, standard/shared/celebrate về 0 khi reduced; spring ReduceMotion.System. Chỉ mô tả primitive dùng hook, không bảo đảm mọi animation trong app đã dùng.",
+    "DongTien": "dòng sổ: tên body (label khi dam) + phụ caption inkSoft, Money label (money khi dam) tone ink/split/warn, minHeight 52, paddingVertical 10, gap 12, hairline line dưới, cuoi bỏ kẻ",
+    "KhungAnh": "card, hairline line, bo radius.small, cardShadow, padding 8 / paddingBottom 14, gap 8, ảnh bo 4 trên nền line; chuThich body ink, xuatXu caption inkFaint 1 dòng; tilt ±1/±2 tay, 0 danh sách",
+    "HangChang": "row minHeight 64 gap 10; giờ label tabular minWidth 46 canh phải; axis 14, node 12 bo 6 viền 2 ink (daToi tô split), line 2 lineStrong hoặc dashed 2 inkFaint khi phac; body label ink + caption phuTone + caption inkSoft, paddingBottom 18, minHeight 48; slot phai; cuoi không đường dưới; AnhChang (đợt 8): ảnh 44x44 expo-image cover trong khung padding 2 card + hairline line bo radius.small (ảnh bo 8, nền line), vào khe phai chỉ khi chặng có địa điểm có ảnh; dùng ở Outing (Lên plan) và Group (tờ lịch trình AI)",
+    "PlaceLead": "Photo ratio 16:10 compact / 21:9 medium+, bo 20, Stamp ai tilt -2 trên ảnh; tên h2, mô tả body inkSoft, sự thật icon 16 + label inkSoft; IconButton lưu",
+    "PlaceRow": "thumb bo 10 (accentSoft khi trống), title 2 dòng, caption inkSoft, caption inkFaint, Stamp ai; paddingVertical 10 gap 8 hairline line dưới; không thẻ; 2 cột ở tablet",
+    "AiNote": "ghi chú lề: sparkles 17 ai, label ink, caption ai «Rủ Đi AI gợi ý» dưới câu; hairline trên/dưới, paddingVertical 12, gap 11; không nền, không viền trái",
+    "ToGiay": "TheAi.tsx: card, viền 1 line, bo base; ký chân icon 15 + caption tông (sparkles/ai hoặc receipt-outline/split); lịch trình bên trong là HangChang phac",
+    "Composer": "Group: hàng bo 22 card viền 1 line pad 6 gap 6, ở footer; paddingBottom max(insets.bottom,8)",
+    "nhip-keo": "sap-toi «Còn N ngày»/«Ngày mai», hom-nay «Hôm nay», dang-dien-ra «Đang đi · còn N ngày»/«· ngày cuối», da-qua «Hôm qua»/«N ngày trước», khong-ro rỗng; tính từ starts_on/ends_on máy chủ, in lên Stamp",
+    "TopBar": "minHeight 52, hai bên đo max để tiêu đề title cân giữa, phụ đề caption inkSoft; trái = back chevron 48 hoặc Wordmark ink cao 18 khi là đầu tab (Discovery/ExploreLive tự vẽ Wordmark 20); phải = DemoBadge compactLabel hay IconButton quiet; ô icon app gradient chỉ còn ở Welcome/Login",
+    "Chip": "bấm được: minHeight 48, pill, viền lineStrong chữ inkSoft; chọn = <tone>Soft + viền tông + check; PressScale 0.96; AI match dùng hàng ScrollView ngang như Khám phá",
+    "IconButton": "48x48 bo 16; quiet không viền không nền; viền lineStrong cạnh chip; PressScale 0.94",
+    "ListRow": "minHeight 58, icon 40 trong <tone>Soft, chevron inkFaint; PressScale 0.985, disabled khi không onPress"
   },
   "surfaces": {
-    "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark phần ba trên, washi accent tilt -2 cao 40, RouteLine 4 chặng glyph people/compass/receipt/images theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20), StampButton «Rủ Đi thôi!» tilt -1.5, CoverButton «Tìm hiểu thêm»; mở bìa: translateY -48 + mờ 0.65 trong shared 300 accelerate rồi push /login",
-    "Login": "RudiScreen surface=cover; CoverBand underStatusBar bleed md/lg với Logo compact + hero «Chào bạn» + body coverInkSoft maxWidth 520; cột 560 gap 20: Field, StampButton «Gửi mã», divider «hoặc» (line + caption inkFaint), RudiButton outline Google / lời mời, caption inkFaint pháp lý",
+    "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
+    "Login": "RudiScreen surface=cover; CoverBand underStatusBar (compact khi bàn phím mở ở compact) bleed md/lg với Logo compact + hero «Chào bạn»; cột 560 gap 20: Field, StampButton vua «Gửi mã», divider «hoặc», outline lời mời; Google chỉ khi native có client ID hợp lệ",
     "Otp": "CoverBand underStatusBar với hero «Nhập mã 6 số»; OtpBoxes 6x 44x54 viền 1.5 (accent ô đang nhập); caption inkSoft đang kiểm/đếm ngược; lỗi body warn",
-    "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112"
+    "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112",
+    "BillSummary": "Phụ đề trên splitSoft dùng split; cặp split/splitSoft nằm trong bảng contrast, không dùng inkFaint cho cặp này.",
+    "ItineraryAI": "TopBar «Lịch trình AI» + Nháp; h1 tên chuyến, body ngày; AiNote tím; chip ngày pill; h2 ngày; HangChang phac toàn bộ (nét chì, «Có thể thay đổi»/«Đã gắn địa điểm»); footer RudiButton outline ai «Chỉnh lịch trình» + solid ai «Dùng plan này»",
+    "Settlement": "TopBar «Quyết toán chuyến đi» + Demo; sổ DongTien (dam tổng, split), câu đếm «2 đã trả · 5 đang chờ · 8 thành viên», hàng người thu với Avatar viền split + Money display split + Stamp NGƯỜI THU BILL, Đã nhận/Còn chờ; SectionHeader h2 «Các khoản chuyển»; hàng chuyển với Money + Stamp ĐÃ TRẢ hoặc RudiButton outline split «Đánh dấu đã trả»; hairline giữa hàng, không thẻ; bấm «Đánh dấu đã trả» → Stamp ĐÃ TRẢ dong cho đúng hàng (clip-dau-tra)",
+    "Finance": "TopBar «Tài chính của tôi» + Demo; sổ DongTien 4 dòng (split/warn/ink trên số); câu bộ lọc vắng; SectionHeader «Chi theo nhóm» với action accent; ListRow giao dịch icon 40 tròn + số tabular; câu chân «Chưa confirm sổ cái. Đây không phải số dư ngân hàng»",
+    "Album": "TopBar tiêu đề + phụ đề ngày, IconButton quiet «+»; KhungAnh ảnh dẫn với xuất xứ; h1 + caption «… · 4 ảnh» đếm thật; SectionHeader «Khoảnh khắc» + chip «Theo ngày» + IconButton chọn; ResponsiveRow maxColumns 6 ô trần bo 10; footer RudiButton solid accent «Thêm khoảnh khắc»",
+    "ExploreTablet": "rail 104 trái (vạch 4 accent, FAB trong rail); Logo + wordmark; SearchField pill + IconButton lọc + IconButton AI aiSoft; chip pill; SectionHeader h2; PlaceLead 21:9 với Stamp HỢP GU; PlaceRow 2 cột hairline",
+    "Chat": "RudiScreen header = TopBar tên nhóm + phụ đề số thành viên + IconButton info, dòng ghim chuyến (icon 20 accentSoft bo 10, label + caption, chevron) trên kẻ tóc; luồng keepEnd cuộn dưới header; composer ở footer",
+    "Plan": "TopBar wordmark + tiêu đề nhóm + ngày; Photo dẫn 16:10 với DemoBadge; Money display + avatar + Stamp nhịp kèo; chip ngày; h2 ngày + IconButton AI; HangChang với AnhChang ở chặng có địa điểm có ảnh",
+    "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet"
+  },
+  "implementationCheckpoint": {
+    "date": "2026-09-06",
+    "status": "Checkpoint trưa 2026-09-06, trước các đợt sau; đã được shippedV3 (head 06a4722f, verdict ship) phủ lên",
+    "sources": [
+      "packages/shared/tokens.json",
+      "apps/mobile/src/rudi/theme.ts",
+      "apps/mobile/src/rudi/ui.tsx",
+      "apps/mobile/src/rudi/adaptive.ts",
+      "apps/mobile/src/rudi/motion.ts",
+      "apps/mobile/src/rudi/ui/useMotion.ts",
+      "apps/mobile/src/rudi/ui/PhotoViewer.tsx",
+      "apps/mobile/src/rudi/ui/ReorderList.tsx",
+      "apps/mobile/src/rudi/ui/RosterPicker.tsx",
+      "apps/mobile/src/rudi/screens/Create.tsx",
+      "apps/mobile/src/rudi/screens/auth/Login.tsx",
+      "apps/mobile/src/rudi/google.ts"
+    ],
+    "scope": [
+      "token màu và typography dùng chung",
+      "lưới đo theo vùng nội dung",
+      "Create cuộn được và giới hạn chiều rộng",
+      "viewer ảnh và biên zoom/pan",
+      "kéo đổi thứ tự có thao tác trợ năng",
+      "chọn người gán món",
+      "Google chỉ hiện khi cấu hình native hợp lệ",
+      "Reduce Motion cập nhật trong phiên"
+    ],
+    "limits": [
+      "Không xác nhận toàn bộ app đã chuyển trọn v2",
+      "Không phải verdict thị giác",
+      "Chưa xác nhận iOS",
+      "Không chứng minh OAuth hoặc adapter ảnh chạy thật bằng việc đọc mã",
+      "measuredFrom chỉ ghi nguồn số đo; bằng chứng checkpoint hiện tại nằm trong nhật ký triển khai"
+    ]
   },
   "narrative": {
     "northStar": "Nhật ký chuyến đi sau giờ làm",
     "rules": [
       {
         "name": "Luật Một Tông Dẫn",
+        "section": "colors"
+      },
+      {
+        "name": "Luật Màu Trên Số, Không Trên Khối",
         "section": "colors"
       },
       {
@@ -765,16 +840,173 @@
         "section": "typography"
       },
       {
+        "name": "Luật Không Kicker",
+        "section": "typography"
+      },
+      {
         "name": "Luật Không Dập Nổi",
         "section": "elevation"
+      },
+      {
+        "name": "Luật Trong Trang / Trên Trang",
+        "section": "elevation"
+      },
+      {
+        "name": "Luật Không Thẻ Lồng Thẻ",
+        "section": "elevation"
+      },
+      {
+        "name": "Luật Một Cú Đóng Mỗi Sự Kiện",
+        "section": "motion"
       }
     ],
     "notCanonized": [
-      "Eyebrow/SurfaceLabel (ui.tsx, không dùng)",
-      "WordmarkEmbossed.tsx (bị reviewer loại; đã xoá khỏi cây ở 5cc57d2)",
-      "bố cục v1 trên nền v2 của các màn chưa redesign",
-      "số tổng màn gán món cắt ở font 1.3 (UI-5)",
-      "bangMauFixture/giayHoaDon/mauSao"
+      "Eyebrow/SurfaceLabel vẫn export trong ui.tsx (dòng 237/958 ở 06a4722f), 0 màn gọi: kicker bị craft floor cấm, nợ dọn kit, không phải thành phần",
+      "Stat, FloatingGlass (0 màn gọi); ProgressBar một chỗ ở Group.tsx:362 (kết quả bình chọn, có chữ đi kèm) không phải mẫu",
+      "WordmarkEmbossed.tsx (bị reviewer loại; đã xoá ở 5cc57d2)",
+      "Card v1 và chip tĩnh: còn trong kit, không màn nào đợt này dùng cho trạng thái",
+      "dòng xuất xứ của ảnh fixture (Commons nhập theo mapping) là mẫu định dạng, không phải xuất xứ thật",
+      "giayHoaDon/demoAssets.wood (hoá đơn trên gỗ), bangMauFixture, mauSao, mauLogo: artwork và màu fixture, không phải token",
+      "iOS và OAuth chỉ đọc từ mã",
+      "Nhánh pressed mờ opacity còn trong màn feature (Group tripPin/bình chọn, HangDiaDiem, Outing, Bill, Profile, GroupWallLive) và styles.pressed/buttonPressed mồ côi trong ui.tsx: nợ đồng bộ với PressScale, không phải kiểu phản hồi thứ hai",
+      "/create mở lạnh từ deep link (app/create.tsx) chỉ đọc từ mã, chưa kiểm trên máy",
+      "số ms của cú đóng dấu đọc từ Stamp.tsx; clip 20 fps chỉ chứng minh thứ tự nhịp"
+    ],
+    "keyCharacteristics": [
+      "Hai bề mặt vật chất đo được bằng pixel: vải bìa, giấy, mực con dấu",
+      "Ba tông mang nghĩa, một tông dẫn mỗi màn; brand.coral chỉ ở mảng lớn; teal/tím trên giấy chỉ ở chữ, số, viền, con dấu, nút",
+      "Một display face tự host (Bricolage Grotesque, bốn instance tĩnh); body giữ system",
+      "Bốn hình dạng kể chuyện: con dấu (đúng), nét chì đứt (nháp), đường mực liên tục (lịch trình), khung in (ảnh có xuất xứ)",
+      "Sổ thay bảng điều khiển: hàng tên trái, số phải, kẻ tóc dưới; số nguyên đồng, tabular, không animate trước domain state",
+      "Bốn bậc chuyển động 100/200/300/550 ms, Reduce Motion đưa mọi bậc trừ instant về 0",
+      "Mọi cú bấm là lò xo scale trên UI thread; trạng thái thành đúng dưới ngón tay là một cú đóng dấu ba nhịp trong ngân sách celebrate, một lần mỗi sự kiện"
     ]
+  },
+  "shippedV3": {
+    "_": "Mốc đợt «chuyển mình»: nhánh claude/p0-w-ui2-bo-cuc-theo-nhiem-vu, bảy commit ab53e789 7ae05b08 20de622c e2c8b1da cc5c6795 e550c058 06a4722f. Finish review trả ship sau tám mục vật chất resolved.",
+    "date": "2026-09-06",
+    "headCommit": "06a4722f",
+    "verdict": "ship",
+    "resolved": [
+      "con dấu CTA rộng bằng chữ, một vành, không mũi tên",
+      "ô soạn chat ở footer, không dải giấy trống",
+      "footer lịch trình hai nút",
+      "lưới album maxColumns 6 và số ảnh đếm thật",
+      "bản in trong khung có dòng xuất xứ",
+      "sổ (DongTien) thay hero metric",
+      "không kicker trên tiêu đề, AI ký ở chân",
+      "huy hiệu đếm từ số thật"
+    ],
+    "craftFloor": [
+      "không kicker/eyebrow",
+      "không hero-metric",
+      "không thẻ lồng thẻ",
+      "không viền trái màu > 1px",
+      "không progress ring/bar thay nội dung",
+      "con dấu mang chữ, không chỉ màu",
+      "tiền tabular, số nguyên đồng",
+      "không số nào màn tự bịa"
+    ],
+    "evidence": {
+      "fromCode": [
+        "packages/shared/tokens.json",
+        "apps/mobile/src/rudi/theme.ts",
+        "apps/mobile/src/rudi/motion.ts",
+        "apps/mobile/src/rudi/adaptive.ts",
+        "apps/mobile/src/rudi/ui.tsx",
+        "apps/mobile/src/rudi/ui/*.tsx",
+        "apps/mobile/src/rudi/screens/explore/HangDiaDiem.tsx",
+        "apps/mobile/src/rudi/screens/keo/HangChang.tsx",
+        "apps/mobile/src/rudi/keo/nhip-keo.ts",
+        "apps/mobile/src/rudi/screens/chat/TheAi.tsx"
+      ],
+      "fromScreenshots": [
+        ".impeccable/review/chuyen-minh/phone-light-01-welcome.png",
+        ".impeccable/review/chuyen-minh/phone-light-09-itinerary.png",
+        ".impeccable/review/chuyen-minh/phone-light-15-settlement.png",
+        ".impeccable/review/chuyen-minh/phone-light-18-album.png",
+        ".impeccable/review/chuyen-minh/phone-light-21-finance.png",
+        ".impeccable/review/chuyen-minh/tablet-light-explore.png"
+      ],
+      "codeOnly": [
+        "iOS BlurView/cardShadow iOS",
+        "OAuth Google",
+        "PhotoViewer zoom",
+        "ReorderList"
+      ],
+      "notRead": [
+        "phone-dark-font13-* ngoài verdict của reviewer",
+        "ảnh 02-08, 10-14, 16-17, 19-20, 22"
+      ]
+    },
+    "directionContract": {
+      "file": "apps/mobile/app/_layout.tsx",
+      "seed": "c8e88116",
+      "directionIndex": 6,
+      "name": "Nhật ký chuyến đi sau giờ làm",
+      "lines": "24-54"
+    }
+  },
+  "shippedV4": {
+    "_": "Đợt 8 của cùng đợt «chuyển mình», 2026-09-06: 4570fdd3 (chuyển động có ngữ pháp, dòng thời gian có nhịp), f838ca45 (tay cầm sheet kéo thật, Explore chỉ wordmark), d2c51977 (con dấu có cú chạm, sheet và khay tạo theo review), cộng sửa chưa commit ở ui/Stamp.tsx (pha lún ra shared value riêng lun) và ui.tsx (kẻ tóc dưới khe header). Finish review trả ship, phạm vi hai mục vật chất nó nêu.",
+    "date": "2026-09-06",
+    "headCommit": "d2c51977",
+    "uncommitted": [
+      "apps/mobile/src/rudi/ui/Stamp.tsx",
+      "apps/mobile/src/rudi/ui.tsx"
+    ],
+    "verdict": "ship",
+    "changes": [
+      "Stamp dong: cú đóng dấu ba nhịp (130ms lao, 60ms chạm + haptic success, lún spring.press), Reduce Motion tĩnh, chỉ hàng vừa bấm; nen: miếng giấy dưới con dấu trên ảnh",
+      "PressScale cho mọi control kit: RudiButton 0.98, IconButton 0.94, Chip 0.96, ListRow 0.985",
+      "AnhChang 44 trong khung giấy 2dp ở chặng có địa điểm có ảnh (Outing, Group)",
+      "TopBar đầu tab chỉ wordmark; RudiScreen header + keepEnd cho chat",
+      "Sheet: tay cầm kéo thật (90dp / 900dp/s), scrim mỏng theo kéo, onClosed; khay tạo là Sheet trong route fade trong suốt",
+      "AI match: hàng bộ lọc cuộn ngang"
+    ],
+    "evidence": {
+      "fromCode": [
+        "apps/mobile/src/rudi/ui/Stamp.tsx",
+        "apps/mobile/src/rudi/ui/Sheet.tsx",
+        "apps/mobile/src/rudi/ui/PressScale.tsx",
+        "apps/mobile/src/rudi/ui/useMotion.ts",
+        "apps/mobile/src/rudi/ui.tsx",
+        "apps/mobile/src/rudi/screens/keo/HangChang.tsx",
+        "apps/mobile/src/rudi/screens/Create.tsx",
+        "apps/mobile/src/rudi/screens/Bill.tsx",
+        "apps/mobile/src/rudi/screens/Outing.tsx",
+        "apps/mobile/src/rudi/screens/Group.tsx",
+        "apps/mobile/src/rudi/screens/Discovery.tsx",
+        "apps/mobile/src/rudi/screens/dot-thu/DotThuLive.tsx",
+        "apps/mobile/app/_layout.tsx",
+        "apps/mobile/app/create.tsx"
+      ],
+      "fromScreenshots": [
+        ".impeccable/review/chuyen-minh/dot8/clip-dau-tra-20fps-frame26.png",
+        ".impeccable/review/chuyen-minh/dot8/phone-light-07-plan.png",
+        ".impeccable/review/chuyen-minh/dot8/phone-light-12-create-sheet.png",
+        ".impeccable/review/chuyen-minh/dot8/phone-light-04-explore.png"
+      ],
+      "codeOnly": [
+        "/create mở lạnh từ deep link (app/create.tsx)",
+        "haptic.success tại nhịp chạm",
+        "Reduce Motion gập cú đóng dấu",
+        "ngưỡng kéo 90dp / 900dp/s",
+        "số ms 130/60 của cú đóng dấu"
+      ],
+      "notRead": [
+        "clip-dau-tra.mp4, clip-keo-sheet.mp4 và các khung còn lại của hai clip",
+        "phone-light-05-ai-match, 06-place, 09-itinerary, 10-chat, 15-settlement(-sau-bam), 16-checkin",
+        "phone-dark-font13-checkin, -plan, -settlement"
+      ]
+    },
+    "directionContract": {
+      "file": "apps/mobile/app/_layout.tsx",
+      "seed": "c8e88116",
+      "directionIndex": 6,
+      "name": "Nhật ký chuyến đi sau giờ làm",
+      "lines": "24-54",
+      "formSignature": "một cú đóng dấu khi một trạng thái thành đúng: tồn tại từ đợt 8"
+    }
   }
 }

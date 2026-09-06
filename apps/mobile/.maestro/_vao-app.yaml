@@ -27,10 +27,12 @@ appId: com.lakiet.rudi
     visible: "Vào bản trải nghiệm Team Đà Lạt"
     timeout: 30000
 - tapOn: "Vào bản trải nghiệm Team Đà Lạt"
+# Sở thích fixture (đợt chuyển mình 06/09): «Tiếp tục» cần chọn 3, còn «Bỏ qua»
+# vào thẳng bản trải nghiệm. Flow vào app chung chỉ cần vào, nên bỏ qua.
 - extendedWaitUntil:
-    visible: "Tạo không gian của tôi"
+    visible: "Cho Rủ Đi biết gu của bạn"
     timeout: 30000
-- tapOn: "Tạo không gian của tôi"
+- tapOn: "Bỏ qua"
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 30000

@@ -17,9 +17,7 @@
  *   `EXPO_PUBLIC_RUDI_FIXTURE=1` -- because the Maestro table and the design
  *   measurements need it and nobody with a real account should ever land on it.
  *
- * Google is a button that says, truthfully, that it opens once the team has
- * configured OAuth; PR-BE4 and the client ids turn it into a chooser. Apple
- * renders on iOS only: on Android it would be a promise with nothing behind it.
+ * Google is available only in configured native builds. Apple is not offered.
  *
  * ## The page after the cover (UI v2)
  *
@@ -27,14 +25,22 @@
  * the logo, «Chào bạn» in the display face and one sentence -- then the paper
  * begins and the form sits directly on it. No card around a single field: a
  * frame around a frame was the tell the audit named.
+ *
+ * The band gives way to the keyboard: once the IME is up on a compact window
+ * it drops its sentence and shrinks, so the field, its error and «Gửi mã»
+ * stay in view (2026-09-06 review: the tall cover pushed the form under the
+ * keyboard). The error prints directly under the field it is about.
  */
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
-import { guiOtp } from "../../../phien";
+import { dangNhapGoogle, guiOtp } from "../../../phien";
+import { googleConfigured, googleSession } from "../../google";
+import { manSauDangNhap } from "../../duong-vao";
+import { useRudiSession } from "../../session";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { CUA_FIXTURE_DEV } from "../../cua-fixture";
 import { datOtpDangCho } from "../../otp-dang-cho";
@@ -43,28 +49,64 @@ import { DemoBadge, Field, Logo, RudiButton, RudiScreen } from "../../ui";
 import { CoverBand } from "../../ui/CoverBand";
 import { StampButton } from "../../ui/StampButton";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
+import { useKeyboardOpen } from "../../ui/useKeyboardOpen";
 
 type Trang = { pha: "nhap" } | { pha: "dang-gui" } | { pha: "hong"; loi: string };
 
-export const CAU_GOOGLE_CHO_CAU_HINH =
-  "Đăng nhập Google mở sau khi đội cấu hình OAuth. Số điện thoại dùng được ngay.";
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim();
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID?.trim();
 
 export function LoginScreen() {
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
+  const banPhim = useKeyboardOpen();
   const [phone, setPhone] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
   const [thongBao, setThongBao] = useState<string | null>(null);
+  const { datPhien } = useRudiSession();
+  const googleLock = useRef(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const hasGoogle = googleConfigured(Platform.OS, googleWebClientId, googleIosClientId);
+
+  const vaoGoogle = async () => {
+    if (!hasGoogle || googleLock.current) return;
+    googleLock.current = true;
+    setGoogleBusy(true);
+    setThongBao(null);
+    try {
+      // Load native code only when that platform's configured door is used.
+      const { GoogleSignin, isErrorWithCode, statusCodes } = await import("@react-native-google-signin/google-signin");
+      GoogleSignin.configure({ webClientId: googleWebClientId, iosClientId: googleIosClientId });
+      try {
+        if (Platform.OS === "android") await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        const phien = await googleSession(() => GoogleSignin.signIn(), dangNhapGoogle);
+        if (phien !== null) {
+          datPhien(phien);
+          router.replace(manSauDangNhap(phien) as never);
+        }
+      } catch (error) {
+        if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) return;
+        throw error;
+      }
+    } catch (error) {
+      setThongBao(error instanceof ApiError ? error.message : "Chưa đăng nhập được với Google. Bạn có thể thử lại hoặc dùng số điện thoại.");
+    } finally {
+      googleLock.current = false;
+      setGoogleBusy(false);
+    }
+  };
 
   const gui = async () => {
+    if (googleLock.current) return;
     setThongBao(null);
     const sach = phone.trim();
     if (chuanHoaSo(sach) === null) {
-      setTrang({ pha: "hong", loi: "Chưa đúng dạng số di động Việt Nam." });
+      setTrang({ pha: "hong", loi: "Chưa đúng dạng số di động Việt Nam: 10 chữ số, bắt đầu bằng 0." });
       return;
     }
     setTrang({ pha: "dang-gui" });
+    googleLock.current = true;
     try {
       const daGui = await guiOtp(sach);
       datOtpDangCho({
@@ -79,21 +121,28 @@ export function LoginScreen() {
         pha: "hong",
         loi: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
       });
+    } finally {
+      googleLock.current = false;
     }
   };
 
-  const dangGui = trang.pha === "dang-gui";
-  const bleed = layout.sizeClass === "compact" ? space.md : space.lg;
+  const dangGui = trang.pha === "dang-gui" || googleBusy;
+  const compact = layout.sizeClass === "compact";
+  const bleed = compact ? space.md : space.lg;
+  // The short band: only when the keyboard has actually taken the room.
+  const gon = banPhim && compact;
 
   return (
     <RudiScreen contentStyle={styles.screen} surface="cover" testID="login-screen">
       <StatusBar style="light" />
-      <CoverBand bleed={bleed} onBack style={styles.band} underStatusBar>
+      <CoverBand bleed={bleed} compact={gon} onBack style={styles.band} underStatusBar>
         <Logo compact ink={colors.coverInk} />
-        <Text style={[typography.hero, styles.chao, { color: colors.coverInk }]}>Chào bạn</Text>
-        <Text style={[typography.body, styles.dan, { color: colors.coverInkSoft }]}>
-          Nhập số di động để nhận mã 6 số qua tin nhắn. Chưa có tài khoản thì Rủ Đi tạo luôn, không cần mật khẩu.
-        </Text>
+        <Text style={[gon ? typography.h1 : typography.display, styles.chao, { color: colors.coverInk }]}>Chào bạn</Text>
+        {gon ? null : (
+          <Text style={[typography.body, styles.dan, { color: colors.coverInkSoft }]}>
+            Nhập số di động để nhận mã 6 số qua tin nhắn. Chưa có tài khoản thì Rủ Đi tạo luôn, không cần mật khẩu.
+          </Text>
+        )}
       </CoverBand>
       {/* One reading width for the whole column: on a tablet the field group and the
           buttons below it used to sit on two different grids. */}
@@ -107,17 +156,22 @@ export function LoginScreen() {
           icon="call-outline"
           keyboardType="phone-pad"
           label="Số điện thoại"
-          onChangeText={setPhone}
+          onChangeText={(text) => {
+            setPhone(text);
+            if (trang.pha === "hong") setTrang({ pha: "nhap" });
+          }}
           onSubmitEditing={() => void gui()}
-          placeholder="Nhập số di động"
+          placeholder="Số di động của bạn"
           returnKeyType="send"
           textContentType="telephoneNumber"
           value={phone}
         />
-        <StampButton disabled={dangGui} icon="arrow-forward" label="Gửi mã" loading={dangGui} onPress={() => void gui()} testID="login-gui-ma" />
         {trang.pha === "hong" ? (
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+          // Beside the field it is about, before the action: the person reads
+          // what to fix where they are about to fix it.
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
         ) : null}
+        <StampButton disabled={dangGui} label="Gửi mã" loading={dangGui} onPress={() => void gui()} size="vua" testID="login-gui-ma" tilt={-1} />
       </View>
       <View style={styles.orRow}>
         <View style={[styles.orLine, { backgroundColor: colors.line }]} />
@@ -125,20 +179,14 @@ export function LoginScreen() {
         <View style={[styles.orLine, { backgroundColor: colors.line }]} />
       </View>
       <View style={styles.khac}>
-        <RudiButton
+        {hasGoogle ? <RudiButton
           icon="logo-google"
           label="Tiếp tục với Google"
-          onPress={() => setThongBao(CAU_GOOGLE_CHO_CAU_HINH)}
+          disabled={dangGui}
+          loading={googleBusy}
+          onPress={() => void vaoGoogle()}
           variant="outline"
-        />
-        {Platform.OS === "ios" ? (
-          <RudiButton
-            icon="logo-apple"
-            label="Tiếp tục với Apple"
-            onPress={() => setThongBao("Apple hiện sau khi có chứng chỉ của đội.")}
-            variant="outline"
-          />
-        ) : null}
+        /> : null}
         <RudiButton
           icon="mail-open-outline"
           label="Tôi có lời mời"
@@ -146,7 +194,7 @@ export function LoginScreen() {
           variant="outline"
         />
         {thongBao ? (
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{thongBao}</Text>
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>{thongBao}</Text>
         ) : null}
       </View>
       {CUA_FIXTURE_DEV ? (
@@ -173,11 +221,11 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   screen: { gap: 20 },
-  band: { gap: 10 },
-  chao: { marginTop: 6 },
+  band: { gap: 8 },
+  chao: { marginTop: 4 },
   dan: { maxWidth: 520 },
   column: { gap: 20, maxWidth: 560, width: "100%", alignSelf: "center" },
-  form: { gap: 14 },
+  form: { gap: 12 },
   orRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   orLine: { flex: 1, height: StyleSheet.hairlineWidth },
   khac: { gap: 10 },

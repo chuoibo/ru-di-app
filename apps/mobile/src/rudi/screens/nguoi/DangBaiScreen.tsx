@@ -12,6 +12,7 @@
  */
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { newAttempt } from "../../../api";
@@ -27,11 +28,11 @@ import { docNhomCuaToi, type NhomTomTat } from "../../../phien";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Chip, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 export function DangBaiScreen() {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [than, setThan] = useState("");
   const [muc, setMuc] = useState<Audience>(MAC_DINH_NGUOI_DOC);
@@ -89,18 +90,16 @@ export function DangBaiScreen() {
   return (
     <RudiScreen testID="dang-bai-screen">
       <TopBar title="Đăng bài" />
-      <Card>
-        <Field
-          label="Bạn muốn kể gì?"
-          multiline
-          numberOfLines={5}
-          onChangeText={setThan}
-          placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
-          value={than}
-        />
-      </Card>
+      <Field
+        label="Bạn muốn kể gì?"
+        multiline
+        numberOfLines={5}
+        onChangeText={setThan}
+        placeholder="Chuyến vừa rồi, quán mới, hay chỉ một câu."
+        value={than}
+      />
       <Heading subtitle="Chọn ai đọc được bài này. Bốn mức không xếp từ hẹp tới rộng: bạn bè và nhóm là hai tập khác nhau." title="Ai đọc được?" />
-      <Card style={styles.danhSach}>
+      <View>
         {AUDIENCES.map((a) => {
           const chon = muc === a;
           return (
@@ -112,14 +111,15 @@ export function DangBaiScreen() {
               accessibilityState={{ selected: chon }}
               key={a}
               onPress={() => setMuc(a)}
-              style={[
+              style={({ pressed }) => [
                 styles.hang,
-                { borderRadius: radius.control },
-                chon && { backgroundColor: colors.accentSoft },
+                { borderBottomColor: colors.line },
+                pressed && styles.bam,
               ]}
             >
+              <Ionicons color={chon ? colors.accent : colors.lineStrong} name={chon ? "checkmark-circle" : "ellipse-outline"} size={22} />
               <View style={styles.hangChu}>
-                <Text style={[typography.label, { color: chon ? colors.accent : colors.ink }]}>
+                <Text style={[typography.label, { color: colors.ink }]}>
                   {MUC_NGUOI_DOC[a].nhan}
                 </Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -129,9 +129,9 @@ export function DangBaiScreen() {
             </Pressable>
           );
         })}
-      </Card>
+      </View>
       {muc === "group" ? (
-        <Card>
+        <View style={styles.khoi}>
           <Text style={[typography.label, { color: colors.ink }]}>Nhóm nào?</Text>
           {nhom.length === 0 ? (
             <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -149,13 +149,9 @@ export function DangBaiScreen() {
               ))}
             </View>
           )}
-        </Card>
+        </View>
       ) : null}
-      {loi ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text>
-        </Card>
-      ) : null}
+      {loi ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
       <RudiButton
         disabled={!guiDuoc}
         icon="send-outline"
@@ -168,8 +164,9 @@ export function DangBaiScreen() {
 }
 
 const styles = StyleSheet.create({
-  danhSach: { gap: 4 },
-  hang: { minHeight: 56, justifyContent: "center", paddingHorizontal: 10, paddingVertical: 8 },
-  hangChu: { gap: 2 },
+  hang: { minHeight: 60, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hangChu: { flex: 1, gap: 2 },
+  khoi: { gap: 8 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  bam: { opacity: 0.7 },
 });

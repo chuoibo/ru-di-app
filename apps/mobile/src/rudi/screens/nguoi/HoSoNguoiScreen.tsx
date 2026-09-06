@@ -6,15 +6,13 @@
  * is loaded after and fails on its own, so a wall that does not answer does
  * not hide a person who did.
  *
- * The header tile is the same warm initial used on every friend surface, not
- * `Avatar`: that primitive takes a fixture person and a fixture colour, and
- * this screen never touches the fixture.
+ * UI v2 (đợt 7): initial, name, when they joined, the relation as a word;
+ * posts are rows on the paper with a hairline between them.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import {
   cauNgayVao,
   cauQuanHe,
@@ -28,7 +26,11 @@ import {
 } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Divider, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 
 type TrangHoSo =
   | { pha: "dang-doc" }
@@ -85,27 +87,16 @@ export function HoSoNguoiScreen() {
     <RudiScreen testID="ho-so-nguoi-screen">
       <TopBar title="Hồ sơ" />
       {hoSo.pha === "dang-doc" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.inkFaint }]}>Đang đọc từ máy chủ…</Text>
-        </Card>
+        <SkeletonGroup>
+          <SkeletonRow leading={60} />
+        </SkeletonGroup>
       ) : null}
-      {hoSo.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{hoSo.loi}</Text>
-          <View style={styles.khoangTren}>
-            <RudiButton label="Thử lại" onPress={() => void napHoSo()} variant="outline" />
-          </View>
-        </Card>
-      ) : null}
+      {hoSo.pha === "hong" ? <ErrorState body={hoSo.loi} onRetry={() => void napHoSo()} title="Chưa mở được hồ sơ" /> : null}
       {hoSo.pha === "xong" ? (
         <>
-          <Card>
+          <View style={styles.hoSo}>
             <View style={styles.dau}>
-              <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-                <Text style={[typography.h2, { color: colors.accent }]}>
-                  {chuDau(hoSo.hoSo.display_name)}
-                </Text>
-              </View>
+              <Avatar name={hoSo.hoSo.display_name} size={60} />
               <View style={styles.dauChu}>
                 <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>
                   {hoSo.hoSo.display_name}
@@ -129,50 +120,36 @@ export function HoSoNguoiScreen() {
               </Text>
             )}
             {hoSo.hoSo.relation === "self" ? (
-              <View style={styles.khoangTren}>
-                <RudiButton
-                  icon="create-outline"
-                  label="Đăng bài mới"
-                  onPress={() => router.push("/posts/new")}
-                />
-              </View>
+              <RudiButton
+                compact
+                full={false}
+                icon="create-outline"
+                label="Đăng bài mới"
+                onPress={() => router.push("/posts/new")}
+              />
             ) : null}
-          </Card>
+          </View>
           <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
           {tuong.pha === "dang-doc" ? (
-            <Card>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bài…</Text>
-            </Card>
+            <SkeletonGroup>
+              <SkeletonLines lines={2} />
+            </SkeletonGroup>
           ) : null}
-          {tuong.pha === "hong" ? (
-            <Card>
-              <Text style={[typography.body, { color: colors.warn }]}>{tuong.loi}</Text>
-              <View style={styles.khoangTren}>
-                <RudiButton label="Đọc lại tường" onPress={() => void napTuong()} variant="outline" />
-              </View>
-            </Card>
-          ) : null}
+          {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
-            <Card>
-              <Text style={[typography.body, { color: colors.inkSoft }]}>
-                {cauTuongRong(hoSo.hoSo.relation)}
-              </Text>
-            </Card>
+            <EmptyState kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
           ) : null}
           {tuong.pha === "xong" && tuong.bai.length > 0 ? (
-            <Card style={styles.danhSach}>
-              {tuong.bai.map((bai, i) => (
-                <View key={bai.id}>
-                  {i > 0 ? <Divider /> : null}
-                  <View style={styles.bai}>
-                    <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
-                    <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                      {dongPhuBai(bai)}
-                    </Text>
-                  </View>
+            <View>
+              {tuong.bai.map((bai) => (
+                <View key={bai.id} style={[styles.bai, { borderBottomColor: colors.line }]}>
+                  <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
+                  <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                    {dongPhuBai(bai)}
+                  </Text>
                 </View>
               ))}
-            </Card>
+            </View>
           ) : null}
         </>
       ) : null}
@@ -181,11 +158,9 @@ export function HoSoNguoiScreen() {
 }
 
 const styles = StyleSheet.create({
+  hoSo: { gap: 10 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
-  chuDau: { width: 60, height: 60, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  danhSach: { paddingVertical: 6 },
-  bai: { gap: 6, paddingVertical: 10 },
-  khoangTren: { marginTop: 4 },
+  bai: { gap: 6, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
 });

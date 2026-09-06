@@ -3,8 +3,7 @@
  * timelines with catalogue places, and check-ins at a stop, plus the pure
  * helpers the screens share.
  *
- * Money and dates stay the server's: the form validation (`kiemTraTaoBuoiDi`)
- * and the stop sort (`sapXepChang`) come from App B's `buoi-di.ts`, and the
+ * Money and dates stay the server's: form validation comes from `buoi-di.ts`, and the
  * server refuses a stop whose `place_id` is not in its catalogue
  * (`stop_place_unknown`) before writing anything.
  */
@@ -18,7 +17,6 @@ import {
   type Attempt,
 } from "../../api";
 import {
-  sapXepChang,
   type BodyTaoBuoiDi,
   type BuoiDi,
   type ChangDung,
@@ -28,6 +26,7 @@ import {
 
 /** Server refusals, in the words the screen says. */
 export const LOI_KEO: Record<string, string> = {
+  timeline_conflict: "Có người vừa sửa lịch trình. Bản nháp của bạn vẫn còn; tải bản mới để đối chiếu trước khi lưu.",
   stop_place_unknown: "Chặng nêu một địa điểm không có trong danh mục.",
   already_checked_in: "Bạn đã đánh dấu tới chặng này rồi.",
   outing_not_found: "Kèo này không còn.",
@@ -58,12 +57,12 @@ export async function taoKeo(contextId: string, personId: string, body: BodyTaoB
 }
 
 export async function luuLichTrinh(
-  outing: Pick<BuoiDi, "id" | "context_id">,
+  outing: Pick<BuoiDi, "id" | "context_id" | "timeline_revision">,
   stops: ChangGui[],
   personId: string,
   attempt: Attempt,
 ): Promise<BuoiDi> {
-  return dich(() => luuDongThoiGian(outing.id, stops, personId, attempt, outing.context_id));
+  return dich(() => luuDongThoiGian(outing.id, stops, personId, attempt, outing.context_id, outing.timeline_revision));
 }
 
 export async function danhDauToi(stopId: string, contextId: string, personId: string, attempt: Attempt): Promise<CheckIn> {
@@ -80,9 +79,20 @@ export function changGuiTu(stop: ChangDung): ChangGui {
   return { at: stop.at, label: stop.label, place_name: stop.place_name, place_id: stop.place_id };
 }
 
-/** The whole timeline with one stop added, sorted by clock time. */
+/** Rebase only order: keep the server's labels/times and any newly added stops. */
+export function reconcileOrder(draft: readonly ChangDung[], latest: readonly ChangDung[]): ChangDung[] {
+  const byId = new Map(latest.map((stop) => [stop.id, stop]));
+  const ordered: ChangDung[] = [];
+  for (const previous of draft) {
+    const current = byId.get(previous.id);
+    if (current) { ordered.push(current); byId.delete(previous.id); }
+  }
+  return [...ordered, ...byId.values()];
+}
+
+/** Append a new stop without changing the group's manual order. */
 export function themChang(hienTai: readonly ChangDung[], moi: ChangGui): ChangGui[] {
-  return sapXepChang([...hienTai.map(changGuiTu), moi]);
+  return [...hienTai.map(changGuiTu), moi];
 }
 
 /** The whole timeline with one stop's place changed, nothing else touched. */
@@ -91,9 +101,7 @@ export function ganDiaDiem(
   stopId: string,
   place: { id: string; name: string },
 ): ChangGui[] {
-  return sapXepChang(
-    hienTai.map((s) => (s.id === stopId ? { ...changGuiTu(s), place_id: place.id, place_name: place.name } : changGuiTu(s))),
-  );
+  return hienTai.map((s) => (s.id === stopId ? { ...changGuiTu(s), place_id: place.id, place_name: place.name } : changGuiTu(s)));
 }
 
 /** Today as the form's ISO date, in the phone's own calendar day. */

@@ -18,7 +18,7 @@ appId: com.lakiet.rudi
     visible: "Chào bạn"
     timeout: 30000
 - tapOn: "Ô số điện thoại"
-- inputText: "${OTP_PHONE_B}"
+- inputText: "${OTP_PHONE_E}"
 - hideKeyboard
 - tapOn: "Gửi mã"
 - extendedWaitUntil:
@@ -36,7 +36,8 @@ appId: com.lakiet.rudi
 - tapOn: "Món local"
 - tapOn: "100K–250K"
 - takeScreenshot: 36-da-chon
-- tapOn: "Tạo không gian của tôi"
+# Nút gọi đúng việc nó làm (đợt chuyển mình UI 06/09): có phiên thì «Lưu sở thích».
+- tapOn: "Lưu sở thích"
 # Tài khoản mới chưa có nhóm nào, nên đích sau khi lưu là màn nhóm rỗng.
 - extendedWaitUntil:
     visible: "Chưa có nhóm nào"

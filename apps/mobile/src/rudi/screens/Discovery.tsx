@@ -1,135 +1,65 @@
+/**
+ * Khám phá, Match gu and Chi tiết địa điểm on the fixture catalogue (the dev
+ * door, `EXPO_PUBLIC_RUDI_FIXTURE=1`). The live screens in `explore/` read
+ * the server; these read `fixtures.ts`. Both draw with the same components
+ * (`HangDiaDiem`) so the two builds stop drifting apart visually.
+ *
+ * Fixture facts (rating, distance, price, «Hợp gu») are the sample world's
+ * and sit under a demo badge; on a real session with no catalogue of its own
+ * they are called samples in words and the match badge is not drawn.
+ */
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
-import { PEOPLE, PLACES, DemoPlace } from "../fixtures";
+import { PLACES, type DemoPlace } from "../fixtures";
 import { PLACE_CATEGORIES, filterPlaces, type PlaceCategory } from "../places";
 import { useRudiSession } from "../session";
-import { bangMauFixture, lopPhu, mauSang, mauSao, mucTrenAnh, phuMau, typography, useRudiTheme } from "../theme";
+import { typography, useRudiTheme } from "../theme";
 import {
   AiNote,
-  AvatarStack,
-  Card,
   Chip,
   DemoBadge,
   Heading,
   IconButton,
   Inline,
-  ListRow,
-  Logo,
   Photo,
-  PhotoShade,
   ResponsiveRow,
   RudiButton,
   RudiScreen,
   SearchField,
   SectionHeader,
-  Spacer,
   TopBar,
+  type IconName,
 } from "../ui";
+import { Wordmark } from "../ui/Wordmark";
+import { EmptyState } from "../ui/EmptyState";
+import { PlaceLead, PlaceRow, type DiaDiemHienThi } from "./explore/HangDiaDiem";
 
-function PlaceCard({
-  place,
-  saved,
-  onSave,
-  featured = false,
-}: {
-  place: DemoPlace;
-  saved: boolean;
-  onSave: () => void;
-  featured?: boolean;
-}) {
-  const router = useRouter();
-  const { colors } = useRudiTheme();
-  const { width } = useWindowDimensions();
-  const compact = width < 700;
-  return (
-    <Card
-      accessibilityLabel={"Mở " + place.name}
-      onPress={() => router.push(("/places/" + place.id) as never)}
-      style={[
-        styles.placeCard,
-        compact && styles.placeCardCompact,
-        featured && styles.placeCardFeatured,
-      ]}
-    >
-      <Photo
-        height={compact ? 112 : featured ? 205 : 154}
-        radius={16}
-        source={place.image}
-        style={compact && styles.placePhotoCompact}
-        overlay={
-          compact ? (
-            featured ? (
-              <View style={[styles.matchPill, styles.matchPillCompact]}>
-                <Ionicons color={mucTrenAnh} name="sparkles" size={12} />
-                <Text style={styles.matchPillText}>Hợp gu</Text>
-              </View>
-            ) : null
-          ) : (
-            <>
-              <View style={styles.placePhotoTop}>
-                <View style={styles.ratingPill}>
-                  <Ionicons color={mauSao.dam} name="star" size={14} />
-                  <Text style={styles.ratingText}>{place.rating}</Text>
-                </View>
-                <IconButton
-                  accessibilityLabel={saved ? "Bỏ lưu địa điểm" : "Lưu địa điểm"}
-                  icon={saved ? "heart" : "heart-outline"}
-                  onPress={onSave}
-                  selected={saved}
-                />
-              </View>
-              {featured ? (
-                <View style={styles.matchPill}>
-                  <Ionicons color={mucTrenAnh} name="sparkles" size={13} />
-                  <Text style={styles.matchPillText}>Rất hợp gu</Text>
-                </View>
-              ) : null}
-            </>
-          )
-        }
-      />
-      <View style={[styles.placeBody, compact && styles.placeBodyCompact]}>
-        <View style={styles.placeHeadingRow}>
-          <View style={styles.flex}>
-            <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{place.name}</Text>
-            <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{place.subtitle}</Text>
-          </View>
-          {compact ? (
-            <IconButton
-              accessibilityLabel={saved ? "Bỏ lưu địa điểm" : "Lưu địa điểm"}
-              icon={saved ? "heart" : "heart-outline"}
-              onPress={onSave}
-              quiet
-              selected={saved}
-            />
-          ) : (
-            <Ionicons color={colors.inkFaint} name="arrow-forward-outline" size={19} />
-          )}
-        </View>
-        <Inline gap={12} wrap>
-          {compact ? (
-            <Inline gap={4}>
-              <Ionicons color={mauSao.dam} name="star" size={14} />
-              <Text style={[typography.caption, { color: colors.ink }]}>{place.rating}</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>({place.reviews})</Text>
-            </Inline>
-          ) : null}
-          <Inline gap={4}>
-            <Ionicons color={colors.inkFaint} name="navigate-outline" size={15} />
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{place.distance}</Text>
-          </Inline>
-          <Inline gap={4}>
-            <Ionicons color={colors.inkFaint} name="wallet-outline" size={15} />
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{place.price}</Text>
-          </Inline>
-        </Inline>
-      </View>
-    </Card>
-  );
+const GLYPH: Record<PlaceCategory, IconName> = {
+  "Quán ăn": "restaurant-outline",
+  Cafe: "cafe-outline",
+  "Vui chơi": "game-controller-outline",
+  "Đi chơi đêm": "moon-outline",
+};
+
+/** The sample place in the row/lead vocabulary. `song`: a real session, so no invented match badge. */
+function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
+  return {
+    id: place.id,
+    name: place.name,
+    sub: place.subtitle,
+    facts: [
+      { icon: "star", text: `${place.rating} (${place.reviews})` },
+      { icon: "navigate-outline", text: place.distance },
+      { icon: "wallet-outline", text: place.price },
+    ],
+    glyph: GLYPH[place.category],
+    photo: place.image,
+    badge: !song && place.match >= 90 ? "Hợp gu" : null,
+  };
 }
 
 /**
@@ -175,8 +105,6 @@ export function ExploreScreen() {
   );
 
   const filtering = Boolean(query.trim()) || matchOnly || nearOnly || savedOnly || category !== null;
-  const primaryPlaces = filtering ? visiblePlaces : visiblePlaces.slice(0, 2);
-  const moodPlaces = filtering ? [] : visiblePlaces.slice(2);
 
   const resetFilters = () => {
     setQuery("");
@@ -191,17 +119,19 @@ export function ExploreScreen() {
     session.toggleSaved(id);
   };
 
+  const moDiaDiem = (id: string) => router.push(("/places/" + id) as never);
+  const [dan, ...conLai] = visiblePlaces;
+
   return (
     <RudiScreen bottomInset={112} testID="explore-screen">
       <View style={styles.exploreHeader}>
         <View style={styles.exploreBrand}>
-          <Logo compact />
-          <Inline gap={4} style={styles.location}>
-            <Ionicons color={colors.accent} name="location" size={14} />
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
+          <Wordmark color={colors.ink} height={20} />
+          <Inline gap={5} style={styles.location}>
+            <Ionicons color={colors.accent} name="location" size={16} />
+            <Text style={[typography.label, { color: colors.ink }]}>
               {song ? "Khu vực chưa chọn" : "Đà Lạt, Lâm Đồng"}
             </Text>
-            <Ionicons color={colors.inkFaint} name="chevron-down" size={13} />
           </Inline>
         </View>
         <Inline gap={8}>
@@ -210,15 +140,19 @@ export function ExploreScreen() {
             accessibilityLabel="Thông báo"
             icon="notifications-outline"
             onPress={() => session.setInboxOpen(true)}
+            quiet
             selected={session.inboxOpen}
           />
         </Inline>
       </View>
       {session.inboxOpen ? (
-        <Card>
-          <Heading size="h2" title="Thông báo" subtitle="Chưa có hộp thư máy chủ. Bản trải nghiệm không đẩy thông báo." />
-          <RudiButton label="Đóng" onPress={() => session.setInboxOpen(false)} variant="outline" />
-        </Card>
+        <EmptyState
+          action={{ label: "Đóng", onPress: () => session.setInboxOpen(false) }}
+          body="Chưa có hộp thư máy chủ. Bản trải nghiệm không đẩy thông báo."
+          kind="first-use"
+          layout="inline"
+          title="Thông báo"
+        />
       ) : null}
       <View style={styles.searchRow}>
         <View style={styles.flex}>
@@ -234,70 +168,25 @@ export function ExploreScreen() {
           onPress={() => setFiltersOpen((value) => !value)}
           selected={filtersOpen}
         />
+        {/* The assistant is a button beside the search, not a banner above the places. */}
+        <IconButton accessibilityLabel="Match gu cả nhóm bằng AI" icon="sparkles" onPress={() => router.push("/ai-match")} selected tone="ai" />
       </View>
       {filtersOpen ? (
-        <Card style={styles.filterPanel}>
-          <View style={styles.filterHeader}>
-            <View>
-              <Text style={[typography.title, { color: colors.ink }]}>Lọc nhanh</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>Cập nhật kết quả ngay khi chọn.</Text>
-            </View>
-            <Chip label="Xóa lọc" onPress={resetFilters} />
-          </View>
-          <Inline gap={7} wrap>
-            <Chip icon="sparkles-outline" label="Từ 90% hợp gu" onPress={() => setMatchOnly((value) => !value)} selected={matchOnly} />
-            <Chip icon="navigate-outline" label="Trong 2 km" onPress={() => setNearOnly((value) => !value)} selected={nearOnly} />
-            <Chip icon="heart-outline" label="Đã lưu" onPress={() => setSavedOnly((value) => !value)} selected={savedOnly} />
-          </Inline>
-        </Card>
+        <Inline gap={7} wrap>
+          <Chip icon="sparkles-outline" label="Từ 90% hợp gu" onPress={() => setMatchOnly((value) => !value)} selected={matchOnly} />
+          <Chip icon="navigate-outline" label="Trong 2 km" onPress={() => setNearOnly((value) => !value)} selected={nearOnly} />
+          <Chip icon="heart-outline" label="Đã lưu" onPress={() => setSavedOnly((value) => !value)} selected={savedOnly} />
+        </Inline>
       ) : null}
-      <Card onPress={() => router.push("/ai-match")} style={styles.aiDiscovery} tone="ai">
-        <View style={styles.aiDiscoveryIcon}>
-          <Ionicons color={colors.aiInk} name="sparkles" size={24} />
-        </View>
-        <View style={styles.flex}>
-          <Text style={[typography.title, { color: colors.ink }]}>Match gu cả nhóm bằng AI</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            {song
-              ? `Gợi ý mẫu cho ${tenNhom}: ${PLACES.length} nơi, chưa lọc theo gu nhóm bạn.`
-              : `Rủ Đi đã tìm thấy ${PLACES.length} nơi hợp Team Đà Lạt.`}
-          </Text>
-        </View>
-        <Ionicons color={colors.ai} name="arrow-forward-circle" size={27} />
-      </Card>
-      <View style={styles.categoryGrid}>
-        {PLACE_CATEGORIES.map((label, index) => {
-          const icons = ["restaurant-outline", "cafe-outline", "game-controller-outline", "moon-outline"] as const;
-          const colorsChip = [bangMauFixture.cam, bangMauFixture.vangSam, mauSang.ai, bangMauFixture.ngocDam] as const;
-          const icon = icons[index];
-          const color = colorsChip[index];
+      <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>
+        {PLACE_CATEGORIES.map((label) => {
           const active = category === label;
-          return (
-            <Pressable
-              key={label}
-              accessibilityRole="button"
-              aria-pressed={active}
-              onPress={() => setCategory(active ? null : label)}
-              style={({ pressed }) => [
-                styles.category,
-                {
-                  backgroundColor: active ? color + "18" : colors.card,
-                  borderColor: active ? color : colors.line,
-                },
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={[styles.categoryIcon, { backgroundColor: color + "1F" }]}>
-                <Ionicons color={color} name={icon} size={23} />
-              </View>
-              <Text style={[typography.caption, { color: active ? color : colors.ink }]}>{label}</Text>
-            </Pressable>
-          );
+          return <Chip icon={GLYPH[label]} key={label} label={label} onPress={() => setCategory(active ? null : label)} selected={active} />;
         })}
-      </View>
+      </ScrollView>
       <SectionHeader
-        action={filtering ? "Xóa lọc" : "Xem tất cả"}
-        onAction={filtering ? resetFilters : () => setFiltersOpen(true)}
+        action={filtering ? "Xóa lọc" : undefined}
+        onAction={filtering ? resetFilters : undefined}
         title={
           filtering
             ? `${visiblePlaces.length} kết quả phù hợp`
@@ -307,57 +196,44 @@ export function ExploreScreen() {
         }
       />
       {song ? (
-        // The cards below carry distances, ratings and prices. For a real
+        // The rows below carry distances, ratings and prices. For a real
         // session those are sample numbers until M4 reads the catalogue from
         // the server, and a number that looks measured must say it is not.
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          Khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản
-          sau.
+          Gợi ý mẫu cho {tenNhom}: khoảng cách, đánh giá và giá ở đây là số mẫu. Gợi ý thật cho khu vực của nhóm đến ở bản sau.
         </Text>
       ) : null}
-      {primaryPlaces.length ? (
-        <ResponsiveRow minItemWidth={320}>
-          {primaryPlaces.map((place, index) => (
-            <View key={place.id} style={styles.placeCell}>
-              <PlaceCard
-                featured={index === 0}
-                onSave={() => toggleSaved(place.id)}
-                place={place}
-                saved={session.savedPlaceIds.includes(place.id)}
-              />
-            </View>
-          ))}
-        </ResponsiveRow>
+      {dan === undefined ? (
+        <EmptyState
+          action={{ label: "Xóa bộ lọc", onPress: resetFilters }}
+          body="Thử từ khóa khác hoặc bỏ bớt bộ lọc nhé."
+          kind={query.trim() ? "no-results" : "filtered"}
+          layout="inline"
+          title="Chưa thấy nơi phù hợp"
+        />
       ) : (
-        <Card style={styles.emptyResults}>
-          <View style={[styles.emptyIcon, { backgroundColor: colors.accentSoft }]}>
-            <Ionicons color={colors.accent} name="search-outline" size={24} />
-          </View>
-          <Heading
-            align="center"
-            size="h2"
-            title="Chưa thấy nơi phù hợp"
-            subtitle="Thử từ khóa khác hoặc xóa bớt bộ lọc nhé."
+        <View style={styles.ketQua}>
+          <PlaceLead
+            daLuu={session.savedPlaceIds.includes(dan.id)}
+            dd={hienThiMau(dan, song)}
+            onOpen={() => moDiaDiem(dan.id)}
+            onSave={() => toggleSaved(dan.id)}
           />
-          <RudiButton label="Xóa bộ lọc" onPress={resetFilters} variant="outline" />
-        </Card>
-      )}
-      {moodPlaces.length ? (
-        <>
-          <SectionHeader action="Đổi mood" title="Tối nay đi đâu?" />
-          <ResponsiveRow minItemWidth={320}>
-            {moodPlaces.map((place) => (
-              <View key={place.id} style={styles.placeCell}>
-                <PlaceCard
+          {conLai.length > 0 ? (
+            <ResponsiveRow gap={0} minItemWidth={300}>
+              {conLai.map((place) => (
+                <PlaceRow
+                  daLuu={session.savedPlaceIds.includes(place.id)}
+                  dd={hienThiMau(place, song)}
+                  key={place.id}
+                  onOpen={() => moDiaDiem(place.id)}
                   onSave={() => toggleSaved(place.id)}
-                  place={place}
-                  saved={session.savedPlaceIds.includes(place.id)}
                 />
-              </View>
-            ))}
-          </ResponsiveRow>
-        </>
-      ) : null}
+              ))}
+            </ResponsiveRow>
+          ) : null}
+        </View>
+      )}
     </RudiScreen>
   );
 }
@@ -365,6 +241,7 @@ export function ExploreScreen() {
 export function AiMatchScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const session = useRudiSession();
   const [filter, setFilter] = useState("Tất cả");
   const visible = filter === "Tất cả"
     ? PLACES
@@ -377,69 +254,67 @@ export function AiMatchScreen() {
               ? place.category === "Cafe"
               : place.category === "Vui chơi",
         );
+  const [dan, ...conLai] = visible;
+  /** A suggestion row: what it is, and the two sample tags it was matched on. */
+  const goiY = (place: DemoPlace, dau: boolean): DiaDiemHienThi => ({
+    id: place.id,
+    name: place.name,
+    sub: place.subtitle,
+    facts: [
+      { icon: "pricetags-outline", text: place.tags.slice(0, 2).join(" · ") },
+      { icon: "wallet-outline", text: place.price },
+    ],
+    glyph: GLYPH[place.category],
+    photo: place.image,
+    badge: dau ? "Gợi ý" : null,
+  });
 
   return (
     <RudiScreen tone="ai" testID="ai-match-screen">
       <TopBar title="Match gu cả nhóm" right={<DemoBadge />} />
       <Heading
-        title={`Rủ Đi tìm được ${visible.length} nơi`}
-        subtitle={`Gợi ý từ ${PLACES.length} địa điểm fixture, sở thích 8 thành viên. Không phải kết quả LLM.`}
+        title="Tối nay cả hội đi đâu?"
+        subtitle={`Gợi ý từ ${PLACES.length} địa điểm mẫu theo sở thích 8 thành viên. Không phải kết quả LLM.`}
       />
-      <Card style={styles.groupMatchCard} tone="ai">
-        <View style={styles.groupMatchTop}>
-          <AvatarStack max={5} people={PEOPLE} />
-          <View style={styles.groupCount}>
-            <Text style={[typography.title, { color: colors.ai }]}>8/8</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>đã có gu</Text>
-          </View>
-        </View>
-        <AiNote>
-          Nhóm mê đồ ăn local, không gian ngoài trời và nơi đủ rộng để ngồi cùng nhau.
-        </AiNote>
-      </Card>
-      <Inline gap={8} wrap>
+      <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>
         {["Tất cả", "Ăn uống", "Cafe", "Vui chơi", "Dưới 250K"].map((item) => (
-          <Chip
-            key={item}
-            label={item}
-            onPress={() => setFilter(item)}
-            selected={filter === item}
-            tone="ai"
+          <Chip key={item} label={item} onPress={() => setFilter(item)} selected={filter === item} />
+        ))}
+      </ScrollView>
+      {dan === undefined ? (
+        <EmptyState
+          action={{ label: "Xem tất cả", onPress: () => setFilter("Tất cả") }}
+          body="Không có nơi mẫu nào trong bộ lọc này."
+          kind="filtered"
+          layout="inline"
+          title="Chưa có gợi ý"
+        />
+      ) : (
+        <View style={styles.ketQua}>
+          <PlaceLead
+            daLuu={session.savedPlaceIds.includes(dan.id)}
+            dd={goiY(dan, true)}
+            onOpen={() => router.push(("/places/" + dan.id) as never)}
+            onSave={() => session.toggleSaved(dan.id)}
           />
-        ))}
-      </Inline>
-      <View style={styles.matchList}>
-        {visible.map((place, index) => (
-          <Card
-            key={place.id}
-            onPress={() => router.push(("/places/" + place.id) as never)}
-            style={styles.matchCard}
-          >
-            <Photo height={142} radius={16} source={place.image} />
-            <View style={styles.matchBody}>
-              <View style={styles.matchScoreRow}>
-                <View style={[styles.matchScore, { backgroundColor: colors.aiSoft }]}>
-                  <Ionicons color={colors.ai} name="sparkles" size={15} />
-                  <Text style={[typography.caption, { color: colors.ai }]}>Rất hợp gu</Text>
-                </View>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>#{index + 1}</Text>
-              </View>
-              <Text style={[typography.title, { color: colors.ink }]}>{place.name}</Text>
-              <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>{place.subtitle}</Text>
-              <Inline gap={6} wrap>
-                {place.tags.slice(0, 2).map((tag) => <Chip key={tag} label={tag} tone="ai" />)}
-              </Inline>
-              <View style={styles.matchMembers}>
-                <AvatarStack max={4} people={PEOPLE.slice(index, index + 6)} />
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                  {Math.max(5, 8 - index)}/8 sẽ thích
-                </Text>
-              </View>
-            </View>
-          </Card>
-        ))}
-      </View>
-      <AiNote>Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.</AiNote>
+          {conLai.length > 0 ? (
+            <ResponsiveRow gap={0} minItemWidth={300}>
+              {conLai.map((place) => (
+                <PlaceRow
+                  daLuu={session.savedPlaceIds.includes(place.id)}
+                  dd={goiY(place, false)}
+                  key={place.id}
+                  onOpen={() => router.push(("/places/" + place.id) as never)}
+                  onSave={() => session.toggleSaved(place.id)}
+                />
+              ))}
+            </ResponsiveRow>
+          ) : null}
+        </View>
+      )}
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>
+        Đây là gợi ý có thể chỉnh. Rủ Đi không tự thêm nơi vào kế hoạch của nhóm.
+      </Text>
     </RudiScreen>
   );
 }
@@ -456,81 +331,69 @@ export function PlaceDetailScreen() {
     [params.id],
   );
   const saved = session.savedPlaceIds.includes(place.id);
+  const rong = width >= 700;
 
   return (
     <RudiScreen padded={false} testID="place-detail-screen">
       <View style={styles.detailShell}>
         <Photo
-          height={width >= 700 ? 430 : 330}
-          radius={width >= 700 ? 30 : 0}
+          height={rong ? 400 : 300}
+          radius={rong ? 24 : 0}
           source={place.image}
           overlay={
-            <>
-              <View style={styles.detailTop}>
-                <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => router.back()} />
-                <Inline gap={8}>
-                  <IconButton
-                    accessibilityLabel="Chia sẻ"
-                    icon="share-social-outline"
-                    onPress={() =>
-                      void Share.share({
-                        message: `${place.name}: ${place.subtitle}`,
-                      })
-                    }
-                  />
-                  <IconButton
-                    accessibilityLabel={saved ? "Bỏ lưu" : "Lưu địa điểm"}
-                    icon={saved ? "heart" : "heart-outline"}
-                    onPress={() => session.toggleSaved(place.id)}
-                    selected={saved}
-                  />
-                </Inline>
-              </View>
-              <PhotoShade>
-                <Inline gap={8}>
-                  <View style={styles.detailRating}>
-                    <Ionicons color={mauSao.sang} name="star" size={15} />
-                    <Text style={styles.detailRatingText}>{place.rating} · {place.reviews} đánh giá</Text>
-                  </View>
-                  <View style={styles.openPill}><Text style={styles.openText}>Đang mở</Text></View>
-                </Inline>
-              </PhotoShade>
-            </>
+            <View style={styles.detailTop}>
+              <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => router.back()} />
+              <Inline gap={8}>
+                <IconButton
+                  accessibilityLabel="Chia sẻ"
+                  icon="share-social-outline"
+                  onPress={() =>
+                    void Share.share({
+                      message: `${place.name}: ${place.subtitle}`,
+                    })
+                  }
+                />
+                <IconButton
+                  accessibilityLabel={saved ? "Bỏ lưu" : "Lưu địa điểm"}
+                  icon={saved ? "heart" : "heart-outline"}
+                  onPress={() => session.toggleSaved(place.id)}
+                  selected={saved}
+                />
+              </Inline>
+            </View>
           }
         />
         <View style={styles.detailContent}>
           <DemoBadge />
           <Heading title={place.name} subtitle={place.subtitle} />
-          <Inline gap={8} wrap>
-            {place.tags.map((tag) => <Chip key={tag} label={tag} selected />)}
+          {/* The three facts that decide, on the paper, each one text node. */}
+          <Inline gap={14} wrap>
+            <Inline gap={5}>
+              <Ionicons color={colors.accent} name="star" size={15} />
+              <Text style={[typography.label, { color: colors.ink }]}>{`${place.rating} (${place.reviews} đánh giá)`}</Text>
+            </Inline>
+            <Inline gap={5}>
+              <Ionicons color={colors.inkFaint} name="navigate-outline" size={15} />
+              <Text style={[typography.label, { color: colors.ink }]}>{place.distance}</Text>
+            </Inline>
+            <Inline gap={5}>
+              <Ionicons color={colors.inkFaint} name="wallet-outline" size={15} />
+              <Text style={[typography.label, { color: colors.ink }]}>{place.price}</Text>
+            </Inline>
           </Inline>
-          <Card style={styles.quickFacts}>
-            <ListRow icon="navigate-outline" title={place.distance} subtitle="Khoảng 6 phút đi xe" />
-            <ListRow icon="wallet-outline" title={place.price} subtitle="Phù hợp ngân sách nhóm" />
-            <ListRow icon="time-outline" title="10:00 - 22:30" subtitle="Mở cửa hôm nay" />
-          </Card>
-          <View>
+          <Inline gap={8} wrap>
+            {place.tags.map((tag) => <Chip key={tag} label={tag} />)}
+          </Inline>
+          <View style={styles.khoi}>
             <SectionHeader title={`Vì sao hợp ${tenNhomHienTai(session)}?`} />
-            <Spacer size={10} />
-            <Card tone="ai">
-              <View style={styles.memberMatchRow}>
-                <AvatarStack max={6} people={PEOPLE} />
-                <View style={styles.memberMatchText}>
-                  <Text style={[typography.title, { color: colors.ai }]}>Rất hợp nhóm</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>7/8 thành viên có thể thích</Text>
-                </View>
-              </View>
-              <Spacer size={12} />
-              <AiNote>View thoáng, món nướng dễ chia sẻ và đủ chỗ cho nhóm 8 người.</AiNote>
-            </Card>
+            <AiNote>View thoáng, món nướng dễ chia sẻ và đủ chỗ cho nhóm 8 người.</AiNote>
           </View>
-          <View>
+          <View style={styles.khoi}>
             <SectionHeader title="Không gian" />
-            <Spacer size={10} />
             <ResponsiveRow minItemWidth={260}>
               {[PLACES[1].image, PLACES[2].image].map((image, index) => (
                 <View key={index} style={styles.galleryCell}>
-                  <Photo height={150} radius={17} source={image} />
+                  <Photo height={150} radius={14} source={image} />
                 </View>
               ))}
             </ResponsiveRow>
@@ -552,52 +415,16 @@ export function PlaceDetailScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  exploreHeader: { minHeight: 55, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
-  exploreBrand: { minWidth: 130, flexShrink: 0 },
-  location: { marginLeft: 49, marginTop: -8 },
-  searchRow: { flexDirection: "row", alignItems: "flex-end", gap: 9 },
-  filterPanel: { gap: 12, padding: 13 },
-  filterHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  emptyResults: { alignItems: "center", gap: 14, paddingVertical: 24 },
-  emptyIcon: { width: 52, height: 52, borderRadius: 17, alignItems: "center", justifyContent: "center" },
-  aiDiscovery: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  aiDiscoveryIcon: { width: 46, height: 46, borderRadius: 16, backgroundColor: mauSang.ai, alignItems: "center", justifyContent: "center" },
-  categoryGrid: { flexDirection: "row", gap: 9 },
-  category: { flex: 1, minWidth: 70, minHeight: 87, borderRadius: 17, borderWidth: 1, alignItems: "center", justifyContent: "center", gap: 8, padding: 8 },
-  categoryIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-  placeCell: { flex: 1 },
-  placeCard: { padding: 7, gap: 3 },
-  placeCardCompact: { flexDirection: "row", alignItems: "center", gap: 4 },
-  placeCardFeatured: { borderColor: phuMau(mauSang.accent, 0.18) },
-  placePhotoCompact: { width: 112, flexShrink: 0 },
-  placePhotoTop: { position: "absolute", left: 9, right: 9, top: 9, flexDirection: "row", justifyContent: "space-between" },
-  ratingPill: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: lopPhu.trang(0.94) },
-  ratingText: { color: bangMauFixture.than, fontSize: 12, fontWeight: "800" },
-  matchPill: { position: "absolute", left: 9, bottom: 9, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: phuMau(mauSang.ai, 0.92) },
-  matchPillCompact: { left: 7, bottom: 7, paddingHorizontal: 7, paddingVertical: 5 },
-  matchPillText: { color: mucTrenAnh, fontSize: 11, fontWeight: "800" },
-  placeBody: { padding: 9, gap: 8 },
-  placeBodyCompact: { flex: 1, padding: 8 },
-  placeHeadingRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  groupMatchCard: { gap: 14 },
-  groupMatchTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  groupCount: { alignItems: "flex-end" },
-  matchList: { gap: 12 },
-  matchCard: { padding: 8, flexDirection: "row", gap: 12 },
-  matchBody: { flex: 1, gap: 7, paddingVertical: 4, paddingRight: 4 },
-  matchScoreRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  matchScore: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5 },
-  matchMembers: { marginTop: 2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  exploreHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  exploreBrand: { gap: 6, flexShrink: 1 },
+  location: { minHeight: 24 },
+  searchRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  cuonLoai: { marginHorizontal: -16 },
+  hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
+  ketQua: { gap: 20 },
+  khoi: { gap: 8 },
   detailShell: { width: "100%", maxWidth: 960, alignSelf: "center" },
   detailTop: { position: "absolute", left: 14, right: 14, top: 14, flexDirection: "row", justifyContent: "space-between" },
-  detailRating: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: lopPhu.xam(0.65) },
-  detailRatingText: { color: mucTrenAnh, fontSize: 12, fontWeight: "700" },
-  openPill: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: phuMau(bangMauFixture.luc, 0.92) },
-  openText: { color: mucTrenAnh, fontSize: 12, fontWeight: "800" },
   detailContent: { paddingHorizontal: 16, paddingTop: 19, gap: 19 },
-  quickFacts: { paddingVertical: 5 },
-  memberMatchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 14 },
-  memberMatchText: { flex: 1, alignItems: "flex-end" },
   galleryCell: { flex: 1 },
 });

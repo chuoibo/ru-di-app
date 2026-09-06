@@ -276,18 +276,17 @@ export const OTHER_TRIP_ITEMS = [
   { name: "Xăng xe khứ hồi", amount: 560_000, people: [0, 1, 2, 3, 4, 5, 6, 7] },
 ] as const;
 
+// Each licensed photograph once. The first cut listed four sources twice to
+// fill an eight-tile grid, and the repeats read as what they were: a grid
+// padded with fakes. Four real frames beat eight that lie (finish review, 2026-09-06).
 export const MEMORY_PHOTOS: ImageSource[] = [
   demoAssets.dalatFriends,
   demoAssets.cafe,
   demoAssets.road,
   demoAssets.friends,
-  demoAssets.cafe,
-  demoAssets.dalatFriends,
-  demoAssets.friends,
-  demoAssets.road,
 ];
 
-export const MEMORY_VIDEO_INDEXES = [2, 6] as const;
+export const MEMORY_VIDEO_INDEXES = [2] as const;
 
 export const VOTE_PLACE_IDS = ["xom-leo", "still-cafe", "puppy-farm"] as const;
 

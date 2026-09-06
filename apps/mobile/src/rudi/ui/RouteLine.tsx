@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
-import Svg, { Circle, Path } from "react-native-svg";
+import { useId } from "react";
+import Svg, { Circle, Defs, Mask, Path, Rect } from "react-native-svg";
 
 import { duongCongS } from "./duong-svg";
 
@@ -54,6 +55,7 @@ export function RouteLine({
   activeColor,
   activeInk,
 }: RouteLineProps) {
+  const routeMask = `route-${useId().replace(/:/g, "")}`;
   const n = Math.min(5, Math.max(2, stops));
   const w = width, h = height;
   // Path grammar lives in `duong-svg.ts`, where node can parse it the way the Java side does.
@@ -71,7 +73,16 @@ export function RouteLine({
       style={{ width: w, height: h, opacity }}
     >
       <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={StyleSheet.absoluteFill}>
-        <Path d={d} stroke={color} strokeWidth={3} {...(dashed ? { strokeDasharray: "7 7" } : {})} strokeLinecap="round" fill="none" />
+        <Defs>
+          <Mask id={routeMask} x={0} y={0} width={w} height={h} maskUnits="userSpaceOnUse">
+            <Rect width={w} height={h} fill="white" />
+            {Array.from({ length: n }, (_, i) => {
+              const q = point(i / (n - 1));
+              return <Circle key={i} cx={q.x} cy={q.y} r={i === active ? rActive : r} fill="black" />;
+            })}
+          </Mask>
+        </Defs>
+        <Path mask={`url(#${routeMask})`} d={d} stroke={color} strokeWidth={3} {...(dashed ? { strokeDasharray: "7 7" } : {})} strokeLinecap="round" fill="none" />
         {Array.from({ length: n }, (_, i) => {
           const q = point(i / (n - 1));
           const here = i === active;
