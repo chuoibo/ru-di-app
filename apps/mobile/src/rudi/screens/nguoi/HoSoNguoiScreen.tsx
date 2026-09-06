@@ -11,9 +11,11 @@
  * this screen never touches the fixture.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { attemptFor, type Attempt } from "../../../api";
+import { ganDanhSachNhom } from "../../../phien";
 import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import {
   cauNgayVao,
@@ -26,6 +28,7 @@ import {
   type Bai,
   type HoSoNguoi,
 } from "../../nguoi/ho-so-nguoi";
+import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Card, Chip, Divider, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -43,7 +46,7 @@ type TrangTuong =
 export function HoSoNguoiScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
-  const { phien, phienDaDoc } = useRudiSession();
+  const { phien, phienDaDoc, datPhien } = useRudiSession();
   const params = useLocalSearchParams<{ id?: string }>();
   // Written as a statement, not `x ? x : ""`: the id-default scanner reads that
   // shape as a display fallback wherever it appears, and it is right to.
@@ -51,6 +54,26 @@ export function HoSoNguoiScreen() {
   if (typeof params.id === "string") personId = params.id;
   const [hoSo, setHoSo] = useState<TrangHoSo>({ pha: "dang-doc" });
   const [tuong, setTuong] = useState<TrangTuong>({ pha: "dang-doc" });
+  // ADR-0021 §2.5: «Nhắn tin» opens (or finds) the pair with this friend. One
+  // attempt per person, held in a ref, so a retry is the same write.
+  const [dangMoChat, setDangMoChat] = useState(false);
+  const [loiChat, setLoiChat] = useState<string | null>(null);
+  const attempts = useRef<Record<string, Attempt>>({});
+
+  const nhanTin = async () => {
+    if (phien === null || personId === "" || dangMoChat) return;
+    setDangMoChat(true);
+    setLoiChat(null);
+    try {
+      const cap = await moNhanRieng(personId, phien.person_id, attemptFor(attempts.current, `dm:${personId}`));
+      datPhien(await ganDanhSachNhom(phien, ghepVaoDanhSach(phien.contexts, cap)));
+      router.push(`/groups/${cap.id}/chat` as never);
+    } catch (error) {
+      setLoiChat(loiRaChu(error));
+    } finally {
+      setDangMoChat(false);
+    }
+  };
 
   const napHoSo = useCallback(async () => {
     if (phien === null || personId === "") return;
@@ -137,6 +160,29 @@ export function HoSoNguoiScreen() {
                 />
               </View>
             ) : null}
+            {hoSo.hoSo.relation === "friend" ? (
+              <View style={[styles.khoangTren, styles.khoiChat]}>
+                <RudiButton
+                  icon="chatbubble-outline"
+                  label="Nhắn tin"
+                  loading={dangMoChat}
+                  onPress={() => void nhanTin()}
+                />
+                {loiChat ? <Text style={[typography.caption, { color: colors.warn }]}>{loiChat}</Text> : null}
+              </View>
+            ) : null}
+            {hoSo.hoSo.relation === "groupmate" ? (
+              <View style={[styles.khoangTren, styles.khoiChat]}>
+                <RudiButton
+                  disabled
+                  icon="chatbubble-outline"
+                  label="Nhắn tin"
+                  onPress={() => undefined}
+                  variant="ghost"
+                />
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>Kết bạn để nhắn riêng.</Text>
+              </View>
+            ) : null}
           </Card>
           <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
           {tuong.pha === "dang-doc" ? (
@@ -188,4 +234,5 @@ const styles = StyleSheet.create({
   danhSach: { paddingVertical: 6 },
   bai: { gap: 6, paddingVertical: 10 },
   khoangTren: { marginTop: 4 },
+  khoiChat: { gap: 6 },
 });

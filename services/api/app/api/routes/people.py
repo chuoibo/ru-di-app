@@ -25,6 +25,7 @@ from fastapi import APIRouter, Depends, Response, status
 from app.api.deps import Actor, get_actor, get_repository
 from app.api.repository import ApiRepository
 from app.api.schemas import (
+    ContextSummary,
     ErrorResponse,
     PersonContextListResponse,
     PersonRegistrationRequest,
@@ -134,6 +135,34 @@ def unsave_place(
 ) -> Response:
     ApiService(repository).unsave_place(place_id, actor)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/people/{person_id}/dm",
+    response_model=ContextSummary,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        200: {"model": ContextSummary},
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
+)
+def open_direct_message(
+    person_id: UUID,
+    response: Response,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> ContextSummary:
+    """Open, or find, the caller's private conversation with a friend
+    (ADR-0021 §2.5). 201 when the pair was just created, 200 when it already
+    existed -- same body either way, shaped like one row of
+    `GET /people/me/contexts` so the client can open the chat at once. Every
+    refusal is the same 404 with the same sentence; the door says nothing
+    about why."""
+    summary, created = ApiService(repository).open_direct_message(person_id, actor)
+    response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+    return summary
 
 
 @router.get(

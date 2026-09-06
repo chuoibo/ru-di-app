@@ -25,6 +25,7 @@ import {
 } from "../../../screens/ca-nhan/bai-dang";
 import { docNhomCuaToi, type NhomTomTat } from "../../../phien";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Card, Chip, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -47,7 +48,8 @@ export function DangBaiScreen() {
       try {
         const ds = await docNhomCuaToi(phien.person_id);
         if (!con) return;
-        const dangO = ds.filter((n) => n.my_state === "active");
+        // A pair is not a group to post to (ADR-0021 §2.5); only groups are offered.
+        const dangO = ds.filter((n) => n.my_state === "active" && !laPair(n));
         setNhom(dangO);
         setNhomChon((truoc) => {
           // Statement form on purpose (see the id-default gate): this id is a

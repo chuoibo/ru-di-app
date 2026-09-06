@@ -57,6 +57,11 @@ export type NhomTomTat = {
   last_message?: TinCuoiTomTat | null;
   /** ADR-0021 §2.4: one of five slugs; absent on a server older than L1. */
   theme?: string;
+  /** ADR-0021 §2.5: `pair` is a private conversation between two friends;
+   *  absent (a group) on a server older than L2. */
+  kind?: "group" | "pair";
+  /** The other person of a pair, named by the server on every read. */
+  counterpart?: { id: string; display_name: string } | null;
 };
 
 export type Phien = {
@@ -292,7 +297,9 @@ export async function guiOtp(phone: string): Promise<OtpDaGui> {
  */
 export function chonNhomMacDinh(phien: Phien): Phien {
   if (phien.context_id !== null) return phien;
-  const active = phien.contexts?.find((nhom) => nhom.my_state === "active");
+  // Never a pair (ADR-0021 §2.5): the money screens read the current group,
+  // and a private conversation is not where somebody expects to find a bill.
+  const active = phien.contexts?.find((nhom) => nhom.my_state === "active" && nhom.kind !== "pair");
   if (active === undefined) return phien;
   return {
     ...phien,
