@@ -23,6 +23,7 @@ import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, typ
 import { xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
+import { StoryRail } from "../story/StoryRail";
 import { typography, useRudiTheme } from "../../theme";
 import { Card, Heading, RudiButton, RudiScreen } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
@@ -114,6 +115,8 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
           <Text style={[typography.caption, { color: colors.inkFaint }]}>Nhóm của bạn trên máy chủ</Text>
         </View>
       </View>
+      {/* L4 (ADR-0022 §2.3): the story rail, drawn from GET /stories on every focus. */}
+      <StoryRail personId={phien.person_id} />
       {/* Not in the top-right corner: on the development build the
           dev-launcher's floating gear covers it, so a tap there opens the dev
           menu instead of this. A full row under the title is reachable on the

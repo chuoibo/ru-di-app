@@ -178,6 +178,7 @@ ROUTES_WITHOUT_RESPONSE_VALIDATION: dict[tuple[str, str], str] = {
     ("DELETE", "/contexts/{context_id}/members/{person_id}"): "204, no body",
     ("DELETE", "/contexts/{context_id}/messages/{message_id}"): "204, no body",
     ("DELETE", "/posts/{post_id}/comments/{comment_id}"): "204, no body",
+    ("DELETE", "/stories/{story_id}"): "204, no body",
     ("GET", "/people/{person_id}/photos/{photo_id}"): "bytes",
     ("DELETE", "/sessions/current"): "204, no body; signing out returns nothing",
     ("DELETE", "/contexts/{context_id}/memories/{memory_id}/reactions"): "204, no body",

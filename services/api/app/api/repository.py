@@ -14,6 +14,7 @@ from datetime import date, datetime
 from typing import Protocol
 
 from sqlalchemy import Date, and_, cast, delete, func, or_, select, tuple_
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
 
@@ -79,6 +80,8 @@ from app.db.models import (
     PostReaction,
     ReceiptConfirmation,
     SavedPlace,
+    Story,
+    StoryView,
     UploadedImage,
     VerificationScope,
     Vote,
@@ -291,6 +294,22 @@ class UploadedImageRecord:
     created_at: datetime
     #: ADR-0022 §2.1: `group`, `avatar` or `personal`.
     purpose: str = "group"
+
+
+@dataclass(frozen=True, slots=True)
+class StoryRecord:
+    """One story as the rail and the viewer need it (ADR-0022 §2.3). `seen`
+    is relative to a reader and False on a record fetched by id."""
+
+    id: uuid.UUID
+    author_id: uuid.UUID
+    author_display_name: str
+    image_url: str
+    caption: str | None
+    audience: str
+    created_at: datetime
+    expires_at: datetime
+    seen: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1396,8 +1415,38 @@ class ApiRepository(Protocol):
     ) -> UploadedImageRecord | None: ...
 
     def person_image_visible_to(
-        self, person_id: uuid.UUID, image_id: uuid.UUID, reader_id: uuid.UUID
+        self,
+        person_id: uuid.UUID,
+        image_id: uuid.UUID,
+        reader_id: uuid.UUID,
+        *,
+        now: datetime,
     ) -> bool: ...
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+
+    def create_story(
+        self,
+        *,
+        author_id: uuid.UUID,
+        image_url: str,
+        caption: str | None,
+        audience: str,
+        now: datetime,
+        expires_at: datetime,
+    ) -> StoryRecord: ...
+
+    def get_story(self, story_id: uuid.UUID) -> StoryRecord | None: ...
+
+    def list_live_stories_for(
+        self, reader_id: uuid.UUID, *, now: datetime
+    ) -> tuple[StoryRecord, ...]: ...
+
+    def mark_story_seen(
+        self, story_id: uuid.UUID, viewer_id: uuid.UUID, *, now: datetime
+    ) -> datetime: ...
+
+    def delete_story(self, story_id: uuid.UUID) -> None: ...
 
     def create_memory(
         self,
@@ -4002,21 +4051,172 @@ class SqlAlchemyApiRepository:
         return None if image is None else self._uploaded_image_record(image)
 
     def person_image_visible_to(
-        self, person_id: uuid.UUID, image_id: uuid.UUID, reader_id: uuid.UUID
+        self,
+        person_id: uuid.UUID,
+        image_id: uuid.UUID,
+        reader_id: uuid.UUID,
+        *,
+        now: datetime,
     ) -> bool:
         """ADR-0022 §2.1: a personal photograph is readable by somebody other
-        than its owner exactly when a post that shows it is readable by them.
-        The post rule is `_readable_by`, the same SQL the feed is fetched by,
-        so a post that is not for this reader cannot open its picture either."""
+        than its owner exactly when a post that shows it is readable by them,
+        or (§2.3) a live story that shows it is. The post rule is
+        `_readable_by` and the story rule `_story_readable_by` -- the same SQL
+        the feed and the rail are fetched by -- so what is not for this reader
+        cannot open its picture either."""
         url = f"/people/{person_id}/photos/{image_id}"
-        return (
-            self.session.scalar(
-                select(Post.id)
-                .where(Post.image_url == url, self._readable_by(reader_id))
-                .limit(1)
-            )
-            is not None
+        shown_by_post = (
+            select(Post.id)
+            .where(Post.image_url == url, self._readable_by(reader_id))
+            .limit(1)
         )
+        shown_by_story = (
+            select(Story.id)
+            .where(Story.image_url == url, self._story_readable_by(reader_id, now))
+            .limit(1)
+        )
+        return (
+            self.session.scalar(shown_by_post) is not None
+            or self.session.scalar(shown_by_story) is not None
+        )
+
+    # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
+
+    @staticmethod
+    def _story_readable_by(reader_id: uuid.UUID, now: datetime):
+        """`story_visibility.can_view`, spelled in SQL.
+
+        Same duplication, same reason, as `_readable_by`: the domain function
+        judges each row the service is about to return, and this keeps the
+        rows it would refuse from being fetched at all. `now` is a bind
+        parameter from the service, never `func.now()`, so a test can stand on
+        either side of the deadline. Blocking (`is_blocked`) arrives with L5.
+        Change either and change both.
+        """
+        friendship = (
+            select(FriendRequest.id)
+            .where(
+                FriendRequest.state == FriendRequestState.ACCEPTED,
+                or_(
+                    and_(
+                        FriendRequest.requester_id == reader_id,
+                        FriendRequest.addressee_id == Story.author_id,
+                    ),
+                    and_(
+                        FriendRequest.addressee_id == reader_id,
+                        FriendRequest.requester_id == Story.author_id,
+                    ),
+                ),
+            )
+            .exists()
+        )
+        return or_(
+            Story.author_id == reader_id,
+            and_(Story.audience == "friends", Story.expires_at > now, friendship),
+        )
+
+    def _story_record(
+        self, story: Story, *, author_name: str, seen: bool
+    ) -> StoryRecord:
+        return StoryRecord(
+            id=story.id,
+            author_id=story.author_id,
+            author_display_name=author_name,
+            image_url=story.image_url,
+            caption=story.caption,
+            audience=story.audience,
+            created_at=story.created_at,
+            expires_at=story.expires_at,
+            seen=seen,
+        )
+
+    def create_story(
+        self,
+        *,
+        author_id: uuid.UUID,
+        image_url: str,
+        caption: str | None,
+        audience: str,
+        now: datetime,
+        expires_at: datetime,
+    ) -> StoryRecord:
+        story = Story(
+            id=uuid.uuid4(),
+            author_id=author_id,
+            image_url=image_url,
+            caption=caption,
+            audience=audience,
+            created_at=now,
+            expires_at=expires_at,
+        )
+        self.session.add(story)
+        self.session.flush()
+        names = self._display_names({author_id})
+        return self._story_record(
+            story, author_name=names.get(author_id, ""), seen=False
+        )
+
+    def get_story(self, story_id: uuid.UUID) -> StoryRecord | None:
+        story = self.session.get(Story, story_id)
+        if story is None:
+            return None
+        names = self._display_names({story.author_id})
+        return self._story_record(
+            story, author_name=names.get(story.author_id, ""), seen=False
+        )
+
+    def list_live_stories_for(
+        self, reader_id: uuid.UUID, *, now: datetime
+    ) -> tuple[StoryRecord, ...]:
+        """Every live story this reader may see, oldest first within an
+        author, each with whether this reader has seen it. Liveness applies to
+        the reader's own stories too: the rail shows what is up, and an
+        author's expired story is reachable only by id, to delete it."""
+        rows = self.session.execute(
+            select(Story, StoryView.seen_at)
+            .outerjoin(
+                StoryView,
+                and_(StoryView.story_id == Story.id, StoryView.viewer_id == reader_id),
+            )
+            .where(self._story_readable_by(reader_id, now), Story.expires_at > now)
+            .order_by(Story.author_id, Story.created_at, Story.id)
+        ).all()
+        names = self._display_names({story.author_id for story, _ in rows})
+        return tuple(
+            self._story_record(
+                story,
+                author_name=names.get(story.author_id, ""),
+                seen=seen_at is not None,
+            )
+            for story, seen_at in rows
+        )
+
+    def mark_story_seen(
+        self, story_id: uuid.UUID, viewer_id: uuid.UUID, *, now: datetime
+    ) -> datetime:
+        """The first look is the one recorded; a second answers the first's
+        time. The primary key is the rule, and `ON CONFLICT DO NOTHING` lets
+        the database apply it in one statement -- asking first and inserting
+        second is this same code with a race inside it."""
+        self.session.execute(
+            pg_insert(StoryView)
+            .values(story_id=story_id, viewer_id=viewer_id, seen_at=now)
+            .on_conflict_do_nothing(constraint="pk_story_views")
+        )
+        seen_at = self.session.scalar(
+            select(StoryView.seen_at).where(
+                StoryView.story_id == story_id, StoryView.viewer_id == viewer_id
+            )
+        )
+        if seen_at is None:  # pragma: no cover - the row was just written
+            raise RuntimeError("story view vanished between insert and read")
+        return seen_at
+
+    def delete_story(self, story_id: uuid.UUID) -> None:
+        story = self.session.get(Story, story_id)
+        if story is not None:
+            self.session.delete(story)
+            self.session.flush()
 
     def create_memory(
         self,

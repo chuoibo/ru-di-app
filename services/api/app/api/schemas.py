@@ -1189,6 +1189,61 @@ class UploadedImageResponse(ApiModel):
     created_at: datetime
 
 
+# --- 24-hour stories (ADR-0022 §2.3) ----------------------------------------
+
+StoryAudience = Literal["friends"]
+
+
+class StoryCreateRequest(ApiModel):
+    """One of one's own photographs, to one's friends, for 24 hours.
+
+    No `author_id`, no `expires_at`, no audience: the author is the actor,
+    the deadline is `story_visibility.expires_at_for`, and the audience is the
+    one word the product has. A caption is optional and short; the length is
+    the same 200 the CHECK on the table states.
+    """
+
+    image_url: PersonPhotoUrl
+    caption: Annotated[StrictStr, Field(max_length=200)] | None = None
+
+
+class StoryResponse(ApiModel):
+    id: UUID
+    author_id: UUID
+    author_display_name: str
+    image_url: str
+    caption: str | None
+    audience: StoryAudience
+    created_at: datetime
+    expires_at: datetime
+    #: Whether THIS reader has seen it, from `story_views`. Server-decided.
+    seen: bool
+
+
+class StoryAuthor(ApiModel):
+    id: UUID
+    display_name: str
+
+
+class StoryAuthorFeed(ApiModel):
+    author: StoryAuthor
+    stories: list[StoryResponse]
+    all_seen: bool
+
+
+class StoryFeedResponse(ApiModel):
+    """One's own first, then authors with something unseen, then the rest --
+    in `story_visibility.order_authors`'s order, so the rail draws the
+    server's order and never its own."""
+
+    authors: list[StoryAuthorFeed]
+
+
+class StorySeenResponse(ApiModel):
+    story_id: UUID
+    seen_at: datetime
+
+
 class MemoryCreateRequest(ApiModel):
     """A photograph onto the group's wall, optionally naming where it was taken.
 

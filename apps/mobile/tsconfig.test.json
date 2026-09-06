@@ -293,6 +293,9 @@
     "src/rudi/tuong/bai-chi-tiet.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
+    // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
+    // deadline check that must be strict at the exact second like the server.
+    "src/rudi/story/story.ts",
     // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
     // reuses. Compiled so the test can prove they go through the bearer.
     "src/screens/quan-tri/quan-tri.ts"

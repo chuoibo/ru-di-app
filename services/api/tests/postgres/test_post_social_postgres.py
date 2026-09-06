@@ -186,3 +186,39 @@ def test_three_hearts_and_two_comments_read_three_and_two_over_http(
         ]
         is False
     )
+
+
+def test_the_same_tap_twice_over_http_is_one_row_and_answers_200_both_times(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """Review #576 S2: the `IntegrityError` branch of `add_post_reaction` --
+    the unique index refusing the second row inside its savepoint -- through
+    the real route on real PostgreSQL. A wrong constraint name in that branch
+    would turn the second tap into a 500 and this into a red line."""
+    author = _person(postgres_session, "Tác giả")
+    reader = _person(postgres_session, "Bạn")
+    post = _write(postgres_session, author, "public")
+    app = _http(postgres_session, monkeypatch)
+
+    first = app_post(
+        app,
+        f"/posts/{post.id}/reactions",
+        headers=_headers(reader.id),
+        json={"kind": "heart"},
+    )
+    assert first.status_code == 200, first.text
+    again = app_post(
+        app,
+        f"/posts/{post.id}/reactions",
+        headers=_headers(reader.id),
+        json={"kind": "heart"},
+    )
+    assert again.status_code == 200, again.text
+    assert again.json()["reactions"] == [{"kind": "heart", "count": 1}]
+    assert again.json()["my_reactions"] == ["heart"]
+    rows = list(
+        postgres_session.scalars(
+            select(PostReaction).where(PostReaction.post_id == post.id)
+        )
+    )
+    assert len(rows) == 1, "hai cú bấm là một hàng"

@@ -2316,6 +2316,85 @@ class Post(Base):
     )
 
 
+class Story(Base):
+    """A 24-hour story (L4, ADR-0022 §2.3): one of the author's own
+    photographs, a caption, and a deadline.
+
+    ## Why `expires_at` is a column with no default
+
+    The deadline is computed by `app.domain.story_visibility.expires_at_for`
+    from `created_at` and written down. A `server_default` of `now() +
+    interval '24 hours'` would spell the product's one number a second time,
+    in SQL, where no test that stands on the boundary can reach it. The CHECK
+    `expires_at > created_at` is the database's own spelling of the only part
+    of the rule it can state.
+
+    ## Why the audience is a CHECK with one value
+
+    `friends` is the story's whole audience today. The column exists so that
+    widening it is a migration and an ADR, rather than a code path that
+    already accepts `public` because a string was never checked.
+    """
+
+    __tablename__ = "stories"
+    __table_args__ = (
+        CheckConstraint("audience IN ('friends')", name="story_audience_known"),
+        CheckConstraint("expires_at > created_at", name="story_expires_after_created"),
+        CheckConstraint(
+            "caption IS NULL OR length(caption) <= 200", name="story_caption_length"
+        ),
+        # «Live stories by the people who are my friends»: author, then the
+        # deadline the feed filters on.
+        Index("ix_stories_author_live", "author_id", desc("expires_at")),
+        # ADR-0022 §2.1: the personal-photo gate asks «does a live story this
+        # reader may see show this photograph», by url.
+        Index("ix_stories_image_url", "image_url"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("people.id", name="fk_stories_author"),
+        nullable=False,
+    )
+    #: A personal photograph, `/people/{id}/photos/{id}`, the author's own.
+    image_url: Mapped[str] = mapped_column(Text, nullable=False)
+    caption: Mapped[str | None] = mapped_column(Text, nullable=True)
+    audience: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="friends", default="friends"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    #: No server default, on purpose. See the class docstring.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
+class StoryView(Base):
+    """One person has seen one story. The composite key is the rule: a second
+    look is the same row, so «unseen» on the rail is a LEFT JOIN and not a
+    count. Goes with the story (CASCADE)."""
+
+    __tablename__ = "story_views"
+    __table_args__ = (Index("ix_story_views_viewer", "viewer_id"),)
+
+    story_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("stories.id", name="fk_story_views_story", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    viewer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("people.id", name="fk_story_views_viewer"),
+        primary_key=True,
+    )
+    seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class OtpChallenge(Base):
     """One code sent to one phone, and how it was spent (ADR-0016).
 
