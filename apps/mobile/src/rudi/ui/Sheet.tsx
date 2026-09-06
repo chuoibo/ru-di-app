@@ -100,8 +100,14 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // The scroll box inside caps the panel so a long editor at font 2.0 scrolls
   // instead of pushing its own submit button off the window.
 
+  // `collapsable={false}`: Fabric flattens a plain wrapper View and attaches
+  // its children to the screen directly; toggling `pointerEvents` later makes
+  // it un-flatten by re-parenting live Reanimated views, which crashed with
+  // «addViewAt: child already has a parent» when a screen went away while its
+  // sheet was closing (board 2026-09-06, flow 39). A real native view never
+  // has to be re-parented.
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents={open ? "auto" : "none"} testID={testID}>
+    <View collapsable={false} style={StyleSheet.absoluteFill} pointerEvents={open ? "auto" : "none"} testID={testID}>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }, scrim]}>
         <Pressable accessibilityLabel="Đóng" accessibilityRole="button" onPress={onClose} style={StyleSheet.absoluteFill} />
       </Animated.View>

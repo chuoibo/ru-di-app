@@ -2,6 +2,10 @@ import { Platform, TextStyle, useColorScheme, ViewStyle } from "react-native";
 
 import tokens from "../../../../packages/shared/tokens.json";
 
+// Chat bubble themes (ADR-0021 §2.4) live in a leaf module so this file stays
+// importable from `session.tsx`; re-exported so screens read them from theme.
+export { THEME_CHAT, bangMauChat, laThemeChat, nhanTheme, type BangMauChat, type ThemeChat } from "./mau-chat";
+
 export type RudiTone = "accent" | "ai" | "split";
 export type RudiPalette = typeof tokens.color.light;
 

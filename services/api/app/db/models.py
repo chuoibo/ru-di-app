@@ -939,6 +939,11 @@ class MessageKind(StrEnum):
     TEXT = "text"
     IMAGE = "image"
     AI_CARD = "ai_card"
+    #: ADR-0021 §2.1: `body` is a sticker id from `app.domain.stickers`.
+    STICKER = "sticker"
+    #: ADR-0021 §2.3: a message the author took back. The row stays because
+    #: replies and read marks point at it; the payload is gone.
+    DELETED = "deleted"
 
 
 class Person(Base):
@@ -1027,6 +1032,21 @@ class Context(Base):
     """
 
     __tablename__ = "contexts"
+    __table_args__ = (
+        CheckConstraint(
+            "theme IN ('mac-dinh', 'hoang-hon', 'bien-dem', 'rung-thong', 'ruc-ro')",
+            name="context_theme_known",
+        ),
+        # ADR-0021 §2.5: a direct message is a context of kind `pair`. The two
+        # spellings of `app.domain.direct.KINDS`, and the rule that only a pair
+        # carries the ordered two-person key that keeps it unique.
+        CheckConstraint("kind IN ('group', 'pair')", name="context_kind_known"),
+        CheckConstraint(
+            "(kind = 'pair') = (pair_key IS NOT NULL)",
+            name="context_pair_has_key",
+        ),
+        UniqueConstraint("pair_key", name="uq_contexts_pair_key"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -1037,6 +1057,19 @@ class Context(Base):
         ForeignKey("people.id", name="fk_contexts_created_by"),
         nullable=False,
     )
+    #: ADR-0021 §2.4: one of five closed slugs (`app.domain.chat_theme`), never
+    #: a colour. A plain `String` + CHECK rather than an enum type so the
+    #: migration and this model spell the same constraint verbatim.
+    theme: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default="mac-dinh"
+    )
+    #: `group` or `pair` (ADR-0021 §2.5). A pair's `display_name` is stored
+    #: empty and the other person's name is derived on every read; `pair_key`
+    #: is `app.domain.direct.pair_key` of the two members, unique.
+    kind: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="group", default="group"
+    )
+    pair_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -1851,18 +1884,41 @@ class Message(Base):
             "AND card IS NULL) OR "
             "(kind = 'image' AND image_url IS NOT NULL AND card IS NULL) OR "
             "(kind = 'ai_card' AND card IS NOT NULL AND image_url IS NULL "
-            "AND body IS NULL)",
+            "AND body IS NULL) OR "
+            "(kind = 'sticker' AND body ~ '^[a-z0-9-]{1,32}$' AND image_url IS NULL "
+            "AND card IS NULL) OR "
+            "(kind = 'deleted' AND body IS NULL AND image_url IS NULL "
+            "AND card IS NULL)",
             name="payload_matches_kind",
         ),
         CheckConstraint(
             "kind = 'ai_card' OR author_id IS NOT NULL",
             name="human_kinds_have_author",
         ),
+        # ADR-0021 §2.3, same shape as `left_state_matches_timestamp`: the
+        # deleted state and its timestamp never part ways.
+        CheckConstraint(
+            "(kind = 'deleted') = (deleted_at IS NOT NULL)",
+            name="deleted_state_matches_timestamp",
+        ),
+        # ADR-0021 §2.2: `(id, context_id)` is unique so a reply can reference
+        # BOTH columns and the database itself refuses a cross-group quote.
+        UniqueConstraint("id", "context_id", name="uq_messages_id_context"),
+        ForeignKeyConstraint(
+            ["reply_to_id", "context_id"],
+            ["messages.id", "messages.context_id"],
+            name="fk_messages_reply_to",
+        ),
         Index(
             "ix_messages_context_feed",
             "context_id",
             desc("created_at"),
             desc("id"),
+        ),
+        Index(
+            "ix_messages_reply_to",
+            "reply_to_id",
+            postgresql_where=text("reply_to_id IS NOT NULL"),
         ),
     )
 
@@ -1892,6 +1948,14 @@ class Message(Base):
     # that is supposed to explain the rejection.
     card: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB(none_as_null=True), nullable=True
+    )
+    #: The message this one quotes; same group by construction (composite FK).
+    reply_to_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    #: Set exactly when `kind = 'deleted'` (CHECK above).
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

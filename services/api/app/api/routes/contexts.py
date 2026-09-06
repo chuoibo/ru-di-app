@@ -13,6 +13,7 @@ from app.api.schemas import (
     ContextBalancesResponse,
     ContextCreateRequest,
     ContextResponse,
+    ContextUpdateRequest,
     ErrorResponse,
     MembershipInviteRequest,
     MembershipListResponse,
@@ -41,6 +42,21 @@ def create_context(
     repository: Annotated[ApiRepository, Depends(get_repository)],
 ) -> ContextResponse:
     return ApiService(repository).create_context(request, actor)
+
+
+@router.patch(
+    "/contexts/{context_id}",
+    response_model=ContextResponse,
+    responses=ERRORS,
+)
+def update_context(
+    context_id: UUID,
+    request: ContextUpdateRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> ContextResponse:
+    """Rename the group or choose its chat theme; any active member may."""
+    return ApiService(repository).update_context(context_id, request, actor)
 
 
 @router.post(

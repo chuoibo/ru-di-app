@@ -67,7 +67,9 @@ OTP_PHONE=""
 OTP_PHONE_B=""
 OTP_PHONE_C=""
 OTP_PHONE_D=""
-# Flow 36 cần một số CHƯA đăng nhập bao giờ (bước cá nhân hoá chỉ hiện cho tài khoản mới); B đã qua flow 23.
+# Số thứ năm (E): người MỚI cho flow 36. Flow 23 đã dùng B nên tới 36 B không còn
+# là tài khoản mới và bước cá nhân hoá không hiện (bảng 2026-09-06). L5 dùng E
+# cho chặn/xoá tài khoản vì cùng lý do: không phá dữ liệu C–D mà các kiểm sau bảng đọc.
 OTP_PHONE_E=""
 
 while [ $# -gt 0 ]; do
@@ -452,8 +454,11 @@ kiem_may_chu_sau_27() {
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-act = [c for c in d.get("contexts", []) if c.get("my_state") == "active"]
-print(act[0]["id"] if act else "")')"
+# «Nhóm của D» là một NHÓM: từ L2 (ADR-0021 §2.5) danh sách còn có cặp nhắn
+# riêng, và cặp mới nhắn đứng đầu danh sách nên act[0] đọc nhầm sang nó.
+act = [c for c in d.get("contexts", []) if c.get("my_state") == "active" and c.get("kind") != "pair"]
+hoi = [c for c in act if c.get("display_name") == "Hoi QA"]
+print((hoi or act)[0]["id"] if act else "")')"
   [ -n "$tok" ] && [ -n "$ctx" ] || hong "sau flow 27: D không có nhóm active."
   ket="$(python3 - "$goc" "$tok" "$ctx" <<'PY3'
 import json, sys, urllib.request
@@ -614,7 +619,7 @@ print("%s|%s" % (",".join(sorted(d.get("interests") or [])), d.get("budget_band"
   IFS='|' read -r tags khoang <<< "$ket"
   [ "$tags" = "an-uong,cafe,mon-local" ]     || hong "sau flow 36: hồ sơ trên máy chủ mang sở thích «$tags», mong «an-uong,cafe,mon-local»."
   [ "$khoang" = "vua-phai" ]     || hong "sau flow 36: mức chi trên máy chủ là «$khoang», mong «vua-phai»."
-  echo "máy chủ xác nhận: hồ sơ B mang đúng 3 sở thích ($tags) và mức chi $khoang"
+  echo "máy chủ xác nhận: hồ sơ E mang đúng 3 sở thích ($tags) và mức chi $khoang"
 }
 
 kiem_may_chu_sau_35() {
@@ -726,8 +731,11 @@ chuan_bi_anh_nhom_cho_38() {
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-act = [c for c in d.get("contexts", []) if c.get("my_state") == "active"]
-print(act[0]["id"] if act else "")')"
+# «Nhóm của D» là một NHÓM: từ L2 (ADR-0021 §2.5) danh sách còn có cặp nhắn
+# riêng, và cặp mới nhắn đứng đầu danh sách nên act[0] đọc nhầm sang nó.
+act = [c for c in d.get("contexts", []) if c.get("my_state") == "active" and c.get("kind") != "pair"]
+hoi = [c for c in act if c.get("display_name") == "Hoi QA"]
+print((hoi or act)[0]["id"] if act else "")')"
   [ -n "$tok" ] && [ -n "$ctx" ] || hong "trước flow 38: người của flow 22 chưa ở nhóm active nào."
   cho="$(curl -sS "$goc/places" | python3 -c '
 import json, sys
@@ -847,6 +855,136 @@ print("%d|%d|%s|%d" % (len(anh), len(hop_le), anh[0].get("body") if anh else "",
   [ "$chu_thich" = "Anh tu QA" ] || hong "sau flow 34: chú thích ảnh là «$chu_thich», mong «Anh tu QA»."
   [ "${so_tra_loi:-0}" -ge 1 ] || hong "sau flow 34: câu trả lời gõ trên máy («Dep qua») không tới máy chủ."
   echo "máy chủ xác nhận: «Hoi QA» có $so_anh tin ảnh trong kho ảnh của chính nhóm, chú thích «Anh tu QA», và câu trả lời từ máy"
+}
+
+# Sau flow 37 (L1, ADR-0021): C vừa gửi một sticker, trả lời «Dep qua» của D rồi
+# xoá tin trả lời. Hỏi máy chủ: đúng một tin `deleted` và nó KHÔNG mang body,
+# ảnh, thẻ (cách viết thứ tư của CHECK, đo từ ngoài); một `sticker` có body
+# trong từ vựng; tin trả lời trỏ đúng id của «Dep qua». Rồi hai canary: người
+# KHÁC xoá sticker → 403 (chỉ tác giả xoá được), theme lạ → 422.
+kiem_may_chu_sau_37() {
+  local goc body tok ctx ket so_sticker so_deleted so_reply tac_gia toi khac body_khac tok_khac rc
+  goc="http://127.0.0.1:$API_PORT"
+  body="$(dang_nhap_curl "$OTP_PHONE_C")" \
+    || hong "sau flow 37: C không đăng nhập được qua curl."
+  tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  toi="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
+  ctx="$(printf '%s' "$body" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+hoi = [c for c in d.get("contexts", []) if c.get("my_state") == "active" and c.get("display_name") == "Hoi QA"]
+print(hoi[0]["id"] if hoi else "")')"
+  [ -n "$tok" ] && [ -n "$ctx" ] || hong "sau flow 37: C không có nhóm «Hoi QA»."
+  ket="$(curl -sS "$goc/contexts/$ctx/messages?limit=50" -H "Authorization: Bearer $tok" | python3 -c '
+import json, sys
+ms = json.load(sys.stdin).get("messages", [])
+VOCAB = {"di-thoi","an-gi","cafe-khong","ok-chot","cho-ti","ket-xe","tra-tien-ne","tuyet-voi"}
+stickers = [m for m in ms if m.get("kind") == "sticker" and m.get("body") in VOCAB
+            and m.get("image_url") is None and m.get("card") is None]
+deleted = [m for m in ms if m.get("kind") == "deleted"]
+sach = [m for m in deleted if m.get("body") is None and m.get("image_url") is None
+        and m.get("card") is None and m.get("deleted_at") and not m.get("reactions")]
+dep = [m for m in ms if m.get("kind") == "text" and m.get("body") == "Dep qua"]
+dep_id = dep[0]["id"] if dep else None
+# Tin trả lời đã bị xoá vẫn phải giữ reply_to trỏ đúng tin gốc.
+replies = [m for m in ms if (m.get("reply_to") or {}).get("id") == dep_id] if dep_id else []
+print("%d|%d|%d|%d|%s|%s" % (len(stickers), len(deleted), len(sach), len(replies),
+      stickers[0]["id"] if stickers else "", stickers[0].get("author_id") if stickers else ""))')"
+  IFS='|' read -r so_sticker so_deleted so_sach so_reply sticker_id tac_gia <<< "$ket"
+  [ "${so_sticker:-0}" -ge 1 ] || hong "sau flow 37: máy chủ không có tin sticker nào trong từ vựng."
+  [ "${so_deleted:-0}" -eq 1 ] || hong "sau flow 37: máy chủ có $so_deleted tin deleted, mong đúng 1."
+  [ "${so_sach:-0}" -eq 1 ] || hong "sau flow 37: tin deleted vẫn mang body/ảnh/thẻ/phản ứng hoặc thiếu deleted_at."
+  [ "${so_reply:-0}" -ge 1 ] || hong "sau flow 37: không có tin nào trả lời đúng tin «Dep qua»."
+  echo "máy chủ xác nhận: $so_sticker sticker, 1 tin đã xoá sạch nội dung, $so_reply tin trả lời trỏ đúng «Dep qua»"
+  # Canary 1: người KHÁC (không phải tác giả sticker) xoá sticker → 403, và sticker vẫn còn.
+  if [ "$tac_gia" = "$toi" ]; then khac="$OTP_PHONE_D"; else khac="$OTP_PHONE_C"; fi
+  body_khac="$(dang_nhap_curl "$khac")" || hong "sau flow 37: người kia không đăng nhập được qua curl."
+  tok_khac="$(printf '%s' "$body_khac" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$goc/contexts/$ctx/messages/$sticker_id" \
+      -H "Authorization: Bearer $tok_khac")"
+  [ "$rc" = "403" ] || hong "canary 37: người khác xoá sticker của tác giả nhận HTTP $rc, mong 403."
+  # Canary 2: theme ngoài bộ đóng → 422 và theme của nhóm không đổi.
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$goc/contexts/$ctx" \
+      -H 'Content-Type: application/json' -H "Authorization: Bearer $tok" \
+      -H "Idempotency-Key: canary-theme-$ctx" -d '{"theme":"hong"}')"
+  [ "$rc" = "422" ] || hong "canary 37: theme lạ nhận HTTP $rc, mong 422."
+  echo "canary 37 đỏ đúng chỗ: xoá tin người khác → 403, theme lạ → 422"
+}
+
+# Sau flow 39 (L1, ADR-0021 §2.4): người vừa lái đã đổi tên, đổi theme rồi RỜI
+# nhóm bỏ đi. Hỏi máy chủ với chính người đó (C nếu 37 đã chạy, D nếu không):
+# nhóm không còn trong danh sách của họ; và theme của «Hoi QA» vẫn mac-dinh.
+kiem_may_chu_sau_39() {
+  local goc body tok so_con hoi theme
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then body="$(dang_nhap_curl "$OTP_PHONE_C")"; else body="$(dang_nhap_curl "$OTP_PHONE_D")"; fi
+  [ -n "$body" ] || hong "sau flow 39: không đăng nhập được qua curl."
+  tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  ket="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
+import json, sys
+cs = json.load(sys.stdin).get("contexts", [])
+con = [c for c in cs if c.get("display_name") in ("Nhom Da Doi Ten", "Nhom Cai Dat QA")]
+hoi = [c for c in cs if c.get("display_name") == "Hoi QA"]
+print("%d|%s" % (len(con), hoi[0].get("theme", "?") if hoi else "?"))')"
+  IFS='|' read -r so_con theme <<< "$ket"
+  [ "${so_con:-1}" -eq 0 ] || hong "sau flow 39: nhóm bỏ đi vẫn còn trong danh sách ($so_con hàng) — rời nhóm không tới máy chủ."
+  [ "$theme" = "mac-dinh" ] || hong "sau flow 39: theme của «Hoi QA» là «$theme», mong mac-dinh — đổi theme một nhóm không được lây."
+  echo "máy chủ xác nhận: nhóm bỏ đi đã rời, theme «Hoi QA» vẫn mac-dinh"
+}
+
+# Sau flow 41 (L2, ADR-0021 §2.5): người lái (C nếu 37 đã chạy, D nếu không) vừa
+# mở nhắn riêng với người kia và gửi «Chao rieng». Hỏi máy chủ với NGƯỜI KIA:
+# danh sách của họ có đúng một context kind=pair mà counterpart là người lái,
+# cặp mang tên người lái, và «Chao rieng» nằm trong cặp do người lái gửi.
+# Canary curl: người lái mở DM với B (đăng nhập ở flow 23, chưa là bạn) → 404
+# đúng một câu; đổi tên cặp và rời cặp → 409 not_a_group (một cặp không có
+# danh sách thành viên để đổi).
+kiem_may_chu_sau_41() {
+  local goc lai kia body_lai body_kia tok_lai tok_kia id_lai ket so_pair so_mine ctx ten so_tin body_b id_b rc than
+  goc="http://127.0.0.1:$API_PORT"
+  if da_chay 37; then lai="$OTP_PHONE_C"; kia="$OTP_PHONE_D"; else lai="$OTP_PHONE_D"; kia="$OTP_PHONE_C"; fi
+  body_lai="$(dang_nhap_curl "$lai")" || hong "sau flow 41: người lái không đăng nhập được qua curl."
+  body_kia="$(dang_nhap_curl "$kia")" || hong "sau flow 41: người kia không đăng nhập được qua curl."
+  tok_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  id_lai="$(printf '%s' "$body_lai" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
+  tok_kia="$(printf '%s' "$body_kia" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
+  [ -n "$tok_lai" ] && [ -n "$id_lai" ] && [ -n "$tok_kia" ] || hong "sau flow 41: thân phiên thiếu token/person_id."
+  ket="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok_kia" | python3 -c '
+import json, sys
+lai = sys.argv[1]
+cs = json.load(sys.stdin).get("contexts", [])
+pairs = [c for c in cs if c.get("kind") == "pair"]
+mine = [c for c in pairs if (c.get("counterpart") or {}).get("id") == lai]
+print("%d|%d|%s|%s" % (len(pairs), len(mine), mine[0]["id"] if mine else "", mine[0].get("display_name", "") if mine else ""))' "$id_lai")"
+  IFS='|' read -r so_pair so_mine ctx ten <<< "$ket"
+  [ "${so_mine:-0}" -eq 1 ] || hong "sau flow 41: người kia thấy $so_mine cặp với người lái (tổng $so_pair cặp), mong đúng 1."
+  [ -n "$ten" ] || hong "sau flow 41: cặp không mang tên người lái."
+  so_tin="$(curl -sS "$goc/contexts/$ctx/messages?limit=50" -H "Authorization: Bearer $tok_kia" | python3 -c '
+import json, sys
+lai = sys.argv[1]
+ms = json.load(sys.stdin).get("messages", [])
+print(len([m for m in ms if m.get("kind") == "text" and m.get("body") == "Chao rieng" and m.get("author_id") == lai]))' "$id_lai")"
+  [ "${so_tin:-0}" -ge 1 ] || hong "sau flow 41: cặp không có tin «Chao rieng» của người lái."
+  echo "máy chủ xác nhận: người kia thấy đúng một cặp với người lái (tên «$ten»), «Chao rieng» nằm trong cặp"
+  # Canary 1: B (flow 23) chưa là bạn của người lái → 404 đúng một câu, không lý do.
+  body_b="$(dang_nhap_curl "$OTP_PHONE_B")" || hong "sau flow 41: B không đăng nhập được qua curl."
+  id_b="$(printf '%s' "$body_b" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("person_id",""))')"
+  [ -n "$id_b" ] || hong "sau flow 41: thân phiên của B không có person_id."
+  than="$(mktemp)"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' -X POST "$goc/people/$id_b/dm" \
+      -H "Authorization: Bearer $tok_lai" -H "Idempotency-Key: canary-dm-$id_b")"
+  [ "$rc" = "404" ] || { rm -f "$than"; hong "canary 41: mở DM với người chưa là bạn nhận HTTP $rc, mong 404."; }
+  grep -q "Chưa thể nhắn riêng với người này." "$than" || { rm -f "$than"; hong "canary 41: 404 không mang đúng câu chung."; }
+  rm -f "$than"
+  # Canary 2: đổi tên cặp và rời cặp → 409 not_a_group.
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$goc/contexts/$ctx" \
+      -H 'Content-Type: application/json' -H "Authorization: Bearer $tok_lai" \
+      -H "Idempotency-Key: canary-rename-$ctx" -d '{"display_name":"Hai dua"}')"
+  [ "$rc" = "409" ] || hong "canary 41: đổi tên cặp nhận HTTP $rc, mong 409."
+  rc="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "$goc/contexts/$ctx/members/$id_lai" \
+      -H "Authorization: Bearer $tok_lai" -H "Idempotency-Key: canary-leave-$ctx")"
+  [ "$rc" = "409" ] || hong "canary 41: rời cặp nhận HTTP $rc, mong 409."
+  echo "canary 41 đỏ đúng chỗ: DM với người chưa là bạn → 404 một câu, đổi tên/rời cặp → 409"
 }
 
 kiem_may_chu_sau_30() {
@@ -1289,6 +1427,15 @@ cd "$APP"
 BANG=0
 DA_CHAY=0
 DO_LIST=""
+# Mỗi bảng OTP bắt đầu từ app SẠCH. Lượt trước để lại trên máy: phiên, và
+# điểm đến đã chọn — flow 35 chọn «Hội An», nơi có 0 địa điểm — nên lượt sau
+# thừa hưởng nó thì flow 22/26 đỏ vì MÁY chứ không vì app (bảng L2, 2026-09-06).
+# Sau pm clear dev client về launcher: nạp lại bundle trước khi chạy flow.
+if [ "$OTP" = 1 ]; then
+  xoa_du_lieu_app
+  mo_link "$(url_metro)"; cho_bundle || true; sleep 2
+fi
+
 # Tên các flow ĐÃ chạy trong lượt này. Bảng mini (`--flows`) chỉ có vài flow,
 # và phép kiểm máy chủ của một flow KHÔNG chạy thì hoặc đỏ vì môi trường không
 # có gì để kiểm, hoặc tệ hơn là xanh vì trạng thái sót lại của lượt trước —
@@ -1361,7 +1508,7 @@ elif [ "$LIVE" = 1 ]; then
   # The seeded person already exists: one fixed number, a fresh curl-session
   # cache per lap so the server check after flow 20 asks the server, not the cache.
   rm -rf "$PHIEN_CURL_DIR"; PHIEN_CURL_DIR="$(mktemp -d)"
-  OTP_PHONE="$OTP_PHONE_SEED"; OTP_PHONE_B=""; OTP_PHONE_C=""; OTP_PHONE_D=""
+  OTP_PHONE="$OTP_PHONE_SEED"; OTP_PHONE_B=""; OTP_PHONE_C=""; OTP_PHONE_D=""; OTP_PHONE_E=""
 fi
 for f in "$FLOWS"/*.yaml; do
   ten="$(basename "$f")"
@@ -1373,7 +1520,7 @@ for f in "$FLOWS"/*.yaml; do
     # môi trường chứ không phải vì app sai. `--live` chạy đúng và chỉ nhóm này.
     20-*)        [ "$LIVE" = 1 ] || continue ;;
     21-*)        [ "$DANG_NHAP" = 1 ] || continue ;;
-    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*) [ "$OTP" = 1 ] || continue ;;
+    22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*) [ "$OTP" = 1 ] || continue ;;
     # Under the keyboard negative control the composer is meant to be covered,
     # so a flow that has to tap it (30, 40) would only fail for the reason the
     # probe already measures. The table for --tat-kav is the sign-in leg + 31.
@@ -1486,6 +1633,9 @@ if [ "$OTP" = 1 ]; then
   da_chay 34 && kiem_can_25 kiem_may_chu_sau_34 && kiem_may_chu_sau_34
   da_chay 35 && kiem_may_chu_sau_35
   da_chay 36 && kiem_may_chu_sau_36
+  da_chay 37 && kiem_can_25 kiem_may_chu_sau_37 && kiem_may_chu_sau_37
+  da_chay 39 && kiem_can_25 kiem_may_chu_sau_39 && kiem_may_chu_sau_39
+  da_chay 41 && kiem_can_25 kiem_may_chu_sau_41 && kiem_may_chu_sau_41
   { [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
   [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
   canary_otp

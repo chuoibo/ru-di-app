@@ -1,0 +1,13 @@
+{
+  "_": "Từ vựng sticker đóng (ADR-0021 §2.1). Cùng danh sách với services/api/app/domain/stickers.py và apps/mobile/src/rudi/chat/sticker.ts; tests/test_sticker_vocabulary_matches_client.py đối chiếu ba nơi. Id là slug ASCII, không có số dài.",
+  "stickers": [
+    { "id": "di-thoi", "label": "Đi thôi!" },
+    { "id": "an-gi", "label": "Ăn gì?" },
+    { "id": "cafe-khong", "label": "Cà phê không?" },
+    { "id": "ok-chot", "label": "OK, chốt!" },
+    { "id": "cho-ti", "label": "Chờ tí" },
+    { "id": "ket-xe", "label": "Kẹt xe" },
+    { "id": "tra-tien-ne", "label": "Trả tiền nè" },
+    { "id": "tuyet-voi", "label": "Tuyệt vời" }
+  ]
+}

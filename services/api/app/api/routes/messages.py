@@ -6,7 +6,7 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 
 from app.api.chat_expense_skill import ChatExpenseReader
 from app.api.deps import (
@@ -146,6 +146,27 @@ def list_context_messages(
 ) -> MessageListResponse:
     query = MessageQuery(limit=limit, before=before, after=after)
     return ApiService(repository).list_context_messages(context_id, query, actor)
+
+
+@router.delete(
+    "/contexts/{context_id}/messages/{message_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=ERRORS,
+)
+def delete_own_message(
+    context_id: UUID,
+    message_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> Response:
+    """Take back one's own text, picture or sticker (ADR-0021 §2.3).
+
+    The row stays as `kind = 'deleted'` with no payload -- replies and read
+    marks still point at it -- so this is a 204 on the message, not a 200 with
+    a body that would have to describe an absence.
+    """
+    ApiService(repository).delete_own_message(context_id, message_id, actor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(

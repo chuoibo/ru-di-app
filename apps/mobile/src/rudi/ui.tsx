@@ -394,6 +394,9 @@ type ButtonProps = {
   compact?: boolean;
   full?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** When the visible label is not enough on its own («Nhắn tin» on a row
+   *  that names somebody): the sentence a screen reader, and Maestro, get. */
+  accessibilityLabel?: string;
 };
 
 export function RudiButton({
@@ -407,6 +410,7 @@ export function RudiButton({
   compact = false,
   full = true,
   style,
+  accessibilityLabel,
 }: ButtonProps) {
   const { colors, radius } = useRudiTheme();
   const solid = variant === "solid";
@@ -439,6 +443,7 @@ export function RudiButton({
     // `instant` step of the motion vocabulary; the old opacity dim ran on the
     // JS thread and could not honour Reduce Motion.
     <PressScale
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       disabled={disabled || loading}
       onPress={onPress}

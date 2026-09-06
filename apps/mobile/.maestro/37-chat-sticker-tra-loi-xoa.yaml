@@ -1,0 +1,100 @@
+# Sticker, trả lời và xoá tin trong chat (L1, ADR-0021 §2.1–2.3), trên API prod.
+#
+# Chạy SAU flow 34 trong cùng lượt: «Hoi QA» đã có tin «Dep qua» của D. Đăng
+# nhập lại bằng C (số của C được dùng lần cuối ở flow 30, nên không đụng nhịp
+# 60 s của OTP): gửi một sticker từ khay → hình «Đi thôi!» hiện thành một tin
+# không bong bóng; giữ lâu tin «Dep qua» → menu → «Trả lời» → dải «Đang trả
+# lời» trên ô soạn → gửi «Tra loi QA» → tin mới mang khối trích «Trích: Dep qua»
+# do MÁY CHỦ dựng; giữ lâu tin vừa gửi → «Xoá» → xác nhận → hàng đổi thành
+# «Tin nhắn đã bị xoá» và chữ cũ biến mất; về danh sách → dòng xem trước của
+# nhóm cũng đọc «Bạn: Tin nhắn đã bị xoá».
+#
+# Harness kiểm máy chủ sau flow (kiem_may_chu_sau_37): một tin kind=sticker có
+# body trong từ vựng, đúng một tin kind=deleted không body/ảnh/thẻ, một tin
+# text có reply_to.id trỏ đúng tin «Dep qua»; và hai canary bằng curl: người
+# KHÁC xoá sticker → 403, theme lạ → 422.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow: _dang-xuat-neu-co.yaml
+- tapOn: "Rủ Đi thôi!"
+- extendedWaitUntil:
+    visible: "Chào bạn"
+    timeout: 30000
+- tapOn: "Ô số điện thoại"
+- inputText: "${OTP_PHONE_C}"
+- hideKeyboard
+- tapOn: "Gửi mã"
+- extendedWaitUntil:
+    visible: "Nhập mã 6 số"
+    timeout: 60000
+- tapOn: "Ô nhập mã"
+- inputText: "${OTP_CODE}"
+- runFlow:
+    file: _bo-qua-so-thich.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Hoi QA"
+    timeout: 60000
+- tapOn: "Hoi QA"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+# Sticker từ khay: một tin không bong bóng, hình vẽ bằng vector.
+- tapOn: "Gửi sticker"
+- extendedWaitUntil:
+    visible: "Khay sticker"
+    timeout: 15000
+- tapOn: "Đi thôi!"
+- extendedWaitUntil:
+    visible: "Sticker: Đi thôi!"
+    timeout: 30000
+- takeScreenshot: 37-sticker
+# Trả lời một tin của người khác: khối trích do máy chủ dựng.
+- longPressOn: "Tin nhắn: Dep qua"
+- extendedWaitUntil:
+    visible: "Trả lời"
+    timeout: 15000
+- tapOn: "Trả lời"
+- extendedWaitUntil:
+    visible: "Đang trả lời .*"
+    timeout: 15000
+- tapOn: "Ô soạn tin"
+- inputText: "Tra loi QA"
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: "Tra loi QA"
+    timeout: 30000
+- hideKeyboard
+- assertVisible: "Trích: Dep qua"
+- assertNotVisible: "Đang trả lời .*"
+- takeScreenshot: 37-tra-loi
+# Xoá tin của mình: hàng đổi thành «đã xoá», chữ cũ biến mất.
+- longPressOn: "Tin nhắn: Tra loi QA"
+- extendedWaitUntil:
+    visible: "Xoá"
+    timeout: 15000
+- tapOn: "Xoá"
+- extendedWaitUntil:
+    visible: "Xoá tin"
+    timeout: 15000
+- tapOn: "Xoá tin"
+- extendedWaitUntil:
+    visible: "Tin nhắn đã bị xoá"
+    timeout: 30000
+- assertNotVisible: "Tra loi QA"
+- takeScreenshot: 37-da-xoa
+# Dòng xem trước của nhóm đọc máy chủ, không đọc state của màn chat.
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Hoi QA"
+    timeout: 30000
+- assertVisible: "Bạn: Tin nhắn đã bị xoá"

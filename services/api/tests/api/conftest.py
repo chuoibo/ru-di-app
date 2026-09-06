@@ -73,6 +73,7 @@ from app.api.repository import (
     StoredGuestLink,
 )
 from app.domain.capability import capability_scope
+from app.domain.direct import display_name_for
 from app.domain.ledger import obligation_status
 
 from .helpers import ADVANCER_ID, CONTEXT_ID, SENDER_ID
@@ -256,6 +257,9 @@ class FakeRepository(SeedCatalogueReads):
         self.receipts: dict[uuid.UUID, FakeReceipt] = {}
         self.people: dict[uuid.UUID, PersonRecord] = {}
         self.contexts: dict[uuid.UUID, ContextRecord] = {}
+        #: ADR-0021 §2.5: pair_key -> context id. A dict cannot race; the
+        #: unique key is proved in tests/postgres/test_direct_message_postgres.py.
+        self.pair_contexts: dict[str, uuid.UUID] = {}
         self.messages: dict[uuid.UUID, MessageRecord] = {}
         self.bills: dict[uuid.UUID, BillRecord] = {}
         self.finances: dict[uuid.UUID, PersonFinanceSummary] = {}
@@ -614,8 +618,55 @@ class FakeRepository(SeedCatalogueReads):
     def get_context(self, context_id):
         return self.contexts.get(context_id)
 
+    def update_context(self, context_id, *, changes):
+        current = self.contexts.get(context_id)
+        if current is None:
+            return None
+        updated = replace(current, **{k: v for k, v in changes.items()})
+        self.contexts[context_id] = updated
+        return updated
+
+    def get_pair_context(self, pair_key):
+        context_id = self.pair_contexts.get(pair_key)
+        return None if context_id is None else self.contexts.get(context_id)
+
+    def create_pair_context(self, *, pair_key, member_ids, created_by_id, now):
+        if pair_key in self.pair_contexts:
+            raise RepositoryConflict("PAIR_EXISTS")
+        record = ContextRecord(
+            id=uuid.uuid4(),
+            display_name="",
+            created_by_id=created_by_id,
+            created_at=now,
+            kind="pair",
+            pair_key=pair_key,
+        )
+        self.contexts[record.id] = record
+        self.pair_contexts[pair_key] = record.id
+        for person_id in member_ids:
+            self.active_memberships.add((record.id, person_id))
+        return record
+
     def get_message(self, message_id):
         return self.messages.get(message_id)
+
+    def get_messages_by_ids(self, message_ids):
+        return {m: self.messages[m] for m in message_ids if m in self.messages}
+
+    def soft_delete_message(self, message_id, *, now):
+        current = self.messages.get(message_id)
+        if current is None:
+            return None
+        updated = replace(
+            current,
+            kind="deleted",
+            body=None,
+            image_url=None,
+            card=None,
+            deleted_at=now,
+        )
+        self.messages[message_id] = updated
+        return updated
 
     def create_outing_invite(
         self,
@@ -841,6 +892,17 @@ class FakeRepository(SeedCatalogueReads):
                 else "invited"
             )
             role = self.membership_role(context_id, person_id) or "member"
+            other_id = None
+            other_name = None
+            if context.kind == "pair":
+                others = [
+                    p
+                    for c, p in self.active_memberships
+                    if c == context_id and p != person_id
+                ]
+                other_id = others[0] if others else None
+                other = self.people.get(other_id) if other_id else None
+                other_name = other.display_name if other else None
             newest = self._messages_in(context_id)
             last = None
             if newest:
@@ -849,9 +911,12 @@ class FakeRepository(SeedCatalogueReads):
                 last = LastMessageRecord(
                     id=m.id,
                     kind=m.kind,
-                    preview=(m.body or "")[:80]
-                    if m.kind == "text"
-                    else ("[Ảnh]" if m.kind == "image" else "[Rủ Đi AI]"),
+                    preview={
+                        "text": (m.body or "")[:80],
+                        "image": "[Ảnh]",
+                        "sticker": "[Sticker]",
+                        "deleted": "Tin nhắn đã bị xoá",
+                    }.get(m.kind, "[Rủ Đi AI]"),
                     author_id=m.author_id,
                     author_display_name=author.display_name if author else None,
                     created_at=m.created_at,
@@ -859,7 +924,9 @@ class FakeRepository(SeedCatalogueReads):
             out.append(
                 PersonContextSummaryRecord(
                     id=context_id,
-                    display_name=context.display_name,
+                    display_name=display_name_for(
+                        context.kind, context.display_name, other_name
+                    ),
                     member_count=sum(
                         1 for c, _ in self.active_memberships if c == context_id
                     ),
@@ -871,6 +938,10 @@ class FakeRepository(SeedCatalogueReads):
                     else None,
                     last_message=last,
                     unread_count=self.count_unread_messages(context_id, person_id),
+                    theme=context.theme,
+                    kind=context.kind,
+                    counterpart_id=other_id,
+                    counterpart_display_name=other_name,
                 )
             )
         out.sort(
@@ -980,9 +1051,14 @@ class FakeRepository(SeedCatalogueReads):
         )
         places = len({stop for (pid, stop) in self.stop_checkins if pid == person_id})
         memories = sum(1 for m in self.memories.values() if m.author_id == person_id)
+        groups = {
+            cid
+            for cid in my_contexts
+            if cid not in self.contexts or self.contexts[cid].kind != "pair"
+        }
         return ProfileCounts(
             friends=friends,
-            contexts=len(my_contexts),
+            contexts=len(groups),
             outings=outings,
             places_checked_in=places,
             memories=memories,

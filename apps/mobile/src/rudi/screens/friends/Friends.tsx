@@ -10,11 +10,12 @@
  * App B called, with the bearer now doing the identifying.
  */
 import { Redirect, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState, type ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useRef, useState, type ReactNode } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, attemptFor, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
+import { ganDanhSachNhom } from "../../../phien";
 import {
   docDanhSachBan,
   docLoiMoi,
@@ -23,6 +24,7 @@ import {
   type LoiMoi,
   type TraLoi,
 } from "../../../screens/ca-nhan/ban-be";
+import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { Divider, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
@@ -65,10 +67,13 @@ export function FriendsScreen() {
   // The pinned footer must clear the gesture bar: the screen shell only pads
   // top/left/right, so the bottom inset is this screen's to add.
   const { bottom: menDuoi } = useSafeAreaInsets();
-  const { phien, phienDaDoc } = useRudiSession();
+  const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [muc, setMuc] = useState(0);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangTraLoi, setDangTraLoi] = useState<string | null>(null);
+  // ADR-0021 §2.5: «Nhắn tin» on a friend's row opens (or finds) the pair.
+  const [dangNhan, setDangNhan] = useState<string | null>(null);
+  const attempts = useRef<Record<string, Attempt>>({});
 
   const nap = useCallback(async () => {
     if (phien === null) return;
@@ -100,6 +105,20 @@ export function FriendsScreen() {
 
   if (!phienDaDoc) return null;
   if (phien === null) return <Redirect href="/welcome" />;
+
+  const nhanTin = async (b: Ban) => {
+    if (dangNhan !== null) return;
+    setDangNhan(b.person_id);
+    try {
+      const cap = await moNhanRieng(b.person_id, phien.person_id, attemptFor(attempts.current, `dm:${b.person_id}`));
+      datPhien(await ganDanhSachNhom(phien, ghepVaoDanhSach(phien.contexts, cap)));
+      router.push(`/groups/${cap.id}/chat` as never);
+    } catch (error) {
+      setTrang({ pha: "hong", loi: loiRaChu(error) });
+    } finally {
+      setDangNhan(null);
+    }
+  };
 
   const traLoi = async (lm: LoiMoi, quyetDinh: TraLoi) => {
     setDangTraLoi(lm.id);
@@ -136,6 +155,19 @@ export function FriendsScreen() {
           <DanhSach
             hang={trang.du.ban.map((b) => (
               <HangNguoi
+                duoi={
+                  <RudiButton
+                    accessibilityLabel={`Nhắn tin cho ${b.display_name}`}
+                    compact
+                    disabled={dangNhan !== null}
+                    full={false}
+                    icon="chatbubble-outline"
+                    label="Nhắn tin"
+                    loading={dangNhan === b.person_id}
+                    onPress={() => void nhanTin(b)}
+                    variant="soft"
+                  />
+                }
                 key={b.person_id}
                 onPress={() => router.push(`/people/${b.person_id}`)}
                 phu={ngayKetBan(b.friends_since)}

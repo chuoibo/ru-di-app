@@ -18,6 +18,7 @@ appId: com.lakiet.rudi
     visible: "Chào bạn"
     timeout: 30000
 - tapOn: "Ô số điện thoại"
+# Số E: một người MỚI thật. B đã đăng nhập ở flow 23, nên với B bước này không hiện.
 - inputText: "${OTP_PHONE_E}"
 - hideKeyboard
 - tapOn: "Gửi mã"

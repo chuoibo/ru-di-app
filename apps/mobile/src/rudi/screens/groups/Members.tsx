@@ -10,11 +10,19 @@
  * invite as the one action at the foot.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { ApiError, thongDiepNguoiDoc } from "../../../api";
+import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
+import {
+  coTheDoiVaiTro,
+  datVaiTro,
+  loiNhacQuanTriCuoi,
+  nhanNutVaiTro,
+  vaiTroDoiThanh,
+} from "../../../screens/quan-tri/quan-tri";
 import { danhSachThanhVien, type ThanhVien } from "../../../screens/vao-cua/cong-api";
+import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -34,6 +42,10 @@ export function GroupMembersScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  const [dangDoiVaiTro, setDangDoiVaiTro] = useState<string | null>(null);
+  const [loiVaiTro, setLoiVaiTro] = useState<string | null>(null);
+  // One attempt per (person, target role): a re-render never mints a second key.
+  const attempts = useRef<Record<string, Attempt>>({});
 
   const nap = useCallback(async () => {
     if (phien === null || typeof id !== "string") return;
@@ -57,8 +69,25 @@ export function GroupMembersScreen() {
   if (phien === null) return <Redirect href="/welcome" />;
   if (typeof id !== "string") return <Redirect href="/messages" />;
 
-  const tenNhom = phien.contexts?.find((nhom) => nhom.id === id)?.display_name ?? "Nhóm";
+  const tenNhom = tenCuocTroChuyen(phien.contexts?.find((nhom) => nhom.id === id));
   const conSong = trang.pha === "xong" ? trang.thanhVien.filter((tv) => tv.state !== "left") : [];
+  const nhacQuanTriCuoi = trang.pha === "xong" ? loiNhacQuanTriCuoi(conSong, phien.person_id) : null;
+
+  /** Promote or demote one member (ADR-0021 L1 wires the M2 route into the roster). */
+  const doiVaiTro = async (tv: ThanhVien) => {
+    if (dangDoiVaiTro !== null) return;
+    const vaiTro = vaiTroDoiThanh(tv);
+    setDangDoiVaiTro(tv.person_id);
+    setLoiVaiTro(null);
+    try {
+      await datVaiTro(id, tv.person_id, vaiTro, phien.person_id, attemptFor(attempts.current, `${tv.person_id}:${vaiTro}`));
+      await nap();
+    } catch (error) {
+      setLoiVaiTro(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+    } finally {
+      setDangDoiVaiTro(null);
+    }
+  };
 
   return (
     <RudiScreen testID="group-members-screen">
@@ -100,10 +129,23 @@ export function GroupMembersScreen() {
                     {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Mở nhóm này" : "Thành viên"}
                   </Text>
                 </View>
-                {tv.role === "admin" && tv.state === "active" ? <Stamp label="Quản trị" /> : null}
+                {coTheDoiVaiTro(conSong, phien.person_id, tv) ? (
+                  <RudiButton
+                    compact
+                    full={false}
+                    label={nhanNutVaiTro(tv)}
+                    loading={dangDoiVaiTro === tv.person_id}
+                    onPress={() => void doiVaiTro(tv)}
+                    variant="soft"
+                  />
+                ) : tv.role === "admin" && tv.state === "active" ? (
+                  <Stamp label="Quản trị" />
+                ) : null}
               </View>
             );
           })}
+          {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
+          {loiVaiTro ? <Text style={[typography.caption, { color: colors.warn }]}>{loiVaiTro}</Text> : null}
         </View>
       ) : null}
       <RudiButton

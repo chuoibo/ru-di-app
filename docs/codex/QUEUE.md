@@ -90,6 +90,37 @@ Phía client (vỏ RuDi, `apps/mobile/`, xếp chồng theo thứ tự, mỗi PR
 
 **Đã merge hết vào `main` ngày 2026-09-04** (Lead uỷ quyền toàn quyền cho Claude; merge commit, không squash, mỗi PR đổi base về `main` trước): máy chủ #520 → #526 → #529 → #530 → #532 → #534 → #536 → #541, rồi client #531 → #533 → #535 → #537 → #539 → #540 → #542 → #543 → #545 → #547 → #549 → #550 → #552 → #554 → #546. Ba PR xung đột ở `.server-routes-uncalled.json` (#531, #533, #539) được giải bằng bản pin của `main` trừ đúng các pin cổng route báo «đã có người gọi». ADR-0016 đã vào `main` nhưng dòng trạng thái vẫn ghi ĐỀ XUẤT — Lead tự tay đổi sang ĐÃ CHẤP NHẬN (một dòng). Trên `main` sau gộp (b9f6473): pytest 2991 passed + 1 đỏ (pin `/contexts/{context_id}/batches` đã trả nợ mà bản gộp tự động giữ lại → PR này gỡ), test-db ĐẠT, 4 cổng hợp đồng rc=0, repo guard tree ĐẠT, tsc 0, npm 609/609; `scripts/e2e_slice.sh` đỏ 3 test e2e vì còn trỏ `dist-test/navigation/nhom-demo.js` (App B đã xoá ở #547; module dời về `src/rudi/nhom-demo.ts`) → PR này trỏ lại. Còn mở: #488 (cổng Luật 1, Lead quyết).
 
+### 0e. 2026-09-06 — Claude nhận toàn bộ «social v1.1» (L1–L8) theo lệnh trực tiếp của Lead
+
+Lead giao Claude làm cả server lẫn client cho chín lát trên nhánh
+`claude/p0-w-m15-social-v1-1` (tách từ `origin/main` d094deb; kế hoạch
+`~/.claude/plans/mellow-waddling-lantern.md`; ADR-0021…0025 trong PR L0). Backend do
+Claude làm theo uỷ quyền ADR-0016 §2.3; charter không đổi. Ghi ở đây để hàng đợi
+không mô tả việc đã có người làm như thể còn nợ:
+
+| Lát | Nội dung | ADR | Trạng thái |
+|---|---|---|---|
+| L0 | Worktree, gói ADR-0021…0025, sửa dòng trạng thái ADR-0019, font vào image API | — | PR mở |
+| L1 | Chat: sticker, trả lời, xoá tin, Cài đặt nhóm (theme, tên, vai trò, rời) | 0021 | đang làm |
+| L2 | Nhắn riêng 1:1 (`contexts.kind = pair`) | 0021 | chờ L1 |
+| L3 | Tường: bình luận, phản ứng, quyền bình luận, ảnh cá nhân (`uploaded_images.purpose`) | 0022 | chờ L0 |
+| L4 | Story 24 giờ | 0022 | chờ L3 |
+| L5 | Settings, xoá tài khoản (ẩn danh hoá), chặn/báo cáo, phiên | 0023 | chờ L2–L4 |
+| L6 | Gu nhóm vào companion, AI tự gợi ý theo nhịp | 0021 §2.6 | chờ L2 |
+| L7 | Thông báo trong app + push (rebuild dev client một lần) | 0024 | chờ L5 |
+| L8 | Reel video MP4, `/reel`, Khoảnh khắc của tôi | 0025 | chờ L7 |
+
+**Hai điều cần bạn (Codex) biết, đo ngày 2026-09-06:**
+
+- Cây làm việc `/home/lakiet/mobile` trên nhánh `codex/ui-chuyen-minh-20260906` có
+  49 file chưa commit về ảnh địa điểm (`place_photos`), **trùng đúng tính năng đã
+  merge ở #567–#572** trên `origin/main`; và API trên cây đó không import được
+  (`app/db/place_photos.py:51`: method tên `list` che builtin nên `list[str]` nổ).
+  Claude không đụng cây này.
+- Hai id migration trên cây đó (`c9d0e1f2a3b4`, `d0e1f2a3b4c5`) đã được `origin/main`
+  dùng cho migration khác; head hiện tại là `e1f2a3b4c5d6`. Các migration của social
+  v1.1 dùng id không nối tiếp (`5c1a7e3d9b42`…) để không đụng.
+
 ## A. REVIEW — 5 PR đang chờ bạn
 
 ### A1. PR #11 — hai luồng phản đối của khách *(mới, quan trọng)*

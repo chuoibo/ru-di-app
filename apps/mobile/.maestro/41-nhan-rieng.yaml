@@ -1,0 +1,83 @@
+# Nhắn riêng 1:1 (L2, ADR-0021 §2.5) trên API prod.
+#
+# Chạy SAU flow 39 trong cùng lượt. Ai đang đăng nhập (C sau 37/39, hoặc D nếu
+# app đang ở màn chào) cũng là bạn của người kia từ flow 25. Cá nhân → «Bạn bè,
+# lời mời đã nhận và đã gửi» → nút «Nhắn tin cho <tên>» trên hàng bạn → màn chat
+# mang TÊN NGƯỜI KIA, không có pill «n thành viên · xem và mời» (không mời ai vào
+# một cuộc trò chuyện riêng được) mà có pill «Xem hồ sơ» → gõ «Chao rieng» → gửi.
+# Về tab Tin nhắn: hàng «Nhắn riêng» đọc «Bạn: Chao rieng» → mở lại → vẫn là
+# cuộc trò chuyện ấy (không có cặp thứ hai). Từ hồ sơ người kia bấm «Nhắn tin» →
+# vẫn thấy «Chao rieng».
+#
+# Harness kiểm máy chủ sau flow (kiem_may_chu_sau_41): NGƯỜI KIA thấy đúng một
+# context kind=pair với counterpart là người lái; «Chao rieng» nằm trong cặp;
+# canary curl: mở DM với B (chưa là bạn) → 404 một câu; đổi tên cặp → 409.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Cá nhân"
+- extendedWaitUntil:
+    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+    timeout: 30000
+- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- extendedWaitUntil:
+    visible: "Nhắn tin cho .*"
+    timeout: 30000
+- tapOn: "Nhắn tin cho .*"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+# Một cuộc trò chuyện riêng không có danh sách thành viên để mời.
+- assertVisible: "Xem hồ sơ"
+- assertNotVisible: ".*thành viên · xem và mời"
+- tapOn: "Ô soạn tin"
+- inputText: "Chao rieng"
+- hideKeyboard
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: "Chao rieng"
+    timeout: 30000
+- takeScreenshot: 41-nhan-rieng
+# Về danh sách: hàng cặp đọc bằng tên người kia và «Nhắn riêng».
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Đã là bạn"
+    timeout: 30000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+    timeout: 30000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Bạn: Chao rieng"
+    timeout: 60000
+- assertVisible: "Nhắn riêng"
+- takeScreenshot: 41-danh-sach
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Chao rieng"
+    timeout: 60000
+- assertVisible: "Ô soạn tin"
+# Cửa thứ hai vào cùng một cặp: từ hồ sơ người kia.
+- tapOn: "Xem hồ sơ"
+- extendedWaitUntil:
+    visible: "Tường cá nhân"
+    timeout: 30000
+- tapOn: "Nhắn tin"
+- extendedWaitUntil:
+    visible: "Chao rieng"
+    timeout: 60000
+- assertVisible: "Ô soạn tin"
+- takeScreenshot: 41-tu-ho-so

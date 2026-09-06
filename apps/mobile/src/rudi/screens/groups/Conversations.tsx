@@ -24,11 +24,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
+import { xemTruocTinCuoi } from "../../chat/tin-song";
+import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
+import { Avatar } from "../../ui/Avatar";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 type Trang =
@@ -78,8 +81,12 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const moNhom = async (nhom: NhomTomTat) => {
     setDangBam(nhom.id);
     try {
-      const moi = await chonNhom({ ...phien, contexts: trang.pha === "xong" ? trang.nhom : phien.contexts }, nhom.id);
-      datPhien(moi);
+      // A pair is never the current group (ADR-0021 §2.5): the money screens
+      // keep the group they had, and only the chat opens.
+      if (!laPair(nhom)) {
+        const moi = await chonNhom({ ...phien, contexts: trang.pha === "xong" ? trang.nhom : phien.contexts }, nhom.id);
+        datPhien(moi);
+      }
       router.push(`/groups/${nhom.id}/chat` as never);
     } catch (error) {
       setTrang({ pha: "hong", loi: loiRaChu(error) });
@@ -142,25 +149,31 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
                 <Pressable
-                  accessibilityLabel={`Mở nhóm ${nhom.display_name}`}
+                  accessibilityLabel={`Mở nhóm ${tenCuocTroChuyen(nhom)}`}
                   accessibilityRole="button"
                   disabled={nhom.my_state !== "active" || dangBam !== null}
                   onPress={() => void moNhom(nhom)}
                   style={({ pressed }) => [styles.hangChinh, pressed && styles.bam]}
                 >
-                  <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
-                    <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />
-                  </View>
+                  {/* A pair (ADR-0021 §2.5) is the other person, so their initial
+                      stands where a group shows the roster glyph. */}
+                  {laPair(nhom) ? (
+                    <Avatar name={tenCuocTroChuyen(nhom)} size={44} />
+                  ) : (
+                    <View style={[styles.hinh, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
+                      <Ionicons color={colors.accent} name={duocMoi ? "mail-open-outline" : "people-outline"} size={22} />
+                    </View>
+                  )}
                   <View style={styles.hangChu}>
-                    <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{nhom.display_name}</Text>
+                    <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-                      {nhom.member_count} thành viên
-                      {nhom.my_role === "admin" ? " · bạn quản trị" : ""}
+                      {laPair(nhom) ? "Nhắn riêng" : `${nhom.member_count} thành viên`}
+                      {!laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
                       {duocMoi ? " · bạn được mời" : ""}
                     </Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: nhom.unread_count > 0 ? colors.ink : colors.inkSoft, fontWeight: nhom.unread_count > 0 ? "700" : "600" }]}>
                       {nhom.last_message
-                        ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${nhom.last_message.preview}`
+                        ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
                         : "Chưa có tin nhắn nào."}
                     </Text>
                   </View>
