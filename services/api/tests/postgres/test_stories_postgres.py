@@ -22,13 +22,13 @@ from sqlalchemy.orm import Session
 
 from app.api.repository import SqlAlchemyApiRepository
 from app.db.models import Story, StoryView, UploadedImage
-from app.db.story_purge import purge_expired_stories
+from app.db.story_purge import purge_expired_stories, remove_purged_files
 from app.domain import story_visibility
 from app.media.storage import PhotoStorage
 
 from .test_group_recap_postgres import _call
 from .test_person_photo_gate_postgres import _app_with_storage, _png, _upload
-from .test_posts_postgres import _befriend, _headers, _person
+from .test_posts_postgres import _befriend, _context, _headers, _join, _person
 from .test_repository_postgres import NOW
 
 pytestmark = pytest.mark.postgres
@@ -258,6 +258,12 @@ def test_the_checks_refuse_what_the_domain_refuses(
 def test_the_sweep_removes_only_what_nothing_points_at(
     postgres_session: Session, monkeypatch: pytest.MonkeyPatch, tmp_path
 ):
+    """Rows the sweep may take: stories expired past the grace period, and
+    personal photographs past the grace period that no post or story names.
+    Rows it must leave (review #577 S1/S2): a photo a post still shows, a
+    story inside the grace period, a photo uploaded just now with no story
+    yet, an avatar, and a group photograph. Files go only through
+    `remove_purged_files`, after the rows (S3)."""
     author = _person(postgres_session, "Chủ story")
     app = _app_with_storage(postgres_session, monkeypatch, tmp_path)
     storage = PhotoStorage(tmp_path)
@@ -267,6 +273,19 @@ def test_the_sweep_removes_only_what_nothing_points_at(
     shared_url = _own_photo(app, author)
     orphan_url = _own_photo(app, author)
     fresh_url = _own_photo(app, author)
+    just_uploaded_url = _own_photo(app, author)
+    avatar = _upload(app, f"/people/{author.id}/avatar", _headers(author.id), _png())
+    assert avatar.status_code == 201, avatar.text
+    group = _context(postgres_session, author, "Nhóm")
+    _join(postgres_session, group, author)
+    group_photo = _upload(
+        app,
+        f"/contexts/{group.id}/photos",
+        _headers(author.id, contexts=str(group.id)),
+        _png(),
+    )
+    assert group_photo.status_code == 201, group_photo.text
+
     stale = uuid.UUID(_story(app, author, stale_url).json()["id"])
     shared = uuid.UUID(_story(app, author, shared_url).json()["id"])
     fresh = uuid.UUID(_story(app, author, fresh_url).json()["id"])
@@ -279,7 +298,7 @@ def test_the_sweep_removes_only_what_nothing_points_at(
     )
     assert posted.status_code == 201, posted.text
 
-    # Two expired eight days ago; one expired a minute ago (still in grace).
+    # Two stories expired eight days ago; one expired a minute ago (in grace).
     for story_id in (stale, shared):
         row = postgres_session.get(Story, story_id)
         row.created_at = NOW - timedelta(days=9)
@@ -287,6 +306,16 @@ def test_the_sweep_removes_only_what_nothing_points_at(
     fresh_row = postgres_session.get(Story, fresh)
     fresh_row.created_at = NOW - DAY - timedelta(minutes=1)
     fresh_row.expires_at = NOW - timedelta(minutes=1)
+    # Every photograph but the one «just uploaded» is old enough to sweep.
+    old_ids = [
+        uuid.UUID(url.rsplit("/", 1)[1])
+        for url in (stale_url, shared_url, orphan_url, fresh_url)
+    ]
+    old_ids += [uuid.UUID(avatar.json()["id"]), uuid.UUID(group_photo.json()["id"])]
+    for image_id in old_ids:
+        postgres_session.get(UploadedImage, image_id).created_at = NOW - timedelta(
+            days=9
+        )
     postgres_session.flush()
 
     def key_of(url: str) -> str:
@@ -300,15 +329,18 @@ def test_the_sweep_removes_only_what_nothing_points_at(
             ("shared", shared_url),
             ("orphan", orphan_url),
             ("fresh", fresh_url),
+            ("just_uploaded", just_uploaded_url),
         )
     }
+    keys["avatar"] = postgres_session.get(
+        UploadedImage, uuid.UUID(avatar.json()["id"])
+    ).storage_key
+    keys["group"] = postgres_session.get(
+        UploadedImage, uuid.UUID(group_photo.json()["id"])
+    ).storage_key
 
     rehearsal = purge_expired_stories(
-        postgres_session,
-        now=NOW,
-        older_than=timedelta(days=7),
-        storage=storage,
-        dry_run=True,
+        postgres_session, now=NOW, older_than=timedelta(days=7), dry_run=True
     )
     assert (rehearsal.stories, rehearsal.images, rehearsal.dry_run) == (2, 2, True)
     assert set(rehearsal.storage_keys) == {keys["stale"], keys["orphan"]}
@@ -316,7 +348,7 @@ def test_the_sweep_removes_only_what_nothing_points_at(
     assert all(storage.read(k) for k in keys.values())
 
     report = purge_expired_stories(
-        postgres_session, now=NOW, older_than=timedelta(days=7), storage=storage
+        postgres_session, now=NOW, older_than=timedelta(days=7)
     )
     assert (report.stories, report.images) == (2, 2)
     assert postgres_session.get(Story, stale) is None
@@ -325,16 +357,29 @@ def test_the_sweep_removes_only_what_nothing_points_at(
     remaining = {
         row.storage_key
         for row in postgres_session.scalars(
-            select(UploadedImage).where(UploadedImage.owner_person_id == author.id)
+            select(UploadedImage).where(UploadedImage.uploaded_by_id == author.id)
         )
     }
-    assert remaining == {keys["shared"], keys["fresh"]}, (
-        "ảnh chung với bài và ảnh của story còn hạn ở lại; ảnh mồ côi và ảnh của story cũ đi"
+    assert remaining == {
+        keys["shared"],
+        keys["fresh"],
+        keys["just_uploaded"],
+        keys["avatar"],
+        keys["group"],
+    }, (
+        "ở lại: ảnh chung với bài, ảnh của story còn hạn, ảnh vừa tải chưa có story, "
+        "ảnh đại diện, ảnh nhóm; đi: ảnh mồ côi cũ và ảnh của story cũ"
     )
+    # Rows are gone, files are still there: the caller commits first.
+    assert all(storage.read(k) for k in keys.values())
+    assert remove_purged_files(storage, report.storage_keys) == 2
     assert storage.read(keys["shared"]) and storage.read(keys["fresh"])
     for gone in ("stale", "orphan"):
         with pytest.raises(FileNotFoundError):
             storage.read(keys[gone])
+    assert remove_purged_files(storage, report.storage_keys) == 0, (
+        "gỡ lần hai là không có gì"
+    )
     assert repo.get_story(fresh) is not None
 
     with pytest.raises(ValueError):

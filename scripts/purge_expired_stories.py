@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
 
 from app.db.session import get_session_factory  # noqa: E402
-from app.db.story_purge import purge_expired_stories  # noqa: E402
+from app.db.story_purge import purge_expired_stories, remove_purged_files  # noqa: E402
 from app.media.storage import PhotoStorage  # noqa: E402
 
 
@@ -45,15 +45,22 @@ def main(argv: list[str] | None = None) -> int:
             session,
             now=datetime.now(UTC),
             older_than=timedelta(days=args.older_than_days),
-            storage=None if args.keep_files else PhotoStorage(),
             dry_run=args.dry_run,
         )
         if args.dry_run:
             session.rollback()
         else:
             session.commit()
+    # Files only after the rows are committed: a failed commit must not leave
+    # a photograph missing while its row still promises it.
+    removed = 0
+    if not args.dry_run and not args.keep_files:
+        removed = remove_purged_files(PhotoStorage(), report.storage_keys)
     verb = "sẽ xoá" if report.dry_run else "đã xoá"
-    print(f"{verb} {report.stories} story hết hạn và {report.images} ảnh mồ côi")
+    print(
+        f"{verb} {report.stories} story hết hạn và {report.images} ảnh mồ côi"
+        + ("" if report.dry_run else f" ({removed} file gỡ khỏi đĩa)")
+    )
     return 0
 
 

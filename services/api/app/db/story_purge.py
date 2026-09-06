@@ -10,11 +10,19 @@ Two rules keep it from removing something still in use:
 - Only stories whose deadline is more than `older_than` in the past are
   candidates. A story that expired a minute ago is not.
 - A personal photograph is deleted only when nothing points at it any more --
-  no post and no story, live or not. A photo shared between a post and an
-  expired story stays, because the post still shows it.
+  no post and no story, live or not -- AND it is itself older than the grace
+  period. A photo shared between a post and an expired story stays, because
+  the post still shows it; a photo uploaded a minute ago stays too, because
+  the story that will show it is still being written (review #577 S2).
+
+Rows first, files second, and only after the caller has committed: the
+function deletes rows and names the files, `remove_purged_files` unlinks them.
+A file that is gone while its row survived a failed commit is a photograph
+lost; a row that is gone while its file lingers is a few kilobytes on a disk
+(review #577 S3).
 
 Run from `scripts/purge_expired_stories.py`; the ORM work is here so the
-Postgres tier can prove the two rules without a subprocess. `dry_run` reports
+Postgres tier can prove the rules without a subprocess. `dry_run` reports
 what would go and touches nothing.
 """
 
@@ -49,13 +57,12 @@ def purge_expired_stories(
     *,
     now: datetime,
     older_than: timedelta = DEFAULT_GRACE,
-    storage: PhotoStorage | None = None,
     dry_run: bool = False,
 ) -> PurgeReport:
     """Delete stories expired for longer than `older_than`, then the personal
-    photographs nothing references. Files go after rows, best effort: a file
-    that will not unlink is logged by the caller, never a reason to keep the
-    row that pointed at it."""
+    photographs older than that which nothing references. Rows only: the
+    storage keys of the deleted photographs come back in the report for
+    `remove_purged_files`, to be called after the caller's commit."""
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("purge needs an aware `now`")
     cutoff = now - older_than
@@ -77,7 +84,10 @@ def purge_expired_stories(
     orphans = [
         image
         for image in session.scalars(
-            select(UploadedImage).where(UploadedImage.purpose == "personal")
+            select(UploadedImage).where(
+                UploadedImage.purpose == "personal",
+                UploadedImage.created_at <= cutoff,
+            )
         )
         if _personal_url(image) not in referenced
     ]
@@ -89,9 +99,12 @@ def purge_expired_stories(
             )
         )
         session.flush()
-        if storage is not None:
-            for key in keys:
-                storage.delete(key)
     return PurgeReport(
         stories=len(stale_ids), images=len(orphans), storage_keys=keys, dry_run=dry_run
     )
+
+
+def remove_purged_files(storage: PhotoStorage, keys: tuple[str, ...]) -> int:
+    """Unlink the files a committed purge named. Answers how many were there;
+    a file already gone is housekeeping already done, not an error."""
+    return sum(1 for key in keys if storage.delete(key))
