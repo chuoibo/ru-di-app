@@ -32,24 +32,29 @@ import { ApiError, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
 import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
-  PHAN_UNG,
   cauYDinh,
   docTheAi,
   gioPhut,
   glyphPhanUng,
   khoaHang,
   nhomTheoNgay,
+  trichTu,
   type HangHienThi,
   type LoaiPhanUng,
   type Tin,
+  type TrichDan,
 } from "../../chat/tin-song";
 import { TAT_KAV_QA } from "../../chat/qa-ban-phim";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { Card, IconButton, TopBar } from "../../ui";
+import { Sticker } from "../../ui/stickers/Sticker";
+import { CaiDatNhomSheet } from "./CaiDatNhom";
+import { KhaySticker } from "./KhaySticker";
+import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 
 const LENH = [
@@ -66,9 +71,9 @@ function goiMoHinh(body: string): boolean {
 
 export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const router = useRouter();
-  const { colors, radius, space } = useRudiTheme();
+  const { colors, dark, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
-  const { phien } = useRudiSession();
+  const { phien, datPhien } = useRudiSession();
   const personId = phien?.person_id ?? "";
   const chat = useTinNhan(contextId, personId);
   const [nhap, setNhap] = useState("");
@@ -80,11 +85,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // What the server said about the last command, drawn as a row in the thread
   // (where the pending card promised it), signed by who is speaking.
   const [thongBao, setThongBao] = useState<{ tu: string; cau: string; luc: string } | null>(null);
-  const [dangChonPhanUng, setDangChonPhanUng] = useState<string | null>(null);
   const [dangGuiAnh, setDangGuiAnh] = useState(false);
   const [tenTheoId, setTenTheoId] = useState<Record<string, string>>({});
+  // L1 (ADR-0021): the sticker tray, the long-press menu of one message, the
+  // message being replied to, and the group settings sheet.
+  const [khaySticker, setKhaySticker] = useState(false);
+  const [menuTin, setMenuTin] = useState<Tin | null>(null);
+  const [traLoi, setTraLoi] = useState<TrichDan | null>(null);
+  const [caiDatMo, setCaiDatMo] = useState(false);
 
-  const tenNhom = phien?.contexts?.find((n) => n.id === contextId)?.display_name ?? "Nhóm";
+  const nhom = phien?.contexts?.find((n) => n.id === contextId);
+  const tenNhom = nhom?.display_name ?? "Nhóm";
+  // The group's theme colours only the sender's bubble and the reader's own
+  // reaction chip; the screen's leading tone stays the brand accent.
+  const mauChat = bangMauChat(nhom?.theme, dark);
 
   useEffect(() => {
     const hien = Keyboard.addListener("keyboardDidShow", () => setBanPhimMo(true));
@@ -133,6 +147,23 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // always come into view, so the send jumps there explicitly.
   const danhSachRef = useRef<FlatList<HangHienThi>>(null);
 
+  /**
+   * Bring the newest end into view after something of ours landed there.
+   *
+   * Once is not enough: `maintainVisibleContentPosition` re-anchors the list
+   * on the row that was visible when a new row (or the AI note in the list
+   * header) is inserted, and that native adjustment runs AFTER a scroll issued
+   * in the same tick -- the new row then sits under the composer, present in
+   * the hierarchy and invisible on the screen (board 2026-09-06, flows 30/37).
+   * So scroll now, and again after layout has settled.
+   */
+  const cuonVeMoiNhat = useCallback(() => {
+    const cuon = () => danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+    cuon();
+    setTimeout(cuon, 160);
+    setTimeout(cuon, 420);
+  }, []);
+
   const gui = async () => {
     const body = nhap.trim();
     if (!body || dangGui) return;
@@ -140,12 +171,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     setDangGuiThan(body);
     setNhap("");
     setThongBao(null);
+    const traLoiId = traLoi?.id ?? null;
     try {
-      const daGui = await chat.gui(body);
-      danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+      const daGui = await chat.gui(body, traLoiId);
+      setTraLoi(null);
       const cau = cauYDinh(daGui);
       const tuAi = daGui.companion !== null && daGui.companion !== undefined && !daGui.companion.spoke;
       setThongBao(cau === null ? null : { tu: tuAi ? "Rủ Đi AI" : "Rủ Đi", cau, luc: new Date().toISOString() });
+      cuonVeMoiNhat();
     } catch (error) {
       // Give the words back: a failed send must not eat what was typed.
       setNhap(body);
@@ -191,7 +224,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
       });
       setNhap("");
-      danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+      cuonVeMoiNhat();
     } catch (error) {
       await boAnh(daChon);
       setThongBao({
@@ -204,8 +237,46 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
   };
 
+  /** One sticker from the tray, optionally as a reply to the quoted message. */
+  const guiStickerChon = async (id: string) => {
+    setKhaySticker(false);
+    if (dangGui) return;
+    setThongBao(null);
+    try {
+      await chat.guiSticker(id, traLoi?.id ?? null);
+      setTraLoi(null);
+      cuonVeMoiNhat();
+    } catch (error) {
+      setThongBao({
+        tu: "Rủ Đi",
+        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
+        luc: new Date().toISOString(),
+      });
+    }
+  };
+
+  /** Take back one's own message; the server's refusal is shown as its sentence. */
+  const xoaTinChon = async (tin: Tin) => {
+    setMenuTin(null);
+    try {
+      await chat.xoaTin(tin.id);
+    } catch (error) {
+      setThongBao({
+        tu: "Rủ Đi",
+        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
+        luc: new Date().toISOString(),
+      });
+    }
+  };
+
+  /** Keep the session's copy of the group current so the header and theme follow at once. */
+  const nhomDaDoi = (thay: { display_name?: string; theme?: string }) => {
+    if (phien === null || !phien.contexts) return;
+    datPhien({ ...phien, contexts: phien.contexts.map((n) => (n.id === contextId ? { ...n, ...thay } : n)) });
+  };
+
   const phanUng = async (tin: Tin, kind: LoaiPhanUng) => {
-    setDangChonPhanUng(null);
+    setMenuTin(null);
     const cuaToi = tin.reactions?.some((r) => r.kind === kind && r.mine) ?? false;
     try {
       await chat.doiPhanUng(tin.id, kind, cuaToi);
@@ -231,7 +302,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const tin = item.tin;
     const cuaToi = tin.author_id === personId;
     const laAi = tin.kind === "ai_card";
+    const laSticker = tin.kind === "sticker";
+    const daXoa = tin.kind === "deleted";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
+    const nenBong = daXoa ? colors.card : cuaToi ? mauChat.bubble : colors.card;
+    const vienBong = daXoa ? colors.line : cuaToi ? mauChat.bubble : colors.line;
+    const mucBong = cuaToi && !daXoa ? mauChat.bubbleInk : colors.ink;
     return (
       <View
         style={[
@@ -251,6 +327,21 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           {!cuaToi && !laAi ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
           ) : null}
+          {/* The quote sits ABOVE the bubble, in the block, never in the
+              flex-wrapped row under it: a lone Text at the end of a wrapping
+              row keeps one word's width (bài học RN 2026-09-04). A deleted
+              row keeps no quote either: what it answered went with it. */}
+          {tin.reply_to && !laAi && tin.kind !== "deleted" ? (
+            <View
+              accessibilityLabel={`Trích: ${tin.reply_to.preview}`}
+              style={[styles.trich, { borderLeftColor: mauChat.accent, backgroundColor: colors.card, borderColor: colors.line }]}
+            >
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.reply_to.author_id)}</Text>
+              <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>
+                {tin.reply_to.preview}
+              </Text>
+            </View>
+          ) : null}
           {laAi ? (
             <TheAiView
               the={docTheAi(tin.card)}
@@ -259,22 +350,27 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               tenNguoi={tenNguoi}
               tacGia={tenNguoi(tin.author_id)}
             />
+          ) : laSticker ? (
+            <Pressable
+              accessibilityLabel={`Tin nhắn: sticker`}
+              onLongPress={() => setMenuTin(tin)}
+              style={styles.stickerHang}
+            >
+              <Sticker id={tin.body ?? ""} size={120} />
+            </Pressable>
           ) : (
             <Pressable
-              accessibilityLabel={`Tin nhắn: ${tin.body ?? ""}`}
-              onLongPress={() => setDangChonPhanUng(tin.id)}
-              style={[
-                styles.bong,
-                {
-                  backgroundColor: cuaToi ? colors.accent : colors.card,
-                  borderColor: cuaToi ? colors.accent : colors.line,
-                },
-              ]}
+              accessibilityLabel={daXoa ? "Tin nhắn đã bị xoá" : `Tin nhắn: ${tin.body ?? ""}`}
+              disabled={daXoa}
+              onLongPress={() => setMenuTin(tin)}
+              style={[styles.bong, { backgroundColor: nenBong, borderColor: vienBong }]}
             >
-              {tin.kind === "image" ? (
+              {daXoa ? (
+                <Text style={[typography.caption, styles.nghieng, { color: colors.inkFaint }]}>Tin nhắn đã bị xoá</Text>
+              ) : tin.kind === "image" ? (
                 <View style={styles.anhKhoi}>
                   {anhTin(tin) === null ? (
-                    <Text style={[typography.caption, { color: cuaToi ? colors.accentInk : colors.inkFaint }]}>
+                    <Text style={[typography.caption, { color: cuaToi ? mauChat.bubbleInk : colors.inkFaint }]}>
                       Ảnh này máy không mở được.
                     </Text>
                   ) : (
@@ -285,14 +381,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                       style={[styles.anh, { borderRadius: radius.small }]}
                     />
                   )}
-                  {tin.body ? (
-                    <Text style={[typography.body, { color: cuaToi ? colors.accentInk : colors.ink }]}>
-                      {tin.body}
-                    </Text>
-                  ) : null}
+                  {tin.body ? <Text style={[typography.body, { color: mucBong }]}>{tin.body}</Text> : null}
                 </View>
               ) : (
-                <Text style={[typography.body, { color: cuaToi ? colors.accentInk : colors.ink }]}>{tin.body}</Text>
+                <Text style={[typography.body, { color: mucBong }]}>{tin.body}</Text>
               )}
             </Pressable>
           )}
@@ -306,7 +398,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 onPress={() => void phanUng(tin, r.kind)}
                 style={[
                   styles.chip,
-                  { borderColor: r.mine ? colors.accent : colors.line, backgroundColor: colors.card },
+                  { borderColor: r.mine ? mauChat.accent : colors.line, backgroundColor: colors.card },
                 ]}
               >
                 <Text style={typography.caption}>
@@ -315,20 +407,6 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               </Pressable>
             ))}
           </View>
-          {dangChonPhanUng === tin.id ? (
-            <View style={[styles.thanhPhanUng, { backgroundColor: colors.card, borderColor: colors.line }]}>
-              {PHAN_UNG.map((p) => (
-                <Pressable
-                  accessibilityLabel={p.nhan}
-                  key={p.kind}
-                  onPress={() => void phanUng(tin, p.kind)}
-                  style={styles.nutPhanUng}
-                >
-                  <Text style={styles.glyph}>{p.glyph}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
         </View>
       </View>
     );
@@ -351,16 +429,26 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             development build the dev-launcher's floating gear covers that
             corner, and a target nobody can reach on the build we test on is a
             target nobody has tested. Messenger puts group info here too. */}
-        <Pressable
-          accessibilityLabel="Thành viên nhóm"
-          accessibilityRole="button"
-          onPress={() => router.push(`/groups/${contextId}/members` as never)}
-          style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
-        >
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
-          </Text>
-        </Pressable>
+        <View style={styles.pills}>
+          <Pressable
+            accessibilityLabel="Thành viên nhóm"
+            accessibilityRole="button"
+            onPress={() => router.push(`/groups/${contextId}/members` as never)}
+            style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+          >
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>
+              {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Cài đặt nhóm"
+            accessibilityRole="button"
+            onPress={() => setCaiDatMo(true)}
+            style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+          >
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Cài đặt</Text>
+          </Pressable>
+        </View>
       </View>
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. */}
@@ -395,8 +483,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <View style={styles.choGui}>
               <View style={[styles.hang, styles.hangToi]}>
                 <View style={[styles.khoi, styles.khoiToi, styles.mo]}>
-                  <View style={[styles.bong, { backgroundColor: colors.accent, borderColor: colors.accent }]}>
-                    <Text style={[typography.body, { color: colors.accentInk }]}>{dangGuiThan}</Text>
+                  <View style={[styles.bong, { backgroundColor: mauChat.bubble, borderColor: mauChat.bubble }]}>
+                    <Text style={[typography.body, { color: mauChat.bubbleInk }]}>{dangGuiThan}</Text>
                   </View>
                   <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi...</Text>
                 </View>
@@ -444,6 +532,20 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           ))}
         </View>
       ) : null}
+      {traLoi ? (
+        <View
+          accessibilityLabel={`Đang trả lời ${tenNguoi(traLoi.author_id)}`}
+          style={[styles.dangTraLoi, { backgroundColor: colors.card, borderColor: colors.line, borderLeftColor: mauChat.accent, marginHorizontal: space.md }]}
+        >
+          <View style={styles.dangTraLoiChu}>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang trả lời {tenNguoi(traLoi.author_id)}</Text>
+            <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>
+              {traLoi.preview}
+            </Text>
+          </View>
+          <IconButton accessibilityLabel="Bỏ trả lời" icon="close" onPress={() => setTraLoi(null)} quiet />
+        </View>
+      ) : null}
       <View
         style={[
           styles.soan,
@@ -457,6 +559,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           },
         ]}
       >
+        <IconButton
+          accessibilityLabel="Gửi sticker"
+          disabled={dangGuiAnh || dangGui}
+          icon="happy-outline"
+          onPress={() => setKhaySticker(true)}
+          quiet
+        />
         <IconButton
           accessibilityLabel="Gửi ảnh"
           disabled={dangGuiAnh || dangGui}
@@ -486,6 +595,25 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           solid={coChu || dangGui}
         />
       </View>
+      <KhaySticker onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
+      <MenuTin
+        cuaToi={menuTin !== null && menuTin.author_id === personId}
+        onClose={() => setMenuTin(null)}
+        onPhanUng={(tin, kind) => void phanUng(tin, kind)}
+        onTraLoi={(tin) => {
+          setTraLoi(trichTu(tin, tenNguoi));
+          setMenuTin(null);
+        }}
+        onXoa={(tin) => void xoaTinChon(tin)}
+        tin={menuTin}
+      />
+      <CaiDatNhomSheet
+        nhom={{ id: contextId, display_name: tenNhom, theme: nhom?.theme }}
+        onClose={() => setCaiDatMo(false)}
+        onDaDoi={nhomDaDoi}
+        open={caiDatMo}
+        personId={personId}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -494,7 +622,13 @@ const styles = StyleSheet.create({
   man: { flex: 1 },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
-  thanhVien: { alignSelf: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginTop: -6 },
+  pills: { flexDirection: "row", justifyContent: "center", gap: 8, marginTop: -6 },
+  thanhVien: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  trich: { borderWidth: 1, borderLeftWidth: 3, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, gap: 1, maxWidth: "100%" },
+  stickerHang: { paddingVertical: 2 },
+  nghieng: { fontStyle: "italic" },
+  dangTraLoi: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderLeftWidth: 3, borderRadius: 14, paddingLeft: 12, paddingRight: 2, paddingVertical: 4, marginBottom: 6 },
+  dangTraLoiChu: { flex: 1, gap: 1 },
   danhSach: { paddingVertical: 12, gap: 12 },
   ngay: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 },
   duong: { flex: 1, height: StyleSheet.hairlineWidth },
@@ -508,9 +642,6 @@ const styles = StyleSheet.create({
   bong: { borderWidth: 1, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   chip: { minHeight: 32, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  thanhPhanUng: { flexDirection: "row", gap: 4, borderWidth: 1, borderRadius: 999, padding: 4, alignSelf: "flex-start" },
-  nutPhanUng: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  glyph: { fontSize: 20 },
   dau: { paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   rong: { alignItems: "center", gap: 6, paddingVertical: 40 },
   choGui: { gap: 12 },

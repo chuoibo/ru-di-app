@@ -39,7 +39,7 @@ import {
 /** What the server hands back once, and what we keep. */
 export type TinCuoiTomTat = {
   id: string;
-  kind: "text" | "image" | "ai_card";
+  kind: "text" | "image" | "ai_card" | "sticker" | "deleted";
   preview: string;
   author_id: string | null;
   author_display_name: string | null;
@@ -55,6 +55,8 @@ export type NhomTomTat = {
   member_count: number;
   unread_count: number;
   last_message?: TinCuoiTomTat | null;
+  /** ADR-0021 §2.4: one of five slugs; absent on a server older than L1. */
+  theme?: string;
 };
 
 export type Phien = {

@@ -20,6 +20,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
+import { xemTruocTinCuoi } from "../../chat/tin-song";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Card, Heading, RudiButton, RudiScreen } from "../../ui";
@@ -145,7 +146,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   </Text>
                   <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
                     {nhom.last_message
-                      ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${nhom.last_message.preview}`
+                      ? `${tenTacGia(nhom.last_message, phien.person_id)}: ${xemTruocTinCuoi(nhom.last_message)}`
                       : "Chưa có tin nhắn nào."}
                   </Text>
                 </View>

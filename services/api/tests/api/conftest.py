@@ -614,8 +614,34 @@ class FakeRepository(SeedCatalogueReads):
     def get_context(self, context_id):
         return self.contexts.get(context_id)
 
+    def update_context(self, context_id, *, changes):
+        current = self.contexts.get(context_id)
+        if current is None:
+            return None
+        updated = replace(current, **{k: v for k, v in changes.items()})
+        self.contexts[context_id] = updated
+        return updated
+
     def get_message(self, message_id):
         return self.messages.get(message_id)
+
+    def get_messages_by_ids(self, message_ids):
+        return {m: self.messages[m] for m in message_ids if m in self.messages}
+
+    def soft_delete_message(self, message_id, *, now):
+        current = self.messages.get(message_id)
+        if current is None:
+            return None
+        updated = replace(
+            current,
+            kind="deleted",
+            body=None,
+            image_url=None,
+            card=None,
+            deleted_at=now,
+        )
+        self.messages[message_id] = updated
+        return updated
 
     def create_outing_invite(
         self,
@@ -849,9 +875,12 @@ class FakeRepository(SeedCatalogueReads):
                 last = LastMessageRecord(
                     id=m.id,
                     kind=m.kind,
-                    preview=(m.body or "")[:80]
-                    if m.kind == "text"
-                    else ("[Ảnh]" if m.kind == "image" else "[Rủ Đi AI]"),
+                    preview={
+                        "text": (m.body or "")[:80],
+                        "image": "[Ảnh]",
+                        "sticker": "[Sticker]",
+                        "deleted": "Tin nhắn đã bị xoá",
+                    }.get(m.kind, "[Rủ Đi AI]"),
                     author_id=m.author_id,
                     author_display_name=author.display_name if author else None,
                     created_at=m.created_at,
@@ -871,6 +900,7 @@ class FakeRepository(SeedCatalogueReads):
                     else None,
                     last_message=last,
                     unread_count=self.count_unread_messages(context_id, person_id),
+                    theme=context.theme,
                 )
             )
         out.sort(
