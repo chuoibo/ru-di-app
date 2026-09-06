@@ -73,6 +73,7 @@ from app.api.repository import (
     StoredGuestLink,
 )
 from app.domain.capability import capability_scope
+from app.domain.direct import display_name_for
 from app.domain.ledger import obligation_status
 
 from .helpers import ADVANCER_ID, CONTEXT_ID, SENDER_ID
@@ -256,6 +257,9 @@ class FakeRepository(SeedCatalogueReads):
         self.receipts: dict[uuid.UUID, FakeReceipt] = {}
         self.people: dict[uuid.UUID, PersonRecord] = {}
         self.contexts: dict[uuid.UUID, ContextRecord] = {}
+        #: ADR-0021 §2.5: pair_key -> context id. A dict cannot race; the
+        #: unique key is proved in tests/postgres/test_direct_message_postgres.py.
+        self.pair_contexts: dict[str, uuid.UUID] = {}
         self.messages: dict[uuid.UUID, MessageRecord] = {}
         self.bills: dict[uuid.UUID, BillRecord] = {}
         self.finances: dict[uuid.UUID, PersonFinanceSummary] = {}
@@ -622,6 +626,27 @@ class FakeRepository(SeedCatalogueReads):
         self.contexts[context_id] = updated
         return updated
 
+    def get_pair_context(self, pair_key):
+        context_id = self.pair_contexts.get(pair_key)
+        return None if context_id is None else self.contexts.get(context_id)
+
+    def create_pair_context(self, *, pair_key, member_ids, created_by_id, now):
+        if pair_key in self.pair_contexts:
+            raise RepositoryConflict("PAIR_EXISTS")
+        record = ContextRecord(
+            id=uuid.uuid4(),
+            display_name="",
+            created_by_id=created_by_id,
+            created_at=now,
+            kind="pair",
+            pair_key=pair_key,
+        )
+        self.contexts[record.id] = record
+        self.pair_contexts[pair_key] = record.id
+        for person_id in member_ids:
+            self.active_memberships.add((record.id, person_id))
+        return record
+
     def get_message(self, message_id):
         return self.messages.get(message_id)
 
@@ -867,6 +892,17 @@ class FakeRepository(SeedCatalogueReads):
                 else "invited"
             )
             role = self.membership_role(context_id, person_id) or "member"
+            other_id = None
+            other_name = None
+            if context.kind == "pair":
+                others = [
+                    p
+                    for c, p in self.active_memberships
+                    if c == context_id and p != person_id
+                ]
+                other_id = others[0] if others else None
+                other = self.people.get(other_id) if other_id else None
+                other_name = other.display_name if other else None
             newest = self._messages_in(context_id)
             last = None
             if newest:
@@ -888,7 +924,9 @@ class FakeRepository(SeedCatalogueReads):
             out.append(
                 PersonContextSummaryRecord(
                     id=context_id,
-                    display_name=context.display_name,
+                    display_name=display_name_for(
+                        context.kind, context.display_name, other_name
+                    ),
                     member_count=sum(
                         1 for c, _ in self.active_memberships if c == context_id
                     ),
@@ -901,6 +939,9 @@ class FakeRepository(SeedCatalogueReads):
                     last_message=last,
                     unread_count=self.count_unread_messages(context_id, person_id),
                     theme=context.theme,
+                    kind=context.kind,
+                    counterpart_id=other_id,
+                    counterpart_display_name=other_name,
                 )
             )
         out.sort(
@@ -1010,9 +1051,14 @@ class FakeRepository(SeedCatalogueReads):
         )
         places = len({stop for (pid, stop) in self.stop_checkins if pid == person_id})
         memories = sum(1 for m in self.memories.values() if m.author_id == person_id)
+        groups = {
+            cid
+            for cid in my_contexts
+            if cid not in self.contexts or self.contexts[cid].kind != "pair"
+        }
         return ProfileCounts(
             friends=friends,
-            contexts=len(my_contexts),
+            contexts=len(groups),
             outings=outings,
             places_checked_in=places,
             memories=memories,

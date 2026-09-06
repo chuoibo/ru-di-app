@@ -33,6 +33,7 @@ from app.api.repository import (
     AccountSessionRecord,
     ApiRepository,
     BillRecord,
+    ContextRecord,
     FriendEdgeRecord,
     GuestLinkDraft,
     MembershipRecord,
@@ -87,6 +88,7 @@ from app.api.schemas import (
     ContextBalancesResponse,
     ContextBatchesResponse,
     ContextBatchView,
+    ContextCounterpart,
     ContextCreateRequest,
     ContextLastMessage,
     ContextResponse,
@@ -211,6 +213,8 @@ from app.domain.collection import CollectionError, transition, unmet_publish_gat
 from app.domain.companion import CompanionError, ground_card, plan_turn
 from app.domain.contract import AllocationError
 from app.domain.conversation import has_conversation, summarise_conversation
+from app.domain.direct import can_open, counterpart_of, display_name_for, is_pair
+from app.domain.direct import pair_key as direct_pair_key
 from app.domain.expense import component_rollups
 from app.domain.faces import MAX_FACES, FaceError, anonymous_boxes
 from app.domain.friendship import (
@@ -381,6 +385,13 @@ def _context_summary(record: PersonContextSummaryRecord) -> ContextSummary:
         ),
         unread_count=record.unread_count,
         theme=record.theme,
+        kind=record.kind,
+        counterpart=None
+        if record.counterpart_id is None
+        else ContextCounterpart(
+            id=record.counterpart_id,
+            display_name=display_name_for("pair", "", record.counterpart_display_name),
+        ),
     )
 
 
@@ -1209,6 +1220,118 @@ class ApiService:
                 "Register this person with PUT /people/{person_id} first",
             )
 
+    def _context_response(self, record: ContextRecord, actor: Actor) -> ContextResponse:
+        """`ContextResponse` for one context as this reader sees it.
+
+        A pair (ADR-0021 §2.5) is called by the other person's name, read
+        from the roster now and never stored; a group is called what its
+        members called it. One extra query, and only for a pair.
+        """
+        counterpart = None
+        if is_pair(record.kind):
+            members = self.repository.list_members(record.id)
+            other_id = counterpart_of(
+                [str(member.person_id) for member in members], str(actor.id)
+            )
+            if other_id is not None:
+                other = next(m for m in members if str(m.person_id) == other_id)
+                counterpart = ContextCounterpart(
+                    id=other.person_id,
+                    display_name=display_name_for("pair", "", other.display_name),
+                )
+        return ContextResponse(
+            id=record.id,
+            display_name=display_name_for(
+                record.kind,
+                record.display_name,
+                counterpart.display_name if counterpart else None,
+            ),
+            created_by_id=record.created_by_id,
+            created_at=record.created_at,
+            theme=record.theme,
+            kind=record.kind,
+            counterpart=counterpart,
+        )
+
+    def _require_group_kind(self, context_id: uuid.UUID) -> None:
+        """Refuse a roster door on a pair (ADR-0021 §2.5.5).
+
+        Called AFTER the permission check, so a stranger still gets the same
+        403 whether the id names a group, a pair or nothing. A member of the
+        pair gets a 409 with a sentence: the door exists, it is closed here.
+        Money, outings, votes and memories do not come through this method.
+        """
+        record = self.repository.get_context(context_id)
+        if record is not None and is_pair(record.kind):
+            raise ApiProblem(
+                409,
+                "not_a_group",
+                "Đây là cuộc trò chuyện riêng, không có danh sách thành viên để đổi.",
+            )
+
+    def open_direct_message(
+        self, person_id: uuid.UUID, actor: Actor
+    ) -> tuple[ContextSummary, bool]:
+        """Open, or find, the caller's private conversation with a friend.
+
+        Every refusal -- not friends, no such person, and later blocked or
+        deleted (ADR-0023) -- is ONE 404 with one sentence: this door must not
+        say which of those it was (ADR-0021 §2.5.3). Only writing to oneself
+        is different (422): that is a client bug, not a fact about somebody.
+
+        Created rows: the context and two ACTIVE memberships in one savepoint.
+        Two people pressing at the same instant race on `uq_contexts_pair_key`
+        and the loser reads the winner's row (§2.5.4).
+        """
+        if person_id == actor.id:
+            raise ApiProblem(
+                422, "self_direct_message", "Không thể nhắn riêng với chính mình."
+            )
+        unavailable = ApiProblem(
+            404, "person_not_found", "Chưa thể nhắn riêng với người này."
+        )
+        is_friend = self.repository.are_friends(actor.id, person_id)
+        try:
+            _require_permission("open_direct_message", actor, {"is_friend": is_friend})
+        except ApiProblem as denied:
+            raise unavailable from denied
+        other = self.repository.get_person(person_id)
+        if not can_open(is_friend=is_friend, other_exists=other is not None):
+            raise unavailable
+        key = direct_pair_key(str(actor.id), str(person_id))
+        existing = self.repository.get_pair_context(key)
+        created = False
+        if existing is None:
+            try:
+                existing = self.repository.create_pair_context(
+                    pair_key=key,
+                    member_ids=(actor.id, person_id),
+                    created_by_id=actor.id,
+                    now=_now(),
+                )
+                created = True
+            except RepositoryConflict as exc:
+                if exc.code != "PAIR_EXISTS":
+                    raise
+                existing = self.repository.get_pair_context(key)
+                if existing is None:
+                    raise ApiProblem(
+                        409,
+                        "pair_exists",
+                        "Cuộc trò chuyện vừa được mở ở nơi khác; thử lại.",
+                    ) from exc
+        summary = next(
+            (
+                row
+                for row in self.repository.list_person_context_summaries(actor.id)
+                if row.id == existing.id
+            ),
+            None,
+        )
+        if summary is None:
+            raise ApiProblem(404, "context_not_found", "Context does not exist")
+        return _context_summary(summary), created
+
     def create_context(
         self, request: ContextCreateRequest, actor: Actor
     ) -> ContextResponse:
@@ -1229,13 +1352,7 @@ class ApiService:
                 "creator_membership_missing",
                 "Creator membership disappeared during context creation",
             )
-        return ContextResponse(
-            id=context.id,
-            display_name=context.display_name,
-            created_by_id=context.created_by_id,
-            created_at=context.created_at,
-            theme=context.theme,
-        )
+        return self._context_response(context, actor)
 
     def update_context(
         self, context_id: uuid.UUID, request: ContextUpdateRequest, actor: Actor
@@ -1254,6 +1371,8 @@ class ApiService:
         )
         changes: dict[str, object] = {}
         if request.display_name is not None:
+            # A pair has no name of its own to rename (ADR-0021 §2.5.6).
+            self._require_group_kind(context_id)
             changes["display_name"] = request.display_name.strip()
         if request.theme is not None:
             if not is_theme(request.theme):
@@ -1264,13 +1383,7 @@ class ApiService:
         record = self.repository.update_context(context_id, changes=changes)
         if record is None:
             raise ApiProblem(404, "context_not_found", "Context does not exist")
-        return ContextResponse(
-            id=record.id,
-            display_name=record.display_name,
-            created_by_id=record.created_by_id,
-            created_at=record.created_at,
-            theme=record.theme,
-        )
+        return self._context_response(record, actor)
 
     def invite_context_member(
         self,
@@ -1291,6 +1404,7 @@ class ApiService:
             # service derives from the resource, never read from a request.
             extra_roles=self._group_admin_role(context_id, actor),
         )
+        self._require_group_kind(context_id)
         self._require_registered_person(request.person_id)
         try:
             membership = self.repository.add_member(
@@ -1332,6 +1446,7 @@ class ApiService:
                 actor,
                 {"is_invitee": membership.person_id == actor.id},
             )
+        self._require_group_kind(membership.context_id)
 
         try:
             membership = self.repository.accept_membership(membership_id, _now())
@@ -1354,6 +1469,7 @@ class ApiService:
                 "is_self": actor.id == person_id,
             },
         )
+        self._require_group_kind(context_id)
         membership = self.repository.leave_context(context_id, person_id, _now())
         if membership is None:
             raise ApiProblem(
@@ -1378,13 +1494,7 @@ class ApiService:
         record = self.repository.get_context(context_id)
         if record is None:
             raise ApiProblem(404, "context_not_found", "Context does not exist")
-        return ContextResponse(
-            id=record.id,
-            display_name=record.display_name,
-            created_by_id=record.created_by_id,
-            created_at=record.created_at,
-            theme=record.theme,
-        )
+        return self._context_response(record, actor)
 
     def list_context_members(
         self, context_id: uuid.UUID, actor: Actor
@@ -2726,6 +2836,7 @@ class ApiService:
             actor,
             {"is_group_member": self.repository.is_member(outing.context_id, actor.id)},
         )
+        self._require_group_kind(outing.context_id)
 
         # Both kinds carry a secret now. A named invitation is what somebody
         # exchanges for their first session, so it needs one; before ADR-0014
@@ -4791,6 +4902,7 @@ class ApiService:
             },
             extra_roles=self._group_admin_role(context_id, actor),
         )
+        self._require_group_kind(context_id)
         membership = self.repository.set_membership_role(
             context_id, person_id, request.role
         )

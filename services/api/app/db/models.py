@@ -1037,6 +1037,15 @@ class Context(Base):
             "theme IN ('mac-dinh', 'hoang-hon', 'bien-dem', 'rung-thong', 'ruc-ro')",
             name="context_theme_known",
         ),
+        # ADR-0021 §2.5: a direct message is a context of kind `pair`. The two
+        # spellings of `app.domain.direct.KINDS`, and the rule that only a pair
+        # carries the ordered two-person key that keeps it unique.
+        CheckConstraint("kind IN ('group', 'pair')", name="context_kind_known"),
+        CheckConstraint(
+            "(kind = 'pair') = (pair_key IS NOT NULL)",
+            name="context_pair_has_key",
+        ),
+        UniqueConstraint("pair_key", name="uq_contexts_pair_key"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -1054,6 +1063,13 @@ class Context(Base):
     theme: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default="mac-dinh"
     )
+    #: `group` or `pair` (ADR-0021 §2.5). A pair's `display_name` is stored
+    #: empty and the other person's name is derived on every read; `pair_key`
+    #: is `app.domain.direct.pair_key` of the two members, unique.
+    kind: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="group", default="group"
+    )
+    pair_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

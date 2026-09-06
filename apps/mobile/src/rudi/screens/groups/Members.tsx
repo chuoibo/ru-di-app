@@ -20,6 +20,7 @@ import {
   vaiTroDoiThanh,
 } from "../../../screens/quan-tri/quan-tri";
 import { danhSachThanhVien, type ThanhVien } from "../../../screens/vao-cua/cong-api";
+import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Card, Chip, Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -62,7 +63,7 @@ export function GroupMembersScreen() {
   if (phien === null) return <Redirect href="/welcome" />;
   if (typeof id !== "string") return <Redirect href="/messages" />;
 
-  const tenNhom = phien.contexts?.find((nhom) => nhom.id === id)?.display_name ?? "Nhóm";
+  const tenNhom = tenCuocTroChuyen(phien.contexts?.find((nhom) => nhom.id === id));
   const conSong = trang.pha === "xong" ? trang.thanhVien.filter((tv) => tv.state !== "left") : [];
   const nhacQuanTriCuoi = trang.pha === "xong" ? loiNhacQuanTriCuoi(conSong, phien.person_id) : null;
 

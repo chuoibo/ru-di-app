@@ -286,6 +286,8 @@
     // The PATCH body carries only the keys the person changed; a screen that
     // renames must not reset the theme. Provable without a renderer.
     "src/rudi/chat/nhom-cai-dat.ts",
+    // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
+    "src/rudi/nhan-rieng/nhan-rieng.ts",
     // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
     // reuses. Compiled so the test can prove they go through the bearer.
     "src/screens/quan-tri/quan-tri.ts"

@@ -52,6 +52,7 @@ import { useRudiSession } from "../../session";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { Card, IconButton, TopBar } from "../../ui";
 import { Sticker } from "../../ui/stickers/Sticker";
+import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { CaiDatNhomSheet } from "./CaiDatNhom";
 import { KhaySticker } from "./KhaySticker";
 import { MenuTin } from "./MenuTin";
@@ -95,7 +96,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   const [caiDatMo, setCaiDatMo] = useState(false);
 
   const nhom = phien?.contexts?.find((n) => n.id === contextId);
-  const tenNhom = nhom?.display_name ?? "Nhóm";
+  const tenNhom = tenCuocTroChuyen(nhom);
+  // A pair (ADR-0021 §2.5) has no roster to show or invite into; the pill in
+  // that place opens the other person's profile instead.
+  const nhanRieng = laPair(nhom);
+  const nguoiKiaId = nhom?.counterpart?.id;
   // The group's theme colours only the sender's bubble and the reader's own
   // reaction chip; the screen's leading tone stays the brand accent.
   const mauChat = bangMauChat(nhom?.theme, dark);
@@ -430,16 +435,31 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             corner, and a target nobody can reach on the build we test on is a
             target nobody has tested. Messenger puts group info here too. */}
         <View style={styles.pills}>
-          <Pressable
-            accessibilityLabel="Thành viên nhóm"
-            accessibilityRole="button"
-            onPress={() => router.push(`/groups/${contextId}/members` as never)}
-            style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
-          >
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
-            </Text>
-          </Pressable>
+          {nhanRieng ? (
+            nguoiKiaId !== undefined ? (
+              <Pressable
+                accessibilityLabel="Xem hồ sơ"
+                accessibilityRole="button"
+                onPress={() => router.push(`/people/${nguoiKiaId}` as never)}
+                style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+              >
+                <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
+                  Xem hồ sơ
+                </Text>
+              </Pressable>
+            ) : null
+          ) : (
+            <Pressable
+              accessibilityLabel="Thành viên nhóm"
+              accessibilityRole="button"
+              onPress={() => router.push(`/groups/${contextId}/members` as never)}
+              style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+            >
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             accessibilityLabel="Cài đặt nhóm"
             accessibilityRole="button"
@@ -456,7 +476,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         <View style={[styles.rong, { paddingHorizontal: space.md }]}>
           <Text style={[typography.title, { color: colors.ink }]}>Chưa có tin nhắn nào</Text>
           <Text style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
-            Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào.
+            {nhanRieng ? `Nhắn gì đó cho ${tenNhom}, hoặc gõ / để rủ Rủ Đi AI vào.` : "Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào."}
           </Text>
         </View>
       ) : null}
@@ -579,7 +599,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           cursorColor={colors.accent}
           multiline
           onChangeText={setNhap}
-          placeholder="Nhắn cho hội, hoặc gõ /"
+          placeholder={nhanRieng ? `Nhắn cho ${tenNhom}, hoặc gõ /` : "Nhắn cho hội, hoặc gõ /"}
           placeholderTextColor={colors.inkFaint}
           selectionColor={colors.accentSoft}
           style={[typography.body, styles.oNhap, { color: colors.ink }]}
@@ -608,7 +628,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         tin={menuTin}
       />
       <CaiDatNhomSheet
-        nhom={{ id: contextId, display_name: tenNhom, theme: nhom?.theme }}
+        nhom={{ id: contextId, display_name: tenNhom, theme: nhom?.theme, kind: nhom?.kind }}
         onClose={() => setCaiDatMo(false)}
         onDaDoi={nhomDaDoi}
         open={caiDatMo}

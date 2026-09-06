@@ -409,12 +409,28 @@ class ContextUpdateRequest(ApiModel):
         return self
 
 
+#: `group` or `pair` (ADR-0021 §2.5); the CHECK on `contexts.kind` is the
+#: other spelling of `app.domain.direct.KINDS`.
+ContextKind = Literal["group", "pair"]
+
+
+class ContextCounterpart(ApiModel):
+    """The other person of a pair; absent on a group. Read from the roster on
+    every call and never stored -- a pair has no name of its own, so the
+    reader sees this person's name where a group shows its name."""
+
+    id: UUID
+    display_name: StrictStr
+
+
 class ContextResponse(ApiModel):
     id: UUID
     display_name: StrictStr
     created_by_id: UUID
     created_at: datetime
     theme: ChatTheme = "mac-dinh"
+    kind: ContextKind = "group"
+    counterpart: ContextCounterpart | None = None
 
 
 class OutingCreateRequest(ApiModel):
@@ -667,6 +683,8 @@ class ContextSummary(ApiModel):
     last_message: ContextLastMessage | None
     unread_count: Annotated[int, Field(strict=True, ge=0)]
     theme: ChatTheme = "mac-dinh"
+    kind: ContextKind = "group"
+    counterpart: ContextCounterpart | None = None
 
 
 class PersonContextListResponse(ApiModel):

@@ -84,6 +84,7 @@ from app.db.models import (
     VoteOption,
 )
 from app.domain.capability import capability_scope
+from app.domain.direct import display_name_for
 from app.domain.friendship import Decision, FriendshipError
 from app.domain.friendship import decide as decide_friendship
 from app.domain.ledger import obligation_status
@@ -129,6 +130,9 @@ class ContextRecord:
     created_at: datetime
     #: ADR-0021 §2.4; defaulted so a fake that predates themes still builds.
     theme: str = "mac-dinh"
+    #: ADR-0021 §2.5: `group` or `pair`; only a pair carries its ordered key.
+    kind: str = "group"
+    pair_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -449,6 +453,11 @@ class PersonContextSummaryRecord:
     last_message: LastMessageRecord | None
     unread_count: int
     theme: str = "mac-dinh"
+    #: ADR-0021 §2.5. For a pair, `display_name` above is already the other
+    #: person's name (derived on read); these two say who that person is.
+    kind: str = "group"
+    counterpart_id: uuid.UUID | None = None
+    counterpart_display_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -992,6 +1001,17 @@ class ApiRepository(Protocol):
     def update_context(
         self, context_id: uuid.UUID, *, changes: dict[str, object]
     ) -> ContextRecord | None: ...
+
+    def get_pair_context(self, pair_key: str) -> ContextRecord | None: ...
+
+    def create_pair_context(
+        self,
+        *,
+        pair_key: str,
+        member_ids: tuple[uuid.UUID, uuid.UUID],
+        created_by_id: uuid.UUID,
+        now: datetime,
+    ) -> ContextRecord: ...
 
     def add_member(
         self,
@@ -2047,6 +2067,8 @@ class SqlAlchemyApiRepository:
             created_by_id=context.created_by_id,
             created_at=context.created_at,
             theme=context.theme,
+            kind=context.kind,
+            pair_key=context.pair_key,
         )
 
     def get_context(self, context_id: uuid.UUID) -> ContextRecord | None:
@@ -2069,6 +2091,60 @@ class SqlAlchemyApiRepository:
         if "theme" in changes:
             context.theme = str(changes["theme"])
         self.session.flush()
+        return self._context_record(context)
+
+    def get_pair_context(self, pair_key: str) -> ContextRecord | None:
+        context = self.session.scalar(
+            select(Context).where(Context.pair_key == pair_key)
+        )
+        return None if context is None else self._context_record(context)
+
+    def create_pair_context(
+        self,
+        *,
+        pair_key: str,
+        member_ids: tuple[uuid.UUID, uuid.UUID],
+        created_by_id: uuid.UUID,
+        now: datetime,
+    ) -> ContextRecord:
+        """A private conversation and its two ACTIVE memberships, one savepoint.
+
+        No invited step: friendship already was the consent (ADR-0021 §2.5).
+        Two people opening the same pair at once both reach the INSERT; the
+        unique key on `pair_key` lets one through and the other surfaces as
+        `PAIR_EXISTS` for the service to read the winner's row. `if exists`
+        first would not have closed that window.
+        """
+        context = Context(
+            display_name="",
+            created_by_id=created_by_id,
+            kind="pair",
+            pair_key=pair_key,
+        )
+        try:
+            with self.session.begin_nested():
+                self.session.add(context)
+                self.session.flush()
+                for person_id in member_ids:
+                    self.session.add(
+                        Membership(
+                            context_id=context.id,
+                            person_id=person_id,
+                            state=MembershipState.ACTIVE,
+                            role=MembershipRole.MEMBER,
+                            origin=MembershipOrigin.NAMED,
+                            invited_by_id=created_by_id,
+                            joined_at=now,
+                        )
+                    )
+                self.session.flush()
+        except IntegrityError as exc:
+            constraint = getattr(
+                getattr(exc.orig, "diag", None), "constraint_name", None
+            )
+            if constraint == "uq_contexts_pair_key":
+                raise RepositoryConflict("PAIR_EXISTS") from exc
+            raise
         return self._context_record(context)
 
     def add_member(
@@ -2980,6 +3056,30 @@ class SqlAlchemyApiRepository:
             if author_ids
             else {}
         )
+        # ADR-0021 §2.5: a pair is called by the other person's name, derived
+        # here on every read and never written back. One query for the
+        # counterpart of every pair in the list, one for their names.
+        pair_ids = [context.id for _, context in rows if context.kind == "pair"]
+        counterparts: dict[uuid.UUID, uuid.UUID] = {}
+        counterpart_names: dict[uuid.UUID, str] = {}
+        if pair_ids:
+            counterparts = dict(
+                self.session.execute(
+                    select(Membership.context_id, Membership.person_id).where(
+                        Membership.context_id.in_(pair_ids),
+                        Membership.person_id != person_id,
+                        Membership.state != MembershipState.LEFT,
+                    )
+                ).all()
+            )
+        if counterparts:
+            counterpart_names = dict(
+                self.session.execute(
+                    select(Person.id, Person.display_name).where(
+                        Person.id.in_(set(counterparts.values()))
+                    )
+                ).all()
+            )
         last_by_context = {
             m.context_id: LastMessageRecord(
                 id=m.id,
@@ -2993,10 +3093,14 @@ class SqlAlchemyApiRepository:
         }
         out: list[PersonContextSummaryRecord] = []
         for membership, context in rows:
+            other_id = counterparts.get(context.id)
+            other_name = counterpart_names.get(other_id) if other_id else None
             out.append(
                 PersonContextSummaryRecord(
                     id=context.id,
-                    display_name=context.display_name,
+                    display_name=display_name_for(
+                        context.kind, context.display_name, other_name
+                    ),
                     member_count=int(counts.get(context.id, 0)),
                     my_role=membership.role.value,
                     my_state=membership.state.value,
@@ -3005,6 +3109,9 @@ class SqlAlchemyApiRepository:
                     last_message=last_by_context.get(context.id),
                     unread_count=self.count_unread_messages(context.id, person_id),
                     theme=context.theme,
+                    kind=context.kind,
+                    counterpart_id=other_id,
+                    counterpart_display_name=other_name,
                 )
             )
         # Newest conversation first; groups with no message yet sort last, then
@@ -3179,7 +3286,8 @@ class SqlAlchemyApiRepository:
         """Five counts, five queries, each against the table that is the source.
 
         Friends are `accepted` rows in either direction -- there is no friends
-        table to drift from this. Contexts are ACTIVE memberships only; outings
+        table to drift from this. Contexts are ACTIVE memberships of GROUPS (a
+        pair is not a group, ADR-0021 §2.5); outings
         are those of the active contexts; places are distinct stops this person
         checked in at; memories are the ones they authored.
         """
@@ -3198,8 +3306,18 @@ class SqlAlchemyApiRepository:
             Membership.person_id == person_id,
             Membership.state == MembershipState.ACTIVE,
         )
+        # «Nhóm» on the profile counts groups. A pair (ADR-0021 §2.5) is a
+        # private conversation, not a group somebody joined; outings below
+        # still count wherever they were planned, a pair included.
         contexts = self.session.scalar(
-            select(func.count()).select_from(active_contexts.subquery())
+            select(func.count())
+            .select_from(Membership)
+            .join(Context, Context.id == Membership.context_id)
+            .where(
+                Membership.person_id == person_id,
+                Membership.state == MembershipState.ACTIVE,
+                Context.kind == "group",
+            )
         )
         outings = self.session.scalar(
             select(func.count())
@@ -3567,8 +3685,15 @@ class SqlAlchemyApiRepository:
         and one stray tap turned into a 500 for the whole group's feed.
         `soft_delete_message` takes the same lock, so the two serialise.
         """
+        # `populate_existing`: an ORM object for this row may already sit in the
+        # identity map (the service read it a moment ago), and a plain
+        # `FOR UPDATE` would hand that stale copy back without re-reading the
+        # kind it just locked (review #574, S7). Same idiom as `accept_membership`.
         message = self.session.execute(
-            select(Message).where(Message.id == message_id).with_for_update()
+            select(Message)
+            .where(Message.id == message_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
         ).scalar_one_or_none()
         if message is None:
             raise RepositoryConflict("MESSAGE_NOT_FOUND")
@@ -4309,7 +4434,10 @@ class SqlAlchemyApiRepository:
         count a message nobody can read.
         """
         message = self.session.execute(
-            select(Message).where(Message.id == message_id).with_for_update()
+            select(Message)
+            .where(Message.id == message_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
         ).scalar_one_or_none()
         if message is None:
             return None

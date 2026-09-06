@@ -328,6 +328,13 @@ _TABLE: dict[str, dict] = {
         "roles": {"group_admin", "member"},
         "requires": ("is_group_member",),
     },
+    # ADR-0021 §2.5. Opening a private conversation with somebody needs one
+    # fact only, proved from `friend_requests` at the moment of the call:
+    # the two are friends. Friendship is the consent step; there is no
+    # «accept conversation». The service turns this 403 into the one 404 every
+    # refusal of the door shares, so the door is not an oracle for who is
+    # friends with whom.
+    "open_direct_message": {"roles": {"member"}, "requires": ("is_friend",)},
     # F32. A proactive suggestion is built from this group's own history --
     # where they went, what it cost, what kind of place they keep choosing --
     # so reading one is reading the group's past. Same ACTIVE gate as the
