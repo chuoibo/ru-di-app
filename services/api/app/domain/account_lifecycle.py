@@ -132,6 +132,62 @@ ERASURE: dict[str, tuple[str, ...]] = {
 }
 
 
+#: Bảng mà một lần xoá tài khoản KHÔNG được chạm tới, dù chỉ một byte.
+#:
+#: Danh sách này là một sự thật về sản phẩm chứ không phải một chi tiết của
+#: test, nên nó sống ở đây và có HAI người đọc: một ca thuần khẳng định mọi tên
+#: dưới đây nằm ở nhánh «keep» của bản đồ, và ca Postgres so md5 của đúng những
+#: bảng này trước và sau khi xoá.
+#:
+#: Vì sao cần cả hai. Bản đồ `ERASURE` trước đây chỉ bị gác bởi một ca «mọi
+#: bảng thật đều có tên trong bản đồ». Ca ấy đếm sự CÓ MẶT, không đọc NHÁNH,
+#: nên chuyển một bảng từ «keep» sang «delete» đi qua sạch sẽ — hai người đo
+#: độc lập (agy QA và reviewer PR #581) cùng dựng đúng đột biến ấy cho
+#: `reports` và cả hai đều thấy cổng xanh. Lỗ ấy đi hai bước: xếp nhầm nhánh
+#: (im lặng), rồi thêm một `wipe()` cho nó (nằm trong giới hạn cũ), và md5 mù
+#: vì bảng ấy không có trong danh sách viết tay.
+#:
+#: `reports` nằm đây không phải vì nó mang tiền: nó mang bằng chứng của NGƯỜI
+#: KHÁC. `guest_links` cũng vậy — nó là cửa vào một nghĩa vụ, và mất một hàng
+#: ở đấy là một envelope khách không mở được nữa.
+MONEY_TABLES: tuple[str, ...] = (
+    "expenses",
+    "expense_versions",
+    "expense_items",
+    "expense_item_shares",
+    "expense_surcharges",
+    "expense_discounts",
+    "confirmed_allocations",
+    "collection_batches",
+    "collection_batch_versions",
+    "collection_obligations",
+    "collection_obligation_sources",
+    "collection_envelopes",
+    "payment_reports",
+    "receipt_confirmations",
+    "guest_links",
+    "bills",
+    "bill_items",
+    "bill_item_shares",
+    "bill_surcharges",
+    "bill_discounts",
+)
+
+#: Bảng mang lời của người KHÁC, hoặc lời của mình trong cuộc trò chuyện của
+#: người khác. Xoá tài khoản của mình không được viết lại thứ người khác đã đọc.
+OTHERS_KEEP_TABLES: tuple[str, ...] = (
+    "messages",
+    "message_reactions",
+    "memories",
+    "memory_comments",
+    "memory_reactions",
+    "reports",
+    "contexts",
+    "outings",
+    "audit_events",
+)
+
+
 class AccountLifecycleError(Exception):
     def __init__(self, code: str):
         super().__init__(code)

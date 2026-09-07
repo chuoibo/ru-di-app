@@ -21,40 +21,17 @@ from sqlalchemy.orm import Session
 
 from app.api.repository import SqlAlchemyApiRepository
 from app.db.models import AccountSession, AuditEvent, Context, Membership, Person, Post
-from app.domain.account_lifecycle import ANONYMOUS_DISPLAY_NAME, ERASURE
+from app.domain.account_lifecycle import (
+    ANONYMOUS_DISPLAY_NAME,
+    ERASURE,
+    MONEY_TABLES,
+)
 
 from .test_group_recap_postgres import _app, _call, _group, _headers, _person, _split
 from .test_posts_postgres import _befriend
 from .test_repository_postgres import NOW
 
 pytestmark = pytest.mark.postgres
-
-MONEY_TABLES = (
-    "expenses",
-    "expense_versions",
-    "expense_items",
-    "expense_item_shares",
-    "expense_surcharges",
-    "expense_discounts",
-    "confirmed_allocations",
-    "collection_batches",
-    "collection_batch_versions",
-    "collection_obligations",
-    "collection_obligation_sources",
-    "collection_envelopes",
-    "payment_reports",
-    "receipt_confirmations",
-    "bills",
-    "bill_items",
-    "bill_item_shares",
-    "bill_surcharges",
-    "bill_discounts",
-    # Không mang số tiền nào, nhưng nó là cái CỬA vào một nghĩa vụ: mất một
-    # hàng ở đây là một envelope khách không mở được nữa, và đó cũng là sổ
-    # tiền hỏng theo nghĩa người dùng. `ERASURE` xếp nó ở nhánh «giữ», nên
-    # phép so md5 phải bao nó (ADR-0023 §6 đếm 20 bảng, không phải 19).
-    "guest_links",
-)
 
 
 def _fingerprints(session: Session) -> dict[str, str]:

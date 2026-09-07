@@ -244,6 +244,24 @@ def test_a_number_that_deleted_and_came_back_is_findable_by_phone_again(
     # Vòng đời một.
     truoc, _ = _login(app, sender, phone)
     id_cu = uuid.UUID(truoc["person_id"])
+    # Vòng đời một có tên và có một nhóm, để hai phép khẳng định «trống» ở cuối
+    # nói về một thứ đã từng có thật.
+    dat_ten = _call(
+        app,
+        "PATCH",
+        "/people/me",
+        json={"display_name": "Chủ số cũ đã đặt tên"},
+        token=truoc["token"],
+    )
+    assert dat_ten.status_code == 200, dat_ten.text
+    mo_nhom = _call(
+        app,
+        "POST",
+        "/contexts",
+        json={"display_name": "Hội của người sẽ đi"},
+        token=truoc["token"],
+    )
+    assert mo_nhom.status_code == 201, mo_nhom.text
 
     # Một người khác đi tìm, qua đúng route mà màn «Thêm bạn» dùng.
     nguoi_tra, _ = _login(app, sender, "0914" + "333444")
@@ -276,3 +294,13 @@ def test_a_number_that_deleted_and_came_back_is_findable_by_phone_again(
         "biến mất khỏi «Thêm bạn» vĩnh viễn, và câu từ chối không nói ra điều đó"
     )
     assert lai_thay.json()["person_id"] == str(id_moi)
+
+    # ADR-0023 §6 đòi ba điều cho lần đăng nhập lại, không phải một. Hai điều
+    # còn lại: hồ sơ TRỐNG, và không thấy nhóm cũ. «Bắt đầu trắng» là nghĩa của
+    # «xoá» mà ADR này chọn, và nó chỉ đúng khi cả ba điều cùng đúng.
+    toi = _call(app, "GET", "/people/me", token=sau["token"])
+    assert toi.status_code == 200, toi.text
+    assert toi.json()["display_name"] != "Chủ số cũ đã đặt tên"
+    assert toi.json()["bio"] is None and toi.json()["city"] is None
+    assert toi.json()["counts"]["contexts"] == 0, "không được thấy nhóm cũ"
+    assert toi.json()["counts"]["friends"] == 0

@@ -10,6 +10,8 @@ import pytest
 from app.domain.account_lifecycle import (
     ANONYMOUS_DISPLAY_NAME,
     ERASURE,
+    MONEY_TABLES,
+    OTHERS_KEEP_TABLES,
     AccountLifecycleError,
     anonymised_person,
     check_confirmation,
@@ -89,3 +91,51 @@ def test_a_naive_clock_is_refused():
     with pytest.raises(AccountLifecycleError) as refused:
         anonymised_person(PERSON, datetime(2026, 9, 6, 12))
     assert refused.value.code == "NAIVE_DATETIME"
+
+
+def test_the_map_pins_the_branch_of_every_table_whose_branch_is_a_decision():
+    """Bản đồ `ERASURE` phải nói đúng NHÁNH, không chỉ có mặt.
+
+    Ca «mọi bảng thật đều có tên trong bản đồ» đếm sự CÓ MẶT. Nó không đọc
+    nhánh, nên chuyển một bảng từ «keep» sang «delete» đi qua sạch sẽ. Hai
+    người đo độc lập (agy QA và reviewer PR #581) cùng dựng đúng đột biến ấy
+    cho `reports` và cả hai đều thấy cổng xanh.
+
+    Lỗ ấy đi hai bước, và bước nào cũng im lặng: xếp một bảng tiền nhầm vào
+    «delete», rồi thêm một `wipe()` cho nó — lúc ấy phép khẳng định «mọi bảng
+    `erase_person` chạm tới đều nằm trong nhánh delete» vẫn đúng, còn phép so
+    md5 thì mù vì bảng ấy không có trong danh sách viết tay. Ca này đóng bước
+    thứ nhất, và vì `MONEY_TABLES` giờ sống trong chính module domain, ca
+    Postgres và ca này đọc CÙNG MỘT danh sách.
+    """
+    keep = set(ERASURE["keep"])
+    delete = set(ERASURE["delete"])
+
+    thieu_tien = sorted(set(MONEY_TABLES) - keep)
+    assert thieu_tien == [], (
+        f"bảng tiền không nằm ở nhánh «keep»: {thieu_tien}. Xoá tài khoản không "
+        "được chạm một byte nào của sổ tiền (ADR-0023 §2.1)."
+    )
+    thieu_nguoi_khac = sorted(set(OTHERS_KEEP_TABLES) - keep)
+    assert thieu_nguoi_khac == [], (
+        f"bảng mang lời của người khác không ở nhánh «keep»: {thieu_nguoi_khac}"
+    )
+
+    # Và không bảng nào trong hai danh sách ấy được phép có mặt ở «delete»:
+    # một bảng nằm cả hai nhánh là một bản đồ tự mâu thuẫn.
+    cham = sorted(delete & (set(MONEY_TABLES) | set(OTHERS_KEEP_TABLES)))
+    assert cham == [], f"bảng vừa «giữ» vừa «xoá»: {cham}"
+
+
+def test_this_case_would_notice_a_table_moved_into_delete():
+    """Đối chứng dương: phép so ở trên phải phân biệt được hai bản đồ.
+
+    Không có bước này thì ca trên xanh cả khi `MONEY_TABLES` rỗng, và một danh
+    sách nguồn rỗng làm cổng tự tháo trong im lặng.
+    """
+    assert MONEY_TABLES, "danh sách bảng tiền rỗng — ca trên không đo gì cả"
+    assert OTHERS_KEEP_TABLES
+    gia_lap_xep_nham = set(ERASURE["keep"]) - {"reports"}
+    assert "reports" in set(OTHERS_KEEP_TABLES) - gia_lap_xep_nham, (
+        "phép so «tên này có ở nhánh keep không» không phân biệt được gì"
+    )
