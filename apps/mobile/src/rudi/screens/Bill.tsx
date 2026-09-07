@@ -39,7 +39,11 @@ import {
   SectionHeader,
   TopBar,
 } from "../ui";
+import { aiCoGi } from "../chia-bill/ai-co-gi";
+import { AiCoGi } from "../ui/AiCoGi";
 import { Avatar } from "../ui/Avatar";
+import { HaiCot } from "../ui/HaiCot";
+import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { RosterPicker } from "../ui/RosterPicker";
@@ -180,6 +184,7 @@ export function ReceiptReviewScreen() {
 export function OcrAssignmentScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const { twoPane } = useAdaptiveLayout();
   const session = useRudiSession();
   const detectedTotal = session.money.billTotal;
   const [moRong, setMoRong] = useState<Set<number>>(() => new Set([0]));
@@ -199,9 +204,35 @@ export function OcrAssignmentScreen() {
     });
   };
 
+  // The fixture keeps its assignment by index; «Ai có gì» reads it by id.
+  const bangAiCoGi = aiCoGi(
+    BILL_ITEMS.map((item, i) => ({ id: String(i), name: item.name })),
+    PEOPLE.map((p) => ({ id: p.id, name: p.name })),
+    Object.fromEntries(session.assignments.map((people, i) => [String(i), people.map((index) => PEOPLE[index].id)])),
+  );
+  const tongBill = (
+    <View style={styles.tongRow}>
+      <View style={styles.flex}>
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>Tổng hóa đơn Xóm Lèo</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Không gồm homestay / xăng</Text>
+      </View>
+      <Money tone="split" vnd={detectedTotal} />
+    </View>
+  );
+
   return (
     <RudiScreen tone="split" testID="ocr-assignment-screen">
       <TopBar title="Ai dùng món nào?" right={<DemoBadge compactLabel="Nháp" label="Nháp trên máy" />} />
+      <HaiCot
+        phaiChiKhiRong
+        phai={
+          <>
+            <AiCoGi bang={bangAiCoGi} />
+            {tongBill}
+          </>
+        }
+        trai={
+          <>
       <Heading title={`${BILL_ITEMS.length} món · ${formatVnd(detectedTotal)}`} subtitle="Chạm một món để sửa ai dùng. Tổng bill giữ nguyên khi bạn sửa người." />
       <View>
         {BILL_ITEMS.map((item, itemIndex) => {
@@ -250,13 +281,10 @@ export function OcrAssignmentScreen() {
           );
         })}
       </View>
-      <View style={styles.tongRow}>
-        <View style={styles.flex}>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Tổng hóa đơn Xóm Lèo</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Không gồm homestay / xăng</Text>
-        </View>
-        <Money tone="split" vnd={detectedTotal} />
-      </View>
+          </>
+        }
+      />
+      {twoPane ? null : tongBill}
       <RudiButton
         disabled={session.assignments.some((people) => people.length === 0)}
         icon="checkmark-circle-outline"
