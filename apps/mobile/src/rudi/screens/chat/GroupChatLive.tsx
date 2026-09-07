@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
   pills: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 2, marginTop: -8 },
-  thanhVien: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 40, paddingHorizontal: 8 },
+  thanhVien: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 48, paddingHorizontal: 8 },
   trich: { borderWidth: 1, borderLeftWidth: 3, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, gap: 1, maxWidth: "100%" },
   stickerHang: { paddingVertical: 2 },
   nghieng: { fontStyle: "italic" },
