@@ -70,8 +70,10 @@ import { IconButton, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { Sticker } from "../../ui/stickers/Sticker";
+import { Sheet } from "../../ui/Sheet";
 import { CaiDatNhomSheet } from "./CaiDatNhom";
 import { KhaySticker } from "./KhaySticker";
+import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 
@@ -107,12 +109,19 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // message, the message being replied to, and the group settings sheet.
   const [khaySticker, setKhaySticker] = useState(false);
   const [menuTin, setMenuTin] = useState<Tin | null>(null);
+  // ADR-0023 §2.4: báo cáo một tin nhắn. Khay riêng, mở sau khi khay menu
+  // đóng, để hai khay không chồng lên nhau trên màn nhỏ.
+  const [baoCaoTin, setBaoCaoTin] = useState<Tin | null>(null);
   const [traLoi, setTraLoi] = useState<TrichDan | null>(null);
   const [caiDatMo, setCaiDatMo] = useState(false);
   const [dangGuiAnh, setDangGuiAnh] = useState(false);
   const [tenTheoId, setTenTheoId] = useState<Record<string, string>>({});
 
   const nhom = phien?.contexts?.find((n) => n.id === contextId);
+  // ADR-0023 §2.3.2: bị chặn, hoặc người kia đã xoá tài khoản. Tin cũ vẫn
+  // đọc được -- chúng cũng là của người kia -- nhưng cửa soạn tin đóng, và
+  // câu nói ra KHÔNG cho biết vì lý do nào trong hai lý do.
+  const khongNhanTin = nhom?.unavailable === true;
   const tenNhom = tenCuocTroChuyen(nhom);
   // A pair (ADR-0021 §2.5) has no roster to show or invite into; the pill in
   // that place opens the other person's profile instead.
@@ -639,55 +648,61 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           <IconButton accessibilityLabel="Bỏ trả lời" icon="close" onPress={() => setTraLoi(null)} quiet />
         </View>
       ) : null}
-      <View
-        style={[
-          styles.soan,
-          {
-            backgroundColor: colors.card,
-            borderColor: colors.line,
-            marginHorizontal: space.md,
-            // With the keyboard up the IME covers the navigation bar, so the
-            // bottom inset would only float the composer above the keys.
-            marginBottom: banPhimMo ? 6 : Math.max(insets.bottom, 8),
-          },
-        ]}
-      >
-        <IconButton
-          accessibilityLabel="Gửi sticker"
-          disabled={dangGuiAnh || dangGui}
-          icon="happy-outline"
-          onPress={() => setKhaySticker(true)}
-          quiet
-        />
-        <IconButton
-          accessibilityLabel="Gửi ảnh"
-          disabled={dangGuiAnh || dangGui}
-          icon="image-outline"
-          loading={dangGuiAnh}
-          onPress={() => void guiAnh()}
-          quiet
-        />
-        <TextInput
-          accessibilityLabel="Ô soạn tin"
-          cursorColor={colors.accent}
-          multiline
-          onChangeText={setNhap}
-          placeholder={nhanRieng ? `Nhắn cho ${tenNhom}, hoặc gõ /` : "Nhắn cho hội, hoặc gõ /"}
-          placeholderTextColor={colors.inkFaint}
-          selectionColor={colors.accentSoft}
-          style={[typography.body, styles.oNhap, { color: colors.ink }]}
-          value={nhap}
-        />
-        <IconButton
-          accessibilityLabel="Gửi tin nhắn"
-          dim={!coChu && !dangGui}
-          disabled={!coChu && !dangGui}
-          icon="arrow-up"
-          loading={dangGui}
-          onPress={() => void gui()}
-          solid={coChu || dangGui}
-        />
-      </View>
+      {khongNhanTin ? (
+        <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Cuộc trò chuyện này không còn nhận tin.</Text>
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.soan,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.line,
+              marginHorizontal: space.md,
+              // With the keyboard up the IME covers the navigation bar, so the
+              // bottom inset would only float the composer above the keys.
+              marginBottom: banPhimMo ? 6 : Math.max(insets.bottom, 8),
+            },
+          ]}
+        >
+          <IconButton
+            accessibilityLabel="Gửi sticker"
+            disabled={dangGuiAnh || dangGui}
+            icon="happy-outline"
+            onPress={() => setKhaySticker(true)}
+            quiet
+          />
+          <IconButton
+            accessibilityLabel="Gửi ảnh"
+            disabled={dangGuiAnh || dangGui}
+            icon="image-outline"
+            loading={dangGuiAnh}
+            onPress={() => void guiAnh()}
+            quiet
+          />
+          <TextInput
+            accessibilityLabel="Ô soạn tin"
+            cursorColor={colors.accent}
+            multiline
+            onChangeText={setNhap}
+            placeholder={nhanRieng ? `Nhắn cho ${tenNhom}, hoặc gõ /` : "Nhắn cho hội, hoặc gõ /"}
+            placeholderTextColor={colors.inkFaint}
+            selectionColor={colors.accentSoft}
+            style={[typography.body, styles.oNhap, { color: colors.ink }]}
+            value={nhap}
+          />
+          <IconButton
+            accessibilityLabel="Gửi tin nhắn"
+            dim={!coChu && !dangGui}
+            disabled={!coChu && !dangGui}
+            icon="arrow-up"
+            loading={dangGui}
+            onPress={() => void gui()}
+            solid={coChu || dangGui}
+          />
+        </View>
+      )}
       <KhaySticker onChon={(id) => void guiStickerChon(id)} onClose={() => setKhaySticker(false)} open={khaySticker} />
       <MenuTin
         cuaToi={menuTin !== null && menuTin.author_id === personId}
@@ -697,9 +712,28 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           setTraLoi(trichTu(tin, tenNguoi));
           setMenuTin(null);
         }}
+        onBaoCao={(tin) => {
+          setMenuTin(null);
+          setBaoCaoTin(tin);
+        }}
         onXoa={(tin) => void xoaTinChon(tin)}
         tin={menuTin}
       />
+      <Sheet
+        accessibilityLabel="Báo cáo tin nhắn"
+        onClose={() => setBaoCaoTin(null)}
+        open={baoCaoTin !== null}
+      >
+        {baoCaoTin === null ? null : (
+          <NoiDungBaoCao
+            actorId={personId}
+            loai="message"
+            onThoi={() => setBaoCaoTin(null)}
+            onXong={() => setBaoCaoTin(null)}
+            targetId={baoCaoTin.id}
+          />
+        )}
+      </Sheet>
       <CaiDatNhomSheet
         nhom={{ id: contextId, display_name: tenNhom, theme: nhom?.theme, kind: nhom?.kind }}
         onClose={() => setCaiDatMo(false)}
@@ -712,6 +746,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 }
 
 const styles = StyleSheet.create({
+  dungNhan: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: 12, marginBottom: 10 },
   man: { flex: 1 },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },

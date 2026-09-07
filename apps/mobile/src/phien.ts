@@ -62,6 +62,8 @@ export type NhomTomTat = {
   kind?: "group" | "pair";
   /** The other person of a pair, named by the server on every read. */
   counterpart?: { id: string; display_name: string } | null;
+  /** ADR-0023 §2.3.2: cặp này không nhận tin mới nữa (bị chặn, hoặc người kia đã xoá tài khoản). */
+  unavailable?: boolean;
 };
 
 export type Phien = {

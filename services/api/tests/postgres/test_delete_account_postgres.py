@@ -24,6 +24,7 @@ from app.db.models import AccountSession, AuditEvent, Membership, Person, Post
 from app.domain.account_lifecycle import ANONYMOUS_DISPLAY_NAME, ERASURE
 
 from .test_group_recap_postgres import _app, _call, _group, _headers, _person, _split
+from .test_posts_postgres import _befriend
 from .test_repository_postgres import NOW
 
 pytestmark = pytest.mark.postgres
@@ -182,3 +183,66 @@ def test_the_map_names_every_table_the_schema_has(postgres_session: Session):
     } - {"alembic_version"}
     assert real - set(named) == set(), "bảng chưa có trong bản đồ xoá"
     assert set(named) - real == set(), "bản đồ nhắc bảng không tồn tại"
+
+
+def test_a_private_conversation_stops_taking_messages_when_one_side_ends(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """ADR-0023 §2.3.2 qua con đường của §2.1: tài khoản kết thúc thì cặp đóng.
+
+    Chỉ tầng này bắt được nó. Kết thúc một tài khoản đặt mọi tư cách thành viên
+    thành «đã rời», và roster của một cặp là nơi phép gác đi tìm «người kia».
+    Bản đầu đọc «không thấy người kia» thành «không có gì để gác» và cho tin đi
+    qua — đúng cánh cửa nó sinh ra để đóng thì nó mở, và mở im lặng. Fake
+    repository không dựng lại được hình dạng ấy vì nó không có roster thật.
+    """
+    context, mot = _group(postgres_session, "Hội có cặp")
+    hai = _person(postgres_session, "Người sẽ rời")
+    postgres_session.add(
+        Membership(
+            context_id=context.id,
+            person_id=hai.id,
+            role="member",
+            state="active",
+            origin="named",
+            joined_at=NOW,
+            created_at=NOW,
+        )
+    )
+    _befriend(postgres_session, mot, hai)
+    postgres_session.flush()
+    app = _app(postgres_session, monkeypatch)
+
+    mo = _call(
+        app, "POST", f"/people/{hai.id}/dm", headers=_headers(mot, context), json=None
+    )
+    assert mo.status_code in (200, 201), mo.text
+    pair_id = mo.json()["id"]
+    pair_headers = {
+        "X-Actor-ID": str(mot.id),
+        "X-Actor-Roles": "member",
+        "X-Actor-Contexts": pair_id,
+    }
+
+    song = _call(
+        app,
+        "POST",
+        f"/contexts/{pair_id}/messages",
+        headers=pair_headers,
+        json={"kind": "text", "body": "Còn sống", "image_url": None, "card": None},
+    )
+    assert song.status_code == 201, song.text
+
+    SqlAlchemyApiRepository(postgres_session).erase_person(hai.id, now=NOW)
+    postgres_session.flush()
+
+    chet = _call(
+        app,
+        "POST",
+        f"/contexts/{pair_id}/messages",
+        headers=pair_headers,
+        json={"kind": "text", "body": "Còn ai không", "image_url": None, "card": None},
+    )
+    assert chet.status_code == 409, chet.text
+    assert chet.json()["code"] == "direct_message_unavailable"
+    assert chet.json()["detail"] == "Cuộc trò chuyện này không còn nhận tin."

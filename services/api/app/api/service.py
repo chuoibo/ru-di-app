@@ -1342,7 +1342,16 @@ class ApiService:
             None,
         )
         if other_id is None:
-            return
+            # Nobody live on the other side. `list_members` leaves out anybody
+            # whose membership ended, and ending an account ends every
+            # membership (§2.1) -- so this is the deleted-account case arriving
+            # by a second road, and returning here would have opened the very
+            # door the rest of this method closes. Same code, same sentence.
+            raise ApiProblem(
+                409,
+                DIRECT_MESSAGE_UNAVAILABLE,
+                "Cuộc trò chuyện này không còn nhận tin.",
+            )
         other = self.repository.get_person(other_id)
         if not dm_allowed(
             self._friend_edge_dict(actor.id, other_id),
@@ -4144,10 +4153,22 @@ class ApiService:
         )
 
     def _context_summaries(self, person_id: uuid.UUID) -> list[ContextSummary]:
-        return [
+        summaries = [
             _context_summary(record)
             for record in self.repository.list_person_context_summaries(person_id)
         ]
+        # ADR-0023 §2.3.2. Saying it on the row costs two reads per pair and a
+        # person has few pairs; groups cost nothing. The alternative is telling
+        # somebody the conversation is dead only after they typed into it.
+        for summary in summaries:
+            if summary.kind != "pair" or summary.counterpart is None:
+                continue
+            other = self.repository.get_person(summary.counterpart.id)
+            summary.unavailable = not dm_allowed(
+                self._friend_edge_dict(person_id, summary.counterpart.id),
+                other_deleted=other is None or other.deleted_at is not None,
+            )
+        return summaries
 
     def list_my_contexts(self, actor: Actor) -> PersonContextListResponse:
         """Every group the caller is in or invited to, newest conversation first.

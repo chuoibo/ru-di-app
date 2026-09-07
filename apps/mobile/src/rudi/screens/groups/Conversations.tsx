@@ -170,7 +170,11 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
                   <View style={styles.hangChu}>
                     <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenCuocTroChuyen(nhom)}</Text>
                     <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>
-                      {laPair(nhom) ? "Nhắn riêng" : `${nhom.member_count} thành viên`}
+                      {nhom.unavailable === true
+                        ? "Không còn nhận tin"
+                        : laPair(nhom)
+                          ? "Nhắn riêng"
+                          : `${nhom.member_count} thành viên`}
                       {!laPair(nhom) && nhom.my_role === "admin" ? " · bạn quản trị" : ""}
                       {duocMoi ? " · bạn được mời" : ""}
                     </Text>

@@ -13,19 +13,13 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../../api";
-import {
-  baoCao,
-  boChan,
-  chan,
-  LY_DO_BAO_CAO,
-  type LoaiBaoCao,
-  type LyDoBaoCao,
-} from "../../cai-dat/quyen-rieng-tu";
+import { boChan, chan } from "../../cai-dat/quyen-rieng-tu";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, RudiButton } from "../../ui";
+import { RudiButton } from "../../ui";
 import { Sheet } from "../../ui/Sheet";
+import { NoiDungBaoCao } from "./NoiDungBaoCao";
 
-type Buoc = "menu" | "xac-nhan-chan" | "bao-cao" | "da-bao-cao";
+type Buoc = "menu" | "xac-nhan-chan" | "bao-cao";
 
 export function HanhDongHoSoSheet({
   open,
@@ -46,8 +40,6 @@ export function HanhDongHoSoSheet({
 }) {
   const { colors } = useRudiTheme();
   const [buoc, setBuoc] = useState<Buoc>("menu");
-  const [lyDo, setLyDo] = useState<LyDoBaoCao>("spam");
-  const [ghiChu, setGhiChu] = useState("");
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
 
@@ -64,21 +56,6 @@ export function HanhDongHoSoSheet({
       onDoiChan(bat);
       setBuoc("menu");
       onClose();
-    } catch (error) {
-      baoLoi(error);
-    } finally {
-      setDangGui(false);
-    }
-  };
-
-  const gui = async () => {
-    if (dangGui) return;
-    setDangGui(true);
-    setLoi(null);
-    try {
-      await baoCao("person" as LoaiBaoCao, personId, lyDo, ghiChu, actorId, newAttempt());
-      setGhiChu("");
-      setBuoc("da-bao-cao");
     } catch (error) {
       baoLoi(error);
     } finally {
@@ -133,41 +110,16 @@ export function HanhDongHoSoSheet({
         </View>
       ) : null}
       {buoc === "bao-cao" ? (
-        <View style={styles.khoi}>
-          <Text style={[typography.label, { color: colors.ink }]}>Vì sao bạn báo cáo?</Text>
-          <View accessibilityRole="radiogroup" style={styles.lyDo}>
-            {LY_DO_BAO_CAO.map((muc) => (
-              <RudiButton
-                compact
-                full={false}
-                key={muc.ma}
-                label={muc.nhan}
-                onPress={() => setLyDo(muc.ma)}
-                variant={lyDo === muc.ma ? "soft" : "ghost"}
-              />
-            ))}
-          </View>
-          <Field
-            accessibilityLabel="Ô ghi chú báo cáo"
-            label="Thêm gì đó, nếu muốn"
-            maxLength={500}
-            multiline
-            numberOfLines={3}
-            onChangeText={setGhiChu}
-            value={ghiChu}
-          />
-          <RudiButton label="Gửi báo cáo" loading={dangGui} onPress={() => void gui()} variant="outline" />
-          <RudiButton label="Thôi" onPress={() => setBuoc("menu")} variant="ghost" />
-        </View>
-      ) : null}
-      {buoc === "da-bao-cao" ? (
-        <View style={styles.khoi}>
-          <Text style={[typography.body, { color: colors.ink }]}>Đã gửi báo cáo</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>
-            Người vận hành sẽ đọc. Bạn không nhận được trả lời tự động, và người kia không biết ai báo cáo.
-          </Text>
-          <RudiButton label="Xong" onPress={() => { setBuoc("menu"); onClose(); }} variant="ghost" />
-        </View>
+        <NoiDungBaoCao
+          actorId={actorId}
+          loai="person"
+          onThoi={() => setBuoc("menu")}
+          onXong={() => {
+            setBuoc("menu");
+            onClose();
+          }}
+          targetId={personId}
+        />
       ) : null}
       {loi ? <Text style={[typography.caption, { color: colors.warn }]}>{loi}</Text> : null}
     </Sheet>
@@ -176,5 +128,4 @@ export function HanhDongHoSoSheet({
 
 const styles = StyleSheet.create({
   khoi: { gap: 10 },
-  lyDo: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 });

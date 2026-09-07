@@ -200,6 +200,15 @@ export function CaiDatScreen() {
           Lựa chọn này ở trên máy này, không gửi lên máy chủ.
         </Text>
       </Card>
+      <SectionHeader title="Về Rủ Đi" />
+      <Card>
+        <ListRow
+          icon="document-text-outline"
+          onPress={() => router.push("/settings/ve-rudi" as never)}
+          subtitle="Điều khoản, dữ liệu Rủ Đi giữ, và điều gì xảy ra khi bạn xoá tài khoản"
+          title="Điều khoản và dữ liệu"
+        />
+      </Card>
       <SectionHeader title="Tài khoản" />
       <Card>
         <ListRow

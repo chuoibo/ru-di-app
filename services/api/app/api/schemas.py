@@ -709,6 +709,11 @@ class ContextSummary(ApiModel):
     theme: ChatTheme = "mac-dinh"
     kind: ContextKind = "group"
     counterpart: ContextCounterpart | None = None
+    #: ADR-0023 §2.3.2: a pair whose other side blocked, was blocked, or
+    #: deleted their account. The conversation stays readable -- the
+    #: messages are the other person's too -- but it takes no new ones.
+    #: Always false for a group, which has no «other person» to be gone.
+    unavailable: bool = False
 
 
 class PersonContextListResponse(ApiModel):

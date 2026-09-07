@@ -52,6 +52,12 @@ appId: com.lakiet.rudi
 - assertVisible: "Sổ tiền của các nhóm giữ nguyên: ai nợ ai bao nhiêu không đổi."
 - assertVisible: "Bạn rời mọi nhóm; tin nhắn cũ ở lại với tên «Người dùng đã rời»."
 - takeScreenshot: 46-canh-bao
+- scrollUntilVisible:
+    element:
+      text: "Tôi hiểu, tiếp tục"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - tapOn: "Tôi hiểu, tiếp tục"
 - extendedWaitUntil:
     visible: "Ô xác nhận xoá"
@@ -60,6 +66,12 @@ appId: com.lakiet.rudi
 - inputText: "XOA"
 - hideKeyboard
 - takeScreenshot: 46-go-xac-nhan
+- scrollUntilVisible:
+    element:
+      text: "Xoá vĩnh viễn"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - tapOn: "Xoá vĩnh viễn"
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"

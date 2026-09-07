@@ -40,8 +40,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Tường cá nhân"
     timeout: 60000
-# Đối chứng dương: còn là bạn thì cửa nhắn riêng có mặt.
+# Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Hai người vẫn chung nhóm
+# sau khi chặn, nên nút «Nhắn tin» vẫn còn trên màn — dạng khoá, kèm câu «Kết
+# bạn để nhắn riêng.». Chính câu ấy là thứ phân biệt hai trạng thái, không phải
+# sự có mặt của cái nút.
 - assertVisible: "Nhắn tin"
+- assertNotVisible: "Kết bạn để nhắn riêng."
 - takeScreenshot: 45-truoc-khi-chan
 # --- chặn ---------------------------------------------------------------------
 - tapOn: "Thêm hành động"
@@ -56,9 +60,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đã chặn"
     timeout: 30000
-# Màn hỏi lại máy chủ sau khi chặn: quan hệ không còn là bạn, nên cửa nhắn riêng
-# đóng lại ngay chứ không đợi lần mở màn sau.
-- assertNotVisible: "Nhắn tin"
+# Màn hỏi lại máy chủ ngay sau khi chặn: quan hệ rơi từ «bạn» xuống «cùng nhóm»,
+# nên cửa nhắn riêng đóng trong cùng khung hình chứ không đợi lần mở màn sau.
+# Nhóm chung giữ nguyên — đó là lý do hồ sơ vẫn đọc được.
+- extendedWaitUntil:
+    visible: "Kết bạn để nhắn riêng."
+    timeout: 30000
 - takeScreenshot: 45-da-chan
 # --- báo cáo ------------------------------------------------------------------
 - tapOn: "Thêm hành động"
@@ -91,7 +98,13 @@ appId: com.lakiet.rudi
     timeout: 30000
 - tapOn: "Cài đặt"
 - extendedWaitUntil:
-    visible: "Người đã chặn"
+    visible: "Đổi ảnh đại diện"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Người đã chặn"
+    direction: DOWN
+    centerElement: true
     timeout: 30000
 - tapOn: "Người đã chặn"
 - extendedWaitUntil:
