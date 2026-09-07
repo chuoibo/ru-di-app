@@ -2183,10 +2183,18 @@ for f in "$FLOWS"/*.yaml; do
   # Exit 2 của script là «không đo được» — cũng đỏ, vì một lượt --otp không đo
   # được bàn phím là một lượt thiếu bằng chứng, không phải một lượt xanh.
   case "$ten" in
-    # Đối chứng âm của flow 45 chạy NGAY tại đây: trạng thái nó cần (F còn sống,
-    # vừa bị chặn rồi bỏ chặn) chỉ sống tới flow 46, nơi F xoá tài khoản.
+    # Phép kiểm VÀ đối chứng âm của flow 45 chạy NGAY tại đây, không ở khối
+    # kiểm sau bảng như mọi flow khác. Lý do là một sự thật về thứ tự chứ không
+    # phải một sở thích: trạng thái chúng đo (F còn sống, còn chung nhóm với
+    # người lái, vừa bị chặn rồi bỏ chặn) chỉ sống tới flow 46, nơi F tự xoá
+    # tài khoản. Đặt chúng ở cuối bảng thì chúng hỏi một người đã không còn, và
+    # câu đỏ nói về «nhóm chung» trong khi chuyện thật là «người ấy đã đi»
+    # (lượt 2026-09-07: hồ sơ F trả 403 thay vì 200, đúng vì F đã bị xoá).
     45-*)
-      if [ "$rc" -eq 0 ]; then canary_dm_bi_chan; fi
+      if [ "$rc" -eq 0 ]; then
+        kiem_can_25 kiem_may_chu_sau_45 && kiem_may_chu_sau_45
+        canary_dm_bi_chan
+      fi
       ;;
     31-*)
       if [ "$rc" -eq 0 ]; then
@@ -2276,7 +2284,6 @@ if [ "$OTP" = 1 ]; then
   da_chay 42 && kiem_can_25 kiem_may_chu_sau_42 && kiem_may_chu_sau_42
   da_chay 43 && kiem_can_25 kiem_may_chu_sau_43 && kiem_may_chu_sau_43
   da_chay 44 && kiem_can_25 kiem_may_chu_sau_44 && kiem_may_chu_sau_44
-  da_chay 45 && kiem_can_25 kiem_may_chu_sau_45 && kiem_may_chu_sau_45
   da_chay 46 && kiem_can_25 kiem_may_chu_sau_46 && kiem_may_chu_sau_46
   { [ "$TAT_KAV" = 1 ] || ! da_chay 30; } || kiem_may_chu_sau_30
   [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] && da_chay 40 && kiem_may_chu_sau_40
