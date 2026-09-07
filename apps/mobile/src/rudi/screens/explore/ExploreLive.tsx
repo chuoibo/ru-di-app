@@ -194,7 +194,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const rong = danhSach.length === 0;
 
   return (
-    <RudiScreen bottomInset={112} testID="explore-screen">
+    <RudiScreen bottomInset={112} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         <Wordmark color={colors.ink} height={20} />
         {/* The destination is a control, not a caption. */}
@@ -206,7 +206,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
         >
           <Ionicons color={colors.accent} name="location" size={16} />
           <Text style={[typography.label, { color: colors.ink }]}>
-            {diemDen === null ? "Đang đọc điểm đến…" : `${diemDen.name} · đổi nơi khác`}
+            {diemDen !== null ? `${diemDen.name} · đổi nơi khác` : trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
           </Text>
           <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
         </Pressable>

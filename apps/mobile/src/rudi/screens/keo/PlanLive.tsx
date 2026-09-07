@@ -129,7 +129,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
 
   if (contextId === null) {
     return (
-      <RudiScreen bottomInset={112} testID="plan-screen">
+      <RudiScreen bottomInset={112} onRefresh={nap} testID="plan-screen">
         <Heading title="Lên plan" subtitle="Vào một nhóm trước; kèo là của nhóm." />
         <RudiButton label="Tới Tin nhắn" onPress={() => router.push("/(tabs)/messages" as never)} variant="outline" />
       </RudiScreen>
@@ -141,7 +141,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
   const [dan, ...sauDo] = chia?.sapToi ?? [];
 
   return (
-    <RudiScreen bottomInset={112} testID="plan-screen">
+    <RudiScreen bottomInset={112} onRefresh={nap} testID="plan-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
           <Heading title="Lên plan" subtitle={`Kèo của ${tenNhom(phien)}`} />

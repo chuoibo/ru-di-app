@@ -400,6 +400,10 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
   return (
     <View style={styles.khoi}>
       <SectionHeader title="Ảnh của nhóm bạn" />
+      {/* Who may see these is said before the pictures, not after: the reader
+          meets the rule with the heading, and at font 1.3 a sentence under a
+          strip of photographs sat below the fold (board 2026-09-07). */}
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_ANH_NHOM}</Text>
       <ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-group-photos">
         {anh.map((a) => {
           const nguon = nguonAnh(a.imageUrl, personId, a.contextId);
@@ -416,7 +420,6 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
           );
         })}
       </ScrollView>
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_ANH_NHOM}</Text>
     </View>
   );
 }

@@ -78,7 +78,13 @@ appId: com.lakiet.rudi
       text: "Ảnh của nhóm bạn"
     direction: DOWN
     timeout: 30000
-- assertVisible: "Nhom minh tung o day"
+# `assertVisible` không cuộn: ở cỡ chữ 1.3 chú thích ảnh nằm dưới nếp gấp sau
+# tiêu đề mục, nên cuộn tới nó rồi mới khẳng định câu về quyền xem.
+- scrollUntilVisible:
+    element:
+      text: "Nhom minh tung o day"
+    direction: DOWN
+    timeout: 30000
 # Maestro khớp TRỌN văn bản của node, và node ấy là cả câu
 # «Ảnh nhóm bạn chụp ở đây. Người ngoài nhóm không thấy.» — mẫu bắt đầu
 # bằng vế sau sẽ không khớp dù chữ hiện rành rành trên ảnh chụp.
