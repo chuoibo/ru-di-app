@@ -254,6 +254,20 @@ trước (`d168b63`, UI-0/UI-1) và checkpoint trưa 2026-09-06 nằm dưới m�
 chỗ nào hợp đồng hướng đi và bản ship lệch nhau thì **bản ship thắng** và
 được ghi rõ.
 
+**Đợt «bản sắc và nhịp thị giác» (2026-09-08)**, nhánh
+`claude/p0-w-ui3-hoan-thien-native`, commit `cdccb590` → `8c1d8600` trên
+`3d89f070`, thêm **lớp vẽ** (`src/rudi/art/*.ts` + `src/rudi/ui/art/*.tsx`:
+mascot Nếp, tám hình gu, ba motif, năm cảnh rỗng), bậc chữ `note`, khe
+`leading` của chip, cặp so sánh địa điểm và lý do dưới ảnh dẫn, album theo
+ngày, và bộ luật câu chữ §8.5 của báo cáo 07/09. Bằng chứng native trong
+`.impeccable/review/ban-sac-2026-09-08/`: `sua2-sang-1.0/` (sáng 1.0, bản
+cuối), `sua-sang-1.0/` (album, dòng thời gian, check-in, khay tạo), `sua-ab/`
+(cảnh có / không Nếp), `sua-sang-1.3/bs-03*` (Sở thích ở font 1.3),
+`toi-1.3/` (tối, **trước** loạt sửa cuối), `art-preview.png` và bảng art
+sáng + tối. Finish reviewer trả `ship` cho màn fixture ở sáng 1.0 và Sở thích
+ở 1.3; **chưa phủ**: các cửa live, tối sau loạt sửa, tương phản nút vô hiệu
+của kit (nợ có tên, xem mục cuối).
+
 **Bằng chứng của từng câu.** Số đo (dp, sp, opacity, tỉ lệ) đọc từ
 `packages/shared/tokens.json`, `src/rudi/theme.ts`, `motion.ts`,
 `adaptive.ts`, kit `src/rudi/ui.tsx` + `src/rudi/ui/*.tsx` và hai hàng
@@ -406,6 +420,16 @@ tối; chữ trên bìa là `coverInk`/`coverInkSoft`.
 `coverLineStrong` trên bìa); cạnh của container vẽ bằng `line`. Thêm một
 control là thêm một dòng trong `interactive_boundaries()` của
 `test_contrast_floor.py`; control không có dòng ở đó là control không ai đo.
+
+**Luật Vai Màu Của Nét Vẽ.** Lớp vẽ không biết màu. Mỗi lớp (`LopVe`) gọi
+tên một **vai** trong bảy vai `MauVe` (`giay` giấy · `bong` mặt gấp trong
+bóng · `muc` mực · `gap` góc gấp coral · `mo` màu rửa nhạt · `split` · `ai`),
+và `VeLop.mauLop` mới đổi vai ra token của scheme: `giay → card`, `bong →
+line`, `muc → ink`, `gap → accent`, `mo → accentSoft`, `split → split`, `ai →
+ai`. Nhờ vậy một hình vẽ giữ bóng dáng trên cả giấy sáng lẫn vải tối (bảng
+art hai nửa: giấy tối đi, mực sáng lên, coral y nguyên) và `rudi-khong-hex`
+vẫn giữ `theme.ts` là file duy nhất viết hex. `doiMau` chỉ đổi **một** vai
+tại chỗ (ô đã chọn: `muc → accent`), không tạo bảng màu riêng cho tranh.
 
 ## Màu, kèm số đo tương phản
 
@@ -569,8 +593,15 @@ instance.
 - **Label** (system 600, 14/19): nhãn nút, nhãn ô nhập, `CoverButton`, tên
   chặng và giờ (tabular) trên `HangChang`, tên dòng sổ **đậm** (`DongTien
   dam`), câu ghi chú AI.
-- **Caption** (system 600, 13/18): chip, phụ đề, pháp lý. Nhãn tab có override
+- **Caption** (system 600, 13/18): chip, nhãn ngắn, pháp lý. Nhãn tab có override
   12/14; `Stamp` 12/14 và `DemoBadge` 10/12 là các cỡ riêng, không phải caption.
+- **Note** (system 400, 13/18, `typography.note`, thêm 2026-09-08): dòng phụ
+  **là một câu** ở cỡ caption nhưng độ đậm đọc: siêu dữ liệu («17 - 19/10/2026
+  · 4 ảnh»), chú thích («Không bắt buộc · K là nghìn đồng»), đếm («Chọn ít
+  nhất 3 để tiếp tục» khi đã đủ), nhãn ngày trong album, mô tả và sự thật
+  trên ô so sánh, dòng chi tiết của khay tạo, câu lưu trữ cuối Sở thích, phần
+  giải thích «Cách tính». Cùng cỡ `micro` của `tokens.json`, không phải bậc
+  mới của thang chung.
 - **Stamp** (CondensedBold, 12/14, +0.8, IN HOA): chữ trên con dấu trạng thái
   và tem; đây là chữ in hoa giãn duy nhất của hệ, và nó là **mực dấu**, không
   phải eyebrow.
@@ -592,6 +623,11 @@ lỗi.
 **Luật Số Tabular.** Số tiền luôn `fontVariant: ["tabular-nums"]`, luôn số
 nguyên đồng, luôn là chuỗi máy chủ gửi. Một cột tiền mà chữ số nhảy bề
 ngang là đọc sai. Cột giờ của lịch trình cũng tabular (`HangChang gio`).
+
+**Luật Nhãn Đậm, Câu Nhẹ.** Ở 13sp, nhãn ngắn (chip, con số đếm chưa đủ,
+nhãn ô) đi `caption` 600; một câu có chủ ngữ đi `note` 400. Caption 600 lên
+một câu làm mọi dòng phụ cùng hét một cỡ (báo cáo 07/09 §4.2); `note` không
+bao giờ lên chip hay nhãn nút.
 
 **Luật Không Kicker.** Không có chữ in hoa giãn nhỏ đứng **trên** tiêu đề.
 Chữ in hoa duy nhất của hệ là mực con dấu (`typography.stamp`), và con dấu
@@ -623,9 +659,14 @@ phím mở ở compact (Login/OTP).
 `onLayout`, sau rail và lề; `gridFor(width, minItemWidth = 250, gap = 12,
 maxColumns = 3)` trả số cột và **bề rộng ô làm tròn xuống dp nguyên** (ba phần
 ba chính xác làm cột cuối gãy dòng trên máy, lỗi album 2026-09-06). `maxColumns`
-mặc định 3 cho hàng thẻ; tường album truyền `maxColumns={6} minItemWidth={104}
-gap={6}` nên tablet hiện sáu ô nhỏ chứ không ba poster; `RosterPicker` ô 130,
-gap 8, tối đa 3. Vì đo vùng thật, màn medium vẫn có thể chỉ một cột.
+mặc định 3 cho hàng thẻ; tường nhóm và album fixture truyền `maxColumns={6}
+minItemWidth={104} gap={6}` nên tablet hiện sáu ô nhỏ chứ không ba poster;
+album live theo ngày truyền `maxColumns={4} minItemWidth={150} gap={6}` (ô
+150 tối thiểu, hai ô một hàng ở compact); `RosterPicker` ô 130, gap 8, tối đa
+3. Vì đo vùng thật, màn medium vẫn có thể chỉ một cột. **Lưới đọc `fontScale`
+khi ô chứa chữ**: ô gu ở Sở thích `minItemWidth = round(150 × max(1,
+fontScale))`, nên ở 1.3 hai cột (mỗi nhãn còn một từ, Android bẻ đôi
+«Shopping») rút về **một cột** thay vì cắt chữ (`sua-sang-1.3/bs-03*`).
 
 **Tỉ lệ ảnh theo cỡ cửa sổ** (`Photo ratio`, `PlaceLead`): ảnh dẫn địa điểm
 **16:10** ở compact (đầy bề ngang máy ở chiều cao đọc được), **21:9** ở
@@ -849,7 +890,11 @@ tạo), `KhungAnh` 3, `AnhChang` 2, `DongTien` 2, `StampButton` 2, `CoverBand` 2
   thêm iOS client ID. Điều kiện hiển thị đọc từ mã, chưa là bằng chứng OAuth.
 
 ### Chips
-- **Chip bấm được**: cao 48, bo pill, icon Ionicons 18 tuỳ chọn; chưa chọn
+- **Chip bấm được**: cao 48, bo pill, icon Ionicons 18 tuỳ chọn **hoặc**
+  `leading` (một `ReactNode` thế chỗ icon, thực tế là `GuGlyph` 22 để một
+  phân loại được vẽ bằng một cây bút ở mọi nơi: hàng danh mục Khám phá
+  fixture và live); có `leading` thì dấu check của trạng thái chọn nhường
+  chỗ, chọn nói bằng nền `<tone>Soft` + viền tông + mực glyph đổi coral; chưa chọn
   nền `card` viền `lineStrong` chữ `inkSoft`; đã chọn nền `<tone>Soft` viền
   màu tông, chữ màu tông **và** dấu check (ảnh `09-itinerary`: «✓ Ngày 1»).
   Nhấn co 0.96. Bộ lọc Khám phá, chọn ngày lịch trình, «Theo ngày» ở album;
@@ -909,8 +954,12 @@ không phải gì.
 - **`KhungAnh`**: giấy `card` bo 10, viền tóc `line`, `cardShadow`, đệm
   8/8/14, ảnh con bo 4; `chuThich` là câu người viết (`body ink`), `xuatXu` là
   dòng app biết chắc («ai · ở đâu · khi nào», `caption inkFaint`, một dòng).
-  Ảnh dẫn của album và bài tường (ảnh `18-album`: «Team Đà Lạt · Đà Lạt ·
-  17 - 19/10/2026»); ô nhỏ trong lưới **không** khung.
+  Ảnh dẫn của album và bài tường; ô nhỏ trong lưới **không** khung. **Mỗi
+  sự thật viết một lần** (08/09, `sua-sang-1.0/bs-18-album`): nơi chốn ở
+  `TopBar` («Album Đà Lạt», không phụ đề ngày nữa), nhóm trên bản in
+  (`xuatXu` «Team Đà Lạt»; live là «Ảnh của nhóm»), ngày và số ảnh trên
+  tiêu đề («17 - 19/10/2026 · 4 ảnh», `note inkSoft`). Không lặp ngày ba lần
+  trên một màn.
 - **`MediaSlot`**: nơi duy nhất ảnh được phép xuất hiện trên màn live; khung
   vẽ trước, fallback là artwork của thế giới, ảnh có giấy phép rơi vào cùng
   khung với `Attribution` (tác giả, giấy phép) in `caption inkFaint` bên dưới;
@@ -919,18 +968,101 @@ không phải gì.
   cho con dấu trên ảnh; `PhotoShade` gradient `lopPhu.xam(0.78)` từ 0.3 xuống
   đáy khi có chữ trên ảnh. Ô album 104 tối thiểu, gap 6, tối đa 6 cột.
 - **Số ảnh thật**: «4 ảnh» đếm từ mảng ảnh, không từ chuỗi.
+- **Album theo ngày** (chỉ `AlbumLive.tsx`, đọc từ mã, chưa có ảnh native):
+  sau ảnh dẫn, `nhomTheoNgay` gom ảnh theo **ngày lịch Việt Nam (+07:00)**
+  tính trên epoch (Hermes không hứa `Intl`); mỗi ngày một nhãn `note
+  inkFaint` «17/10» (chỉ khi có hơn một ngày; tem không parse được gom dưới
+  «Chưa rõ ngày», không bị rơi), ảnh **theo cặp** vuông (`ResponsiveRow
+  maxColumns 4 minItemWidth 150 gap 6`), **ảnh lẻ cuối ngày đi ngang** ở tỉ
+  lệ ảnh dẫn để ngày kết bằng một nhịp, không bằng lỗ hổng. Album fixture
+  (`Memories.tsx`) vẫn là lưới đều ba cột.
 
-### Hàng địa điểm (`PlaceLead`, `PlaceRow`)
+### Lớp vẽ (`art/`): Nếp, hình gu, motif, cảnh rỗng
+Đợt 08/09 thêm một lớp minh hoạ **vector thuần**, tách hình học khỏi màu và
+khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopVe`
+(`d`, vai màu `mau`, `net` > 0 là nét, không có là tô); `src/rudi/ui/art/`
+(`VeLop`, `Nep`, `GuGlyph`, `VongHo`/`DuongChuyen`/`GocGap`, `Canh`) vẽ mảng
+đó bằng `react-native-svg`, nét tròn đầu tròn góc, tô phẳng, không bóng.
+- **Ngữ pháp đường**: mọi `d` chỉ gồm lệnh tuyệt đối `M`/`L`/`C`/`Z`, số thập
+  phân trơn (không mũ, không `-0`), dựng từ số lúc chạy qua `net.ts`
+  (`daGiac`, `netGay`, `cong`, `qCong`, `tron`, `bau`, `cungTron`, `quat`,
+  `khungBo`, `vien`, `thon`, `giot`). Bậc hai và cung tròn được đổi ra bậc ba
+  ở builder, không bao giờ phát `Q`/`A`. Lý do là hai lỗi thật: Java
+  `PathParser` ném lúc mount và app chết khung hình đầu (tsc, web export mù),
+  và repo guard đọc chín chữ số cách nhau như số tài khoản.
+  `tests/art-duong.test.mjs` parse từng hình đúng cách Java parse.
+- **Ba lưới**: Nếp trong ô **96** (`KHUNG_NEP`), hình gu trong ô **48**
+  (`KHUNG_GU`), cảnh trong khung ngang **144×112** (`KHUNG_CANH`). Ô đặt qua
+  `bienDoi(x0, y0, tiLe)`; chưa có lưới 24 nào dùng ngoài bản 22/32 của
+  `GuGlyph` co từ 48.
+- **Nếp** (`hinhNep`, sáu tư thế `moi` · `giu-cho` · `gop-y` · `doi` ·
+  `ghi-lai` · `vui`): tờ hẹn gấp, thân giấy hơi rộng chân, một nếp chéo
+  (`bong`) như hai ve áo, **một** góc coral gấp xuống trên phải, mắt mực
+  dưới cặp mày lệch, nụ cười nghiêng khép, chân thon và tay bao (`vien`)
+  luôn đang làm gì đó. **Hai bản đọc**: 96 có mày, nếp, đạo cụ; dưới 72dp
+  (`Nep size < 72`) vẽ **bản 48** dày nét bỏ chi tiết, không co bản 96.
+  Trang trí, ẩn khỏi cây trợ năng; chữ bên cạnh mới nói.
+- **Hình gu** (`hinhGu`, tám id của máy chủ `an-uong` · `cafe` · `nightlife`
+  · `mon-local` · `outdoor` · `shopping` · `karaoke` · `game`): vật trên bàn
+  vẽ **một cây bút** (nét chính 2.4 trên lưới 48, nét mảnh 1.7), **tối đa
+  một chi tiết coral** mỗi hình (giọt cà phê, bóng đèn sáng, thẻ menu, điểm
+  đứng); id lạ vẽ **thẻ gấp**, không rỗng, không ném. `GuGlyph` 40 trên ô Sở
+  thích, 22 trong chip Khám phá, 32 trong thumbnail hàng, ×1.15 trong đĩa
+  `PlaceGlyph`; `tone="accent"` đổi mực sang coral cho ô/chip đã chọn.
+- **Ba motif** (`motif.ts`): **vòng hở** (`vongHo`, một nét coral, khe hở
+  hơn 60°, mặc định mở trên phải) là cái bàn còn trống một bên, **chỉ trang
+  trí**; **đường chuyền** (`duongChuyen`, đường S của kit với chấm coral ở
+  điểm đặt bút) nối những thứ thuộc về nhau; **góc gấp** (`gocGap`, tờ giấy
+  gấp góc trên phải cùng góc với Nếp, tỉ lệ 0.28). Ghế `hinhGhe` là đạo cụ
+  chung của cảnh.
+- **Năm cảnh** (`hinhCanh`, `CANH_IDS`), mỗi cảnh **trọn vẹn khi không có
+  Nếp** (`nep: false`, so `sua-ab/A-co-nep` với `B-khong-nep`) và được trình
+  đọc màn hình đọc thành **một câu**: `chua-co-hoi` «Một chiếc ghế được kéo
+  ra, chừa sẵn chỗ» · `chua-co-keo` «Một tờ hẹn trống, nét mực bắt đầu từ
+  đó» · `chua-co-anh` «Một khung ảnh còn trống, góc giấy gấp» · `chua-co-ban`
+  «Hai chiếc ghế, một chỗ còn trống» · `tim-khong-ra` «Một tấm bản đồ gấp,
+  đường đi chưa tới nơi». `Canh` khung chặt theo `hopNgang` + `viewBox`, nên
+  bỏ Nếp thì cảnh không để lại khoảng thụt bên trái; `width` là bề rộng
+  khung 144 đầy đủ để đạo cụ giữ một cỡ có hay không có nhân vật.
+- **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
+  **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
+  Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
+- **Luật Vòng Hở Không Tiến Độ.** Vòng hở không bao giờ là progress ring:
+  không animate, không đi cùng phần trăm, khe luôn rộng. Đường chuyền khi
+  mang nghĩa tiến độ phải có chữ đi kèm.
+
+### Hàng địa điểm (`PlaceLead`, `PlaceCompare`, `PlaceRow`, `PlaceGlyph`)
+Một từ vựng `DiaDiemHienThi` cho catalogue fixture và màn live; đợt 08/09
+thêm `loai` (id danh mục, để khung trống vẽ hình gu) và `lyDo` (một lý do có
+căn cứ). Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
+**một cặp so sánh** (khi còn ≥ 2) → **các hàng** (`sua2-sang-1.0/bs-04-kham-pha*`).
 - **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20, `Stamp` tím nghiêng
-  -2 ở góc trên trái khi có `badge`; dưới ảnh tên `h2`, mô tả `body inkSoft`,
-  ba sự thật với icon 16 (`label inkSoft`); nút lưu `IconButton` phải.
-- **`PlaceRow`**: thumbnail bo 10 (`accentSoft` khi chưa có ảnh), tên `title`
-  hai dòng, mô tả `caption inkSoft` một dòng, sự thật `caption inkFaint` một
-  dòng, ghi công `caption inkFaint` tối đa hai dòng («Ảnh quanh đây: tác giả ·
-  giấy phép», cùng câu với `MediaSlot` qua `cauGhiCong`) khi thumbnail là ảnh
-  có giấy phép, `Stamp` tím dưới cùng khi có; nút tim phải; đệm dọc 10, gap 8,
-  kẻ tóc dưới. Hàng nằm trên giấy, **không thẻ**; ở tablet hai cột
-  (`tablet-light-explore`).
+  -2 ở góc trên trái khi có `badge`; dưới ảnh tên `h2`, **một dòng lý do**
+  `label` màu `ai` ngay dưới tên («Hợp gu nhờ Chill và View đẹp») chỉ khi
+  match là thật và máy chủ gửi `reason`, không bao giờ là tagline hoá trang
+  làm lý do; rồi mô tả `body inkSoft`, ba sự thật với icon 16 (`label
+  inkSoft`); nút lưu `IconButton` phải.
+- **`PlaceCompare`**: hai ứng viên **trên một trục**, không thẻ quanh ô nào:
+  hàng `gap` 16, đệm dưới 12, kẻ tóc `line` dưới; mỗi ô `flex 1` gồm
+  `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
+  (như ảnh dẫn, không hàng mồ côi dưới sự thật) và `Stamp` tím `nen` khi có
+  badge; tên `title` hai dòng, mô tả `note inkSoft` hai dòng, các sự thật
+  đầu nối « · » trên một dòng `note inkFaint`, **sự thật cuối (giá kèm đơn
+  vị) đứng riêng một dòng** để ô nửa màn không bẻ «80K/người»; ghi công
+  `note inkFaint` khi ảnh có giấy phép. Thuần: cùng hàm chia cho fixture và
+  live.
+- **`PlaceRow`**: thumbnail 56 bo 10 (`accentSoft` khi trống, bên trong
+  `GuGlyph` 32 coral khi có `loai`, Ionicons 24 khi không), **con dấu đứng
+  cạnh tên** trên cùng hàng (`rowTen`, tên rút về một dòng khi có dấu) để
+  hàng có match cao bằng hàng thường; mô tả `caption inkSoft` một dòng, sự
+  thật `caption inkFaint` một dòng, ghi công `caption inkFaint` tối đa hai
+  dòng (`cauGhiCong`); nút tim phải; đệm dọc 10, gap 8, kẻ tóc dưới. Hàng
+  nằm trên giấy, **không thẻ**; ở tablet hai cột.
+- **`PlaceGlyph`**: đĩa `accentSoft` đường kính 1.7 × size, bên trong hình
+  gu của danh mục (`guTheoLoai`: `quan-an-local → an-uong`, `cafe`, `vui-choi
+  → game`, `di-choi-dem → nightlife`, còn lại → thẻ gấp) tô coral; Ionicons
+  chỉ còn là fallback khi caller không truyền `loai`. Khung trống **không
+  bao giờ** là ảnh stock.
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
@@ -1018,8 +1150,12 @@ nên tab Lên plan và tờ lịch trình AI trong chat có nhịp «điểm đ�
 - **Khay tạo** (`screens/Create.tsx`) giờ **là** `Sheet` đó, không còn bản
   chép tay: route `create` chỉ `fade` với `contentStyle` trong suốt
   (`app/_layout.tsx`), tab bên dưới còn nguyên dưới scrim (ảnh
-  `dot8/12-create-sheet`); nội dung `maxWidth` 560, ba hành động cao 72 kẻ
-  tóc, `PressScale` 0.985; đóng xong mới `router.back()`. Mở lạnh (deep
+  `dot8/12-create-sheet`); nội dung `maxWidth` 560, hành động cao 72 kẻ
+  tóc, `PressScale` 0.985; **dòng chi tiết (`note inkFaint`) chỉ ở hành
+  động dễ nhầm với hành động khác** («Đăng kỷ niệm» · «Ảnh lên tường nhóm»
+  và «Đăng story» · «Một tấm 24 giờ, chỉ bạn bè thấy»), «Tạo cuộc hẹn» và
+  «Chia hóa đơn» chỉ một dòng (`sua-sang-1.0/bs-10-khay-tao`); đóng xong
+  mới `router.back()`. Mở lạnh (deep
   link, thông báo) `app/create.tsx` dựng vỏ tab trước rồi mở lại sheet: **chỉ
   đọc từ mã**, chưa kiểm trên máy.
 - **Ô soạn chat** (Group): hàng bo 22 nền `card` viền 1px `line`, đệm 6, ở
@@ -1070,7 +1206,12 @@ nên tab Lên plan và tờ lịch trình AI trong chat có nhịp «điểm đ�
 - **`EmptyState`** năm loại (`first-use`, `no-results`, `filtered`,
   `permission`, `failure`): `h2` + một câu `body` `inkSoft` rộng tối đa 420,
   **một** hành động `RudiButton compact` (`outline` khi `failure`) và một cửa
-  phụ `ghost`; minh hoạ chỉ khi có artwork của thế giới.
+  phụ `ghost`; khe `illustration` từ 08/09 nhận `<Canh>` **rộng 168**:
+  Album «Chưa có kèo nào» → `chua-co-keo`, «Chưa có khoảnh khắc» →
+  `chua-co-anh`, Khám phá «Chưa thấy nơi phù hợp» → `tim-khong-ra`
+  (`sua2-sang-1.0/bs-04-tim-khong-ra`: cảnh, `h2`, một câu, một nút). Hai
+  cảnh còn lại (`chua-co-hoi`, `chua-co-ban`) đã vẽ, chưa có màn gọi. Câu
+  thân rút về một câu vì cảnh đã nói vế đầu.
 - **`Skeleton`**: xương màu `line`, bo 10, băng sáng `card` 0.55 chạy 1400ms;
   tắt hẳn dưới Reduce Motion. `SkeletonLines` dòng cuối 62%.
 - **`ErrorState`**: cùng khung với `EmptyState kind="failure"`.
@@ -1133,6 +1274,26 @@ fixture luôn dán «Dữ liệu demo» (đầy đủ), «Demo»/«Nháp» (tron
 «Bản trải nghiệm» (Welcome). Số tiền viết «1.106.250đ»; không có số nào màn
 tự bịa: đếm ảnh, huy hiệu, ngày còn lại đều tính từ dữ liệu.
 
+**Luật Nói Một Lần** (08/09, báo cáo 07/09 §8.5, §4.6): mỗi trạng thái và
+mỗi sự thật có **một** chỗ trên màn.
+- `HangChang phu` mang **tên địa điểm** khi có, «Chọn địa điểm» khi chưa có
+  (live: «Mở địa điểm» khi máy chủ chỉ có id), không «Đã gắn địa điểm · bấm
+  để mở».
+- Trạng thái nháp nói **một lần** ở đầu màn (badge «Nháp», `AiNote`), không
+  «Có thể thay đổi» dưới từng hàng.
+- Hàng check-in là **một con dấu**: đã tới thì chỉ `Stamp`, chưa tới thì
+  một `note` «Chưa tới»; không caption «Đã check-in» đứng cạnh dấu «ĐÃ TỚI»
+  (`sua-sang-1.0/bs-20-check-in`).
+- Luật tính toán đứng sau **một cửa mở** «Cách tính» (Thành tích:
+  `Pressable` cao 48, `label inkSoft` + chevron, `accessibilityState
+  expanded`), không làm chân trang dưới mọi danh sách; luật vẫn giữ nguyên
+  câu.
+- Khay tạo: dòng chi tiết chỉ ở hành động dễ nhầm.
+- Nút làm mới gọi «Làm mới», không «Đọc lại từ máy chủ»; fixture bill nói
+  «Bill mẫu · N dòng · tổng …. Bạn đang thử bằng dữ liệu mẫu.» thay vì giải
+  thích canonical/OCR; ô tìm Khám phá tự nói bằng placeholder («Tìm quán,
+  món… hoặc hỏi Rủ Đi AI»), không đoạn hướng dẫn dưới ô.
+
 ### Trợ năng (sàn)
 Đích bấm 48dp (nút 52/60, `compact` 48, chip 48, tab 48, back 48, link bìa
 48, tay nắm kéo 48×56, checkbox 48); chữ nhỏ nhất 13sp caption, trừ ba cỡ
@@ -1183,6 +1344,20 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   chặng khác để trống khe `phai`.
 - **Do** cấp mọi màu mới qua `tokens.json` → script → `guest.css` + DESIGN.md
   cùng PR; `rudi-khong-hex` giữ `theme.ts` là file duy nhất viết hex.
+- **Do** vẽ minh hoạ qua `art/*.ts` → `VeLop`: chỉ `M`/`L`/`C`/`Z` tuyệt
+  đối dựng từ số, vai màu `MauVe` thay vì màu, và thêm hình mới vào
+  `tests/art-duong.test.mjs`.
+- **Do** để Nếp chỉ ở trạng thái rỗng và cửa vào, dưới 72dp thì bản 48; cảnh
+  phải đứng được khi `nep={false}` và đọc thành một câu.
+- **Do** vẽ phân loại bằng `GuGlyph` (chip `leading`, ô gu, khung trống
+  `PlaceGlyph`), mực đổi coral khi chọn; id lạ là thẻ gấp.
+- **Do** dùng `note` (13/400) cho dòng phụ là một câu và giữ `caption` (600)
+  cho nhãn ngắn.
+- **Do** xếp kết quả Khám phá dẫn → cặp so sánh (4:3, tim trên ảnh, giá
+  đứng riêng dòng) → hàng; lý do dưới ảnh dẫn chỉ khi máy chủ gửi.
+- **Do** viết mỗi sự thật một lần trên màn: tên địa điểm ở `phu`, nháp ở đầu
+  màn, check-in là một con dấu, luật tính sau «Cách tính».
+- **Do** nhân `minItemWidth` với `fontScale` khi ô lưới chứa nhãn chữ.
 
 ### Don't:
 - **Don't** đặt chữ nhỏ hay icon lên `brand.*` bằng mực của scheme; coral với
@@ -1223,6 +1398,15 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** thêm toast hay modal lỗi; lỗi là một câu `warn` dưới form.
 - **Don't** dùng gạch dài trong câu chữ; đừng đặt nhãn «OK»/«Tiếp» lên control.
 - **Don't** ship nhãn demo trên tiền thật; `DemoBadge` phải rỗng ở phiên live.
+- **Don't** đặt Nếp cạnh số tiền, lỗi hay xung đột; đừng cho Nếp dấu chuyển
+  động hay mặt hào hứng.
+- **Don't** biến vòng hở thành progress ring (animate, phần trăm, khe hẹp);
+  đừng đặt đường chuyền làm tiến độ mà không có chữ.
+- **Don't** phát `Q`/`A`/lệnh tương đối hay số mũ trong `d`; đừng gõ đường
+  SVG bằng literal chín chữ số.
+- **Don't** đưa hex hay màu vào `art/*.ts`; lớp vẽ chỉ biết vai.
+- **Don't** lặp một sự thật hai chỗ trên màn (ngày ba lần ở album, «Đã
+  check-in» cạnh dấu «ĐÃ TỚI», «Có thể thay đổi» dưới mỗi chặng).
 - **Don't** vẽ ảnh địa điểm mà không nói được nguồn (M12, ADR-0017 §2.5): ảnh có giấy phép thì tác giả + giấy phép ngay dưới ảnh (kể cả ô nhỏ trên hàng); ảnh của nhóm chỉ người trong nhóm thấy và máy chủ lọc; không xuất xứ thì về dải typographic, không mượn ảnh khác.
 
 ## Những gì bản ship KHÔNG phong thánh
@@ -1257,6 +1441,22 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   reviewer đợt 8 không kiểm trên máy.
 - Số ms của cú đóng dấu đọc từ `Stamp.tsx`; clip 20 fps chỉ chứng minh thứ
   tự nhịp (nhạt → đầy, hàng bên không động), không đo được 130/60.
+- **Nút vô hiệu của kit** («Tiếp tục» mờ trên `sua2-sang-1.0/bs-03-so-thich`):
+  chữ trắng trên coral nhạt, reviewer 08/09 ghi là nợ tương phản có tên,
+  không đo ở đây và không có tỉ lệ nào được in để hợp thức nó. Không lấy làm
+  mẫu trạng thái vô hiệu.
+- **Chế độ tối sau loạt sửa cuối** chỉ có bảng art (`art.png` nửa dưới) và
+  `toi-1.3/` chụp **trước** loạt sửa; cảnh trong `EmptyState`, cặp so sánh
+  và ô gu ở dark chưa có ảnh.
+- Album theo ngày chỉ ở `AlbumLive.tsx` và chỉ đọc từ mã; album fixture
+  `Memories.tsx` vẫn lưới đều ba cột (ảnh `bs-18-album`), là hai nhịp của
+  hai cây, không phải hai kiểu album của hệ.
+- Hai cảnh `chua-co-hoi`, `chua-co-ban` và bốn tư thế Nếp ngoài `moi`,
+  `ghi-lai` mới có trên bảng art, chưa màn nào gọi; ghi ở đây để không bị vẽ
+  lại khác, không phải để nói chúng đã lên máy.
+- Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
+  không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
+  phải một cuộc thay icon toàn hệ.
 
 ## Cổng phải xanh trước khi đổi hệ này
 
@@ -1265,6 +1465,7 @@ python3 -m pytest services/api/tests/web -q                   # token guest.css 
 python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sinh lại 4 gương, không gõ tay
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
+cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
 ```
 
