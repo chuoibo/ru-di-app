@@ -70,9 +70,12 @@ import {
   themMon,
   type ThanhVien,
 } from "../../chia-bill/hoa-don";
+import { aiCoGi } from "../../chia-bill/ai-co-gi";
 import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Chip, Field, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { AiCoGi } from "../../ui/AiCoGi";
 import { DongTien } from "../../ui/DongTien";
+import { HaiCot } from "../../ui/HaiCot";
 import { Money } from "../../ui/Money";
 import { RosterPicker } from "../../ui/RosterPicker";
 import { Stamp } from "../../ui/Stamp";
@@ -439,7 +442,14 @@ export function ChiaBillLiveScreen({ phien }: { phien: Phien }) {
       ) : null}
 
       {buoc.ten === "gan-mon" ? (
-        <>
+        // Wide window: the dish list on the left, «Ai có gì» beside it -- the
+        // same assignment read per person, plus the dishes still waiting. On
+        // a phone the per-line names already say it, so the pane is dropped.
+        <HaiCot
+          phaiChiKhiRong
+          phai={<AiCoGi bang={aiCoGi(reading.lines, roster, assignment)} />}
+          trai={
+            <>
           <Heading title={cauTongMon(reading)} subtitle="Chạm một món để sửa ai dùng. Máy chủ giữ bản gán này; tổng bill không đổi khi bạn sửa người." />
           <View>
             {reading.lines.map((line, i) => {
@@ -487,11 +497,31 @@ export function ChiaBillLiveScreen({ phien }: { phien: Phien }) {
               );
             })}
           </View>
-        </>
+            </>
+          }
+        />
       ) : null}
 
       {buoc.ten === "ket-qua" ? (
-        <>
+        // Wide window: the ledger on the left, the two things still to decide
+        // (who paid, what to call it) on the right, in view beside the numbers.
+        <HaiCot
+          phai={
+            <>
+          <SectionHeader title="Ai đã trả bill?" />
+          <Inline gap={6} wrap>
+            {roster.map((tv) => (
+              <Chip accessibilityLabel={`Người trả ${tv.name}`} key={tv.id} label={tv.name} onPress={() => setPayerId(tv.id)} selected={payerId === tv.id} tone="split" />
+            ))}
+          </Inline>
+          <Field accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+            Ghi vào sổ là tạo khoản chi với đúng các số ở trên; máy chủ tự kiểm tổng khớp trước khi ghi.
+          </Text>
+            </>
+          }
+          trai={
+            <>
           {phanCuaToi !== undefined ? (
             // The person's own share is the first line of the ledger, not a
             // tinted block with a label over a big number (the hero-metric
@@ -529,17 +559,9 @@ export function ChiaBillLiveScreen({ phien }: { phien: Phien }) {
               {w}
             </Text>
           ))}
-          <SectionHeader title="Ai đã trả bill?" />
-          <Inline gap={6} wrap>
-            {roster.map((tv) => (
-              <Chip accessibilityLabel={`Người trả ${tv.name}`} key={tv.id} label={tv.name} onPress={() => setPayerId(tv.id)} selected={payerId === tv.id} tone="split" />
-            ))}
-          </Inline>
-          <Field accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Ghi vào sổ là tạo khoản chi với đúng các số ở trên; máy chủ tự kiểm tổng khớp trước khi ghi.
-          </Text>
-        </>
+            </>
+          }
+        />
       ) : null}
 
       {buoc.ten === "da-ghi" ? (

@@ -14,6 +14,7 @@ import {
   Keyboard,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -52,6 +53,8 @@ type ScreenProps = {
   /** Only opt in when this screen owns the composer; live chat owns its own IME. */
   avoidKeyboard?: boolean;
   scrollEnabled?: boolean;
+  /** Pull-to-refresh on a live list: the same read the screen does on focus, so stale data has a way out. */
+  onRefresh?: () => Promise<void>;
   /** A sheet or scrim laid over the whole screen, outside the scroll box (a `Sheet` inside the content would scroll away with it). */
   overlay?: ReactNode;
   /** A thread reads from its end: keep the scroll at the bottom as content grows. */
@@ -76,11 +79,25 @@ export function RudiScreen({
   overlay,
   keepEnd = false,
   header,
+  onRefresh,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  // Pull-to-refresh runs the screen's own read; the spinner is the only state
+  // the shell adds, and it ends whether the read succeeded or threw.
+  const [dangKeo, setDangKeo] = useState(false);
+  const keoLamMoi = onRefresh
+    ? async () => {
+        setDangKeo(true);
+        try {
+          await onRefresh();
+        } finally {
+          setDangKeo(false);
+        }
+      }
+    : undefined;
   useEffect(() => {
     if (!avoidKeyboard) return;
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
@@ -125,6 +142,11 @@ export function RudiScreen({
           contentContainerStyle={inner}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={keepEnd ? () => cuon.current?.scrollToEnd({ animated: false }) : undefined}
+          refreshControl={
+            keoLamMoi ? (
+              <RefreshControl colors={[colors.accent]} onRefresh={() => void keoLamMoi()} progressBackgroundColor={colors.card} refreshing={dangKeo} tintColor={colors.accent} />
+            ) : undefined
+          }
           showsVerticalScrollIndicator={false}
           style={styles.flex}
         >
@@ -1044,7 +1066,9 @@ const styles = StyleSheet.create({
   fieldBlock: { gap: 7 },
   field: { minHeight: 52, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 10 },
   fieldMultiline: { minHeight: 108, alignItems: "flex-start", paddingTop: 13 },
-  fieldInput: { flex: 1, minHeight: 40, paddingVertical: 0 },
+  // The input is the node a finger and a screen reader land on, not the box
+  // around it: 48dp on its own (Material target), inside the 52dp field.
+  fieldInput: { flex: 1, minHeight: 48, paddingVertical: 0 },
   chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
   chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
   avatar: { alignItems: "center", justifyContent: "center" },

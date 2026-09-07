@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   composerShell: { gap: 8 },
   attachmentTray: { justifyContent: "center" },
   composer: { flexDirection: "row", alignItems: "center", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
-  oNhap: { flex: 1, minHeight: 40, paddingHorizontal: 10, paddingVertical: 8 },
+  oNhap: { flex: 1, minHeight: 48, paddingHorizontal: 10, paddingVertical: 8 },
   itineraryHead: { gap: 6 },
   aiLine: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   budgetLine: { gap: 2, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },

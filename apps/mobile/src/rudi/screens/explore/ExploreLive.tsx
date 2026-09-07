@@ -194,7 +194,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const rong = danhSach.length === 0;
 
   return (
-    <RudiScreen bottomInset={112} testID="explore-screen">
+    <RudiScreen bottomInset={112} onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         <Wordmark color={colors.ink} height={20} />
         {/* The destination is a control, not a caption. */}
@@ -206,7 +206,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
         >
           <Ionicons color={colors.accent} name="location" size={16} />
           <Text style={[typography.label, { color: colors.ink }]}>
-            {diemDen === null ? "Đang đọc điểm đến…" : `${diemDen.name} · đổi nơi khác`}
+            {diemDen !== null ? `${diemDen.name} · đổi nơi khác` : trang.pha === "hong" ? "Chưa đọc được điểm đến · thử lại" : "Đang đọc điểm đến…"}
           </Text>
           <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
         </Pressable>
@@ -295,17 +295,27 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           />
           {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
               button, because it is the one state the person can fix. */}
-          <Pressable
-            accessibilityRole={gu === null || gu.co_so === "chua-biet" ? "button" : undefined}
-            disabled={gu !== null && gu.co_so !== "chua-biet"}
-            onPress={() => router.push("/personalization" as never)}
-            style={styles.guRow}
-          >
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGu(gu)}</Text>
-            {chuaCo !== "" ? (
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>{chuaCo}</Text>
-            ) : null}
-          </Pressable>
+          {gu === null || gu.co_so === "chua-biet" ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/personalization" as never)}
+              style={({ pressed }) => [styles.guRow, styles.guNut, pressed && styles.bam]}
+            >
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGu(gu)}</Text>
+              {chuaCo !== "" ? (
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>{chuaCo}</Text>
+              ) : null}
+            </Pressable>
+          ) : (
+            // Once the taste is known there is nothing to press: a disabled
+            // Pressable still reads as a control to a screen reader.
+            <View style={styles.guRow}>
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGu(gu)}</Text>
+              {chuaCo !== "" ? (
+                <Text style={[typography.caption, { color: colors.inkFaint }]}>{chuaCo}</Text>
+              ) : null}
+            </View>
+          )}
           {rong ? (
             <EmptyState
               action={{ label: "Xóa lọc", onPress: boTim }}
@@ -348,13 +358,15 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   dau: { gap: 6 },
-  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, alignSelf: "flex-start" },
+  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   khung: { gap: 12 },
   cuonLoai: { marginHorizontal: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   theAi: { gap: 4, padding: 14, borderRadius: 14 },
   guRow: { marginTop: -8, gap: 2 },
+  // Only while it is a button does the sentence need a 48dp target.
+  guNut: { minHeight: 48, justifyContent: "center", marginTop: -14 },
   bam: { opacity: 0.7 },
   ketQua: { gap: 20 },
 });

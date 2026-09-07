@@ -15,6 +15,7 @@
  * fields say their format beside them instead of after a failed submit.
  */
 import { Redirect, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -48,6 +49,7 @@ function nhomHienTai(phien: Phien): { ten: string; soNguoi: string } {
 
 export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors, radius } = useRudiTheme();
   const nhom = nhomHienTai(phien);
   const [title, setTitle] = useState("");
@@ -85,7 +87,16 @@ export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
   const xemTruoc = title.trim() !== "";
 
   return (
-    <RudiScreen contentStyle={styles.screen} testID="create-outing-screen">
+    // The one decision of this screen stays above the keyboard and the gesture
+    // bar however tall the form grows: at font 1.3 the button sat below the
+    // fold behind the IME and the live board could not reach it (2026-09-07).
+    <RudiScreen
+      bottomInset={Math.max(insets.bottom, 16) + 40}
+      contentStyle={styles.screen}
+      footer={<RudiButton disabled={dangTao} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} />}
+      footerInset={Math.max(insets.bottom, 12) + 4}
+      testID="create-outing-screen"
+    >
       <TopBar title="Kèo mới" />
       <Heading title="Hội mình đi đâu?" subtitle={`Rủ ${nhom.ten}. Chặng và địa điểm thêm sau, trong kèo.`} />
       <View style={styles.khoi}>
@@ -146,7 +157,6 @@ export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
         </View>
       ) : null}
       {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-      <RudiButton disabled={dangTao} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} />
     </RudiScreen>
   );
 }

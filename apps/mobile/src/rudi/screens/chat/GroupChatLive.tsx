@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
   pills: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 2, marginTop: -8 },
-  thanhVien: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 40, paddingHorizontal: 8 },
+  thanhVien: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 48, paddingHorizontal: 8 },
   trich: { borderWidth: 1, borderLeftWidth: 3, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, gap: 1, maxWidth: "100%" },
   stickerHang: { paddingVertical: 2 },
   nghieng: { fontStyle: "italic" },
@@ -745,5 +745,5 @@ const styles = StyleSheet.create({
   lenh: { borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
   soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
-  oNhap: { flex: 1, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8 },
+  oNhap: { flex: 1, minHeight: 48, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8 },
 });
