@@ -140,8 +140,10 @@ appId: com.lakiet.rudi
     centerElement: true
     timeout: 30000
 - pressKey: Back
+# Màn Cài đặt giữ nguyên chỗ đã cuộn tới, nên sau khi quay lại thì khung hình
+# đang ở CUỐI trang. Chờ một nhãn của chính chỗ ấy, không phải một nhãn ở trên.
 - extendedWaitUntil:
-    visible: "Quyền riêng tư"
+    visible: "Xoá vĩnh viễn hồ sơ và nội dung của bạn"
     timeout: 30000
 - scrollUntilVisible:
     element:

@@ -145,10 +145,34 @@ export function HoSoNguoiScreen() {
     }, [napHoSo, napTuong, napChinhSach]),
   );
 
+  // ADR-0023 §2.3: khay này phải nằm NGOÀI hộp cuộn của màn. `Sheet` phủ
+  // đúng CHA của nó (`StyleSheet.absoluteFill`), nên đặt trong nội dung
+  // cuộn thì nó phủ khung nội dung chứ không phủ màn: bảng 2026-09-07 chụp
+  // được cảnh chữ của tường vẽ đè lên nút của khay, và cú chạm rơi vào
+  // chữ. `RudiScreen` có sẵn `overlay` cho đúng việc này.
+  const khayHanhDong =
+    hoSo.pha === "xong" && hoSo.hoSo.relation !== "self" && personId !== "" ? (
+      <HanhDongHoSoSheet
+        actorId={phien?.person_id ?? ""}
+        daChan={daChan}
+        displayName={hoSo.hoSo.display_name}
+        onClose={() => setMoHanhDong(false)}
+        onDoiChan={(chan) => {
+          setDaChan(chan);
+          // Chặn làm mất tình bạn, nên «Nhắn tin» và tường đều sai ngay lúc
+          // nó xong. Hỏi lại máy chủ chứ không để một quan hệ cũ trên màn.
+          void napHoSo();
+          void napTuong();
+        }}
+        open={moHanhDong}
+        personId={personId}
+      />
+    ) : null;
+
   if (!phienDaDoc) return null;
 
   return (
-    <RudiScreen testID="ho-so-nguoi-screen">
+    <RudiScreen overlay={khayHanhDong} testID="ho-so-nguoi-screen">
       <TopBar title="Hồ sơ" />
       {hoSo.pha === "dang-doc" ? (
         <SkeletonGroup>
@@ -247,24 +271,6 @@ export function HoSoNguoiScreen() {
               </View>
             ) : null}
           </View>
-          {hoSo.hoSo.relation !== "self" && personId !== "" ? (
-            <HanhDongHoSoSheet
-              actorId={phien?.person_id ?? ""}
-              daChan={daChan}
-              displayName={hoSo.hoSo.display_name}
-              onClose={() => setMoHanhDong(false)}
-              onDoiChan={(chan) => {
-                setDaChan(chan);
-                // Blocking ends the friendship, so «Nhắn tin» and the wall are
-                // both wrong the instant it lands. Ask the server again rather
-                // than leaving a stale relation on the screen.
-                void napHoSo();
-                void napTuong();
-              }}
-              open={moHanhDong}
-              personId={personId}
-            />
-          ) : null}
           <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
           {tuong.pha === "dang-doc" ? (
             <SkeletonGroup>

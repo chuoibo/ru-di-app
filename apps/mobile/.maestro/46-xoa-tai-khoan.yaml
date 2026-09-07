@@ -18,12 +18,15 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
     timeout: 150000
+# Đăng xuất rồi đăng nhập F, LUÔN LUÔN: flow này xoá một tài khoản, nên nó
+# không được thừa hưởng phiên của ai từ flow trước. Khoá an toàn bên dưới là
+# lớp thứ hai, không phải lớp duy nhất.
 - runFlow:
-    when:
-      visible: "Rủ Đi thôi!"
+    file: _dang-xuat-neu-co.yaml
+- runFlow:
     file: _dang-nhap-f.yaml
 - extendedWaitUntil:
-    visible: "Khám phá"
+    visible: "Khám phá|Chưa có nhóm nào"
     timeout: 60000
 - tapOn: "Cá nhân"
 - scrollUntilVisible:

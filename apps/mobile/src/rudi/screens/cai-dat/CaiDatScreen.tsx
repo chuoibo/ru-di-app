@@ -38,6 +38,10 @@ export function CaiDatScreen() {
   // The avatar address never changes, so a fresh upload is invisible until the
   // query string does. Counting the uploads is enough to make the frame reload.
   const [lanTaiAnh, setLanTaiAnh] = useState(0);
+  // 404 là câu trả lời BÌNH THƯỜNG khi chưa ai tải ảnh nào lên. Không bắt
+  // lấy nó thì khung ảnh vẽ ra một vòng tròn rỗng, tệ hơn hai chữ cái
+  // (bảng 2026-09-07 chụp được đúng vòng tròn rỗng ấy).
+  const [anhHong, setAnhHong] = useState(false);
 
   const nap = useCallback(async () => {
     if (phien === null) return;
@@ -92,6 +96,7 @@ export function CaiDatScreen() {
     setDangDoiAnh(true);
     try {
       await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
+      setAnhHong(false);
       setLanTaiAnh((truoc) => truoc + 1);
     } catch (error) {
       await boAnh(daChon);
@@ -114,7 +119,12 @@ export function CaiDatScreen() {
       <SectionHeader title="Hồ sơ" />
       <Card style={styles.khoi}>
         <Inline gap={12}>
-          <Avatar name={hoSo?.display_name ?? "Bạn"} size={64} source={nguonMat} />
+          <Avatar
+            name={hoSo?.display_name ?? "Bạn"}
+            onError={() => setAnhHong(true)}
+            size={64}
+            source={anhHong ? null : nguonMat}
+          />
           <View style={styles.hangChu}>
             <Text style={[typography.label, { color: colors.ink }]}>{hoSo?.display_name ?? "Bạn"}</Text>
             <Text style={[typography.caption, { color: colors.inkFaint }]}>
