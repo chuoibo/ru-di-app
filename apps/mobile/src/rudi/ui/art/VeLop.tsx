@@ -40,6 +40,8 @@ export interface VeLopProps {
   height: number;
   /** Swap one role for another colour, e.g. ink for accent on a selected tile. */
   doiMau?: Partial<Record<MauVe, string>>;
+  /** A frame narrower than the authored one, `x y w h`; default the whole frame. */
+  viewBox?: string;
   /** Informative art carries a label and is an image; decorative art is hidden from the tree. */
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
@@ -51,7 +53,7 @@ export interface VeLopProps {
  * a pen line ends like a pen line; fills are flat. `transform` never reaches
  * a style here, so there is no `transform: undefined` for Reanimated to trip on.
  */
-export function VeLop({ lop, khungW, khungH, width, height, doiMau, accessibilityLabel, style, testID }: VeLopProps) {
+export function VeLop({ lop, khungW, khungH, width, height, doiMau, viewBox, accessibilityLabel, style, testID }: VeLopProps) {
   const { colors } = useRudiTheme();
   const decorative = accessibilityLabel === undefined;
   return (
@@ -63,7 +65,7 @@ export function VeLop({ lop, khungW, khungH, width, height, doiMau, accessibilit
       style={[styles.khung, { width, height }, style]}
       testID={testID}
     >
-      <Svg height={height} pointerEvents="none" viewBox={`0 0 ${khungW} ${khungH}`} width={width}>
+      <Svg height={height} pointerEvents="none" viewBox={viewBox ?? `0 0 ${khungW} ${khungH}`} width={width}>
         {lop.map((l, i) => {
           const mau = doiMau?.[l.mau] ?? mauLop(colors, l.mau);
           return l.net === undefined ? (

@@ -189,10 +189,12 @@ export function PersonalizationScreen() {
           {demChon}
         </Text>
       </View>
-      <View style={styles.block}>
-        {/* One row: the meaning, the unit and that it is optional, and no
-            paragraph. Tapping the chosen band again clears it (`doiKhoang`). */}
-        <Text style={[typography.label, { color: colors.inkSoft }]}>Mỗi lần đi chơi, bạn thường tiêu khoảng (không bắt buộc)</Text>
+      <View style={styles.blockNganSach}>
+        {/* The question at question weight, then one note with what is
+            optional and what K means; no paragraph. Tapping the chosen band
+            again clears it (`doiKhoang`). */}
+        <Text style={[typography.title, { color: colors.ink }]}>Mỗi lần đi chơi, bạn thường tiêu khoảng</Text>
+        <Text style={[typography.note, { color: colors.inkSoft }]}>Không bắt buộc · K là nghìn đồng</Text>
         <Inline gap={8} wrap>
           {NGAN_SACH.map((k) => (
             <Chip key={k.id} label={k.nhan} onPress={() => doiKhoang(k.id)} selected={khoang === k.id} />
@@ -213,6 +215,7 @@ const styles = StyleSheet.create({
   personalization: { maxWidth: 640 },
   boQua: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
   block: { gap: 12 },
+  blockNganSach: { gap: 8, marginTop: 10 },
   tile: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, borderWidth: 1 },
   tileLabel: { flex: 1, flexShrink: 1 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },

@@ -90,6 +90,26 @@ const NEP: Record<CanhId, () => LopVe[]> = {
   "tim-khong-ra": () => hinhNep("moi", { x0: -4, y0: 18, tiLe: 0.75 }),
 };
 
+/**
+ * The horizontal extent of a layer list, read from every x in its paths, so a
+ * scene without the figure can be framed to its props instead of leaving the
+ * figure's empty slot as an indent (finish review 08/09).
+ */
+export function hopNgang(lop: readonly LopVe[]): { x0: number; x1: number } {
+  let x0 = Infinity, x1 = -Infinity;
+  for (const l of lop) {
+    let i = 0;
+    for (const t of l.d.split(/\s+/)) {
+      if (/^[A-Za-z]$/.test(t)) { i = 0; continue; }
+      const n = Number(t);
+      if (Number.isNaN(n)) continue;
+      if (i % 2 === 0) { if (n < x0) x0 = n; if (n > x1) x1 = n; }
+      i += 1;
+    }
+  }
+  return Number.isFinite(x0) ? { x0, x1 } : { x0: 0, x1: KHUNG_CANH.w };
+}
+
 export interface TuyChonCanh {
   /** Draw the figure; off, the scene is the props alone. */
   nep?: boolean;

@@ -40,12 +40,16 @@ const HINH: Record<GuId, () => LopVe[]> = {
     { d: netGay([[13, 26], [35, 26]]), mau: "muc", net: NET },
     { d: giot(24, 31.5, 2.3), mau: "gap" },
   ],
-  // A streak of light and a ticket: a night out is not by default a drink.
+  // A hanging lamp throwing one beam, and a ticket stub: a night out is not
+  // by default a drink, and the lamp reads at 32 where a streak did not.
   nightlife: () => [
-    { d: cong([8, 41], [11, 20], [24, 11], [39, 9]), mau: "muc", net: NET },
-    { d: tron(39.5, 9, 3.2), mau: "gap" },
-    { d: khungBo(19, 27, 20, 12, 2), mau: "muc", net: NET },
-    { d: netGay([[29, 29], [29, 37]]), mau: "muc", net: MANH },
+    { d: netGay([[24, 4], [24, 13]]), mau: "muc", net: NET },
+    { d: tron(24, 19, 5.5), mau: "muc", net: NET },
+    { d: tron(24, 19, 2), mau: "gap" },
+    { d: netGay([[19, 24], [10, 42]]), mau: "muc", net: MANH },
+    { d: netGay([[29, 24], [38, 42]]), mau: "muc", net: MANH },
+    { d: khungBo(27, 33, 15, 9, 2), mau: "muc", net: NET },
+    { d: netGay([[34, 35], [34, 40]]), mau: "muc", net: MANH },
   ],
   // A small pot with its lid and a menu tag: local food, not a burger.
   "mon-local": () => [
@@ -57,12 +61,12 @@ const HINH: Record<GuId, () => LopVe[]> = {
     { d: daGiac([[33, 36], [44, 33], [44, 42], [33, 45]]), mau: "gap" },
     { d: tron(36, 39, 1.3), mau: "giay" },
   ],
-  // A trail and a tree in two strokes; the coral dot is where you are standing.
+  // A trail rising to a pine on the ridge; the coral dot is where you stand.
   outdoor: () => [
-    { d: cong([9, 42], [14, 24], [30, 36], [39, 13]), mau: "muc", net: NET },
-    { d: tron(9, 42, 2.6), mau: "gap" },
-    { d: netGay([[37, 43], [37, 33]]), mau: "muc", net: NET },
-    { d: cungTron(37, 27, 7, 0.72 * Math.PI, 2.28 * Math.PI), mau: "muc", net: NET },
+    { d: cong([8, 43], [16, 22], [26, 40], [40, 14]), mau: "muc", net: NET },
+    { d: tron(8, 43, 2.6), mau: "gap" },
+    { d: daGiac([[33, 12], [42, 30], [24, 30]]), mau: "muc" },
+    { d: netGay([[33, 30], [33, 38]]), mau: "muc", net: NET },
   ],
   // A cloth bag with the same folded corner as the sheet.
   shopping: () => [

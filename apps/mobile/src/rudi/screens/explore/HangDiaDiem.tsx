@@ -47,6 +47,8 @@ export interface DiaDiemHienThi {
   attribution?: Attribution;
   /** «Rất hợp gu» from a computed match; null otherwise. */
   badge: string | null;
+  /** One grounded reason for the lead, from the match payload; absent → no line. */
+  lyDo?: string;
 }
 
 interface CommonProps {
@@ -86,6 +88,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         />
         <View style={styles.leadText}>
           <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
+          {dd.lyDo ? <Text style={[typography.label, { color: colors.ai }]}>{dd.lyDo}</Text> : null}
           {dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {dd.facts.length > 0 ? (
             <Inline gap={12} wrap>
@@ -127,7 +130,11 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           )}
         </View>
         <View style={styles.rowText}>
-          <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
+          {/* The seal sits beside the name, so a matched row is as tall as any other. */}
+          <View style={styles.rowTen}>
+            <Text numberOfLines={dd.badge ? 1 : 2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
+            {dd.badge ? <Stamp label={dd.badge} tone="ai" /> : null}
+          </View>
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node: a row of several short texts keeps its first
               measurement when the row wraps and strands one word alone. */}
@@ -138,7 +145,6 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {dd.photo && dd.attribution ? (
             <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
           ) : null}
-          {dd.badge ? <Stamp label={dd.badge} style={styles.rowBadge} tone="ai" /> : null}
         </View>
       </Pressable>
       <IconButton
@@ -185,31 +191,38 @@ export function PlaceCompare({
     <View style={[styles.soSanh, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
         const luu = daLuu(dd.id);
-        const fact = dd.facts[0]?.text;
+        // The same facts the rows print, so the two really compare.
+        const facts = dd.facts.map((f) => f.text).join(" · ");
         return (
           <View key={dd.id} style={styles.ungVien}>
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
                 fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={34} />}
-                overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
+                overlay={
+                  <>
+                    {dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
+                    {/* The heart lives on the picture's corner, as on the lead; no orphan row under the facts. */}
+                    <View style={styles.timOnMedia}>
+                      <IconButton
+                        accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+                        icon={luu ? "heart" : "heart-outline"}
+                        onPress={() => onSave(dd.id)}
+                        selected={luu}
+                      />
+                    </View>
+                  </>
+                }
                 ratio={4 / 3}
                 source={dd.photo}
               />
               <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
               {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-              {fact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{fact}</Text> : null}
+              {facts ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{facts}</Text> : null}
               {dd.photo && dd.attribution ? (
                 <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
               ) : null}
             </Pressable>
-            <IconButton
-              accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
-              icon={luu ? "heart" : "heart-outline"}
-              onPress={() => onSave(dd.id)}
-              quiet
-              selected={luu}
-            />
           </View>
         );
       })}
@@ -219,8 +232,11 @@ export function PlaceCompare({
 
 const styles = StyleSheet.create({
   soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  ungVien: { flex: 1, minWidth: 0, gap: 4 },
+  ungVien: { flex: 1, minWidth: 0 },
   ungVienPress: { gap: 6 },
+  timOnMedia: { position: "absolute", right: 6, bottom: 6 },
+  rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
+  flex1: { flex: 1, minWidth: 0 },
   glyphDisc: { alignItems: "center", justifyContent: "center" },
   lead: { gap: 4 },
   leadPress: { gap: 12 },
@@ -232,5 +248,4 @@ const styles = StyleSheet.create({
   rowPress: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   thumb: { width: 56, height: 56, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   rowText: { flex: 1, gap: 2, minWidth: 0 },
-  rowBadge: { marginTop: 4 },
 });

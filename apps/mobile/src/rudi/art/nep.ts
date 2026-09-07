@@ -51,14 +51,18 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   // The sheet: nearly a rectangle, a shade wider at the foot, its top edge
   // climbing to the right so the figure leans toward whoever it is talking
   // to. The corner at the top right is cut along H..G, where it folds down.
-  const A = P(27, 22), H = P(56, 19), G = P(68, 31), C = P(70, 66), D = P(62, 74), E = P(30, 76), F = P(24, 50);
-  // The folded-down corner: the mirror image of the cut-off corner across H..G.
-  const Bp = P(56, 31);
+  const A = P(26, 22), H = P(50, 20), G = P(69, 38), C = P(70, 66), D = P(62, 74), E = P(30, 76), F = P(24, 50);
+  // The folded-down corner: the mirror image of the cut-off corner across
+  // H..G, a flap that lands over the body with its right angle inside.
+  const Bp = P(50, 38);
+  // The lapel: one crease from high on the left edge across the body to the
+  // lower right, the face of the sheet below it overlapping in shade. It is
+  // the concept's identity mark, not a cut corner (finish review 08/09).
+  const V1 = P(26, 40), V2 = P(66, 74);
   const than: LopVe[] = [
     { d: daGiac([A, H, G, C, D, E, F]), mau: "giay" },
-    // The lower lapel: the diagonal fold across the body, its face in shade.
-    { d: daGiac([F, E, D]), mau: "bong" },
-    ...(chiTiet ? [{ d: netGay([F, D]), mau: "muc" as const, net: net(1.8) }] : []),
+    { d: daGiac([V1, F, E, D, V2]), mau: "bong" },
+    ...(chiTiet ? [{ d: netGay([V1, V2]), mau: "muc" as const, net: net(1.8) }] : []),
     { d: daGiac([H, G, Bp]), mau: "gap" },
     { d: daGiac([A, H, G, C, D, E, F]), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
     { d: daGiac([H, G, Bp]), mau: "muc", net: net(chiTiet ? 1.8 : 2.4) },
@@ -66,17 +70,18 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
 
   const mat: LopVe[] = chiTiet
     ? [
-        { d: bau(...P(41, 40), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
-        { d: bau(...P(54, 38), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
+        { d: bau(...P(39, 45), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
+        { d: bau(...P(52, 43), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
         // One brow level, one raised: the expression lives in the brows, not in the mouth.
-        { d: netGay([P(37, 33), P(44, 32)]), mau: "muc", net: net(1.9) },
-        { d: netGay([P(50, 29), P(57, 31.5)]), mau: "muc", net: net(1.9) },
-        { d: cong(P(44, 50), P(47, 54.5), P(52, 54.5), P(57, 49)), mau: "muc", net: net(2.2) },
+        { d: netGay([P(35, 38), P(42, 37)]), mau: "muc", net: net(1.9) },
+        { d: netGay([P(48, 34), P(55, 36.5)]), mau: "muc", net: net(1.9) },
+        // A short, closed, sidelong smile; never an open U.
+        { d: cong(P(46, 53), P(48, 56), P(52, 56), P(55, 53)), mau: "muc", net: net(2) },
       ]
     : [
-        { d: tron(...P(41, 40), 2.6 * tiLe), mau: "muc" },
-        { d: tron(...P(54, 38), 2.6 * tiLe), mau: "muc" },
-        { d: cong(P(45, 51), P(48, 54.5), P(52, 54.5), P(56, 50)), mau: "muc", net: net(2.6) },
+        { d: tron(...P(39, 45), 2.6 * tiLe), mau: "muc" },
+        { d: tron(...P(52, 43), 2.6 * tiLe), mau: "muc" },
+        { d: cong(P(46, 54), P(48, 56.5), P(52, 56.5), P(55, 54)), mau: "muc", net: net(2.4) },
       ];
 
   // Limbs are filled capsules, so they do not depend on the renderer's caps.
@@ -151,14 +156,9 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     }
     case "vui":
     default: {
-      // Both arms up, quietly; two short marks say the hands just moved.
-      const dau: LopVe[] = chiTiet
-        ? [
-            { d: netGay([P(5, 22), P(8, 15)]), mau: "muc", net: net(1.8) },
-            { d: netGay([P(91, 17), P(94, 10)]), mau: "muc", net: net(1.8) },
-          ]
-        : [];
-      tuThe = [...tay(L, P(10, 28)), ...tay(R, P(88, 24)), ...dau];
+      // Both arms up, quietly. No motion marks: the concept forbids an
+      // excited face on every pose, and the raised arms already say it.
+      tuThe = [...tay(L, P(10, 28)), ...tay(R, P(88, 24))];
       break;
     }
   }

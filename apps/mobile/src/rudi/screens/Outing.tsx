@@ -279,7 +279,7 @@ export function CheckInScreen() {
             {session.locationSharing ? "Đang chia sẻ vị trí đến 11:30" : "Chưa chia sẻ vị trí"}
           </Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Opt-in, có hạn. Bản trải nghiệm không đọc GPS máy; check-in là bạn tự đánh dấu. Trạng thái {noiLuu(session.luuTruSong)}.
+            Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái {noiLuu(session.luuTruSong)}.
           </Text>
         </View>
         <RudiButton

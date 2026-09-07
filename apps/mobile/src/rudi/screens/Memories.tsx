@@ -227,7 +227,7 @@ export function TripAlbumScreen() {
         style={({ pressed }) => [styles.gridPhoto, pressed && styles.pressed]}
       >
         {lead ? (
-          <KhungAnh xuatXu={`${DEMO_GROUP.name} · Đà Lạt`}>
+          <KhungAnh xuatXu={DEMO_GROUP.name}>
             <Photo radius={4} ratio={tiLeDan} source={photo.photo} />
           </KhungAnh>
         ) : (

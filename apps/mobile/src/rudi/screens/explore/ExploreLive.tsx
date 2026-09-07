@@ -47,6 +47,7 @@ import {
   docDaLuu,
   docDanhMucCoLui,
   dongPhu,
+  guTheoLoai,
   locTheoTen,
   luuDiaDiem,
   type Gu,
@@ -55,6 +56,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import { Wordmark } from "../../ui/Wordmark";
 import { Canh } from "../../ui/art/Canh";
+import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
@@ -95,6 +97,9 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     // 250 m, so the picture is from around here, not of this business.
     attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
     badge: hop !== null && hop.real ? hop.text : null,
+    // One grounded reason under the lead: the model's own sentence when the
+    // match is real, nothing otherwise. Never the tagline dressed as a reason.
+    lyDo: hop !== null && hop.real && place.match?.reason ? place.match.reason : undefined,
   };
 }
 
@@ -249,9 +254,9 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               const chon = loai === c.id;
               return (
                 <Chip
-                  icon={bieuTuongLoai(c.id)}
                   key={c.id}
                   label={c.label}
+                  leading={<GuGlyph id={guTheoLoai(c.id)} size={22} tone={chon ? "accent" : "ink"} />}
                   onPress={() => setLoai(loaiSauBam(chon, c.id))}
                   selected={chon}
                 />
