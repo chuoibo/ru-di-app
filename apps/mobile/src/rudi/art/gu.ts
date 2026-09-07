@@ -40,16 +40,18 @@ const HINH: Record<GuId, () => LopVe[]> = {
     { d: netGay([[13, 26], [35, 26]]), mau: "muc", net: NET },
     { d: giot(24, 31.5, 2.3), mau: "gap" },
   ],
-  // A hanging lamp throwing one beam, and a ticket stub: a night out is not
-  // by default a drink, and the lamp reads at 32 where a streak did not.
+  // A string of lights sagging across the night, one of them lit: the
+  // night-market garland, which reads at 32 where a lamp-and-beam read as a
+  // compass (finish review 08/09). Still not a glass.
   nightlife: () => [
-    { d: netGay([[24, 4], [24, 13]]), mau: "muc", net: NET },
-    { d: tron(24, 19, 5.5), mau: "muc", net: NET },
-    { d: tron(24, 19, 2), mau: "gap" },
-    { d: netGay([[19, 24], [10, 42]]), mau: "muc", net: MANH },
-    { d: netGay([[29, 24], [38, 42]]), mau: "muc", net: MANH },
-    { d: khungBo(27, 33, 15, 9, 2), mau: "muc", net: NET },
-    { d: netGay([[34, 35], [34, 40]]), mau: "muc", net: MANH },
+    { d: cong([5, 13], [16, 25], [32, 25], [43, 13]), mau: "muc", net: NET },
+    { d: netGay([[13, 19.5], [13, 25]]), mau: "muc", net: MANH },
+    { d: netGay([[24, 22], [24, 28]]), mau: "muc", net: MANH },
+    { d: netGay([[35, 19.5], [35, 25]]), mau: "muc", net: MANH },
+    { d: tron(13, 29.5, 4.2), mau: "muc", net: NET },
+    { d: tron(24, 32.5, 4.6), mau: "gap" },
+    { d: tron(35, 29.5, 4.2), mau: "muc", net: NET },
+    { d: netGay([[8, 43], [40, 43]]), mau: "muc", net: MANH },
   ],
   // A small pot with its lid and a menu tag: local food, not a burger.
   "mon-local": () => [

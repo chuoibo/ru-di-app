@@ -443,7 +443,7 @@ export function bieuTuongLoai(categoryId: string): IconName {
 }
 
 const GU_THEO_LOAI: Record<string, string> = {
-  "quan-an-local": "mon-local",
+  "quan-an-local": "an-uong",
   cafe: "cafe",
   "vui-choi": "game",
   "di-choi-dem": "nightlife",

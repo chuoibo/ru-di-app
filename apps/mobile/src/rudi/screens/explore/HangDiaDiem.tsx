@@ -191,8 +191,12 @@ export function PlaceCompare({
     <View style={[styles.soSanh, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
         const luu = daLuu(dd.id);
-        // The same facts the rows print, so the two really compare.
-        const facts = dd.facts.map((f) => f.text).join(" · ");
+        // The same facts the rows print, so the two really compare; the last
+        // fact (the price band, with its unit) gets its own line so a half-width
+        // tile never breaks «80K/người» across two lines (finish review 08/09).
+        const facts = dd.facts.map((f) => f.text);
+        const dauFacts = facts.slice(0, -1).join(" · ");
+        const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
         return (
           <View key={dd.id} style={styles.ungVien}>
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
@@ -218,7 +222,8 @@ export function PlaceCompare({
               />
               <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
               {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-              {facts ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{facts}</Text> : null}
+              {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+              {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
               {dd.photo && dd.attribution ? (
                 <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
               ) : null}
