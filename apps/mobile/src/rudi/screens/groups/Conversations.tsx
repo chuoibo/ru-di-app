@@ -115,7 +115,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   };
 
   return (
-    <RudiScreen bottomInset={112} testID="conversations-screen">
+    <RudiScreen bottomInset={112} onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
           <Heading title="Tin nhắn" subtitle="Nhóm của bạn trên máy chủ" />

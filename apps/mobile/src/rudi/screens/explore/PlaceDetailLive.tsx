@@ -45,6 +45,7 @@ import {
   duongChiDuong,
   luuDiaDiem,
   nguonAnhDiaDiem,
+  CAU_NGUON_ANH,
   TIEN_TO_ANH,
   type AnhDiaDiem,
   type AnhNhom,
@@ -254,6 +255,12 @@ function ThanChiTiet({
       />
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
+      {/* The sentence the pictures are shown on: found by geosearch around the
+          venue, licensed, not supplied by the place. Said once under the
+          photographs whenever there is at least one (M12, ADR-0017 §2.5). */}
+      {bia !== null || conLai.length > 0 ? (
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{CAU_NGUON_ANH}</Text>
+      ) : null}
       <View style={styles.dau}>
         <Text style={[typography.h1, { color: colors.ink }]}>{place.name}</Text>
         {dongPhu(place) ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dongPhu(place)}</Text> : null}
@@ -393,6 +400,10 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
   return (
     <View style={styles.khoi}>
       <SectionHeader title="Ảnh của nhóm bạn" />
+      {/* Who may see these is said before the pictures, not after: the reader
+          meets the rule with the heading, and at font 1.3 a sentence under a
+          strip of photographs sat below the fold (board 2026-09-07). */}
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_ANH_NHOM}</Text>
       <ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-group-photos">
         {anh.map((a) => {
           const nguon = nguonAnh(a.imageUrl, personId, a.contextId);
@@ -409,7 +420,6 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
           );
         })}
       </ScrollView>
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_ANH_NHOM}</Text>
     </View>
   );
 }

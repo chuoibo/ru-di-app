@@ -606,14 +606,17 @@ print(act[0]["id"] if act else "")')"
   ket="$(curl -sS "$goc/contexts/$ctx/memories?limit=10" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-m = d.get("memories", [])
+# Only the check-in: flow 38, prepared in the same run, drops a plain photo
+# memory into this group too (as D, so D can see it), and that one is not
+# what flow 32 wrote.
+m = [x for x in d.get("memories", []) if x.get("kind") == "checkin"]
 if len(m) != 1:
     print("so_ky_niem=%d" % len(m))
 else:
     x = m[0]
     print("%s|%s|%s|%s|%s" % (x.get("kind"), x.get("place_name"), x.get("reaction_count"), x.get("comment_count"), x.get("caption")))')"
   case "$ket" in
-    so_ky_niem=*) hong "sau flow 32: máy chủ có ${ket#so_ky_niem=} kỷ niệm, mong 1." ;;
+    so_ky_niem=*) hong "sau flow 32: máy chủ có ${ket#so_ky_niem=} kỷ niệm check-in, mong 1." ;;
   esac
   IFS='|' read -r loai cho tim bl cau <<< "$ket"
   [ "$loai" = "checkin" ] || hong "sau flow 32: kỷ niệm là $loai, mong checkin."
@@ -760,9 +763,16 @@ PYCHECK
 # Đăng bằng phiên đang sống (OTP_PHONE của flow 22), không phải D: flow 38 chạy
 # trên phiên ấy, và ảnh của nhóm chỉ hiện cho người trong nhóm.
 chuan_bi_anh_nhom_cho_38() {
-  local goc body tok ctx cho anh url
+  local goc body tok ctx cho anh url nguoi
   goc="http://127.0.0.1:$API_PORT"
-  body="$(dang_nhap_curl "$OTP_PHONE")" || hong "trước flow 38: không đăng nhập được qua curl."
+  # The photo must sit in a group of WHOEVER is holding the phone at flow 38:
+  # after flow 26 that is D (in «Hoi QA»), not the flow-22 person, whose own
+  # group nobody else is in. Posting as the wrong person put the picture where
+  # the driver could never see it (mini-board 2026-09-07, «Ảnh của nhóm bạn»
+  # never came up while the row sat in «Nhom OTP»).
+  nguoi="$OTP_PHONE"
+  if da_chay 26; then nguoi="$OTP_PHONE_D"; fi
+  body="$(dang_nhap_curl "$nguoi")" || hong "trước flow 38: không đăng nhập được qua curl."
   tok="$(printf '%s' "$body" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')"
   ctx="$(curl -sS "$goc/people/me/contexts" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
@@ -772,7 +782,7 @@ d = json.load(sys.stdin)
 act = [c for c in d.get("contexts", []) if c.get("my_state") == "active" and c.get("kind") != "pair"]
 hoi = [c for c in act if c.get("display_name") == "Hoi QA"]
 print((hoi or act)[0]["id"] if act else "")')"
-  [ -n "$tok" ] && [ -n "$ctx" ] || hong "trước flow 38: người của flow 22 chưa ở nhóm active nào."
+  [ -n "$tok" ] && [ -n "$ctx" ] || hong "trước flow 38: người đang cầm máy ở flow 38 chưa ở nhóm active nào."
   cho="$(curl -sS "$goc/places" | python3 -c '
 import json, sys
 ps = json.load(sys.stdin).get("places", [])
