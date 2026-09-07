@@ -1,6 +1,6 @@
 # ADR-0023 — Xoá tài khoản là ẩn danh hoá và sổ tiền không đổi một byte; chặn là cạnh bạn bè `blocked`; báo cáo là một bảng
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-06 — chờ Lead đánh ĐÃ CHẤP NHẬN. Lát L5 (Settings, xoá tài khoản, chặn/báo cáo, phiên) của nhánh `claude/p0-w-m15-social-v1-1` không merge trước khi dòng này đổi. Lead đã duyệt kế hoạch chứa các quyết định này trong phiên 2026-09-06.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (phiên 2026-09-06: xoá tài khoản và chặn/báo cáo là điều kiện lên App Store / Google Play với nội dung người dùng; ghi lại ở mục 2).
 - **Hiện thực:** nhánh `claude/p0-w-m15-social-v1-1`, lát L5; kế hoạch `~/.claude/plans/mellow-waddling-lantern.md` mục 5.6.
 - **Thay đổi cách một tài khoản kết thúc, cách hai người không nhìn thấy nhau, và cách tra bạn theo số điện thoại**; không đổi ba luật tiền; không xoá bất kỳ dòng nào trong các bảng tiền; không đổi cách phiên được cấp (ADR-0014, ADR-0016).
