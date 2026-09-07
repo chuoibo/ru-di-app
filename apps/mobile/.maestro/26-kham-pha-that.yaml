@@ -111,8 +111,13 @@ appId: com.lakiet.rudi
 - takeScreenshot: 26-da-luu
 # Thanh đầu đã cuộn khỏi màn; nút back của hệ thống đưa về danh mục.
 - back
-- extendedWaitUntil:
-    visible: "[0-9]+ nơi ở Đà Lạt"
+# Danh sách giữ nguyên chỗ đã cuộn tới khi quay lại (không về đầu trang), và
+# «chờ thấy» không cuộn: trên stack đã nhập OSM (152 nơi) tiêu đề nằm trên khung
+# hình. Cuộn lên tới nó rồi mới khẳng định.
+- scrollUntilVisible:
+    element:
+      text: "[0-9]+ nơi ở Đà Lạt"
+    direction: UP
     timeout: 30000
 - assertVisible: "Bỏ lưu Tiệm Nướng Xóm Lào"
 - takeScreenshot: 26-danh-muc-da-luu

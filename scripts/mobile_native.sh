@@ -582,14 +582,17 @@ print(act[0]["id"] if act else "")')"
   ket="$(curl -sS "$goc/contexts/$ctx/memories?limit=10" -H "Authorization: Bearer $tok" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-m = d.get("memories", [])
+# Only the check-in: flow 38, prepared in the same run, drops a plain photo
+# memory into this group too (as D, so D can see it), and that one is not
+# what flow 32 wrote.
+m = [x for x in d.get("memories", []) if x.get("kind") == "checkin"]
 if len(m) != 1:
     print("so_ky_niem=%d" % len(m))
 else:
     x = m[0]
     print("%s|%s|%s|%s|%s" % (x.get("kind"), x.get("place_name"), x.get("reaction_count"), x.get("comment_count"), x.get("caption")))')"
   case "$ket" in
-    so_ky_niem=*) hong "sau flow 32: máy chủ có ${ket#so_ky_niem=} kỷ niệm, mong 1." ;;
+    so_ky_niem=*) hong "sau flow 32: máy chủ có ${ket#so_ky_niem=} kỷ niệm check-in, mong 1." ;;
   esac
   IFS='|' read -r loai cho tim bl cau <<< "$ket"
   [ "$loai" = "checkin" ] || hong "sau flow 32: kỷ niệm là $loai, mong checkin."
