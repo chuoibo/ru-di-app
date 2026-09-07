@@ -10,16 +10,22 @@
  *
  * Editing goes through `PATCH /people/me` and the card re-reads the server's
  * answer rather than trusting the form.
+ *
+ * UI v2 (đợt 7): a footprint, not a trophy page -- initial, name, one line,
+ * and the five counts as one sentence on the paper. The form sits on the
+ * page too, with the error next to the field it is about.
  */
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { docHoSoToi, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Field, Inline, RudiButton } from "../../ui";
+import { Chip, Field, Inline, RudiButton } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -83,26 +89,22 @@ export function HoSoSong({ phien }: { phien: Phien }) {
 
   if (trang.pha === "dang-doc") {
     return (
-      <Card>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc hồ sơ từ máy chủ...</Text>
-      </Card>
+      <SkeletonGroup>
+        <SkeletonRow leading={64} />
+      </SkeletonGroup>
     );
   }
   if (trang.pha === "hong") {
-    return (
-      <Card>
-        <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        <RudiButton label="Thử lại" onPress={() => void nap()} variant="outline" />
-      </Card>
-    );
+    return <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được hồ sơ" />;
   }
   const { hoSo } = trang;
 
   if (dangSua) {
     return (
-      <Card style={styles.card}>
-        <Text style={[typography.title, { color: colors.ink }]}>Chỉnh hồ sơ</Text>
+      <View style={styles.form}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Chỉnh hồ sơ</Text>
         <Field accessibilityLabel="Ô tên hiển thị" label="Tên" maxLength={200} onChangeText={setTen} value={ten} />
+        {loiLuu ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiLuu}</Text> : null}
         <Field
           accessibilityLabel="Ô giới thiệu"
           label="Giới thiệu"
@@ -120,66 +122,53 @@ export function HoSoSong({ phien }: { phien: Phien }) {
           placeholder="Bạn hay ở đâu"
           value={city}
         />
-        {loiLuu ? <Text style={[typography.body, { color: colors.warn }]}>{loiLuu}</Text> : null}
         <RudiButton disabled={dangLuu} label="Lưu hồ sơ" loading={dangLuu} onPress={() => void luu()} />
         <RudiButton disabled={dangLuu} label="Huỷ" onPress={() => setDangSua(false)} variant="ghost" />
-      </Card>
+      </View>
     );
   }
 
-  const soDem: { gia: number; nhan: string }[] = [
-    { gia: hoSo.counts.friends, nhan: "bạn bè" },
-    { gia: hoSo.counts.contexts, nhan: "nhóm" },
-    { gia: hoSo.counts.outings, nhan: "kèo" },
-    { gia: hoSo.counts.places_checked_in, nhan: "nơi đã tới" },
-    { gia: hoSo.counts.memories, nhan: "kỷ niệm" },
-  ];
+  const soDem = [
+    `${hoSo.counts.friends} bạn bè`,
+    `${hoSo.counts.contexts} nhóm`,
+    `${hoSo.counts.outings} kèo`,
+    `${hoSo.counts.places_checked_in} nơi đã tới`,
+    `${hoSo.counts.memories} kỷ niệm`,
+  ].join(" · ");
 
   return (
-    <>
-      <Card style={styles.card}>
-        <View style={styles.dau}>
-          <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-            <Text style={[typography.h1, { color: colors.accent }]}>{chuDau(hoSo.display_name)}</Text>
-          </View>
-          <View style={styles.dauChu}>
-            <Text style={[typography.h1, { color: colors.ink }]}>{hoSo.display_name}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>
-              Đăng nhập bằng {hoSo.login_methods.map((m) => NHAN_CUA[m] ?? m).join(", ") || "lời mời"}
-            </Text>
-          </View>
+    <View style={styles.card}>
+      <View style={styles.dau}>
+        <Avatar name={hoSo.display_name} ring size={64} />
+        <View style={styles.dauChu}>
+          <Text style={[typography.h1, { color: colors.ink }]}>{hoSo.display_name}</Text>
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>
+            Đăng nhập bằng {hoSo.login_methods.map((m) => NHAN_CUA[m] ?? m).join(", ") || "lời mời"}
+          </Text>
         </View>
-        {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
-        <Inline gap={7} wrap>
-          {hoSo.city ? <Chip icon="location-outline" label={hoSo.city} /> : null}
-          <Chip icon="calendar-outline" label={`Thành viên từ ${new Date(hoSo.created_at).getFullYear()}`} />
-        </Inline>
-        <RudiButton
-          compact
-          full={false}
-          icon="create-outline"
-          label="Chỉnh hồ sơ"
-          onPress={() => moSua(hoSo)}
-          variant="outline"
-        />
-      </Card>
-      <Card style={styles.soDem}>
-        {soDem.map((muc) => (
-          <View key={muc.nhan} style={styles.mucDem}>
-            <Text style={[typography.money, { color: colors.accent }]}>{String(muc.gia)}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{muc.nhan}</Text>
-          </View>
-        ))}
-      </Card>
-    </>
+      </View>
+      {hoSo.bio ? <Text style={[typography.body, { color: colors.inkSoft }]}>{hoSo.bio}</Text> : null}
+      <Inline gap={7} wrap>
+        {hoSo.city ? <Chip icon="location-outline" label={hoSo.city} /> : null}
+        <Chip icon="calendar-outline" label={`Thành viên từ ${new Date(hoSo.created_at).getFullYear()}`} />
+      </Inline>
+      {/* The counts as one sentence: a footprint, not a scoreboard. */}
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>{soDem}</Text>
+      <RudiButton
+        compact
+        full={false}
+        icon="create-outline"
+        label="Chỉnh hồ sơ"
+        onPress={() => moSua(hoSo)}
+        variant="outline"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: 12 },
+  card: { gap: 10 },
+  form: { gap: 12 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
-  chuDau: { width: 64, height: 64, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  soDem: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12 },
-  mucDem: { minWidth: "18%", alignItems: "center", gap: 2 },
 });

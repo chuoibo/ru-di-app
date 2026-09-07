@@ -18,14 +18,14 @@
  */
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, registerPerson, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { layIdTuSo, moiVaoNhom } from "../../../screens/vao-cua/cong-api";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 type Trang =
   | { pha: "nhap" }
@@ -106,7 +106,7 @@ export function GroupInviteScreen() {
         title="Mời bằng số điện thoại"
         subtitle="Số điện thoại chỉ dùng để nhận ra đúng người khi họ đăng nhập; máy chủ không lưu số."
       />
-      <Card style={styles.card}>
+      <View style={styles.form}>
         <Field
           accessibilityLabel="Ô số điện thoại người được mời"
           autoComplete="tel"
@@ -129,16 +129,16 @@ export function GroupInviteScreen() {
           placeholder="Bạn gọi người này là gì"
           value={ten}
         />
-        <RudiButton disabled={dangMoi} label="Gửi lời mời" loading={dangMoi} onPress={() => void moi()} />
         {trang.pha === "hong" ? (
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
         ) : null}
-      </Card>
+        <RudiButton disabled={dangMoi} label="Gửi lời mời" loading={dangMoi} onPress={() => void moi()} />
+      </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20 },
-  card: { gap: 14 },
+  screen: { gap: 20, maxWidth: 560 },
+  form: { gap: 14 },
 });

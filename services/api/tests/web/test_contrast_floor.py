@@ -336,6 +336,28 @@ class DesignDocRecordsWhatWasMeasured(unittest.TestCase):
 class TextContrastStillHolds(unittest.TestCase):
     """Guard the pairs the old table did cover, so the fix cannot trade them away."""
 
+    def test_assignment_summary_caption_uses_readable_semantic_text(self):
+        # Since the ledger redesign (2026-09-06) the assignment summary is a
+        # `Heading` on paper, not a caption on a teal block: the title counts
+        # the dishes from the fixture and prints the total, the subtitle says
+        # what a tap does. The pair to guard is the Heading subtitle on ground.
+        source = (REPO / "apps/mobile/src/rudi/screens/Bill.tsx").read_text()
+        self.assertIn(
+            'subtitle="Chạm một món để sửa ai dùng. Tổng bill giữ nguyên khi bạn sửa người."',
+            source,
+        )
+        heading = kit_component("Heading")
+        match = re.search(r"subtitle \?[\s\S]*?color: colors\.(\w+)", heading)
+        self.assertIsNotNone(match)
+        for mode in ("light", "dark"):
+            with self.subTest(mode=mode):
+                colours = palette(mode)
+                self.assertGreaterEqual(
+                    contrast(colours[match.group(1)], colours["ground"]),
+                    TEXT_FLOOR,
+                    f"phụ đề Heading `{match.group(1)}` trên `ground` ở {mode}",
+                )
+
     def test_placeholder_tone_clears_the_text_floor(self):
         for mode in ("light", "dark"):
             colours = palette(mode)

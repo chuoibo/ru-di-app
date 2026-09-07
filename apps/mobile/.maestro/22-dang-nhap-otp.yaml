@@ -74,8 +74,11 @@ appId: com.lakiet.rudi
 - assertNotVisible: "Xóm Lèo"
 # Từ M4 Khám phá của một phiên THẬT đọc danh mục từ GET /places: tên thật hiện,
 # nhãn «mẫu» và câu chuyện «Team Đà Lạt» của bản fixture không được hiện.
-- extendedWaitUntil:
-    visible: "Tiệm Nướng Xóm Lào"
+# Khám phá sống dẫn bằng một địa điểm lớn (đợt chuyển mình 06/09); tên ghim có thể nằm dưới nếp gấp.
+- scrollUntilVisible:
+    element:
+      text: "Tiệm Nướng Xóm Lào"
+    direction: DOWN
     timeout: 60000
 - assertNotVisible: "Gợi ý mẫu.*"
 - assertNotVisible: "Mẫu minh hoạ.*"

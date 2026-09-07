@@ -11,7 +11,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { duongCongS, duongVachSang, duongWashiXeMep } from "../dist-test/rudi/ui/duong-svg.js";
+import { duongCongS, duongVachSang, duongVienDau, duongWashiXeMep } from "../dist-test/rudi/ui/duong-svg.js";
 
 const ARITY = { M: 2, L: 2, C: 6, Z: 0 };
 const SO = /^-?\d+(\.\d+)?$/;
@@ -59,6 +59,31 @@ test("washi xé mép: đường hợp lệ ở mọi cỡ, kín, nằm trong h�
 test("washi: cùng cỡ thì cùng đường (không nhấp nháy khi re-layout), khác bề rộng thì xé khác", () => {
   assert.equal(duongWashiXeMep(200, 40), duongWashiXeMep(200, 40));
   assert.notEqual(duongWashiXeMep(200, 40), duongWashiXeMep(201, 40));
+});
+
+test("viền dấu: đường hợp lệ ở mọi cỡ, kín, nằm trong hộp, mép thật sự gãy, và ổn định theo cỡ", () => {
+  for (const [w, h] of [[120, 52], [163, 56], [200.4, 60], [48, 40], [400, 64]]) {
+    const d = duongVienDau(w, h);
+    const lenh = phanTich(d);
+    assert.equal(lenh[0].c, "M", d.slice(0, 20));
+    assert.equal(lenh[lenh.length - 1].c, "Z", d.slice(-20));
+    assert.equal(lenh[lenh.length - 2].c, "L", "Z phải đứng sau một điểm thật: " + d.slice(-30));
+    assert.ok(lenh.length >= 20, `quá ít điểm cho ${w}x${h}: ${lenh.length}`);
+    const xs = [], ys = [];
+    for (const { c, args: nums } of lenh) {
+      if (c === "Z") continue;
+      assert.equal(nums.length, 2, `${c} cần đúng 2 số: ${nums.join(",")}`);
+      xs.push(nums[0]); ys.push(nums[1]);
+    }
+    assert.ok(Math.min(...xs) >= 0 && Math.max(...xs) <= w + 0.001, `x ra ngoài hộp ${w}: ${Math.min(...xs)}..${Math.max(...xs)}`);
+    assert.ok(Math.min(...ys) >= 0 && Math.max(...ys) <= h + 0.001, `y ra ngoài hộp ${h}: ${Math.min(...ys)}..${Math.max(...ys)}`);
+    // The top edge is not a straight line: at least two distinct y values among its points.
+    const topYs = new Set(lenh.filter(({ c, args }) => c !== "Z" && args[1] < 8).map(({ args }) => args[1]));
+    assert.ok(topYs.size >= 2, `mép trên phẳng lì ở ${w}x${h}`);
+    assert.ok(!/e/i.test(d), "không số mũ");
+  }
+  assert.equal(duongVienDau(163, 56), duongVienDau(163, 56));
+  assert.notEqual(duongVienDau(163, 56), duongVienDau(190, 56));
 });
 
 test("đường cong S: một M và một C, số thập phân thường, điểm đầu/cuối khớp d", () => {

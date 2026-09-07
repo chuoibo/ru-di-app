@@ -1,29 +1,48 @@
+/**
+ * The fixture trip (dev door): create an outing, the trip's timeline tab, and
+ * the manual check-in. The live counterparts are in `keo/`; both draw stops
+ * with `HangChang` and dates with `nhip-keo.ts`, so «còn N ngày» here is
+ * counted from the sample trip's dates rather than typed.
+ */
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
-import { DEMO_GROUP, PEOPLE, demoAssets, formatVnd } from "../fixtures";
+import { DEMO_GROUP, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
+import { homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
+import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
 import { useRudiSession } from "../session";
-import { lopPhu, mauSang, mucTrenAnh, phuMau, typography, useRudiTheme } from "../theme";
+import { displayFace, lopPhu, mucTrenAnh, typography, useRudiTheme } from "../theme";
 import {
-  Avatar,
-  AvatarStack,
-  Card,
   Chip,
   DemoBadge,
   Field,
   Heading,
   IconButton,
   Inline,
+  ListRow,
   Photo,
-  ProgressBar,
   RudiButton,
   RudiScreen,
   TopBar,
 } from "../ui";
+import { Avatar, AvatarStack } from "../ui/Avatar";
+import { Money } from "../ui/Money";
+import { RosterPicker } from "../ui/RosterPicker";
+import { Sheet } from "../ui/Sheet";
+import { Stamp } from "../ui/Stamp";
+import { AnhChang, HangChang } from "./keo/HangChang";
+
+/** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
+function isoTu(ddmmyyyy: string): string {
+  const [d, m, y] = ddmmyyyy.split("/");
+  if (!d || !m || !y) return ddmmyyyy;
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
 
 export function CreateOutingScreen() {
   const router = useRouter();
@@ -32,15 +51,15 @@ export function CreateOutingScreen() {
   const selected = session.selectedMemberIds;
 
   return (
-    <RudiScreen testID="create-outing-screen">
+    <RudiScreen contentStyle={styles.form} testID="create-outing-screen">
       <TopBar title="Tạo cuộc hẹn" right={<DemoBadge />} />
       <Heading
         title="Hội mình đi đâu?"
-        subtitle="Tạo một nơi chung để chốt ngày, rủ bạn và cùng nhau lên plan."
+        subtitle="Một lời rủ: tên, nơi đến, ngày và ngân sách. Chốt chỗ và lịch trình làm cùng nhau sau."
       />
-      <Card style={styles.formCard}>
+      <View style={styles.khoi}>
         <Field
-          icon="sparkles-outline"
+          icon="flag-outline"
           label="Tên cuộc hẹn"
           onChangeText={session.setTripName}
           placeholder="Ví dụ: Đà Lạt cuối tuần"
@@ -53,6 +72,8 @@ export function CreateOutingScreen() {
           placeholder="Đà Lạt, Lâm Đồng"
           value={session.destination}
         />
+      </View>
+      <View style={styles.khoi}>
         <Inline gap={10}>
           <View style={styles.flex}>
             <Field icon="calendar-outline" label="Ngày đi" value={session.startDate} />
@@ -67,66 +88,34 @@ export function CreateOutingScreen() {
           label="Ngân sách mỗi người"
           value={formatVnd(DEMO_GROUP.budgetPerPersonVnd)}
         />
-      </Card>
-      <View style={styles.section}>
+      </View>
+      <View style={styles.khoi}>
         <View style={styles.sectionTitleRow}>
-          <View>
-            <Text style={[typography.title, { color: colors.ink }]}>Rủ hội bạn</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{selected.length}/8 thành viên được chọn</Text>
+          <View style={styles.flex}>
+            <Text style={[typography.h2, { color: colors.ink }]}>Rủ hội bạn</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{selected.length}/{PEOPLE.length} người được chọn</Text>
           </View>
-          <Pressable accessibilityRole="button" onPress={() => session.selectAllMembers()}>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => session.selectAllMembers()} style={({ pressed }) => [styles.chonTatCa, pressed && styles.pressed]}>
             <Text style={[typography.label, { color: colors.accent }]}>Chọn tất cả</Text>
           </Pressable>
         </View>
-        <View style={styles.memberGrid}>
-          {PEOPLE.map((person) => {
-            const active = selected.includes(person.id);
-            return (
-              <Pressable
-                key={person.id}
-                accessibilityRole="checkbox"
-                aria-checked={active}
-                onPress={() => session.toggleMember(person.id)}
-                style={({ pressed }) => [
-                  styles.member,
-                  {
-                    backgroundColor: active ? colors.accentSoft : colors.card,
-                    borderColor: active ? colors.accent : colors.line,
-                  },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View>
-                  <Avatar person={person} ring={active} size={46} />
-                  {active ? (
-                    <View style={[styles.memberCheck, { backgroundColor: colors.accent }]}>
-                      <Ionicons color={colors.accentInk} name="checkmark" size={11} />
-                    </View>
-                  ) : null}
-                </View>
-                <Text numberOfLines={1} style={[typography.caption, { color: colors.ink }]}>{person.name.split(" ")[0]}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* Names, not eight tiny coloured heads: the same picker the bill uses, in the invitation's own tone. */}
+        <RosterPicker onToggle={session.toggleMember} people={PEOPLE} selected={selected} tone="accent" />
       </View>
-      <Card style={styles.switchCard}>
-        <View style={[styles.switchIcon, { backgroundColor: colors.aiSoft }]}>
-          <Ionicons color={colors.ai} name="sparkles" size={22} />
-        </View>
+      <View style={[styles.aiRow, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <Ionicons color={colors.ai} name="sparkles" size={22} />
         <View style={styles.flex}>
           <Text style={[typography.label, { color: colors.ink }]}>Nhờ Rủ Đi gợi ý lịch trình</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Dựa trên gu của {selected.length} thành viên</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Dựa trên gu của {selected.length} thành viên; bạn sửa được trước khi chốt.</Text>
         </View>
-        <Pressable
-          accessibilityRole="switch"
-          aria-checked={session.aiSuggest}
-          onPress={() => session.setAiSuggest(!session.aiSuggest)}
-          style={[styles.toggle, { backgroundColor: session.aiSuggest ? colors.ai : colors.line }]}
-        >
-          <View style={[styles.toggleThumb, !session.aiSuggest && { alignSelf: "flex-start" }]} />
-        </Pressable>
-      </Card>
+        <Switch
+          accessibilityLabel="Nhờ Rủ Đi gợi ý lịch trình"
+          onValueChange={session.setAiSuggest}
+          thumbColor={colors.card}
+          trackColor={{ false: colors.lineStrong, true: colors.ai }}
+          value={session.aiSuggest}
+        />
+      </View>
       <RudiButton
         disabled={!session.tripName || selected.length === 0}
         icon="arrow-forward"
@@ -145,39 +134,62 @@ export function TripTimelineScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const days = session.itinerary;
   const current = days[day] ?? days[0];
+  const nhan = nhanNhip(nhipKeo(isoTu(session.startDate), isoTu(session.endDate), homNay()));
+  const diCung = PEOPLE.filter((person) => session.selectedMemberIds.includes(person.id));
 
   return (
-    <RudiScreen bottomInset={112} testID="trip-timeline-screen">
+    <RudiScreen
+      bottomInset={112}
+      overlay={
+        <Sheet accessibilityLabel="Tùy chọn chuyến đi" onClose={() => setMenuOpen(false)} open={menuOpen}>
+          <View style={styles.khay}>
+            <Text style={[typography.h2, { color: colors.ink }]}>{session.tripName}</Text>
+            <RudiButton
+              label="Mở lịch trình AI"
+              onPress={() => {
+                setMenuOpen(false);
+                router.push(session.tripPath("/itinerary") as never);
+              }}
+              variant="ghost"
+            />
+            <RudiButton
+              label="Check-in nhóm"
+              onPress={() => {
+                setMenuOpen(false);
+                router.push("/check-ins/new");
+              }}
+              variant="ghost"
+            />
+            <RudiButton
+              label="Tường nhóm"
+              onPress={() => {
+                setMenuOpen(false);
+                router.push(("/groups/" + DEMO_GROUP.id + "/wall") as never);
+              }}
+              variant="ghost"
+            />
+          </View>
+        </Sheet>
+      }
+      testID="trip-timeline-screen"
+    >
       <TopBar
         back={false}
         title={DEMO_GROUP.name}
-        subtitle="17–19/10/2026"
+        subtitle={nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
         right={
           <IconButton
             accessibilityLabel="Tùy chọn"
             icon="ellipsis-horizontal"
-            onPress={() => setMenuOpen((value) => !value)}
+            onPress={() => setMenuOpen(true)}
+            quiet
           />
         }
       />
-      {menuOpen ? (
-        <Card>
-          <RudiButton
-            label="Mở lịch trình AI"
-            onPress={() => router.push(session.tripPath("/itinerary") as never)}
-            variant="ghost"
-          />
-          <RudiButton label="Check-in nhóm" onPress={() => router.push("/check-ins/new")} variant="ghost" />
-          <RudiButton
-            label="Tường nhóm"
-            onPress={() => router.push(("/groups/" + DEMO_GROUP.id + "/wall") as never)}
-            variant="ghost"
-          />
-        </Card>
-      ) : null}
+      {/* The trip as an invitation: its picture, its name, when. */}
       <Photo
-        height={245}
-        radius={24}
+        height={200}
+        radius={20}
         source={demoAssets.road}
         overlay={
           <>
@@ -187,47 +199,32 @@ export function TripTimelineScreen() {
             />
             <View style={styles.tripHeroBadge}><DemoBadge /></View>
             <View style={styles.tripHeroCopy}>
-              <Text style={styles.tripKicker}>CHUYẾN ĐI SẮP TỚI</Text>
               <Text style={styles.tripTitle}>{session.tripName}</Text>
-              <Inline gap={12}>
-                <Inline gap={5}>
-                  <Ionicons color={mucTrenAnh} name="calendar-outline" size={15} />
-                  <Text style={styles.tripMeta}>3 ngày 2 đêm</Text>
-                </Inline>
-                <Inline gap={5}>
-                  <Ionicons color={mucTrenAnh} name="people-outline" size={15} />
-                  <Text style={styles.tripMeta}>{session.selectedMemberIds.length} người</Text>
-                </Inline>
-              </Inline>
+              <Text style={styles.tripMeta}>{session.destination} · 3 ngày 2 đêm · {diCung.length} người</Text>
             </View>
           </>
         }
       />
-      <Card style={styles.tripOverview}>
-        <View style={styles.overviewItem}>
-          <Text style={[typography.money, { color: colors.ink }]}>2,1M</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>dự kiến/người</Text>
+      <View style={styles.tomTat}>
+        <View style={styles.oTomTat}>
+          <Money vnd={DEMO_GROUP.budgetPerPersonVnd} />
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến một người</Text>
         </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.overviewItem}>
-          <AvatarStack max={4} people={PEOPLE} />
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>{session.selectedMemberIds.length} đã tham gia</Text>
+        <View style={styles.oTomTat}>
+          <AvatarStack max={4} people={diCung.map((p) => ({ name: p.name }))} />
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{diCung.length} tham gia</Text>
         </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.overviewItem}>
-          <Text style={[typography.money, { color: colors.accent }]}>46</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>ngày nữa</Text>
-        </View>
-      </Card>
-      <View style={styles.daySelector}>
+        {nhan ? <Stamp label={nhan} tilt={-2} /> : null}
+      </View>
+      <Inline gap={8} wrap>
         {days.map((item, index) => (
           <Chip key={item.day} label={"Ngày " + (index + 1)} onPress={() => setDay(index)} selected={day === index} />
         ))}
-      </View>
+      </Inline>
       <View style={styles.sectionTitleRow}>
-        <View>
+        <View style={styles.flex}>
           <Text style={[typography.h2, { color: colors.ink }]}>{current.day}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>{current.items.length} hoạt động</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{current.items.length} hoạt động</Text>
         </View>
         <IconButton
           accessibilityLabel="Mở lịch trình AI"
@@ -237,34 +234,25 @@ export function TripTimelineScreen() {
           tone="ai"
         />
       </View>
-      <Card style={styles.scheduleCard}>
-        {current.items.map((slot, index) => (
-          <View key={slot.time + slot.title + index} style={styles.scheduleRow}>
-            <View style={styles.scheduleTime}>
-              <Text style={[typography.label, { color: colors.ink }]}>{slot.time}</Text>
-              {index < current.items.length - 1 ? <View style={[styles.scheduleLine, { backgroundColor: colors.line }]} /> : null}
-            </View>
-            <View style={[styles.scheduleIcon, { backgroundColor: slot.color + "1A" }]}>
-              <Ionicons color={slot.color} name={slot.icon as never} size={20} />
-            </View>
-            <View style={styles.flex}>
-              <Text style={[typography.label, { color: colors.ink }]}>{slot.title}</Text>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>{slot.placeId ? "Đã gắn địa điểm" : "Cả nhóm"}</Text>
-            </View>
-            <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
-          </View>
-        ))}
-      </Card>
-      <Card onPress={() => router.push("/check-ins/new")} style={styles.checkInCta}>
-        <View style={[styles.checkInIcon, { backgroundColor: colors.accent }]}>
-          <Ionicons color={colors.accentInk} name="location" size={22} />
-        </View>
-        <View style={styles.flex}>
-          <Text style={[typography.title, { color: colors.ink }]}>Đến nơi rồi?</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>Check-in để giữ lại khoảnh khắc cùng nhóm.</Text>
-        </View>
-        <Ionicons color={colors.accent} name="arrow-forward-circle" size={26} />
-      </Card>
+      <View>
+        {current.items.map((slot, index) => {
+          // A stop with a picture reads as a destination; the others stay lines.
+          const noi = slot.placeId ? PLACES.find((p) => p.id === slot.placeId) : undefined;
+          return (
+            <HangChang
+              cuoi={index === current.items.length - 1}
+              gio={slot.time}
+              key={slot.time + slot.title + index}
+              onPress={slot.placeId ? () => router.push(("/places/" + slot.placeId) as never) : undefined}
+              phai={noi?.image ? <AnhChang alt={noi.name} source={noi.image} /> : undefined}
+              phu={slot.placeId ? "Đã gắn địa điểm · bấm để mở" : "Cả nhóm"}
+              phuTone={slot.placeId ? "accent" : "inkFaint"}
+              tieuDe={slot.title}
+            />
+          );
+        })}
+      </View>
+      <ListRow icon="location" onPress={() => router.push("/check-ins/new")} subtitle="Check-in để giữ lại khoảnh khắc cùng nhóm." title="Đến nơi rồi?" />
     </RudiScreen>
   );
 }
@@ -274,71 +262,78 @@ export function CheckInScreen() {
   const { colors } = useRudiTheme();
   const session = useRudiSession();
   const arrived = session.checkedInIds.length;
+  // The person just checked in under this finger: their seal lands once.
+  const [vuaToi, setVuaToi] = useState<string | null>(null);
   const missing = PEOPLE.filter((person) => !session.checkedInIds.includes(person.id));
+  const daToi = PEOPLE.filter((person) => session.checkedInIds.includes(person.id));
 
   return (
     <RudiScreen testID="check-in-screen">
       <TopBar title="Check-in nhóm" right={<DemoBadge />} />
-      <Card>
-        <Text style={[typography.h2, { color: colors.ink }]}>{arrived}/{PEOPLE.length} thành viên đã tới</Text>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Quảng trường Lâm Viên · Đà Lạt</Text>
-        <AvatarStack max={8} people={PEOPLE.filter((person) => session.checkedInIds.includes(person.id))} />
-      </Card>
-      <Card style={session.locationSharing ? styles.shareOn : undefined}>
-        <Inline gap={10}>
-          <View style={styles.flex}>
-            <Text style={[typography.label, { color: colors.ink }]}>
-              {session.locationSharing ? "Đang chia sẻ vị trí đến 11:30" : "Chưa chia sẻ vị trí"}
-            </Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>
-              Opt-in, có hạn. Bản trải nghiệm không đọc GPS máy, trạng thái {noiLuu(session.luuTruSong)}.
-            </Text>
-          </View>
-        </Inline>
+      <Heading title={`${arrived}/${PEOPLE.length} thành viên đã tới`} subtitle="Quảng trường Lâm Viên · Đà Lạt" />
+      <AvatarStack max={8} people={daToi.map((p) => ({ name: p.name }))} tone="split" />
+      {/* No map. This build reads no GPS; drawing a map box would promise one. */}
+      <View style={[styles.viTri, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <View style={styles.flex}>
+          <Text style={[typography.label, { color: colors.ink }]}>
+            {session.locationSharing ? "Đang chia sẻ vị trí đến 11:30" : "Chưa chia sẻ vị trí"}
+          </Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+            Opt-in, có hạn. Bản trải nghiệm không đọc GPS máy; check-in là bạn tự đánh dấu. Trạng thái {noiLuu(session.luuTruSong)}.
+          </Text>
+        </View>
         <RudiButton
-          label={session.locationSharing ? "Dừng chia sẻ" : "Chia vị trí trực tiếp"}
+          compact
+          full={false}
+          label={session.locationSharing ? "Dừng chia sẻ" : "Chia vị trí"}
           onPress={() => session.setLocationSharing(!session.locationSharing)}
           variant="outline"
         />
-      </Card>
-      <Card style={styles.mapPlaceholder}>
-        <Ionicons color={colors.inkFaint} name="map-outline" size={36} />
-        <Text style={[typography.label, { color: colors.ink }]}>Bản đồ Quảng trường Lâm Viên</Text>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Placeholder. GPS thật là Pha D.</Text>
-      </Card>
-      <View style={styles.section}>
-        <Text style={[typography.title, { color: colors.ink }]}>Ai đã tới</Text>
+      </View>
+      <View style={styles.khoi}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Ai đã tới</Text>
         {PEOPLE.map((person) => {
           const here = session.checkedInIds.includes(person.id);
           return (
             <Pressable
               key={person.id}
+              accessibilityLabel={person.name}
               accessibilityRole="checkbox"
+              accessibilityState={{ checked: here }}
               aria-checked={here}
-              onPress={() => session.toggleCheckIn(person.id)}
-              style={styles.checkRow}
+              onPress={() => {
+                // Landing only for a check-in, never for an undo.
+                if (here) setVuaToi(null);
+                else setVuaToi(person.id);
+                session.toggleCheckIn(person.id);
+              }}
+              style={({ pressed }) => [styles.checkRow, { borderBottomColor: colors.line }, pressed && styles.pressed]}
             >
-              <Avatar person={person} ring={here} size={40} />
+              <Avatar name={person.name} ring={here} size={40} tone="split" />
               <View style={styles.flex}>
                 <Text style={[typography.label, { color: colors.ink }]}>{person.name}</Text>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>{here ? "Đã check-in" : "Chưa tới"}</Text>
+                <Text style={[typography.caption, { color: here ? colors.split : colors.inkSoft }]}>{here ? "Đã check-in" : "Chưa tới"}</Text>
               </View>
-              <Ionicons color={here ? colors.split : colors.inkFaint} name={here ? "checkmark-circle" : "ellipse-outline"} size={22} />
+              {here ? (
+                <Stamp dong={vuaToi === person.id} label="Đã tới" tilt={-2} tone="split" />
+              ) : (
+                <Ionicons color={colors.lineStrong} name="ellipse-outline" size={22} />
+              )}
             </Pressable>
           );
         })}
       </View>
       {missing.length ? (
-        <Text style={[typography.caption, { color: colors.warn }]}>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {missing.map((person) => person.name).join(", ")} chưa check-in.
         </Text>
       ) : (
         <Text style={[typography.caption, { color: colors.split }]}>Đủ 8 người.</Text>
       )}
-      <Card>
+      <View>
         <Text style={[typography.caption, { color: colors.inkFaint }]}>Điểm đến tiếp theo</Text>
         <Text style={[typography.title, { color: colors.ink }]}>Still Cafe · 10:00</Text>
-      </Card>
+      </View>
       <Inline gap={10}>
         <RudiButton
           full={false}
@@ -351,7 +346,7 @@ export function CheckInScreen() {
         <RudiButton
           full={false}
           icon="location"
-          label="Đánh dấu tôi đã tới"
+          label="Tôi đã tới"
           onPress={() => {
             session.checkInSelf();
             router.replace(("/groups/" + DEMO_GROUP.id + "/wall") as never);
@@ -370,40 +365,20 @@ export function CheckInScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  formCard: { gap: 15 },
-  section: { gap: 10 },
+  form: { maxWidth: 640 },
+  khoi: { gap: 10 },
+  khay: { gap: 6 },
   sectionTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  memberGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  member: { flexBasis: 72, flexGrow: 1, alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 17, padding: 10 },
-  memberCheck: { position: "absolute", right: -3, bottom: -2, width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  switchCard: { flexDirection: "row", alignItems: "center", gap: 11 },
-  switchIcon: { width: 43, height: 43, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  toggle: { width: 50, height: 29, borderRadius: 999, padding: 3, alignItems: "flex-end" },
-  toggleThumb: { width: 23, height: 23, borderRadius: 12, backgroundColor: mucTrenAnh },
-  pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
+  chonTatCa: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
+  aiRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  pressed: { opacity: 0.75 },
   tripHeroBadge: { position: "absolute", right: 12, top: 12 },
-  tripHeroCopy: { position: "absolute", left: 18, right: 18, bottom: 17, gap: 7 },
-  tripKicker: { color: lopPhu.trang(0.78), fontSize: 11, fontWeight: "800", letterSpacing: 1 },
-  tripTitle: { color: mucTrenAnh, fontSize: 29, lineHeight: 34, fontWeight: "900", letterSpacing: -0.8 },
-  tripMeta: { color: mucTrenAnh, fontSize: 12, fontWeight: "700" },
-  tripOverview: { minHeight: 94, flexDirection: "row", alignItems: "center", paddingHorizontal: 10 },
-  overviewItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 4 },
-  verticalLine: { width: StyleSheet.hairlineWidth, height: 44 },
-  daySelector: { flexDirection: "row", gap: 8 },
-  scheduleCard: { paddingVertical: 8 },
-  scheduleRow: { minHeight: 64, flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  scheduleTime: { width: 47, alignItems: "center", alignSelf: "stretch", paddingTop: 10 },
-  scheduleLine: { position: "absolute", top: 32, bottom: -1, width: 2 },
-  scheduleIcon: { width: 40, height: 40, borderRadius: 13, alignItems: "center", justifyContent: "center", marginTop: 2 },
-  checkInCta: { flexDirection: "row", alignItems: "center", gap: 12 },
-  checkInIcon: { width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center" },
-  locationCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 11, borderRadius: 16, backgroundColor: lopPhu.xam(0.58), borderWidth: 1, borderColor: lopPhu.trang(0.24) },
-  locationPin: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  locationTitle: { color: mucTrenAnh, fontSize: 15, fontWeight: "800" },
-  locationSubtitle: { color: lopPhu.trang(0.75), fontSize: 11, fontWeight: "600" },
-  taggedCard: { gap: 10 },
+  tripHeroCopy: { position: "absolute", left: 18, right: 18, bottom: 16, gap: 4 },
+  tripTitle: { color: mucTrenAnh, fontFamily: displayFace.extraBold, fontSize: 28, lineHeight: 33, letterSpacing: -0.7 },
+  tripMeta: { color: mucTrenAnh, fontSize: 13, lineHeight: 18, fontWeight: "600" },
+  tomTat: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 20 },
+  oTomTat: { gap: 4 },
+  viTri: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  checkRow: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth },
   demoNote: { textAlign: "center", paddingHorizontal: 20 },
-  mapPlaceholder: { minHeight: 160, alignItems: "center", justifyContent: "center", gap: 8 },
-  checkRow: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 10 },
-  shareOn: { borderColor: phuMau(mauSang.split, 0.35) },
 });

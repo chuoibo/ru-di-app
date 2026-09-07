@@ -20,13 +20,16 @@
  * and «Chưa có nhóm nào». `datPhien` puts the session into force for the
  * screens already mounted; without it they would read fixtures until restart.
  *
- * UI v2: the cover band continues from the login page (title and the masked
- * number in cover ink), the six boxes sit on the paper without a card.
+ * UI v2: the cover band continues from the login page in its short form (the
+ * code field focuses itself, so the keyboard is up from the first frame and
+ * the band never gets the room the login band had). The masked number and
+ * «Đổi số» sit together on the paper above the boxes: the fact and the way to
+ * correct it in one line, instead of a ghost button at the foot.
  */
 import { Redirect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { guiOtp, xacMinhOtp } from "../../../phien";
@@ -120,49 +123,68 @@ export function OtpScreen() {
   return (
     <RudiScreen contentStyle={styles.screen} surface="cover" testID="otp-screen">
       <StatusBar style="light" />
-      <CoverBand bleed={bleed} onBack={doiSo} style={styles.band} underStatusBar>
-        <Text style={[typography.hero, { color: colors.coverInk }]}>Nhập mã 6 số</Text>
+      <CoverBand bleed={bleed} compact onBack={doiSo} style={styles.band} underStatusBar>
+        <Text style={[typography.h1, { color: colors.coverInk }]}>Nhập mã 6 số</Text>
         <Text style={[typography.body, styles.dan, { color: colors.coverInkSoft }]}>
-          Mã đã gửi tới {cheSo(cho.phone)}. Có hiệu lực 5 phút; nhập đủ 6 số là tự kiểm.
+          Nhập đủ 6 số là tự kiểm. Mã có hiệu lực 5 phút.
         </Text>
       </CoverBand>
       <View style={styles.column}>
-      <View style={styles.form}>
-        <OtpBoxes disabled={ban} length={DO_DAI_MA} onChange={doiMa} value={ma} />
-        {trang.pha === "dang-xac-minh" ? (
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang kiểm mã...</Text>
-        ) : null}
-        {trang.pha === "hong" ? (
-          // Body size, not caption: this is the one line that carries the
-          // retry count, and it must not sit at the 12sp floor under a control.
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        ) : null}
-        <RudiButton
-          disabled={ban || conLai > 0}
-          label="Gửi lại mã"
-          loading={trang.pha === "dang-gui-lai"}
-          onPress={() => void guiLai()}
-          variant="outline"
-        />
-        {conLai > 0 ? (
-          // Live information stays readable: a disabled button's label is pale
-          // by design, so the countdown lives in ink beneath it instead.
-          <Text style={[typography.caption, styles.demNguoc, { color: colors.inkSoft }]}>
-            Gửi lại được sau {conLai} giây.
+        {/* The number the code went to, and the way to change it, on one line. */}
+        <View style={styles.soRow}>
+          <Text style={[typography.body, styles.so, { color: colors.inkSoft }]}>
+            Đã gửi tới <Text style={{ color: colors.ink, fontWeight: "700" }}>{cheSo(cho.phone)}</Text>
           </Text>
-        ) : null}
-      </View>
-      <RudiButton disabled={ban} label="Đổi số điện thoại" onPress={doiSo} variant="ghost" />
+          <Pressable
+            accessibilityLabel="Đổi số điện thoại"
+            accessibilityRole="button"
+            disabled={ban}
+            hitSlop={6}
+            onPress={doiSo}
+            style={({ pressed }) => [styles.doiSo, pressed && styles.pressed]}
+          >
+            <Text style={[typography.label, { color: ban ? colors.inkFaint : colors.accent }]}>Đổi số</Text>
+          </Pressable>
+        </View>
+        <View style={styles.form}>
+          <OtpBoxes disabled={ban} length={DO_DAI_MA} onChange={doiMa} value={ma} />
+          {trang.pha === "dang-xac-minh" ? (
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]}>Đang kiểm mã...</Text>
+          ) : null}
+          {trang.pha === "hong" ? (
+            // Body size, not caption: this is the one line that carries the
+            // retry count, and it must not sit at the 13sp floor under a control.
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+          ) : null}
+          <RudiButton
+            disabled={ban || conLai > 0}
+            label="Gửi lại mã"
+            loading={trang.pha === "dang-gui-lai"}
+            onPress={() => void guiLai()}
+            variant="outline"
+          />
+          {conLai > 0 ? (
+            // Live information stays readable: a disabled button's label is pale
+            // by design, so the countdown lives in ink beneath it instead.
+            <Text style={[typography.caption, styles.demNguoc, { color: colors.inkSoft }]}>
+              Gửi lại được sau {conLai} giây.
+            </Text>
+          ) : null}
+        </View>
       </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20 },
-  band: { gap: 10 },
+  screen: { gap: 16 },
+  band: { gap: 6 },
   dan: { maxWidth: 520 },
-  column: { gap: 20, maxWidth: 560, width: "100%", alignSelf: "center" },
+  column: { gap: 16, maxWidth: 560, width: "100%", alignSelf: "center" },
+  soRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" },
+  so: { flexShrink: 1 },
+  doiSo: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
+  pressed: { opacity: 0.68 },
   form: { gap: 16 },
   demNguoc: { textAlign: "center" },
 });

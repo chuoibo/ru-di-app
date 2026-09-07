@@ -12,9 +12,12 @@ appId: com.lakiet.rudi
     centerElement: true
     timeout: 30000
 - tapOn: "Tài chính của tôi"
+# Tài chính là sổ phẳng (đợt chuyển mình 06/09): câu tổng nằm ở phụ đề dòng
+# đầu, câu về bộ lọc kỳ là một dòng riêng; assertVisible so trọn văn bản node.
 - extendedWaitUntil:
-    visible: "Cả chuyến 3.840.000đ · một bill Xóm Lèo 1.280.000đ. Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ."
+    visible: "Cả chuyến 3.840.000đ · một bill Xóm Lèo 1.280.000đ"
     timeout: 30000
+- assertVisible: "Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ."
 # Minh Anh (collector, index 0): 173.750đ of the bill + 320.000đ of
 # homestay+xăng = 493.750đ. Hand-checked against BILL_ITEMS / OTHER_TRIP_ITEMS.
 - assertVisible: "493.750đ"
@@ -32,7 +35,11 @@ appId: com.lakiet.rudi
     visible: "Quyết toán chuyến đi"
     timeout: 30000
 - assertVisible: "3.840.000đ"
-- assertVisible: "Gồm bill Xóm Lèo 1.280.000đ và phần còn lại 2.560.000đ (homestay + xăng)."
+# Quyết toán là sổ phẳng: bill và phần còn lại là hai dòng sổ, mỗi dòng một số.
+- assertVisible: "Bill Xóm Lèo"
+- assertVisible: "1.280.000đ"
+- assertVisible: "Homestay + xăng"
+- assertVisible: "2.560.000đ"
 # Same 1.106.250đ the finance screen printed → one source, not two constants.
 - assertVisible: "1.106.250đ"
 - assertNotVisible: "2.840.000đ"

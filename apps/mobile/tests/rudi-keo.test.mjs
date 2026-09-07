@@ -20,6 +20,7 @@ import {
   homNayIso,
   kiemTraChangMoi,
   luuLichTrinh,
+  reconcileOrder,
   themChang,
 } from "../dist-test/rudi/keo/keo.js";
 
@@ -28,14 +29,25 @@ const CHANG = [
   { id: "s-2", position: 1, at: "18:00", label: "Ăn tối", place_name: "Xóm Lào", place_id: "p-tiem-nuong-xom-lao" },
 ];
 
-test("themChang giữ nguyên chặng cũ (kể cả place_id) và xếp theo giờ", () => {
+test("ghép thứ tự không ghi đè giờ/nội dung mới, không hồi sinh chặng đã xóa", () => {
+  const draft = [CHANG[1], CHANG[0]];
+  const latest = [{ ...CHANG[0], at: "09:00", label: "Tên mới" }, { ...CHANG[1], id: "s-3", label: "Chặng mới" }];
+  const result = reconcileOrder(draft, latest);
+  assert.deepEqual(result.map((stop) => stop.id), ["s-1", "s-3"]);
+  assert.equal(result[0].at, "09:00");
+  assert.equal(result[0].label, "Tên mới");
+  assert.deepEqual(reconcileOrder(draft, []), []);
+  assert.deepEqual(reconcileOrder(draft, CHANG).map((stop) => stop.id), ["s-2", "s-1"]);
+});
+
+test("themChang nối cuối, giữ nguyên thứ tự đã chọn và place_id", () => {
   const ra = themChang(CHANG, { at: "15:00", label: "Cafe", place_name: "Lưng Chừng", place_id: "p-lung-chung-cafe" });
   assert.deepEqual(
     ra.map((c) => [c.at, c.label, c.place_id]),
     [
       ["12:00", "Ăn trưa", null],
-      ["15:00", "Cafe", "p-lung-chung-cafe"],
       ["18:00", "Ăn tối", "p-tiem-nuong-xom-lao"],
+      ["15:00", "Cafe", "p-lung-chung-cafe"],
     ],
   );
 });
@@ -56,7 +68,9 @@ test("luuLichTrinh gửi place_id lên PUT /outings/{id}/timeline và dịch sto
     }
     return new Response(JSON.stringify({ code: "stop_place_unknown", detail: "x" }), { status: 422, headers: { "Content-Type": "application/json" } });
   };
-  await luuLichTrinh({ id: "o-1", context_id: "c-1" }, changGuiTu(CHANG[1]) && [changGuiTu(CHANG[1])], "nguoi-1", newAttempt());
+  await luuLichTrinh({ id: "o-1", context_id: "c-1", timeline_revision: 4 }, [changGuiTu(CHANG[1]), changGuiTu(CHANG[0])], "nguoi-1", newAttempt());
+  assert.equal(goi[0].body.expected_revision, 4);
+  assert.deepEqual(goi[0].body.stops.map(stop => stop.at), ["18:00", "12:00"]);
   assert.match(goi[0].url, /\/outings\/o-1\/timeline$/);
   assert.deepEqual(goi[0].body.stops[0], { at: "18:00", label: "Ăn tối", place_name: "Xóm Lào", place_id: "p-tiem-nuong-xom-lao" });
   await assert.rejects(

@@ -13,9 +13,40 @@ import {
   SHORT_HEIGHT,
   SIZE_CLASS_BREAKPOINTS,
   heightClassFor,
+  gridFor,
   layoutFor,
   sizeClassFor,
 } from "../dist-test/rudi/adaptive.js";
+
+test("grid đo hộp nội dung: 30 địa điểm không ép thành một hàng", () => {
+  for (const width of [288, 360, 692, 900, 1200, 2000]) {
+    const grid = gridFor(width, 320, 12);
+    assert.ok(grid.columns >= 1 && grid.columns <= 3);
+    assert.ok(grid.itemWidth * grid.columns + 12 * (grid.columns - 1) <= width + 0.001);
+    if (grid.columns > 1) assert.ok(grid.itemWidth >= 320);
+    assert.ok(Math.ceil(30 / grid.columns) >= 10);
+  }
+  assert.equal(gridFor(900 - 104 - 48, 320).columns, 2);
+  assert.equal(gridFor(600 - 104 - 48, 320).columns, 1);
+  for (const width of [0, -1, NaN, Infinity]) {
+    assert.deepEqual(gridFor(width), { columns: 1, itemWidth: 0 });
+  }
+});
+
+test("maxColumns: ô album lên sáu cột trên tablet, thẻ vẫn dừng ở ba", () => {
+  // Phone content box (360 - 32): three tiles either way.
+  assert.equal(gridFor(328, 104, 6).columns, 3);
+  assert.equal(gridFor(328, 104, 6, 6).columns, 3);
+  // Tablet content box (1200 - 36 * 2 after the rail): cards cap at three, tiles at six.
+  assert.equal(gridFor(1128, 104, 6).columns, 3);
+  const tiles = gridFor(1128, 104, 6, 6);
+  assert.equal(tiles.columns, 6);
+  assert.ok(tiles.itemWidth * 6 + 6 * 5 <= 1128);
+  assert.ok(Number.isInteger(tiles.itemWidth));
+  // A nonsense cap falls back to the default of three.
+  assert.equal(gridFor(1128, 104, 6, NaN).columns, 3);
+  assert.equal(gridFor(1128, 104, 6, 0).columns, 1);
+});
 
 test("biên 600 và 840 theo Android window size classes, không phải 700", () => {
   assert.equal(SIZE_CLASS_BREAKPOINTS.medium, 600);

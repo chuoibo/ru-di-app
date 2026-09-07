@@ -61,6 +61,56 @@ export function duongCongS(w: number, h: number, direction: "down" | "up" = "dow
   return { d, diem };
 }
 
+/**
+ * The rim of a rubber stamp: a rounded rectangle whose edge is not quite a
+ * curve. Every point of the outline is pushed in or out by up to `amp` along
+ * its normal, by a fixed function of its index and the width, so the same
+ * stamp prints the same way on every render and two stamps of different
+ * widths break differently. The outline is inset by `amp + 1` so nothing
+ * leaves the `w`×`h` box, and it is closed with `Z` after a real point.
+ */
+export function duongVienDau(w: number, h: number, r = 14, amp = 1.3): string {
+  const inset = amp + 1;
+  const x0 = inset, y0 = inset, x1 = w - inset, y1 = h - inset;
+  const rr = Math.max(2, Math.min(r, (x1 - x0) / 2 - 1, (y1 - y0) / 2 - 1));
+  const step = 4;
+  const goc = 5; // points per corner arc
+  const pts: { x: number; y: number; nx: number; ny: number }[] = [];
+  const edge = (ax: number, ay: number, bx: number, by: number, nx: number, ny: number) => {
+    const len = Math.hypot(bx - ax, by - ay);
+    const n = Math.max(1, Math.floor(len / step));
+    for (let i = 0; i < n; i += 1) {
+      const t = i / n;
+      pts.push({ x: ax + (bx - ax) * t, y: ay + (by - ay) * t, nx, ny });
+    }
+  };
+  const arc = (cx: number, cy: number, a0: number, a1: number) => {
+    for (let i = 0; i < goc; i += 1) {
+      const a = a0 + ((a1 - a0) * i) / goc;
+      pts.push({ x: cx + rr * Math.cos(a), y: cy + rr * Math.sin(a), nx: Math.cos(a), ny: Math.sin(a) });
+    }
+  };
+  const PI = Math.PI;
+  edge(x0 + rr, y0, x1 - rr, y0, 0, -1);
+  arc(x1 - rr, y0 + rr, -PI / 2, 0);
+  edge(x1, y0 + rr, x1, y1 - rr, 1, 0);
+  arc(x1 - rr, y1 - rr, 0, PI / 2);
+  edge(x1 - rr, y1, x0 + rr, y1, 0, 1);
+  arc(x0 + rr, y1 - rr, PI / 2, PI);
+  edge(x0, y1 - rr, x0, y0 + rr, -1, 0);
+  arc(x0 + rr, y0 + rr, PI, (3 * PI) / 2);
+  // Two octaves: a slow swell held over three points (the rubber's own edge)
+  // and a small per-point grain (the ink). One octave alone read as a saw.
+  const nhieu = (k: number) => (((k + Math.round(w) * 11) % 7) / 6 - 0.5) * 2;
+  const wobble = (i: number) => amp * (0.75 * nhieu(Math.floor(i / 3) * 7) + 0.35 * nhieu(i * 37));
+  const parts = pts.map((p, i) => {
+    const d = wobble(i);
+    return `${i === 0 ? "M" : "L"} ${so(p.x + p.nx * d)} ${so(p.y + p.ny * d)}`;
+  });
+  parts.push("Z");
+  return parts.join(" ");
+}
+
 /** Sheen line along the top of a tape. */
 export function duongVachSang(w: number, y = 1.5, inset = 8): string {
   return `M ${so(inset)} ${so(y)} L ${so(w - inset)} ${so(y)}`;

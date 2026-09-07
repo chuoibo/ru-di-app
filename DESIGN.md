@@ -5,20 +5,20 @@ colors:
   ground: "#f7f3ec"
   card: "#ffffff"
   line: "#e6dfd3"
-  line-strong: "#a7825d"
+  line-strong: "#777580"
   ink: "#1f2230"
   ink-soft: "#4e5563"
   ink-faint: "#676e7b"
-  accent: "#c93900"
-  accent-end: "#c9344a"
+  accent: "#ba3e20"
+  accent-end: "#ba3e20"
   accent-ink: "#ffffff"
   accent-soft: "#fff0ea"
   split: "#00756b"
   split-ink: "#ffffff"
-  split-soft: "#d5f5f0"
-  ai: "#7d49ef"
+  split-soft: "#e6f2ee"
+  ai: "#7356a6"
   ai-ink: "#ffffff"
-  ai-soft: "#f5f1ff"
+  ai-soft: "#f1ebf7"
   warn: "#c2410c"
   cover: "#1d2140"
   cover-ink: "#f7f3ec"
@@ -33,15 +33,15 @@ colors:
   ink-soft-dark: "#c4c2cf"
   ink-faint-dark: "#9b9aae"
   accent-dark: "#fb693e"
-  accent-end-dark: "#e75262"
+  accent-end-dark: "#fb693e"
   accent-ink-dark: "#1c0d06"
   accent-soft-dark: "#3d1a10"
-  split-dark: "#02a498"
+  split-dark: "#74cec0"
   split-ink-dark: "#04201d"
-  split-soft-dark: "#0d2f30"
-  ai-dark: "#a27dff"
+  split-soft-dark: "#153734"
+  ai-dark: "#c7b1e5"
   ai-ink-dark: "#150a30"
-  ai-soft-dark: "#251b4a"
+  ai-soft-dark: "#30273f"
   warn-dark: "#e8734b"
   cover-dark: "#0f1126"
   cover-ink-dark: "#f4f1ea"
@@ -50,6 +50,7 @@ colors:
   cover-line-strong-dark: "#9095c0"
   brand-glow: "#fc7b37"
   brand-coral: "#fb693e"
+  brand-coral-ink: "#1f2230"
   brand-rose: "#e75262"
   brand-violet: "#8350f6"
   brand-teal: "#04a89d"
@@ -86,9 +87,9 @@ typography:
     letterSpacing: "-0.15"
   body:
     fontFamily: "system (Roboto / SF)"
-    fontSize: "16sp"
+    fontSize: "17sp"
     fontWeight: 400
-    lineHeight: "23sp"
+    lineHeight: "24sp"
   label:
     fontFamily: "system (Roboto / SF)"
     fontSize: "14sp"
@@ -96,9 +97,9 @@ typography:
     lineHeight: "19sp"
   caption:
     fontFamily: "system (Roboto / SF)"
-    fontSize: "12sp"
+    fontSize: "13sp"
     fontWeight: 600
-    lineHeight: "16sp"
+    lineHeight: "18sp"
   stamp:
     fontFamily: "BricolageGrotesque-CondensedBold"
     fontSize: "12sp"
@@ -114,9 +115,11 @@ typography:
     fontFeature: "tnum"
 rounded:
   base: "20dp"
+  stamp-cta: "16dp"
   control: "14dp"
   small: "10dp"
   stamp: "6dp"
+  print: "4dp"
   cover-band: "28dp"
   pill: "999dp"
 spacing:
@@ -130,10 +133,17 @@ components:
   stamp-button:
     backgroundColor: "{colors.brand-coral}"
     textColor: "{colors.ink}"
-    typography: "BricolageGrotesque-Bold 18/22"
+    typography: "BricolageGrotesque-Bold 21/26 +0.4"
+    rounded: "{rounded.stamp-cta}"
+    padding: "0 30dp"
+    height: "60dp"
+  stamp-button-form:
+    backgroundColor: "{colors.brand-coral}"
+    textColor: "{colors.ink}"
+    typography: "BricolageGrotesque-Bold 17/22 +0.4"
     rounded: "{rounded.control}"
-    padding: "0 22dp"
-    height: "56dp"
+    padding: "0 24dp"
+    height: "52dp"
   cover-button:
     backgroundColor: "transparent"
     textColor: "{colors.cover-ink}"
@@ -141,6 +151,12 @@ components:
     rounded: "{rounded.control}"
     padding: "0 18dp"
     height: "50dp"
+  cover-link:
+    backgroundColor: "transparent"
+    textColor: "{colors.cover-ink}"
+    typography: "{typography.label}"
+    padding: "0 12dp"
+    height: "48dp"
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.accent-ink}"
@@ -169,13 +185,6 @@ components:
     rounded: "{rounded.pill}"
     padding: "10dp 12dp"
     height: "48dp"
-  chip-static:
-    backgroundColor: "{colors.accent-soft}"
-    textColor: "{colors.accent}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.small}"
-    padding: "5dp 9dp"
-    height: "30dp"
   stamp:
     backgroundColor: "transparent"
     textColor: "{colors.accent}"
@@ -183,11 +192,30 @@ components:
     rounded: "{rounded.stamp}"
     padding: "4dp 8dp"
     height: "26dp"
-  card:
+  stamp-ink:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.accent-ink}"
+    typography: "{typography.stamp}"
+    rounded: "{rounded.stamp}"
+    padding: "4dp 8dp"
+    height: "26dp"
+  ledger-row:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    padding: "10dp 0"
+    height: "52dp"
+  print-frame:
     backgroundColor: "{colors.card}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.base}"
-    padding: "16dp"
+    typography: "{typography.caption}"
+    rounded: "{rounded.small}"
+    padding: "8dp 8dp 14dp"
+  ai-note:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    padding: "12dp 0"
   cover-band:
     backgroundColor: "{colors.cover}"
     textColor: "{colors.cover-ink}"
@@ -202,7 +230,7 @@ components:
     textColor: "{colors.accent}"
   fab:
     backgroundColor: "{colors.brand-coral}"
-    textColor: "{colors.accent-ink}"
+    textColor: "{colors.brand-coral-ink}"
     rounded: "{rounded.pill}"
     size: "56dp"
 ---
@@ -211,12 +239,35 @@ components:
 
 <!-- impeccable:design-schema 2 -->
 
-Hệ thiết kế v2 của **Rủ Đi**, **đo lại từ artifact đã ship** ở head
-`d168b63` (nhánh `claude/p0-w-ui0-nen-tang-design-system`, 2026-09-05), lát
-UI-0 (nền tảng) + UI-1 (vào cửa: Welcome, Login, OTP, thanh tab). Finish
-reviewer trả `ship` trên head này cho phạm vi đã chấm: tám mục vật chất và hai
-hồi quy, trên phone sáng font 1.0, phone tối font 1.3, tablet sáng. Chỗ nào
-hợp đồng hướng đi và bản ship lệch nhau thì **bản ship thắng** và được ghi rõ.
+Hệ thiết kế v2 của **Rủ Đi**, ghi từ artifact **đã ship** của đợt «chuyển
+mình» (nhánh `claude/p0-w-ui2-bo-cuc-theo-nhiem-vu`, bảy commit `ab53e789` →
+`06a4722f`, 2026-09-06). Finish reviewer trả `ship` sau khi tám mục vật chất
+được chấm resolved: con dấu CTA, ô soạn chat, footer lịch trình, lưới album và
+số ảnh thật, ảnh in trong khung có dòng xuất xứ, sổ thay hero metric, không
+kicker trên tiêu đề và AI ký ở chân, huy hiệu đếm từ số thật. **Đợt 8** (ba
+commit `4570fdd3` → `f838ca45` → `d2c51977` cùng ngày, cộng một sửa chưa
+commit ở `ui/Stamp.tsx` + `ui.tsx` tách pha lún của con dấu ra shared value
+riêng và kẻ tóc dưới khe `header`) thêm cú đóng dấu, phản hồi bấm trên UI
+thread, ảnh chặng trên dòng thời gian, tay cầm sheet kéo được thật và header
+tab chỉ còn wordmark; reviewer trả `ship` cho hai mục vật chất nó nêu. Mốc
+trước (`d168b63`, UI-0/UI-1) và checkpoint trưa 2026-09-06 nằm dưới mốc này;
+chỗ nào hợp đồng hướng đi và bản ship lệch nhau thì **bản ship thắng** và
+được ghi rõ.
+
+**Bằng chứng của từng câu.** Số đo (dp, sp, opacity, tỉ lệ) đọc từ
+`packages/shared/tokens.json`, `src/rudi/theme.ts`, `motion.ts`,
+`adaptive.ts`, kit `src/rudi/ui.tsx` + `src/rudi/ui/*.tsx` và hai hàng
+feature `screens/explore/HangDiaDiem.tsx`, `screens/keo/HangChang.tsx`. Cách
+nó *trông* trên máy đối chiếu bằng ảnh native Android trong
+`.impeccable/review/chuyen-minh/` (phone sáng 1.0 hành trình 01–22, phone tối
+font 1.3, tablet sáng); tài liệu này đã mở `01-welcome`, `09-itinerary`,
+`15-settlement`, `18-album`, `21-finance`, `tablet-light-explore`, và cho
+đợt 8 thư mục `dot8/`: `phone-light-04-explore`, `07-plan`,
+`12-create-sheet`, khung 26 của `clip-dau-tra-20fps` (con dấu «ĐÃ TRẢ» vừa
+chạm mực đầy cạnh một con dấu còn nhạt). Câu nào chỉ có từ mã (iOS,
+`BlurView`, OAuth, `/create` mở lạnh từ deep link) được đánh dấu như vậy;
+không suy hành vi người dùng từ ảnh, và số mili giây của cú đóng dấu đọc từ
+`Stamp.tsx`, không đo từ clip 20 fps.
 
 Nguồn số duy nhất là `packages/shared/tokens.json` (`theme.ts` đọc, `guest.css`
 soi gương, `test_shared_tokens.py` so từng token). Hai mục «Màu, kèm số đo
@@ -224,50 +275,61 @@ tương phản» và «Sàn phi-chữ 3:1» bên dưới do `scripts/sinh_token_
 sinh ra và `test_contrast_floor.py` đối chiếu từng tỉ lệ; không sửa tay.
 `.impeccable/design.json` là bản máy đọc, cùng script viết các khối số.
 
-**Phạm vi thật, nói thẳng.** Thế giới v2 phủ **trọn** bốn bề mặt: Welcome,
-Login, OTP và `RudiTabBar`. Mọi màn còn lại (Khám phá, Tin nhắn, Lên plan,
-Chia bill, Album, Cá nhân, Tài chính, kèo, nhóm) đang chạy **bố cục v1 trên
-nền v2**: nhận trang giấy có vân, bảng màu, Bricolage ở tiêu đề và số tiền,
-nhưng thẻ, chip, hero, nút vẫn là primitive cũ trong `ui.tsx`. Các lát
-UI-2 đến UI-8 sẽ đổi từng họ màn; file này **không mô tả** bố cục chưa tồn
-tại, và sẽ được đo lại sau UI-8.
+**Phạm vi.** Đợt này chuyển 21 màn sang bố cục theo nhiệm vụ: vào cửa
+(Welcome, Login, OTP, Onboarding), Khám phá + chi tiết địa điểm, kèo/lịch
+trình, nhóm + chat + thẻ AI, Bill (hoá đơn, gán món, quyết toán), Cá nhân
+(sổ tài chính, huy hiệu), Kỷ niệm/album. Dữ liệu trên ảnh là fixture, dán
+«Dữ liệu demo»/«Demo»/«Nháp»; tài liệu này không đọc bộ ảnh xanh thành «sản
+phẩm đúng».
 
 ## Overview
 
 **Creative North Star: "Nhật ký chuyến đi sau giờ làm"**
 
 Một cuốn sổ chuyến đi cả hội cùng viết trong một buổi tối. *Bìa* vải indigo
-là bề mặt thuyết phục (Welcome, dải đầu trang của Login/OTP); *trang giấy*
-trắng ngà có vân là bề mặt làm việc. Ba cuộn *washi* bão hoà mang nghĩa (cam =
-lời rủ và hành động, teal = tiền, tím = AI) chỉ dán lên **vùng đang quan
-trọng**. Trạng thái là *con dấu* mực, không phải chip màu lẫn chữ. Kế hoạch
-là một *đường route bút mực* liên tục. Khung kẻ in trước, màu đổ sau khi có dữ
-liệu. Lưới 4pt, snap ô nguyên. Hợp đồng hướng đi nằm nguyên văn trong
-`apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6, rendition bão
-hoà); ADR-0020 là thẩm quyền.
+là bề mặt thuyết phục (Welcome, `CoverBand` đầu Login/OTP); *trang giấy*
+trắng ngà có vân là bề mặt làm việc, và trên giấy **hàng nằm thẳng trên trang,
+ngăn bằng kẻ tóc**, không có thẻ lồng thẻ. Ba tông bão hoà mang nghĩa (cam =
+lời rủ, teal = tiền, tím = AI) chỉ dán lên **vùng đang quan trọng**, và trên
+màn tiền tông teal chỉ đậu trên **con số**, không tô cả khối. Trạng thái đúng
+là *con dấu* có chữ; bản nháp là *nét chì đứt*; kế hoạch là *một đường mực
+liên tục*; ảnh là *bản in* dán vào trang, có dòng xuất xứ; tiền là *dòng sổ*;
+thứ máy sinh ra là *tờ giấy ký ở chân* «Rủ Đi AI gợi ý». Khung kẻ in trước,
+màu đổ sau khi có dữ liệu. Lưới 4pt, snap ô nguyên. Hợp đồng hướng đi nằm
+nguyên văn trong `apps/mobile/app/_layout.tsx` (seed `c8e88116`, hướng số 6);
+ADR-0020 là thẩm quyền.
 
 Thế giới này **từ chối mặc định của thể loại**: ảnh hoàng hôn + thẻ trắng +
-pill cam. Reviewer đã bắt đúng cái pill coral phẳng ở vòng 1 và bản ship đổi
-nó thành con dấu (viền mực kép, mực có hạt, nghiêng 1.5°). Cũng bị loại ở
-vòng review: giả dập nổi bằng bóng lệch cứng trên wordmark; bản ship là một
-lớp phẳng.
+pill cam, và dashboard số to + thanh tiến độ. Hai vòng review đã gọt nó: pill
+coral thành con dấu (vòng 1); con dấu **rộng bằng chữ** với **một** vành mực
+vẽ bằng đường SVG gãy nhẹ, không mũi tên, và hero metric thành sổ (vòng
+2026-09-06). Cũng bị loại: dập nổi bằng bóng lệch cứng, kicker/eyebrow trên
+tiêu đề, nhãn «AI» đặt trên đầu thẻ.
 
-Mật độ: một quyết định mỗi màn, cột nội dung tối đa 560dp ở tablet, đích bấm
-48dp, sàn chữ 12sp. Không toast, không modal lỗi; lỗi là một câu `warn` dưới
-form.
+Mật độ: một quyết định mỗi màn; cột form tối đa 560dp; đích bấm 48dp; body
+17sp; caption dùng chung 13sp; tem, nhãn tab 12sp và `DemoBadge` 10sp là cỡ
+riêng. Không toast, không modal lỗi; lỗi là một câu `warn` dưới form. Mỗi màn
+tiền có một câu nói rõ số này là gì và không phải gì («Chưa confirm sổ cái.
+Đây không phải số dư ngân hàng»).
 
 **Key Characteristics:**
-- Hai bề mặt vật chất, đo được bằng pixel: vải bìa (stddev ≈ 8 mức trên
-  `#1d2140`), giấy (≈ 2 mức trên `#f7f3ec`), mực trong con dấu (≈ 8.6 mức trên
-  coral).
-- Ba tông mang nghĩa, một tông dẫn mỗi màn; màu thương hiệu `coral` chỉ ở
-  mảng lớn (washi, con dấu, FAB, logo).
+- Hai bề mặt vật chất đo được bằng pixel: vải bìa (stddev ≈ 8 mức trên
+  `#1d2140`), giấy (≈ 2 mức trên `#f7f3ec`), mực trong con dấu (≈ 8.6 mức
+  trên coral).
+- Ba tông mang nghĩa, một tông dẫn mỗi màn; `brand.coral` chỉ ở mảng lớn
+  (washi, con dấu CTA, FAB, chặng đang ở); teal/tím trên giấy chỉ ở chữ, số,
+  viền, con dấu, nút.
 - Một display face tự host (Bricolage Grotesque, bốn instance tĩnh) cho tiêu
   đề, số tiền, chữ con dấu; body giữ system.
-- Trạng thái là con dấu; số tiền là chữ số tabular, không bao giờ animate trước
-  domain state.
-- Bốn bậc chuyển động (100/200/300/550 ms), Reduce Motion đưa về 0; scale và
-  opacity là đường chính.
+- Bốn hình dạng kể chuyện: con dấu (trạng thái đúng), nét chì đứt (nháp),
+  đường mực liên tục (lịch trình), khung in (ảnh có xuất xứ).
+- Sổ thay bảng điều khiển: hàng tên trái, số phải, kẻ tóc dưới; số nguyên
+  đồng, tabular, không animate trước domain state.
+- Bốn bậc chuyển động (100/200/300/550 ms), Reduce Motion đưa mọi bậc trừ
+  `instant` về 0; scale và opacity là đường chính.
+- Mọi cú bấm là một lò xo scale trên UI thread (`PressScale`); trạng thái
+  thành đúng dưới ngón tay là **một cú đóng dấu** ba nhịp trong ngân sách
+  `celebrate`, một lần mỗi sự kiện.
 
 ## Colors
 
@@ -275,26 +337,34 @@ Bảng màu có **hai bề mặt và hai scheme**: giấy (`ground`/`card`) và 
 (`cover`), mỗi cái có bộ mực riêng; bốn nhóm đo đủ ở sáng và tối. Tầng
 thương hiệu (`brand.*`) giữ nguyên số đo từ logo, không chỉnh theo tương phản,
 và vì thế bị giới hạn công dụng.
-Ba màu tông ở scheme sáng là màu đo từ logo đã **làm tối tới khi qua AA** (cam
-#fb693e → #c93900, teal #04a89d → #00756b, tím #8350f6 → #7d49ef); cả hai số
-được giữ ở `tokens.json` (`_source`, `_contrastFloor`) và màu đo được vẫn
-nguyên trong `brand.*` cho mảng lớn.
+Ba màu ngữ nghĩa hiện tại ở scheme sáng là cam đất (`accent`), teal tiền
+(`split`) và tím dịu (`ai`), theo frontmatter đồng bộ `tokens.json`.
+Màu thương hiệu vẫn giữ riêng trong `brand.*` cho mảng lớn; không lấy
+gradient thương hiệu cũ làm giá trị của `accent` runtime.
 
 ### Primary
-- **Cam hành động** (`accent` #c93900 sáng / #fb693e tối): tông thương hiệu và
+- **Cam hành động** (`accent`): tông thương hiệu và
   hành động chính. Chữ cam trên giấy, chỉ báo tab đang chọn, viền chip đã
-  chọn. Nút chính v1 (`RudiButton solid`) là gradient `[accent, accentEnd]`
-  theo scheme; nút chính v2 (`StampButton`) lại là `brand.coral` với mực tối.
+  chọn. `RudiButton solid` dùng nền tông phẳng (nút «Thêm khoảnh khắc» ở
+  album); `accentEnd` hiện bằng `accent` ở cả hai scheme. `StampButton` dùng
+  `brand.coral` với mực tối.
 - **Coral thương hiệu** (`brand.coral` #fb693e, cả hai scheme): washi cam,
   mặt con dấu CTA, FAB «Tạo mới», chặng đang ở trên route. Luôn là mảng lớn,
   luôn đi với mực tối tĩnh (xem luật Mực Tĩnh).
 
 ### Secondary
-- **Teal tiền** (`split` #00756b / #02a498): chia bill, tiền, quyết toán;
-  washi teal là `brand.teal` #04a89d.
-- **Tím AI** (`ai` #7d49ef / #a27dff): thứ máy sinh ra, người còn sửa được;
-  washi tím là `brand.violet` #8350f6.
-- **Cảnh báo** (`warn` #c2410c / #e8734b): một câu lỗi dưới form, chữ `body`.
+- **Teal tiền** (`split`): chia bill, tiền, quyết toán. Trên bản ship teal
+  đậu ở **số** (`Money tone="split"`), con dấu «ĐÃ TRẢ»/«NGƯỜI THU BILL», viền
+  nút outline «Đánh dấu đã trả», vòng avatar người thu; nền `splitSoft` chỉ
+  ở đĩa icon nhỏ và ô đã chọn của `RosterPicker`. Washi teal là `brand.teal`
+  #04a89d.
+- **Tím AI** (`ai`): thứ máy sinh ra, người còn sửa được: ghi chú lề
+  `AiNote`, chữ ký chân tờ AI, con dấu «HỢP GU», hai nút chân lịch trình AI
+  («Chỉnh lịch trình» outline, «Dùng plan này» solid). Washi tím là
+  `brand.violet` #8350f6.
+- **Cảnh báo** (`warn` #c2410c / #e8734b): một câu lỗi dưới form, chữ `body`;
+  trong sổ là màu của số **còn phải trả** khi lớn hơn 0 (`DongTien
+  tone="warn"`), số 0 thì về `ink`.
 
 ### Neutral
 - **Giấy** (`ground` #f7f3ec / #151830): nền trang, luôn có `Grain giayTrang`
@@ -304,7 +374,7 @@ nguyên trong `brand.*` cho mảng lớn.
   (`inkFaint`): ba bậc chữ trên giấy, tất cả qua AA ở cả hai nền.
 - **Kẻ trang trí** (`line` #e6dfd3 / #363b5e): cạnh thẻ, divider, xương
   skeleton; **cố ý dưới 3:1**.
-- **Viền control** (`lineStrong` #a7825d / #7d82a9): ô nhập, chip chưa chọn,
+- **Viền control** (`lineStrong`): ô nhập, chip chưa chọn,
   nút outline, tay nắm sheet; qua sàn 3:1 trên mọi nền nó nằm lên.
 - **Bìa** (`cover` #1d2140 / #0f1126) với **mực bìa** (`coverInk`,
   `coverInkSoft`) và hai viền bìa (`coverLine` trang trí, `coverLineStrong`
@@ -313,7 +383,14 @@ nguyên trong `brand.*` cho mảng lớn.
 ### Named Rules
 **Luật Một Tông Dẫn.** Một màn có đúng một tông dẫn; hai tông dẫn cùng lúc là
 lỗi, không phải lựa chọn. Welcome/Login/OTP dẫn bằng cam (washi + con dấu);
-thẻ AI trên Khám phá là tím ở **thành phần**, không đổi tông màn.
+Quyết toán và Tài chính dẫn bằng teal; Lịch trình AI và thẻ AI dẫn bằng tím;
+con dấu «HỢP GU» tím trên Khám phá là tông ở **thành phần**, không đổi tông
+màn.
+
+**Luật Màu Trên Số, Không Trên Khối.** Trên trang giấy, tông ngữ nghĩa đậu lên
+chữ số, chữ, viền, con dấu; không tô một khối `<tone>Soft` to rồi đặt số lên.
+Sổ quyết toán trên ảnh `15-settlement`: mọi teal là số hoặc viền, nền vẫn là
+giấy.
 
 **Luật Mực Tĩnh trên Coral.** `brand.coral` không đổi theo scheme nên chữ,
 icon và viền đặt lên nó dùng `mauSang.ink` (#1f2230) **tĩnh**, không dùng
@@ -321,7 +398,7 @@ icon và viền đặt lên nó dùng `mauSang.ink` (#1f2230) **tĩnh**, không 
 chỉ 2.4:1 và đã ship nhầm một lần. Áp cho tagline trên washi, nhãn/viền/icon
 `StampButton`, glyph chặng đang ở của `RouteLine`.
 
-**Luật Cam Không Nhỏ trên Bìa.** `accent` sáng trên `cover` đo 3.03:1: cấm
+**Luật Cam Không Nhỏ trên Bìa.** `accent` sáng trên `cover` đo 2.83:1: cấm
 chữ cam nhỏ trên bìa. Cam trên bìa là washi (mảng lớn) hoặc con dấu có mực
 tối; chữ trên bìa là `coverInk`/`coverInkSoft`.
 
@@ -332,7 +409,7 @@ control là thêm một dòng trong `interactive_boundaries()` của
 
 ## Màu, kèm số đo tương phản
 
-50 cặp chữ trên nền mà hệ này thật sự dùng đều được đo, cả trang giấy lẫn bìa sổ. Thấp nhất **4.61:1**, cao nhất **16.50:1**, không cặp nào dưới ngưỡng AA 4.5:1.
+50 cặp chữ trên nền mà hệ này thật sự dùng đều được đo, cả trang giấy lẫn bìa sổ. Thấp nhất **4.64:1**, cao nhất **16.50:1**, không cặp nào dưới ngưỡng AA 4.5:1.
 
 Bảng này chỉ đo **chữ**. Ranh giới của thành phần giao diện đi theo ngưỡng khác và nằm ở mục "Sàn phi-chữ 3:1" bên dưới. Đọc thiếu mục đó là cách lỗi viền nút 1.21:1 đã lọt qua một lần.
 
@@ -346,23 +423,23 @@ Bảng này chỉ đo **chữ**. Ranh giới của thành phần giao diện đi
 | `inkSoft` #4e5563 trên `ground` #f7f3ec | Chữ phụ trên nền | **6.77:1** | AA |
 | `inkFaint` #676e7b trên `card` #ffffff | Chú thích trên thẻ | **5.13:1** | AA |
 | `inkFaint` #676e7b trên `ground` #f7f3ec | Chú thích trên nền | **4.64:1** | AA |
-| `accent` #c93900 trên `card` #ffffff | Cam trên thẻ | **5.16:1** | AA |
-| `accent` #c93900 trên `ground` #f7f3ec | Cam trên nền | **4.67:1** | AA |
-| `accentInk` #ffffff trên `accent` #c93900 | Nhãn trên nút cam | **5.16:1** | AA |
-| `accent` #c93900 trên `accentSoft` #fff0ea | Cam trên chip cam nhạt | **4.65:1** | AA |
+| `accent` #ba3e20 trên `card` #ffffff | Cam trên thẻ | **5.53:1** | AA |
+| `accent` #ba3e20 trên `ground` #f7f3ec | Cam trên nền | **5.00:1** | AA |
+| `accentInk` #ffffff trên `accent` #ba3e20 | Nhãn trên nút cam | **5.53:1** | AA |
+| `accent` #ba3e20 trên `accentSoft` #fff0ea | Cam trên chip cam nhạt | **4.98:1** | AA |
 | `split` #00756b trên `card` #ffffff | Teal trên thẻ | **5.59:1** | AA |
 | `split` #00756b trên `ground` #f7f3ec | Teal trên nền | **5.05:1** | AA |
 | `splitInk` #ffffff trên `split` #00756b | Nhãn trên nút teal | **5.59:1** | AA |
-| `split` #00756b trên `splitSoft` #d5f5f0 | Teal trên chip teal nhạt | **4.83:1** | AA |
-| `ai` #7d49ef trên `card` #ffffff | Tím trên thẻ | **5.16:1** | AA |
-| `ai` #7d49ef trên `ground` #f7f3ec | Tím trên nền | **4.66:1** | AA |
-| `aiInk` #ffffff trên `ai` #7d49ef | Nhãn trên nút tím | **5.16:1** | AA |
-| `ai` #7d49ef trên `aiSoft` #f5f1ff | Tím trên chip tím nhạt | **4.64:1** | AA |
+| `split` #00756b trên `splitSoft` #e6f2ee | Teal trên chip teal nhạt | **4.87:1** | AA |
+| `ai` #7356a6 trên `card` #ffffff | Tím trên thẻ | **5.82:1** | AA |
+| `ai` #7356a6 trên `ground` #f7f3ec | Tím trên nền | **5.26:1** | AA |
+| `aiInk` #ffffff trên `ai` #7356a6 | Nhãn trên nút tím | **5.82:1** | AA |
+| `ai` #7356a6 trên `aiSoft` #f1ebf7 | Tím trên chip tím nhạt | **4.98:1** | AA |
 | `warn` #c2410c trên `card` #ffffff | Cảnh báo trên thẻ | **5.18:1** | AA |
 | `warn` #c2410c trên `ground` #f7f3ec | Cảnh báo trên nền | **4.68:1** | AA |
 | `ink` #1f2230 trên `accentSoft` #fff0ea | Chữ thân trên chip cam | **14.22:1** | AAA |
-| `ink` #1f2230 trên `splitSoft` #d5f5f0 | Chữ thân trên chip teal | **13.65:1** | AAA |
-| `ink` #1f2230 trên `aiSoft` #f5f1ff | Chữ thân trên chip tím | **14.22:1** | AAA |
+| `ink` #1f2230 trên `splitSoft` #e6f2ee | Chữ thân trên chip teal | **13.76:1** | AAA |
+| `ink` #1f2230 trên `aiSoft` #f1ebf7 | Chữ thân trên chip tím | **13.51:1** | AAA |
 | `coverInk` #f7f3ec trên `cover` #1d2140 | Chữ trên bìa sổ | **14.13:1** | AAA |
 | `coverInkSoft` #c9c6d6 trên `cover` #1d2140 | Chữ phụ trên bìa sổ | **9.33:1** | AAA |
 
@@ -380,25 +457,25 @@ Bảng này chỉ đo **chữ**. Ranh giới của thành phần giao diện đi
 | `accent` #fb693e trên `ground` #151830 | Cam trên nền | **5.97:1** | AA |
 | `accentInk` #1c0d06 trên `accent` #fb693e | Nhãn trên nút cam | **6.48:1** | AA |
 | `accent` #fb693e trên `accentSoft` #3d1a10 | Cam trên chip cam nhạt | **5.31:1** | AA |
-| `split` #02a498 trên `card` #1f2340 | Teal trên thẻ | **4.93:1** | AA |
-| `split` #02a498 trên `ground` #151830 | Teal trên nền | **5.61:1** | AA |
-| `splitInk` #04201d trên `split` #02a498 | Nhãn trên nút teal | **5.50:1** | AA |
-| `split` #02a498 trên `splitSoft` #0d2f30 | Teal trên chip teal nhạt | **4.61:1** | AA |
-| `ai` #a27dff trên `card` #1f2340 | Tím trên thẻ | **5.04:1** | AA |
-| `ai` #a27dff trên `ground` #151830 | Tím trên nền | **5.74:1** | AA |
-| `aiInk` #150a30 trên `ai` #a27dff | Nhãn trên nút tím | **6.18:1** | AA |
-| `ai` #a27dff trên `aiSoft` #251b4a | Tím trên chip tím nhạt | **5.18:1** | AA |
+| `split` #74cec0 trên `card` #1f2340 | Teal trên thẻ | **8.26:1** | AAA |
+| `split` #74cec0 trên `ground` #151830 | Teal trên nền | **9.40:1** | AAA |
+| `splitInk` #04201d trên `split` #74cec0 | Nhãn trên nút teal | **9.22:1** | AAA |
+| `split` #74cec0 trên `splitSoft` #153734 | Teal trên chip teal nhạt | **6.96:1** | AA |
+| `ai` #c7b1e5 trên `card` #1f2340 | Tím trên thẻ | **7.90:1** | AAA |
+| `ai` #c7b1e5 trên `ground` #151830 | Tím trên nền | **9.00:1** | AAA |
+| `aiInk` #150a30 trên `ai` #c7b1e5 | Nhãn trên nút tím | **9.70:1** | AAA |
+| `ai` #c7b1e5 trên `aiSoft` #30273f | Tím trên chip tím nhạt | **7.29:1** | AAA |
 | `warn` #e8734b trên `card` #1f2340 | Cảnh báo trên thẻ | **5.09:1** | AA |
 | `warn` #e8734b trên `ground` #151830 | Cảnh báo trên nền | **5.80:1** | AA |
 | `ink` #f4f1ea trên `accentSoft` #3d1a10 | Chữ thân trên chip cam | **13.75:1** | AAA |
-| `ink` #f4f1ea trên `splitSoft` #0d2f30 | Chữ thân trên chip teal | **12.70:1** | AAA |
-| `ink` #f4f1ea trên `aiSoft` #251b4a | Chữ thân trên chip tím | **13.95:1** | AAA |
+| `ink` #f4f1ea trên `splitSoft` #153734 | Chữ thân trên chip teal | **11.44:1** | AAA |
+| `ink` #f4f1ea trên `aiSoft` #30273f | Chữ thân trên chip tím | **12.51:1** | AAA |
 | `coverInk` #f4f1ea trên `cover` #0f1126 | Chữ trên bìa sổ | **16.50:1** | AAA |
 | `coverInkSoft` #c4c2cf trên `cover` #0f1126 | Chữ phụ trên bìa sổ | **10.60:1** | AAA |
 
 ## Sàn phi-chữ 3:1 (WCAG 1.4.11)
 
-Bảng 46 cặp bên trên chỉ đo **chữ trên nền**. Nó không đo một dòng nào cho
+Bảng 50 cặp bên trên chỉ đo **chữ trên nền**. Ở bản cũ, nó không đo
 token `line`, và đó là một lỗ thật chứ không phải thiếu sót hình thức: nút
 `quiet` không có nền (`backgroundColor: "transparent"`), nên **viền là thứ duy
 nhất cho biết nó là nút**. Viền đó vẽ bằng `line`, đo được **1.21:1** trên nền
@@ -417,8 +494,8 @@ ngưỡng khác nhau thì cần hai token, nên `line` tách làm hai:
 
 | Cặp | Vai trò | Tỉ lệ | Ngưỡng |
 |---|---|---|---|
-| `lineStrong` #a7825d trên `ground` #f7f3ec | Viền control trên nền trang | **3.17:1** | 1.4.11 |
-| `lineStrong` #a7825d trên `card` #ffffff | Viền control trên thẻ | **3.50:1** | 1.4.11 |
+| `lineStrong` #777580 trên `ground` #f7f3ec | Viền control trên nền trang | **4.09:1** | 1.4.11 |
+| `lineStrong` #777580 trên `card` #ffffff | Viền control trên thẻ | **4.53:1** | 1.4.11 |
 | `coverLineStrong` #8d92bd trên `cover` #1d2140 | Viền control trên bìa sổ | **5.19:1** | 1.4.11 |
 | `line` #e6dfd3 trên `ground` #f7f3ec | Cạnh thẻ trên nền trang | **1.20:1** | trang trí |
 | `line` #e6dfd3 trên `card` #ffffff | Đường kẻ trong thẻ | **1.32:1** | trang trí |
@@ -448,10 +525,12 @@ là mất nhận diện. Đổi lại chúng bị giới hạn công dụng:
 | `coral` | #fb693e | 2.92:1 | 5.41:1 | mảng lớn, logo, hero. Cấm chữ nhỏ |
 | `rose` | #e75262 | 3.63:1 | 4.35:1 | mảng lớn, logo, hero. Cấm chữ nhỏ |
 | `violet` | #8350f6 | 4.73:1 | 3.34:1 | mảng lớn, logo, hero. Cấm chữ nhỏ |
-| `actionGradient` | #c93900 → #c9344a | 5.16:1 / 5.16:1 | | nút chính, nhãn trắng an toàn cả dải |
+| `actionGradient` | #c93900 → #c9344a | 5.16:1 / 5.16:1 | | token gradient thương hiệu còn lưu; không phải nền `RudiButton solid` hiện tại |
 Cam `coral` với chữ trắng chỉ đạt 2.92:1, dưới cả ngưỡng 3:1 của thành phần
-giao diện. Nên **cấm đặt chữ nhỏ hoặc icon lên màu thương hiệu**. Cần chữ trên
-nền cam thì dùng `actionGradient`, hai đầu đều 5.16:1 với nhãn trắng.
+giao diện. Chữ/icon trên coral dùng mực tối tĩnh theo luật Mực Tĩnh;
+`RudiButton` dùng cặp `<tone>`/`<tone>Ink` của scheme hiện tại. Bảng thương
+hiệu này không thay thế bảng token ngữ nghĩa và không cấp phép mực trắng
+trên coral.
 
 ## Typography
 
@@ -481,23 +560,29 @@ instance.
   một lần.
 - **H1** (ExtraBold, 28/34, -0.65): tiêu đề màn. Tiêu đề trang pager Welcome
   dùng cùng face ở 28/33.
-- **H2** (Bold, 21/27, -0.3): `SectionHeader`, tiêu đề trạng thái rỗng.
+- **H2** (Bold, 21/27, -0.3): `SectionHeader` («Chi theo nhóm», «Các khoản
+  chuyển»), tên địa điểm dẫn (`PlaceLead`), tiêu đề trạng thái rỗng.
 - **Title** (system 700, 17/23, -0.15): tiêu đề `TopBar`, tiêu đề thẻ, chữ số
   OTP.
-- **Body** (system 400, 16/23): chữ thân, ô nhập; bề rộng tối đa 520 khi là
-  đoạn dẫn.
-- **Label** (system 600, 14/19): nhãn nút, nhãn ô nhập, `CoverButton`.
-- **Caption** (system 600, 12/16): chip, phụ đề, nhãn tab, pháp lý. **Sàn 12sp.**
+- **Body** (system 400, 17/24): chữ thân, ô nhập, tên dòng sổ thường; bề
+  rộng tối đa 520 khi là đoạn dẫn.
+- **Label** (system 600, 14/19): nhãn nút, nhãn ô nhập, `CoverButton`, tên
+  chặng và giờ (tabular) trên `HangChang`, tên dòng sổ **đậm** (`DongTien
+  dam`), câu ghi chú AI.
+- **Caption** (system 600, 13/18): chip, phụ đề, pháp lý. Nhãn tab có override
+  12/14; `Stamp` 12/14 và `DemoBadge` 10/12 là các cỡ riêng, không phải caption.
 - **Stamp** (CondensedBold, 12/14, +0.8, IN HOA): chữ trên con dấu trạng thái
   và tem; đây là chữ in hoa giãn duy nhất của hệ, và nó là **mực dấu**, không
   phải eyebrow.
 - **Money** (ExtraBold, 21/27, `tabular-nums`): mọi số tiền qua `Money`
   (kích cỡ `display`/`money`/`body`/`label`/`caption`, luôn ép tabular).
-- **Nhãn con dấu CTA** (Bold, 18/22, +0.2): riêng cho `StampButton`.
+- **Nhãn con dấu CTA** (Bold, 21/26 `lon` trên bìa, 17/22 `vua` trong form,
+  +0.4): riêng cho `StampButton`; đo theo chữ, không theo cột.
 
-Thang `tokens.json.type` (display 34/700, h1 28/700, title 20, body 16, label
-13, micro 12) là thang của **trang khách web** và không đổi vì `guest.css` còn
-đọc; hai thang cùng sàn 12.
+Thang `tokens.json.type` dùng chung có display 34/700, h1 28/700, title 20,
+body 17, label 14, micro 13. App đọc trực tiếp `body.size` và `micro.size`;
+các face, độ đậm và line-height app còn lại theo `theme.ts` như bảng trên.
+Không đồng nhất toàn bộ thang guest với thang native.
 
 ### Named Rules
 **Luật Một Face.** Bricolage chỉ ở tiêu đề, số tiền, chữ con dấu và thương
@@ -506,7 +591,13 @@ lỗi.
 
 **Luật Số Tabular.** Số tiền luôn `fontVariant: ["tabular-nums"]`, luôn số
 nguyên đồng, luôn là chuỗi máy chủ gửi. Một cột tiền mà chữ số nhảy bề
-ngang là đọc sai.
+ngang là đọc sai. Cột giờ của lịch trình cũng tabular (`HangChang gio`).
+
+**Luật Không Kicker.** Không có chữ in hoa giãn nhỏ đứng **trên** tiêu đề.
+Chữ in hoa duy nhất của hệ là mực con dấu (`typography.stamp`), và con dấu
+đứng **cạnh** hay **dưới** nội dung, không bao giờ làm nhãn mở đầu. Tờ AI
+được ký ở **chân** («Rủ Đi AI gợi ý» 13sp tím + sparkles 15), câu hỏi là tiêu
+đề, không có nhãn trên đầu.
 
 ## Layout
 
@@ -514,53 +605,91 @@ Lưới 4pt, thang khoảng cách sáu bước `xs` 6 · `sm` 10 · `md` 16 · `
 `xl` 36 · `xxl` 48; không thêm bước thứ bảy. Nhịp giữa khối trong
 `RudiScreen` là 18; cột form Login/OTP `gap` 20.
 
-**Ba size class Android** (`src/rudi/adaptive.ts`, `useAdaptiveLayout`):
+**Ba size class Android** (`src/rudi/adaptive.ts`, `useAdaptiveLayout`), tính
+từ **cửa sổ hiện tại**, không từ thiết bị, nên xoay và split-screen phân
+lớp lại:
 
-| Size class | Bề rộng | Cột | Gutter | Điều hướng | Bề rộng nội dung |
-|---|---|---|---|---|---|
-| `compact` | < 600dp | 1 | 16 | thanh tab đáy | toàn màn |
-| `medium` | 600 đến 839 | 2 | 24 | rail trái 104 | 560 (form), 640 (pager Welcome) |
-| `expanded` | ≥ 840 | 3 | 36 | rail trái 104, hai khung | tối đa 1200 |
+| Size class | Bề rộng | `columns` | `gutter` | `rail` | `twoPane` | `maxContent` |
+|---|---|---|---|---|---|---|
+| `compact` | < 600dp | 1 | 16 | không, thanh tab đáy | không | bề rộng cửa sổ |
+| `medium` | 600 đến 839 | 2 | 24 | rail trái 104 | chỉ khi cao ≥ 480 | 960 |
+| `expanded` | ≥ 840 | 3 | 36 | rail trái 104 | có | 1200 |
 
 `heightClass = short` dưới 480dp (máy nằm ngang hoặc IME đè sheet): Welcome hạ
-wordmark xuống 72 và bỏ route.
+wordmark xuống 72 và bỏ route; `CoverBand compact` rút vải trên dưới khi bàn
+phím mở ở compact (Login/OTP).
+
+**Lưới đo theo vùng nội dung.** `ResponsiveRow` đo chính vùng nội dung qua
+`onLayout`, sau rail và lề; `gridFor(width, minItemWidth = 250, gap = 12,
+maxColumns = 3)` trả số cột và **bề rộng ô làm tròn xuống dp nguyên** (ba phần
+ba chính xác làm cột cuối gãy dòng trên máy, lỗi album 2026-09-06). `maxColumns`
+mặc định 3 cho hàng thẻ; tường album truyền `maxColumns={6} minItemWidth={104}
+gap={6}` nên tablet hiện sáu ô nhỏ chứ không ba poster; `RosterPicker` ô 130,
+gap 8, tối đa 3. Vì đo vùng thật, màn medium vẫn có thể chỉ một cột.
+
+**Tỉ lệ ảnh theo cỡ cửa sổ** (`Photo ratio`, `PlaceLead`): ảnh dẫn địa điểm
+**16:10** ở compact (đầy bề ngang máy ở chiều cao đọc được), **21:9** ở
+medium/expanded (đối chiếu `tablet-light-explore.png`: dải 21:9 trên cột
+960). Không có chiều cao ảnh cố định cho ảnh dẫn; `height = 190` chỉ là mặc
+định của `Photo` khi không truyền `ratio`.
 
 **Bề mặt** (`RudiScreen surface`): `page` = nền `ground` + `Grain giayTrang`,
 `SafeAreaView` cạnh top/left/right, lề ngang `md` (`lg` ở tablet),
 `bottomInset` 32 (112 dưới thanh tab), status bar tối trên giấy sáng.
 `cover` = nền `cover`, **không** cạnh top: `CoverBand underStatusBar` tự cộng
-`insets.top` để vải bìa chạy liền dưới status bar (khe giấy 8px ở đây là lỗi
-đã sửa), status bar sáng. `CoverBand` `bleed` bằng lề màn (`md` compact,
-`lg` tablet) để vải chạm mép.
+`insets.top` để vải bìa chạy liền dưới status bar, status bar sáng. `CoverBand`
+`bleed` bằng lề màn (`md` compact, `lg` tablet) để vải chạm mép.
 
-**Login/OTP** là **một cột 560 bọc cả trang** (`alignSelf: center`); reviewer
-bắt hồi quy hai lưới ở tablet (ô số trong cột 560, nút dưới kéo hết 1600) và
-bản ship gộp về một cột. **Welcome**: lề 20, wordmark 118 (compact) / 150
-(medium+), route `maxWidth` 560, khối đáy `maxWidth` 640 ở medium+.
+**Bốn khe của màn** (`RudiScreen`): `header` đứng **trên** hộp cuộn với kẻ
+tóc `line` dưới nó (chat: `TopBar` + dòng ghim chuyến đi, nội dung cuộn dưới
+kẻ như giấy dưới một đường kẻ; bằng chứng reviewer `dot8/10-chat`, không mở ở đây); `footer` ghim đáy (ô soạn
+chat, hai nút chân lịch trình, «Thêm khoảnh khắc»), đệm dưới rút về 8 khi bàn
+phím mở; `overlay` đặt sheet/scrim **ngoài** hộp cuộn để nó không cuộn theo
+nội dung; `keepEnd` giữ cuộn ở cuối khi nội dung dài ra (luồng chat đọc từ
+đuôi, và vì thế chat cần `header` để tên nhóm không trôi mất).
+Nội dung cuộn **dưới** footer; ảnh `09-itinerary` chụp giữa chừng nên số tổng
+đang nằm dưới footer là hành vi cuộn, không phải cắt.
 
-**Safe area cho thứ ghim đáy** (giữ từ v1, vẫn đúng trên bản ship): thanh tab
-`paddingBottom = max(insets.bottom, 10)`; sheet `max(insets.bottom, 16)`;
-Welcome `max(insets.bottom, 16) + 6`; composer chat `max(insets.bottom, 8)`.
+**Login/OTP** là **một cột 560 bọc cả trang** (`alignSelf: center`).
+**Welcome**: lề 20, wordmark 118 (compact) / 150 (medium+), route `maxWidth`
+560, khối đáy `maxWidth` 640 ở medium+.
 
-**Hàng chip cuộn ngang trong form** (v1, còn đúng): ở font 1.3 lưới chip gập
-tám hàng đẩy nút gửi khỏi màn; form dùng `ScrollView horizontal`, lưới gập chỉ
-khi không có CTA bên dưới.
+**Safe area cho thứ ghim đáy**: thanh tab `paddingBottom = max(insets.bottom,
+10)`; sheet `max(insets.bottom, 16)`; Welcome `max(insets.bottom, 16) + 6`;
+composer chat `max(insets.bottom, 8)`.
 
-**`TopBar`** (v1, sửa ở lát này): hai bên đo bề rộng tự nhiên và lấy `max`
-cho cả hai để tiêu đề cân giữa (đo: tâm mực lệch 2.5 đến 3px so với tâm màn
-ở 360dp); huy hiệu trong `TopBar` dùng `compactLabel` («Demo», «Nháp») vì ở
-360dp font 1.3 không thể có cả tiêu đề cân giữa lẫn nhãn dài.
+**Hàng chip cuộn ngang trong form**: ở font 1.3 lưới chip gập tám hàng đẩy
+nút gửi khỏi màn; form dùng `ScrollView horizontal`, lưới gập chỉ khi không
+có CTA bên dưới.
+
+**`TopBar`** (`minHeight` 52): hai bên đo bề rộng tự nhiên và lấy `max` cho cả
+hai để tiêu đề cân giữa; huy hiệu trong `TopBar` dùng `compactLabel`
+(«Demo», «Nháp») vì ở 360dp font 1.3 không thể có cả tiêu đề cân giữa lẫn
+nhãn dài. Tiêu đề có thể mang phụ đề (ảnh `18-album`: «Album Đà Lạt» + ngày).
+Không có nút back thì ô trái là **wordmark trơn** (`Wordmark` `ink` cao 18;
+header Khám phá tự vẽ cao 20): ô icon app gradient chỉ còn ở Welcome/Login,
+không lặp lại ở đầu mỗi tab (ảnh `dot8/04-explore`, `07-plan`).
 
 ## Elevation & Depth
 
-Hệ này lấy độ sâu từ **chất liệu và khung kẻ**, không từ bóng. Bìa và giấy là
-hai lớp vật lý; con dấu **không có bóng** (viền mực kép và hạt giấy nói «đã
-đóng lên»); `CoverBand` không bóng, chỉ bo góc dưới 28 để đọc thành mép bìa
-lật lên trang. Ba ô chất liệu (`assets/textures/`, 256×256, seed cố định
-20260905, sinh bằng Pillow) trải bằng `Grain`: **lưới Image thường**, ô ở
-đúng pixel máy, tối đa 60 view; không dùng `resizeMode="repeat"` vì Android
-raster một lần theo cỡ view và vân dừng ở một phần ba trên (đo stddev 0.0 từ
-y≈700). Opacity đo trên emulator 1x, dưới ngưỡng này là màu phẳng:
+Hệ này lấy độ sâu từ **chất liệu, khung kẻ và kẻ tóc**, không từ bóng. Bìa và
+giấy là hai lớp vật lý. Trên giấy, hàng (`ListRow`, `PlaceRow`, `DongTien`,
+`HangChang`, hàng bình chọn) **không có thẻ**: kẻ tóc `line` dưới mỗi hàng là
+toàn bộ cấu trúc, và ảnh `15-settlement`, `21-finance`, `tablet-light-explore`
+xác nhận không còn thẻ trắng bo 20 xếp chồng. Chỉ hai thứ có bóng, và mỗi thứ
+vì một lý do vật lý:
+
+- **Con dấu** không có bóng: nó nằm **trong** trang. Vành mực và hạt mực nói
+  «đã đóng lên».
+- **Bản in** (`KhungAnh`) có `cardShadow` mềm: nó nằm **trên** trang, dán vào.
+  Đây là bóng mềm ám nâu (`#5A3014`, iOS 0/8 đục 0.1 mờ 18; Android
+  `elevation: 3`), không phải bóng lệch cứng.
+
+Ba ô chất liệu (`assets/textures/`, 256×256, seed cố định 20260905, sinh bằng
+Pillow) trải bằng `Grain`: **lưới Image thường**, ô ở đúng pixel máy, tối đa
+60 view; không dùng `resizeMode="repeat"` vì Android raster một lần theo cỡ
+view và vân dừng ở một phần ba trên. Opacity đo trên emulator 1x, dưới ngưỡng
+này là màu phẳng:
 
 | Chất liệu | Ô | Opacity | Đo (stddev) |
 |---|---|---|---|
@@ -572,168 +701,427 @@ y≈700). Opacity đo trên emulator 1x, dưới ngưỡng này là màu phẳng
 một mức: bảng tương phản vẫn áp cho bề mặt có vân.
 
 ### Shadow Vocabulary
-- **Thẻ native** (`cardShadow`: iOS `#5A3014` 0/8, đục 0.1, mờ 18; Android
-  `elevation: 3`): `Card` v1 ship **cả** viền `line` lẫn bóng này, vì bóng
-  elevation 3 gần như không thấy trên giấy và ở scheme tối không tách được
-  gì; viền giữ cạnh ở cả hai scheme. Đừng «sửa» theo luật web một-trong-hai.
+- **Bản in** (`cardShadow`: iOS `#5A3014` 0/8, đục 0.1, mờ 18; Android
+  `elevation: 3`): chỉ `KhungAnh` và `Card` v1 còn sót; `Card` v1 ship **cả**
+  viền `line` lẫn bóng vì elevation 3 gần như không thấy trên giấy và ở
+  scheme tối không tách được gì. Không màn nào trong đợt này còn gọi `Card`.
 - **FAB** (`elevation: 6`, 0/6, đục 0.22, mờ 10, màu `accent`): thứ duy nhất
-  nổi trên thanh tab; vòng 4px màu `ground` tách nó khỏi thanh. Đã hạ từ mức
-  nặng hơn sau vòng chụp 1.
+  nổi trên thanh tab; vòng 4px màu `ground` tách nó khỏi thanh.
 - **Scrim sheet** (`lopPhu.toi(0.42)`): lớp phủ ấm gần đen, không xám.
+- **Tờ giấy AI** (`ToGiay` trong `TheAi.tsx`, khung `aiSheet` trong Group):
+  nền `card`, viền 1px `line`, bo `base`, **không bóng**; một tờ giấy đặt lên
+  trang, ký ở chân.
 
 ### Named Rules
 **Luật Không Dập Nổi.** Không giả độ sâu bằng bóng lệch cứng (hard offset
 shadow). Reviewer loại «wordmark dập nổi» ở vòng 1; `WordmarkEmbossed.tsx`
-đã xoá khỏi cây ở `5cc57d2` sau verdict pass 2 và không phải hệ.
+đã xoá khỏi cây ở `5cc57d2` và không phải hệ.
+
+**Luật Trong Trang / Trên Trang.** Thứ *in vào* trang (con dấu, kẻ, đường
+mực, chữ) không có bóng. Thứ *dán lên* trang (bản in) có một bóng mềm ám
+nâu. Không có bậc thứ ba.
+
+**Luật Không Thẻ Lồng Thẻ.** Một bề mặt `card` không chứa bề mặt `card` khác.
+Danh sách là hàng + kẻ tóc trên giấy; tờ AI là một tờ, bên trong là hàng.
 
 ## Shapes
 
-Bo góc ba bậc từ `tokens.json` giữ tỉ lệ thẻ:nút 2:1: **`base` 20** (thẻ,
-sheet, số tiền), **`control` 14** (nút, con dấu CTA, ô nhập, `CoverButton`),
-**`small` 10** (chip tĩnh, ảnh trong thẻ, xương skeleton), `pill` 999 (chip
-bấm, huy hiệu, FAB tròn 56, nút back tròn 48). Hai giá trị quan sát được mà
-tokens.json chưa có tên: **6** cho con dấu trạng thái (`Stamp`) và **28** cho
-góc dưới `CoverBand`.
+Bo góc ba bậc từ `tokens.json` giữ tỉ lệ thẻ:nút 2:1: **`base` 20** (sheet,
+tờ AI, khung hoá đơn trên gỗ), **`control` 14** (nút, con dấu CTA cỡ `vua`,
+ô nhập, `CoverButton`), **`small` 10** (khung bản in, thumbnail hàng địa
+điểm, xương skeleton, ô bình chọn), `pill` 999 (chip bấm, huy hiệu, FAB tròn
+56, nút back tròn 48, ô soạn chat bo 22). Ba giá trị bản ship dùng ngoài
+`tokens.json`: **16** cho con dấu CTA cỡ `lon`, **6** cho con dấu trạng thái
+(`Stamp`), **4** cho mép ảnh bên trong khung in, và **28** cho góc dưới
+`CoverBand`.
 
-Hình dạng đặc trưng của thế giới:
-- **Con dấu**: hình chữ nhật bo 14 (CTA) hoặc 6 (trạng thái), viền mực 2px,
-  viền trong 1px lùi 4 (CTA), nghiêng một hơi (-1.5° trên bìa, 0 trong form và
-  bảng; `Stamp` cho phép ±2/±3). Mọi góc nghiêng chỉ áp khi khác 0
-  (`transform: undefined` làm Reanimated crash, bẫy đã ghi).
-- **Washi**: dải SVG mép xé hai đầu (`duongWashiXeMep`), một vạch sáng 1.5px
-  `card` ở 0.35 chạy dọc, `fillOpacity` 0.9, nghiêng ±1/±2°; đường SVG sinh
-  từ `duong-svg.ts` và có test parse theo cách Java parse (`react-native-svg`
-  ném lúc mount nếu chuỗi `d` hỏng).
-- **Route**: đường cong S nét 3, đầu tròn; chặng là vòng tròn nét 2.5 (r 16 khi
-  có glyph), chặng đang ở tô coral r 21 nét 3 với glyph mực tối.
+Hình dạng đặc trưng của thế giới, mỗi cái mang một nghĩa:
+- **Con dấu CTA** (`StampButton`): **rộng bằng chữ** (`alignSelf: center`),
+  không kéo theo cột; vành là **một** đường SVG `duongVienDau(w, h, r, amp =
+  1.3)`: chữ nhật bo góc mà mỗi điểm biên đẩy vào/ra tới 1.3dp theo hàm cố
+  định của chỉ số và bề rộng, nên cùng một con dấu in giống nhau mỗi lần
+  render và hai con dấu khác bề rộng gãy khác nhau. Nét 2 mực 0.88, tô
+  `brand.coral`, hạt mực clip lùi 3. **Không có vành trong** (vòng review
+  2026-09-06 đọc vành thứ hai thành ba vòng quanh chữ), **không mũi tên**
+  (con dấu là động từ). Nghiêng -3 trên bìa, -1 trong form, 0 trong bảng.
+  Khung đầu tiên trước `onLayout` tô coral phẳng, không bao giờ là lỗ.
+- **Con dấu trạng thái** (`Stamp`): bo 6, viền 2 màu tông, chữ in hoa
+  condensed, nghiêng ±2/±3 khi «đóng tay» (con dấu nhịp kèo «Còn 3 ngày»
+  -2, «HỢP GU» trên ảnh -2), 0 trong bảng. Đặt lên ảnh thì có **miếng giấy**
+  `card` dưới con dấu viền (`nen`), để mực không đọc trên ảnh (ảnh
+  `dot8/04-explore`: «HỢP GU» trên ảnh dẫn).
+- **Ảnh chặng** (`AnhChang`): ảnh 44×44 trong khung giấy 2dp (`card` + kẻ
+  tóc `line`, bo 10, ảnh bo 8; 48 tổng) ở khe `phai` của chặng có địa điểm
+  **có ảnh**; chặng khác vẫn là một dòng gọn. Chênh lệch đó là nhịp của dòng
+  thời gian (ảnh `dot8/07-plan`: 12:30 «Bánh căn Lệ» có ảnh, 07:00/11:00
+  không).
+- **Nét chì đứt** (`HangChang phac`): đường 2dp `borderStyle: "dashed"` màu
+  `inkFaint`, nút tròn viền `inkFaint`; là bản nháp/đề xuất AI chưa ai chốt.
+  Ảnh `09-itinerary`: toàn bộ lịch trình AI là nét chì.
+- **Đường mực liên tục**: trong lịch trình, trục 14 rộng, đường 2dp
+  `lineStrong` liền giữa các chặng, nút 12 bo 6 viền 2 `ink` (đã tới: tô
+  `split`, viền `split`); trên bìa, `RouteLine` đường cong S nét 3 đầu tròn,
+  chặng vòng tròn nét 2.5 r 16 có glyph, chặng đang ở tô coral r 21 nét 3.
+- **Bản in** (`KhungAnh`): giấy `card`, viền tóc `line`, đệm 8 ba cạnh và
+  **14 ở đáy** (lề dưới dày của ảnh in), ảnh bo 4 trên nền `line` khi chưa
+  tải, dòng xuất xứ caption `inkFaint` một dòng; nghiêng ±1/±2 khi đặt tay,
+  0 trong danh sách.
+- **Washi**: dải SVG mép xé hai đầu (`duongWashiXeMep`), vạch sáng 1.5px
+  `card` 0.35 chạy dọc, `fillOpacity` 0.9, nghiêng ±1/±2°.
 - **Mép bìa**: `CoverBand` bo hai góc dưới 28, tràn lề.
-- **Kẻ**: mọi divider là `StyleSheet.hairlineWidth` màu `line` (cạnh trên
-  thanh tab, cạnh phải rail, dòng «hoặc»).
+- **Kẻ**: mọi divider là `StyleSheet.hairlineWidth` màu `line` (dưới hàng
+  địa điểm, dòng sổ, hàng bình chọn, cạnh trên thanh tab, cạnh phải rail,
+  trên/dưới ghi chú AI). Không có viền trái màu dày hơn 1px.
+
+Mọi góc nghiêng chỉ spread khi khác 0 (`transform: undefined` làm Reanimated
+crash); mọi đường SVG có test parse theo cách Java parse (`react-native-svg`
+ném lúc mount nếu chuỗi `d` hỏng).
 
 ## Components
 
-Kit v2 nằm ở `src/rudi/ui/*.tsx`, **một file một primitive**; kit v1
-`src/rudi/ui.tsx` (`RudiScreen`, `TopBar`, `Card`, `Field`, `OtpBoxes`,
-`Chip`, `RudiButton`, `Segmented`, `ListRow`, `Stat`, `AiNote`, `DemoBadge`)
-vẫn là thứ các màn chưa redesign dùng, và Login/OTP vẫn dùng `Field`,
-`OtpBoxes`, `RudiButton outline/ghost` của nó.
+Kit nằm ở `src/rudi/ui.tsx` (`RudiScreen`, `TopBar`, `Heading`,
+`SectionHeader`, `ListRow`, `Chip`, `Segmented`, `Field`, `SearchField`,
+`OtpBoxes`, `Photo`, `ResponsiveRow`, `AiNote`, `IconButton`, `RudiButton`,
+`DemoBadge`, `Avatar`) và `src/rudi/ui/*.tsx`, **một file một primitive**
+(`StampButton`, `Stamp`, `CoverButton`, `KhungAnh`, `DongTien`, `Money`,
+`MediaSlot`, `Sheet`, `Skeleton*`, `EmptyState`, `ErrorState`, `RosterPicker`,
+`ReorderList`, `CoverBand`, `Washi`, `RouteLine`, `Wordmark`, `Grain`,
+`PressScale`, `PhotoViewer`). Hai hàng feature dùng lại nhiều nơi:
+`screens/explore/HangDiaDiem.tsx` (`PlaceLead`, `PlaceRow`) và
+`screens/keo/HangChang.tsx` (`HangChang`, `AnhChang`). Số màn gọi (đếm `grep`
+trong `screens/` ở `d2c51977`): `Stamp` 12 (3 truyền `dong`, 6 truyền `nen`),
+`Heading` 25, `ListRow` 5, `AiNote` 4, `HangChang` 4, `Sheet` 4 (thêm khay
+tạo), `KhungAnh` 3, `AnhChang` 2, `DongTien` 2, `StampButton` 2, `CoverBand` 2,
+`Washi` 1, `RudiScreen header` 1.
+
+### Khi nào dùng cái gì
+| Muốn nói | Dùng | Không dùng |
+|---|---|---|
+| Lời rủ / hành động chính của màn thuyết phục | `StampButton` (`lon` bìa, `vua` form) | pill cam, nút kéo hết cột |
+| Hành động chính trên trang giấy | `RudiButton solid` tông của màn | con dấu (con dấu là lời rủ, không phải mọi nút) |
+| Lựa chọn phụ dưới con dấu trên bìa | `CoverButton variant="link"` | outline kéo hết cột (lấn con dấu) |
+| Một trạng thái **đã đúng** | `Stamp` có chữ | chip màu không chữ, chữ inline đổi màu |
+| Bản nháp / đề xuất AI chưa chốt | `HangChang phac` (nét chì), nhãn «Nháp» | con dấu (chưa đúng thì chưa đóng dấu) |
+| Một khoản tiền trong danh sách | `DongTien` + `Money` | thẻ số to, `Stat`, thanh tiến độ |
+| Ảnh dẫn / ảnh có xuất xứ | `KhungAnh` (album, tường) hoặc `MediaSlot` có `attribution` | ảnh tràn không nguồn |
+| Ô ảnh nhỏ trong lưới | `Photo` trần bo 10 | khung in cho từng ô |
+| Thứ máy sinh ra | `AiNote` (ghi chú lề) hay tờ `ToGiay` ký ở chân | nhãn «AI» trên đầu, tô cả khối tím |
+| Danh sách nhiều mục | hàng + kẻ tóc (`ListRow`, `PlaceRow`) | thẻ mỗi mục |
+| Sheet trên nội dung cuộn | `RudiScreen overlay={<Sheet/>}` | sheet trong hộp cuộn |
+| Trạng thái vừa thành đúng **dưới ngón tay** | `Stamp dong` cho đúng hàng vừa bấm | hoạt hình khi mount, confetti, toast |
+| Con dấu đặt lên ảnh | `Stamp nen` (miếng giấy dưới) | con dấu viền trơn trên ảnh |
+| Chặng có địa điểm có ảnh | `HangChang phai={<AnhChang/>}` | thẻ ảnh cho mọi chặng |
+| Phản hồi bấm | `PressScale` (lò xo scale) | mờ `opacity` khi `pressed` |
 
 ### Buttons
-- **Con dấu CTA (`StampButton`)**, nút chính của thế giới v2: nền
-  `brand.coral`, viền 2px mực tối 0.88, viền trong 1px mực 0.32 lùi 4, `Grain
-  mucIn` 0.26, bo 14, cao tối thiểu 56, đệm ngang 22, nhãn Bricolage Bold
-  18/22 màu `mauSang.ink`, icon 22 (`arrow-forward` mặc định); `tilt` -1.5 trên
-  bìa, 0 trong form; nhấn co 0.97 kèm haptic `impact`; `loading` thay icon bằng
-  spinner mực và khoá nút; `disabled` mờ 0.55. Không bóng. Ship ở Welcome «Rủ
-  Đi thôi!» và Login «Gửi mã».
-- **Nút bìa (`CoverButton`)**, nút phụ trên vải: trong suốt, viền 1px
+- **Con dấu CTA (`StampButton`)**, nút chính của bề mặt thuyết phục: tô
+  `brand.coral`, vành 2px mực 0.88 theo `duongVienDau`, `Grain mucIn` 0.26,
+  nhãn Bricolage Bold màu `mauSang.ink` +0.4; cỡ `lon` cao tối thiểu 60, đệm
+  ngang 30, chữ 21/26, bo 16 (Welcome «Rủ Đi thôi!» nghiêng -3); cỡ `vua` cao
+  52, đệm 24, chữ 17/22, bo 14 (Login «Gửi mã»). Không icon, không vành
+  trong, không bóng, rộng bằng chữ. Nhấn co 0.97 kèm haptic `impact`;
+  `loading` thay bằng spinner mực trong hàng và khoá nút; `disabled` mờ 0.55.
+- **Nút bìa (`CoverButton`)**: `outline` trong suốt, viền 1px
   `coverLineStrong` (5.19:1 sáng / 6.42:1 tối trên `cover`), bo 14, cao 50,
-  nhãn `label` màu `coverInk`, icon 18, haptic `select`. Là thứ duy nhất nói
-  «đây là nút» nên viền của nó nằm trong `interactive_boundaries()`.
-- **Nút v1 (`RudiButton`)** vẫn ship trên trang giấy: cao 52 (48 `compact`), bo
-  14, nhãn `label` một dòng, icon 20; `solid` = gradient `[accent, accentEnd]`
-  theo scheme (sáng #c93900 → #c9344a nhãn trắng; tối #fb693e → #e75262 nhãn
-  #1c0d06); `outline` = nền `card` viền `lineStrong` chữ màu tông (Login: «Tiếp
-  tục với Google», «Tôi có lời mời»); `soft` = nền `<tone>Soft`; `ghost` trong
-  suốt. Nhấn mờ 0.82 co 0.98; `disabled` 0.45.
-- **Nút back** trên bìa: `PressScale` 48×48 co 0.92, **mặt tròn là View con**
-  (nền `coverInk` 0.08, chevron 26 `coverInk`); animate scale, không animate
-  opacity, vì lớp opacity theo bounds vuông để lại vệt trên nền có vân.
-- **Icon button v1**: 48×48 bo 16, `quiet` không viền không nền.
+  đệm 18, nhãn `label` `coverInk`, icon 18, haptic `select`. `link`: không
+  viền, rộng bằng chữ, cao tối thiểu 48, đệm 12; là lựa chọn phụ **dưới** con
+  dấu (Welcome «Tìm hiểu thêm ›», ảnh `01-welcome`), vì một thanh outline kéo
+  hết cột đã lấn át con dấu nó phải theo sau.
+- **Nút giấy (`RudiButton`)**: cao 52 (48 `compact`), bo 14, nhãn `label` một
+  dòng, icon 20; `solid` = nền `<tone>` phẳng và nhãn `<tone>Ink` theo
+  scheme (album «Thêm khoảnh khắc» accent, lịch trình «Dùng plan này» ai);
+  `outline` = nền `card` viền `lineStrong` chữ màu tông với `accent`, viền màu
+  tông với `split`/`ai` («Đánh dấu đã trả» teal, «Chỉnh lịch trình» tím);
+  `soft` = nền `<tone>Soft`; `ghost` trong suốt. Nhấn **co 0.98 bằng lò xo
+  trên UI thread** (`PressScale`), không còn mờ 0.82; `disabled` 0.45. Hai nút chân đứng cạnh nhau trong `footer`, outline trái,
+  solid phải.
+- **Nút back** trên bìa: `PressScale` 48×48 co 0.92, mặt tròn là View con
+  (nền `coverInk` 0.08, chevron 26); trên giấy `TopBar` dùng chevron `ink`
+  trong ô 48.
+- **`IconButton`**: 48×48 bo 16; `quiet` không viền không nền (nút «+» góc
+  phải album, «Chọn ảnh»); có viền `lineStrong` khi đứng cạnh chip (nút lọc
+  Khám phá). Nhấn co 0.94 (`PressScale`, cùng số với FAB).
+- **Bốn scale bấm của kit** (đợt 8, thay mọi nhánh `pressed` mờ opacity trên
+  JS thread): `RudiButton` 0.98 · `IconButton` 0.94 · `Chip` 0.96 · `ListRow`
+  0.985; con dấu CTA 0.97, FAB 0.94, back 0.92 giữ nguyên. Lò xo nhấn {18,
+  260, 0.6}, thả {20, 180, 0.8}; Reduce Motion đưa lò xo về tức thì.
+- **Google ở Login**: chỉ hiện khi native có web client ID hợp lệ; iOS cần
+  thêm iOS client ID. Điều kiện hiển thị đọc từ mã, chưa là bằng chứng OAuth.
 
 ### Chips
-- **Chip bấm được** (v1, còn dùng): cao 48, bo pill; chưa chọn nền `card` viền
-  `lineStrong` chữ `inkSoft`; đã chọn nền `<tone>Soft` viền màu tông, chữ màu
-  tông **và** dấu check.
-- **Chip tĩnh** (sự thật, không control): cao 30, bo 10, không role. Trên các
-  màn v1 trạng thái vẫn là chip tĩnh; các lát sau đổi sang `Stamp`.
+- **Chip bấm được**: cao 48, bo pill, icon Ionicons 18 tuỳ chọn; chưa chọn
+  nền `card` viền `lineStrong` chữ `inkSoft`; đã chọn nền `<tone>Soft` viền
+  màu tông, chữ màu tông **và** dấu check (ảnh `09-itinerary`: «✓ Ngày 1»).
+  Nhấn co 0.96. Bộ lọc Khám phá, chọn ngày lịch trình, «Theo ngày» ở album;
+  hàng bộ lọc của AI match giờ là **một hàng cuộn ngang** như Khám phá
+  (bằng chứng reviewer `dot8/05-ai-match`, không mở ở đây; đọc từ `Discovery.tsx`), không còn lưới gập.
+- **Chip tĩnh** (không `onPress`): cao 30, bo 10, không role; kit còn giữ
+  nhưng **đợt này trạng thái đi bằng `Stamp`**; chip tĩnh chỉ cho thẻ phân
+  loại không phải trạng thái.
 - **Huy hiệu demo (`DemoBadge`)**: viền `line`, chữ 10/700 `inkFaint`, icon
-  `flask-outline`, bo pill; trong `TopBar` rút về `compactLabel`; **render
-  rỗng ở chế độ live**.
+  `flask-outline`, bo pill; mặc định «Dữ liệu demo», trong `TopBar` rút về
+  `compactLabel` («Demo», «Nháp»); **render rỗng ở chế độ live**. Trên Welcome
+  nhãn là «Bản trải nghiệm».
 
 ### Con dấu trạng thái (`Stamp`)
 Chữ `stamp` (CondensedBold 12 IN HOA +0.8), viền 2px màu tông, bo 6, đệm 8/4,
-cao tối thiểu 26, `alignSelf: flex-start`. `outline` mặc định (chữ màu tông);
-`ink` tô đầy với chữ `<tone>Ink`, hiếm: một trạng thái quan trọng nhất mỗi
-màn. Nhãn ngắn và đúng sự thật («ĐÃ TỚI», «ĐÃ TRẢ», «AI GỢI Ý»). Primitive
-có trong kit, ship ở lát này chưa gọi từ màn nào ngoài kit; ghi ở đây vì
-đây là cách trạng thái sẽ đi, không phải chip màu.
+cao tối thiểu 26, `alignSelf: flex-start`, `accessibilityLabel` = nhãn, không
+role, không press. `outline` mặc định (chữ màu tông); `ink` tô đầy với chữ
+`<tone>Ink`, hiếm: một trạng thái quan trọng nhất mỗi màn. Con dấu **luôn
+mang một chữ**, màu chỉ là tông của chữ đó: «ĐÃ TRẢ», «NGƯỜI THU BILL» (teal,
+quyết toán), «HỢP GU» (tím, trên ảnh dẫn nghiêng -2 và trong hàng địa điểm),
+«CÒN 3 NGÀY» / «HÔM NAY» / «ĐANG ĐI · CÒN 2 NGÀY» / «ĐÃ QUA» (nhịp kèo, tính
+từ `starts_on`/`ends_on` máy chủ qua `keo/nhip-keo.ts`, không từ chuỗi
+fixture; nghiêng -2 ở Cá nhân), «ĐÃ TỚI» (teal, nghiêng -2, điểm danh). Ship
+trên 12 màn.
+
+Hai prop đợt 8:
+- **`nen`**: miếng giấy `card` dưới con dấu viền khi con dấu nằm trên ảnh
+  (ảnh dẫn và chi tiết địa điểm: «HỢP GU», «GỢI Ý»); trên giấy vẫn trong
+  suốt.
+- **`dong`**: trạng thái này **vừa thành đúng do chính người đó bấm**. Con dấu
+  *rơi xuống* trong ba nhịp, tổng dưới ngân sách `celebrate` 550: **lao** 130
+  ms `Easing.in(quad)` scale 1.35 → 1, mực giữ 25 %; **chạm** 60 ms mực 25 %
+  → 100 %, `haptic.success()` nổ đúng lúc chạm, không ở đầu; **lún và
+  đứng** scale 1 → 0.97 → 1 trên lò xo nhấn, shared value riêng (`lun`) nên
+  không pha nào đọc qua đường cong của pha khác. Reduce Motion gập cả ba
+  thành con dấu tĩnh. Một cú zoom ease-out đơn đã bị reviewer đợt 8 đọc là
+  «entrance mặc định của mọi thư viện». Ba nơi ship: «Đã trả» ở quyết toán
+  fixture (`Bill`), «Đã tới» ở điểm danh fixture (`Outing`, chỉ khi điểm
+  danh, không khi bỏ), con dấu nghĩa vụ ở đợt thu live **sau khi máy chủ xác
+  nhận** (`DotThuLive`, trạng thái đọc lại, không giả định). Khung 21..32 của
+  `clip-dau-tra` là bằng chứng.
+
+### Sổ (`DongTien`) và tiền (`Money`)
+Một dòng sổ: tên trái (`body`, hoặc `label` khi `dam`), dòng phụ `caption`
+`inkSoft` (số ngữ cảnh: «Đã trả 587.500đ», «5 người chưa trả», «Nháp trên
+máy, chưa confirm vào sổ cái»), số phải `Money` (`label` thường, `money` khi
+`dam`), cao tối thiểu 52, đệm dọc 10, kẻ tóc `line` dưới, `cuoi` bỏ kẻ. Tông
+chỉ đậu trên số: `split` cho phần của bạn / sẽ nhận, `warn` cho còn phải trả
+> 0, `ink` cho mọi số khác. `dam` đậm **một** dòng người đọc tìm trước, không
+đổi bậc cỡ. Đây là thứ thay cho hero metric ở Quyết toán và Tài chính (ảnh
+`15-settlement`, `21-finance`). `Money`: `typography.money` 21/27 EB tabular;
+cỡ `display`/`money`/`body`/`label`/`caption`; `countUp` chỉ khi
+`domainStateValid`. Dưới mỗi sổ là một câu `caption` nói rõ số này là gì và
+không phải gì.
+
+### Ảnh: bản in (`KhungAnh`), ô ảnh (`MediaSlot`, `Photo`)
+- **`KhungAnh`**: giấy `card` bo 10, viền tóc `line`, `cardShadow`, đệm
+  8/8/14, ảnh con bo 4; `chuThich` là câu người viết (`body ink`), `xuatXu` là
+  dòng app biết chắc («ai · ở đâu · khi nào», `caption inkFaint`, một dòng).
+  Ảnh dẫn của album và bài tường (ảnh `18-album`: «Team Đà Lạt · Đà Lạt ·
+  17 - 19/10/2026»); ô nhỏ trong lưới **không** khung.
+- **`MediaSlot`**: nơi duy nhất ảnh được phép xuất hiện trên màn live; khung
+  vẽ trước, fallback là artwork của thế giới, ảnh có giấy phép rơi vào cùng
+  khung với `Attribution` (tác giả, giấy phép) in `caption inkFaint` bên dưới;
+  URL không qua `nguonAnh` bị từ chối trước khi tới đây.
+- **`Photo`**: `ratio` hoặc `height` (mặc định 190), bo mặc định 20, `overlay`
+  cho con dấu trên ảnh; `PhotoShade` gradient `lopPhu.xam(0.78)` từ 0.3 xuống
+  đáy khi có chữ trên ảnh. Ô album 104 tối thiểu, gap 6, tối đa 6 cột.
+- **Số ảnh thật**: «4 ảnh» đếm từ mảng ảnh, không từ chuỗi.
+
+### Hàng địa điểm (`PlaceLead`, `PlaceRow`)
+- **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20, `Stamp` tím nghiêng
+  -2 ở góc trên trái khi có `badge`; dưới ảnh tên `h2`, mô tả `body inkSoft`,
+  ba sự thật với icon 16 (`label inkSoft`); nút lưu `IconButton` phải.
+- **`PlaceRow`**: thumbnail bo 10 (`accentSoft` khi chưa có ảnh), tên `title`
+  hai dòng, mô tả `caption inkSoft` một dòng, sự thật `caption inkFaint` một
+  dòng, ghi công `caption inkFaint` tối đa hai dòng («Ảnh quanh đây: tác giả ·
+  giấy phép», cùng câu với `MediaSlot` qua `cauGhiCong`) khi thumbnail là ảnh
+  có giấy phép, `Stamp` tím dưới cùng khi có; nút tim phải; đệm dọc 10, gap 8,
+  kẻ tóc dưới. Hàng nằm trên giấy, **không thẻ**; ở tablet hai cột
+  (`tablet-light-explore`).
+
+### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
+- **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
+  danh sách với `packages/shared/stickers.json` và máy chủ), vẽ bằng
+  `ui/stickers/Sticker` cỡ 120 trong hàng, không nền không viền; giữ lâu mở
+  cùng `MenuTin` như bong bóng chữ. Không GIF, không ảnh raster.
+- **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
+  `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
+  dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
+  ngay trên ô soạn, có nút «Bỏ trả lời».
+- **Tin đã xoá** là bong bóng giấy (`card`/`line`) với `caption` nghiêng
+  `inkFaint` «Tin nhắn đã bị xoá»; không trích dẫn, không giữ lâu.
+- **Theme bong bóng** (`mau-chat.ts`, 5 bảng trong `tokens.json` khoá
+  `chatTheme`, `mac-dinh` = accent của scheme) chỉ tô bong bóng của người gửi
+  và viền chip phản ứng của mình; tông dẫn của màn vẫn là accent thương hiệu.
+- **Pill dưới tiêu đề**: hàng hai pill cân giữa (`pills`), «N thành viên ·
+  xem và mời ›» (cặp: «Xem hồ sơ ›») và «Cài đặt» (mở `CaiDatNhomSheet`);
+  cùng `caption inkSoft` + icon 15 `inkFaint`, cao 40, không viền.
+- **Cặp (nhắn riêng)** dùng nguyên màn chat với tên người kia làm tiêu đề;
+  ở Conversations là chữ cái đầu (`Avatar` 44) thay glyph nhóm, dòng phụ
+  «Nhắn riêng».
+
+### Lịch trình (`HangChang`)
+Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 với nút
+12 và đường 2dp, thân phải (`label ink` tiêu đề, `caption` dòng phụ với
+`phuTone` `inkSoft`/`inkFaint`/`accent`, `caption inkSoft` ghi chú), khe
+`phai` cho con dấu/nút/menu, cao tối thiểu 64, thân đệm dưới 18. Mực liền
+`lineStrong` cho chặng nhóm giữ; `phac` nét chì đứt `inkFaint`; `daToi` tô nút
+`split`; `cuoi` không vẽ đường dưới. **Mọi trạng thái cũng là một chữ**
+(`phu`: «Có thể thay đổi», «Đã gắn địa điểm»), không bao giờ chỉ là nét.
+**`AnhChang`** vào khe `phai`: ảnh 44 (`expo-image` `cover`, `alt` = tên địa
+điểm) trong khung giấy đệm 2 `card` + kẻ tóc `line` bo 10, nền `line` khi
+chưa tải; chỉ cho chặng có địa điểm **có ảnh** (`PLACES.find(...).image`),
+nên tab Lên plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đường
+đi» (`dot8/07-plan` đã mở; `09-itinerary` và `phone-dark-font13-plan` là bằng chứng reviewer, không mở ở đây).
+
+### Ghi chú AI (`AiNote`) và tờ AI (`ToGiay`)
+- **`AiNote`**: ghi chú **lề**: hàng với icon `sparkles` 17 tím, câu `label
+  ink`, chữ ký `caption` tím «Rủ Đi AI gợi ý» **dưới** câu; kẻ tóc trên và
+  dưới, đệm dọc 12; **không nền tím, không viền trái**. Bốn màn dùng.
+- **`ToGiay`** (`chat/TheAi.tsx`), nền cho mọi thẻ AI trong chat: `card`
+  viền 1px `line` bo 20, nội dung là mực thường, lịch trình bên trong là
+  `HangChang phac`, **ký ở chân** bằng icon 15 + `caption` tông (`sparkles`
+  «Rủ Đi AI gợi ý» tím; `receipt-outline` với tông `split` khi là tờ tiền).
+  Câu hỏi là tiêu đề của tờ, không có nhãn trên đầu.
 
 ### Cards / Containers
-- **`Card` v1**: bo 20, đệm 16, viền 1px `line` **và** `cardShadow`; `tone` đổi
-  nền sang `<tone>Soft` và viền cùng màu nền. Có `onPress` thì là button, nhấn
-  co 0.992 mờ 0.94. Một thẻ tông mỗi màn.
+- **Hàng + kẻ tóc là container mặc định** trên giấy. `Card` v1 (bo 20, đệm
+  16, viền `line` + `cardShadow`) còn trong kit nhưng **không màn nào trong
+  đợt này gọi**.
 - **`CoverBand`**: nền `cover` + `Grain vaiBia` 0.3, bo góc dưới 28, đệm trên
   `md` (+`insets.top` khi `underStatusBar`), đệm dưới `lg`, tràn lề theo
-  `bleed`; chứa logo compact, `hero` `coverInk`, đoạn dẫn `body`
-  `coverInkSoft`, nút back tròn.
-- **`Sheet`**: nền `card`, bo trên 20, tay nắm 40×4 `lineStrong`, đệm ngang
-  `md`, đệm dưới `max(insets.bottom, 16)`; vào bằng spring `settle`, ra bằng
-  `standard`; scrim `lopPhu.toi(0.42)`; nút cứng back Android đóng sheet.
-- **`Washi`**: dải mép xé cao 30 (40 dưới wordmark), đệm ngang 18, rộng tối
-  thiểu 120, tô `brand.coral`/`brand.teal`/`brand.violet` theo tông ở 0.9;
-  con là chữ mực tối tĩnh. Chỉ dán lên vùng đang quan trọng.
+  `bleed`; `compact` rút vải khi bàn phím mở; chứa logo compact, `hero`
+  `coverInk`, đoạn dẫn `body` `coverInkSoft`, nút back tròn.
+- **`Sheet`**: nền `card`, bo trên 20, đệm ngang `md`, đệm dưới
+  `max(insets.bottom, 16)`, cao tối đa 82% cửa sổ (hoặc `maxHeight`), nội
+  dung cuộn; vào bằng spring, ra bằng `standard`; scrim `lopPhu.toi(0.42)`;
+  nút cứng back Android và scrim đều đóng; `onClosed` nổ **sau khi** tấm đã
+  rời màn. **Tay cầm là vùng nắm thật** (đợt 8): hàng cao tối thiểu 36 rộng
+  cả tấm, vạch 40×4 `lineStrong` ở giữa, `accessibilityLabel` «Tay cầm»,
+  hint «Kéo xuống để đóng»; `Gesture.Pan` `activeOffsetY` 6, tấm đi theo
+  ngón tay, thả quá **90 dp** hoặc vẩy **900 dp/s** thì đóng, thả ngắn hơn
+  thì lò xo về; scrim mỏng dần theo kéo (`progress × (1 − kéo/480)`). Vùng
+  nắm chỉ là hàng tay cầm, không phải cả tấm, nên cuộn của nội dung không
+  đánh nhau với kéo (`clip-keo-sheet`). Đặt qua `RudiScreen overlay`, hoặc
+  trong một route trong suốt.
+- **Khay tạo** (`screens/Create.tsx`) giờ **là** `Sheet` đó, không còn bản
+  chép tay: route `create` chỉ `fade` với `contentStyle` trong suốt
+  (`app/_layout.tsx`), tab bên dưới còn nguyên dưới scrim (ảnh
+  `dot8/12-create-sheet`); nội dung `maxWidth` 560, ba hành động cao 72 kẻ
+  tóc, `PressScale` 0.985; đóng xong mới `router.back()`. Mở lạnh (deep
+  link, thông báo) `app/create.tsx` dựng vỏ tab trước rồi mở lại sheet: **chỉ
+  đọc từ mã**, chưa kiểm trên máy.
+- **Ô soạn chat** (Group): hàng bo 22 nền `card` viền 1px `line`, đệm 6, ở
+  `footer` của màn; không có dải giấy trống thứ hai dưới nó.
+- **Hoá đơn trên gỗ** (Bill): khung tối thiểu 420 bo 20 nền `giayHoaDon.khung`
+  với ảnh gỗ, viền `lopPhu.trang(0.22)`; tờ hoá đơn gradient `giayHoaDon.nen`,
+  chữ đen nâu hoá đơn, tổng tabular. Đây là **artwork của fixture** (theme.ts
+  cho phép hex ở đây), không phải token.
+- **`Washi`**: dải mép xé cao 30 (34/40 dưới wordmark), đệm ngang 18, rộng
+  tối thiểu 120, tô `brand.coral`/`brand.teal`/`brand.violet` ở 0.9; con là
+  chữ mực tối tĩnh. Chỉ Welcome dùng trong đợt này.
 
 ### Inputs / Fields
 - **`Field`**: cao 52 (108 `multiline`), nền `card`, viền 1px `lineStrong`, bo
-  14, chữ `body`, placeholder `inkFaint` (5.13:1 trên thẻ), nhãn `label` màu
-  `ink` phía trên, icon dẫn 20 `inkFaint`.
-- **`OtpBoxes`**: 6 ô 44×54, viền 1.5, một `TextInput` thật phủ lên (chữ trong
-  suốt, `autoComplete="sms-otp"`); ô đang nhập viền `accent`, ô khác
-  `lineStrong`; chữ số `title`.
-- **Lỗi**: một câu `body` màu `warn` ngay dưới control; **không** toast, không
-  modal. Đang tải: `StampButton loading` tại chỗ vừa bấm.
+  14, chữ `body`, placeholder `inkFaint`, nhãn `label` `ink` phía trên, icon
+  dẫn 20 `inkFaint`. **`SearchField`** cùng khung, bo pill, placeholder «Tìm
+  quán, món...».
+- **`OtpBoxes`**: 6 ô 44×54, viền 1.5, một `TextInput` thật phủ lên
+  (`autoComplete="sms-otp"`); ô đang nhập viền `accent`, ô khác `lineStrong`;
+  chữ số `title`.
+- **`Segmented`**: khung `card` viền `line` bo 14, đoạn 48, chọn = `<tone>Soft`
+  bo 10, `role="tab"`.
+- **`RosterPicker`**: checkbox cao 48; chưa chọn `card`/`lineStrong`, chọn
+  `splitSoft`/`split` + check; tên `ink` xuống dòng; lưới ô 130 gap 8 tối đa
+  3 cột.
+- **Lỗi**: một câu `body` màu `warn` ngay dưới control; không toast, không
+  modal. Đang tải: `StampButton loading` tại chỗ vừa bấm, hoặc `Skeleton`.
 
 ### Navigation
-- **`RudiTabBar`** tự vẽ (không dùng tab bar mặc định): nền `card`, cạnh trên
-  hairline `line`, cao **64 + max(insets.bottom, 10)**; bốn tab `role="tab"`,
-  cao tối thiểu 48, icon Ionicons 24 (outline → filled khi chọn), nhãn
-  `caption` 12/14 một dòng; đang chọn `accent`, còn lại `inkFaint`. Chỉ báo
-  là một **mẩu băng 28×4 `accent`** bo góc dưới, treo ở cạnh trên cột đang
-  chọn, trượt bằng `standard` 200ms; container chỉ báo **trong suốt** (bản
-  đầu tô cả cột 20% cam, lỗi thấy bằng mắt không thấy bằng code). Bấm tab
-  haptic `select`.
-- **FAB «Tạo mới»**: cột giữa (giữa Lên plan và Tin nhắn), tròn 56, nền
-  `brand.coral`, glyph `add` 30 `accentInk`, vòng 4px `ground`, nhô lên 22,
-  elevation 6, nhấn co 0.94 haptic `impact`, mở `/create`.
-- **Rail** (medium+): rộng 104, cạnh phải hairline, mỗi mục 72, chỉ báo là
-  vạch 4px `accent` bên trái trượt theo `translateY`; FAB không nhô, không
-  bóng.
-- iOS: `BlurView` 78 theo scheme thay nền `card` (chưa có ảnh iOS; chỉ đọc từ
-  code).
+- **`RudiTabBar`** tự vẽ: nền `card`, cạnh trên hairline `line`, cao **64 +
+  max(insets.bottom, 10)**; bốn tab `role="tab"` cao tối thiểu 48, icon
+  Ionicons 24 (outline → filled khi chọn), nhãn 12/14 một dòng; đang chọn
+  `accent`, còn lại `inkFaint`; chỉ báo băng 28×4 `accent` treo ở cạnh trên
+  cột đang chọn, trượt `standard` 200ms; haptic `select`.
+- **FAB «Tạo mới»**: cột giữa, tròn 56, nền `brand.coral`, glyph `add` 30
+  `brand.coralInk` tĩnh, vòng 4px `ground`, nhô lên 22, elevation 6, nhấn co
+  0.94 haptic `impact`, mở `/create`.
+- **Rail** (medium+): rộng 104, cạnh phải hairline, mỗi mục 72 với icon +
+  nhãn `caption`, chỉ báo vạch 4px `accent` bên trái trượt theo `translateY`;
+  FAB nằm trong rail, vòng `ground`, không nhô (`tablet-light-explore`).
+- **`TopBar`** trên giấy: tiêu đề `title` cân giữa, phụ đề `caption inkSoft`,
+  back chevron 48 hoặc wordmark `ink` 18 khi là đầu tab, phải là `DemoBadge
+  compactLabel` hay `IconButton quiet`. Ô icon app chỉ ở Welcome/Login.
+- iOS: `BlurView` 78 theo scheme thay nền `card` (chỉ đọc từ mã, chưa có
+  ảnh iOS).
 
 ### Trạng thái rỗng, tải, lỗi
 - **`EmptyState`** năm loại (`first-use`, `no-results`, `filtered`,
   `permission`, `failure`): `h2` + một câu `body` `inkSoft` rộng tối đa 420,
   **một** hành động `RudiButton compact` (`outline` khi `failure`) và một cửa
-  phụ `ghost`; `full` căn giữa khung, `inline` nằm trong danh sách; minh hoạ
-  chỉ khi có artwork của thế giới, không có thì không vẽ gì.
+  phụ `ghost`; minh hoạ chỉ khi có artwork của thế giới.
 - **`Skeleton`**: xương màu `line`, bo 10, băng sáng `card` 0.55 chạy 1400ms;
   tắt hẳn dưới Reduce Motion. `SkeletonLines` dòng cuối 62%.
 - **`ErrorState`**: cùng khung với `EmptyState kind="failure"`.
+- **Bộ lọc vắng vì không có dữ liệu** được nói thẳng bằng một câu `body
+  inkSoft` («Không có dữ liệu tháng khác nên không hiện bộ lọc kỳ»), không
+  vẽ control chết.
 
 ### Signature: Bìa mở ra trang (Welcome → Login)
-Welcome là bìa đóng: indigo tràn màn với vân vải, wordmark rất lớn ở phần ba
-trên (`coverInk`), washi cam nghiêng -2° mang «AI đi chơi, chia bill thông
-minh» bằng mực tối, route mực 4 chặng với glyph (people · compass · receipt ·
-images) và chặng đang ở tô coral chạy theo trang pager, pager 4 trang (tiêu
-đề EB 28/33, body `coverInkSoft`), chấm 7 (đang ở 20 rộng), rồi con dấu «Rủ
-Đi thôi!» và nút bìa «Tìm hiểu thêm». Bấm con dấu: bìa **nhấc** (translateY
--48, mờ tới 0.65) trong `shared` 300ms easing `accelerate`, rồi push
-`/login`; Login mở với `CoverBand` dưới status bar, tức bìa vẫn còn ở đầu
-trang giấy. Reduce Motion: pager nhảy thẳng, bìa không nhấc.
+Welcome là bìa đóng (ảnh `01-welcome`): indigo tràn màn với vân vải, wordmark
+rất lớn ở phần ba trên (`coverInk`), washi cam nghiêng -2° cao 34 mang «AI đi
+chơi, chia bill thông minh» bằng mực tối, route mực 4 chặng với glyph (people
+· compass · receipt · images) và chặng đang ở tô coral chạy theo trang pager,
+pager 4 trang (tiêu đề EB 28/33, body `coverInkSoft`), chấm 7 (đang ở 20
+rộng, cam), rồi con dấu «Rủ Đi thôi!» nghiêng -3 rộng bằng chữ và liên kết
+«Tìm hiểu thêm ›» dưới nó. Bấm con dấu: bìa **nhấc** (translateY -48, mờ tới
+0.65) trong `shared` 300ms easing `accelerate`, rồi push `/login`; Login mở
+với `CoverBand` dưới status bar và con dấu «Gửi mã» cỡ `vua`, tức lời rủ có
+một ngôn ngữ ở cả hai màn. Reduce Motion: pager nhảy thẳng, bìa không nhấc.
+
+### Signature: Con dấu rơi xuống (trạng thái thành đúng dưới ngón tay)
+Dòng FORM của hợp đồng gọi tên «một cú đóng dấu khi một trạng thái thành
+đúng»; đợt 8 là nơi nó tồn tại. Bấm «Đánh dấu đã trả» ở quyết toán: nút co
+0.98, hàng đổi sang con dấu «ĐÃ TRẢ» teal và con dấu **lao** xuống từ 1.35
+với mực nhạt, **chạm** trang (mực đầy, rung `success`), **lún** 0.97 rồi
+đứng; hàng bên cạnh đã đóng từ trước không nhúc nhích (khung 26 của
+`clip-dau-tra`: một con dấu đầy mực, một con dấu còn nhạt đang rơi). Cùng cú
+đó ở «Đã tới» khi điểm danh và ở nghĩa vụ vừa được máy chủ xác nhận. Reduce
+Motion: con dấu chỉ xuất hiện. Không có confetti, không toast, không đếm số.
 
 ### Chuyển động (đặt cùng thành phần)
 `tokens.motion` qua `src/rudi/motion.ts` và `useMotion`: **instant 100**
 (bấm, chip, haptic) · **standard 200** (đổi trạng thái, chỉ báo tab, sheet
-đóng, skeleton → nội dung) · **shared 300** (bìa mở, thẻ sang chi tiết) ·
-**celebrate 550** (một lần mỗi sự kiện, ba khoảnh khắc: chốt kèo, xong bill,
-mở huy hiệu; `celebrateOnce` giữ ngân sách). Easing `standard` [0.2,0,0,1],
-`decelerate` [0,0,0.2,1], `accelerate` [0.3,0,1,1]. Spring nhấn
-{damping 18, stiffness 260, mass 0.6}, thả {20, 180, 0.8}. `PressScale` chỉ
-scale (0.97 thẻ/hàng, 0.94 FAB, 0.92 back), không opacity. **Reduce Motion
-đưa mọi bậc trừ `instant` về 0.** **Tiền không animate trước khi domain state
-hợp lệ**: `moneyCountUpMs` trả 0 khi chưa hợp lệ, `standard` khi có.
+đóng, skeleton → nội dung) · **shared 300** (bìa mở, thẻ sang chi tiết, kèo
+sang timeline, ảnh sang viewer) · **celebrate 550** (một lần mỗi sự kiện, ba
+khoảnh khắc: chốt kèo, xong bill, mở huy hiệu; `celebrateOnce` giữ ngân sách).
+Easing `standard` [0.2,0,0,1], `decelerate` [0,0,0.2,1], `accelerate`
+[0.3,0,1,1]. Spring nhấn {damping 18, stiffness 260, mass 0.6}, thả {20, 180,
+0.8}. `PressScale` chỉ scale (0.98 nút giấy, 0.985 hàng/khay tạo, 0.97 con
+dấu CTA, 0.96 chip, 0.94 FAB/icon, 0.92 back), không opacity; kit không còn
+nhánh `pressed` mờ. Cú đóng dấu (`Stamp dong`) là cách `celebrate` được tiêu:
+130 + 60 ms + lò xo nhấn, haptic `success` ở nhịp chạm. **Reduce Motion đưa
+mọi bậc trừ `instant` về 0** và gập cú đóng dấu thành con dấu tĩnh. **Tiền
+không animate trước khi domain state hợp lệ**: `moneyCountUpMs` trả 0 khi
+chưa hợp lệ; con dấu live chỉ rơi sau khi máy chủ xác nhận. `useMotion` đọc
+cài đặt ban đầu và nghe `reduceMotionChanged` trong phiên.
+
+**Luật Một Cú Đóng Mỗi Sự Kiện.** `dong` chỉ truyền cho **hàng người đó vừa
+bấm** (`vuaTra`, `vuaToi`, `vuaNhan` là state của màn, không phải của dữ
+liệu); màn mount với trạng thái đã đúng thì con dấu chỉ *có ở đó*. Remount
+không bao giờ phát lại; bỏ điểm danh không đóng dấu; một danh sách không
+bao giờ rơi cả loạt.
+
+### Câu chữ (copy) trên control
+Tiếng Việt, không gạch dài (em dash); dùng « », dấu chấm giữa « · » để nối
+sự thật. Control **gọi tên hành động** («Gửi mã», «Đánh dấu đã trả», «Dùng
+plan này», «Thêm khoảnh khắc»), không «OK»/«Tiếp». `accessibilityLabel` mở
+bằng động từ: «Mở {tên địa điểm}», «Mở ảnh 3», «Chọn ảnh», «Đóng chọn ảnh»,
+«Thêm ảnh», «Lưu …». Con dấu là danh từ/trạng thái ngắn IN HOA. Dữ liệu
+fixture luôn dán «Dữ liệu demo» (đầy đủ), «Demo»/«Nháp» (trong `TopBar`),
+«Bản trải nghiệm» (Welcome). Số tiền viết «1.106.250đ»; không có số nào màn
+tự bịa: đếm ảnh, huy hiệu, ngày còn lại đều tính từ dữ liệu.
+
+### Trợ năng (sàn)
+Đích bấm 48dp (nút 52/60, `compact` 48, chip 48, tab 48, back 48, link bìa
+48, tay nắm kéo 48×56, checkbox 48); chữ nhỏ nhất 13sp caption, trừ ba cỡ
+riêng có kiểm ở font 1.3 (tem 12, nhãn tab 12, demo 10); mọi cặp chữ/nền
+trong bảng đo dưới; viền control ≥ 3:1; con dấu có `accessibilityLabel`,
+`Stamp` không role; `role="tab"` cho tab và segmented; Reduce Motion tôn
+trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 
 ## Do's and Don'ts
 
@@ -742,63 +1130,115 @@ hợp lệ**: `moneyCountUpMs` trả 0 khi chưa hợp lệ, `standard` khi có.
   (washi, con dấu, chặng route); đo 5.41:1 ở cả hai scheme.
 - **Do** vẽ ranh giới control bằng `lineStrong`/`coverLineStrong` và thêm dòng
   trong `interactive_boundaries()`; cạnh container bằng `line`.
-- **Do** giữ đích bấm 48dp (nút 52/56, compact 48, chip bấm 48, tab 48, back
-  48), sàn chữ 12sp, và chụp lại ở font 1.3 trước khi nói «không cắt».
+- **Do** giữ đích bấm 48dp, body 17/24 và caption 13/18; kiểm riêng nhãn
+  tab/tem/demo có cỡ nhỏ hơn, và chụp lại ở font 1.3 trước khi nói «không
+  cắt».
 - **Do** trải chất liệu bằng `Grain` (lưới ô) ở đúng opacity đo được: vải
-  0.30, giấy 0.45/0.30, mực 0.26; dưới ngưỡng là màu phẳng, đừng «hạ nhẹ».
-- **Do** để `CoverBand underStatusBar` khi màn có bề mặt `cover`, và
-  `StatusBar` sáng trên bìa, tối trên giấy sáng.
-- **Do** dán washi và đặt con dấu chỉ lên vùng đang quan trọng; phần còn lại
-  của trang là giấy và mực.
-- **Do** dùng `Money` cho mọi số tiền: số nguyên đồng, tabular, `countUp` chỉ
-  khi domain state hợp lệ.
-- **Do** giữ một tông dẫn mỗi màn; thẻ AI tím, thẻ tiền teal là tông ở thành
-  phần.
-- **Do** cuộn ngang hàng chip trong form, ghim đáy bằng `max(insets.bottom, n)`.
+  0.30, giấy 0.45/0.30, mực 0.26; dưới ngưỡng là màu phẳng.
+- **Do** để `CoverBand underStatusBar` khi màn có bề mặt `cover`, `StatusBar`
+  sáng trên bìa, tối trên giấy sáng.
+- **Do** làm con dấu rộng bằng chữ, một vành, không mũi tên; `lon` trên bìa,
+  `vua` trong form; nghiêng -3/-1/0 theo bìa/form/bảng.
+- **Do** đóng dấu **chỉ khi trạng thái đã đúng**, và con dấu luôn mang một
+  chữ; nháp là nét chì đứt và nhãn «Nháp».
+- **Do** viết tiền thành dòng sổ `DongTien` + `Money`: số nguyên đồng,
+  tabular, tông trên số, `countUp` chỉ khi domain state hợp lệ, và một câu
+  nói số này chưa phải sổ cái.
+- **Do** để danh sách nằm thẳng trên giấy với kẻ tóc; thẻ chỉ cho tờ AI và
+  bản in.
+- **Do** cho mỗi ảnh dẫn một khung in và dòng xuất xứ; ảnh có giấy phép in
+  `Attribution` bên dưới; số ảnh đếm từ dữ liệu.
+- **Do** ký tờ AI ở chân («Rủ Đi AI gợi ý») và để ghi chú AI là ghi chú lề
+  với kẻ tóc.
+- **Do** dùng `Photo ratio` 16:10 compact / 21:9 rộng cho ảnh dẫn, và
+  `ResponsiveRow maxColumns` khi ô là thumbnail (album 6).
+- **Do** giữ một tông dẫn mỗi màn; teal ở màn tiền, tím ở màn AI, cam ở lời
+  rủ.
+- **Do** đặt sheet qua `RudiScreen overlay`, composer và nút chân qua
+  `footer`, luồng chat với `keepEnd` và thanh tên nhóm qua `header`.
+- **Do** cho mọi thứ bấm được một lò xo scale qua `PressScale` (0.98 nút,
+  0.96 chip, 0.985 hàng, 0.94 icon); haptic `select`/`impact` ở bấm,
+  `success` chỉ ở nhịp chạm của con dấu.
+- **Do** truyền `Stamp dong` cho đúng hàng vừa bấm, và ở màn live chỉ sau khi
+  máy chủ xác nhận; `nen` khi con dấu nằm trên ảnh.
+- **Do** cho chặng có địa điểm có ảnh một `AnhChang` 44 trong khung giấy;
+  chặng khác để trống khe `phai`.
 - **Do** cấp mọi màu mới qua `tokens.json` → script → `guest.css` + DESIGN.md
   cùng PR; `rudi-khong-hex` giữ `theme.ts` là file duy nhất viết hex.
 
 ### Don't:
 - **Don't** đặt chữ nhỏ hay icon lên `brand.*` bằng mực của scheme; coral với
   chữ trắng 2.92:1.
-- **Don't** đặt chữ `accent` nhỏ trên `cover` (3.03:1).
+- **Don't** đặt chữ `accent` nhỏ trên `cover` (2.83:1 ở scheme sáng).
+- **Don't** đặt kicker/eyebrow (chữ in hoa giãn nhỏ) trên tiêu đề; chữ in
+  hoa của hệ là mực con dấu và nó đứng cạnh/dưới nội dung.
+- **Don't** mở màn tiền bằng hero metric (số to trong khối màu, nhãn nhỏ
+  trên, thanh tiến độ dưới); sổ là hàng.
+- **Don't** dùng thanh tiến độ hay vòng tiến độ **thay** nội dung; số phiếu
+  bình chọn có `ProgressBar` là ngoại lệ đã có chữ đi kèm («5 phiếu của bạn
+  trên bản này»), không phải mẫu.
+- **Don't** lồng thẻ trong thẻ, hay kẻ viền trái màu dày hơn 1px.
+- **Don't** thêm vành trong hay mũi tên vào con dấu; đừng kéo con dấu hết
+  cột.
+- **Don't** đóng dấu lên bản nháp hay đề xuất AI chưa chốt; đừng để trạng
+  thái chỉ là màu hay chỉ là nét.
 - **Don't** giả độ sâu bằng bóng lệch cứng hay dập nổi; con dấu và bìa không
   có bóng.
 - **Don't** dùng `resizeMode="repeat"` cho chất liệu trên Android.
 - **Don't** animate `opacity` trên một pressable tròn nằm trên nền có vân;
-  animate scale, mặt tròn là View con.
+  animate scale, mặt tròn là View con. Đừng thêm nhánh `pressed` mờ mới:
+  kit đã bỏ hết, chúng chạy trên JS thread và mù với Reduce Motion.
+- **Don't** truyền `dong` lúc mount hay cho cả danh sách; đừng thay cú đóng
+  dấu bằng một zoom ease-out, confetti hay toast.
+- **Don't** vẽ tay cầm sheet không kéo được; tay cầm là lời hứa kéo-để-đóng.
+- **Don't** lặp ô icon app ở đầu mỗi tab; header tab là wordmark trơn.
 - **Don't** ghi `transform: undefined` vào style Reanimated; chỉ spread khi
   có góc nghiêng.
 - **Don't** dựng hình dạng máy chủ chưa có: không ô mã chuyển khoản, không
   VietQR, không số tài khoản (ADR-0015/0016); sản phẩm nói phần của mỗi người
   rồi dừng.
-- **Don't** dùng ảnh stock cho địa điểm thật, ảnh người thật cho avatar.
-  Ảnh địa điểm được phép **và chỉ được phép** khi nó nói được nguồn (M12,
-  ADR-0017 §2.5): ảnh có giấy phép thì hiện **tác giả + giấy phép** ngay dưới
-  ảnh; ảnh của nhóm thì chỉ người trong nhóm thấy, và máy chủ lọc chứ không
-  phải màn hình lọc. Không có xuất xứ thì quay về dải typographic — `photo_url`
-  là `null` và thẻ vẽ dải chữ, chứ không mượn một tấm ảnh nào khác.
+- **Don't** in một số màn tự bịa: đếm ảnh, huy hiệu, ngày còn lại, tổng đều
+  từ dữ liệu; fixture phải dán nhãn demo/nháp.
+- **Don't** cho ảnh xuất hiện không xuất xứ, ảnh stock cho địa điểm thật, ảnh
+  người thật cho avatar (ADR-0020 §2.5).
 - **Don't** thêm face display thứ hai, hay đưa Bricolage vào body/nhãn/ô nhập.
 - **Don't** thêm toast hay modal lỗi; lỗi là một câu `warn` dưới form.
+- **Don't** dùng gạch dài trong câu chữ; đừng đặt nhãn «OK»/«Tiếp» lên control.
 - **Don't** ship nhãn demo trên tiền thật; `DemoBadge` phải rỗng ở phiên live.
-- **Don't** mô tả trong file này bố cục của màn chưa redesign; đo lại sau mỗi
-  lát.
+- **Don't** vẽ ảnh địa điểm mà không nói được nguồn (M12, ADR-0017 §2.5): ảnh có giấy phép thì tác giả + giấy phép ngay dưới ảnh (kể cả ô nhỏ trên hàng); ảnh của nhóm chỉ người trong nhóm thấy và máy chủ lọc; không xuất xứ thì về dải typographic, không mượn ảnh khác.
 
 ## Những gì bản ship KHÔNG phong thánh
 
 Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 
-- `Eyebrow`, `SurfaceLabel` (nhãn in hoa giãn chữ, ui.tsx) và
-  `WordmarkEmbossed.tsx` (dập nổi bằng bóng lệch): **đã xoá khỏi cây ở
-  `5cc57d2`**; hai cái đầu là eyebrow bị craft floor cấm, cái sau bị
-  reviewer loại.
-- Bố cục v1 của Khám phá, Tin nhắn, Tài chính… trên nền v2 (thẻ trắng bo 20 +
-  chip màu + ảnh stock fixture, như ảnh `phone-light-explore-tabbar.png`): là
-  **nợ của lát UI-2 đến UI-8**, không phải quy tắc.
-- Màn gán món (fixture, bố cục v1) cắt số tổng ở font 1.3: lỗi để lát UI-5,
-  không ghi giá trị nào để hợp thức.
-- `bangMauFixture`, `giayHoaDon`, `mauSao` trong `theme.ts`: màu của thế giới
-  fixture và hoá đơn vẽ tay, không phải token.
+- `Eyebrow` và `SurfaceLabel` **vẫn còn export trong `ui.tsx`** (dòng 237 và
+  958 ở head này) dù tài liệu mốc trước ghi đã xoá; không màn nào gọi
+  (`grep` 0). Là kicker/eyebrow bị craft floor cấm; giữ lại là nợ dọn kit,
+  không phải thành phần. `FloatingGlass`, `Stat`, `ProgressBar` cùng số phận:
+  `Stat` và `FloatingGlass` 0 màn gọi; `ProgressBar` một chỗ (kết quả bình
+  chọn Group.tsx:362) chỉ được để lại vì có chữ đi kèm, không phải mẫu.
+- `WordmarkEmbossed.tsx` (dập nổi bằng bóng lệch): đã xoá ở `5cc57d2`.
+- `Card` v1 và chip tĩnh: còn trong kit, không màn nào trong đợt này dùng
+  cho trạng thái; không lấy làm container mặc định.
+- Ảnh fixture trong album, tường và Khám phá là ảnh Commons đã nhập theo
+  mapping duyệt (`tools`, commit `5d853f4`) với dòng xuất xứ của **fixture**
+  («Team Đà Lạt · Đà Lạt · …»); dòng đó là mẫu định dạng, không phải xuất xứ
+  thật của tấm ảnh.
+- Hoá đơn trên gỗ (`giayHoaDon`, `demoAssets.wood`) là artwork fixture của
+  màn Bill; `bangMauFixture`, `mauSao`, `mauLogo` trong `theme.ts` là màu của
+  thế giới fixture, không phải token.
+- iOS (`BlurView`, `cardShadow` iOS) và OAuth Google chỉ đọc từ mã; chưa có
+  ảnh iOS trong `.impeccable/review/`.
+- **Nhánh `pressed` mờ opacity còn trong màn feature** (đợt 8 chỉ chuyển
+  kit): `Group.tsx` dòng ghim chuyến và ô bình chọn, `HangDiaDiem.tsx`
+  `PlaceLead`/`PlaceRow`, `Outing.tsx` hàng điểm danh và «Chọn tất cả»,
+  `Bill.tsx` dòng món, `Profile.tsx`, `GroupWallLive.tsx`; `styles.pressed`
+  0.68 và `buttonPressed` vẫn khai trong `ui.tsx` mà không ai gọi. Là nợ
+  đồng bộ với `PressScale`, không phải hai kiểu phản hồi bấm của hệ.
+- `/create` mở lạnh (replace `/explore` rồi push lại sheet) chỉ đọc từ mã;
+  reviewer đợt 8 không kiểm trên máy.
+- Số ms của cú đóng dấu đọc từ `Stamp.tsx`; clip 20 fps chỉ chứng minh thứ
+  tự nhịp (nhạt → đầy, hàng bên không động), không đo được 130/60.
 
 ## Cổng phải xanh trước khi đổi hệ này
 

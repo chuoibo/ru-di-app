@@ -19,19 +19,30 @@ appId: com.lakiet.rudi
     visible: "Khám phá"
     timeout: 60000
 - tapOn: "Khám phá"
-# Danh mục của máy chủ, không phải fixture: tên thật xuất hiện, tên mẫu không.
-- extendedWaitUntil:
-    visible: "Tiệm Nướng Xóm Lào"
-    timeout: 60000
 # Con số là của máy chủ (danh mục seed có 12 chỗ ở Đà Lạt; một stack đã nhập
 # OpenStreetMap có hàng trăm), nên flow gác HÌNH DẠNG câu chứ không gác con số:
 # tên thành phố phải là tên máy chủ vừa phục vụ, không phải chuỗi viết cứng.
-- assertVisible: "[0-9]+ nơi ở Đà Lạt"
+- extendedWaitUntil:
+    visible: "[0-9]+ nơi ở Đà Lạt"
+    timeout: 60000
 - assertNotVisible: "Xóm Lèo"
 - assertNotVisible: "Mẫu minh hoạ.*"
 - assertNotVisible: "Gợi ý mẫu.*"
 - takeScreenshot: 26-danh-muc-that
-# Lọc theo category của máy chủ.
+# Danh mục của máy chủ, không phải fixture: tên thật xuất hiện, tên mẫu không.
+# Khám phá sống dẫn bằng một địa điểm lớn (đợt chuyển mình 06/09); tên ghim có thể nằm dưới nếp gấp.
+- scrollUntilVisible:
+    element:
+      text: "Tiệm Nướng Xóm Lào"
+    direction: DOWN
+    timeout: 60000
+# Lọc theo category của máy chủ. Hàng chip nằm trên đầu trang; sau khi cuộn tới
+# địa điểm ghim thì cuộn ngược lên tới chip.
+- scrollUntilVisible:
+    element:
+      text: "Cafe"
+    direction: UP
+    timeout: 30000
 - tapOn: "Cafe"
 # Con số là của danh mục đang phục vụ: 3 trên stack seed, hàng chục trên stack
 # đã nhập OpenStreetMap. Flow gác việc BỘ LỌC CÓ CẮN (số kết quả ít hơn tổng,
@@ -62,8 +73,10 @@ appId: com.lakiet.rudi
 - takeScreenshot: 26-tim-ten
 - tapOn: "Xóa lọc"
 # Mở chi tiết từ danh mục: địa chỉ, giờ, giá của máy chủ; nút chỉ đường; lưu.
-- extendedWaitUntil:
-    visible: "Tiệm Nướng Xóm Lào"
+- scrollUntilVisible:
+    element:
+      text: "Tiệm Nướng Xóm Lào"
+    direction: DOWN
     timeout: 30000
 - tapOn: "Mở Tiệm Nướng Xóm Lào"
 - extendedWaitUntil:

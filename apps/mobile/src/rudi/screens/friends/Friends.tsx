@@ -26,8 +26,9 @@ import {
 } from "../../../screens/ca-nhan/ban-be";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
-import { Card, Divider, Heading, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
+import { Divider, RudiButton, RudiScreen, Segmented, TopBar } from "../../ui";
+import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
 import { HangNguoi, HangNguoiCho } from "./HangNguoi";
 
 type Du = { ban: Ban[]; daNhan: LoiMoi[]; daGui: LoiMoi[] };
@@ -43,10 +44,10 @@ function ngayKetBan(iso: string): string {
   return `Bạn từ ${new Date(iso).toLocaleDateString("vi-VN")}`;
 }
 
-/** Rows inside one card, a hairline between neighbours, like the profile menu. */
+/** Rows on the paper, a hairline between neighbours. */
 function DanhSach({ hang }: { hang: ReactNode[] }) {
   return (
-    <Card style={styles.danhSach}>
+    <View style={styles.danhSach}>
       {hang.map((h, i) => (
         <View key={i}>
           {i > 0 ? (
@@ -57,13 +58,12 @@ function DanhSach({ hang }: { hang: ReactNode[] }) {
           {h}
         </View>
       ))}
-    </Card>
+    </View>
   );
 }
 
 export function FriendsScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
   // The pinned footer must clear the gesture bar: the screen shell only pads
   // top/left/right, so the bottom inset is this screen's to add.
   const { bottom: menDuoi } = useSafeAreaInsets();
@@ -146,20 +146,11 @@ export function FriendsScreen() {
     >
       <TopBar title="Bạn bè" />
       <Segmented items={MUC} onSelect={setMuc} selected={muc} />
-      {trang.pha === "dang-doc" ? (
-        <Card style={styles.danhSach}>
-          <HangNguoiCho />
-        </Card>
-      ) : null}
-      {trang.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-          <RudiButton label="Thử lại" onPress={() => void nap()} variant="outline" />
-        </Card>
-      ) : null}
+      {trang.pha === "dang-doc" ? <HangNguoiCho /> : null}
+      {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách bạn" /> : null}
       {trang.pha === "xong" && muc === 0 ? (
         trang.du.ban.length === 0 ? (
-          <Heading title="Chưa có bạn nào" subtitle="Thêm bạn bằng số điện thoại. Người ấy đồng ý thì hai bên là bạn." />
+          <EmptyState body="Thêm bạn bằng số điện thoại. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" title="Chưa có bạn nào" />
         ) : (
           <DanhSach
             hang={trang.du.ban.map((b) => (
@@ -188,7 +179,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 1 ? (
         trang.du.daNhan.length === 0 ? (
-          <Heading title="Không có lời mời nào đang chờ" />
+          <EmptyState body="Khi ai đó gửi lời mời kết bạn, nó hiện ở đây." kind="first-use" layout="inline" title="Không có lời mời nào đang chờ" />
         ) : (
           <DanhSach
             hang={trang.du.daNhan.map((lm) => (
@@ -223,7 +214,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 2 ? (
         trang.du.daGui.length === 0 ? (
-          <Heading title="Bạn chưa gửi lời mời nào" />
+          <EmptyState body="Lời mời bạn gửi và đang chờ trả lời hiện ở đây." kind="first-use" layout="inline" title="Bạn chưa gửi lời mời nào" />
         ) : (
           <DanhSach
             hang={trang.du.daGui.map((lm) => (
@@ -237,7 +228,7 @@ export function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
-  danhSach: { paddingVertical: 6 },
-  // Hairline starts at the text column, like the Profile menu card (tile 40 + gap 12).
+  danhSach: { paddingVertical: 2 },
+  // Hairline starts at the text column (avatar 40 + gap 12).
   vach: { marginLeft: 52 },
 });

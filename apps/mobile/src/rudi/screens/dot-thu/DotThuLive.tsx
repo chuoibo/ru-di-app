@@ -13,6 +13,10 @@
  *
  * A phone that did not publish the round has no links to send: the server
  * keeps only a digest of each token, and this screen says so.
+ *
+ * UI v2 (đợt 6): the board is a list of rows -- who → whom, the state as a
+ * word, the sum -- ordered by what is still waiting; the sentences that
+ * explain a state sit beside the action they explain and nowhere else.
  */
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -20,7 +24,6 @@ import { Share, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
-import { dinhDangTienVnd } from "../../../screens/chat/ke-hoach";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCua, type ThanhVien } from "../../chia-bill/hoa-don";
 import {
@@ -41,7 +44,11 @@ import {
 } from "../../dot-thu/dot-thu";
 import { docLinkDot, luuLinkDot } from "../../dot-thu/kho-link";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Heading, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Heading, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { ErrorState } from "../../ui/ErrorState";
+import { Money } from "../../ui/Money";
+import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
+import { Stamp } from "../../ui/Stamp";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -57,9 +64,14 @@ function tenHienThi(ten: string | null | undefined): string {
   return "Thành viên";
 }
 
+/** Money that arrived is a fact and gets the filled seal; the rest is outline. */
+function daVeRoi(trangThai: NghiaVu["trangThai"]): boolean {
+  return trangThai === "confirmed" || trangThai === "over_confirmed";
+}
+
 export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: string }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const contextId = phien.context_id;
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
@@ -137,10 +149,14 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
       setDaMoKhay((hienTai) => ({ ...hienTai, [envelope.senderId]: true }));
     });
 
+  // The obligation just confirmed under this finger: its seal lands after the
+  // server has said so (the state is re-read, never assumed).
+  const [vuaNhan, setVuaNhan] = useState<string | null>(null);
   const daNhan = (n: NghiaVu) =>
     chay(async () => {
       await xacNhanDaNhan(n.id, n.amountVnd, phien.person_id, attemptFor(attempts.current, `nhan:${n.id}:${n.amountVnd}`));
       await doc();
+      setVuaNhan(n.id);
     });
 
   const docLai = () => chay(doc);
@@ -149,7 +165,11 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
     return (
       <RudiScreen tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bảng thu…</Text>
+        <SkeletonGroup style={styles.khung}>
+          <SkeletonLines lastWidth="50%" lineHeight={24} lines={2} />
+          <SkeletonRow leading={0} />
+          <SkeletonRow leading={0} />
+        </SkeletonGroup>
       </RudiScreen>
     );
   }
@@ -157,11 +177,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
     return (
       <RudiScreen tone="split" testID="collection-batch-screen">
         <TopBar title="Đợt thu" />
-        <Card>
-          <Text style={[typography.title, { color: colors.warn }]}>Chưa đọc được bảng thu</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{trang.loi}</Text>
-        </Card>
-        <RudiButton label="Thử lại" onPress={docLai} tone="split" variant="soft" />
+        <ErrorState body={trang.loi} onRetry={docLai} title="Chưa đọc được bảng thu" />
       </RudiScreen>
     );
   }
@@ -169,24 +185,22 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
   const tom = tomTatBang(trang.nghiaVu);
   const daPhatRoi = trang.trangThai !== null && daPhat(trang.trangThai);
   const toiNhan = new Set(nghiaVuToiNhan(trang.nghiaVu, phien.person_id).map((n) => n.id));
+  // What is still waiting comes first; what has arrived settles to the foot.
+  const bang = [...trang.nghiaVu].sort((a, b) => Number(daVeRoi(a.trangThai)) - Number(daVeRoi(b.trangThai)));
 
   return (
     <RudiScreen tone="split" testID="collection-batch-screen">
       <TopBar subtitle={trang.trangThai === null ? undefined : cauTrangThaiDot(trang.trangThai)} title="Đợt thu" />
-      {thongBao !== null ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{thongBao}</Text>
-        </Card>
-      ) : null}
-      <Card style={styles.hero} tone="split">
-        <Text style={[styles.soLon, { color: colors.ink }]}>
+      {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
+      <View style={styles.dau}>
+        <Text style={[typography.h1, { color: colors.ink }]}>
           {tom.daVe}/{tom.tong} lượt chuyển đã về
         </Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>
           {tom.nguoiXong}/{tom.nguoiGui} người đã xong phần mình.{" "}
           {daPhatRoi ? "Đã phát: mỗi người xem phần của mình qua link riêng." : "Chưa phát: chưa ai bị nhắn gì."}
         </Text>
-      </Card>
+      </View>
 
       <SectionHeader title="Ai chuyển cho ai" />
       {daPhatRoi ? (
@@ -195,34 +209,39 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
         </Text>
       ) : null}
       {trang.nghiaVu.length === 0 ? (
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Đợt này không ai phải chuyển tiền.</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Đợt này không ai phải chuyển tiền.</Text>
       ) : null}
-      {trang.nghiaVu.map((n) => (
-        <Card key={n.id} style={styles.hang}>
-          <View style={styles.dong}>
-            <View style={styles.flex}>
-              <Text style={[typography.label, { color: colors.ink }]}>{cauHangNghiaVu(n, roster)}</Text>
-              {n.tranhCai && n.trangThai !== "disputed" ? (
-                <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
+      <View>
+        {bang.map((n) => {
+          const ve = daVeRoi(n.trangThai);
+          return (
+            <View key={n.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
+              <View style={styles.dong}>
+                <View style={styles.flex}>
+                  <Text style={[typography.label, { color: colors.ink }]}>{cauHangNghiaVu(n, roster)}</Text>
+                  {n.tranhCai && n.trangThai !== "disputed" ? (
+                    <Text style={[typography.caption, { color: colors.warn }]}>đang thắc mắc</Text>
+                  ) : null}
+                </View>
+                <Stamp dong={vuaNhan === n.id && ve} label={TU_NGHIA_VU[n.trangThai]} tone="split" variant={ve ? "ink" : "outline"} />
+                <Money size="label" tone={ve ? "split" : "ink"} vnd={n.amountVnd} />
+              </View>
+              {daPhatRoi && toiNhan.has(n.id) ? (
+                <RudiButton
+                  compact
+                  disabled={ban}
+                  full={false}
+                  icon="checkmark-done-outline"
+                  label={`Tiền đã về từ ${tenCua(roster, n.senderId)}`}
+                  onPress={() => void daNhan(n)}
+                  tone="split"
+                  variant="soft"
+                />
               ) : null}
             </View>
-            <Chip label={TU_NGHIA_VU[n.trangThai]} selected={n.trangThai === "confirmed" || n.trangThai === "over_confirmed"} tone="split" />
-            <Text style={[typography.money, { color: colors.ink }]}>{dinhDangTienVnd(n.amountVnd)}</Text>
-          </View>
-          {daPhatRoi && toiNhan.has(n.id) ? (
-            <RudiButton
-              compact
-              disabled={ban}
-              full={false}
-              icon="checkmark-done-outline"
-              label={`Tiền đã về từ ${tenCua(roster, n.senderId)}`}
-              onPress={() => void daNhan(n)}
-              tone="split"
-              variant="soft"
-            />
-          ) : null}
-        </Card>
-      ))}
+          );
+        })}
+      </View>
 
       {!daPhatRoi && !sapPhat ? (
         <>
@@ -233,52 +252,52 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
         </>
       ) : null}
       {!daPhatRoi && sapPhat ? (
-        <Card style={styles.hang}>
-          <Text style={[typography.label, { color: colors.ink }]}>Phát đợt thu này?</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+        <View style={[styles.xacNhan, { borderColor: colors.split, borderRadius: radius.base }]}>
+          <Text style={[typography.h2, { color: colors.ink }]}>Phát đợt thu này?</Text>
+          <Text style={[typography.body, { color: colors.inkSoft }]}>
             Không hoàn lại được. {tom.nguoiGui} người sẽ có link riêng; link chỉ hiện một lần và chỉ máy này giữ.
           </Text>
           <RudiButton disabled={ban} icon="paper-plane-outline" label="Phát, không hoàn lại" loading={ban} onPress={() => void phat()} tone="split" />
           <RudiButton disabled={ban} label="Thôi, chưa phát" onPress={() => setSapPhat(false)} tone="split" variant="ghost" />
-        </Card>
+        </View>
       ) : null}
 
       {daPhatRoi ? (
         <>
           <SectionHeader title="Gửi link riêng" />
           {trang.links === null ? (
-            <Card>
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                Link của đợt này được phát ở máy khác. Máy chủ chỉ giữ dấu vân của link, nên máy này không lấy lại được; bảng thu ở trên vẫn là thật.
-              </Text>
-            </Card>
+            <Text style={[typography.body, { color: colors.inkSoft }]}>
+              Link của đợt này được phát ở máy khác. Máy chủ chỉ giữ dấu vân của link, nên máy này không lấy lại được; bảng thu ở trên vẫn là thật.
+            </Text>
           ) : null}
           {trang.links !== null && trang.links.length === 0 ? (
             <Text style={[typography.caption, { color: colors.inkFaint }]}>Không có link nào: đợt này không ai phải chuyển.</Text>
           ) : null}
-          {(trang.links === null ? [] : trang.links).map((env) => (
-            <Card key={env.senderId} style={styles.hang}>
-              <View style={styles.dong}>
-                <View style={styles.flex}>
-                  <Text style={[typography.label, { color: colors.ink }]}>{env.senderName}</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {daMoKhay[env.senderId] === true ? "Đã mở khay chia sẻ, chưa rõ đã gửi link chưa" : "Chưa gửi link. Mỗi người một link riêng."}
-                  </Text>
+          <View>
+            {(trang.links === null ? [] : trang.links).map((env) => (
+              <View key={env.senderId} style={[styles.hang, { borderBottomColor: colors.line }]}>
+                <View style={styles.dong}>
+                  <View style={styles.flex}>
+                    <Text style={[typography.label, { color: colors.ink }]}>{env.senderName}</Text>
+                    <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                      {daMoKhay[env.senderId] === true ? "Đã mở khay chia sẻ, chưa rõ đã gửi link chưa" : "Chưa gửi link. Mỗi người một link riêng."}
+                    </Text>
+                  </View>
+                  <Money size="label" vnd={env.amountVnd} />
                 </View>
-                <Text style={[typography.money, { color: colors.ink }]}>{dinhDangTienVnd(env.amountVnd)}</Text>
+                <RudiButton
+                  compact
+                  disabled={ban}
+                  full={false}
+                  icon="share-social-outline"
+                  label={daMoKhay[env.senderId] === true ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
+                  onPress={() => void guiLink(env)}
+                  tone="split"
+                  variant="outline"
+                />
               </View>
-              <RudiButton
-                compact
-                disabled={ban}
-                full={false}
-                icon="share-social-outline"
-                label={daMoKhay[env.senderId] === true ? `Gửi lại cho ${env.senderName}` : `Gửi cho ${env.senderName}`}
-                onPress={() => void guiLink(env)}
-                tone="split"
-                variant="outline"
-              />
-            </Card>
-          ))}
+            ))}
+          </View>
         </>
       ) : null}
 
@@ -289,8 +308,9 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  hero: { gap: 6 },
-  soLon: { fontSize: 24, lineHeight: 30, fontWeight: "800", letterSpacing: -0.4, fontVariant: ["tabular-nums"] },
-  hang: { gap: 10 },
-  dong: { flexDirection: "row", alignItems: "center", gap: 10 },
+  khung: { gap: 14 },
+  dau: { gap: 6 },
+  hang: { gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  dong: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
+  xacNhan: { gap: 10, padding: 16, borderWidth: 1.5, borderStyle: "dashed" },
 });

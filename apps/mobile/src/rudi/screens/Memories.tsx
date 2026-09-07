@@ -1,15 +1,20 @@
+/**
+ * The fixture group's memories (dev door): its wall, the trip album and the
+ * share screen. The live counterparts are in `ky-niem/`; the grammar is the
+ * same -- a post is a page on the paper, an album opens on its first
+ * photograph, tagging people means their names. Nothing here is called a
+ * video: the fixture has photographs, and says so.
+ */
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { COLLECTOR_INDEX, DEMO_GROUP, MEMORY_PHOTOS, MEMORY_VIDEO_INDEXES, PEOPLE, demoAssets } from "../fixtures";
+import { COLLECTOR_INDEX, DEMO_GROUP, MEMORY_PHOTOS, PEOPLE, demoAssets } from "../fixtures";
 import { useRudiSession } from "../session";
+import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
 import { lopPhu, mucTrenAnh, typography, useRudiTheme } from "../theme";
 import {
-  Avatar,
-  AvatarStack,
-  Card,
   Chip,
   DemoBadge,
   Field,
@@ -17,13 +22,16 @@ import {
   Inline,
   Photo,
   PhotoShade,
+  ResponsiveRow,
   RudiButton,
   RudiScreen,
   SectionHeader,
   Segmented,
   TopBar,
-  widthPercent,
 } from "../ui";
+import { Avatar, AvatarStack } from "../ui/Avatar";
+import { KhungAnh } from "../ui/KhungAnh";
+import { RosterPicker } from "../ui/RosterPicker";
 
 function FeedPost({
   personIndex,
@@ -41,54 +49,43 @@ function FeedPost({
   const person = PEOPLE[personIndex];
 
   return (
-    <Card style={styles.post}>
+    <View style={[styles.post, { borderBottomColor: colors.line }]}>
       <View style={styles.postHeader}>
-        <Avatar person={person} size={43} />
+        <Avatar name={person.name} size={36} />
         <View style={styles.flex}>
           <Text style={[typography.label, { color: colors.ink }]}>{person.name}</Text>
-          <Inline gap={4}>
-            <Ionicons color={colors.inkFaint} name="location-outline" size={13} />
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>Đà Lạt · {time}</Text>
-          </Inline>
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>Đà Lạt · {time}</Text>
         </View>
         <IconButton accessibilityLabel="Tùy chọn bài viết" icon="ellipsis-horizontal" quiet />
       </View>
       <Text style={[typography.body, { color: colors.ink }]}>{caption}</Text>
-      <Photo height={285} radius={18} source={MEMORY_PHOTOS[imageIndex]} />
-      <View style={styles.reactions}>
-        <Inline gap={6}>
-          <View style={[styles.reactionDots, { backgroundColor: colors.accentSoft }]}>
-            <Ionicons color={colors.accent} name="heart" size={13} />
-          </View>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>{PEOPLE[COLLECTOR_INDEX].name} và {PEOPLE.length - 1} người khác</Text>
-        </Inline>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>4 bình luận</Text>
-      </View>
-      <View style={[styles.postDivider, { backgroundColor: colors.line }]} />
-      <Inline gap={8}>
+      <KhungAnh xuatXu={`${person.name} · Đà Lạt · ${time}`}>
+        <Photo height={240} radius={4} source={MEMORY_PHOTOS[imageIndex]} />
+      </KhungAnh>
+      <View style={styles.postActions}>
         <Pressable
           accessibilityRole="button"
           onPress={() => setLiked((value) => !value)}
           style={({ pressed }) => [styles.postAction, pressed && styles.pressed]}
         >
-          <Ionicons color={liked ? colors.accent : colors.inkFaint} name={liked ? "heart" : "heart-outline"} size={20} />
+          <Ionicons color={liked ? colors.accent : colors.inkSoft} name={liked ? "heart" : "heart-outline"} size={22} />
           <Text style={[typography.label, { color: liked ? colors.accent : colors.inkSoft }]}>Thích</Text>
         </Pressable>
         <Pressable accessibilityRole="button" style={({ pressed }) => [styles.postAction, pressed && styles.pressed]}>
-          <Ionicons color={colors.inkFaint} name="chatbubble-outline" size={19} />
+          <Ionicons color={colors.inkSoft} name="chatbubble-outline" size={20} />
           <Text style={[typography.label, { color: colors.inkSoft }]}>Bình luận</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" style={({ pressed }) => [styles.postAction, pressed && styles.pressed]}>
-          <Ionicons color={colors.inkFaint} name="share-social-outline" size={19} />
-        </Pressable>
-      </Inline>
-    </Card>
+        <Text style={[typography.caption, styles.flex, { color: colors.inkFaint, textAlign: "right" }]}>
+          {PEOPLE[COLLECTOR_INDEX].name} và {PEOPLE.length - 1} người khác · 4 bình luận
+        </Text>
+      </View>
+    </View>
   );
 }
 
 export function GroupWallScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [tab, setTab] = useState(0);
 
@@ -109,81 +106,75 @@ export function GroupWallScreen() {
       <TopBar
         title={DEMO_GROUP.name}
         subtitle="Không gian kỷ niệm"
-        right={<IconButton accessibilityLabel="Tùy chọn nhóm" icon="ellipsis-horizontal" />}
+        right={<IconButton accessibilityLabel="Tùy chọn nhóm" icon="ellipsis-horizontal" quiet />}
       />
+      {/* A low cover: the group's picture, its name, who is in it. The counts
+          are one line under it, not a card of three numbers. */}
       <Photo
-        height={245}
-        radius={24}
+        height={180}
+        radius={20}
         source={demoAssets.friends}
         overlay={
           <PhotoShade>
             <View style={styles.wallHero}>
-              <DemoBadge />
               <Text style={styles.wallTitle}>Team Đà Lạt</Text>
               <View style={styles.wallMeta}>
-                <AvatarStack max={5} people={PEOPLE} />
-                <Text style={styles.wallMetaText}>
-                  {PEOPLE.length} thành viên · 1 chuyến đi
-                </Text>
+                <AvatarStack max={5} people={PEOPLE.map((p) => ({ name: p.name }))} />
+                <Text style={styles.wallMetaText}>{PEOPLE.length} thành viên · 1 chuyến đi</Text>
               </View>
             </View>
           </PhotoShade>
         }
       />
+      <View style={styles.dongDem}>
+        <DemoBadge />
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+          {session.photoCount} ảnh · {session.checkInCount} check-in
+        </Text>
+      </View>
       <Segmented items={["Tường", "Album", "Kế hoạch", "Thành viên"]} onSelect={onTab} selected={tab} />
-      <Card style={styles.memorySummary}>
-        <Pressable onPress={() => router.push(session.tripPath("/album") as never)} style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.accent }]}>{String(session.photoCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>ảnh</Text>
-        </Pressable>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <Pressable onPress={() => router.push(session.tripPath("/album") as never)} style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.ai }]}>{String(session.videoCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>video</Text>
-        </Pressable>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.split }]}>{String(session.checkInCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>check-in</Text>
-        </View>
-      </Card>
       {tab === 3 ? (
-        <Card style={styles.post}>
+        <View>
           {PEOPLE.map((person) => (
-            <View key={person.id} style={styles.postHeader}>
-              <Avatar person={person} size={43} />
+            <View key={person.id} style={[styles.hangNguoi, { borderBottomColor: colors.line }]}>
+              <Avatar name={person.name} size={40} />
               <Text style={[typography.label, { color: colors.ink }]}>{person.name}</Text>
             </View>
           ))}
-        </Card>
+        </View>
       ) : (
         <>
-          <Card onPress={() => router.push("/moments/new")} style={styles.sharePrompt}>
-            <Avatar person={PEOPLE[0]} size={43} />
-            <View style={[styles.promptField, { backgroundColor: colors.ground, borderColor: colors.line }]}>
-              <Text style={[typography.label, { color: colors.inkFaint }]}>Chia sẻ khoảnh khắc với cả nhóm...</Text>
+          <Pressable
+            accessibilityLabel="Chia sẻ khoảnh khắc với cả nhóm"
+            accessibilityRole="button"
+            onPress={() => router.push("/moments/new")}
+            style={({ pressed }) => [styles.sharePrompt, pressed && styles.pressed]}
+          >
+            <Avatar name={session.displayName} size={40} />
+            <View style={[styles.promptField, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control }]}>
+              <Text style={[typography.body, { color: colors.inkFaint }]}>Chia sẻ khoảnh khắc với cả nhóm...</Text>
             </View>
-            <View style={[styles.photoAction, { backgroundColor: colors.accentSoft }]}>
-              <Ionicons color={colors.accent} name="images-outline" size={21} />
-            </View>
-          </Card>
+            <Ionicons color={colors.accent} name="images-outline" size={22} />
+          </Pressable>
           <SectionHeader
             action="Mở album"
             onAction={() => router.push(session.tripPath("/album") as never)}
             title="Chuyện của hội mình"
           />
-          <FeedPost
-            caption="Sáng Đà Lạt lạnh nhưng cả hội vẫn dậy đúng giờ săn mây. Xứng đáng ghê! ☁️"
-            imageIndex={2}
-            personIndex={2}
-            time="2 giờ"
-          />
-          <FeedPost
-            caption="Một chiếc ảnh đủ 8 người sau bao lần hẹn mãi mới đủ mặt 🌿"
-            imageIndex={0}
-            personIndex={1}
-            time="Hôm qua"
-          />
+          <View>
+            <FeedPost
+              caption="Sáng Đà Lạt lạnh nhưng cả hội vẫn dậy đúng giờ săn mây. Xứng đáng ghê! ☁️"
+              imageIndex={2}
+              personIndex={2}
+              time="2 giờ"
+            />
+            <FeedPost
+              caption="Một chiếc ảnh đủ 8 người sau bao lần hẹn mãi mới đủ mặt 🌿"
+              imageIndex={0}
+              personIndex={1}
+              time="Hôm qua"
+            />
+          </View>
         </>
       )}
     </RudiScreen>
@@ -192,20 +183,17 @@ export function GroupWallScreen() {
 
 export function TripAlbumScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
-  const { width } = useWindowDimensions();
-  const session = useRudiSession();
-  const [segment, setSegment] = useState(0);
+  const { colors, radius } = useRudiTheme();
+  const { sizeClass } = useAdaptiveLayout();
+  // A phone reads the lead photograph at 4:3; a tablet would get a wall of
+  // pixels at that ratio, so the lead widens to a band and the story starts sooner.
+  const tiLeDan = sizeClass === "compact" ? 4 / 3 : 21 / 9;
   const [newestFirst, setNewestFirst] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
-  const columns = width >= 820 ? 4 : width >= 560 ? 3 : 2;
-  const videoIndexes: readonly number[] = MEMORY_VIDEO_INDEXES;
-  const visiblePhotos = MEMORY_PHOTOS.map((photo, originalIndex) => ({ photo, originalIndex }))
-    .filter(({ originalIndex }) =>
-      segment === 0 || (segment === 1 ? !videoIndexes.includes(originalIndex) : videoIndexes.includes(originalIndex)),
-    );
+  const visiblePhotos = MEMORY_PHOTOS.map((photo, originalIndex) => ({ photo, originalIndex }));
   if (newestFirst) visiblePhotos.reverse();
+  const [dan, ...conLai] = visiblePhotos;
 
   const togglePhoto = (index: number) => {
     setSelectedPhotos((items) =>
@@ -220,44 +208,55 @@ export function TripAlbumScreen() {
     });
   };
 
+  const oAnh = (photo: (typeof visiblePhotos)[number], lead: boolean) => {
+    const selected = selectedPhotos.includes(photo.originalIndex);
+    return (
+      <Pressable
+        key={photo.originalIndex}
+        accessibilityLabel={
+          selecting
+            ? `${selected ? "Bỏ chọn" : "Chọn"} ảnh ${photo.originalIndex + 1}`
+            : `Mở ảnh ${photo.originalIndex + 1}`
+        }
+        accessibilityRole={selecting ? "checkbox" : "button"}
+        aria-checked={selecting ? selected : undefined}
+        onPress={() => {
+          if (!selecting) setSelecting(true);
+          togglePhoto(photo.originalIndex);
+        }}
+        style={({ pressed }) => [styles.gridPhoto, pressed && styles.pressed]}
+      >
+        {lead ? (
+          <KhungAnh xuatXu={`${DEMO_GROUP.name} · Đà Lạt · 17 - 19/10/2026`}>
+            <Photo radius={4} ratio={tiLeDan} source={photo.photo} />
+          </KhungAnh>
+        ) : (
+          <Photo radius={radius.small} ratio={1} source={photo.photo} />
+        )}
+        {selecting ? (
+          <View style={[styles.selectionBadge, selected && { backgroundColor: colors.accent, borderColor: colors.accent }]}>
+            <Ionicons color={mucTrenAnh} name={selected ? "checkmark" : "ellipse-outline"} size={17} />
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  };
+
   return (
     <RudiScreen testID="trip-album-screen">
       <TopBar
         title="Album Đà Lạt"
-        subtitle="17–19/10/2026"
-        right={<IconButton accessibilityLabel="Thêm ảnh" icon="add" onPress={() => router.push("/moments/new")} />}
+        subtitle="17 - 19/10/2026"
+        right={<IconButton accessibilityLabel="Thêm ảnh" icon="add" onPress={() => router.push("/moments/new")} quiet />}
       />
-      <Photo
-        height={215}
-        radius={23}
-        source={demoAssets.road}
-        overlay={
-          <PhotoShade>
-            <Text style={styles.albumKicker}>ĐÀ LẠT CUỐI TUẦN</Text>
-            <Text style={styles.albumTitle}>Những ngày mình đi cùng nhau</Text>
-            <Text style={styles.albumDate}>17–19 tháng 10, 2026 · Team Đà Lạt</Text>
-          </PhotoShade>
-        }
-      />
-      <Card style={styles.albumStats}>
-        <View style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.ink }]}>{String(session.photoCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>ảnh</Text>
-        </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.ink }]}>{String(session.videoCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>video</Text>
-        </View>
-        <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-        <View style={styles.summaryItem}>
-          <Text style={[typography.money, { color: colors.ink }]}>{String(session.checkInCount)}</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>check-in</Text>
-        </View>
-      </Card>
-      <Segmented items={["Tất cả", "Ảnh", "Video"]} onSelect={setSegment} selected={segment} />
+      {/* The first photograph leads; the title and the date sit right under it. */}
+      {dan ? oAnh(dan, true) : null}
+      <View style={styles.albumDau}>
+        <Text style={[typography.h2, { color: colors.ink }]}>Những ngày mình đi cùng nhau</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đà Lạt cuối tuần · 17 - 19/10/2026 · Team Đà Lạt · {MEMORY_PHOTOS.length} ảnh</Text>
+      </View>
       <View style={styles.albumToolbar}>
-        <Text style={[typography.h2, { color: colors.ink }]}>
+        <Text style={[typography.label, styles.flex, { color: colors.ink }]}>
           {selecting ? `${selectedPhotos.length} ảnh đã chọn` : "Khoảnh khắc"}
         </Text>
         <Inline gap={7}>
@@ -275,49 +274,9 @@ export function TripAlbumScreen() {
           />
         </Inline>
       </View>
-      <View style={styles.photoGrid}>
-        {visiblePhotos.map(({ photo, originalIndex }, index) => {
-          const selected = selectedPhotos.includes(originalIndex);
-          return (
-          <Pressable
-            key={originalIndex}
-            accessibilityLabel={
-              selecting
-                ? `${selected ? "Bỏ chọn" : "Chọn"} ảnh ${originalIndex + 1}`
-                : `Mở ảnh ${originalIndex + 1}`
-            }
-            accessibilityRole={selecting ? "checkbox" : "button"}
-            aria-checked={selecting ? selected : undefined}
-            onPress={() => {
-              if (!selecting) setSelecting(true);
-              togglePhoto(originalIndex);
-            }}
-            style={({ pressed }) => [
-              styles.gridPhoto,
-              {
-                width: widthPercent(100 / columns),
-                paddingRight: index % columns === columns - 1 ? 0 : 4,
-                height: index % 3 === 0 ? 190 : 145,
-              },
-              pressed && styles.pressed,
-            ]}
-          >
-            <Photo height={index % 3 === 0 ? 186 : 141} radius={15} source={photo} />
-            {videoIndexes.includes(originalIndex) ? (
-              <View style={styles.videoBadge}>
-                <Ionicons color={mucTrenAnh} name="play" size={14} />
-                <Text style={styles.videoText}>0:{originalIndex === 2 ? "18" : "24"}</Text>
-              </View>
-            ) : null}
-            {selecting ? (
-              <View style={[styles.selectionBadge, selected && { backgroundColor: colors.accent }]}>
-                <Ionicons color={mucTrenAnh} name={selected ? "checkmark" : "ellipse-outline"} size={17} />
-              </View>
-            ) : null}
-          </Pressable>
-          );
-        })}
-      </View>
+      <ResponsiveRow gap={6} maxColumns={6} minItemWidth={104}>
+        {conLai.map((photo) => oAnh(photo, false))}
+      </ResponsiveRow>
       <RudiButton
         disabled={selecting && selectedPhotos.length === 0}
         icon={selecting ? "share-social-outline" : "cloud-upload-outline"}
@@ -330,35 +289,22 @@ export function TripAlbumScreen() {
 
 export function ShareMomentScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const [caption, setCaption] = useState("Đà Lạt có lạnh, nhưng hội mình thì không 🌲✨");
   const [visibility, setVisibility] = useState(0);
-  const [selectedPeople, setSelectedPeople] = useState([0, 1, 2, 3]);
+  const [selectedPeople, setSelectedPeople] = useState<string[]>(PEOPLE.slice(0, 4).map((p) => p.id));
 
-  const toggle = (index: number) => {
-    setSelectedPeople((items) => (items.includes(index) ? items.filter((item) => item !== index) : [...items, index]));
+  const toggle = (id: string) => {
+    setSelectedPeople((items) => (items.includes(id) ? items.filter((item) => item !== id) : [...items, id]));
   };
 
   return (
-    <RudiScreen testID="share-moment-screen">
+    <RudiScreen contentStyle={styles.form} testID="share-moment-screen">
       <TopBar title="Chia sẻ khoảnh khắc" right={<DemoBadge />} />
-      <Photo
-        height={330}
-        radius={24}
-        source={demoAssets.dalatFriends}
-        overlay={
-          <>
-            <View style={styles.photoEditTop}>
-              <IconButton accessibilityLabel="Cắt ảnh" icon="crop-outline" />
-              <IconButton accessibilityLabel="Xóa ảnh" icon="trash-outline" />
-            </View>
-            <View style={styles.photoCount}>
-              <Ionicons color={mucTrenAnh} name="images" size={15} />
-              <Text style={styles.photoCountText}>1 ảnh</Text>
-            </View>
-          </>
-        }
-      />
+      {/* The print: the picture, the sentence, and where it was taken. */}
+      <KhungAnh chuThich={caption.trim() === "" ? "Câu của bạn hiện ở đây" : caption.trim()} xuatXu={`${PEOPLE[COLLECTOR_INDEX].name} · Đà Lạt, Lâm Đồng · hôm nay`}>
+        <Photo height={240} radius={4} source={demoAssets.dalatFriends} />
+      </KhungAnh>
       <Field
         label="Viết vài dòng"
         multiline
@@ -368,34 +314,16 @@ export function ShareMomentScreen() {
       />
       <View style={styles.section}>
         <Text style={[typography.label, { color: colors.ink }]}>Gắn thẻ bạn bè</Text>
-        <View style={styles.peoplePicker}>
-          {PEOPLE.map((person, index) => {
-            const active = selectedPeople.includes(index);
-            return (
-              <Pressable
-                key={person.id}
-                accessibilityRole="checkbox"
-                aria-checked={active}
-                onPress={() => toggle(index)}
-                style={[styles.personPick, !active && styles.avatarInactive]}
-              >
-                <Avatar person={person} ring={active} size={45} />
-                <Text numberOfLines={1} style={[styles.personName, { color: colors.inkSoft }]}>{person.name.split(" ")[0]}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* Names, chosen or not, all readable: a faded head is not a choice. */}
+        <RosterPicker onToggle={toggle} people={PEOPLE} selected={selectedPeople} tone="accent" />
       </View>
-      <Card style={styles.locationRow}>
-        <View style={[styles.locationIcon, { backgroundColor: colors.accentSoft }]}>
-          <Ionicons color={colors.accent} name="location" size={21} />
-        </View>
+      <View style={[styles.locationRow, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <Ionicons color={colors.accent} name="location" size={20} />
         <View style={styles.flex}>
           <Text style={[typography.label, { color: colors.ink }]}>Đà Lạt, Lâm Đồng</Text>
           <Text style={[typography.caption, { color: colors.inkFaint }]}>Vị trí demo</Text>
         </View>
-        <Ionicons color={colors.inkFaint} name="chevron-forward" size={19} />
-      </Card>
+      </View>
       <View style={styles.section}>
         <Text style={[typography.label, { color: colors.ink }]}>Chia sẻ với</Text>
         <Segmented items={["Chỉ nhóm", "Bạn bè"]} onSelect={setVisibility} selected={visibility} />
@@ -411,41 +339,24 @@ export function ShareMomentScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  post: { gap: 13, padding: 11 },
+  form: { maxWidth: 640 },
+  post: { gap: 10, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   postHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  reactions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  reactionDots: { width: 25, height: 25, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  postDivider: { height: StyleSheet.hairlineWidth },
-  postAction: { minHeight: 36, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
-  pressed: { opacity: 0.7, transform: [{ scale: 0.985 }] },
-  wallHero: { gap: 7 },
-  wallTitle: { color: mucTrenAnh, fontSize: 28, lineHeight: 33, fontWeight: "900", letterSpacing: -0.8 },
+  postActions: { flexDirection: "row", alignItems: "center", gap: 4 },
+  postAction: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 12 },
+  pressed: { opacity: 0.7 },
+  wallHero: { gap: 6 },
+  wallTitle: { color: mucTrenAnh, fontSize: 26, lineHeight: 31, fontWeight: "800", letterSpacing: -0.7 },
   wallMeta: { flexDirection: "row", alignItems: "center", gap: 9 },
-  wallMetaText: { color: lopPhu.trang(0.84), fontSize: 12, fontWeight: "700" },
-  memorySummary: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8 },
-  summaryItem: { flex: 1, alignItems: "center", gap: 3, paddingVertical: 6 },
-  verticalLine: { width: StyleSheet.hairlineWidth, height: 37 },
-  sharePrompt: { flexDirection: "row", alignItems: "center", gap: 9, padding: 10 },
-  promptField: { flex: 1, minHeight: 43, borderWidth: 1, borderRadius: 15, paddingHorizontal: 12, justifyContent: "center" },
-  photoAction: { width: 41, height: 41, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  albumKicker: { color: lopPhu.trang(0.74), fontSize: 10, fontWeight: "900", letterSpacing: 1.1 },
-  albumTitle: { color: mucTrenAnh, fontSize: 24, lineHeight: 29, fontWeight: "900", letterSpacing: -0.6 },
-  albumDate: { color: lopPhu.trang(0.8), fontSize: 11, fontWeight: "700" },
-  albumStats: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8 },
+  wallMetaText: { color: lopPhu.trang(0.88), fontSize: 13, lineHeight: 18, fontWeight: "600" },
+  dongDem: { flexDirection: "row", alignItems: "center", gap: 10 },
+  hangNguoi: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  sharePrompt: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 56 },
+  promptField: { flex: 1, minHeight: 48, borderWidth: 1, paddingHorizontal: 14, justifyContent: "center" },
+  albumDau: { gap: 4 },
   albumToolbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  photoGrid: { flexDirection: "row", flexWrap: "wrap", marginHorizontal: -2 },
-  gridPhoto: { position: "relative", paddingLeft: 2, paddingBottom: 4 },
-  selectionBadge: { position: "absolute", top: 9, right: 9, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: lopPhu.xam(0.5), borderWidth: 2, borderColor: mucTrenAnh },
-  videoBadge: { position: "absolute", right: 9, bottom: 12, flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 999, backgroundColor: lopPhu.xam(0.68), paddingHorizontal: 7, paddingVertical: 5 },
-  videoText: { color: mucTrenAnh, fontSize: 10, fontWeight: "800" },
-  photoEditTop: { position: "absolute", top: 11, right: 11, flexDirection: "row", gap: 8 },
-  photoCount: { position: "absolute", left: 11, bottom: 11, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 999, backgroundColor: lopPhu.xam(0.68) },
-  photoCountText: { color: mucTrenAnh, fontSize: 11, fontWeight: "800" },
+  gridPhoto: { position: "relative" },
+  selectionBadge: { position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: lopPhu.xam(0.5), borderWidth: 2, borderColor: mucTrenAnh },
   section: { gap: 10 },
-  peoplePicker: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  personPick: { width: 60, alignItems: "center", gap: 4 },
-  personName: { width: 60, textAlign: "center", fontSize: 10, fontWeight: "700" },
-  avatarInactive: { opacity: 0.34 },
-  locationRow: { flexDirection: "row", alignItems: "center", gap: 11 },
-  locationIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
 });
