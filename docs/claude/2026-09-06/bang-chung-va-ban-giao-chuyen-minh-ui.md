@@ -187,3 +187,17 @@ npx tsc --noEmit -p tsconfig.json
 python3 scripts/repo_guard.py range bd32e4d cc5c6795
 ANDROID_SERIAL=<serial> scripts/mobile_native.sh --port 8097 --serial <serial>
 ```
+
+## 8. Đợt hoàn thiện native (07/09, nhánh `claude/p0-w-ui3-hoan-thien-native`)
+
+Mục tiêu: đóng nốt các dòng «còn nợ» của mục 5 bằng bằng chứng đo được, theo §13.1–13.2 của báo cáo.
+
+| Nợ | Việc đã làm | Bằng chứng |
+|---|---|---|
+| Tablet hai cột (lát E) | `HaiCot` + `AiCoGi`: gán món hai cột (món trái, «Ai có gì» phải), kết quả hai cột (sổ trái, ai trả + tên khoản phải), fixture và live | ảnh fixture 900dp `ui3/assign-tablet.png`; mini-bảng 22→24→25→27→28 ở 1800×2400@320 (14:49): **XANH**, kiểm máy chủ sau 24/25/27/28 qua, canary OTP đỏ đúng chỗ; ảnh `28-gan-mon.png`/`28-ket-qua.png` cho thấy hai cột trên máy sống |
+| TalkBack/focus chưa đo | `scripts/a11y_native_audit.py` (uiautomator): node bấm được phải có tên, ≥48dp, không trùng; node bị mép cắt tách riêng; dump dev-launcher bị từ chối | 25 màn fixture + 28 màn sống (phiên OTP thật, nhóm thật): sau sửa **0 chưa tên · 0 nhỏ · 0 trùng**; sửa: ô nhập 40→48 (`Field`, ô soạn chat fixture/live), pill điểm đến 44→48, pill chat 40→48, câu gu chỉ là nút khi còn bấm được, nút «Đánh dấu đã trả» mang tên người |
+| Bảng live ở cỡ chữ 1.3 / expanded | **[BANG_13]** | |
+| Flow 38 (ảnh có giấy phép) | stack 47597 nhập 144 địa điểm OSM Đà Lạt thật (`import_osm_places.py`) rồi 97 ảnh Commons theo geosearch 250 m (`import_place_photos.py --moi-noi 1`, 0 file bỏ vì thiếu xuất xứ) — dữ liệu thật chỉ vào DB dùng một lần, không vào Git; `/places?destination=d-da-lat` trả 152 nơi, 97 có ảnh bìa kèm tác giả + giấy phép | **[FLOW_38]** |
+| Ma trận §13.2: mạng lỗi | **[MANG]** | |
+
+Ngoài tầm máy này (không đo được, nói thẳng): iOS (không có macOS/thiết bị), TalkBack thật với người dùng (chỉ đo cây a11y), nghiên cứu người dùng §13.3, Google sign-in (chờ client id của Lead).

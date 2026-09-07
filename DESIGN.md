@@ -953,6 +953,22 @@ không phải gì.
   ở Conversations là chữ cái đầu (`Avatar` 44) thay glyph nhóm, dòng phụ
   «Nhắn riêng».
 
+### Hai cột trên cửa sổ rộng (`HaiCot`, `AiCoGi`)
+`HaiCot` đọc `twoPane` từ hợp đồng thích ứng: expanded (≥840dp) hoặc medium
+đủ cao xếp hai cột 3:2 (`gap: space.lg`, mỗi cột giữ nhịp dọc 18 của màn),
+điện thoại xếp dọc theo thứ tự; `phaiChiKhiRong` bỏ hẳn cột phải trên điện
+thoại khi nội dung ấy đã có ở cột trái. Tờ bill dùng nó: bước gán món có
+`AiCoGi` («Ai có gì» — mỗi người một hàng `label` + `caption` liệt kê món,
+món chưa có người ở cuối bằng `warn`; chỉ đếm và tên, không tiền), bước kết
+quả có «ai đã trả» và tên khoản bên phải sổ. Không thẻ, không cột nào có nền.
+
+### Mục tiêu chạm và trình đọc màn hình
+Mọi node bấm được ≥48×48dp — kể cả `TextInput` bên trong `Field` (52dp hộp,
+48dp ô), ô soạn chat, pill dưới tiêu đề chat, pill điểm đến. Một câu chỉ là
+`Pressable` khi còn việc để bấm (`Pressable` bị `disabled` vẫn là «nút» với
+TalkBack). Hai control cùng chữ trên một màn phải khác nhau ở `accessibilityLabel`
+(«Đánh dấu Minh Anh đã trả»). Đo bằng `scripts/a11y_native_audit.py`.
+
 ### Lịch trình (`HangChang`)
 Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 với nút
 12 và đường 2dp, thân phải (`label ink` tiêu đề, `caption` dòng phụ với
