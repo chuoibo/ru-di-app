@@ -35,6 +35,7 @@ __all__ = [
     "can_read",
     "check_writable",
     "needs_context",
+    "visible_to",
 ]
 
 #: Narrowest first, purely so the tuple reads in a sensible order. Nothing in
@@ -120,6 +121,39 @@ def can_comment(
     if policy == "friends":
         return bool(is_friend)
     return False
+
+
+def visible_to(
+    post: dict,
+    *,
+    reader_id: str,
+    is_friend: bool,
+    is_group_member: bool,
+    is_blocked: bool,
+) -> bool:
+    """`can_read`, and then the block rule (ADR-0023 §2.3.2).
+
+    Kept separate from `can_read` rather than folded into it, because the two
+    answer different questions and the older one is the F42 audience rule that
+    a dozen tests pin word for word. This is the one the service asks and the
+    one `SqlAlchemyApiRepository._readable_by` is the SQL spelling of.
+
+    A block hides `public` and `friends` posts **both ways** -- it is not a
+    mute. A `group` post seen inside a group both people are still in stays
+    readable: the group's wall belongs to the group, and making one member's
+    messages vanish would rewrite what everybody else already read. The author
+    always reads their own.
+    """
+    if not can_read(
+        post,
+        reader_id=reader_id,
+        is_friend=is_friend,
+        is_group_member=is_group_member,
+    ):
+        return False
+    if not is_blocked or reader_id == post.get("author_id"):
+        return True
+    return post.get("audience") == "group"
 
 
 def can_delete_comment(comment: dict, post: dict, actor_id: str) -> bool:

@@ -21,12 +21,18 @@ server, and a stolen phone is exactly when that matters.
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Response, status
 
-from app.api.deps import bearer_token, get_repository
+from app.api.deps import Actor, bearer_token, get_actor, get_repository
 from app.api.repository import ApiRepository
-from app.api.schemas import ErrorResponse, SessionBootstrapRequest, SessionResponse
+from app.api.schemas import (
+    ErrorResponse,
+    SessionBootstrapRequest,
+    SessionListResponse,
+    SessionResponse,
+)
 from app.api.service import ApiService
 
 router = APIRouter(tags=["sessions"])
@@ -46,6 +52,44 @@ def create_session(
     repository: Annotated[ApiRepository, Depends(get_repository)],
 ) -> SessionResponse:
     return ApiService(repository).bootstrap_session_from_invite(request.invite_token)
+
+
+@router.get(
+    "/sessions",
+    response_model=SessionListResponse,
+    responses={401: {"model": ErrorResponse}},
+)
+def list_sessions(
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+) -> SessionListResponse:
+    """Where this account is signed in (ADR-0023 §2.5).
+
+    The header is read again here, next to the actor, for one reason: the
+    screen has to be able to say which row is «phiên này», and the actor
+    carries a person, not a session.
+    """
+    return ApiService(repository).list_account_sessions(
+        actor, current_token=bearer_token(authorization) if authorization else None
+    )
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+)
+def revoke_session(
+    session_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> Response:
+    """Sign one other device out. Somebody else's session answers 404: a 403
+    would confirm that the id names a real session. Declared after
+    `/sessions/current` so the literal is never parsed as an id."""
+    ApiService(repository).revoke_account_session(session_id, actor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.delete(

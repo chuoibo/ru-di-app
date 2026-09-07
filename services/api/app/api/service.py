@@ -58,6 +58,7 @@ from app.api.repository import (
     _message_preview,
 )
 from app.api.schemas import (
+    AccountDeleteRequest,
     AlbumListResponse,
     AlbumPhoto,
     AlbumPlace,
@@ -81,6 +82,9 @@ from app.api.schemas import (
     BillSplitRequest,
     BillSplitResponse,
     BillSurchargeResponse,
+    BlockedListResponse,
+    BlockedPersonSummary,
+    BlockResponse,
     BudgetBandResponse,
     ChatExpenseDraft,
     ChatExpenseDraftResponse,
@@ -186,9 +190,13 @@ from app.api.schemas import (
     ReceiptConfirmationResponse,
     ReelPick,
     ReelResponse,
+    ReportCreateRequest,
+    ReportResponse,
     SavedPlacesResponse,
     SavedPlaceSummary,
+    SessionListResponse,
     SessionResponse,
+    SessionSummary,
     SettlementTransferProposal,
     SocialMapResponse,
     StopCheckinResponse,
@@ -214,10 +222,15 @@ from app.api.schemas import (
     WidgetResponse,
 )
 from app.api.sms import SmsDeliveryError, SmsSender
-from app.domain import permissions, post_audience, story_visibility
+from app.domain import blocking, permissions, post_audience, story_visibility
+from app.domain.account_lifecycle import (
+    AccountLifecycleError,
+    check_confirmation,
+)
 from app.domain.album import build_album
 from app.domain.allocator import allocate
 from app.domain.bill import BillError, allocator_input_from_bill
+from app.domain.blocking import DIRECT_MESSAGE_UNAVAILABLE, dm_allowed
 from app.domain.budget import build_group_budget
 from app.domain.capability import CapabilityScopeError, capability_scope
 from app.domain.chat_expense import ChatExpenseError
@@ -235,6 +248,7 @@ from app.domain.friendship import (
     BLOCKED_IS_SILENT,
     Decision,
     FriendshipError,
+    open_block,
 )
 from app.domain.friendship import (
     decide as decide_friendship,
@@ -273,6 +287,7 @@ from app.domain.photo_ref import (
 )
 from app.domain.preferences import build_preference_profile
 from app.domain.reel import ReelError, ground_reel
+from app.domain.reports import ReportError, validate_report
 from app.domain.stickers import is_sticker
 from app.domain.suggestion import (
     SuggestionError,
@@ -1305,6 +1320,52 @@ class ApiService:
             counterpart=counterpart,
         )
 
+    def _require_pair_is_alive(self, context_id: uuid.UUID, actor: Actor) -> None:
+        """Refuse a new message in a pair that has stopped (ADR-0023 §2.3.2).
+
+        Two causes, ONE code and ONE sentence: the other person blocked (or was
+        blocked by) the caller, or their account ended. This is a weak oracle
+        and it is taken on purpose -- somebody typing into a dead conversation
+        has to be told it is dead, and one sentence for both causes is the
+        least that can be said while still being useful. Groups never reach
+        here; only a `pair` has an «other person» to be gone.
+        """
+        record = self.repository.get_context(context_id)
+        if record is None or not is_pair(record.kind):
+            return
+        other_id = next(
+            (
+                member.person_id
+                for member in self.repository.list_members(context_id)
+                if member.person_id != actor.id
+            ),
+            None,
+        )
+        if other_id is None:
+            return
+        other = self.repository.get_person(other_id)
+        if not dm_allowed(
+            self._friend_edge_dict(actor.id, other_id),
+            other_deleted=other is None or other.deleted_at is not None,
+        ):
+            raise ApiProblem(
+                409,
+                DIRECT_MESSAGE_UNAVAILABLE,
+                "Cuộc trò chuyện này không còn nhận tin.",
+            )
+
+    def _friend_edge_dict(self, a: uuid.UUID, b: uuid.UUID) -> dict | None:
+        """The pair's live edge as the domain wants it, or None."""
+        edge = self.repository.get_friend_edge(a, b)
+        if edge is None:
+            return None
+        return {
+            "state": edge.state,
+            "decided_by_id": None
+            if edge.decided_by_id is None
+            else str(edge.decided_by_id),
+        }
+
     def _require_group_kind(self, context_id: uuid.UUID) -> None:
         """Refuse a roster door on a pair (ADR-0021 §2.5.5).
 
@@ -1348,7 +1409,13 @@ class ApiService:
         except ApiProblem as denied:
             raise unavailable from denied
         other = self.repository.get_person(person_id)
-        if not can_open(is_friend=is_friend, other_exists=other is not None):
+        # Blocked, and «their account ended», join the same one 404 as «not
+        # friends» and «no such person» (ADR-0023 §2.3.2). Four facts, one
+        # sentence: this door tells nobody which of them it was.
+        if not can_open(
+            is_friend=is_friend,
+            other_exists=other is not None and other.deleted_at is None,
+        ) or self._is_blocked_with(actor.id, person_id):
             raise unavailable
         key = direct_pair_key(str(actor.id), str(person_id))
         existing = self.repository.get_pair_context(key)
@@ -1787,10 +1854,7 @@ class ApiService:
     def _story_facts(self, record: StoryRecord, reader_id: uuid.UUID) -> dict:
         return {
             "is_friend": self._is_friend(reader_id, record.author_id),
-            # Blocking arrives with L5 (ADR-0023); until then nobody is. The
-            # argument is required by the domain so the L5 rule cannot be
-            # forgotten here.
-            "is_blocked": False,
+            "is_blocked": self._is_blocked_with(reader_id, record.author_id),
         }
 
     def _viewable_story_or_404(self, story_id: uuid.UUID, actor: Actor) -> StoryRecord:
@@ -1851,15 +1915,19 @@ class ApiService:
         now = _now()
         rows = self.repository.list_live_stories_for(actor.id, now=now)
         friends: dict[uuid.UUID, bool] = {}
+        blocked: dict[uuid.UUID, bool] = {}
         groups: dict[uuid.UUID, dict] = {}
         for record in rows:
             if record.author_id not in friends:
                 friends[record.author_id] = self._is_friend(actor.id, record.author_id)
+                blocked[record.author_id] = self._is_blocked_with(
+                    actor.id, record.author_id
+                )
             if not story_visibility.can_view(
                 _story_dict(record),
                 reader_id=str(actor.id),
                 is_friend=friends[record.author_id],
-                is_blocked=False,
+                is_blocked=blocked[record.author_id],
                 now=now,
             ):
                 continue
@@ -1959,6 +2027,18 @@ class ApiService:
         edge = self.repository.get_friend_edge(reader_id, other_id)
         return edge is not None and edge.state == "accepted"
 
+    def _is_blocked_with(self, reader_id: uuid.UUID, other_id: uuid.UUID) -> bool:
+        """Whether a block stands between these two, either way round.
+
+        One read of the same edge `_is_friend` reads. Blocking is not a
+        separate table (ADR-0023 §2.3.1): it is the state of the one live edge
+        a pair may have, so «are they friends» and «is one blocking the other»
+        are two questions about one row.
+        """
+        if reader_id == other_id:
+            return False
+        return blocking.is_blocked(self._friend_edge_dict(reader_id, other_id))
+
     def _post_facts(self, record: PostRecord, reader_id: uuid.UUID) -> dict:
         """Prove, for this reader and this post, the two facts F42 turns on.
 
@@ -1979,6 +2059,7 @@ class ApiService:
     ) -> list[PostResponse]:
         friends: dict[uuid.UUID, bool] = {}
         members: dict[uuid.UUID, bool] = {}
+        blocked: dict[uuid.UUID, bool] = {}
         readable: list[tuple[PostRecord, bool, bool]] = []
         for record in records:
             if record.author_id not in friends:
@@ -1991,11 +2072,16 @@ class ApiService:
             is_group_member = (
                 record.context_id is not None and members[record.context_id]
             )
-            if post_audience.can_read(
+            if record.author_id not in blocked:
+                blocked[record.author_id] = self._is_blocked_with(
+                    reader_id, record.author_id
+                )
+            if post_audience.visible_to(
                 _post_dict(record),
                 reader_id=str(reader_id),
                 is_friend=is_friend,
                 is_group_member=is_group_member,
+                is_blocked=blocked[record.author_id],
             ):
                 readable.append((record, is_friend, is_group_member))
         return self._wire_posts(readable, reader_id)
@@ -2063,8 +2149,14 @@ class ApiService:
         if record is None:
             raise ApiProblem(404, "post_not_found", "Post does not exist")
         facts = self._post_facts(record, actor.id)
-        if not post_audience.can_read(
-            _post_dict(record), reader_id=str(actor.id), **facts
+        # `facts` stays two keys wide because `can_comment` takes exactly
+        # those; the block is a third fact only this gate asks for, and a post
+        # it hides never reaches the comment rule at all (ADR-0023 §2.3.2).
+        if not post_audience.visible_to(
+            _post_dict(record),
+            reader_id=str(actor.id),
+            is_blocked=self._is_blocked_with(actor.id, record.author_id),
+            **facts,
         ):
             raise ApiProblem(404, "post_not_found", "Post does not exist")
         return record, facts
@@ -3622,15 +3714,28 @@ class ApiService:
                 422, "otp_code_invalid", f"Mã chưa đúng. Còn {left} lần thử."
             )
 
-        person_id = derive_person_id(canonical, key)
-        person = self.repository.get_person(person_id)
-        is_new = person is None
-        if is_new:
-            try:
-                self.repository.create_person(person_id, self.NEW_PERSON_NAME)
-            except RepositoryConflict:
-                # Two verifies raced on a brand-new number; the row exists now.
-                is_new = False
+        # Who this number belongs to is `account_identities`, not the derived
+        # id (ADR-0023 §2.2.2). The derivation only decides what id a NEW
+        # account gets; a number whose previous account was deleted comes back
+        # as a new person, because reviving the anonymised row would hand the
+        # next holder of that number somebody else's groups and ledger.
+        bound = self.repository.get_account_identity("phone", digest.hex())
+        is_new = False
+        if bound is not None:
+            person_id = bound.person_id
+        else:
+            person_id = derive_person_id(canonical, key)
+            person = self.repository.get_person(person_id)
+            if person is not None and person.deleted_at is not None:
+                person_id = uuid.uuid4()
+                person = None
+            is_new = person is None
+            if is_new:
+                try:
+                    self.repository.create_person(person_id, self.NEW_PERSON_NAME)
+                except RepositoryConflict:
+                    # Two verifies raced on a brand-new number; the row exists.
+                    is_new = False
         self.repository.upsert_account_identity(
             person_id=person_id, provider="phone", subject=digest.hex(), now=now
         )
@@ -3743,6 +3848,8 @@ class ApiService:
             changes["city"] = request.city.strip() or None
         if request.wall_comment_policy is not None:
             changes["wall_comment_policy"] = request.wall_comment_policy
+        if request.discoverable_by_phone is not None:
+            changes["discoverable_by_phone"] = request.discoverable_by_phone
         person = self.repository.update_person_profile(actor.id, changes=changes)
         if person is None:
             raise ApiProblem(
@@ -3834,6 +3941,7 @@ class ApiService:
             ),
             budget_band=person.budget_band,
             wall_comment_policy=person.wall_comment_policy,
+            discoverable_by_phone=person.discoverable_by_phone,
         )
 
     def get_person_profile(
@@ -3869,9 +3977,10 @@ class ApiService:
             ) from denied
         assert relation is not None
         person = self.repository.get_person(person_id)
-        if person is None:
-            # Only reachable for `self` without a people row: the other two
-            # relations are proved from rows that reference this person.
+        if person is None or person.deleted_at is not None:
+            # `self` without a people row, or an account that ended: the same
+            # 404 either way (ADR-0023 §2.1.4). A profile that still rendered
+            # for a deleted account would be the erasure only half done.
             raise ApiProblem(
                 404, "person_not_found", "Chưa có hồ sơ cho tài khoản này."
             )
@@ -4113,6 +4222,195 @@ class ApiService:
         if record is None:
             return
         self.repository.revoke_account_session(session_id=record.id, now=_now())
+
+    # --- sessions, blocking, reports, and ending an account (ADR-0023) -----
+
+    def list_account_sessions(
+        self, actor: Actor, *, current_token: str | None = None
+    ) -> SessionListResponse:
+        """Every session of the caller's that a bearer could still use.
+
+        `current` is computed from the token this request arrived on rather
+        than stored, so the screen can refuse to offer «đăng xuất phiên này»
+        as if it were somebody else's. In `dev` mode there is no bearer and
+        every row answers False -- which is true: no session is being used.
+        """
+        _require_permission("manage_own_sessions", actor, {"is_self": True})
+        here = None if current_token is None else token_digest(current_token)
+        rows = self.repository.list_account_sessions(actor.id, now=_now())
+        current_id = None
+        if here is not None:
+            record = self.repository.get_account_session_by_digest(here)
+            current_id = None if record is None else record.id
+        return SessionListResponse(
+            sessions=[
+                SessionSummary(
+                    id=row.id,
+                    issued_via=row.issued_via,
+                    created_at=row.created_at,
+                    expires_at=row.expires_at,
+                    current=row.id == current_id,
+                )
+                for row in rows
+            ]
+        )
+
+    def revoke_account_session(self, session_id: uuid.UUID, actor: Actor) -> None:
+        """Sign one device out. Somebody else's session is 404, not 403: a 403
+        would confirm the id names a real session."""
+        _require_permission("manage_own_sessions", actor, {"is_self": True})
+        record = self.repository.get_account_session(session_id)
+        if record is None or record.person_id != actor.id:
+            raise ApiProblem(404, "session_not_found", "Phiên này không còn.")
+        self.repository.revoke_account_session(session_id=session_id, now=_now())
+
+    def delete_own_account(self, request: AccountDeleteRequest, actor: Actor) -> None:
+        """End the caller's account (ADR-0023 §2.1).
+
+        The ledger keeps every đồng: `erase_person` names no money table, and
+        `tests/postgres/test_delete_account_postgres.py` compares their md5
+        before and after rather than trusting that sentence.
+
+        Photograph files are unlinked here, inside the request, and this is
+        the one place that order is right: after `erase_person` no row points
+        at them any more, so a rollback would leave files nobody can reach
+        rather than a promise nobody can keep. Failure to unlink is logged and
+        never fails the request -- the account still ended.
+        """
+        _require_permission("delete_own_account", actor, {"is_self": True})
+        try:
+            check_confirmation(request.confirm)
+        except AccountLifecycleError as refused:
+            raise ApiProblem(
+                422,
+                "confirm_required",
+                "Cần xác nhận rõ ràng để xoá tài khoản.",
+            ) from refused
+        try:
+            report = self.repository.erase_person(actor.id, now=_now())
+        except RepositoryConflict as missing:
+            raise ApiProblem(
+                404, "person_not_found", "Chưa có hồ sơ cho tài khoản này."
+            ) from missing
+        removed = 0
+        for key in report.storage_keys:
+            try:
+                if self.photo_storage.delete(key):
+                    removed += 1
+            except OSError:
+                logger.warning("account.deleted: could not unlink a stored photo")
+        logger.info(
+            "account.deleted: %d photo file(s) removed of %d",
+            removed,
+            len(report.storage_keys),
+        )
+
+    def block_person(self, person_id: uuid.UUID, actor: Actor) -> BlockResponse:
+        """Block somebody (ADR-0023 §2.3). Idempotent: blocking twice is the
+        same wall, answered 200, not an error."""
+        _require_permission(
+            "block_person", actor, {"is_not_self": actor.id != person_id}
+        )
+        if self.repository.get_person(person_id) is None:
+            raise ApiProblem(404, "person_not_found", "Chưa có ai mang danh tính này.")
+        edge = self.repository.get_friend_edge(actor.id, person_id)
+        try:
+            open_block(
+                blocker_id=str(actor.id),
+                addressee_id=str(person_id),
+                existing=None
+                if edge is None
+                else {
+                    "requester_id": str(edge.requester_id),
+                    "addressee_id": str(edge.addressee_id),
+                    "state": edge.state,
+                    "decided_by_id": None
+                    if edge.decided_by_id is None
+                    else str(edge.decided_by_id),
+                },
+            )
+        except FriendshipError as refused:
+            if refused.code == "ALREADY_BLOCKED":
+                return BlockResponse(person_id=person_id, state="blocked")
+            raise self._friend_refusal(refused) from refused
+        try:
+            self.repository.open_block_edge(
+                blocker_id=actor.id, addressee_id=person_id, now=_now()
+            )
+        except RepositoryConflict as raced:
+            # Two people pressing at once on one pair. The wall is up either
+            # way, and which insert won is not the caller's business.
+            if raced.code != "EDGE_EXISTS":
+                raise
+        return BlockResponse(person_id=person_id, state="blocked")
+
+    def unblock_person(self, person_id: uuid.UUID, actor: Actor) -> BlockResponse:
+        """Lift a block. Only whoever put it up, and what comes back is
+        `declined` -- never a restored friendship."""
+        edge = self.repository.get_friend_edge(actor.id, person_id)
+        is_blocker = blocking.blocker_of(
+            None
+            if edge is None
+            else {
+                "state": edge.state,
+                "decided_by_id": None
+                if edge.decided_by_id is None
+                else str(edge.decided_by_id),
+            }
+        ) == str(actor.id)
+        _require_permission("unblock_person", actor, {"is_blocker": is_blocker})
+        try:
+            self.repository.lift_block_edge(
+                blocker_id=actor.id, addressee_id=person_id, now=_now()
+            )
+        except RepositoryConflict as refused:
+            raise ApiProblem(
+                409, refused.code.lower(), "Không gỡ chặn được người này."
+            ) from refused
+        return BlockResponse(person_id=person_id, state="declined")
+
+    def list_blocked_people(self, actor: Actor) -> BlockedListResponse:
+        """Who the caller is blocking. Not who is blocking them: that list
+        would tell somebody they have been blocked, which is the one thing
+        `BLOCKED_IS_SILENT` exists to withhold."""
+        _require_permission("view_own_blocks", actor, {"is_self": True})
+        return BlockedListResponse(
+            blocked=[
+                BlockedPersonSummary(
+                    person_id=row.other_person_id,
+                    display_name=row.other_display_name,
+                    blocked_at=row.decided_at or row.created_at,
+                )
+                for row in self.repository.list_blocked(actor.id)
+            ]
+        )
+
+    def create_report(
+        self, request: ReportCreateRequest, actor: Actor
+    ) -> ReportResponse:
+        """File one report. The target is not looked up on purpose: a report
+        about something deleted a second ago is still worth keeping, and a 404
+        here would tell the reporter whether it is still there."""
+        _require_permission("file_report", actor, {})
+        try:
+            fields = validate_report(
+                target_type=request.target_type,
+                reason=request.reason,
+                note=request.note,
+            )
+        except ReportError as refused:
+            raise ApiProblem(
+                422, refused.code.lower(), "Báo cáo chưa hợp lệ."
+            ) from refused
+        record = self.repository.create_report(
+            reporter_id=actor.id,
+            target_type=fields["target_type"],
+            target_id=request.target_id,
+            reason=fields["reason"],
+            note=fields["note"],
+            now=_now(),
+        )
+        return ReportResponse(id=record.id, created_at=record.created_at)
 
     def rotate_outing_invite_secret(
         self,
@@ -4706,6 +5004,10 @@ class ApiService:
             actor,
             {"is_group_member": self.repository.is_member(context_id, actor.id)},
         )
+        # Membership first, then whether this particular conversation still
+        # accepts messages: a stranger must not learn from the refusal that
+        # the pair exists at all.
+        self._require_pair_is_alive(context_id, actor)
 
         payload_is_valid = (
             (
@@ -6585,6 +6887,14 @@ class ApiService:
         """
         _require_permission("find_person_by_phone", actor, {})
         person = self.repository.get_person(person_id)
+        # ADR-0023 §2.1.4 and §2.5: an ended account and a person who turned
+        # the telephone lookup off answer the SAME sentence as «nobody uses
+        # this number». Three facts, one refusal: a lookup that varied would
+        # be a directory of who has an account and who left.
+        if person is not None and (
+            person.deleted_at is not None or not person.discoverable_by_phone
+        ):
+            person = None
         if person is None:
             # Same sentence whatever the input was. A refusal that varied with
             # the number would be a directory with extra steps.

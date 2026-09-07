@@ -985,6 +985,25 @@ class Person(Base):
     #: Who may comment on this person's posts (ADR-0022 §2.2): `readers`
     #: (anyone who may read the post), `friends`, or `nobody`. The person's
     #: own setting; `GET /people/{id}` never carries it.
+    #: ADR-0023 §2.5: off means «tra theo số» answers the same 404 as «nobody
+    #: uses this number». A person who cannot be found by number can still be
+    #: found by an invitation link and by a group they are already in.
+    discoverable_by_phone: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true"), default=True
+    )
+    #: ADR-0023 §2.1. The account ended; the row stays because the money
+    #: ledger points at this id and invariant 3 says a balance is recomputable
+    #: from that ledger forever. Everything that named a person is cleared by
+    #: `account_lifecycle.anonymised_person`, and `get_actor` refuses a
+    #: session whose person carries this stamp.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    #: ADR-0024's switches, created here so the notifications slice does not
+    #: have to alter `people` a second time. Empty means «every default».
+    notify_prefs: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb"), default=dict
+    )
     wall_comment_policy: Mapped[str] = mapped_column(
         String(8), nullable=False, server_default="readers", default="readers"
     )
@@ -2393,6 +2412,55 @@ class StoryView(Base):
         primary_key=True,
     )
     seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class Report(Base):
+    """One person telling the operators about something (ADR-0023 §2.4).
+
+    A row, and nothing else. There is no state machine, no assignee and no
+    admin screen in v1: pretending to triage reports the product cannot triage
+    would be a promise nobody keeps. What the row must carry is who said it,
+    what they were looking at, one word for why, and their own sentence.
+
+    `target_id` has no foreign key on purpose. Five different tables can be
+    reported and a report about something that was deleted a second later is
+    still the report an operator needs to read; a foreign key would either
+    forbid that or delete the evidence with the evidence.
+    """
+
+    __tablename__ = "reports"
+    __table_args__ = (
+        CheckConstraint(
+            "target_type IN ('person', 'post', 'message', 'comment', 'story')",
+            name="report_target_known",
+        ),
+        CheckConstraint(
+            "reason IN ('spam', 'harassment', 'inappropriate',"
+            " 'impersonation', 'other')",
+            name="report_reason_known",
+        ),
+        CheckConstraint(
+            "note IS NULL OR length(note) <= 500", name="report_note_length"
+        ),
+        Index("ix_reports_target", "target_type", "target_id"),
+        Index("ix_reports_reporter", "reporter_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    reporter_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("people.id", name="fk_reports_reporter"),
+        nullable=False,
+    )
+    target_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    target_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    reason: Mapped[str] = mapped_column(String(24), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class OtpChallenge(Base):

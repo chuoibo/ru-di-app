@@ -22,6 +22,7 @@ from app.api.cursors import decode_cursor
 from app.api.deps import get_chat_expense_reader, get_companion, get_repository
 from app.api.main import create_app
 from app.api.repository import (
+    ContextRecord,
     MembershipRecord,
     MessagePage,
     MessageRecord,
@@ -33,7 +34,7 @@ from app.api.routes.messages import get_message_intent_limiter
 from app.api.search_rate_limit import FixedWindowLimiter
 from app.domain.chat_expense import ChatExpenseError
 
-from .conftest import SeedCatalogueReads, ASGITestClient
+from .conftest import ASGITestClient, SeedCatalogueReads
 from .helpers import actor_headers
 
 NOW = datetime(2030, 8, 27, 12, 0, tzinfo=UTC)
@@ -64,6 +65,22 @@ class ChatRepository(SeedCatalogueReads):
     def is_member(self, context_id, person_id):
         del person_id
         return context_id == CONTEXT_ID
+
+    def get_context(self, context_id):
+        """A group, never a pair. L5 asks this before every message so a pair
+        that stopped accepting them can say so (ADR-0023 §2.3.2); this fake
+        models one ordinary group, and the answer is what makes that check a
+        no-op here."""
+        if context_id != CONTEXT_ID:
+            return None
+        return ContextRecord(
+            id=CONTEXT_ID,
+            display_name="Hội",
+            # No person fixture in this file; the creator is not read by the
+            # code under test, only by the shape of the record.
+            created_by_id=CONTEXT_ID,
+            created_at=NOW,
+        )
 
     def list_members(self, context_id):
         del context_id
