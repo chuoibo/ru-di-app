@@ -34,8 +34,6 @@ import {
   DemoBadge,
   Field,
   Heading,
-  IconButton,
-  Inline,
   ListRow,
   RudiButton,
   RudiScreen,
@@ -60,7 +58,7 @@ export function ProfileScreen() {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
-  const [panel, setPanel] = useState<"home" | "settings" | "account" | "edit" | "saved">("home");
+  const [panel, setPanel] = useState<"home" | "account" | "edit" | "saved">("home");
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = session.phien === null ? null : `/people/${session.phien.person_id}`;
   const personId = session.phien?.person_id ?? null;
@@ -80,22 +78,6 @@ export function ProfileScreen() {
     }, [personId]),
   );
 
-  if (panel === "settings") {
-    return (
-      <RudiScreen bottomInset={112} testID="profile-screen">
-        <TopBar onBack={() => setPanel("home")} title="Cài đặt" />
-        <Heading
-          title={session.phien !== null ? "Bản này còn ít cài đặt" : "Bản trải nghiệm"}
-          subtitle={
-            session.phien !== null
-              ? "Chưa có thông báo đẩy hay sinh trắc để bật tắt. Phiên của bạn nằm trên máy chủ; đăng nhập và đăng xuất ở mục Tài khoản."
-              : "Không có thông báo đẩy, không có sinh trắc, không có tài khoản máy chủ. Đây không phải cài đặt production."
-          }
-        />
-        <RudiButton label="Xong" onPress={() => setPanel("home")} />
-      </RudiScreen>
-    );
-  }
   if (panel === "account") {
     return (
       <RudiScreen bottomInset={112} testID="profile-screen">
@@ -155,10 +137,10 @@ export function ProfileScreen() {
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
         </View>
-        <Inline gap={8}>
-          <DemoBadge />
-          <IconButton accessibilityLabel="Cài đặt" icon="settings-outline" onPress={() => setPanel("settings")} quiet />
-        </Inline>
+        {/* One door to Settings, and it is the row below. A gear in this corner
+            reads as a second one, and on a dev client the launcher's own gear
+            sits on top of it, so the corner is the worst place for it. */}
+        <DemoBadge />
       </View>
       {session.profileNotice ? (
         <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.accent }]}>{session.profileNotice}</Text>
@@ -281,6 +263,18 @@ export function ProfileScreen() {
             title="Đã lưu"
           />
         </View>
+        <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
+          <ListRow
+            icon="settings-outline"
+            onPress={() => router.push("/settings" as never)}
+            subtitle="Hồ sơ, phiên, quyền riêng tư, giao diện"
+            title="Cài đặt"
+          />
+        </View>
+        {/* «Tài khoản» and «Đăng xuất» stay here, on this screen, with these
+            words: `_dang-xuat-neu-co.yaml` walks through them on every OTP
+            table, and moving them into Settings would break the evidence of
+            every other slice. */}
         <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
           <ListRow
             icon="shield-checkmark-outline"

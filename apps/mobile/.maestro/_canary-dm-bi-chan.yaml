@@ -1,0 +1,36 @@
+# ĐỐI CHỨNG ÂM — flow này PHẢI ĐỎ, và phải đỏ Ở BƯỚC CUỐI.
+#
+# Chạy ngay sau flow 45, khi F vừa bị người lái chặn rồi bỏ chặn. ADR-0023 §2.3:
+# bỏ chặn để lại cạnh «đã từ chối», không trả lại tình bạn — nên F còn thấy hồ
+# sơ người lái (hai người vẫn chung nhóm «Nhom Chan QA») nhưng KHÔNG mở được
+# cuộc trò chuyện riêng nữa.
+#
+# Flow đi đúng đường hạnh phúc của flow 41 («Nhắn tin» → «Ô soạn tin») với điều
+# kiện sai. Nếu nó XANH thì phép đo của flow 41 không phân biệt được người nhắn
+# được với người không, và cả hai flow đều vô nghĩa.
+#
+# Hồ sơ mở bằng deep link vì đó là đường DUY NHẤT còn lại: sản phẩm cố ý không
+# cho người đã bị chặn tìm đường tới hồ sơ người chặn qua danh sách bạn bè hay
+# qua màn thành viên. Id người lái do harness đưa vào bằng `-e`.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow: _dang-xuat-neu-co.yaml
+- runFlow: _dang-nhap-f.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- openLink: rudi://people/${ID_NGUOI_LAI}
+- extendedWaitUntil:
+    visible: "Tường cá nhân"
+    timeout: 60000
+- assertVisible: "Nhắn tin"
+- tapOn: "Nhắn tin"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 20000

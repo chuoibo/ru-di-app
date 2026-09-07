@@ -62,6 +62,8 @@ export type NhomTomTat = {
   kind?: "group" | "pair";
   /** The other person of a pair, named by the server on every read. */
   counterpart?: { id: string; display_name: string } | null;
+  /** ADR-0023 §2.3.2: cặp này không nhận tin mới nữa (bị chặn, hoặc người kia đã xoá tài khoản). */
+  unavailable?: boolean;
 };
 
 export type Phien = {
@@ -383,6 +385,8 @@ export type HoSoToi = {
   login_methods: string[];
   /** ADR-0022 §2.2: who may comment on my posts; absent on a server older than L3. */
   wall_comment_policy?: string;
+  /** ADR-0023 §2.5: findable by telephone number; absent on a server older than L5. */
+  discoverable_by_phone?: boolean;
 };
 
 const LOI_HO_SO: Record<string, string> = {
@@ -397,7 +401,12 @@ export async function docHoSoToi(personId: string): Promise<HoSoToi> {
 /** Partial update; `bio`/`city` = "" clears the field. */
 export async function suaHoSoToi(
   personId: string,
-  thayDoi: { display_name?: string; bio?: string; city?: string },
+  thayDoi: {
+    display_name?: string;
+    bio?: string;
+    city?: string;
+    discoverable_by_phone?: boolean;
+  },
 ): Promise<HoSoToi> {
   return translatedAsActor<HoSoToi>(LOI_HO_SO, "/people/me", {
     method: "PATCH",

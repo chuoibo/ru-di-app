@@ -13,6 +13,8 @@ export interface AvatarProps {
   /** A ring marks the person who is speaking, paying, or being pointed at. */
   ring?: boolean;
   tone?: RudiTone;
+  /** The frame could not load its photograph; the caller drops back to initials. */
+  onError?: () => void;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -26,7 +28,7 @@ export interface AvatarProps {
  * do not have. The tint is the screen's tone; identity is the letter or the
  * photo.
  */
-export function Avatar({ name, source = null, size = 44, ring = false, tone = "accent", style, testID }: AvatarProps) {
+export function Avatar({ name, source = null, size = 44, ring = false, tone = "accent", onError, style, testID }: AvatarProps) {
   const { colors } = useRudiTheme();
   const soft = tone === "accent" ? colors.accentSoft : tone === "split" ? colors.splitSoft : colors.aiSoft;
   const ink = colors[tone];
@@ -43,6 +45,7 @@ export function Avatar({ name, source = null, size = 44, ring = false, tone = "a
       {source ? (
         <Image
           source={source}
+          onError={onError}
           contentFit="cover"
           transition={MOTION_MS.standard}
           style={[StyleSheet.absoluteFill, { borderRadius: size / 2 }]}

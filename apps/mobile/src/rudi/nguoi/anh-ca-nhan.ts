@@ -9,7 +9,7 @@
  */
 import type { ImageSource } from "expo-image";
 
-import { BASE_URL, taiAnhCaNhanLen, type AnhDaTai } from "../../api";
+import { BASE_URL, duongDanAnhDaiDien, taiAnhCaNhanLen, type AnhDaTai } from "../../api";
 import { headerNguoiGoi } from "../../danh-tinh";
 
 const UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
@@ -19,6 +19,22 @@ const ANH_NHOM = new RegExp(`^/contexts/(${UUID})/photos/(${UUID})$`);
 /** The literal the server-routes gate reads: a personal photo's address. */
 export function duongDanAnhNguoi(personId: string, photoId: string): string {
   return `/people/${personId}/photos/${photoId}`;
+}
+
+/**
+ * A person's avatar, with the headers its gate reads.
+ *
+ * `lan` counts the uploads this screen has made. The address of an avatar never
+ * changes when a new picture replaces it -- that is what makes it usable from a
+ * roster -- so a frame pointed at it would keep drawing the old bytes out of
+ * cache. The query string is not sent anywhere meaningful; it exists to make
+ * the cache key different.
+ */
+export function nguonAnhDaiDien(personId: string, actorId: string, lan: number): ImageSource {
+  return {
+    uri: BASE_URL + duongDanAnhDaiDien(personId) + "?v=" + String(lan),
+    headers: headerNguoiGoi(actorId, { roles: "member" }),
+  };
 }
 
 export function laAnhNguoi(url: string): boolean {

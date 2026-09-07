@@ -102,6 +102,12 @@ JSONB_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
     ("messages", "card"): (
         "rendered chat card; amounts inside are display copies of ledger rows"
     ),
+    # L5 (ADR-0023 §2.5, ADR-0024). Switches, one per notification kind, each
+    # a boolean; the keys are a closed vocabulary in `app/domain/notifications`
+    # and nothing in this column is, or becomes, an amount.
+    ("people", "notify_prefs"): (
+        "per-kind notification switches; booleans keyed by a closed vocabulary"
+    ),
     # M9 (ADR-0017). Prices live in their own bigint columns
     # (`price_min_vnd`, `price_max_vnd`); none of these four holds an amount.
     ("places", "kinds"): (

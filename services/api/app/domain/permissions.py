@@ -212,6 +212,16 @@ _TABLE: dict[str, dict] = {
     # telephone number -- see `routes/friends.py`, which is where that is
     # enforced and tested.
     "find_person_by_phone": {"roles": {"member"}, "requires": ()},
+    # ADR-0023. Everything here is about the caller's own account, so the
+    # predicate is `is_self` -- except blocking, where the fact that matters
+    # is «not yourself», and lifting a block, where only the person who put it
+    # up may take it down (`is_blocker`, proved from `decided_by_id`).
+    "manage_own_sessions": {"roles": {"member"}, "requires": ("is_self",)},
+    "delete_own_account": {"roles": {"member"}, "requires": ("is_self",)},
+    "block_person": {"roles": {"member"}, "requires": ("is_not_self",)},
+    "unblock_person": {"roles": {"member"}, "requires": ("is_blocker",)},
+    "view_own_blocks": {"roles": {"member"}, "requires": ("is_self",)},
+    "file_report": {"roles": {"member"}, "requires": ()},
     # --- group logistics ------------------------------------------------
     # These four actions require group membership, not outing ownership: the
     # trip belongs to the group, so any member may adjust its plan.

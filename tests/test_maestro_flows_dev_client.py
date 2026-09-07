@@ -116,6 +116,9 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             "41-nhan-rieng.yaml",
             "42-binh-luan-bai.yaml",
             "43-story-24h.yaml",
+            "44-cai-dat.yaml",
+            "45-chan-bao-cao.yaml",
+            "46-xoa-tai-khoan.yaml",
             "40-ai-plan.yaml",
         ):
             text = (FLOWS / name).read_text(encoding="utf-8")
@@ -123,7 +126,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
             # the number and the code still have to come from the harness.
             for helper in re.findall(r"file: (_[\w-]+\.yaml)", text):
                 text += (FLOWS / helper).read_text(encoding="utf-8")
-            self.assertRegex(text, r"\$\{OTP_PHONE(_[BCDE])?\}", name)
+            self.assertRegex(text, r"\$\{OTP_PHONE(_[BCDEF])?\}", name)
             self.assertIn("${OTP_CODE}", text, name)
             # A phone number in a flow file is a phone number in Git.
             self.assertIsNone(
@@ -135,6 +138,27 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
                 text.replace("- ", ""),
                 name,
             ) if name.startswith("22") else None
+
+    def test_the_account_deleting_flow_cannot_reach_another_person(self) -> None:
+        # Flow 46 is the only flow in the table that destroys an account. Two
+        # things keep it off C and D, whom every earlier slice's server check
+        # still asks about after the table, and both are literal text:
+        # it signs in with F's number and nobody else's, and it refuses to open
+        # the delete door until the server has named that person on the screen.
+        text = (FLOWS / "46-xoa-tai-khoan.yaml").read_text(encoding="utf-8")
+        self.assertIn("file: _dang-nhap-f.yaml", text)
+        for cam in (
+            "_dang-nhap-d.yaml",
+            "${OTP_PHONE_C}",
+            "${OTP_PHONE_D}",
+            "${OTP_PHONE_E}",
+        ):
+            self.assertNotIn(cam, text, f"flow 46 nhắc tới {cam}")
+        khoa = text.index('visible: "Ut QA"')
+        self.assertLess(khoa, text.index('tapOn: "Xoá tài khoản"'))
+        self.assertIn(
+            "${OTP_PHONE_F}", (FLOWS / "_dang-nhap-f.yaml").read_text(encoding="utf-8")
+        )
 
     def test_harness_otp_mode_probes_the_debug_code_and_hides_the_fixture_door(
         self,
@@ -157,7 +181,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertNotIn("EXPO_PUBLIC_RUDI_ACTOR=", script)
         self.assertIn("canary_otp", script)
         self.assertIn(
-            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*)"
+            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*)"
             ' [ "$OTP" = 1 ] || continue',
             script,
         )

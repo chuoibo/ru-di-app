@@ -22,9 +22,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Response, status
 
-from app.api.deps import Actor, get_actor, get_repository
+from app.api.deps import Actor, get_actor, get_photo_storage, get_repository
 from app.api.repository import ApiRepository
 from app.api.schemas import (
+    AccountDeleteRequest,
+    BlockedListResponse,
+    BlockResponse,
     ContextSummary,
     ErrorResponse,
     PersonContextListResponse,
@@ -37,6 +40,7 @@ from app.api.schemas import (
     SavedPlaceSummary,
 )
 from app.api.service import ApiService
+from app.media.storage import PhotoStorage
 
 router = APIRouter(tags=["people"])
 
@@ -135,6 +139,84 @@ def unsave_place(
 ) -> Response:
     ApiService(repository).unsave_place(place_id, actor)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/people/me/blocked",
+    response_model=BlockedListResponse,
+    responses={401: {"model": ErrorResponse}},
+)
+def list_blocked(
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> BlockedListResponse:
+    """Who the caller is blocking, so they can lift it. Never who is blocking
+    them: that list is the one thing `BLOCKED_IS_SILENT` withholds."""
+    return ApiService(repository).list_blocked_people(actor)
+
+
+@router.delete(
+    "/people/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        401: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
+)
+def delete_my_account(
+    request: AccountDeleteRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    photo_storage: Annotated[PhotoStorage, Depends(get_photo_storage)],
+) -> Response:
+    """End this account (ADR-0023 §2.1). The body must say `confirm: true`.
+
+    `me` and not an id: a route that took somebody else's id would be a route
+    for deleting somebody else, however carefully it checked afterwards.
+    """
+    ApiService(repository, photo_storage=photo_storage).delete_own_account(
+        request, actor
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/people/{person_id}/block",
+    response_model=BlockResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+)
+def block_person(
+    person_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> BlockResponse:
+    """Block somebody. Pressing it twice is the same wall, answered the same
+    way -- an error there would only tell the caller what they already did."""
+    return ApiService(repository).block_person(person_id, actor)
+
+
+@router.delete(
+    "/people/{person_id}/block",
+    response_model=BlockResponse,
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+)
+def unblock_person(
+    person_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> BlockResponse:
+    """Lift a block. Only whoever put it up, and the edge comes back
+    `declined` rather than as a restored friendship (§2.3.3)."""
+    return ApiService(repository).unblock_person(person_id, actor)
 
 
 @router.post(

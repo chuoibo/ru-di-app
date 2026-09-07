@@ -303,6 +303,15 @@
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
     // deadline check that must be strict at the exact second like the server.
     "src/rudi/story/story.ts",
+    // L5 (ADR-0023). Four leaves whose rules are all refusals or copy: a
+    // session list that must not invent a device name, a report body that
+    // sends `note` only when there is one, the one word that unlocks account
+    // deletion, and a light/dark choice that falls back to «system» for any
+    // value the disk hands back. None of that is visible in a screenshot.
+    "src/rudi/cai-dat/phien-cai-dat.ts",
+    "src/rudi/cai-dat/quyen-rieng-tu.ts",
+    "src/rudi/cai-dat/xoa-tai-khoan.ts",
+    "src/rudi/giao-dien.ts",
     // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
     // reuses. Compiled so the test can prove they go through the bearer.
     "src/screens/quan-tri/quan-tri.ts"

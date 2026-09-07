@@ -42,6 +42,7 @@ from app.api.repository import (
     ContextBatchRow,
     ContextRecord,
     DestinationRecord,
+    ErasureReport,
     ExpenseIdentity,
     FriendEdgeRecord,
     FrozenBatch,
@@ -72,11 +73,13 @@ from app.api.repository import (
     ReadMarkRecord,
     ReceiptRecord,
     ReceiptTarget,
+    ReportRecord,
     SavedPlaceRecord,
     StoredGuestLink,
     StoryRecord,
     UploadedImageRecord,
 )
+from app.domain.account_lifecycle import ANONYMOUS_DISPLAY_NAME
 from app.domain.capability import capability_scope
 from app.domain.direct import display_name_for
 from app.domain.ledger import obligation_status
@@ -258,6 +261,9 @@ class FakeRepository(SeedCatalogueReads):
         self.obligations: dict[uuid.UUID, PublishObligation] = {}
         self.links: dict[bytes, FakeLink] = {}
         self.reports: dict[uuid.UUID, FakeReport] = {}
+        #: ADR-0023 §2.4 -- content reports, a different thing from the
+        #: payment `reports` above; named apart so neither shadows the other.
+        self.reports_filed: list[dict] = []
         self.objections: list[dict] = []
         self.receipts: dict[uuid.UUID, FakeReceipt] = {}
         self.people: dict[uuid.UUID, PersonRecord] = {}
@@ -1029,6 +1035,184 @@ class FakeRepository(SeedCatalogueReads):
         self.account_session_ids_by_digest[token_digest] = record.id
         return record
 
+    # --- sessions, blocks, reports, erasure (ADR-0023) --------------------
+
+    def list_account_sessions(self, person_id, *, now):
+        rows = [
+            row
+            for row in self.account_sessions.values()
+            if row.person_id == person_id
+            and row.revoked_at is None
+            and row.expires_at > now
+        ]
+        rows.sort(key=lambda row: (row.created_at, row.id.bytes), reverse=True)
+        return rows
+
+    def get_account_session(self, session_id):
+        return self.account_sessions.get(session_id)
+
+    def revoke_all_account_sessions(self, person_id, *, now):
+        live = [
+            row
+            for row in self.account_sessions.values()
+            if row.person_id == person_id and row.revoked_at is None
+        ]
+        for row in live:
+            self.account_sessions[row.id] = replace(row, revoked_at=now)
+        return len(live)
+
+    def _live_edge_between(self, a, b):
+        for edge in self.friend_edges.values():
+            if {edge["requester_id"], edge["addressee_id"]} == {a, b} and edge[
+                "state"
+            ] != "declined":
+                return edge
+        return None
+
+    def open_block_edge(self, *, blocker_id, addressee_id, now):
+        edge = self._live_edge_between(blocker_id, addressee_id)
+        if edge is None:
+            edge = {
+                "id": uuid.uuid4(),
+                "requester_id": blocker_id,
+                "addressee_id": addressee_id,
+                "state": "blocked",
+                "decided_by_id": blocker_id,
+                "created_at": now,
+                "decided_at": now,
+            }
+            self.friend_edges[edge["id"]] = edge
+        else:
+            edge["state"] = "blocked"
+            edge["decided_by_id"] = blocker_id
+            edge["decided_at"] = now
+        return self._friend_record(edge, blocker_id)
+
+    def lift_block_edge(self, *, blocker_id, addressee_id, now):
+        edge = self._live_edge_between(blocker_id, addressee_id)
+        if edge is None or edge["state"] != "blocked":
+            raise RepositoryConflict("NOT_BLOCKED")
+        if edge["decided_by_id"] != blocker_id:
+            raise RepositoryConflict("ONLY_BLOCKER_MAY_UNBLOCK")
+        edge["state"] = "declined"
+        edge["decided_at"] = now
+        return self._friend_record(edge, blocker_id)
+
+    def list_blocked(self, person_id):
+        rows = [
+            edge
+            for edge in self.friend_edges.values()
+            if edge["state"] == "blocked" and edge["decided_by_id"] == person_id
+        ]
+        rows.sort(key=lambda edge: (edge["decided_at"] or edge["created_at"]))
+        return [self._friend_record(edge, person_id) for edge in reversed(rows)]
+
+    def create_report(self, *, reporter_id, target_type, target_id, reason, note, now):
+        record = ReportRecord(id=uuid.uuid4(), created_at=now)
+        self.reports_filed.append(
+            {
+                "id": record.id,
+                "reporter_id": reporter_id,
+                "target_type": target_type,
+                "target_id": target_id,
+                "reason": reason,
+                "note": note,
+                "created_at": now,
+            }
+        )
+        return record
+
+    def erase_person(self, person_id, *, now):
+        """The fake's copy of the erasure map. Deliberately literal, and
+        deliberately NOT clever: it deletes from the same dicts the rest of
+        this fake reads, so a service that forgot one of them shows up here
+        rather than only in tests/postgres."""
+        person = self.people.get(person_id)
+        if person is None:
+            raise RepositoryConflict("PERSON_NOT_FOUND")
+        counts = {}
+        keys = tuple(
+            image.storage_key
+            for image in self.uploaded_images.values()
+            if image.owner_person_id == person_id
+        )
+        own_posts = {p.id for p in self.posts.values() if p.author_id == person_id}
+        own_stories = {s.id for s in self.stories.values() if s.author_id == person_id}
+
+        def drop(table, mapping, keep):
+            before = len(mapping)
+            for key in [k for k, v in mapping.items() if not keep(v)]:
+                del mapping[key]
+            counts[table] = before - len(mapping)
+
+        drop(
+            "post_comments",
+            self.post_comments,
+            lambda c: c.author_id != person_id and c.post_id not in own_posts,
+        )
+        drop(
+            "post_reactions",
+            self.post_reactions,
+            lambda r: r.person_id != person_id and r.post_id not in own_posts,
+        )
+        counts["story_views"] = 0
+        for key in [
+            k for k in self.story_views if k[1] == person_id or k[0] in own_stories
+        ]:
+            del self.story_views[key]
+            counts["story_views"] += 1
+        drop("posts", self.posts, lambda p: p.author_id != person_id)
+        drop("stories", self.stories, lambda s: s.author_id != person_id)
+        drop(
+            "uploaded_images",
+            self.uploaded_images,
+            lambda i: i.owner_person_id != person_id,
+        )
+        counts["person_interests"] = len(self.person_interests.pop(person_id, ()) or ())
+        counts["saved_places"] = 0
+        for key in [k for k in self.saved_places if k[0] == person_id]:
+            del self.saved_places[key]
+            counts["saved_places"] += 1
+        counts["context_read_marks"] = 0
+        for key in [k for k in self.read_marks if k[1] == person_id]:
+            del self.read_marks[key]
+            counts["context_read_marks"] += 1
+        counts["account_identities"] = 0
+        for key in [
+            k for k, v in self.account_identities.items() if v.person_id == person_id
+        ]:
+            del self.account_identities[key]
+            counts["account_identities"] += 1
+        drop(
+            "friend_requests",
+            self.friend_edges,
+            lambda e: person_id not in (e["requester_id"], e["addressee_id"]),
+        )
+        counts["account_sessions"] = self.revoke_all_account_sessions(
+            person_id, now=now
+        )
+        left = {
+            (context_id, member)
+            for (context_id, member) in self.active_memberships
+            | self.invited_memberships
+            if member == person_id
+        }
+        self.active_memberships -= left
+        self.invited_memberships -= left
+        self.left_memberships |= left
+        counts["memberships"] = len(left)
+        self.people[person_id] = replace(
+            person,
+            display_name=ANONYMOUS_DISPLAY_NAME,
+            bio=None,
+            city=None,
+            budget_band=None,
+            discoverable_by_phone=False,
+            wall_comment_policy="nobody",
+            deleted_at=now,
+        )
+        return ErasureReport(counts=counts, storage_keys=keys)
+
     def get_account_session_by_digest(self, token_digest):
         session_id = self.account_session_ids_by_digest.get(token_digest)
         if session_id is None:
@@ -1053,7 +1237,10 @@ class FakeRepository(SeedCatalogueReads):
         `platform_moderator` is never granted because nothing says who holds it.
         """
 
-        if person_id not in self.people:
+        person = self.people.get(person_id)
+        if person is None or person.deleted_at is not None:
+            # Mirrors the real adapter after ADR-0023 §2.1.4: an ended account
+            # is not a person any session may speak as.
             return ActorGrants(
                 person_exists=False, roles=frozenset(), context_ids=frozenset()
             )
