@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { manDau } from "../duong-vao";
 import {
@@ -46,6 +46,10 @@ const TOI_THIEU = 3;
 export function PersonalizationScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  // At a large font scale two columns leave a label the width of one word,
+  // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
+  // board, 2026-09-08). The grid falls back to one column instead.
+  const { fontScale } = useWindowDimensions();
   const session = useRudiSession();
   const personId = session.phien?.person_id ?? null;
 
@@ -149,7 +153,7 @@ export function PersonalizationScreen() {
       />
       <Heading title="Cho Rủ Đi biết gu của bạn" />
       <View style={styles.block}>
-        <ResponsiveRow minItemWidth={150} gap={12}>
+        <ResponsiveRow minItemWidth={Math.round(150 * Math.max(1, fontScale))} gap={12}>
           {danhSach.map((m) => {
             const selected = muc.includes(m.id);
             return (
