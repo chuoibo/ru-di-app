@@ -1232,6 +1232,11 @@ print("co" if any(n["author"]["id"] == sys.argv[1] for n in json.load(sys.stdin)
   rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc$anh_url" -H "Authorization: Bearer $tok_lai")"
   [ "$rc" = "404" ] || hong "sau flow 43: story hết hạn mà bạn vẫn mở được ảnh (HTTP $rc)."
   echo "máy chủ xác nhận: qua hạn thì story rời GET /stories của cả hai và ảnh đóng lại (404)"
+  # `_43b` tự đăng nhập bằng số C khi máy đã đăng xuất (flow 46 để lại trạng
+  # thái ấy), và các phép kiểm ở trên vừa xin mã cho chính số ấy qua curl. Chờ
+  # cho hết nhịp 60 giây, không thì màn hiện «Mã vừa được gửi» và cái đỏ ấy nói
+  # về nhịp chứ không nói về story.
+  cho_nhip_otp "$lai"
   set +e; chay_flow "$FLOWS/_43b-story-het-han.yaml"; rc_flow=$?; set -e
   [ "$rc_flow" -eq 0 ] || hong "sau flow 43: máy vẫn vẽ vòng story đã hết hạn (flow _43b đỏ, rc=$rc_flow)."
   echo "máy xác nhận: mở lại app sau khi story qua hạn, dải không còn vòng của người kia"
