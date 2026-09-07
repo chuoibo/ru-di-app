@@ -32,6 +32,21 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "[0-9]+ nơi ở .*"
     timeout: 60000
+# Flow 35 (chạy trước trong cùng lượt) để máy ở «Hội An», nơi stack không có địa
+# điểm nào — bảng cỡ chữ 1.3 ngày 07/09 cuộn 40 s trên «0 nơi ở Hội An». Ảnh có
+# giấy phép nằm ở Đà Lạt, nên trả điểm đến về đó trước khi tìm thẻ.
+- runFlow:
+    when:
+      visible: "Hội An · đổi nơi khác"
+    commands:
+      - tapOn: "Đổi điểm đến"
+      - extendedWaitUntil:
+          visible: "Đi đâu?"
+          timeout: 30000
+      - tapOn: "Chọn Đà Lạt"
+      - extendedWaitUntil:
+          visible: "Đà Lạt · đổi nơi khác"
+          timeout: 60000
 # Thẻ có ảnh bìa mang credit ngay trong thẻ. Cuộn tới thẻ đầu tiên có nó.
 - scrollUntilVisible:
     element:
