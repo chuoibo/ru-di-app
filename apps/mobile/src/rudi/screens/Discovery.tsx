@@ -36,6 +36,8 @@ import {
 } from "../ui";
 import { Wordmark } from "../ui/Wordmark";
 import { Canh } from "../ui/art/Canh";
+import { GuGlyph } from "../ui/art/Gu";
+import { guTheoLoai } from "../kham-pha/dia-diem";
 import { EmptyState } from "../ui/EmptyState";
 import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
 
@@ -69,6 +71,9 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
     loai: LOAI[place.category],
     photo: place.image,
     badge: !song && place.match >= 90 ? "Hợp gu" : null,
+    // The sample's reason is the two tags it was matched on (the same two
+    // `AiMatchScreen` shows), and only while the sample badge is shown.
+    lyDo: !song && place.match >= 90 && place.tags.length > 0 ? `Hợp gu nhờ ${place.tags.slice(0, 2).join(" và ")}` : undefined,
   };
 }
 
@@ -192,7 +197,7 @@ export function ExploreScreen() {
       <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>
         {PLACE_CATEGORIES.map((label) => {
           const active = category === label;
-          return <Chip icon={GLYPH[label]} key={label} label={label} onPress={() => setCategory(active ? null : label)} selected={active} />;
+          return <Chip key={label} label={label} leading={<GuGlyph id={guTheoLoai(LOAI[label])} size={22} tone={active ? "accent" : "ink"} />} onPress={() => setCategory(active ? null : label)} selected={active} />;
         })}
       </ScrollView>
       <SectionHeader
