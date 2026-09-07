@@ -49,8 +49,20 @@ appId: com.lakiet.rudi
     visible: "Xoá tài khoản là vĩnh viễn."
     timeout: 30000
 # Màn nói cả điều khó nghe: sổ tiền của nhóm KHÔNG mất đi cùng tài khoản.
-- assertVisible: "Sổ tiền của các nhóm giữ nguyên: ai nợ ai bao nhiêu không đổi."
-- assertVisible: "Bạn rời mọi nhóm; tin nhắn cũ ở lại với tên «Người dùng đã rời»."
+# Cuộn tới thay vì khẳng định thẳng: `assertVisible` không cuộn, nên nó chỉ đo
+# được thứ nằm sẵn trong khung hình, và khung hình đổi theo cỡ chữ của máy.
+- scrollUntilVisible:
+    element:
+      text: "Bạn rời mọi nhóm; tin nhắn cũ ở lại với tên «Người dùng đã rời»."
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Sổ tiền của các nhóm giữ nguyên: ai nợ ai bao nhiêu không đổi."
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - takeScreenshot: 46-canh-bao
 - scrollUntilVisible:
     element:
