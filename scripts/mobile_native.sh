@@ -327,6 +327,21 @@ except Exception: print("(không phải JSON)")' "$tep" 2>/dev/null)"
 # cho D trong khi máy đang là C).
 da_chay() { case "$DA_CHAY_TEN" in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
 
+# Phép kiểm của flow NN chỉ hỏi đúng người khi flow 25 đã đổi phiên sang D.
+# Định nghĩa Ở ĐÂY, trước vòng lặp flow, vì hook sau flow 45 gọi nó TRONG
+# vòng lặp: khi nó còn nằm dưới, `kiem_can_25 … && kiem_may_chu_sau_45` là
+# «command not found», `&&` nuốt mã 127, và phép kiểm ấy không chạy trong
+# khi bảng vẫn in XANH (lượt 2026-09-07). `tests/test_harness_ham_dinh_nghia
+# _truoc_khi_dung.py` gác hình dạng này từ giờ.
+# Bỏ qua thì phải NÓI RA. Một phép kiểm tự tháo trong im lặng là dấu xanh cho
+# một câu hỏi không ai hỏi.
+kiem_can_25() {
+  da_chay 25 && return 0
+  echo "BỎ QUA $1: bảng này không có flow 25 nên phiên sống không phải của D;" \
+       "phép kiểm sẽ hỏi nhầm người. KHÔNG đọc dòng này thành «đã kiểm»."
+  return 1
+}
+
 # Sau flow 20 (--live): người seed vừa xem «Team Đà Lạt» trên máy. Hỏi máy chủ
 # với tư cách người đó — nhóm 8 người, phần và khoản sẽ nhận đúng bill Xóm Lèo chia 8, một đợt thu
 # đã phát với 7 nghĩa vụ — chứ không đọc từ màn hình. Contexts hỏi lại bằng token
@@ -1621,7 +1636,7 @@ else:
     print(tin.get("author_display_name") or "(tin cuối không có tác giả)")')"
   [ "$ten_trong_nhom" = "Người dùng đã rời" ] \
     || hong "sau flow 46: tin cũ của người đã xoá mang tên «$ten_trong_nhom», mong «Người dùng đã rời»."
-  echo "máy chủ xác nhận: hồ sơ F 404, phiên cũ 401 cùng câu với token bịa, sổ dư không đổi một đồng, tin cũ ký tên «Người dùng đã rời»"
+  echo "máy chủ xác nhận: hồ sơ F 403 cùng byte với một id lạ, phiên cũ 401 cùng câu với token bịa, sổ dư không đổi một đồng, tin cũ ký tên «Người dùng đã rời»"
 }
 
 # ĐỐI CHỨNG ÂM của flow 45, chạy NGAY sau nó vì trạng thái nó cần chỉ sống tới
@@ -2264,14 +2279,6 @@ fi
 # (lượt 2026-09-06: «máy chủ giữ 0 địa điểm đã lưu cho D» trong khi màn vừa
 # lưu thật cho người của flow 22).
 #
-# Bỏ qua thì phải NÓI RA. Một phép kiểm tự tháo trong im lặng là dấu xanh cho
-# một câu hỏi không ai hỏi.
-kiem_can_25() {
-  da_chay 25 && return 0
-  echo "BỎ QUA $1: bảng này không có flow 25 nên phiên sống không phải của D;" \
-       "phép kiểm sẽ hỏi nhầm người. KHÔNG đọc dòng này thành «đã kiểm»."
-  return 1
-}
 
 if [ "$OTP" = 1 ]; then
   da_chay 24 && kiem_can_25 kiem_may_chu_sau_24 && kiem_may_chu_sau_24
