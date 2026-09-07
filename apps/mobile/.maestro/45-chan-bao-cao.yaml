@@ -85,10 +85,15 @@ appId: com.lakiet.rudi
 - takeScreenshot: 45-da-bao-cao
 - tapOn: "Xong"
 # --- danh sách đã chặn, rồi bỏ chặn -------------------------------------------
+# Back từ hồ sơ về màn BẠN BÈ (tiêu đề «Bạn bè»), không về màn Cá nhân: câu
+# «Bạn bè, lời mời đã nhận và đã gửi» là dòng phụ của hàng trên màn Cá nhân,
+# một màn nữa mới tới.
 - pressKey: Back
 - extendedWaitUntil:
-    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+    visible: "Đã là bạn"
     timeout: 30000
+# Chặn đã cắt tình bạn: người vừa bị chặn rời khỏi danh sách ngay.
+- assertNotVisible: "Xem hồ sơ Ut QA"
 - pressKey: Back
 - scrollUntilVisible:
     element:
@@ -117,16 +122,26 @@ appId: com.lakiet.rudi
     timeout: 30000
 # Gỡ chặn KHÔNG trả lại tình bạn: cạnh còn ở trạng thái đã từ chối.
 - pressKey: Back
+# Màn Cài đặt giữ nguyên chỗ đã cuộn tới, nên chờ chính hàng vừa bấm.
 - extendedWaitUntil:
-    visible: "Quyền riêng tư"
+    visible: "Người đã chặn"
     timeout: 30000
 - pressKey: Back
+# Về màn Cá nhân, ở đúng chỗ đã cuộn tới lúc nãy — tức là hàng «Bạn bè» nằm
+# PHÍA TRÊN khung hình. Cuộn NGƯỢC lên tới nó thay vì chờ nó tự hiện.
 - extendedWaitUntil:
-    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+    visible: "Cài đặt"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Bạn bè, lời mời đã nhận và đã gửi"
+    direction: UP
+    centerElement: true
     timeout: 30000
 - tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
 - extendedWaitUntil:
     visible: "Đã là bạn"
     timeout: 30000
+# Bỏ chặn xong vẫn KHÔNG phải bạn: cạnh dừng ở «đã từ chối» (ADR-0023 §2.3).
 - assertNotVisible: "Xem hồ sơ Ut QA"
 - takeScreenshot: 45-khong-con-la-ban
