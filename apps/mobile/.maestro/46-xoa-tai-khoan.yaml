@@ -1,0 +1,67 @@
+# Xoá tài khoản (L5, ADR-0023 §2.1) — flow cuối của phần L5, và flow duy nhất
+# trong bảng làm mất một tài khoản.
+#
+# Người bị xoá là F, người chỉ tồn tại cho L5. KHÔNG bao giờ là C hay D: mọi
+# `kiem_may_chu_sau_*` của các lát trước còn hỏi hai người ấy sau bảng. Vì cú
+# bấm này không lấy lại được, flow tự khoá an toàn trước khi đi tiếp: nó phải
+# ĐỌC được tên «Ut QA» trên màn Cài đặt — tên đến từ máy chủ, không từ state —
+# rồi mới mở cửa xoá. Đăng nhập nhầm người thì flow đỏ, không xoá nhầm ai.
+#
+# `chuan_bi_cho_46` đã ghi một khoản chi của F trong «Nhom Chan QA» và lưu lại
+# sổ dư trước khi xoá; `kiem_may_chu_sau_46` so lại từng đồng sau khi xoá, cùng
+# với 404 cho hồ sơ, 401 cho phiên cũ, và tên «Người dùng đã rời» trong roster.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-f.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Cá nhân"
+- scrollUntilVisible:
+    element:
+      text: "Cài đặt"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Cài đặt"
+# KHOÁ AN TOÀN. Tên này do máy chủ trả về cho phiên đang sống; sai người thì
+# flow dừng ở đây.
+- extendedWaitUntil:
+    visible: "Ut QA"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Xoá tài khoản"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Xoá tài khoản"
+- extendedWaitUntil:
+    visible: "Xoá tài khoản là vĩnh viễn."
+    timeout: 30000
+# Màn nói cả điều khó nghe: sổ tiền của nhóm KHÔNG mất đi cùng tài khoản.
+- assertVisible: "Sổ tiền của các nhóm giữ nguyên: ai nợ ai bao nhiêu không đổi."
+- assertVisible: "Bạn rời mọi nhóm; tin nhắn cũ ở lại với tên «Người dùng đã rời»."
+- takeScreenshot: 46-canh-bao
+- tapOn: "Tôi hiểu, tiếp tục"
+- extendedWaitUntil:
+    visible: "Ô xác nhận xoá"
+    timeout: 30000
+- tapOn: "Ô xác nhận xoá"
+- inputText: "XOA"
+- hideKeyboard
+- takeScreenshot: 46-go-xac-nhan
+- tapOn: "Xoá vĩnh viễn"
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- takeScreenshot: 46-da-xoa

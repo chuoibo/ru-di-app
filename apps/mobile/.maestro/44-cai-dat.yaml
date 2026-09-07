@@ -1,0 +1,98 @@
+# Cài đặt thật (L5, ADR-0023 §2.5) — thay panel tự nhận «không phải cài đặt
+# production» bằng sáu mục có người bấm được.
+#
+# Chạy SAU flow 43 với người đang đăng nhập (C nếu 37 đã chạy, D nếu không).
+# Flow đi từ trên xuống đúng thứ tự màn: hồ sơ (ảnh đại diện) → phiên → quyền
+# riêng tư (công tắc tìm theo số, ai được bình luận, người đã chặn) → giao diện
+# → cửa xoá tài khoản. Hai mục quyền riêng tư đi THẲNG lên máy chủ, nên câu dưới
+# công tắc chỉ đổi khi `PATCH /people/me` trả về — một `useState` không làm được
+# vòng ấy, và `kiem_may_chu_sau_44` hỏi lại bằng curl.
+#
+# «Tối» được chụp lại vì nhãn không chứng minh màu: harness đo pixel nền của
+# ảnh `44-giao-dien-toi` (góc trên trái phải TỐI) trước khi tin dòng này.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Cá nhân"
+- scrollUntilVisible:
+    element:
+      text: "Cài đặt"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Cài đặt"
+- extendedWaitUntil:
+    visible: "Quyền riêng tư"
+    timeout: 30000
+# Tên hiển thị ở khối hồ sơ đến TỪ MÁY CHỦ, nên nó là dấu hiệu «đã tải xong»:
+# công tắc bên dưới bị khoá cho tới lúc ấy.
+- extendedWaitUntil:
+    visible: "(An|Ban) QA"
+    timeout: 30000
+- assertVisible: "Đổi ảnh đại diện"
+- takeScreenshot: 44-cai-dat
+# --- phiên đăng nhập ----------------------------------------------------------
+- tapOn: "Phiên đăng nhập"
+- extendedWaitUntil:
+    visible: "PHIÊN NÀY"
+    timeout: 30000
+- assertVisible: "Đăng xuất phiên này"
+- takeScreenshot: 44-phien
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Quyền riêng tư"
+    timeout: 30000
+# --- quyền riêng tư -----------------------------------------------------------
+# Công tắc mang nhãn khác dòng chữ bên cạnh, để cú chạm này không rơi vào một
+# `Text` không bấm được.
+- tapOn: "Chỉ bạn bè"
+- extendedWaitUntil:
+    visible: "Người cùng nhóm đọc được vẫn chỉ xem, không bình luận."
+    timeout: 30000
+# Công tắc để lại ở trạng thái TẮT: `kiem_may_chu_sau_44` đọc chính cờ ấy trên
+# máy chủ, rồi thử tra số của người này (phải 404) và bật lại (phải tìm thấy).
+# Một cờ được bật lại ngay trên màn thì phép kiểm sau bảng không phân biệt được
+# «đã đi tới máy chủ» với «chưa bao giờ đi».
+- tapOn: "Cho tìm theo số điện thoại"
+- extendedWaitUntil:
+    visible: "Không ai tìm được bạn theo số điện thoại."
+    timeout: 30000
+- takeScreenshot: 44-quyen-rieng-tu
+- tapOn: "Người đã chặn"
+- extendedWaitUntil:
+    visible: "Bạn chưa chặn ai"
+    timeout: 30000
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Quyền riêng tư"
+    timeout: 30000
+# --- giao diện và cửa xoá -----------------------------------------------------
+- scrollUntilVisible:
+    element:
+      text: "Giao diện"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Tối"
+- extendedWaitUntil:
+    visible: "Lựa chọn này ở trên máy này, không gửi lên máy chủ."
+    timeout: 20000
+- takeScreenshot: 44-giao-dien-toi
+- tapOn: "Theo hệ thống"
+- assertVisible: "Xoá tài khoản"
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Cá nhân"
+    timeout: 30000
