@@ -1,6 +1,6 @@
 # ADR-0021 — Chat có sticker, trả lời, xoá tin và theme nhóm; nhắn riêng là một context hai người; Rủ Đi AI được tự lên tiếng theo nhịp
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-06 — chờ Lead đánh ĐÃ CHẤP NHẬN. Lát L1 (chat nâng cấp) và L2 (nhắn riêng) của nhánh `claude/p0-w-m15-social-v1-1` không merge trước khi dòng này đổi. Lead đã duyệt kế hoạch chứa các quyết định dưới đây trong phiên 2026-09-06 (`~/.claude/plans/mellow-waddling-lantern.md`); ADR này là chỗ ghi lại để không hợp thức hoá hậu nghiệm.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (phiên 2026-09-06: chọn toàn bộ mảng chat kể cả theme nhóm — mục Claude không khuyến nghị — ghi lại ở mục 2 và 5).
 - **Hiện thực:** nhánh `claude/p0-w-m15-social-v1-1`, lát L1 và L2; kế hoạch `~/.claude/plans/mellow-waddling-lantern.md` mục 5.2–5.3.
 - **Thay đổi hình dạng bảng `messages` và `contexts`, thêm ba route, mở rộng ngữ pháp lệnh chat**; không đổi ba luật tiền, không đổi ADR-0015 (không đường thanh toán), không đổi cách phiên đăng nhập hoạt động (ADR-0014).
