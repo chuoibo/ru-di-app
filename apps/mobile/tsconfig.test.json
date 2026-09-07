@@ -244,6 +244,15 @@
     // Đường SVG của bộ kit (UI v2): compile vì react-native-svg parse `d` trong
     // Java lúc mount; một token sai là app chết ở khung hình đầu, tsc và web mù.
     "src/rudi/ui/duong-svg.ts",
+    // Tầng art (báo cáo 07/09 «Chừa một chỗ cho nhau»): compile vì mọi `d` của
+    // Nếp, ba motif, tám glyph gu và năm cảnh rỗng được Java parse lúc mount;
+    // một token sai là app chết ở khung hình đầu, tsc và web export đều mù.
+    // `tests/art-duong.test.mjs` chạy từng đường qua đúng ngữ pháp ấy.
+    "src/rudi/art/net.ts",
+    "src/rudi/art/nep.ts",
+    "src/rudi/art/motif.ts",
+    "src/rudi/art/gu.ts",
+    "src/rudi/art/canh.ts",
     // Lưới ô chất liệu của `ui/Grain.tsx`: compile để test pin «phủ hết hộp» và «≤ 60 view».
     "src/rudi/ui/luoi-chat-lieu.ts",
     // Nhịp chuyển động (UI v2): compile để test pin bốn bậc, luật Reduce
