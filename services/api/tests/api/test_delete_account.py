@@ -97,15 +97,18 @@ def test_the_ended_account_stops_being_a_person_the_product_answers_about(
 ):
     _delete(client)
     profile = client.get(f"/people/{ME}", headers=actor_headers(FRIEND))
-    # ADR-0023 §2.1.4 asks for 404 «no such profile». What actually happens is
-    # narrower and is left as it is: erasure removed every friend edge and
-    # turned every membership into `left`, so nobody shares a relation with
-    # this id any more and the profile door refuses at its usual 403 before it
-    # ever reads the row. Both refusals are the same door to the caller, and
-    # 403 leaks less: a 404 reachable only for ended accounts would tell an
-    # attacker which ids used to be people.
-    assert profile.status_code in (403, 404), profile.text
-    assert profile.json()["code"] in ("person_not_visible", "person_not_found")
+    # ADR-0023 §2.1.4 lúc viết ra nói «404». Cái xảy ra thật là 403, và 403 mới
+    # đúng — ADR đã được sửa theo. Xoá tài khoản gỡ mọi cạnh bạn bè và đặt mọi
+    # membership thành `left`, nên không ai còn quan hệ với id ấy và cửa hồ sơ
+    # từ chối ở đúng chỗ nó vẫn từ chối, TRƯỚC khi đọc hàng. Một 404 chỉ tới
+    # được cho tài khoản đã kết thúc sẽ là một oracle: nó nói cho người hỏi
+    # biết id nào TỪNG là người. Nên phép khẳng định ở đây không phải «mã nào»
+    # mà là «không phân biệt được»: cùng byte với một id chưa bao giờ tồn tại.
+    la = client.get(f"/people/{uuid.uuid4()}", headers=actor_headers(FRIEND))
+    assert profile.status_code == 403, profile.text
+    assert profile.json()["code"] == "person_not_visible"
+    assert profile.status_code == la.status_code
+    assert profile.json() == la.json(), "người đã xoá phải giống hệt một id lạ"
     assert "Minh" not in profile.text, "cái tên không rời máy chủ nữa"
 
     dm = client.post(f"/people/{ME}/dm", headers=actor_headers(FRIEND))

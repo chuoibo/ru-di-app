@@ -1584,9 +1584,16 @@ kiem_may_chu_sau_46() {
   lai="$(nguoi_lai_l5)"
   tok_lai="$(tok_cua "$lai")" || hong "sau flow 46: người lái không đăng nhập được qua curl."
   tok_f_cu="$(tok_cua "$OTP_PHONE_F")" || hong "sau flow 46: không đọc được phiên cũ của F từ cache."
-  # 1. Hồ sơ đã đi.
-  rc="$(curl -sS -o /dev/null -w '%{http_code}' "$goc/people/$ID_NGUOI_F" -H "Authorization: Bearer $tok_lai")"
-  [ "$rc" = "404" ] || hong "sau flow 46: hồ sơ F vẫn mở được (HTTP $rc, mong 404)."
+  # 1. Hồ sơ đã đi, và đi theo cách KHÔNG phân biệt được với một id lạ: xoá tài
+  # khoản gỡ mọi quan hệ nên cửa hồ sơ từ chối ở đúng chỗ nó vẫn từ chối (403).
+  # Một mã riêng cho «đã xoá» sẽ nói cho người hỏi biết id nào TỪNG là người.
+  than="$(mktemp)"; than_bia="$(mktemp)"
+  rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc/people/$ID_NGUOI_F" -H "Authorization: Bearer $tok_lai")"
+  [ "$rc" = "403" ] || { rm -f "$than" "$than_bia"; hong "sau flow 46: hồ sơ F trả HTTP $rc, mong 403 (không xem được)."; }
+  rc="$(curl -sS -o "$than_bia" -w '%{http_code}' "$goc/people/0a0a0a0a-0a0a-4a0a-8a0a-0a0a0a0a0a0a" -H "Authorization: Bearer $tok_lai")"
+  [ "$rc" = "403" ] && [ "$(cat "$than")" = "$(cat "$than_bia")" ] \
+    || { rm -f "$than" "$than_bia"; hong "sau flow 46: người đã xoá và một id lạ trả hai câu khác nhau — mã đang là oracle."; }
+  rm -f "$than" "$than_bia"
   # 2. Phiên cũ chết, và chết CÙNG MỘT CÂU với một token bịa.
   than="$(mktemp)"; than_bia="$(mktemp)"
   rc="$(curl -sS -o "$than" -w '%{http_code}' "$goc/people/me" -H "Authorization: Bearer $tok_f_cu")"

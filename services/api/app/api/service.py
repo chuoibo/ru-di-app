@@ -3987,9 +3987,14 @@ class ApiService:
         assert relation is not None
         person = self.repository.get_person(person_id)
         if person is None or person.deleted_at is not None:
-            # `self` without a people row, or an account that ended: the same
-            # 404 either way (ADR-0023 §2.1.4). A profile that still rendered
-            # for a deleted account would be the erasure only half done.
+            # A SECOND layer, not the contract callers see. Ending an account
+            # removes every friend edge and leaves every membership, so by the
+            # time somebody else asks, `relation` is already None and the door
+            # above has answered 403 -- the same 403 an id that was never a
+            # person gets, which is the point (ADR-0023 §2.1.4). This branch is
+            # what is left for `self` on a row that ended, a state the session
+            # layer already refuses at 401. Keep it: cheap, and the day one of
+            # those two layers moves, a profile must still not render.
             raise ApiProblem(
                 404, "person_not_found", "Chưa có hồ sơ cho tài khoản này."
             )
