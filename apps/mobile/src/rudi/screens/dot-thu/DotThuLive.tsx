@@ -301,7 +301,7 @@ export function DotThuLiveScreen({ phien, batchId }: { phien: Phien; batchId: st
         </>
       ) : null}
 
-      <RudiButton disabled={ban} icon="refresh-outline" label="Đọc lại từ máy chủ" onPress={docLai} tone="split" variant="ghost" />
+      <RudiButton disabled={ban} icon="refresh-outline" label="Làm mới" onPress={docLai} tone="split" variant="ghost" />
     </RudiScreen>
   );
 }

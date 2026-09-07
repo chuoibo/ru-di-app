@@ -12,7 +12,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Phien } from "../../../phien";
 import { FinanceError } from "../../../screens/ca-nhan/tai-chinh";
@@ -55,6 +55,7 @@ function phuHuyHieu(h: HuyHieu): string {
 
 export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const { colors, radius } = useRudiTheme();
+  const [moCachTinh, setMoCachTinh] = useState(false);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
 
   const doc = async () => {
@@ -129,7 +130,7 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       ) : null}
 
       <SectionHeader title="Huy hiệu" />
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>{demHuyHieuMo(huyHieu)} · mỗi huy hiệu là một luật đọc từ sổ</Text>
+      <Text style={[typography.note, { color: colors.inkSoft }]}>{demHuyHieuMo(huyHieu)}</Text>
       <View>
         {huyHieu.map((h) => {
           const mo = h.trangThai === "mo";
@@ -147,11 +148,6 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
           );
         })}
       </View>
-      {huyHieu.some((h) => h.trangThai === "chua-do-duoc") ? (
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          «Chưa đo được»: sổ chưa ghi mục đó theo từng người, nên chưa có gì để đếm. Không phải khoá.
-        </Text>
-      ) : null}
 
       <SectionHeader title="Thử thách tuần này" />
       {thuThach.length === 0 ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Tuần này chưa có thử thách nào đo được từ sổ.</Text> : null}
@@ -166,13 +162,35 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
           </View>
         ))}
       </View>
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>Thành tích tính lại mỗi lần mở, từ đúng những gì có trong sổ. Không có điểm thưởng nào cấp ngoài sổ.</Text>
+      {/* The rules stay true and stay available, but behind one word instead
+          of standing under every list (report 07/09 §8.5). */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: moCachTinh }}
+        aria-expanded={moCachTinh}
+        onPress={() => setMoCachTinh((v) => !v)}
+        style={({ pressed }) => [styles.cachTinh, pressed && styles.bam]}
+      >
+        <Text style={[typography.label, { color: colors.inkSoft }]}>Cách tính</Text>
+        <Ionicons color={colors.inkFaint} name={moCachTinh ? "chevron-up" : "chevron-down"} size={16} />
+      </Pressable>
+      {moCachTinh ? (
+        <View style={styles.giaiThich}>
+          <Text style={[typography.note, { color: colors.inkSoft }]}>Thành tích tính lại mỗi lần mở, từ đúng những gì có trong sổ. Không có điểm thưởng nào cấp ngoài sổ.</Text>
+          {huyHieu.some((h) => h.trangThai === "chua-do-duoc") ? (
+            <Text style={[typography.note, { color: colors.inkSoft }]}>«Chưa đo được»: sổ chưa ghi mục đó theo từng người, nên chưa có gì để đếm. Không phải khoá.</Text>
+          ) : null}
+        </View>
+      ) : null}
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  cachTinh: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 48, alignSelf: "flex-start" },
+  giaiThich: { gap: 6 },
+  bam: { opacity: 0.7 },
   khung: { gap: 14 },
   dau: { gap: 6 },
   cap: { fontFamily: displayFace.extraBold, fontSize: 34, lineHeight: 39, letterSpacing: -1 },

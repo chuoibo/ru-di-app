@@ -85,8 +85,8 @@ function loiRaChu(error: unknown): string {
 
 /** The second line of a stop: where, or what is still missing, in words. */
 function dongDiaDiem(stop: ChangDung): { chu: string; tone: "accent" | "inkFaint" } {
-  if (stop.place_id === null) return { chu: "Chưa gắn địa điểm · bấm để chọn", tone: "inkFaint" };
-  if (stop.place_name === null || stop.place_name === stop.label) return { chu: "Địa điểm trong danh mục · bấm để mở", tone: "accent" };
+  if (stop.place_id === null) return { chu: "Chọn địa điểm", tone: "inkFaint" };
+  if (stop.place_name === null || stop.place_name === stop.label) return { chu: "Mở địa điểm", tone: "accent" };
   return { chu: stop.place_name, tone: "accent" };
 }
 

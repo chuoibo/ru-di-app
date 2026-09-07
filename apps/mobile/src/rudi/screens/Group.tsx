@@ -317,7 +317,7 @@ export function AiItineraryScreen() {
                 <AnhChang alt={noi.name} source={noi.image} />
               ) : null
             }
-            phu={slot.placeId ? "Đã gắn địa điểm" : "Có thể thay đổi"}
+            phu={noi?.name ?? null}
             phuTone="inkSoft"
             tieuDe={slot.title}
           />

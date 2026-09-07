@@ -975,8 +975,10 @@ Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 v
 `phuTone` `inkSoft`/`inkFaint`/`accent`, `caption inkSoft` ghi chú), khe
 `phai` cho con dấu/nút/menu, cao tối thiểu 64, thân đệm dưới 18. Mực liền
 `lineStrong` cho chặng nhóm giữ; `phac` nét chì đứt `inkFaint`; `daToi` tô nút
-`split`; `cuoi` không vẽ đường dưới. **Mọi trạng thái cũng là một chữ**
-(`phu`: «Có thể thay đổi», «Đã gắn địa điểm»), không bao giờ chỉ là nét.
+`split`; `cuoi` không vẽ đường dưới. **Mọi trạng thái cũng là một chữ**, không bao giờ chỉ là nét: `phu` mang
+tên địa điểm khi có, «Chọn địa điểm» khi chưa có; trạng thái nháp nói **một
+lần** ở đầu màn (badge «Nháp», AiNote), không lặp «Có thể thay đổi» dưới từng
+hàng (báo cáo 07/09 §4.6).
 **`AnhChang`** vào khe `phai`: ảnh 44 (`expo-image` `cover`, `alt` = tên địa
 điểm) trong khung giấy đệm 2 `card` + kẻ tóc `line` bo 10, nền `line` khi
 chưa tải; chỉ cho chặng có địa điểm **có ảnh** (`PLACES.find(...).image`),

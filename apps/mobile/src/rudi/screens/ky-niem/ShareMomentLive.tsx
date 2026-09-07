@@ -114,9 +114,6 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         ) : (
           <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { borderRadius: radius.small, backgroundColor: colors.ground }]} />
         )}
-        <Text numberOfLines={2} style={[typography.body, styles.chuThich, { color: caption.trim() === "" ? colors.inkFaint : colors.ink }]}>
-          {caption.trim() === "" ? "Câu của bạn hiện ở đây" : caption.trim()}
-        </Text>
       </View>
       <RudiButton disabled={ban} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chon()} variant="outline" />
       <Field
