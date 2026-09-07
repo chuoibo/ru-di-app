@@ -76,23 +76,6 @@ def list_sessions(
 
 
 @router.delete(
-    "/sessions/{session_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
-)
-def revoke_session(
-    session_id: UUID,
-    actor: Annotated[Actor, Depends(get_actor)],
-    repository: Annotated[ApiRepository, Depends(get_repository)],
-) -> Response:
-    """Sign one other device out. Somebody else's session answers 404: a 403
-    would confirm that the id names a real session. Declared after
-    `/sessions/current` so the literal is never parsed as an id."""
-    ApiService(repository).revoke_account_session(session_id, actor)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.delete(
     "/sessions/current",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={401: {"model": ErrorResponse}},
@@ -106,4 +89,21 @@ def revoke_current_session(
     # versions this repo runs on disagree about which annotation counts as a
     # promise. See `tests/api/test_bodyless_status_declarations.py`.
     ApiService(repository).revoke_session_token(bearer_token(authorization))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+)
+def revoke_session(
+    session_id: UUID,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+) -> Response:
+    """Sign one other device out. Somebody else's session answers 404: a 403
+    would confirm that the id names a real session. Declared after
+    `/sessions/current` so the literal is never parsed as an id."""
+    ApiService(repository).revoke_account_session(session_id, actor)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

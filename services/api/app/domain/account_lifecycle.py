@@ -107,6 +107,10 @@ ERASURE: dict[str, tuple[str, ...]] = {
         "payment_reports",
         "receipt_confirmations",
         "guest_links",
+        # A report is evidence for whoever reads the table, and most reports
+        # are about somebody else. Deleting one's account must not delete what
+        # one reported; `reporter_id` still resolves, to the anonymised row.
+        "reports",
         "bills",
         "bill_items",
         "bill_item_shares",
