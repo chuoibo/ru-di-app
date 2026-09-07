@@ -160,8 +160,9 @@ Bảng native trên cây merge `e4f2cedf`: fixture **XANH** (02:45); live OTP 18
 
 ## 5. Chưa kiểm, còn nợ
 
-- **Màn live chưa chụp native.** ExploreLive, PlanLive, ChiaBillLive, GroupChatLive, AlbumLive, HoSoSong… dùng chung thành phần với màn fixture và qua typecheck + test, nhưng cần API + thế giới seed (`make demo-rudi`, `make mobile-native-live`) để soi trên máy. Chưa làm trong lượt này.
-- **Màn OTP** chưa chụp (cần cửa OTP thật).
+- **Màn live và OTP đã đo native** qua chín lượt bảng `--otp` (mục 4d–4g), nhưng chỉ ở compact 360dp, cỡ chữ 1.0, light; expanded window và cỡ chữ 1.3/2.0 mới soi ở màn fixture (đợt 8), chưa chạy bảng live ở các điều kiện đó.
+- **Flow 38 (ảnh địa điểm có giấy phép)** chưa đo được trên stack demo: địa điểm seed là dữ liệu bịa, importer từ chối gắn ảnh thật; cần một stack có ảnh nhập từ mapping đã duyệt.
+- **Ma trận §13.2 của báo cáo** (rỗng/1/nhiều, tên dài, mạng chậm/lỗi một phần, ra nền/quay lại) chỉ phủ phần các flow Maestro đi qua; chưa có bảng riêng cho từng ô.
 - **iOS, TalkBack/VoiceOver** chưa đo. Nhãn a11y đã đặt trên mọi nút mới (`Mở …`, `Lưu …`, `Chọn ảnh N`) nhưng chưa có ai nghe thử.
 - **Tablet hai cột** (`twoPane` trong `adaptive.ts`) chưa màn nào dùng; tablet hiện là một cột rộng có rail, ảnh dẫn giãn 21:9.
 - **Google sign-in** vắng cho tới khi có client id (quyết định ở checkpoint `2490e67` của Codex).
