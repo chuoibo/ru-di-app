@@ -745,5 +745,5 @@ const styles = StyleSheet.create({
   lenh: { borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
   soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
-  oNhap: { flex: 1, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8 },
+  oNhap: { flex: 1, minHeight: 48, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8 },
 });

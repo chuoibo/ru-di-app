@@ -546,6 +546,7 @@ function QuyetToanNhap() {
                   <Stamp dong={vuaTra === item.fromIndex} label="Đã trả" tone="split" />
                 ) : (
                   <RudiButton
+                    accessibilityLabel={`Đánh dấu ${person.name} đã trả`}
                     compact
                     full={false}
                     label="Đánh dấu đã trả"

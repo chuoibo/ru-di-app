@@ -1044,7 +1044,9 @@ const styles = StyleSheet.create({
   fieldBlock: { gap: 7 },
   field: { minHeight: 52, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 10 },
   fieldMultiline: { minHeight: 108, alignItems: "flex-start", paddingTop: 13 },
-  fieldInput: { flex: 1, minHeight: 40, paddingVertical: 0 },
+  // The input is the node a finger and a screen reader land on, not the box
+  // around it: 48dp on its own (Material target), inside the 52dp field.
+  fieldInput: { flex: 1, minHeight: 48, paddingVertical: 0 },
   chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
   chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
   avatar: { alignItems: "center", justifyContent: "center" },
