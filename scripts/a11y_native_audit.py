@@ -20,6 +20,7 @@ summary table on stdout; exit 1 when any screen has findings.
         --serial 127.0.0.1:5561 --out /tmp/a11y \\
         rudi://welcome rudi://settlements/team-da-lat
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,7 +36,9 @@ MIN_DP = 48
 
 
 def adb(serial: str, *args: str, timeout: int = 60) -> str:
-    out = subprocess.run(["adb", "-s", serial, *args], capture_output=True, text=True, timeout=timeout)
+    out = subprocess.run(
+        ["adb", "-s", serial, *args], capture_output=True, text=True, timeout=timeout
+    )
     return out.stdout
 
 
@@ -63,8 +66,15 @@ def tap_text(serial: str, root: ET.Element, label: str) -> bool:
     """Tap the centre of the first node whose text or description is `label`."""
     for n in root.iter("node"):
         if n.get("text") == label or n.get("content-desc") == label:
-            l, t, r, b = bounds_of(n)
-            adb(serial, "shell", "input", "tap", str((l + r) // 2), str((t + b) // 2))
+            left, top, right, bottom = bounds_of(n)
+            adb(
+                serial,
+                "shell",
+                "input",
+                "tap",
+                str((left + right) // 2),
+                str((top + bottom) // 2),
+            )
             return True
     return False
 
@@ -99,14 +109,20 @@ def audit(root: ET.Element, dpi: int, allow_dup: set[str]) -> dict:
     seen: dict[str, int] = {}
     # The bottom edge of every scroll container: a target whose box ends
     # there is cut by the fold, not drawn small (five such rows on 2026-09-07).
-    edges = {bounds_of(n)[3] for n in root.iter("node") if n.get("scrollable") == "true"}
+    edges = {
+        bounds_of(n)[3] for n in root.iter("node") if n.get("scrollable") == "true"
+    }
     edges.add(max((bounds_of(n)[3] for n in root.iter("node")), default=0))
     for n in root.iter("node"):
-        interactive = n.get("clickable") == "true" or n.get("long-clickable") == "true" or n.get("checkable") == "true"
+        interactive = (
+            n.get("clickable") == "true"
+            or n.get("long-clickable") == "true"
+            or n.get("checkable") == "true"
+        )
         if not interactive:
             continue
-        l, t, r, b = bounds_of(n)
-        w, h = (r - l) / scale, (b - t) / scale
+        left, top, right, bottom = bounds_of(n)
+        w, h = (right - left) / scale, (bottom - top) / scale
         name = name_of(n)
         cls = n.get("class", "")
         if not name:
@@ -115,7 +131,7 @@ def audit(root: ET.Element, dpi: int, allow_dup: set[str]) -> dict:
             seen[name] = seen.get(name, 0) + 1
         # A scroll container is clickable to the tree but not a target.
         if name and (w < MIN_DP - 0.5 or h < MIN_DP - 0.5) and "ScrollView" not in cls:
-            if b in edges and h < MIN_DP - 0.5:
+            if bottom in edges and h < MIN_DP - 0.5:
                 cut.append({"name": name[:60], "dp": [round(w), round(h)]})
             else:
                 small.append({"name": name[:60], "dp": [round(w), round(h)]})
@@ -130,7 +146,12 @@ def main() -> int:
     ap.add_argument("--serial", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--wait", type=float, default=5.0)
-    ap.add_argument("--allow-dup", action="append", default=[], help="tên được phép lặp (hàng cùng nhãn)")
+    ap.add_argument(
+        "--allow-dup",
+        action="append",
+        default=[],
+        help="tên được phép lặp (hàng cùng nhãn)",
+    )
     ap.add_argument("links", nargs="+")
     a = ap.parse_args()
     out = Path(a.out)
@@ -139,9 +160,22 @@ def main() -> int:
     rows = []
     red = False
     for link in a.links:
-        adb(a.serial, "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", link, "com.lakiet.rudi")
+        adb(
+            a.serial,
+            "shell",
+            "am",
+            "start",
+            "-a",
+            "android.intent.action.VIEW",
+            "-d",
+            link,
+            "com.lakiet.rudi",
+        )
         time.sleep(a.wait)
-        slug = re.sub(r"[^a-z0-9]+", "-", link.split("://", 1)[-1].lower()).strip("-") or "root"
+        slug = (
+            re.sub(r"[^a-z0-9]+", "-", link.split("://", 1)[-1].lower()).strip("-")
+            or "root"
+        )
         xml_path = out / f"{slug}.xml"
         root = qua_dev_launcher(a.serial, xml_path)
         if root is None:
@@ -150,14 +184,25 @@ def main() -> int:
             continue
         # A screen that still shows the launcher, or nothing interactive, is
         # not a measurement: say so instead of printing zeros.
-        texts = {(n.get("text") or n.get("content-desc") or "") for n in root.iter("node")}
-        if "Runtime version: exposdk:57.0.0" in " ".join(texts) or not any(n.get("clickable") == "true" for n in root.iter("node")):
+        texts = {
+            (n.get("text") or n.get("content-desc") or "") for n in root.iter("node")
+        }
+        if "Runtime version: exposdk:57.0.0" in " ".join(texts) or not any(
+            n.get("clickable") == "true" for n in root.iter("node")
+        ):
             rows.append((link, "KHÔNG PHẢI MÀN APP", 0, 0, 0))
             red = True
             continue
         res = audit(root, dpi, set(a.allow_dup))
-        (out / f"{slug}.json").write_text(json.dumps({"link": link, **res}, ensure_ascii=False, indent=2))
-        n_un, n_sm, n_du, n_cut = len(res["unnamed"]), len(res["small"]), len(res["duplicates"]), len(res["cut"])
+        (out / f"{slug}.json").write_text(
+            json.dumps({"link": link, **res}, ensure_ascii=False, indent=2)
+        )
+        n_un, n_sm, n_du, n_cut = (
+            len(res["unnamed"]),
+            len(res["small"]),
+            len(res["duplicates"]),
+            len(res["cut"]),
+        )
         if n_un or n_sm or n_du:
             red = True
         rows.append((link, f"cắt bởi mép: {n_cut}" if n_cut else "", n_un, n_sm, n_du))
