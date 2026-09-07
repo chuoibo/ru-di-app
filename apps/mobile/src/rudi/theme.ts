@@ -82,6 +82,16 @@ export const typography = {
     lineHeight: 18,
     fontWeight: "600",
   } satisfies TextStyle,
+  /**
+   * A secondary line at caption size but at reading weight: metadata, a
+   * helper, a count. Caption's 600 is right for a short label and wrong for
+   * a sentence, where it makes every line shout (report 07/09 §4.2).
+   */
+  note: {
+    fontSize: tokens.type.micro.size,
+    lineHeight: 18,
+    fontWeight: "400",
+  } satisfies TextStyle,
   /** Stamp lettering: condensed caps on tickets and status seals. */
   stamp: {
     fontFamily: displayFace.condensedBold,

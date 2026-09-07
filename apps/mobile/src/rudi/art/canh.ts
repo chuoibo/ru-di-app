@@ -33,8 +33,16 @@ export function laCanhId(id: string): id is CanhId {
   return (CANH_IDS as readonly string[]).includes(id);
 }
 
+/** The first scene stands in for an id this build has no scene for. */
+const CANH_MAC_DINH: CanhId = "chua-co-hoi";
+
+function canhHopLe(id: string): CanhId {
+  if (laCanhId(id)) return id;
+  return CANH_MAC_DINH;
+}
+
 export function moTaCanh(id: string): string {
-  return MO_TA[laCanhId(id) ? id : "chua-co-hoi"];
+  return MO_TA[canhHopLe(id)];
 }
 
 const NEN: Record<CanhId, () => LopVe[]> = {
@@ -90,6 +98,6 @@ export interface TuyChonCanh {
 /** The layers of one scene, back to front. An unknown id draws the first scene. */
 export function hinhCanh(id: string, tuyChon: TuyChonCanh = {}): LopVe[] {
   const { nep = true } = tuyChon;
-  const canh: CanhId = laCanhId(id) ? id : "chua-co-hoi";
+  const canh = canhHopLe(id);
   return nep ? [...NEN[canh](), ...NEP[canh]()] : NEN[canh]();
 }

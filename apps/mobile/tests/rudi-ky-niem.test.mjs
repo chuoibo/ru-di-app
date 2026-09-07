@@ -16,6 +16,8 @@ import {
   cauCapDo,
   cauKyNiem,
   cauThongKeAlbum,
+  ngayVietNam,
+  nhomTheoNgay,
   cauThuocPhim,
   cauTuongTac,
   checkInKyNiem,
@@ -129,4 +131,23 @@ test("tenDiaDiem: chỗ không tên không in id, khoảng trắng không phải
   assert.equal(tenDiaDiem({ place_id: "p-xxxxxxxx", place_name: "   " }), TEN_DIA_DIEM_CHUA_BIET);
   assert.equal(tenDiaDiem({ place_id: "p-xxxxxxxx", place_name: "Quán Ốc Dì Bé" }), "Quán Ốc Dì Bé");
   assert.doesNotMatch(TEN_DIA_DIEM_CHUA_BIET, /p-|[0-9a-f]{8}-/);
+});
+
+test("ngày Việt Nam của một tấm ảnh: biên nửa đêm +07 đúng từng giây, dấu thời gian hỏng ra null", () => {
+  assert.equal(ngayVietNam("2026-10-17T16:59:59Z"), "2026-10-17");
+  assert.equal(ngayVietNam("2026-10-17T17:00:00Z"), "2026-10-18");
+  assert.equal(ngayVietNam("2026-10-18T00:30:00+07:00"), "2026-10-18");
+  assert.equal(ngayVietNam("hôm qua"), null);
+});
+
+test("ảnh gom theo ngày, giữ thứ tự máy chủ, ngày hỏng gom riêng chứ không rơi", () => {
+  const anh = [
+    { id: "a", created_at: "2026-10-17T10:00:00+07:00" },
+    { id: "b", created_at: "2026-10-17T22:00:00+07:00" },
+    { id: "c", created_at: "2026-10-18T08:00:00+07:00" },
+    { id: "d", created_at: "?" },
+  ];
+  const nhom = nhomTheoNgay(anh);
+  assert.deepEqual(nhom.map((n) => [n.nhan, n.anh.map((a) => a.id)]), [["17/10", ["a", "b"]], ["18/10", ["c"]], ["Chưa rõ ngày", ["d"]]]);
+  assert.deepEqual(nhomTheoNgay([]), []);
 });

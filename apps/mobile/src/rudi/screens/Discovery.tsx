@@ -35,14 +35,23 @@ import {
   type IconName,
 } from "../ui";
 import { Wordmark } from "../ui/Wordmark";
+import { Canh } from "../ui/art/Canh";
 import { EmptyState } from "../ui/EmptyState";
-import { PlaceLead, PlaceRow, type DiaDiemHienThi } from "./explore/HangDiaDiem";
+import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
 
 const GLYPH: Record<PlaceCategory, IconName> = {
   "Quán ăn": "restaurant-outline",
   Cafe: "cafe-outline",
   "Vui chơi": "game-controller-outline",
   "Đi chơi đêm": "moon-outline",
+};
+
+/** The catalogue's id for each sample category, so the frame draws the same object the live screen does. */
+const LOAI: Record<PlaceCategory, string> = {
+  "Quán ăn": "quan-an-local",
+  Cafe: "cafe",
+  "Vui chơi": "vui-choi",
+  "Đi chơi đêm": "di-choi-dem",
 };
 
 /** The sample place in the row/lead vocabulary. `song`: a real session, so no invented match badge. */
@@ -57,6 +66,7 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
       { icon: "wallet-outline", text: place.price },
     ],
     glyph: GLYPH[place.category],
+    loai: LOAI[place.category],
     photo: place.image,
     badge: !song && place.match >= 90 ? "Hợp gu" : null,
   };
@@ -121,6 +131,7 @@ export function ExploreScreen() {
 
   const moDiaDiem = (id: string) => router.push(("/places/" + id) as never);
   const [dan, ...conLai] = visiblePlaces;
+  const { soSanh, hang } = taiSoSanh(conLai);
 
   return (
     <RudiScreen bottomInset={112} testID="explore-screen">
@@ -207,6 +218,7 @@ export function ExploreScreen() {
         <EmptyState
           action={{ label: "Xóa bộ lọc", onPress: resetFilters }}
           body="Thử từ khóa khác hoặc bỏ bớt bộ lọc nhé."
+          illustration={<Canh id="tim-khong-ra" width={168} />}
           kind={query.trim() ? "no-results" : "filtered"}
           layout="inline"
           title="Chưa thấy nơi phù hợp"
@@ -219,9 +231,17 @@ export function ExploreScreen() {
             onOpen={() => moDiaDiem(dan.id)}
             onSave={() => toggleSaved(dan.id)}
           />
-          {conLai.length > 0 ? (
+          {soSanh !== null ? (
+            <PlaceCompare
+              daLuu={(id) => session.savedPlaceIds.includes(id)}
+              items={[hienThiMau(soSanh[0], song), hienThiMau(soSanh[1], song)]}
+              onOpen={moDiaDiem}
+              onSave={toggleSaved}
+            />
+          ) : null}
+          {hang.length > 0 ? (
             <ResponsiveRow gap={0} minItemWidth={300}>
-              {conLai.map((place) => (
+              {hang.map((place) => (
                 <PlaceRow
                   daLuu={session.savedPlaceIds.includes(place.id)}
                   dd={hienThiMau(place, song)}
@@ -265,6 +285,7 @@ export function AiMatchScreen() {
       { icon: "wallet-outline", text: place.price },
     ],
     glyph: GLYPH[place.category],
+    loai: LOAI[place.category],
     photo: place.image,
     badge: dau ? "Gợi ý" : null,
   });

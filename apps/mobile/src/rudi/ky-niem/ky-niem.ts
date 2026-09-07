@@ -218,6 +218,43 @@ export function cauTuongTac(k: KyNiem): string {
 
 export const CAPTION_DAI_NHAT = 300;
 
+/**
+ * A photo's calendar day in Vietnam (`+07:00`), the same days the kèo and the
+ * shelf count in. Arithmetic on the epoch rather than `Intl`, which Hermes
+ * does not promise; a stamp that does not parse is null, never today.
+ */
+export function ngayVietNam(iso: string): string | null {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  const d = new Date(t + 7 * 3600 * 1000);
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const ng = String(d.getUTCDate()).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${m}-${ng}`;
+}
+
+export type NhomNgay<T> = { ngay: string | null; nhan: string; anh: T[] };
+
+/**
+ * Photos in the order given, gathered into runs of one Vietnam calendar day,
+ * so an album reads day by day (report 07/09 §9.18). A stamp that does not
+ * parse gathers under «Chưa rõ ngày» rather than being dropped.
+ */
+export function nhomTheoNgay<T extends { created_at: string }>(anh: readonly T[]): NhomNgay<T>[] {
+  const ra: NhomNgay<T>[] = [];
+  for (const a of anh) {
+    const ngay = ngayVietNam(a.created_at);
+    const cuoi = ra[ra.length - 1];
+    if (cuoi !== undefined && cuoi.ngay === ngay) cuoi.anh.push(a);
+    else ra.push({ ngay, nhan: ngay === null ? "Chưa rõ ngày" : nhanNgay(ngay), anh: [a] });
+  }
+  return ra;
+}
+
+function nhanNgay(ngay: string): string {
+  const [, m, d] = ngay.split("-");
+  return `${Number(d)}/${Number(m)}`;
+}
+
 export function cauThongKeAlbum(a: Pick<TomTatAlbum, "photo_count" | "place_count" | "checkin_count" | "expense_count" | "split_total_vnd">): string {
   // Non-breaking spaces: a count must not be orphaned from its noun when the line wraps.
   const phan = [`${a.photo_count}\u00a0ảnh`, `${a.place_count}\u00a0chỗ đã tới`, `${a.checkin_count}\u00a0check-in`];

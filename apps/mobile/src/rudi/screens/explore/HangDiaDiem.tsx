@@ -7,6 +7,8 @@ import { IconButton, Inline, type IconName } from "../../ui";
 import { MediaSlot, cauGhiCong, type Attribution } from "../../ui/MediaSlot";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
+import { GuGlyph } from "../../ui/art/Gu";
+import { guTheoLoai } from "../../kham-pha/dia-diem";
 
 /**
  * One place, two sizes, one vocabulary -- for the fixture catalogue and the
@@ -23,6 +25,12 @@ import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
  *
  * A screen adapts its own data into `DiaDiemHienThi`; nothing here fetches
  * or invents. A badge is printed only when the caller says the match is real.
+ *
+ * 2026-09-08 (report 07/09 §9.4): between the lead and the rows there is now a
+ * **pair** to compare, two places side by side on the same axis (picture,
+ * name, one line, the facts), so choosing is a comparison before it is a
+ * scroll. And the empty frame's artwork is the category drawn with the art
+ * layer's pen (`GuGlyph`) rather than a system icon blown up in a disc.
  */
 export interface DiaDiemHienThi {
   id: string;
@@ -33,6 +41,8 @@ export interface DiaDiemHienThi {
   facts: { icon: IconName; text: string }[];
   /** Category glyph, the fallback artwork when there is no photo. */
   glyph: IconName;
+  /** Catalogue category id; with it the fallback is the drawn object, without it the icon above. */
+  loai?: string;
   photo: ImageSource | null;
   attribution?: Attribution;
   /** «Rất hợp gu» from a computed match; null otherwise. */
@@ -47,12 +57,12 @@ interface CommonProps {
   testID?: string;
 }
 
-/** The empty frame's artwork: the category glyph, drawn once, never a stock photo. */
-export function PlaceGlyph({ glyph, size = 40 }: { glyph: IconName; size?: number }) {
+/** The empty frame's artwork: the category drawn with one pen, never a stock photo. */
+export function PlaceGlyph({ glyph, loai, size = 40 }: { glyph: IconName; loai?: string; size?: number }) {
   const { colors } = useRudiTheme();
   return (
     <View style={[styles.glyphDisc, { width: size * 1.7, height: size * 1.7, borderRadius: size * 0.85, backgroundColor: colors.accentSoft }]}>
-      <Ionicons color={colors.accent} name={glyph} size={size} />
+      {loai === undefined ? <Ionicons color={colors.accent} name={glyph} size={size} /> : <GuGlyph id={guTheoLoai(loai)} size={size * 1.15} tone="accent" />}
     </View>
   );
 }
@@ -69,7 +79,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         <MediaSlot
           alt={dd.name}
           attribution={dd.attribution}
-          fallback={<PlaceGlyph glyph={dd.glyph} size={44} />}
+          fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={44} />}
           overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
           ratio={tiLe}
           source={dd.photo}
@@ -110,6 +120,8 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         <View style={[styles.thumb, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
           {dd.photo ? (
             <Image accessibilityLabel={dd.name} contentFit="cover" source={dd.photo} style={StyleSheet.absoluteFill} />
+          ) : dd.loai !== undefined ? (
+            <GuGlyph id={guTheoLoai(dd.loai)} size={32} tone="accent" />
           ) : (
             <Ionicons color={colors.accent} name={dd.glyph} size={24} />
           )}
@@ -140,7 +152,75 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   );
 }
 
+/**
+ * What follows the lead: a pair to compare when there are at least two left,
+ * then the rest as rows. With one place left there is nothing to compare and
+ * it stays a row. Pure, so the live and the fixture screen split alike.
+ */
+export function taiSoSanh<T>(sauDan: readonly T[]): { soSanh: readonly [T, T] | null; hang: T[] } {
+  if (sauDan.length < 2) return { soSanh: null, hang: [...sauDan] };
+  return { soSanh: [sauDan[0], sauDan[1]], hang: sauDan.slice(2) };
+}
+
+/**
+ * Two candidates on one axis. The same frame, name, line and facts for both,
+ * so the eye moves across rather than down; there is no card around either.
+ * The pair sits between the lead and the rows (report 07/09 §9.4).
+ */
+export function PlaceCompare({
+  items,
+  daLuu,
+  onOpen,
+  onSave,
+  testID,
+}: {
+  items: readonly [DiaDiemHienThi, DiaDiemHienThi];
+  daLuu: (id: string) => boolean;
+  onOpen: (id: string) => void;
+  onSave: (id: string) => void;
+  testID?: string;
+}) {
+  const { colors } = useRudiTheme();
+  return (
+    <View style={[styles.soSanh, { borderBottomColor: colors.line }]} testID={testID}>
+      {items.map((dd) => {
+        const luu = daLuu(dd.id);
+        const fact = dd.facts[0]?.text;
+        return (
+          <View key={dd.id} style={styles.ungVien}>
+            <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
+              <MediaSlot
+                alt={dd.name}
+                fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={34} />}
+                overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
+                ratio={4 / 3}
+                source={dd.photo}
+              />
+              <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
+              {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
+              {fact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{fact}</Text> : null}
+              {dd.photo && dd.attribution ? (
+                <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
+              ) : null}
+            </Pressable>
+            <IconButton
+              accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+              icon={luu ? "heart" : "heart-outline"}
+              onPress={() => onSave(dd.id)}
+              quiet
+              selected={luu}
+            />
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  ungVien: { flex: 1, minWidth: 0, gap: 4 },
+  ungVienPress: { gap: 6 },
   glyphDisc: { alignItems: "center", justifyContent: "center" },
   lead: { gap: 4 },
   leadPress: { gap: 12 },

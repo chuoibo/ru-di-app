@@ -442,6 +442,22 @@ export function bieuTuongLoai(categoryId: string): IconName {
   return co;
 }
 
+const GU_THEO_LOAI: Record<string, string> = {
+  "quan-an-local": "mon-local",
+  cafe: "cafe",
+  "vui-choi": "game",
+  "di-choi-dem": "nightlife",
+};
+
+/**
+ * The drawn object for a category (`art/gu.ts`), for the frame of a place
+ * that has no licensed photo. A category this build has no picture for maps
+ * to an id the art layer does not know, which it draws as a folded tag.
+ */
+export function guTheoLoai(categoryId: string): string {
+  return GU_THEO_LOAI[categoryId] ?? "khac";
+}
+
 /** Lower-case without diacritics, so «oc» finds «Ốc» and «dl» finds nothing false. */
 function gapChu(text: string): string {
   return text
