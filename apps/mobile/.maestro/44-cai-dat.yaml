@@ -129,8 +129,16 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "BẢN NHÁP"
     timeout: 30000
-- assertVisible: "Sổ tiền của các nhóm giữ nguyên: xoá tài khoản không xoá một khoản nợ."
+- assertVisible: "Điều khoản và dữ liệu"
 - takeScreenshot: 44-ve-rudi
+# Câu đắt nhất của trang nằm ở mục cuối, nên phải cuộn tới: `assertVisible`
+# không cuộn, và một phép khẳng định đọc thứ ngoài khung hình thì luôn đỏ.
+- scrollUntilVisible:
+    element:
+      text: "Sổ tiền của các nhóm giữ nguyên: xoá tài khoản không xoá một khoản nợ."
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - pressKey: Back
 - extendedWaitUntil:
     visible: "Quyền riêng tư"
