@@ -20,7 +20,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from app.api.repository import SqlAlchemyApiRepository
-from app.db.models import AccountSession, AuditEvent, Membership, Person, Post
+from app.db.models import AccountSession, AuditEvent, Context, Membership, Person, Post
 from app.domain.account_lifecycle import ANONYMOUS_DISPLAY_NAME, ERASURE
 
 from .test_group_recap_postgres import _app, _call, _group, _headers, _person, _split
@@ -49,6 +49,11 @@ MONEY_TABLES = (
     "bill_item_shares",
     "bill_surcharges",
     "bill_discounts",
+    # Không mang số tiền nào, nhưng nó là cái CỬA vào một nghĩa vụ: mất một
+    # hàng ở đây là một envelope khách không mở được nữa, và đó cũng là sổ
+    # tiền hỏng theo nghĩa người dùng. `ERASURE` xếp nó ở nhánh «giữ», nên
+    # phép so md5 phải bao nó (ADR-0023 §6 đếm 20 bảng, không phải 19).
+    "guest_links",
 )
 
 
@@ -246,3 +251,198 @@ def test_a_private_conversation_stops_taking_messages_when_one_side_ends(
     assert chet.status_code == 409, chet.text
     assert chet.json()["code"] == "direct_message_unavailable"
     assert chet.json()["detail"] == "Cuộc trò chuyện này không còn nhận tin."
+
+
+def test_a_number_that_deleted_and_came_back_is_findable_again(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """ADR-0023 §2.2.2, và cái giá của việc đọc sai nguồn sự thật.
+
+    `person_id` của tài khoản OTP suy ra từ số, nên trong nhiều tháng «id suy
+    ra» và «id thật» là một. Chúng thôi bằng nhau đúng lúc ai đó bấm nút xoá:
+    `verify_otp` mint uuid4 mới thay vì hồi sinh một hàng đã ẩn danh. Từ đó
+    id suy ra trỏ tới một người không còn, còn người thật mang một id không ai
+    suy ra được.
+
+    Nếu `find_person_by_phone` chỉ đọc phép suy ra thì mọi người từng xoá tài
+    khoản biến mất vĩnh viễn khỏi «Thêm bạn» — và câu từ chối GIỐNG HỆT câu
+    «chưa có ai dùng số này», nên lỗi tự giấu mình. Ca này là chỗ nó không
+    giấu được.
+    """
+    from app.api.person_identity import (
+        KEY_ENV_VAR,
+        canonical_mobile,
+        derive_person_id,
+        derive_phone_digest,
+        read_key,
+    )
+
+    monkeypatch.setenv(KEY_ENV_VAR, "d" * 64)
+    key = read_key()
+    # Ghép từ mảnh: repo guard đọc một dãy chín chữ số liền nhau là số tài khoản.
+    so = "09" + "0" * 6 + "12"
+    # Chuẩn hoá TRƯỚC khi suy ra, đúng như route làm. Suy ra từ chuỗi thô thì
+    # digest lệch và ca này sẽ đỏ vì một lý do không liên quan tới điều nó đo.
+    chuan = canonical_mobile(so)
+    assert chuan is not None, so
+    id_suy_ra = derive_person_id(chuan, key)
+    digest = derive_phone_digest(chuan, key).hex()
+
+    app = _app(postgres_session, monkeypatch)
+    repo = SqlAlchemyApiRepository(postgres_session)
+    nguoi_tra = _person(postgres_session, "Người đi tìm")
+
+    # Vòng đời một: số này thuộc về người mang id suy ra.
+    repo.create_person(id_suy_ra, "Chủ số cũ")
+    repo.upsert_account_identity(
+        person_id=id_suy_ra, provider="phone", subject=digest, now=NOW
+    )
+    postgres_session.flush()
+    truoc = _call(
+        app,
+        "POST",
+        "/friends/lookup",
+        headers={"X-Actor-ID": str(nguoi_tra.id), "X-Actor-Roles": "member"},
+        json={"phone": so},
+    )
+    assert truoc.status_code == 200, truoc.text
+    assert truoc.json()["person_id"] == str(id_suy_ra)
+
+    # Xoá, rồi số ấy quay lại với MỘT NGƯỜI KHÁC — đúng như `verify_otp` làm.
+    repo.erase_person(id_suy_ra, now=NOW)
+    id_moi = uuid.uuid4()
+    repo.create_person(id_moi, "Chủ số mới")
+    repo.upsert_account_identity(
+        person_id=id_moi, provider="phone", subject=digest, now=NOW
+    )
+    postgres_session.flush()
+
+    sau = _call(
+        app,
+        "POST",
+        "/friends/lookup",
+        headers={"X-Actor-ID": str(nguoi_tra.id), "X-Actor-Roles": "member"},
+        json={"phone": so},
+    )
+    assert sau.status_code == 200, (
+        "người đăng ký lại phải tìm được: 404 ở đây nghĩa là ai bấm nút xoá thì "
+        "biến mất khỏi «Thêm bạn» vĩnh viễn, và câu từ chối không nói ra điều đó"
+    )
+    assert sau.json()["person_id"] == str(id_moi)
+    assert sau.json()["display_name"] == "Chủ số mới"
+
+
+def test_an_ended_id_cannot_be_claimed_or_renamed_by_anybody(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """ADR-0023 §2.2.3: `PUT /people/{id}` không hồi sinh một hàng đã xoá.
+
+    Trước bản sửa, đường này trả 403 «rename_person_identity» — vừa nói cho
+    người hỏi biết id ấy TỪNG là ai đó, vừa đóng vĩnh viễn đường mời-bằng-số
+    cho số ấy. Câu đúng là 404, và đúng CÂU của «chưa có ai dùng số này».
+    """
+    app = _app(postgres_session, monkeypatch)
+    repo = SqlAlchemyApiRepository(postgres_session)
+    di = _person(postgres_session, "Người sẽ đi")
+    o_lai = _person(postgres_session, "Người ở lại")
+    postgres_session.flush()
+    repo.erase_person(di.id, now=NOW)
+    postgres_session.flush()
+
+    dat_ten = _call(
+        app,
+        "PUT",
+        f"/people/{di.id}",
+        headers={"X-Actor-ID": str(o_lai.id), "X-Actor-Roles": "member"},
+        json={"display_name": "Tên mới toanh"},
+    )
+    assert dat_ten.status_code == 404, dat_ten.text
+    assert dat_ten.json()["code"] == "person_not_found"
+    assert dat_ten.json()["detail"] == "Chưa có ai dùng số này trong Rủ Đi."
+    con = postgres_session.get(Person, di.id)
+    assert con is not None and con.display_name == ANONYMOUS_DISPLAY_NAME
+
+
+def _mo_cap(app, mot: Person, hai: Person, context: Context) -> dict[str, str]:
+    """Mở cặp giữa hai người bạn và trả về header để gửi tin vào cặp ấy."""
+    mo = _call(
+        app, "POST", f"/people/{hai.id}/dm", headers=_headers(mot, context), json=None
+    )
+    assert mo.status_code in (200, 201), mo.text
+    return {
+        "X-Actor-ID": str(mot.id),
+        "X-Actor-Roles": "member",
+        "X-Actor-Contexts": mo.json()["id"],
+    }
+
+
+def _gui(app, headers: dict[str, str], body: str):
+    return _call(
+        app,
+        "POST",
+        f"/contexts/{headers['X-Actor-Contexts']}/messages",
+        headers=headers,
+        json={"kind": "text", "body": body, "image_url": None, "card": None},
+    )
+
+
+def test_both_reasons_a_pair_dies_answer_with_the_very_same_bytes(
+    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
+):
+    """ADR-0023 §2.3.2: MỘT mã và MỘT câu cho cả hai nguyên nhân.
+
+    «Người kia chặn tôi» và «người kia đã xoá tài khoản» là hai chuyện khác
+    nhau, và ADR chọn nói cùng một câu cho cả hai — một oracle yếu, cố ý: người
+    đang gõ vào một cuộc trò chuyện đã chết cần biết là nó chết, nhưng không ai
+    được dùng đường này để hỏi «người kia có chặn tôi không».
+
+    Trước ca này, «một mã một câu» là hai chuỗi ký tự trùng nhau ở hai chỗ
+    trong `service.py` và KHÔNG có gì gác. Tách chúng ra thành hai mã khác
+    nhau không làm ca nào đỏ ở bất kỳ tầng nào — reviewer của PR #581 đã chạy
+    đúng phép ấy và cả bộ test giữ nguyên số. Ca này là cái gác còn thiếu: nó
+    so THÂN TRẢ VỀ của hai nguyên nhân với nhau, từng byte.
+    """
+    context, mot = _group(postgres_session, "Hội hai lý do")
+    bi_chan = _person(postgres_session, "Người sẽ chặn")
+    da_xoa = _person(postgres_session, "Người sẽ xoá")
+    for ai in (bi_chan, da_xoa):
+        postgres_session.add(
+            Membership(
+                context_id=context.id,
+                person_id=ai.id,
+                role="member",
+                state="active",
+                origin="named",
+                joined_at=NOW,
+                created_at=NOW,
+            )
+        )
+        _befriend(postgres_session, mot, ai)
+    postgres_session.flush()
+    app = _app(postgres_session, monkeypatch)
+    repo = SqlAlchemyApiRepository(postgres_session)
+
+    cap_chan = _mo_cap(app, mot, bi_chan, context)
+    cap_xoa = _mo_cap(app, mot, da_xoa, context)
+    # Đối chứng dương: khi cả hai còn sống thì cả hai cửa đều mở.
+    assert _gui(app, cap_chan, "Còn sống 1").status_code == 201
+    assert _gui(app, cap_xoa, "Còn sống 2").status_code == 201
+
+    # Nguyên nhân một: người kia chặn.
+    repo.open_block_edge(blocker_id=bi_chan.id, addressee_id=mot.id, now=NOW)
+    postgres_session.flush()
+    # Nguyên nhân hai: người kia kết thúc tài khoản.
+    repo.erase_person(da_xoa.id, now=NOW)
+    postgres_session.flush()
+
+    vi_chan = _gui(app, cap_chan, "Còn ai không 1")
+    vi_xoa = _gui(app, cap_xoa, "Còn ai không 2")
+
+    assert vi_chan.status_code == 409, vi_chan.text
+    assert vi_chan.status_code == vi_xoa.status_code, vi_xoa.text
+    assert vi_chan.json() == vi_xoa.json(), (
+        "hai nguyên nhân trả hai câu khác nhau — mã trả về đang là một cách hỏi "
+        "«người kia có chặn tôi không», đúng thứ ADR-0023 §2.3.2 bỏ công giấu"
+    )
+    assert vi_chan.json()["code"] == "direct_message_unavailable"
+    assert vi_chan.json()["detail"] == "Cuộc trò chuyện này không còn nhận tin."

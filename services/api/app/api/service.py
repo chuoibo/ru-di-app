@@ -1203,6 +1203,15 @@ class ApiService:
         while deciding whether to send money.
         """
         existing = self.repository.get_person(person_id)
+        if existing is not None and existing.deleted_at is not None:
+            # ADR-0023 §2.2.3: an ended account is not a name to be claimed or
+            # renamed. Answering the rename refusal (403) here would both leak
+            # that the id used to be somebody and shut invite-by-phone forever
+            # for that number; answering 404 with the SAME sentence as «nobody
+            # uses this number» says the one true thing and says nothing else.
+            raise ApiProblem(
+                404, "person_not_found", "Chưa có ai dùng số này trong Rủ Đi."
+            )
         if existing is None:
             _require_permission("register_person_identity", actor, {})
             try:
@@ -6899,6 +6908,28 @@ class ApiService:
                 )
                 for record in self.repository.list_friends(person_id)
             ]
+        )
+
+    def find_person_by_phone_identity(
+        self, *, digest_hex: str, derived_id: uuid.UUID, actor: Actor
+    ) -> PersonMatchResponse:
+        """Who holds this number (ADR-0023 §2.2.2).
+
+        `account_identities` is the source of truth; the derivation only
+        decides what id a BRAND NEW account gets. The two agreed for as long
+        as an account was forever. They stop agreeing the moment somebody uses
+        the delete button: `verify_otp` mints a fresh uuid4 rather than revive
+        an anonymised row, so from then on the derived id names a person who
+        no longer exists and the real person has an id nobody can derive.
+
+        Reading only the derivation would make everybody who ever deleted an
+        account permanently invisible to «Thêm bạn» -- and the refusal is the
+        same sentence as «nobody uses this number», so the bug would hide
+        itself. The number never reaches here: both arguments are opaque.
+        """
+        bound = self.repository.get_account_identity("phone", digest_hex)
+        return self.find_person_by_person_id(
+            derived_id if bound is None else bound.person_id, actor
         )
 
     def find_person_by_person_id(
