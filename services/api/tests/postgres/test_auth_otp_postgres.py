@@ -12,7 +12,7 @@ No telephone number is spelled out whole; the repo guard is right to refuse it.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import anyio
 import httpx
@@ -215,3 +215,64 @@ def test_a_failed_delivery_leaves_a_consumed_challenge_behind(postgres_session):
     assert response.status_code == 503
     rows = postgres_session.scalars(select(OtpChallenge)).all()
     assert len(rows) == 1 and rows[0].consumed_at is not None
+
+
+def test_a_number_that_deleted_and_came_back_is_findable_by_phone_again(
+    postgres_session, monkeypatch
+):
+    """ADR-0023 §2.2.2 trên ĐƯỜNG THẬT, không mô phỏng.
+
+    `person_id` của tài khoản OTP suy ra từ số, nên «id suy ra» và «id thật»
+    trùng nhau suốt nhiều tháng. Chúng thôi trùng đúng lúc ai đó bấm nút xoá:
+    `verify_otp` mint uuid4 mới thay vì hồi sinh một hàng đã ẩn danh.
+
+    Ca này lái cả vòng bằng chính các route của sản phẩm — xin mã, xác minh,
+    xoá, xin mã lại, xác minh lại, rồi tra số — chứ không tự tay ghi hàng
+    `account_identities`. Bản đầu của ca này có ghi tay, và một reviewer chỉ
+    ra đúng chỗ yếu: nó sẽ vẫn xanh vào ngày `verify_otp` đổi thứ nó ghi.
+
+    Nếu `find_person_by_phone` chỉ đọc phép suy ra thì mọi người từng xoá tài
+    khoản biến mất vĩnh viễn khỏi «Thêm bạn», và câu từ chối GIỐNG HỆT câu
+    «chưa có ai dùng số này» — nên lỗi tự giấu mình.
+    """
+    dong_ho = {"luc": datetime(2030, 8, 27, 12, tzinfo=UTC)}
+    monkeypatch.setattr("app.api.service._now", lambda: dong_ho["luc"])
+    sender = RecordingSender()
+    app = _app(postgres_session, sender)
+    phone = "0913" + "111222"
+
+    # Vòng đời một.
+    truoc, _ = _login(app, sender, phone)
+    id_cu = uuid.UUID(truoc["person_id"])
+
+    # Một người khác đi tìm, qua đúng route mà màn «Thêm bạn» dùng.
+    nguoi_tra, _ = _login(app, sender, "0914" + "333444")
+
+    def tra_so():
+        return _call(
+            app,
+            "POST",
+            "/friends/lookup",
+            json={"phone": phone},
+            token=nguoi_tra["token"],
+        )
+
+    thay = tra_so()
+    assert thay.status_code == 200, thay.text
+    assert thay.json()["person_id"] == str(id_cu)
+
+    # Kết thúc tài khoản, rồi cùng số ấy quay lại.
+    SqlAlchemyApiRepository(postgres_session).erase_person(id_cu, now=dong_ho["luc"])
+    postgres_session.flush()
+    # Nhịp gửi lại mã là 60 giây theo đồng hồ máy chủ; nhích đồng hồ thay vì chờ.
+    dong_ho["luc"] = dong_ho["luc"] + timedelta(minutes=5)
+    sau, _ = _login(app, sender, phone)
+    id_moi = uuid.UUID(sau["person_id"])
+    assert id_moi != id_cu, "đăng ký lại phải là một người MỚI, không hồi sinh hàng cũ"
+
+    lai_thay = tra_so()
+    assert lai_thay.status_code == 200, (
+        "người đăng ký lại phải tìm được: 404 ở đây nghĩa là ai bấm nút xoá thì "
+        "biến mất khỏi «Thêm bạn» vĩnh viễn, và câu từ chối không nói ra điều đó"
+    )
+    assert lai_thay.json()["person_id"] == str(id_moi)
