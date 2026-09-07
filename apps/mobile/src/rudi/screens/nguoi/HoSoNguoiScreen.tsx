@@ -34,6 +34,7 @@ import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
+import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
@@ -61,6 +62,11 @@ export function HoSoNguoiScreen() {
   if (typeof params.id === "string") personId = params.id;
   const [hoSo, setHoSo] = useState<TrangHoSo>({ pha: "dang-doc" });
   const [tuong, setTuong] = useState<TrangTuong>({ pha: "dang-doc" });
+  // ADR-0023 §2.3: blocking and reporting live behind «Thêm hành động». The
+  // flag is local because the server never says «you blocked them» on a
+  // profile read -- the list of people one blocks is its own screen.
+  const [moHanhDong, setMoHanhDong] = useState(false);
+  const [daChan, setDaChan] = useState(false);
   // ADR-0021 §2.5: «Nhắn tin» opens (or finds) the pair with this friend. One
   // attempt per person, held in a ref, so a retry is the same write.
   const [dangMoChat, setDangMoChat] = useState(false);
@@ -229,7 +235,36 @@ export function HoSoNguoiScreen() {
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>Kết bạn để nhắn riêng.</Text>
               </View>
             ) : null}
+            {hoSo.hoSo.relation !== "self" ? (
+              <View style={styles.khoiChat}>
+                {daChan ? <Chip label="Đã chặn" selected /> : null}
+                <RudiButton
+                  icon="ellipsis-horizontal"
+                  label="Thêm hành động"
+                  onPress={() => setMoHanhDong(true)}
+                  variant="ghost"
+                />
+              </View>
+            ) : null}
           </View>
+          {hoSo.hoSo.relation !== "self" && personId !== "" ? (
+            <HanhDongHoSoSheet
+              actorId={phien?.person_id ?? ""}
+              daChan={daChan}
+              displayName={hoSo.hoSo.display_name}
+              onClose={() => setMoHanhDong(false)}
+              onDoiChan={(chan) => {
+                setDaChan(chan);
+                // Blocking ends the friendship, so «Nhắn tin» and the wall are
+                // both wrong the instant it lands. Ask the server again rather
+                // than leaving a stale relation on the screen.
+                void napHoSo();
+                void napTuong();
+              }}
+              open={moHanhDong}
+              personId={personId}
+            />
+          ) : null}
           <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
           {tuong.pha === "dang-doc" ? (
             <SkeletonGroup>

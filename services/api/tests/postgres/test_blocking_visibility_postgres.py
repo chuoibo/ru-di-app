@@ -81,13 +81,12 @@ def test_a_block_hides_the_wall_both_ways_and_the_rows_never_leave_the_database(
     assert "A trong nhóm" in hidden
 
 
-def test_a_block_hides_a_story_both_ways(
-    postgres_session: Session, monkeypatch: pytest.MonkeyPatch
-):
+def test_a_block_hides_a_story_both_ways(postgres_session: Session):
+    # No HTTP app here on purpose: the claim is about the SQL that decides who
+    # a story leaves the database for, so the test asks that predicate directly.
     a = _person(postgres_session, "A")
     b = _person(postgres_session, "B")
     _befriend(postgres_session, a, b)
-    app = _http(postgres_session, monkeypatch)
     repo = SqlAlchemyApiRepository(postgres_session)
     story = repo.create_story(
         author_id=a.id,

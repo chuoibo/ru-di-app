@@ -10,6 +10,7 @@ import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
 import { useRudiTheme } from "../src/rudi/theme";
+import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
 
 // Module level, before the first frame: `index.ts` never runs under
 // `expo-router/entry`, so the call that used to live in the legacy App.tsx never
@@ -121,6 +122,18 @@ function LegacyFragmentAdapter() {
 }
 
 export default function RootLayout() {
+  // The light/dark choice wraps everything, including the part of this file
+  // that reads the theme: `RootInner` is a separate component so its
+  // `useRudiTheme()` runs INSIDE the provider. Read it in `RootLayout` and
+  // the status bar would keep the system's answer forever.
+  return (
+    <GiaoDienProvider>
+      <RootInner />
+    </GiaoDienProvider>
+  );
+}
+
+function RootInner() {
   const { dark, colors } = useRudiTheme();
   // Hold the first frame until the display face is in: a heading that flips
   // from Roboto to Bricolage a beat after launch is the cheapest tell that a

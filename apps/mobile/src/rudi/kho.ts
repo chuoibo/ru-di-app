@@ -60,3 +60,26 @@ export async function xoaPhienAsync(): Promise<void> {
     // from the screen's point of view; the in-memory reset has already happened.
   }
 }
+
+/**
+ * Lựa chọn giao diện của máy này (L5, ADR-0023 §2.5).
+ *
+ * Cùng cách hỏng như phiên: đọc không được thì coi như chưa chọn gì, và ghi
+ * không được thì màn vẫn đổi cho lần chạy này — một tuỳ chọn hiển thị không
+ * đáng để chặn người dùng vì một lần AsyncStorage trở chứng.
+ */
+export async function docGiaoDienAsync(khoa: string): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(khoa);
+  } catch {
+    return null;
+  }
+}
+
+export async function ghiGiaoDienAsync(khoa: string, gia_tri: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(khoa, gia_tri);
+  } catch {
+    // See the docstring: a display preference is not worth an error screen.
+  }
+}
