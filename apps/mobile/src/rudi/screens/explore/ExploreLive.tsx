@@ -3,55 +3,55 @@
  * saved places that live on the server, and a natural-language search that
  * Rủ Đi AI ranks. Typing filters by name at once; submitting asks the model.
  *
- * No photographs travel on the wire (the catalogue has none), so a place is
- * a typographic tile: category glyph, name, kinds, then the numbers the
- * server actually measured.
+ * ## Places lead, the assistant stands beside the search (UI v2, đợt 4)
+ *
+ * The first cut opened with a violet card selling the AI and drew four
+ * coloured category tiles before any place; the 2026-09-06 review read it as
+ * a feature advert over a contact list. Here the page opens with where you
+ * are and a search; the assistant is the sparkle button beside it and one
+ * sentence under it. Categories are plain chips, only the chosen one tinted.
+ * The first place is the lead (a licensed photo when the catalogue has one,
+ * the category glyph when it does not); the rest are rows on the paper.
+ * Changing a filter crossfades the results over `standard`; typing filters
+ * without ceremony.
  */
-import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import type { Phien } from "../../../phien";
-import {
-  matchLabel,
-  type Category,
-  type Place,
-} from "../../../screens/kham-pha/places";
+import { matchLabel, type Category, type Place } from "../../../screens/kham-pha/places";
 import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-pha/tim-kiem";
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
+  TIEN_TO_ANH,
   anhBiaThe,
   bieuTuongLoai,
   boLuuDiaDiem,
+  cauChuaCo,
+  cauGu,
   cauTimKiem,
   chiTietNgan,
   daoLuu,
   docDaLuu,
-  cauChuaCo,
-  cauGu,
   docDanhMucCoLui,
   dongPhu,
-  type Gu,
   locTheoTen,
   luuDiaDiem,
+  type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
-import {
-  Card,
-  Chip,
-  Heading,
-  IconButton,
-  Inline,
-  Logo,
-  RudiButton,
-  RudiScreen,
-  SearchField,
-  SectionHeader,
-} from "../../ui";
-import { MediaSlot } from "../../ui/MediaSlot";
+import { Chip, IconButton, ResponsiveRow, RudiScreen, SearchField, SectionHeader } from "../../ui";
+import { Wordmark } from "../../ui/Wordmark";
+import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { useMotion } from "../../ui/useMotion";
+import { PlaceLead, PlaceRow, type DiaDiemHienThi } from "./HangDiaDiem";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -76,9 +76,29 @@ function tenNhom(phien: Phien): string {
   return nhom.display_name;
 }
 
+/** The server's place, in the vocabulary the row and the lead draw. */
+export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
+  const hop = matchLabel(place.match);
+  const bia = anhBiaThe(place);
+  return {
+    id: place.id,
+    name: place.name,
+    sub: dongPhu(place),
+    facts: chiTietNgan(place).map((m) => ({ icon: m.icon, text: m.chu })),
+    glyph: bieuTuongLoai(place.category),
+    // The picture comes with its credit or not at all (ADR-0017 §2.5).
+    photo: bia === null ? null : bia.nguon,
+    // «Quanh đây» travels with the credit: the importer geosearched within
+    // 250 m, so the picture is from around here, not of this business.
+    attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
+    badge: hop !== null && hop.real ? hop.text : null,
+  };
+}
+
 export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const motion = useMotion();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [daLuu, setDaLuu] = useState<string[]>([]);
   const [loiLuu, setLoiLuu] = useState<string | null>(null);
@@ -158,103 +178,98 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
 
   const dangLoc = loai !== null || query.trim().length > 0 || timKiem.kind === "co-ket-qua";
   const cauLoi = cauTimKiem(timKiem);
+  // A filter change crossfades the results; a keystroke does not (it would
+  // flicker on every letter). Reduce Motion cuts straight to the new list.
+  const khoaKetQua = `${loai ?? ""}|${timKiem.kind === "co-ket-qua" ? timKiem.query : ""}`;
+  const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(ReduceMotion.System);
+  // The lead is a photograph at reading size. A catalogue that has no picture
+  // for its first place (a fresh server, no licensed photos yet) would open
+  // on a screenful of empty frame, so without a photo nothing is promoted
+  // and every place is a row (report §7.3: a placeholder must be honest,
+  // not a stage).
+  const daNhat = danhSach[0];
+  const coAnhDan = daNhat !== undefined && anhBiaThe(daNhat) !== null;
+  const dan = coAnhDan ? daNhat : undefined;
+  const conLai = coAnhDan ? danhSach.slice(1) : danhSach;
+  const rong = danhSach.length === 0;
 
   return (
     <RudiScreen bottomInset={112} testID="explore-screen">
       <View style={styles.dau}>
-        <View>
-          <Logo compact />
-          {/* The destination is a control, not a caption. It used to be the
-              words «Đà Lạt · danh mục Rủ Đi» printed under the logo whatever
-              the list actually held. */}
-          <Pressable
-            accessibilityLabel="Đổi điểm đến"
-            accessibilityRole="button"
-            onPress={() => router.push("/destinations")}
-            style={styles.viTri}
-          >
-            <Ionicons color={colors.accent} name="location" size={14} />
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {diemDen === null ? "Đang đọc điểm đến…" : `${diemDen.name} · đổi nơi khác`}
-            </Text>
-            <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
-          </Pressable>
-        </View>
-      </View>
-      <SearchField
-        accessibilityLabel="Ô tìm địa điểm"
-        onChangeText={(t) => {
-          setQuery(t);
-          if (timKiem.kind !== "chua-tim") setTimKiem({ kind: "chua-tim" });
-        }}
-        onSubmitEditing={() => void hoi()}
-        placeholder="Tìm quán hoặc hỏi Rủ Đi AI"
-        value={query}
-      />
-      <Card onPress={() => setQuery(CAU_MAU)} style={styles.theAi} tone="ai">
-        <View style={styles.theAiIcon}>
-          <Ionicons color={colors.ai} name="sparkles" size={22} />
-        </View>
-        <View style={styles.flex}>
-          <Text style={[typography.title, { color: colors.ink }]}>Hỏi Rủ Đi AI theo gu {tenNhom(phien)}</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Gõ một câu như «{CAU_MAU}» rồi bấm tìm. Rủ Đi xếp hạng theo ngân sách, số người và khoảng cách.
+        <Wordmark color={colors.ink} height={20} />
+        {/* The destination is a control, not a caption. */}
+        <Pressable
+          accessibilityLabel="Đổi điểm đến"
+          accessibilityRole="button"
+          onPress={() => router.push("/destinations")}
+          style={({ pressed }) => [styles.viTri, pressed && styles.bam]}
+        >
+          <Ionicons color={colors.accent} name="location" size={16} />
+          <Text style={[typography.label, { color: colors.ink }]}>
+            {diemDen === null ? "Đang đọc điểm đến…" : `${diemDen.name} · đổi nơi khác`}
           </Text>
+          <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
+        </Pressable>
+      </View>
+      <View style={styles.timRow}>
+        <View style={styles.flex}>
+          <SearchField
+            accessibilityLabel="Ô tìm địa điểm"
+            onChangeText={(t) => {
+              setQuery(t);
+              if (timKiem.kind !== "chua-tim") setTimKiem({ kind: "chua-tim" });
+            }}
+            onSubmitEditing={() => void hoi()}
+            placeholder="Tìm quán, hỏi AI..."
+            value={query}
+          />
         </View>
-      </Card>
+        {/* The assistant stands beside the search, not above the places: one
+            tap drops a sample question in so the person sees what to ask. */}
+        <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={() => setQuery(CAU_MAU)} selected tone="ai" />
+      </View>
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>
+        Gõ tên để lọc ngay. Hỏi Rủ Đi AI một câu như «{CAU_MAU}» rồi bấm tìm: xếp theo gu {tenNhom(phien)}, ngân sách, số người và khoảng cách.
+      </Text>
       {trang.pha === "dang-doc" ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đang đọc danh mục từ máy chủ...</Text>
+        <SkeletonGroup style={styles.khung}>
+          <SkeletonCard lines={1} media={200} />
+          <SkeletonRow leading={56} />
+          <SkeletonRow leading={56} />
+          <SkeletonRow leading={56} />
+        </SkeletonGroup>
       ) : null}
-      {trang.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-          <RudiButton label="Thử lại" onPress={() => void nap()} variant="outline" />
-        </Card>
-      ) : null}
+      {trang.pha === "hong" ? <ErrorState onRetry={() => void nap()} title="Chưa đọc được danh mục" /> : null}
       {trang.pha === "xong" ? (
         <>
-          <View style={styles.luoiLoai}>
+          <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>
             {trang.categories.map((c) => {
               const chon = loai === c.id;
               return (
-                <Pressable
-                  accessibilityRole="button"
-                  aria-pressed={chon}
+                <Chip
+                  icon={bieuTuongLoai(c.id)}
                   key={c.id}
+                  label={c.label}
                   onPress={() => setLoai(loaiSauBam(chon, c.id))}
-                  style={({ pressed }) => [
-                    styles.oLoai,
-                    {
-                      backgroundColor: chon ? colors.accentSoft : colors.card,
-                      borderColor: chon ? colors.accent : colors.line,
-                    },
-                    pressed && styles.bam,
-                  ]}
-                >
-                  <View style={[styles.oLoaiIcon, { backgroundColor: chon ? colors.card : colors.accentSoft }]}>
-                    <Ionicons color={colors.accent} name={bieuTuongLoai(c.id)} size={22} />
-                  </View>
-                  <Text numberOfLines={2} style={[typography.caption, styles.nhanLoai, { color: chon ? colors.accent : colors.ink }]}>
-                    {c.label}
-                  </Text>
-                </Pressable>
+                  selected={chon}
+                />
               );
             })}
-          </View>
+          </ScrollView>
           {timKiem.kind === "dang-tim" ? (
-            <Card tone="ai">
+            <View style={[styles.theAi, { backgroundColor: colors.aiSoft }]}>
               <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI</Text>
               <Text style={[typography.body, { color: colors.ink }]}>Đang đọc câu «{timKiem.query}»...</Text>
-            </Card>
+            </View>
           ) : null}
           {cauLoi !== null ? (
-            <Card tone="ai">
+            <View style={[styles.theAi, { backgroundColor: colors.aiSoft }]}>
               <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI</Text>
               <Text style={[typography.body, { color: colors.ink }]}>{cauLoi}</Text>
-            </Card>
+            </View>
           ) : null}
           {timKiem.kind === "co-ket-qua" ? (
-            <Card tone="ai">
+            <View style={[styles.theAi, { backgroundColor: colors.aiSoft }]}>
               <Text style={[typography.caption, { color: colors.ai }]}>Rủ Đi AI hiểu câu «{timKiem.query}»</Text>
               {hieuDuocGi(timKiem.understood, trang.categories).map((d) => (
                 <Text key={d.label} style={[typography.body, { color: colors.ink }]}>
@@ -264,21 +279,9 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               {hieuDuocGi(timKiem.understood, trang.categories).length === 0 ? (
                 <Text style={[typography.body, { color: colors.ink }]}>Chưa rút được ngân sách, số người hay khu vực; xếp theo gu chung.</Text>
               ) : null}
-            </Card>
+            </View>
           ) : null}
-          {loiLuu !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiLuu}</Text> : null}
-          {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
-              button, because it is the one state the person can fix. */}
-          <Pressable
-            accessibilityRole={gu === null || gu.co_so === "chua-biet" ? "button" : undefined}
-            disabled={gu !== null && gu.co_so !== "chua-biet"}
-            onPress={() => router.push("/personalization" as never)}
-          >
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGu(gu)}</Text>
-            {chuaCo !== "" ? (
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>{chuaCo}</Text>
-            ) : null}
-          </Pressable>
+          {loiLuu !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiLuu}</Text> : null}
           <SectionHeader
             action={dangLoc ? "Xóa lọc" : undefined}
             onAction={dangLoc ? boTim : undefined}
@@ -290,21 +293,51 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
                 : `${trang.places.length} nơi ở ${diemDen === null ? "đây" : diemDen.name}`
             }
           />
-          {danhSach.length === 0 ? (
-            <Card style={styles.rong}>
-              <Heading align="center" size="h2" title="Chưa thấy nơi phù hợp" subtitle="Thử từ khóa khác hoặc xóa bớt bộ lọc nhé." />
-              <RudiButton label="Xóa lọc" onPress={boTim} variant="outline" />
-            </Card>
+          {/* Whose taste the badges follow (M11). The «chưa biết» sentence is a
+              button, because it is the one state the person can fix. */}
+          <Pressable
+            accessibilityRole={gu === null || gu.co_so === "chua-biet" ? "button" : undefined}
+            disabled={gu !== null && gu.co_so !== "chua-biet"}
+            onPress={() => router.push("/personalization" as never)}
+            style={styles.guRow}
+          >
+            <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGu(gu)}</Text>
+            {chuaCo !== "" ? (
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>{chuaCo}</Text>
+            ) : null}
+          </Pressable>
+          {rong ? (
+            <EmptyState
+              action={{ label: "Xóa lọc", onPress: boTim }}
+              body="Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục."
+              kind={query.trim() ? "no-results" : "filtered"}
+              layout="inline"
+              title="Chưa thấy nơi phù hợp"
+            />
           ) : (
-            danhSach.map((place) => (
-              <TheDiaDiem
-                daLuu={daLuu.includes(place.id)}
-                key={place.id}
-                onLuu={() => void doiLuu(place)}
-                onMo={() => router.push(`/places/${place.id}` as never)}
-                place={place}
-              />
-            ))
+            <Animated.View entering={hienRa} key={khoaKetQua} style={styles.ketQua}>
+              {dan !== undefined ? (
+                <PlaceLead
+                  daLuu={daLuu.includes(dan.id)}
+                  dd={hienThiDiaDiem(dan)}
+                  onOpen={() => router.push(`/places/${dan.id}` as never)}
+                  onSave={() => void doiLuu(dan)}
+                />
+              ) : null}
+              {conLai.length > 0 ? (
+                <ResponsiveRow gap={0} minItemWidth={300}>
+                  {conLai.map((place) => (
+                    <PlaceRow
+                      daLuu={daLuu.includes(place.id)}
+                      dd={hienThiDiaDiem(place)}
+                      key={place.id}
+                      onOpen={() => router.push(`/places/${place.id}` as never)}
+                      onSave={() => void doiLuu(place)}
+                    />
+                  ))}
+                </ResponsiveRow>
+              ) : null}
+            </Animated.View>
           )}
         </>
       ) : null}
@@ -312,93 +345,16 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   );
 }
 
-function TheDiaDiem({
-  place,
-  daLuu,
-  onLuu,
-  onMo,
-}: {
-  place: Place;
-  daLuu: boolean;
-  onLuu: () => void;
-  onMo: () => void;
-}) {
-  const { colors } = useRudiTheme();
-  const hop = matchLabel(place.match);
-  // The picture replaces the glyph, and only when its credit came with it --
-  // the credit is then a line in this card, so the photograph never appears
-  // anywhere its author is not named (ADR-0017 §2.5).
-  const bia = anhBiaThe(place);
-  return (
-    <Card accessibilityLabel={`Mở ${place.name}`} onPress={onMo} style={styles.the}>
-      {bia === null ? (
-        <View style={[styles.theIcon, { backgroundColor: colors.accentSoft }]}>
-          <Ionicons color={colors.accent} name={bieuTuongLoai(place.category)} size={24} />
-        </View>
-      ) : (
-        <MediaSlot alt={`Ảnh ${place.name}`} height={48} radius={16} source={bia.nguon} width={48} />
-      )}
-      <View style={styles.theChu}>
-        <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>
-          {place.name}
-        </Text>
-        <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
-          {dongPhu(place)}
-        </Text>
-        {/* Only the facts this place has (M9). Each item is ONE text node: a
-            multi-word Text that shares a wrapping row with siblings keeps its
-            first-row measurement and renders one word alone. */}
-        <Inline gap={10} wrap>
-          {chiTietNgan(place).map((muc) => (
-            <Inline gap={4} key={muc.icon}>
-              <Ionicons
-                color={muc.icon === "star" ? colors.accent : colors.inkFaint}
-                name={muc.icon}
-                size={13}
-              />
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>{muc.chu}</Text>
-            </Inline>
-          ))}
-        </Inline>
-        {hop !== null && hop.real ? (
-          <View style={styles.huyHieu}>
-            <Chip icon="sparkles-outline" label={hop.text} selected tone="ai" />
-          </View>
-        ) : null}
-        {bia === null ? null : (
-          <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>
-            {bia.giayPhep}
-          </Text>
-        )}
-      </View>
-      <IconButton
-        accessibilityLabel={daLuu ? `Bỏ lưu ${place.name}` : `Lưu ${place.name}`}
-        icon={daLuu ? "heart" : "heart-outline"}
-        onPress={onLuu}
-        quiet
-        selected={daLuu}
-      />
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  dau: { minHeight: 55, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
-  viTri: { marginLeft: 49, marginTop: -8 },
-  theAi: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  theAiIcon: { width: 44, height: 44, borderRadius: 15, alignItems: "center", justifyContent: "center" },
-  luoiLoai: { flexDirection: "row", gap: 9 },
-  // Glyphs share one baseline whatever the label does: the label slot is always
-  // two caption lines tall, so «Quán ăn local» wrapping does not lift its tile.
-  oLoai: { flex: 1, minWidth: 70, borderRadius: 17, borderWidth: 1, alignItems: "center", justifyContent: "flex-start", gap: 8, paddingHorizontal: 6, paddingTop: 10, paddingBottom: 8 },
-  nhanLoai: { textAlign: "center", minHeight: 32 },
-  huyHieu: { flexDirection: "row" },
-  oLoaiIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  giua: { textAlign: "center" },
-  bam: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-  rong: { alignItems: "center", gap: 14, paddingVertical: 24 },
-  the: { flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 12 },
-  theIcon: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  theChu: { flex: 1, gap: 6 },
+  dau: { gap: 6 },
+  viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, alignSelf: "flex-start" },
+  timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  khung: { gap: 12 },
+  cuonLoai: { marginHorizontal: -16 },
+  hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
+  theAi: { gap: 4, padding: 14, borderRadius: 14 },
+  guRow: { marginTop: -8, gap: 2 },
+  bam: { opacity: 0.7 },
+  ketQua: { gap: 20 },
 });

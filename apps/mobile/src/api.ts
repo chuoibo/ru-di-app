@@ -49,7 +49,6 @@ import {
   type SoDuWire,
 } from "./bill";
 import {
-  sapXepChang,
   type BodyTaoBuoiDi,
   type BuoiDi,
   type ChangGui,
@@ -2074,11 +2073,13 @@ export async function luuDongThoiGian(
   actorId: string,
   attempt: Attempt,
   contextId: string,
+  expectedRevision?: number,
 ): Promise<BuoiDi> {
   return callAsActor<BuoiDi>(`/outings/${outingId}/timeline`, {
     method: "PUT",
     body: {
-      stops: sapXepChang(stops).map((stop) => ({
+      ...(expectedRevision === undefined ? {} : { expected_revision: expectedRevision }),
+      stops: stops.map((stop) => ({
         at: stop.at,
         label: stop.label,
         place_name: stop.place_name,

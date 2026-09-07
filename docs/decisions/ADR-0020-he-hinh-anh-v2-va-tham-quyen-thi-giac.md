@@ -1,6 +1,6 @@
 # ADR-0020 — Hệ hình ảnh v2: thẩm quyền thị giác phân tầng, một display face tự host, bốn bậc chuyển động
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-05 — chờ Lead đánh ĐÃ CHẤP NHẬN. UI-0 + UI-1 (nền tảng + vào cửa) đi chung một PR (#566) theo uỷ quyền của Lead 13:0x 05/09 («tự chọn hướng và tự thực hiện», §5 `docs/claude/2026-09-05/ui-v2-direction-round.md`) và lệnh merge trực tiếp của Lead tối 05/09; các lát UI-2 trở đi chờ Lead đổi dòng này.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (bốn quyết định chốt trong phiên 2026-09-05, ghi lại ở mục 2).
 - **Hiện thực:** chiến dịch UI v2, 9 PR xếp chồng bắt đầu từ `claude/p0-w-ui0-nen-tang-design-system`; kế hoạch ở `~/.claude/plans/t-i-nh-n-c-1-squishy-shell.md`, bản sao đưa vào `docs/architecture/03-ui-v2.md` ở PR UI-1.
 - **Thay đổi hệ hình ảnh và hai quyết định đã ghi trong DESIGN.md** (system stack; «bản ship là ground truth»), không đổi route, API, domain hay ba luật tiền.

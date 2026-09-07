@@ -38,7 +38,12 @@ appId: com.lakiet.rudi
     visible: "Đi đâu?"
     timeout: 30000
 - assertVisible: "Đà Lạt"
-- assertVisible: "Hội An"
+# Danh sách điểm đến có mô tả từng nơi (đợt chuyển mình 06/09), Hội An nằm dưới nếp gấp.
+- scrollUntilVisible:
+    element:
+      text: "Hội An"
+    direction: DOWN
+    timeout: 30000
 - takeScreenshot: 35-danh-sach-diem-den
 # Tìm theo tên bỏ dấu: gõ «hoi an» phải ra «Hội An».
 - tapOn: "Tìm thành phố hoặc tỉnh"

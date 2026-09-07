@@ -3,6 +3,16 @@
  * validated by App B's `kiemTraTaoBuoiDi` and written with one Attempt.
  * Dates default to today; headcount defaults to the group's size (a real
  * number, not an invented one); the budget is the person's to type.
+ *
+ * ## An invitation, not a form to file (UI v2, đợt 4)
+ *
+ * The fields sit directly on the paper in the order a person says an
+ * invitation out loud -- what, when, how many, how much -- with the group
+ * named at the top so nobody creates into the wrong one. A small preview
+ * under the fields reads the invitation back as it will appear on the plan.
+ * There is one create button, and it waits on the server before anything is
+ * called created. No native date picker ships in this build, so the date
+ * fields say their format beside them instead of after a failed submit.
  */
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -10,10 +20,10 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
-import { kiemTraTaoBuoiDi } from "../../../screens/len-plan/buoi-di";
+import { kiemTraTaoBuoiDi, nhanKhoangNgay } from "../../../screens/len-plan/buoi-di";
 import { homNayIso, taoKeo } from "../../keo/keo";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Field, Heading, Inline, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Chip, Field, Heading, Inline, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { dinhDangTienVnd } from "../../../screens/chat/ke-hoach";
 
 const MUC_NGAN_SACH = [
@@ -30,19 +40,20 @@ function tienDaGo(chu: string): string | null {
   return dinhDangTienVnd(Number(t));
 }
 
-function soThanhVien(phien: Phien): string {
+function nhomHienTai(phien: Phien): { ten: string; soNguoi: string } {
   const nhom = phien.contexts?.find((n) => n.id === phien.context_id);
-  if (nhom === undefined) return "";
-  return String(nhom.member_count);
+  if (nhom === undefined) return { ten: "nhóm của bạn", soNguoi: "" };
+  return { ten: nhom.display_name, soNguoi: String(nhom.member_count) };
 }
 
 export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
+  const nhom = nhomHienTai(phien);
   const [title, setTitle] = useState("");
   const [startsOn, setStartsOn] = useState(homNayIso());
   const [endsOn, setEndsOn] = useState(homNayIso());
-  const [headcount, setHeadcount] = useState(soThanhVien(phien));
+  const [headcount, setHeadcount] = useState(nhom.soNguoi);
   const [nganSach, setNganSach] = useState("");
   const [loi, setLoi] = useState<string | null>(null);
   const [dangTao, setDangTao] = useState(false);
@@ -70,12 +81,27 @@ export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
     }
   };
 
+  const tien = tienDaGo(nganSach);
+  const xemTruoc = title.trim() !== "";
+
   return (
-    <RudiScreen testID="create-outing-screen">
+    <RudiScreen contentStyle={styles.screen} testID="create-outing-screen">
       <TopBar title="Kèo mới" />
-      <Heading title="Hội mình đi đâu?" subtitle="Ngày, số người và ngân sách một người. Chặng và địa điểm thêm sau, trong kèo." />
-      <Card style={styles.form}>
-        <Field accessibilityLabel="Ô tên kèo" icon="flag-outline" label="Tên kèo" onChangeText={setTitle} placeholder="Ví dụ: Đà Lạt cuối tuần" value={title} />
+      <Heading title="Hội mình đi đâu?" subtitle={`Rủ ${nhom.ten}. Chặng và địa điểm thêm sau, trong kèo.`} />
+      <View style={styles.khoi}>
+        <Field
+          accessibilityLabel="Ô tên kèo"
+          icon="flag-outline"
+          label="Tên kèo"
+          onChangeText={(t) => {
+            setTitle(t);
+            if (loi !== null) setLoi(null);
+          }}
+          placeholder="Ví dụ: Đà Lạt cuối tuần"
+          value={title}
+        />
+      </View>
+      <View style={styles.khoi}>
         <View style={styles.hang}>
           <View style={styles.flex}>
             <Field accessibilityLabel="Ô ngày đi" icon="calendar-outline" keyboardType="numbers-and-punctuation" label="Ngày đi" onChangeText={setStartsOn} value={startsOn} />
@@ -84,7 +110,13 @@ export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
             <Field accessibilityLabel="Ô ngày về" icon="calendar-outline" keyboardType="numbers-and-punctuation" label="Ngày về" onChangeText={setEndsOn} value={endsOn} />
           </View>
         </View>
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>Dạng năm-tháng-ngày, ví dụ 2026-09-20. Đi về trong ngày thì để hai ô giống nhau.</Text>
+      </View>
+      <View style={styles.khoi}>
         <Field accessibilityLabel="Ô số người" icon="people-outline" keyboardType="number-pad" label="Số người" onChangeText={setHeadcount} value={headcount} />
+        {nhom.soNguoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhom.ten} hiện có {nhom.soNguoi} người; sửa nếu chỉ một phần đi.</Text> : null}
+      </View>
+      <View style={styles.khoi}>
         <Field
           accessibilityLabel="Ô ngân sách một người"
           icon="wallet-outline"
@@ -99,18 +131,30 @@ export function CreateOutingLiveScreen({ phien }: { phien: Phien }) {
             <Chip key={m.dong} label={m.nhan} onPress={() => setNganSach(String(m.dong))} selected={nganSach === String(m.dong)} />
           ))}
         </Inline>
-        {tienDaGo(nganSach) !== null ? (
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>= {tienDaGo(nganSach)} một người</Text>
-        ) : null}
-        {loi !== null ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
-        <RudiButton disabled={dangTao} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} />
-      </Card>
+        {tien !== null ? <Text style={[typography.caption, { color: colors.inkSoft }]}>= {tien} một người, số tham chiếu chứ không phải mức trần.</Text> : null}
+      </View>
+      {xemTruoc ? (
+        // The invitation read back, the way the plan tab will print it.
+        <View style={[styles.xemTruoc, { borderColor: colors.line, borderRadius: radius.small }]}>
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>Lời rủ sẽ hiện trên Lên plan</Text>
+          <Text style={[typography.title, { color: colors.ink }]}>{title.trim()}</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>
+            {nhanKhoangNgay(startsOn, endsOn)}
+            {headcount.trim() ? ` · ${headcount.trim()} người` : ""}
+            {tien !== null ? ` · ${tien} một người` : ""}
+          </Text>
+        </View>
+      ) : null}
+      {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      <RudiButton disabled={dangTao} label="Tạo kèo" loading={dangTao} onPress={() => void tao()} />
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { maxWidth: 640 },
   flex: { flex: 1 },
-  form: { gap: 14 },
+  khoi: { gap: 8 },
   hang: { flexDirection: "row", gap: 10 },
+  xemTruoc: { gap: 4, padding: 14, borderWidth: 1, borderStyle: "dashed" },
 });

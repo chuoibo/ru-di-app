@@ -41,7 +41,7 @@ export type CheckIn = {
 };
 
 /** One stop on its way to PUT /outings/{id}/timeline. No position: the
- *  server assigns that from the array order after we sort. */
+ *  server assigns that from the array order chosen by the group. */
 export type ChangGui = {
   at: string;
   label: string;
@@ -61,6 +61,7 @@ export type BuoiDi = {
   budget_per_person_vnd: number;
   created_at: string;
   stops: ChangDung[];
+  timeline_revision: number;
 };
 
 export type FormTaoBuoiDi = {

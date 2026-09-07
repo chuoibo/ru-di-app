@@ -13,10 +13,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "BBQ tối thứ Bảy ở đâu?"
     timeout: 30000
-- assertVisible: "Kết quả ẩn đến khi xác nhận. Bản trải nghiệm chỉ ghi phiếu của bạn."
+- assertVisible: "Mỗi người chọn một nơi. Kết quả ẩn đến khi xác nhận. Bản trải nghiệm chỉ ghi phiếu của bạn."
 - assertNotVisible: "1 phiếu của bạn trên bản này"
 - takeScreenshot: 06-vote-hidden-before-confirm
 # Pick an option: still hidden until confirm.
 - tapOn: "Tiệm Nướng Xóm Lèo"
-- assertVisible: "Kết quả ẩn đến khi xác nhận. Bản trải nghiệm chỉ ghi phiếu của bạn."
+- assertVisible: "Mỗi người chọn một nơi. Kết quả ẩn đến khi xác nhận. Bản trải nghiệm chỉ ghi phiếu của bạn."
 - takeScreenshot: 06-vote-hidden-after-pick

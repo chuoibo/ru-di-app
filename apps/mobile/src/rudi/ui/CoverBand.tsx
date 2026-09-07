@@ -22,6 +22,13 @@ export interface CoverBandProps {
    * review flagged.
    */
   underStatusBar?: boolean;
+  /**
+   * The band's short form: less cloth above and below its words. A form that
+   * has the keyboard up (Login, OTP) reads this so the field and its action
+   * stay in the visible half of the window; the greeting keeps its place, it
+   * just stops asking for a third of the screen.
+   */
+  compact?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -31,7 +38,7 @@ export interface CoverBandProps {
  * begins. Text on it uses `coverInk` / `coverInkSoft`; small orange text is
  * banned here (3.03:1), orange arrives only as washi or a stamp button.
  */
-export function CoverBand({ children, bleed = 0, onBack, underStatusBar = false, style }: CoverBandProps) {
+export function CoverBand({ children, bleed = 0, onBack, underStatusBar = false, compact = false, style }: CoverBandProps) {
   const { colors, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -44,9 +51,10 @@ export function CoverBand({ children, bleed = 0, onBack, underStatusBar = false,
           backgroundColor: colors.cover,
           marginHorizontal: -bleed,
           paddingHorizontal: bleed + space.md,
-          paddingTop: space.md + (underStatusBar ? insets.top : 0),
-          paddingBottom: space.lg,
+          paddingTop: (compact ? space.sm : space.md) + (underStatusBar ? insets.top : 0),
+          paddingBottom: compact ? space.md : space.lg,
         },
+        compact && styles.bandCompact,
         style,
       ]}
     >
@@ -73,6 +81,7 @@ export function CoverBand({ children, bleed = 0, onBack, underStatusBar = false,
 
 const styles = StyleSheet.create({
   band: { borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: "hidden" },
+  bandCompact: { borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   backHit: { width: 48, height: 48, marginLeft: -8, marginBottom: 4 },
   back: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
 });

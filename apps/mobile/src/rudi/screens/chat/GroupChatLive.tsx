@@ -11,7 +11,21 @@
  *
  * Keyboard: `KeyboardAvoidingView` with `padding`; the geometry is measured on
  * the emulator (flow 30 + `scripts/do_ban_phim.py`), not assumed from a prop.
+ *
+ * UI v2 (đợt 5): consecutive messages from one person read as one run --
+ * the name once at the top of the run, the initial once at its foot -- so a
+ * conversation is a conversation and not a column of identical rows. The
+ * header is a title and one line of roster; the AI answers as a sheet of
+ * paper in the thread (`TheAi.tsx`), never as a violet advert. Reaction
+ * targets are 48dp. The inverted list, paging, pending row and position
+ * holding are unchanged: they are the behaviour the review said to keep.
+ *
+ * Social v1.1 (ADR-0021): stickers from a closed vocabulary, a reply quote
+ * the server builds, taking back one's own message, the group's settings
+ * sheet (name, bubble theme, members, leave), and a pair -- two friends'
+ * private thread -- drawn by the same screen with the other person's name.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +33,8 @@ import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   StyleSheet,
@@ -29,7 +45,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, taiAnhNhom, thongDiepNguoiDoc } from "../../../api";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { danhSachThanhVien } from "../../../screens/vao-cua/cong-api";
 import {
   cauYDinh,
@@ -48,11 +63,13 @@ import { TAT_KAV_QA } from "../../chat/qa-ban-phim";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
 import { nguonAnh } from "../../ky-niem/ky-niem";
 import { useTinNhan } from "../../chat/useTinNhan";
+import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
-import { Card, IconButton, TopBar } from "../../ui";
+import { IconButton, TopBar } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { EmptyState } from "../../ui/EmptyState";
 import { Sticker } from "../../ui/stickers/Sticker";
-import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { CaiDatNhomSheet } from "./CaiDatNhom";
 import { KhaySticker } from "./KhaySticker";
 import { MenuTin } from "./MenuTin";
@@ -86,14 +103,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // What the server said about the last command, drawn as a row in the thread
   // (where the pending card promised it), signed by who is speaking.
   const [thongBao, setThongBao] = useState<{ tu: string; cau: string; luc: string } | null>(null);
-  const [dangGuiAnh, setDangGuiAnh] = useState(false);
-  const [tenTheoId, setTenTheoId] = useState<Record<string, string>>({});
-  // L1 (ADR-0021): the sticker tray, the long-press menu of one message, the
-  // message being replied to, and the group settings sheet.
+  // Social v1.1 (ADR-0021): the sticker tray, the long-press menu of one
+  // message, the message being replied to, and the group settings sheet.
   const [khaySticker, setKhaySticker] = useState(false);
   const [menuTin, setMenuTin] = useState<Tin | null>(null);
   const [traLoi, setTraLoi] = useState<TrichDan | null>(null);
   const [caiDatMo, setCaiDatMo] = useState(false);
+  const [dangGuiAnh, setDangGuiAnh] = useState(false);
+  const [tenTheoId, setTenTheoId] = useState<Record<string, string>>({});
 
   const nhom = phien?.contexts?.find((n) => n.id === contextId);
   const tenNhom = tenCuocTroChuyen(nhom);
@@ -151,22 +168,43 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // newest end (see autoscrollToTopThreshold); a message you just sent must
   // always come into view, so the send jumps there explicitly.
   const danhSachRef = useRef<FlatList<HangHienThi>>(null);
-
-  /**
-   * Bring the newest end into view after something of ours landed there.
-   *
-   * Once is not enough: `maintainVisibleContentPosition` re-anchors the list
-   * on the row that was visible when a new row (or the AI note in the list
-   * header) is inserted, and that native adjustment runs AFTER a scroll issued
-   * in the same tick -- the new row then sits under the composer, present in
-   * the hierarchy and invisible on the screen (board 2026-09-06, flows 30/37).
-   * So scroll now, and again after layout has settled.
-   */
-  const cuonVeMoiNhat = useCallback(() => {
-    const cuon = () => danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
-    cuon();
-    setTimeout(cuon, 160);
-    setTimeout(cuon, 420);
+  // Whether the reader is at the newest end (within a bubble of offset 0 of
+  // the inverted list). A new row (the model's answer, a friend's message) and
+  // the keyboard opening both pull the list back to the end only then; a
+  // reader up in the history keeps their place.
+  const ganCuoi = useRef(true);
+  // The same fact as state, because it decides a prop: the list anchors the
+  // reader's place only while they are up in the history.
+  const [oCuoi, setOCuoi] = useState(true);
+  const ghiViTri = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const gan = e.nativeEvent.contentOffset.y <= 120;
+    ganCuoi.current = gan;
+    setOCuoi(gan);
+  }, []);
+  // Back to the end before a row of ours lands, and say so: with the anchor
+  // off, the new row and the notice under it sit at offset 0 by construction.
+  const veCuoi = useCallback(() => {
+    ganCuoi.current = true;
+    setOCuoi(true);
+    danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, []);
+  const soHang = useRef(chat.tin.length);
+  useEffect(() => {
+    if (chat.tin.length > soHang.current && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+    soHang.current = chat.tin.length;
+  }, [chat.tin.length]);
+  // The notice under the newest bubble (why the model stayed quiet, a send
+  // error) is a list header, not a row: `maintainVisibleContentPosition` keeps
+  // row 0 in place and leaves the header under the composer, so it is pulled
+  // into view the same way a new row is.
+  useEffect(() => {
+    if (thongBao !== null && ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [thongBao]);
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidShow", () => {
+      if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+    });
+    return () => sub.remove();
   }, []);
 
   const gui = async () => {
@@ -180,10 +218,10 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     try {
       const daGui = await chat.gui(body, traLoiId);
       setTraLoi(null);
+      veCuoi();
       const cau = cauYDinh(daGui);
       const tuAi = daGui.companion !== null && daGui.companion !== undefined && !daGui.companion.spoke;
       setThongBao(cau === null ? null : { tu: tuAi ? "Rủ Đi AI" : "Rủ Đi", cau, luc: new Date().toISOString() });
-      cuonVeMoiNhat();
     } catch (error) {
       // Give the words back: a failed send must not eat what was typed.
       setNhap(body);
@@ -229,7 +267,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
       });
       setNhap("");
-      cuonVeMoiNhat();
+      veCuoi();
     } catch (error) {
       await boAnh(daChon);
       setThongBao({
@@ -250,7 +288,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     try {
       await chat.guiSticker(id, traLoi?.id ?? null);
       setTraLoi(null);
-      cuonVeMoiNhat();
+      veCuoi();
     } catch (error) {
       setThongBao({
         tu: "Rủ Đi",
@@ -294,7 +332,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
   };
 
-  const renderItem = ({ item }: { item: HangHienThi }) => {
+  /** Same human author as the neighbour row (not the AI, not a day divider). */
+  const cungNguoi = (a: HangHienThi | undefined, b: HangHienThi | undefined) =>
+    a !== undefined && b !== undefined && a.loai === "tin" && b.loai === "tin" &&
+    a.tin.kind !== "ai_card" && b.tin.kind !== "ai_card" &&
+    a.tin.author_id !== null && a.tin.author_id === b.tin.author_id;
+
+  const renderItem = ({ item, index }: { item: HangHienThi; index: number }) => {
     if (item.loai === "ngay") {
       return (
         <View style={styles.ngay}>
@@ -310,9 +354,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const laSticker = tin.kind === "sticker";
     const daXoa = tin.kind === "deleted";
     const chips = (tin.reactions ?? []).filter((r) => r.count > 0);
+    // The theme colours the sender's bubble; a taken-back row is paper again.
     const nenBong = daXoa ? colors.card : cuaToi ? mauChat.bubble : colors.card;
     const vienBong = daXoa ? colors.line : cuaToi ? mauChat.bubble : colors.line;
     const mucBong = cuaToi && !daXoa ? mauChat.bubbleInk : colors.ink;
+    // Inverted list: index + 1 is the older neighbour, index - 1 the newer.
+    const dauChuoi = !cungNguoi(item, hang[index + 1]);
+    const cuoiChuoi = !cungNguoi(item, hang[index - 1]);
     return (
       <View
         style={[
@@ -324,19 +372,17 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ]}
       >
         {!cuaToi && !laAi ? (
-          <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-            <Text style={[typography.caption, { color: colors.accent }]}>{chuDau(tenNguoi(tin.author_id))}</Text>
-          </View>
+          cuoiChuoi ? <Avatar name={tenNguoi(tin.author_id)} size={30} /> : <View style={styles.choChuDau} />
         ) : null}
         <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
-          {!cuaToi && !laAi ? (
+          {!cuaToi && !laAi && dauChuoi ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>{tenNguoi(tin.author_id)}</Text>
           ) : null}
           {/* The quote sits ABOVE the bubble, in the block, never in the
               flex-wrapped row under it: a lone Text at the end of a wrapping
               row keeps one word's width (bài học RN 2026-09-04). A deleted
               row keeps no quote either: what it answered went with it. */}
-          {tin.reply_to && !laAi && tin.kind !== "deleted" ? (
+          {tin.reply_to && !laAi && !daXoa ? (
             <View
               accessibilityLabel={`Trích: ${tin.reply_to.preview}`}
               style={[styles.trich, { borderLeftColor: mauChat.accent, backgroundColor: colors.card, borderColor: colors.line }]}
@@ -356,11 +402,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               tacGia={tenNguoi(tin.author_id)}
             />
           ) : laSticker ? (
-            <Pressable
-              accessibilityLabel={`Tin nhắn: sticker`}
-              onLongPress={() => setMenuTin(tin)}
-              style={styles.stickerHang}
-            >
+            <Pressable accessibilityLabel="Tin nhắn: sticker" onLongPress={() => setMenuTin(tin)} style={styles.stickerHang}>
               <Sticker id={tin.body ?? ""} size={120} />
             </Pressable>
           ) : (
@@ -441,11 +483,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 accessibilityLabel="Xem hồ sơ"
                 accessibilityRole="button"
                 onPress={() => router.push(`/people/${nguoiKiaId}` as never)}
-                style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+                style={({ pressed }) => [styles.thanhVien, pressed && styles.mo]}
               >
+                <Ionicons color={colors.inkFaint} name="person-outline" size={15} />
                 <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>
                   Xem hồ sơ
                 </Text>
+                <Ionicons color={colors.inkFaint} name="chevron-forward" size={14} />
               </Pressable>
             ) : null
           ) : (
@@ -453,19 +497,22 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               accessibilityLabel="Thành viên nhóm"
               accessibilityRole="button"
               onPress={() => router.push(`/groups/${contextId}/members` as never)}
-              style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+              style={({ pressed }) => [styles.thanhVien, pressed && styles.mo]}
             >
+              <Ionicons color={colors.inkFaint} name="people-outline" size={15} />
               <Text style={[typography.caption, { color: colors.inkSoft }]}>
                 {Object.keys(tenTheoId).length || 1} thành viên · xem và mời
               </Text>
+              <Ionicons color={colors.inkFaint} name="chevron-forward" size={14} />
             </Pressable>
           )}
           <Pressable
             accessibilityLabel="Cài đặt nhóm"
             accessibilityRole="button"
             onPress={() => setCaiDatMo(true)}
-            style={[styles.thanhVien, { borderColor: colors.line, backgroundColor: colors.card }]}
+            style={({ pressed }) => [styles.thanhVien, pressed && styles.mo]}
           >
+            <Ionicons color={colors.inkFaint} name="settings-outline" size={15} />
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Cài đặt</Text>
           </Pressable>
         </View>
@@ -474,10 +521,12 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           back upright, and an extra flip here once mirrored this copy. */}
       {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null ? (
         <View style={[styles.rong, { paddingHorizontal: space.md }]}>
-          <Text style={[typography.title, { color: colors.ink }]}>Chưa có tin nhắn nào</Text>
-          <Text style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>
-            {nhanRieng ? `Nhắn gì đó cho ${tenNhom}, hoặc gõ / để rủ Rủ Đi AI vào.` : "Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào."}
-          </Text>
+          <EmptyState
+            body={nhanRieng ? `Nhắn gì đó cho ${tenNhom}, hoặc gõ / để rủ Rủ Đi AI vào.` : "Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào."}
+            kind="first-use"
+            layout="inline"
+            title="Chưa có tin nhắn nào"
+          />
         </View>
       ) : null}
       <FlatList
@@ -492,10 +541,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           dangGuiThan === null && thongBao !== null ? (
             <View style={styles.hang}>
               <View style={[styles.khoi, styles.khoiAi]}>
-                <Card tone="ai" style={styles.choAi}>
-                  <Text style={[typography.caption, { color: colors.ai }]}>{thongBao.tu}</Text>
+                <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
+                  <View style={styles.dauAi}>
+                    <Ionicons color={colors.ai} name="sparkles" size={15} />
+                    <Text style={[typography.caption, { color: colors.ai }]}>{thongBao.tu}</Text>
+                  </View>
                   <Text style={[typography.body, { color: colors.ink }]}>{thongBao.cau}</Text>
-                </Card>
+                </View>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioPhut(thongBao.luc)}</Text>
               </View>
             </View>
@@ -512,12 +564,15 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
               {goiMoHinh(dangGuiThan) ? (
                 <View style={styles.hang}>
                   <View style={[styles.khoi, styles.khoiAi]}>
-                    <Card tone="ai" style={styles.choAi}>
-                      <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                    <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
+                      <View style={styles.dauAi}>
+                        <Ionicons color={colors.ai} name="sparkles" size={15} />
+                        <Text style={[typography.caption, { color: colors.ai }]}>Đang hỏi Rủ Đi AI...</Text>
+                      </View>
                       <Text style={[typography.caption, { color: colors.inkSoft }]}>
                         Câu trả lời sẽ hiện ở đây trong vài giây, hoặc lý do nó không trả lời.
                       </Text>
-                    </Card>
+                    </View>
                   </View>
                 </View>
               ) : null}
@@ -529,14 +584,32 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Text style={[typography.caption, styles.giua, { color: colors.inkFaint }]}>Đang tải tin cũ...</Text>
           ) : null
         }
-        // Hold the reader's place while older pages load above, but when they
-        // are within a bubble of the newest end, new rows (own sends, the AI's
-        // answer, a friend's message) scroll into view instead of landing
-        // under the composer.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 120 }}
+        // Hold the reader's place while they are up in the history and rows
+        // arrive at the newest end. Off while they are at the end: in an
+        // inverted list offset 0 *is* the newest end, so a new row, the
+        // pending bubble and the notice header land in view with no scroll at
+        // all. Keeping the anchor on there was the flow-30 red: the native
+        // helper answers every content change with a smooth scroll of its
+        // own, the JS side holds the render window until a scroll event comes
+        // back, and the throttle dropped the event that would have said «at
+        // the end again» -- the sent bubble ended half under the composer and
+        // the notice below it, off screen.
+        maintainVisibleContentPosition={oCuoi ? undefined : { minIndexForVisible: 0 }}
+        // Content grows at the newest end (a row, the pending bubble, the
+        // notice header): within a bubble of the end, stay at the end.
+        onContentSizeChange={() => {
+          if (ganCuoi.current) danhSachRef.current?.scrollToOffset({ offset: 0, animated: false });
+        }}
         onEndReached={() => void chat.napCuHon()}
         onEndReachedThreshold={0.6}
+        onMomentumScrollEnd={ghiViTri}
+        onScroll={ghiViTri}
+        onScrollEndDrag={ghiViTri}
         renderItem={renderItem}
+        // Every event: Android drops (not delays) events inside the throttle
+        // window, and a dropped last event leaves `ganCuoi` pointing at the
+        // wrong end of the list.
+        scrollEventThrottle={16}
         testID="chat-list"
       />
       {chat.loi ? (
@@ -642,8 +715,8 @@ const styles = StyleSheet.create({
   man: { flex: 1 },
   anhKhoi: { gap: 6 },
   anh: { width: 208, height: 208 },
-  pills: { flexDirection: "row", justifyContent: "center", gap: 8, marginTop: -6 },
-  thanhVien: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  pills: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 2, marginTop: -8 },
+  thanhVien: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 40, paddingHorizontal: 8 },
   trich: { borderWidth: 1, borderLeftWidth: 3, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, gap: 1, maxWidth: "100%" },
   stickerHang: { paddingVertical: 2 },
   nghieng: { fontStyle: "italic" },
@@ -658,15 +731,16 @@ const styles = StyleSheet.create({
   khoi: { maxWidth: "82%", gap: 4 },
   khoiToi: { alignItems: "flex-end" },
   khoiAi: { maxWidth: "100%", flex: 1 },
-  chuDau: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  choChuDau: { width: 30, height: 30 },
   bong: { borderWidth: 1, borderRadius: 17, paddingHorizontal: 13, paddingVertical: 10 },
   duoiBong: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  chip: { minHeight: 32, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  chip: { minHeight: 36, justifyContent: "center", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   dau: { paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
-  rong: { alignItems: "center", gap: 6, paddingVertical: 40 },
+  rong: { paddingVertical: 24 },
   choGui: { gap: 12 },
   mo: { opacity: 0.62 },
-  choAi: { gap: 4 },
+  choAi: { gap: 6, padding: 14, borderWidth: 1 },
+  dauAi: { flexDirection: "row", alignItems: "center", gap: 6 },
   giua: { textAlign: "center", paddingVertical: 8 },
   lenh: { borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { paddingHorizontal: 10, paddingVertical: 8, gap: 1 },

@@ -22,7 +22,7 @@ import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { vaoNhom, type NhomTomTat } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 type Trang = { pha: "yen" } | { pha: "dang-vao"; id: string } | { pha: "hong"; loi: string };
 
@@ -77,10 +77,10 @@ export function GroupsEmptyScreen() {
         </Text>
       ) : null}
       {loiMoi.length > 0 ? (
-        <Card style={styles.card}>
-          <Text style={[typography.title, { color: colors.ink }]}>Lời mời đang chờ</Text>
+        <View style={styles.khoi}>
+          <Text style={[typography.h2, { color: colors.ink }]}>Lời mời đang chờ</Text>
           {loiMoi.map((nhom) => (
-            <View key={nhom.id} style={styles.hang}>
+            <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
               <View style={styles.hangChu}>
                 <Text numberOfLines={1} style={[typography.body, { color: colors.ink }]}>
                   {nhom.display_name}
@@ -100,9 +100,9 @@ export function GroupsEmptyScreen() {
             </View>
           ))}
           {trang.pha === "hong" ? (
-            <Text style={[typography.caption, { color: colors.warn }]}>{trang.loi}</Text>
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
           ) : null}
-        </Card>
+        </View>
       ) : null}
       <View style={styles.nut}>
         <RudiButton icon="people-outline" label="Tạo nhóm" onPress={() => router.push("/groups/new")} />
@@ -126,9 +126,9 @@ export function GroupsEmptyScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20 },
-  card: { gap: 12 },
-  hang: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  screen: { gap: 20, maxWidth: 560 },
+  khoi: { gap: 8 },
+  hang: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 60, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChu: { flex: 1, gap: 2 },
   nut: { gap: 10 },
 });

@@ -27,6 +27,22 @@ export const SIZE_CLASS_BREAKPOINTS = Object.freeze({
 /** Below this height (dp) a phone is on its side or a sheet is fighting the IME. */
 export const SHORT_HEIGHT = 480;
 
+/** Measure the actual content box, after rail and gutters, not the display. */
+/**
+ * `maxColumns` defaults to 3, the most a row of cards can carry; a wall of
+ * album tiles passes more so a tablet shows six thumbnails, not three posters.
+ */
+export function gridFor(contentWidth: number, minItemWidth = 250, gap = 12, maxColumns = 3) {
+  const width = Number.isFinite(contentWidth) ? Math.max(0, contentWidth) : 0;
+  const minimum = Number.isFinite(minItemWidth) ? Math.max(1, minItemWidth) : 250;
+  const spacing = Number.isFinite(gap) ? Math.max(0, gap) : 12;
+  const cap = Number.isFinite(maxColumns) ? Math.max(1, Math.floor(maxColumns)) : 3;
+  const columns = Math.max(1, Math.min(cap, Math.floor((width + spacing) / (minimum + spacing))));
+  // Whole dp: three exact thirds round up to a pixel each on the device and the
+  // last column wraps (album grid, 2026-09-06). A dp of slack per row costs nothing.
+  return { columns, itemWidth: Math.max(0, Math.floor((width - spacing * (columns - 1)) / columns)) };
+}
+
 export interface AdaptiveLayout {
   sizeClass: SizeClass;
   heightClass: HeightClass;

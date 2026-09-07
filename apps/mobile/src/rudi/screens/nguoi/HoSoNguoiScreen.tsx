@@ -6,9 +6,8 @@
  * is loaded after and fails on its own, so a wall that does not answer does
  * not hide a person who did.
  *
- * The header tile is the same warm initial used on every friend surface, not
- * `Avatar`: that primitive takes a fixture person and a fixture colour, and
- * this screen never touches the fixture.
+ * UI v2 (đợt 7): initial, name, when they joined, the relation as a word;
+ * posts are rows on the paper with a hairline between them.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
@@ -16,11 +15,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Image } from "expo-image";
 
-import { attemptFor, type Attempt } from "../../../api";
-import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
-import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
-import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import {
   cauNgayVao,
   cauQuanHe,
@@ -32,11 +26,19 @@ import {
   type Bai,
   type HoSoNguoi,
 } from "../../nguoi/ho-so-nguoi";
+import { attemptFor, type Attempt } from "../../../api";
+import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
+import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
+import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
-import { Card, Chip, Divider, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { EmptyState } from "../../ui/EmptyState";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 
 type TrangHoSo =
   | { pha: "dang-doc" }
@@ -143,27 +145,16 @@ export function HoSoNguoiScreen() {
     <RudiScreen testID="ho-so-nguoi-screen">
       <TopBar title="Hồ sơ" />
       {hoSo.pha === "dang-doc" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.inkFaint }]}>Đang đọc từ máy chủ…</Text>
-        </Card>
+        <SkeletonGroup>
+          <SkeletonRow leading={60} />
+        </SkeletonGroup>
       ) : null}
-      {hoSo.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{hoSo.loi}</Text>
-          <View style={styles.khoangTren}>
-            <RudiButton label="Thử lại" onPress={() => void napHoSo()} variant="outline" />
-          </View>
-        </Card>
-      ) : null}
+      {hoSo.pha === "hong" ? <ErrorState body={hoSo.loi} onRetry={() => void napHoSo()} title="Chưa mở được hồ sơ" /> : null}
       {hoSo.pha === "xong" ? (
         <>
-          <Card>
+          <View style={styles.hoSo}>
             <View style={styles.dau}>
-              <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-                <Text style={[typography.h2, { color: colors.accent }]}>
-                  {chuDau(hoSo.hoSo.display_name)}
-                </Text>
-              </View>
+              <Avatar name={hoSo.hoSo.display_name} size={60} />
               <View style={styles.dauChu}>
                 <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>
                   {hoSo.hoSo.display_name}
@@ -187,16 +178,16 @@ export function HoSoNguoiScreen() {
               </Text>
             )}
             {hoSo.hoSo.relation === "self" ? (
-              <View style={styles.khoangTren}>
-                <RudiButton
-                  icon="create-outline"
-                  label="Đăng bài mới"
-                  onPress={() => router.push("/posts/new")}
-                />
-              </View>
+              <RudiButton
+                compact
+                full={false}
+                icon="create-outline"
+                label="Đăng bài mới"
+                onPress={() => router.push("/posts/new")}
+              />
             ) : null}
             {hoSo.hoSo.relation === "self" ? (
-              <View style={[styles.khoangTren, styles.chinhSach]}>
+              <View style={styles.chinhSach}>
                 <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
                 <View accessibilityRole="radiogroup" style={styles.chips}>
                   {CHINH_SACH.map((c) => (
@@ -216,7 +207,7 @@ export function HoSoNguoiScreen() {
               </View>
             ) : null}
             {hoSo.hoSo.relation === "friend" ? (
-              <View style={[styles.khoangTren, styles.khoiChat]}>
+              <View style={styles.khoiChat}>
                 <RudiButton
                   icon="chatbubble-outline"
                   label="Nhắn tin"
@@ -227,7 +218,7 @@ export function HoSoNguoiScreen() {
               </View>
             ) : null}
             {hoSo.hoSo.relation === "groupmate" ? (
-              <View style={[styles.khoangTren, styles.khoiChat]}>
+              <View style={styles.khoiChat}>
                 <RudiButton
                   disabled
                   icon="chatbubble-outline"
@@ -238,55 +229,42 @@ export function HoSoNguoiScreen() {
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>Kết bạn để nhắn riêng.</Text>
               </View>
             ) : null}
-          </Card>
+          </View>
           <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
           {tuong.pha === "dang-doc" ? (
-            <Card>
-              <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc bài…</Text>
-            </Card>
+            <SkeletonGroup>
+              <SkeletonLines lines={2} />
+            </SkeletonGroup>
           ) : null}
-          {tuong.pha === "hong" ? (
-            <Card>
-              <Text style={[typography.body, { color: colors.warn }]}>{tuong.loi}</Text>
-              <View style={styles.khoangTren}>
-                <RudiButton label="Đọc lại tường" onPress={() => void napTuong()} variant="outline" />
-              </View>
-            </Card>
-          ) : null}
+          {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
-            <Card>
-              <Text style={[typography.body, { color: colors.inkSoft }]}>
-                {cauTuongRong(hoSo.hoSo.relation)}
-              </Text>
-            </Card>
+            <EmptyState kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
           ) : null}
           {tuong.pha === "xong" && tuong.bai.length > 0 ? (
-            <Card style={styles.danhSach}>
-              {tuong.bai.map((bai, i) => (
-                <View key={bai.id}>
-                  {i > 0 ? <Divider /> : null}
-                  <Pressable
-                    accessibilityLabel={`Mở bài: ${bai.body}`}
-                    accessibilityRole="button"
-                    onPress={() => router.push(`/posts/${bai.id}` as never)}
-                    style={styles.bai}
-                  >
-                    <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
-                    {bai.image_url ? (
-                      <Image
-                        accessibilityLabel="Ảnh bài đăng"
-                        contentFit="cover"
-                        source={nguonAnhBai(bai.image_url, phien?.person_id ?? "")}
-                        style={[styles.anhBai, { borderRadius: 12 }]}
-                      />
-                    ) : null}
-                    <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                      {dongPhuBai(bai)} · {cauTuongTacBai(bai)}
-                    </Text>
-                  </Pressable>
-                </View>
+            <View>
+              {tuong.bai.map((bai) => (
+                <Pressable
+                  accessibilityLabel={`Mở bài: ${bai.body}`}
+                  accessibilityRole="button"
+                  key={bai.id}
+                  onPress={() => router.push(`/posts/${bai.id}` as never)}
+                  style={({ pressed }) => [styles.bai, { borderBottomColor: colors.line }, pressed && styles.bam]}
+                >
+                  <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
+                  {bai.image_url ? (
+                    <Image
+                      accessibilityLabel="Ảnh bài đăng"
+                      contentFit="cover"
+                      source={nguonAnhBai(bai.image_url, phien?.person_id ?? "")}
+                      style={[styles.anhBai, { borderRadius: 12 }]}
+                    />
+                  ) : null}
+                  <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                    {dongPhuBai(bai)} · {cauTuongTacBai(bai)}
+                  </Text>
+                </Pressable>
               ))}
-            </Card>
+            </View>
           ) : null}
         </>
       ) : null}
@@ -295,14 +273,13 @@ export function HoSoNguoiScreen() {
 }
 
 const styles = StyleSheet.create({
+  hoSo: { gap: 10 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
-  chuDau: { width: 60, height: 60, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  danhSach: { paddingVertical: 6 },
-  bai: { gap: 6, paddingVertical: 10 },
-  khoangTren: { marginTop: 4 },
-  khoiChat: { gap: 6 },
-  chinhSach: { gap: 8 },
+  bai: { gap: 6, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  khoiChat: { gap: 6, marginTop: 4 },
+  chinhSach: { gap: 8, marginTop: 4 },
   anhBai: { width: "100%", aspectRatio: 4 / 3 },
+  bam: { opacity: 0.7 },
 });

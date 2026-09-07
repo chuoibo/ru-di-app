@@ -106,7 +106,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
           { backgroundColor: brand.coral, borderColor: colors.ground, shadowColor: colors.accent },
         ]}
       >
-        <Ionicons color={colors.accentInk} name="add" size={30} />
+        <Ionicons color={brand.coralInk} name="add" size={30} />
       </PressScale>
     </View>
   );

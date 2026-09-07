@@ -8,8 +8,9 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import { typography, useRudiTheme } from "../../theme";
+import { Avatar } from "../../ui/Avatar";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
 /**
  * `onPress` turns the row into the way into that person's profile. It stays
@@ -30,9 +31,7 @@ export function HangNguoi({
   const { colors } = useRudiTheme();
   const than = (
     <>
-      <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-        <Text style={[typography.title, { color: colors.accent }]}>{chuDau(ten)}</Text>
-      </View>
+      <Avatar name={ten} size={40} />
       <View style={styles.hangChu}>
         <Text numberOfLines={1} style={[typography.body, { color: colors.ink }]}>
           {ten}
@@ -58,27 +57,17 @@ export function HangNguoi({
 }
 
 export function HangNguoiCho({ soHang = 3 }: { soHang?: number }) {
-  const { colors } = useRudiTheme();
   return (
-    <View accessibilityLabel="Đang đọc từ máy chủ">
+    <SkeletonGroup>
       {Array.from({ length: soHang }, (_, i) => (
-        <View key={i} style={styles.hang}>
-          <View style={[styles.chuDau, { backgroundColor: colors.line }]} />
-          <View style={styles.hangChu}>
-            <View style={[styles.xuongTen, { backgroundColor: colors.line }]} />
-            <View style={[styles.xuongPhu, { backgroundColor: colors.line }]} />
-          </View>
-        </View>
+        <SkeletonRow key={i} leading={40} />
       ))}
-    </View>
+    </SkeletonGroup>
   );
 }
 
 const styles = StyleSheet.create({
   hang: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   hangChu: { flex: 1, gap: 2 },
-  chuDau: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   duoi: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8 },
-  xuongTen: { height: 14, width: "55%", borderRadius: 7 },
-  xuongPhu: { height: 10, width: "35%", borderRadius: 5 },
 });

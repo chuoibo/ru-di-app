@@ -1,6 +1,6 @@
 # ADR-0024 — Thông báo là những hàng sinh cùng transaction; push đi qua một sender cắm được; việc sau-response chỉ có một cửa
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-06 — chờ Lead đánh ĐÃ CHẤP NHẬN. Lát L7 của nhánh `claude/p0-w-m15-social-v1-1` không merge trước khi dòng này đổi. **Push thật chưa đo được cho tới khi Lead cấp cấu hình FCM** (mục 4). Lead đã duyệt kế hoạch chứa các quyết định này trong phiên 2026-09-06 và giữ mục push dù Claude không khuyến nghị.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (phiên 2026-09-06; ghi lại ở mục 2).
 - **Hiện thực:** nhánh `claude/p0-w-m15-social-v1-1`, lát L7; kế hoạch `~/.claude/plans/mellow-waddling-lantern.md` mục 5.8.
 - **Thêm hai bảng, một họ route, một cơ chế chạy-sau-response, ba module native và một lần dựng lại dev client**; không đổi ba luật tiền (thông báo về đợt thu chỉ là một hàng chèn thêm, không chạm cột `_vnd`); không đổi cách chat đọc tin (vẫn poll khi màn mở).

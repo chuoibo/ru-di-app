@@ -1,6 +1,6 @@
 # ADR-0022 — Ảnh cá nhân đọc được khi và chỉ khi có bài hoặc story đọc được trỏ tới; tường có bình luận và phản ứng; story sống 24 giờ cho bạn bè
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-06 — chờ Lead đánh ĐÃ CHẤP NHẬN. Lát L3 (tường) và L4 (story) của nhánh `claude/p0-w-m15-social-v1-1` không merge trước khi dòng này đổi. Lead đã duyệt kế hoạch chứa các quyết định này trong phiên 2026-09-06.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (phiên 2026-09-06; ghi lại ở mục 2).
 - **Hiện thực:** nhánh `claude/p0-w-m15-social-v1-1`, lát L3 và L4; kế hoạch `~/.claude/plans/mellow-waddling-lantern.md` mục 5.4–5.5.
 - **Thay đổi bảng `uploaded_images`, `posts`, `people`; thêm bốn bảng và hai họ route**; không đổi ba luật tiền; không đổi quy tắc «404 thay 403» của F39/F42; không đổi cách ảnh nhóm hoạt động.

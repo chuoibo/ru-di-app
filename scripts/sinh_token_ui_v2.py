@@ -1,11 +1,11 @@
-"""Write the UI v2 palette into tokens.json, guest.css, DESIGN.md tables and design.json.
+"""Generate guest.css and contrast documentation from shared tokens.json.
 
-One palette dict is the source; every mirror is generated, never typed, so the
-four files cannot disagree. Re-run after any colour change. Formatting of
-tokens.json is preserved by replacing whole blocks textually.
+The shared token file is the source; this script never replaces its palette
+with a stale built-in copy. Re-run after any colour change.
 """
 
 from __future__ import annotations
+
 import json
 import pathlib
 import re
@@ -41,56 +41,9 @@ ORDER = [
     "coverLine",
     "coverLineStrong",
 ]
-LIGHT = dict(
-    ground="#f7f3ec",
-    card="#ffffff",
-    line="#e6dfd3",
-    lineStrong="#a7825d",
-    ink="#1f2230",
-    inkSoft="#4e5563",
-    inkFaint="#676e7b",
-    accent="#c93900",
-    accentEnd="#c9344a",
-    accentInk="#ffffff",
-    accentSoft="#fff0ea",
-    split="#00756b",
-    splitInk="#ffffff",
-    splitSoft="#d5f5f0",
-    ai="#7d49ef",
-    aiInk="#ffffff",
-    aiSoft="#f5f1ff",
-    warn="#c2410c",
-    cover="#1d2140",
-    coverInk="#f7f3ec",
-    coverInkSoft="#c9c6d6",
-    coverLine="#3a3f63",
-    coverLineStrong="#8d92bd",
-)
-DARK = dict(
-    ground="#151830",
-    card="#1f2340",
-    line="#363b5e",
-    lineStrong="#7d82a9",
-    ink="#f4f1ea",
-    inkSoft="#c4c2cf",
-    inkFaint="#9b9aae",
-    accent="#fb693e",
-    accentEnd="#e75262",
-    accentInk="#1c0d06",
-    accentSoft="#3d1a10",
-    split="#02a498",
-    splitInk="#04201d",
-    splitSoft="#0d2f30",
-    ai="#a27dff",
-    aiInk="#150a30",
-    aiSoft="#251b4a",
-    warn="#e8734b",
-    cover="#0f1126",
-    coverInk="#f4f1ea",
-    coverInkSoft="#c4c2cf",
-    coverLine="#2e3255",
-    coverLineStrong="#9095c0",
-)
+PALETTE = json.loads(TOKENS.read_text(encoding="utf-8"))["color"]
+LIGHT = PALETTE["light"]
+DARK = PALETTE["dark"]
 assert list(LIGHT) == ORDER and list(DARK) == ORDER
 
 TEXT_PAIRS = [
@@ -120,7 +73,7 @@ TEXT_PAIRS = [
     ("coverInk", "cover", "Chữ trên bìa sổ"),
     ("coverInkSoft", "cover", "Chữ phụ trên bìa sổ"),
 ]
-# NOTE: accent on cover measures 3.03:1 in light -- small orange text is banned on the cover; orange there is washi (brand.coral, large areas) or a stamp with accentInk on it.
+# Action text on cover must use coverInk; light accent is below the text floor.
 NONTEXT = [
     ("lineStrong", "ground", "Viền control trên nền trang", True),
     ("lineStrong", "card", "Viền control trên thẻ", True),
@@ -167,36 +120,6 @@ def table_nontext(pal):
             f"| `{fg}` {pal[fg]} trên `{bg}` {pal[bg]} | {role} | **{r:.2f}:1** | {'1.4.11' if control else 'trang trí'} |"
         )
     return "\n".join(rows)
-
-
-def write_tokens():
-    s = TOKENS.read_text(encoding="utf-8")
-
-    def block(name, pal):
-        body = ",\n".join(f'      "{k}": "{v}"' for k, v in pal.items())
-        return f'    "{name}": {{\n{body}\n    }}'
-
-    for name, pal in (("light", LIGHT), ("dark", DARK)):
-        m = re.search(
-            rf'    "{name}": \{{\n(?:      "[a-zA-Z]+": "#[0-9a-f]{{6}}",?\n)+    \}}',
-            s,
-        )
-        assert m, name
-        s = s[: m.start()] + block(name, pal) + s[m.end() :]
-    if '"teal"' not in s:
-        s = s.replace(
-            '    "violet": "#8350f6",\n',
-            '    "violet": "#8350f6",\n    "teal": "#04a89d",\n',
-            1,
-        )
-    if '"displayFace"' not in s:
-        s = s.replace(
-            '  "type": {\n    "_":',
-            '  "type": {\n    "displayFace": "BricolageGrotesque",\n    "hero": { "size": 40, "weight": "800", "tracking": -1.2 },\n    "_":',
-            1,
-        )
-    json.loads(s)
-    TOKENS.write_text(s, encoding="utf-8")
 
 
 def css_name(k):
@@ -312,7 +235,8 @@ def write_design_json():
         for m, p in (("light", LIGHT), ("dark", DARK))
     }
     d["measuredFrom"] = (
-        "UI v2 (2026-09-05): tokens.json sinh bởi scripts/sinh_token_ui_v2.py; bìa sổ indigo + trang giấy sáng; đo lại từ artifact ở lát UI-8"
+        "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. "
+        "Các tỷ lệ token không thay thế bằng chứng native của từng component."
     )
     DJSON.write_text(
         json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -320,8 +244,11 @@ def write_design_json():
 
 
 if __name__ == "__main__":
-    write_tokens()
+    # Validate all pairs before writing any mirror.
+    for palette in (LIGHT, DARK):
+        table_text(palette)
+        table_nontext(palette)
     write_css()
     write_design()
     write_design_json()
-    print("tokens.json, guest.css, DESIGN.md, design.json regenerated")
+    print("guest.css, DESIGN.md contrast tables, design.json mirrored from tokens.json")

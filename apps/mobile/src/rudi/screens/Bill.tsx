@@ -1,9 +1,23 @@
+/**
+ * The bill on the fixture build, and the settlement on both builds.
+ *
+ * Fixture: a printed sample receipt on the table, then «ai dùng món nào»
+ * with the same collapsed rows and roster the live flow uses, then the
+ * settlement draft. Live: the settlement as the ledger has it. Every sum is
+ * `Money`; nothing here computes a share (see `QuyetToanLive`).
+ *
+ * UI v2 (đợt 6): the receipt is an input, not a stage -- the actions come
+ * first and the paper is shown at reading size; a line is a row that opens
+ * to its roster; the settlement answers what is owed and to whom in rows,
+ * with the state as a word beside each.
+ */
 import { Ionicons } from "@expo/vector-icons";
+import { DongTien } from "../ui/DongTien";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, BASE_URL, attemptFor, scanReceipt, type Attempt } from "../../api";
@@ -13,21 +27,24 @@ import { DEMO_PEOPLE } from "../nhom-demo";
 import { BILL_ITEMS, COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, demoAssets, formatVnd } from "../fixtures";
 import { noiLuuNgan } from "../luu-tru";
 import { useRudiSession } from "../session";
-import { bongDen, giayHoaDon, lopPhu, mauSang, mucTrenAnh, phuMau, typography, useRudiTheme } from "../theme";
+import { bongDen, giayHoaDon, lopPhu, typography, useRudiTheme } from "../theme";
 import {
-  AiNote,
-  Avatar,
-  Card,
   Chip,
   DemoBadge,
+  Heading,
   Inline,
   ListRow,
-  ProgressBar,
   RudiButton,
   RudiScreen,
   SectionHeader,
   TopBar,
 } from "../ui";
+import { Avatar } from "../ui/Avatar";
+import { ErrorState } from "../ui/ErrorState";
+import { Money } from "../ui/Money";
+import { RosterPicker } from "../ui/RosterPicker";
+import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
+import { Stamp } from "../ui/Stamp";
 
 function ReceiptPaper({ compact = false }: { compact?: boolean }) {
   const { colors } = useRudiTheme();
@@ -41,7 +58,6 @@ function ReceiptPaper({ compact = false }: { compact?: boolean }) {
       style={[styles.receipt, compact && styles.receiptCompact]}
     >
       <View pointerEvents="none" style={styles.paperHighlight} />
-      <View pointerEvents="none" style={styles.paperFold} />
       <Text style={styles.receiptStore}>TIỆM NƯỚNG XÓM LÈO</Text>
       <Text style={styles.receiptSmall}>Đà Lạt, Lâm Đồng</Text>
       <View style={styles.receiptDash} />
@@ -113,31 +129,11 @@ export function ReceiptReviewScreen() {
   return (
     <RudiScreen tone="split" testID="receipt-review-screen">
       <TopBar title="Xem lại hóa đơn" right={<DemoBadge />} />
-      <View style={styles.wood}>
-        <Image contentFit="cover" source={demoAssets.wood} style={StyleSheet.absoluteFill} />
-        <View pointerEvents="none" style={styles.woodWarmth} />
-        <LinearGradient
-          colors={[lopPhu.toi(0.34), lopPhu.toi(0.02), lopPhu.toi(0.38)]}
-          locations={[0, 0.52, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-        <ReceiptPaper />
-        <View style={[styles.cropCorner, styles.cropTopLeft]} />
-        <View style={[styles.cropCorner, styles.cropTopRight]} />
-        <View style={[styles.cropCorner, styles.cropBottomLeft]} />
-        <View style={[styles.cropCorner, styles.cropBottomRight]} />
-      </View>
-      <Card style={styles.detectCard} tone="split">
-        <View style={[styles.detectIcon, { backgroundColor: colors.split }]}>
-          <Ionicons color={colors.splitInk} name="receipt-outline" size={19} />
-        </View>
-        <View style={styles.flex}>
-          <Text style={[typography.label, { color: colors.ink }]}>Giấy mẫu Tiệm Nướng Xóm Lèo</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>
-            6 dòng canonical · tổng {formatVnd(DEMO_GROUP.billTotalVnd)}. Đây không phải kết quả OCR.
-          </Text>
-        </View>
-      </Card>
+      {/* The decision first, the paper after: what this bill is, and what to do with it. */}
+      <Heading
+        title="Giấy mẫu Tiệm Nướng Xóm Lèo"
+        subtitle={`${BILL_ITEMS.length} dòng canonical, tổng ${formatVnd(DEMO_GROUP.billTotalVnd)}. Đây không phải kết quả OCR; ảnh bạn chọn chỉ để thử đường gửi.`}
+      />
       <Inline gap={10}>
         <RudiButton
           full={false}
@@ -159,93 +155,108 @@ export function ReceiptReviewScreen() {
         />
       </Inline>
       {scanNote ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{scanNote}</Text>
+        <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>{scanNote}</Text>
       ) : (
-        <Inline gap={7} style={styles.hint}>
-          <Ionicons color={colors.inkFaint} name="information-circle-outline" size={18} />
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>
-            {session.receiptPicked
-              ? "Đã chọn ảnh trên máy. OCR chỉ chạy khi máy chủ nhận được POST /receipts/scan."
-              : "Chọn ảnh từ thư viện để thử OCR. Không có camera giả."}
-          </Text>
-        </Inline>
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>
+          {session.receiptPicked
+            ? "Đã chọn ảnh trên máy. OCR chỉ chạy khi máy chủ nhận được POST /receipts/scan."
+            : "Chọn ảnh từ thư viện để thử OCR. Không có camera giả."}
+        </Text>
       )}
+      <View style={styles.wood}>
+        <Image contentFit="cover" source={demoAssets.wood} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={[lopPhu.toi(0.34), lopPhu.toi(0.02), lopPhu.toi(0.38)]}
+          locations={[0, 0.52, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        <ReceiptPaper />
+      </View>
     </RudiScreen>
   );
 }
 
+/** The same «who had what» rows the live flow draws, on the sample bill. */
 export function OcrAssignmentScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const session = useRudiSession();
   const detectedTotal = session.money.billTotal;
+  const [moRong, setMoRong] = useState<Set<number>>(() => new Set([0]));
+  const doiMo = (i: number) =>
+    setMoRong((cu) => {
+      const moi = new Set(cu);
+      if (moi.has(i)) moi.delete(i);
+      else moi.add(i);
+      return moi;
+    });
+  /** Set one line to exactly `ids` through the session's own toggle. */
+  const datNguoi = (itemIndex: number, ids: readonly string[]) => {
+    const dang = session.assignments[itemIndex].map((i) => PEOPLE[i].id);
+    PEOPLE.forEach((p, i) => {
+      const nen = ids.includes(p.id);
+      if (dang.includes(p.id) !== nen) session.toggleAssignment(itemIndex, i);
+    });
+  };
 
   return (
     <RudiScreen tone="split" testID="ocr-assignment-screen">
       <TopBar title="Ai dùng món nào?" right={<DemoBadge compactLabel="Nháp" label="Nháp trên máy" />} />
-      <Card style={styles.ocrSummary} tone="split">
-        <View style={[styles.scanIcon, { backgroundColor: colors.split }]}>
-          <Ionicons color={colors.splitInk} name="scan" size={24} />
-        </View>
-        <View style={styles.flex}>
-          <Text style={[typography.title, { color: colors.ink }]}>Gán người từng dòng</Text>
-          <Text style={[typography.caption, { color: colors.inkFaint }]}>
-            6 khoản · tổng không đổi khi bạn sửa người
-          </Text>
-        </View>
-        <Text style={[typography.money, { color: colors.split }]}>{formatVnd(detectedTotal)}</Text>
-      </Card>
-      <AiNote>
-        Rủ Đi gợi ý người dùng món. Chạm avatar để sửa. Tổng bill giữ nguyên; phần mỗi người đổi và chảy sang quyết toán.
-      </AiNote>
-      <View style={styles.billItems}>
-        {BILL_ITEMS.map((item, itemIndex) => (
-          <Card key={item.name} style={styles.billItem}>
-            <View style={styles.billItemTop}>
-              <View style={styles.flex}>
-                <Text style={[typography.title, { color: colors.ink }]}>{item.name}</Text>
-                <Inline gap={5}>
-                  <Ionicons color={colors.split} name="people-outline" size={13} />
-                  <Text style={[typography.caption, { color: colors.split }]}>
-                    {session.assignments[itemIndex].length} người · cần kiểm tra
+      <Heading title={`${BILL_ITEMS.length} món · ${formatVnd(detectedTotal)}`} subtitle="Chạm một món để sửa ai dùng. Tổng bill giữ nguyên khi bạn sửa người." />
+      <View>
+        {BILL_ITEMS.map((item, itemIndex) => {
+          const mo = moRong.has(itemIndex);
+          const dangDung = session.assignments[itemIndex].map((index) => PEOPLE[index]);
+          return (
+            <View key={item.name} style={[styles.dongMon, { borderBottomColor: colors.line }]}>
+              <Pressable
+                accessibilityLabel={`Sửa người dùng ${item.name}`}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: mo }}
+                onPress={() => doiMo(itemIndex)}
+                style={({ pressed }) => [styles.dongMonDau, pressed && styles.pressed]}
+              >
+                <View style={styles.flex}>
+                  <Text style={[typography.label, { color: colors.ink }]}>{item.name}</Text>
+                  {/* The count is its own node, the names another: the count is what a glance reads. */}
+                  <Text style={[typography.caption, { color: dangDung.length === 0 ? colors.warn : colors.inkSoft }]}>
+                    {dangDung.length === 0 ? "Chưa chọn người" : `${dangDung.length} người`}
                   </Text>
-                </Inline>
-              </View>
-              <Text style={[typography.money, { color: colors.ink }]}>{formatVnd(item.amount)}</Text>
+                  {dangDung.length > 0 ? (
+                    <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dangDung.map((p) => p.name).join(", ")}</Text>
+                  ) : null}
+                </View>
+                <Money size="label" vnd={item.amount} />
+                <Ionicons color={colors.inkFaint} name={mo ? "chevron-up" : "chevron-down"} size={18} />
+              </Pressable>
+              {mo ? (
+                <View style={styles.sua}>
+                  <RosterPicker
+                    nhanCho={(ten) => `${ten} · ${item.name}`}
+                    onToggle={(id) => session.toggleAssignment(itemIndex, PEOPLE.findIndex((person) => person.id === id))}
+                    people={PEOPLE}
+                    selected={dangDung.map((p) => p.id)}
+                  />
+                  <Inline gap={6} wrap>
+                    <Chip label="Cả nhóm" onPress={() => datNguoi(itemIndex, PEOPLE.map((p) => p.id))} tone="split" />
+                    <Chip label="Bỏ hết" onPress={() => datNguoi(itemIndex, [])} tone="split" />
+                    {itemIndex > 0 ? (
+                      <Chip label="Như món trên" onPress={() => datNguoi(itemIndex, session.assignments[itemIndex - 1].map((i) => PEOPLE[i].id))} tone="split" />
+                    ) : null}
+                  </Inline>
+                </View>
+              ) : null}
             </View>
-            <View style={[styles.itemDivider, { backgroundColor: colors.line }]} />
-            <View style={styles.assignmentRow}>
-              <View>
-                <Text style={[typography.caption, { color: colors.inkFaint }]}>Chia cho</Text>
-                <Text style={[typography.label, { color: colors.ink }]}>{session.assignments[itemIndex].length} người</Text>
-              </View>
-              <View style={styles.assignmentPeople}>
-                {PEOPLE.map((person, personIndex) => {
-                  const active = session.assignments[itemIndex].includes(personIndex);
-                  return (
-                    <Pressable
-                      key={person.id}
-                      accessibilityRole="checkbox"
-                      aria-checked={active}
-                      onPress={() => session.toggleAssignment(itemIndex, personIndex)}
-                      style={({ pressed }) => [!active && styles.avatarInactive, pressed && styles.pressed]}
-                    >
-                      <Avatar person={person} ring={active} size={34} />
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          </Card>
-        ))}
+          );
+        })}
       </View>
-      <Card style={styles.totalCard}>
-        <View>
+      <View style={styles.tongRow}>
+        <View style={styles.flex}>
           <Text style={[typography.caption, { color: colors.inkFaint }]}>Tổng hóa đơn Xóm Lèo</Text>
-          <Text style={[typography.h2, { color: colors.ink }]}>Không gồm homestay / xăng</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>Không gồm homestay / xăng</Text>
         </View>
-        <Text style={[typography.money, { color: colors.split }]}>{formatVnd(detectedTotal)}</Text>
-      </Card>
+        <Money tone="split" vnd={detectedTotal} />
+      </View>
       <RudiButton
         disabled={session.assignments.some((people) => people.length === 0)}
         icon="checkmark-circle-outline"
@@ -281,7 +292,7 @@ export function SettlementScreen() {
  * would be the second allocator this repo has already thrown out once.
  */
 function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: string }) {
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const router = useRouter();
   const [du, setDu] = useState<QuyetToanLive | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
@@ -330,39 +341,37 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     }
   };
 
+  const docSo = useCallback(() => {
+    let song = true;
+    setLoi(null);
+    void docQuyetToanLive(actorId, contextId, BASE_URL)
+      .then((ketQua) => {
+        if (song) setDu(ketQua);
+      })
+      .catch((error: unknown) => {
+        // The real sentence from the real failure. Falling back to the fixture
+        // here would answer a broken request with somebody else's money.
+        if (!song) return;
+        setLoi(
+          error instanceof ApiError
+            ? error.message
+            : `Không đọc được quyết toán tại ${BASE_URL}.`,
+        );
+      });
+    return () => {
+      song = false;
+    };
+  }, [actorId, contextId]);
+
   // On focus, like the rounds below: a receipt confirmed on the round screen
   // empties the ledger's transfer list, and coming back must show that.
-  useFocusEffect(
-    useCallback(() => {
-      let song = true;
-      void docQuyetToanLive(actorId, contextId, BASE_URL)
-        .then((ketQua) => {
-          if (song) setDu(ketQua);
-        })
-        .catch((error: unknown) => {
-          // The real sentence from the real failure. Falling back to the fixture
-          // here would answer a broken request with somebody else's money.
-          if (!song) return;
-          setLoi(
-            error instanceof ApiError
-              ? error.message
-              : `Không đọc được quyết toán tại ${BASE_URL}.`,
-          );
-        });
-      return () => {
-        song = false;
-      };
-    }, [actorId, contextId]),
-  );
+  useFocusEffect(docSo);
 
   if (loi !== null) {
     return (
       <RudiScreen tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán chuyến đi" />
-        <Card>
-          <Text style={[typography.title, { color: colors.warn }]}>Chưa đọc được sổ</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{loi}</Text>
-        </Card>
+        <ErrorState body={loi} onRetry={() => void docSo()} title="Chưa đọc được sổ" />
       </RudiScreen>
     );
   }
@@ -370,7 +379,11 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     return (
       <RudiScreen tone="split" testID="settlement-screen">
         <TopBar title="Quyết toán chuyến đi" />
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc sổ…</Text>
+        <SkeletonGroup style={styles.khung}>
+          <SkeletonLines lastWidth="45%" lineHeight={24} lines={2} />
+          <SkeletonRow leading={0} />
+          <SkeletonRow leading={0} />
+        </SkeletonGroup>
       </RudiScreen>
     );
   }
@@ -378,40 +391,40 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
   return (
     <RudiScreen tone="split" testID="settlement-screen">
       <TopBar title="Quyết toán chuyến đi" />
-      <Card style={styles.settlementHero} tone="split">
-        <View style={[styles.balanceIcon, { backgroundColor: colors.split }]}>
-          <Ionicons color={colors.splitInk} name="wallet" size={26} />
+      {/* The ledger's first line, not a hero: the sum the server holds, its name beside it. */}
+      <View style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
+        <View style={styles.flex}>
+          <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
         </View>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>{hero.nhan}</Text>
-        <Text style={[styles.bigMoney, { color: colors.ink }]}>{hero.so}</Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
-      </Card>
+        <Text style={[typography.money, { color: colors.split }]}>{hero.so}</Text>
+      </View>
       <SectionHeader title="Các khoản chuyển" />
       {du.chuyenTien.length === 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>
+        <Text style={[typography.body, { color: colors.inkSoft }]}>Sổ không còn ai nợ ai: mọi khoản đã về hoặc chưa có khoản nào được ghi.</Text>
       ) : null}
-      <View style={styles.transferList}>
+      <View>
         {du.chuyenTien.map((row) => (
-          <Card key={`${row.fromId}-${row.toId}`} style={styles.transfer}>
+          <View key={`${row.fromId}-${row.toId}`} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
             <View style={styles.flex}>
               <Text style={[typography.label, { color: colors.ink }]}>
                 {tenCua(du.nguoi, row.fromId)} → {tenCua(du.nguoi, row.toId)}
               </Text>
               <Text style={[typography.caption, { color: colors.inkFaint }]}>Đề xuất, chưa phải nghĩa vụ</Text>
             </View>
-            <Text style={[typography.money, { color: colors.split }]}>{formatVnd(row.amountVnd)}</Text>
-          </Card>
+            <Money tone="split" vnd={row.amountVnd} />
+          </View>
         ))}
       </View>
-      <Card style={styles.safetyNote}>
-        <Ionicons color={colors.split} name="shield-checkmark-outline" size={21} />
+      <View style={styles.ghiChu}>
+        <Ionicons color={colors.split} name="shield-checkmark-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           {du.toiThieu
             ? "Máy chủ chứng minh đây là danh sách chuyển ngắn nhất."
             : "Danh sách này chưa được chứng minh là ngắn nhất."}{" "}
           Nghĩa vụ chỉ tồn tại sau khi một đợt thu được phát.
         </Text>
-      </Card>
+      </View>
       <SectionHeader title="Đợt thu" />
       {dotThu === null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang đọc các đợt thu…</Text> : null}
       {dotThu === "hong" ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa đọc được các đợt thu của nhóm.</Text> : null}
@@ -430,7 +443,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
             />
           ))
         : null}
-      {loiDot !== null ? <Text style={[typography.body, { color: colors.warn }]}>{loiDot}</Text> : null}
+      {loiDot !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loiDot}</Text> : null}
       {du.chuyenTien.length > 0 ? (
         <>
           <RudiButton disabled={dangMo} icon="add" label="Tạo đợt thu từ sổ" loading={dangMo} onPress={() => void moDot()} tone="split" variant="soft" />
@@ -446,10 +459,13 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
 }
 
 function QuyetToanNhap() {
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const picture = session.money;
   const collector = PEOPLE[COLLECTOR_INDEX];
+  // The row the person just marked: its seal lands; rows already marked when
+  // the screen opened simply carry theirs (no replay on remount).
+  const [vuaTra, setVuaTra] = useState<number | null>(null);
   const paidCount = session.paidFromIndexes.length;
   const pendingCount = picture.transfers.filter((row) => !session.paidFromIndexes.includes(row.fromIndex)).length;
   const paidSum = picture.transfers
@@ -459,60 +475,37 @@ function QuyetToanNhap() {
   return (
     <RudiScreen tone="split" testID="settlement-screen">
       <TopBar title="Quyết toán chuyến đi" right={<DemoBadge />} />
-      <Card style={styles.settlementHero} tone="split">
-        <View style={[styles.balanceIcon, { backgroundColor: colors.split }]}>
-          <Ionicons color={colors.splitInk} name="wallet" size={26} />
-        </View>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>Tổng chi tiêu cả chuyến (8 người)</Text>
-        <Text style={[styles.bigMoney, { color: colors.ink }]}>{formatVnd(picture.tripTotal)}</Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>
-          Gồm bill Xóm Lèo {formatVnd(picture.billTotal)} và phần còn lại {formatVnd(picture.otherTotal)} (homestay + xăng).
+      {/* A ledger, not a dashboard: every sum is a row, teal only on the number. */}
+      <View>
+        <DongTien dam nhan="Tổng chi tiêu cả chuyến (8 người)" phu="Nháp trên máy, chưa confirm vào sổ cái" tone="split" vnd={picture.tripTotal} />
+        <DongTien nhan="Bill Xóm Lèo" vnd={picture.billTotal} />
+        <DongTien nhan="Homestay + xăng" phu="Phần còn lại của chuyến" vnd={picture.otherTotal} />
+      </View>
+      <View style={styles.tomTat}>
+        <Text style={[typography.body, { color: colors.ink }]}>
+          {String(paidCount)} đã trả · {String(pendingCount)} đang chờ · {String(PEOPLE.length)} thành viên
         </Text>
-        <Text style={[typography.caption, { color: colors.warn }]}>
-          Số dưới là nháp trên máy, chưa confirm vào sổ cái.
-        </Text>
-        <View style={styles.settlementStats}>
-          <View style={styles.settlementStat}>
-            <Text style={[typography.title, { color: colors.ink }]}>{String(paidCount)}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>đã trả</Text>
-          </View>
-          <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-          <View style={styles.settlementStat}>
-            <Text style={[typography.title, { color: colors.warn }]}>{String(pendingCount)}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>đang chờ</Text>
-          </View>
-          <View style={[styles.verticalLine, { backgroundColor: colors.line }]} />
-          <View style={styles.settlementStat}>
-            <Text style={[typography.title, { color: colors.split }]}>{String(PEOPLE.length)}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>thành viên</Text>
-          </View>
-        </View>
-      </Card>
-      <Card style={styles.receiveCard}>
-        <View style={styles.receiveTop}>
-          <Avatar person={collector} size={49} />
+      </View>
+      <View style={[styles.nguoiThu, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
+        <View style={styles.nguoiThuDau}>
+          <Avatar name={collector.name} ring size={44} tone="split" />
           <View style={styles.flex}>
             <Text style={[typography.caption, { color: colors.inkFaint }]}>{collector.name} sẽ nhận (bill Xóm Lèo)</Text>
-            <Text style={[typography.money, { color: colors.split }]}>{formatVnd(picture.collectorReceives)}</Text>
+            <Money tone="split" vnd={picture.collectorReceives} />
           </View>
-          <Chip icon="shield-checkmark-outline" label="Người thu bill" selected tone="split" />
+          <Stamp label="Người thu bill" tone="split" />
         </View>
-        <ProgressBar
-          tone="split"
-          value={picture.collectorReceives === 0 ? 0 : (paidSum * 100) / picture.collectorReceives}
-        />
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Đã nhận {formatVnd(paidSum)} · còn {formatVnd(picture.collectorReceives - paidSum)}
-        </Text>
-      </Card>
+        <DongTien nhan="Đã nhận" tone="split" vnd={paidSum} />
+        <DongTien cuoi nhan="Còn chờ" vnd={picture.collectorReceives - paidSum} />
+      </View>
       <SectionHeader title="Các khoản chuyển (chỉ bill Xóm Lèo)" />
-      <View style={styles.transferList}>
+      <View>
         {picture.transfers.map((item) => {
           const person = PEOPLE[item.fromIndex];
           const paid = session.paidFromIndexes.includes(item.fromIndex);
           return (
-            <Card key={person.id} style={styles.transfer}>
-              <Avatar person={person} size={44} />
+            <View key={person.id} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
+              <Avatar name={person.name} size={40} tone="split" />
               <View style={styles.flex}>
                 <Text style={[typography.label, { color: colors.ink }]}>{person.name} → {collector.name}</Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -520,27 +513,33 @@ function QuyetToanNhap() {
                 </Text>
               </View>
               <View style={styles.transferRight}>
-                <Text style={[typography.label, { color: colors.ink }]}>{formatVnd(item.amount)}</Text>
-                <Pressable
-                  onPress={() => session.markPaid(item.fromIndex)}
-                  style={[styles.status, { backgroundColor: paid ? colors.splitSoft : colors.accentSoft }]}
-                >
-                  <Ionicons color={paid ? colors.split : colors.warn} name={paid ? "checkmark-circle" : "time"} size={13} />
-                  <Text style={[styles.statusText, { color: paid ? colors.split : colors.warn }]}>
-                    {paid ? "Đã trả" : "Đánh dấu đã trả"}
-                  </Text>
-                </Pressable>
+                <Money size="label" vnd={item.amount} />
+                {paid ? (
+                  <Stamp dong={vuaTra === item.fromIndex} label="Đã trả" tone="split" />
+                ) : (
+                  <RudiButton
+                    compact
+                    full={false}
+                    label="Đánh dấu đã trả"
+                    onPress={() => {
+                      setVuaTra(item.fromIndex);
+                      session.markPaid(item.fromIndex);
+                    }}
+                    tone="split"
+                    variant="outline"
+                  />
+                )}
               </View>
-            </Card>
+            </View>
           );
         })}
       </View>
-      <Card style={styles.safetyNote}>
-        <Ionicons color={colors.split} name="shield-checkmark-outline" size={21} />
+      <View style={styles.ghiChu}>
+        <Ionicons color={colors.split} name="shield-checkmark-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           “Đã trả” là xác nhận trong Rủ Đi, không phải bằng chứng chuyển tiền. Chuyển bằng cách nào là việc giữa hai người; app dừng ở phần của mỗi người.
         </Text>
-      </Card>
+      </View>
       <RudiButton
         icon="notifications-outline"
         label={
@@ -557,16 +556,11 @@ function QuyetToanNhap() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  wood: { minHeight: 560, overflow: "hidden", borderRadius: 24, backgroundColor: giayHoaDon.khung, padding: 28, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: lopPhu.trang(0.22), elevation: 6, shadowColor: giayHoaDon.bong, shadowOpacity: 0.25, shadowRadius: 18, shadowOffset: { width: 0, height: 10 } },
-  woodWarmth: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: phuMau(giayHoaDon.bongNau, 0.12) },
-  receipt: { width: "88%", maxWidth: 390, minHeight: 500, borderRadius: 3, paddingHorizontal: 24, paddingVertical: 28, shadowColor: bongDen, shadowOpacity: 0.48, shadowRadius: 20, shadowOffset: { width: 0, height: 13 }, elevation: 14, transform: [{ rotate: "-1.2deg" }] },
+  khung: { gap: 14 },
+  wood: { minHeight: 420, overflow: "hidden", borderRadius: 20, backgroundColor: giayHoaDon.khung, padding: 24, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: lopPhu.trang(0.22) },
+  receipt: { width: "88%", maxWidth: 390, minHeight: 380, borderRadius: 3, paddingHorizontal: 22, paddingVertical: 22, shadowColor: bongDen, shadowOpacity: 0.48, shadowRadius: 20, shadowOffset: { width: 0, height: 13 }, elevation: 14, transform: [{ rotate: "-1.2deg" }] },
   receiptCompact: { minHeight: 0, paddingVertical: 18 },
   paperHighlight: { position: "absolute", left: 8, top: 0, bottom: 0, width: 1, backgroundColor: lopPhu.trang(0.72) },
-  paperFold: { position: "absolute", right: -10, top: -10, width: 42, height: 42, borderRadius: 21, backgroundColor: phuMau(giayHoaDon.vien, 0.2) },
-  cameraTarget: { width: "88%", maxWidth: 390, minHeight: 500, borderWidth: 2, borderStyle: "dashed", borderColor: lopPhu.trang(0.8), borderRadius: 20, alignItems: "center", justifyContent: "center", gap: 9, padding: 24, backgroundColor: lopPhu.toi(0.24) },
-  cameraTargetIcon: { width: 64, height: 64, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: lopPhu.trang(0.18), borderWidth: 1, borderColor: lopPhu.trang(0.34) },
-  cameraTargetTitle: { color: mucTrenAnh, fontSize: 18, lineHeight: 24, fontWeight: "900", textAlign: "center" },
-  cameraTargetCopy: { color: lopPhu.trang(0.78), fontSize: 12, lineHeight: 18, fontWeight: "700", textAlign: "center" },
   receiptStore: { color: giayHoaDon.chuDam, textAlign: "center", fontSize: 19, lineHeight: 24, fontWeight: "900" },
   receiptSmall: { color: giayHoaDon.chuNhat, fontSize: 11, lineHeight: 18, fontWeight: "600" },
   receiptDash: { borderTopWidth: 1, borderStyle: "dashed", borderColor: giayHoaDon.chuMo, marginVertical: 12 },
@@ -581,38 +575,15 @@ const styles = StyleSheet.create({
   receiptTotalLabel: { color: giayHoaDon.chuDam, fontSize: 15, fontWeight: "900" },
   receiptTotalValue: { color: giayHoaDon.chuDam, fontSize: 17, fontWeight: "900", fontVariant: ["tabular-nums"] },
   receiptThanks: { textAlign: "center", fontSize: 11, marginTop: 20 },
-  cropCorner: { position: "absolute", width: 40, height: 40, borderColor: mucTrenAnh },
-  cropTopLeft: { left: 14, top: 14, borderLeftWidth: 3, borderTopWidth: 3, borderTopLeftRadius: 14 },
-  cropTopRight: { right: 14, top: 14, borderRightWidth: 3, borderTopWidth: 3, borderTopRightRadius: 14 },
-  cropBottomLeft: { left: 14, bottom: 14, borderLeftWidth: 3, borderBottomWidth: 3, borderBottomLeftRadius: 14 },
-  cropBottomRight: { right: 14, bottom: 14, borderRightWidth: 3, borderBottomWidth: 3, borderBottomRightRadius: 14 },
-  detectCard: { flexDirection: "row", alignItems: "center", gap: 11 },
-  detectIcon: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  hint: { justifyContent: "center", paddingHorizontal: 10 },
-  ocrSummary: { flexDirection: "row", alignItems: "center", gap: 11 },
-  scanIcon: { width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center" },
-  billItems: { gap: 10 },
-  billItem: { gap: 12 },
-  billItemTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
-  itemDivider: { height: StyleSheet.hairlineWidth },
-  assignmentRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  assignmentPeople: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 4, flex: 1 },
-  avatarInactive: { opacity: 0.27 },
-  pressed: { opacity: 0.7 },
-  totalCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
-  settlementHero: { alignItems: "center", gap: 6, paddingTop: 22 },
-  balanceIcon: { width: 54, height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 4 },
-  bigMoney: { fontSize: 35, lineHeight: 42, fontWeight: "900", letterSpacing: -1, fontVariant: ["tabular-nums"] },
-  settlementStats: { width: "100%", flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 13, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: phuMau(mauSang.split, 0.18) },
-  settlementStat: { flex: 1, alignItems: "center", gap: 2 },
-  verticalLine: { height: 33, width: StyleSheet.hairlineWidth },
-  receiveCard: { gap: 12 },
-  receiveTop: { flexDirection: "row", alignItems: "center", gap: 11 },
-  transferList: { gap: 9 },
-  transfer: { flexDirection: "row", alignItems: "center", gap: 11, padding: 12 },
-  transferRight: { alignItems: "flex-end", gap: 5 },
-  status: { flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 4 },
-  statusText: { fontSize: 10, lineHeight: 12, fontWeight: "800" },
-  // No fill of its own: the Card token follows the scheme, a cream literal did not.
-  safetyNote: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
+  dongMon: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
+  dongMonDau: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 56, paddingVertical: 6 },
+  sua: { gap: 10, paddingBottom: 12 },
+  pressed: { opacity: 0.75 },
+  tongRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 4 },
+  tomTat: { paddingVertical: 2 },
+  nguoiThu: { gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  nguoiThuDau: { flexDirection: "row", alignItems: "center", gap: 12 },
+  hangChuyen: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  transferRight: { alignItems: "flex-end", gap: 6 },
+  ghiChu: { flexDirection: "row", alignItems: "flex-start", gap: 9 },
 });

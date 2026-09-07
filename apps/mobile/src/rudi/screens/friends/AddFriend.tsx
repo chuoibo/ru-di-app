@@ -12,14 +12,14 @@
  */
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { guiLoiMoi, timBanTheoSo, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { HangNguoi } from "./HangNguoi";
 
 type Trang =
@@ -100,7 +100,7 @@ export function AddFriendScreen() {
         title="Thêm bạn bằng số điện thoại"
         subtitle="Chỉ tìm được người đã dùng Rủ Đi hoặc đã được ai đó đặt tên bằng số này. Số không được lưu."
       />
-      <Card style={styles.card}>
+      <View style={styles.form}>
         <Field
           accessibilityLabel="Ô số điện thoại bạn"
           autoComplete="tel"
@@ -131,14 +131,14 @@ export function AddFriendScreen() {
           <RudiButton disabled={ban} label="Tìm" loading={trang.pha === "dang-tim"} onPress={() => void tim()} />
         )}
         {trang.pha === "hong" ? (
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
         ) : null}
-      </Card>
+      </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: 20 },
-  card: { gap: 14 },
+  screen: { gap: 20, maxWidth: 560 },
+  form: { gap: 14 },
 });

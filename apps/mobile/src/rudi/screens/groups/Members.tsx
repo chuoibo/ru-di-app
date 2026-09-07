@@ -5,13 +5,15 @@
  * same one App B called, with the bearer now doing the identifying. Names
  * come with the roster (`display_name`), initials are drawn in one tone -- the
  * design system does not colour people.
+ *
+ * UI v2: rows on the paper, the group's two memory doors as plain rows, the
+ * invite as the one action at the foot.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../api";
-import { chuDau } from "../../../screens/ca-nhan/ban-be";
 import {
   coTheDoiVaiTro,
   datVaiTro,
@@ -23,7 +25,11 @@ import { danhSachThanhVien, type ThanhVien } from "../../../screens/vao-cua/cong
 import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Avatar } from "../../ui/Avatar";
+import { ErrorState } from "../../ui/ErrorState";
+import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
+import { Stamp } from "../../ui/Stamp";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -94,33 +100,33 @@ export function GroupMembersScreen() {
             : "Đang đọc danh sách từ máy chủ..."
         }
       />
-      <Card style={styles.loiVao}>
+      <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
         <ListRow icon="images-outline" onPress={() => router.push(`/groups/${id}/wall` as never)} subtitle="Ảnh, check-in, tim và bình luận. Chỉ thành viên thấy." title="Tường kỷ niệm" />
-        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album, có thước phim." title="Album chuyến đi" />
-      </Card>
-      {trang.pha === "hong" ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-          <RudiButton label="Thử lại" onPress={() => void nap()} variant="outline" />
-        </Card>
+        <ListRow icon="albums-outline" onPress={() => router.push(`/groups/${id}/album` as never)} subtitle="Mỗi kèo một album." title="Album chuyến đi" />
+      </View>
+      {trang.pha === "dang-doc" ? (
+        <SkeletonGroup>
+          <SkeletonRow />
+          <SkeletonRow />
+        </SkeletonGroup>
       ) : null}
+      {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách thành viên" /> : null}
       {trang.pha === "xong" ? (
-        <Card style={styles.danhSach}>
+        <View>
           {conSong.map((tv) => {
             const ten = tv.display_name ?? "Thành viên";
             const laToi = tv.person_id === phien.person_id;
+            const duocMoi = tv.state === "invited";
             return (
-              <View key={tv.id} style={styles.hang}>
-                <View style={[styles.chuDau, { backgroundColor: colors.accentSoft }]}>
-                  <Text style={[typography.title, { color: colors.accent }]}>{chuDau(ten)}</Text>
-                </View>
+              <View key={tv.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
+                <Avatar name={ten} ring={laToi} size={40} />
                 <View style={styles.hangChu}>
-                  <Text style={[typography.body, { color: colors.ink }]}>
+                  <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : colors.ink }]}>
                     {ten}
                     {laToi ? " (bạn)" : ""}
                   </Text>
                   <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {tv.state === "invited" ? "Đã mời, chưa đồng ý" : tv.role === "admin" ? "Quản trị" : "Thành viên"}
+                    {duocMoi ? "Đã mời, chưa đồng ý" : tv.role === "admin" && tv.state === "active" ? "Mở nhóm này" : "Thành viên"}
                   </Text>
                 </View>
                 {coTheDoiVaiTro(conSong, phien.person_id, tv) ? (
@@ -133,14 +139,14 @@ export function GroupMembersScreen() {
                     variant="soft"
                   />
                 ) : tv.role === "admin" && tv.state === "active" ? (
-                  <Chip label="Quản trị" />
+                  <Stamp label="Quản trị" />
                 ) : null}
               </View>
             );
           })}
           {nhacQuanTriCuoi ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{nhacQuanTriCuoi}</Text> : null}
           {loiVaiTro ? <Text style={[typography.caption, { color: colors.warn }]}>{loiVaiTro}</Text> : null}
-        </Card>
+        </View>
       ) : null}
       <RudiButton
         icon="person-add-outline"
@@ -156,9 +162,7 @@ export function GroupMembersScreen() {
 }
 
 const styles = StyleSheet.create({
-  loiVao: { gap: 0, paddingVertical: 4 },
-  danhSach: { gap: 12 },
-  hang: { flexDirection: "row", alignItems: "center", gap: 12 },
+  loiVao: { paddingVertical: 4, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   hangChu: { flex: 1, gap: 2 },
-  chuDau: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" },
 });

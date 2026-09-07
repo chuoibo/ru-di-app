@@ -1,6 +1,6 @@
 # ADR-0025 — Thước phim là một file MP4 do máy chủ dựng từ ảnh nhóm; mô hình vẫn chỉ nhận metadata; `/reel` là một lệnh chat; «Khoảnh khắc của tôi» đọc kỷ niệm mình đã đăng
 
-- **Trạng thái:** 🟡 **ĐỀ XUẤT** 2026-09-06 — chờ Lead đánh ĐÃ CHẤP NHẬN. Lát L8 của nhánh `claude/p0-w-m15-social-v1-1` không merge trước khi dòng này đổi. Lead đã duyệt kế hoạch chứa các quyết định này trong phiên 2026-09-06.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-07 — Lead đánh dấu trong phiên 2026-09-07 («tôi đồng ý hết»), sau khi các lát đã ship được đo trên máy thật và merge vào `main`.
 - **Quyết định bởi:** Lead (phiên 2026-09-06; ghi lại ở mục 2).
 - **Hiện thực:** nhánh `claude/p0-w-m15-social-v1-1`, lát L8 (sau khi L7 đã dựng lại dev client với `expo-video`, `expo-sharing`); kế hoạch `~/.claude/plans/mellow-waddling-lantern.md` mục 5.9.
 - **Thêm một bảng, một phụ thuộc Python, một font vào image API, một họ route và một lệnh chat**; không đổi ADR-0011/F37 về việc mô hình không nhận byte ảnh; không đổi ba luật tiền.

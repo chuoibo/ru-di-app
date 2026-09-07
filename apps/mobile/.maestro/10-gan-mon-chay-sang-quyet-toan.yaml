@@ -38,9 +38,11 @@ appId: com.lakiet.rudi
     below: "Bò nướng"
 - takeScreenshot: 10-assignment-before
 # Minh Anh ("MA") joins the Bò nướng line.
+# Dòng món gấp lại theo mặc định (đợt chuyển mình UI 06/09): bấm dòng để mở
+# editor, rồi bấm TÊN người (không còn chữ cái đầu) để bật thêm một người.
+- tapOn: "Bò nướng"
 - tapOn:
-    text: "MA"
-    below: "Bò nướng"
+    text: "Minh Anh · Bò nướng"
 - assertVisible:
     text: "3 người"
     below: "Bò nướng"
@@ -61,7 +63,12 @@ appId: com.lakiet.rudi
     visible: "Quyết toán chuyến đi"
     timeout: 30000
 # Bill total is untouched — Σ allocation = Σ bill still holds.
-- assertVisible: "Gồm bill Xóm Lèo 1.280.000đ và phần còn lại 2.560.000đ (homestay + xăng)."
+# Quyết toán là sổ phẳng (đợt chuyển mình 06/09): bill và phần còn lại là hai
+# dòng sổ, mỗi dòng một số; bill không đổi nên Σ phân bổ = Σ bill vẫn giữ.
+- assertVisible: "Bill Xóm Lèo"
+- assertVisible: "1.280.000đ"
+- assertVisible: "Homestay + xăng"
+- assertVisible: "2.560.000đ"
 - assertVisible: "919.583đ"
 - assertNotVisible: "1.106.250đ"
 - takeScreenshot: 10-settlement-recomputed
