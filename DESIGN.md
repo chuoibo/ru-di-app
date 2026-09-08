@@ -995,13 +995,25 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   (`KHUNG_GU`), cảnh trong khung ngang **144×112** (`KHUNG_CANH`). Ô đặt qua
   `bienDoi(x0, y0, tiLe)`; chưa có lưới 24 nào dùng ngoài bản 22/32 của
   `GuGlyph` co từ 48.
-- **Nếp** (`hinhNep`, sáu tư thế `moi` · `giu-cho` · `gop-y` · `doi` ·
-  `ghi-lai` · `vui`): tờ hẹn gấp, thân giấy hơi rộng chân, một nếp chéo
+- **Nếp** (`hinhNep`, chín tư thế `moi` · `keo-ghe` · `giu-cho` · `gop-y` ·
+  `cam-ban-do` · `giu-khung` · `doi` · `ghi-lai` · `vui`): tờ hẹn gấp, thân
+  giấy hơi rộng chân, một nếp chéo
   (`bong`) như hai ve áo, **một** góc coral gấp xuống trên phải, mắt mực
   dưới cặp mày lệch, nụ cười nghiêng khép, chân thon và tay bao (`vien`)
   luôn đang làm gì đó. **Hai bản đọc**: 96 có mày, nếp, đạo cụ; dưới 72dp
   (`Nep size < 72`) vẽ **bản 48** dày nét bỏ chi tiết, không co bản 96.
   Trang trí, ẩn khỏi cây trợ năng; chữ bên cạnh mới nói.
+- **Tư thế là cả người, không phải chỉ tay** (review 08/09, gói R2). Mỗi
+  pose khai trong `TU_THE` hai con số: `nghieng` là quãng thân trên trượt
+  ngang khi bàn chân giữ nguyên trên đường sàn `CHAN_NEP = 91` (một phép
+  trượt tuyến tính theo chiều cao, không xoay), `nhin` là quãng dời của hai
+  con mắt về phía vật đang làm, chặn trong ±1.6 ô. Bốn pose diễn có **điểm
+  tay chạm vật** ghi thẳng trong chú thích cảnh: `keo-ghe` nắm đỉnh cọc lưng
+  ghế ở ô (90, 34) và ngả người ra sau; `giu-cho` đặt tay lên thanh ghế bên
+  cạnh ở (88, 48); `cam-ban-do` và `giu-khung` đặt **hai tay lên cùng một
+  cạnh** vật (ô x 74..78), tay gần gập khuỷu ở (38, 72) nên cánh tay không
+  xuyên qua thân. Đổi cảnh thì đổi cả hai đầu: toạ độ vật trong `canh.ts` và
+  toạ độ tay trong `nep.ts` phải gặp nhau, không chỉnh một bên.
 - **Hình gu** (`hinhGu`, tám id của máy chủ `an-uong` · `cafe` · `nightlife`
   · `mon-local` · `outdoor` · `shopping` · `karaoke` · `game`): vật trên bàn
   vẽ **một cây bút** (nét chính 2.4 trên lưới 48, nét mảnh 1.7), **tối đa
@@ -1015,6 +1027,11 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   điểm đặt bút) nối những thứ thuộc về nhau; **góc gấp** (`gocGap`, tờ giấy
   gấp góc trên phải cùng góc với Nếp, tỉ lệ 0.28). Ghế `hinhGhe` là đạo cụ
   chung của cảnh.
+- **Một mặt sàn cho cả cảnh**: `SAN = 102` trong `canh.ts`. Chân ghế, chân
+  khung ảnh, chân bản đồ và bàn chân Nếp (`nepTrenSan` đặt `y0 = SAN −
+  CHAN_NEP × tiLe`) cùng kết thúc ở đó, nên không nhân vật nào lơ lửng cạnh
+  đồ vật. Cảnh `chua-co-keo` là ngoại lệ có chủ ý: tờ hẹn bay, nhân vật viết
+  bên cạnh, không có sàn nào để đứng.
 - **Năm cảnh** (`hinhCanh`, `CANH_IDS`), mỗi cảnh **trọn vẹn khi không có
   Nếp** (`nep: false`, so `sua-ab/A-co-nep` với `B-khong-nep`) và được trình
   đọc màn hình đọc thành **một câu**: `chua-co-hoi` «Một chiếc ghế được kéo
@@ -1024,6 +1041,14 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   đường đi chưa tới nơi». `Canh` khung chặt theo `hopNgang` + `viewBox`, nên
   bỏ Nếp thì cảnh không để lại khoảng thụt bên trái; `width` là bề rộng
   khung 144 đầy đủ để đạo cụ giữ một cỡ có hay không có nhân vật.
+- **Quyết định mở rộng nhận diện (08/09, sau review đợt 1).** Nếp là **một
+  lớp tháo được**, không phải nhân vật bắt buộc: mọi cảnh phải đọc được với
+  `nep={false}`, và cổng A/B (`rudi://dev/ui-lab`, mục «Cảnh rỗng») dựng hai
+  bản cạnh nhau trên cùng máy cùng dữ liệu để quyết định bằng ảnh. Giới hạn
+  đi kèm: nhân vật **không** vào màn có dữ liệu thật của nhóm (ảnh nhóm,
+  ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
+  **không** thay `Stamp`/`GuGlyph` trong vai trò thông tin. Muốn đưa Nếp ra
+  ngoài trạng thái rỗng và cửa vào thì mở quyết định mới, đừng suy từ mục này.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.

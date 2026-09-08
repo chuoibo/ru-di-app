@@ -159,8 +159,11 @@ Việc này **phụ thuộc câu hỏi 1**: không có Nếp thì không có di�
 Có **hai hệ song song** và chúng không khớp:
 
 - `screens/Profile.tsx` (fixture): **6** huy hiệu, tất cả đang là cùng một ổ khoá.
-- `screens/ky-niem/AchievementsLive.tsx` (live): **8** huy hiệu từ máy chủ, ba trạng thái
-  (`mo` / `chua-dat` / `chua-do-duoc`).
+- `screens/ky-niem/AchievementsLive.tsx` (live): **8** huy hiệu, ba trạng thái
+  (`mo` / `chua-dat` / `chua-do-duoc`). Đính chính so với bản 08/09 đầu: máy chủ **không** gửi huy
+  hiệu. Danh sách nằm ở `src/screens/thanh-tich/thanh-tich.ts`, do client tính từ số liệu Tài chính
+  (`huyHieuCuaNguoi(so: Finance)`): **4 huy hiệu đo được** (`mo-hang`, `bill-hero`, `trip-planner`,
+  `song-phang`) và **4 huy hiệu `chua-do-duoc`** giữ tên của mockup và nói thẳng còn thiếu bảng nào.
 
 §9.22 muốn mỗi thành tích có silhouette gắn hoạt động thật. **Câu hỏi:** vẽ theo danh mục nào? Vẽ 8
 theo live rồi fixture dùng lại 6 trong số đó là hợp lý nhất với tôi, nhưng cần biết fixture có được
