@@ -1,0 +1,42 @@
+# Bàn thử dev: renderer chặng (HangChang.anh) ba ca, và nhánh ảnh hỏng của
+# Khám phá sau khi nền khung theo theme. Cảnh A/B chụp lại neo vào tiêu đề mục
+# để cảnh ghế không bị cắt đầu (review vòng 2, F22).
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Cảnh rỗng · A/B có Nếp và tắt Nếp"
+    direction: DOWN
+    timeout: 20000
+- takeScreenshot: r3-68-canh-ab-du
+- runFlow:
+    file: _ca-chang.yaml
+    env:
+      CHIP: "Chặng có ghi công"
+      ANH: r3-68-chang-ghi-cong
+- extendedWaitUntil:
+    visible: "Ảnh minh hoạ: Tác giả tổng hợp · Giấy phép tổng hợp"
+    timeout: 20000
+- runFlow:
+    file: _ca-chang.yaml
+    env:
+      CHIP: "Chặng ảnh hỏng"
+      ANH: r3-68-chang-anh-hong
+- extendedWaitUntil:
+    visible: "Chưa tải được ảnh: Quán tổng hợp"
+    timeout: 20000
+- runFlow:
+    file: _ca-chang.yaml
+    env:
+      CHIP: "Chặng không ảnh"
+      ANH: r3-68-chang-khong-anh
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Ảnh hỏng"
+      ANH: r3-68-kham-pha-anh-hong

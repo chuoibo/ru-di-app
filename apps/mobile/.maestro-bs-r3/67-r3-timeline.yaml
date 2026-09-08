@@ -1,0 +1,15 @@
+# Timeline của chuyến mẫu (Outing.tsx), ngày 2: cùng renderer chặng, cùng câu
+# ghi công. Vào bằng deep link như flow 62 vào album.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://trips/team-da-lat/timeline
+- extendedWaitUntil:
+    visible: "Ngày 2"
+    timeout: 30000
+- tapOn: "Ngày 2"
+- extendedWaitUntil:
+    visible: "Ảnh minh hoạ: Hieu Do Quang · Unsplash License"
+    timeout: 30000
+- assertVisible: "Ảnh minh hoạ: Kien Tran · Pexels License"
+- takeScreenshot: r3-67-timeline-ngay-2
