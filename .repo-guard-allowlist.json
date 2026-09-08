@@ -4,37 +4,49 @@
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-assignment.png",
       "sha256": "523e16086bce722595e01bf004c6d3ba624209211bc8e16868106fb1cacad789",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-create-dark.png",
       "sha256": "c4e9e06378be5a137b0c1020f423d59698c8219a6857d4009a8632e6452fdba6",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-assignment-dark.png",
       "sha256": "dff72c54b06601ec40483a51e01eb4748489614e41223b2a7a2fa2ac7dc7fc7c",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-create-dark.png",
       "sha256": "38832c91a7838af266b7aebee7e2778797ea3f0bc3d7853ba6065bf14b15dfe4",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-explore.png",
       "sha256": "c1f184b4432e2ec989fef5234fa3c7f81002f0d2d9393828f31c961451fae097",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android fixture với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh địa điểm thật hoặc người tham gia; README nêu ranh giới."
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-viewer-resize.png",
       "sha256": "9670ea5f667c1f30d6ccd0f4d026c8106f2594601ea34281474e6403116a0cb6",
-      "rules": ["controlled-artifact"],
+      "rules": [
+        "controlled-artifact"
+      ],
       "reason": "Ảnh Android probe với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh người tham gia; README nêu ranh giới."
     },
     {
@@ -537,6 +549,70 @@
         "controlled-artifact"
       ],
       "reason": "Bản chép nguyên byte của apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf (SIL OFL 1.1, cùng digest) để image API dựng thước phim MP4 vẽ chữ bằng Pillow (ADR-0025 §2.1): Docker build context là services/api nên font của mobile không vào image. Giấy phép kèm ở OFL-BricolageGrotesque.txt cùng thư mục. Path và digest ghim để mọi thay đổi byte phải review lại."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/ab-canh-rong-native.png",
+      "sha256": "b2c0be41947bac51eb66b53583972513311a87bfb8aa502ef1a7cc45ba6c001c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ghép hai ảnh Android emulator của cùng một cảnh rỗng «tìm không ra», khác nhau đúng một cờ `nep`. Fixture Team Đà Lạt, cửa demo, không phiên thật, không dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/album-truoc-sau.png",
+      "sha256": "d1d5029c516a66bd7b04daeb5c5bca9b21b19ba78f105baf752dcba589ebce3f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ghép ảnh Android emulator màn Album trước 07/09 và sau 08/09. Ảnh trong khung là ảnh stock đã có sẵn trong repo; không phải ảnh người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/art-tong-sang.png",
+      "sha256": "694caf5e72dce5927a57d86c1e84b750e93d7537833b31180672e5818d69700a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng tổng tầng art (sáu pose Nếp hai bản đọc, tám hình gu, ba motif, năm cảnh) trên nền sáng, render từ chính `src/rudi/art/` bằng headless Chrome của repo. Vector tự vẽ, không ảnh người, không dữ liệu người tham gia. Đính vào doc hỏi review 08/09."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/art-tong-toi.png",
+      "sha256": "b7fec288569230dbb9c43688b2b494516bcba65ab8bac0d7cacb349689464a94",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng tổng tầng art trên nền tối, cùng nguồn và cùng lượt render với bản sáng. Vector tự vẽ, không dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/canh-nam-sang.png",
+      "sha256": "4fbc2862e2ccf27a6f92dac7843722b82999cd23c3e0bdbfc9e21413fb0384fd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Năm cảnh rỗng ở hai biến thể có/không Nếp, nền sáng, cỡ đủ lớn để phán quyết A/B. Render từ `src/rudi/art/canh.ts`; vector tự vẽ."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/canh-nam-toi.png",
+      "sha256": "dedc84618f575e393b9af9b04bfc0eee8c7695e0333791ac08ef2cc491b923ac",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Năm cảnh rỗng có/không Nếp trên nền tối, cùng lượt render. Vector tự vẽ."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/kham-pha-truoc-sau.png",
+      "sha256": "a37ce4919fb875c23d201cd272c24ee1c099e433bf6387de7909e2fb545190b4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ghép ba ảnh Android emulator màn Khám phá: trước 07/09, sau 08/09, và phần cuộn tới cặp so sánh. Ảnh trong khung là ảnh stock đã có sẵn trong repo; không phải ảnh địa điểm thật hay người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/canh/so-thich-truoc-sau.png",
+      "sha256": "b0f253fdff67cbd5ab190fd857490bedacc01cfbb7f55a6fc9cc24bb61974bd9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ghép ảnh Android emulator màn Sở thích trước (khảo sát 07/09) và sau đợt 08/09. Fixture, không dữ liệu người tham gia."
     }
   ]
 }

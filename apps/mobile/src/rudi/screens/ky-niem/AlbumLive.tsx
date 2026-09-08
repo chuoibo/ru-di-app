@@ -13,6 +13,12 @@
  * UI v2 (đợt 7): an album opens on its first photograph, large, right under a
  * short title, and the rest follow as a grid; the places and the reel come
  * after the pictures. Nothing here is called a video.
+ *
+ * 2026-09-08 (report 07/09 §9.18): the grid became days. After the lead, the
+ * photographs are gathered by their Vietnam calendar day, laid in pairs, and
+ * an odd last print goes wide, so the album has a rhythm instead of a wall of
+ * equal squares. The dates and the group are written once, in the heading;
+ * the print carries only its own caption and provenance.
  */
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -28,6 +34,7 @@ import {
   layDanhSachAlbum,
   layThuocPhim,
   nguonAnh,
+  nhomTheoNgay,
   tenDiaDiem,
   type Album,
   type ThuocPhim,
@@ -35,6 +42,7 @@ import {
 } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Heading, ListRow, ResponsiveRow, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Canh } from "../../ui/art/Canh";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { KhungAnh } from "../../ui/KhungAnh";
@@ -94,7 +102,13 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void doc()} title="Chưa đọc được album" /> : null}
       {trang.pha === "xong" && trang.albums.length === 0 ? (
-        <EmptyState body="Album mọc theo kèo: tạo một kèo ở Lên plan, ảnh và check-in trong những ngày đó sẽ gom về đây." kind="first-use" layout="inline" title="Chưa có kèo nào" />
+        <EmptyState
+          body="Tạo một kèo ở Lên plan; ảnh và check-in trong những ngày đó sẽ về đây."
+          illustration={<Canh id="chua-co-keo" width={168} />}
+          kind="first-use"
+          layout="inline"
+          title="Chưa có kèo nào"
+        />
       ) : null}
       {trang.pha === "xong"
         ? trang.albums.map((a) => (
@@ -175,8 +189,17 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
   const a = trang.album;
   const photos = a.photos.flatMap((photo) => {
     const source = nguonAnh(photo.image_url, me, contextId);
-    return source === null ? [] : [{ id: photo.memory_id, source, caption: photo.caption || "Khoảnh khắc của nhóm" }];
+    return source === null ? [] : [{ id: photo.memory_id, source, caption: photo.caption || "Khoảnh khắc của nhóm", created_at: photo.created_at }];
   });
+  // Everything after the lead, by day; `viTri` is the index into `photos`
+  // so the viewer opens on the print that was pressed.
+  const theoNgay = nhomTheoNgay(photos.slice(1).map((photo, k) => ({ ...photo, viTri: k + 1 })));
+  const nhieuNgay = theoNgay.length > 1;
+  const oAnh = (photo: (typeof photos)[number] & { viTri: number }, ratio: number) => (
+    <Pressable accessibilityLabel={`Mở ảnh: ${photo.caption}`} accessibilityRole="button" key={photo.id} onPress={() => setViewer({ photos, index: photo.viTri })}>
+      <Image accessibilityLabel={photo.caption} cachePolicy="none" contentFit="cover" source={photo.source} style={{ width: "100%", aspectRatio: ratio, borderRadius: radius.small, backgroundColor: colors.line }} />
+    </Pressable>
+  );
   return (
     <RudiScreen testID="trip-album-screen">
       {viewer ? <PhotoViewer photos={viewer.photos} initialIndex={viewer.index} title={viewer.title} onClose={() => setViewer(null)} /> : null}
@@ -184,22 +207,39 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
       <Heading title={a.title} subtitle={`${cauKhoang(a)} · ${cauThongKeAlbum(a)}`} />
 
       {photos.length === 0 ? (
-        <EmptyState body="Chưa có ảnh nào trong những ngày của kèo. Thả khoảnh khắc lên tường nhóm là ảnh về đây." kind="first-use" layout="inline" title="Chưa có khoảnh khắc" />
+        <EmptyState
+          body="Thả khoảnh khắc lên tường nhóm trong những ngày này là ảnh về đây."
+          illustration={<Canh id="chua-co-anh" width={168} />}
+          kind="first-use"
+          layout="inline"
+          title="Chưa có khoảnh khắc"
+        />
       ) : (
         <>
-          {/* The first photograph leads, at reading size; the rest are a grid. */}
+          {/* The first photograph leads, at reading size, on a print that
+              carries its own caption and provenance and not the trip's dates
+              again (they are in the heading above). */}
           <Pressable accessibilityRole="button" accessibilityLabel={`Mở ảnh: ${photos[0].caption}`} onPress={() => setViewer({ photos, index: 0 })}>
-            <KhungAnh chuThich={photos[0].caption} xuatXu={`${a.title} · ${cauKhoang(a)}`}>
+            <KhungAnh chuThich={photos[0].caption} xuatXu="Ảnh của nhóm">
               <Image accessibilityLabel={photos[0].caption} contentFit="cover" source={photos[0].source} cachePolicy="none" style={{ width: "100%", aspectRatio: tiLeDan, backgroundColor: colors.line }} />
             </KhungAnh>
           </Pressable>
           {photos.length > 1 ? <SectionHeader title={`${photos.length} khoảnh khắc`} /> : null}
-          <ResponsiveRow gap={6} maxColumns={6} minItemWidth={104}>
-            {photos.slice(1).map((photo, index) => <Pressable key={photo.id} accessibilityRole="button" accessibilityLabel={`Mở ảnh: ${photo.caption}`}
-              onPress={() => setViewer({ photos, index: index + 1 })}>
-              <Image accessibilityLabel={photo.caption} contentFit="cover" source={photo.source} cachePolicy="none" style={{ width: "100%", aspectRatio: 1, borderRadius: radius.small, backgroundColor: colors.line }} />
-            </Pressable>)}
-          </ResponsiveRow>
+          {theoNgay.map((ngay) => {
+            const chan = ngay.anh.length - (ngay.anh.length % 2);
+            return (
+              <View key={ngay.ngay ?? "chua-ro"} style={styles.ngay}>
+                {nhieuNgay ? <Text style={[typography.note, { color: colors.inkFaint }]}>{ngay.nhan}</Text> : null}
+                {chan > 0 ? (
+                  <ResponsiveRow gap={6} maxColumns={4} minItemWidth={150}>
+                    {ngay.anh.slice(0, chan).map((photo) => oAnh(photo, 1))}
+                  </ResponsiveRow>
+                ) : null}
+                {/* An odd last print goes wide: the day ends on a beat, not a gap. */}
+                {chan < ngay.anh.length ? oAnh(ngay.anh[ngay.anh.length - 1], tiLeDan) : null}
+              </View>
+            );
+          })}
         </>
       )}
 
@@ -212,8 +252,10 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
       <SectionHeader title="Thước phim" />
       {trang.phim === null ? (
         <>
+          {/* The button and its AI tone say what this is; the answer sentence
+              (`cauThuocPhim`) says who composed it or why nothing was. The
+              paragraph that explained the model here is gone (report §4.3). */}
           <RudiButton disabled={trang.dangDung} icon="film-outline" label="Dựng thước phim" loading={trang.dangDung} onPress={() => void dungPhim()} tone="ai" variant="soft" />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>Máy chủ chọn vài cảnh từ kỷ niệm của kèo; có mô hình thì mô hình dựng, không thì nói rõ vì sao chưa có.</Text>
         </>
       ) : (
         <>
@@ -250,6 +292,7 @@ export function TripAlbumLiveScreen({ phien, contextId, outingId }: { phien: Phi
 
 const styles = StyleSheet.create({
   khung: { gap: 14 },
+  ngay: { gap: 6 },
   chuThich: { marginTop: 6 },
   canh: { gap: 8, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   anhCanh: { width: "100%", aspectRatio: 4 / 3 },

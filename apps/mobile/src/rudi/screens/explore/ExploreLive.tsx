@@ -14,6 +14,13 @@
  * the category glyph when it does not); the rest are rows on the paper.
  * Changing a filter crossfades the results over `standard`; typing filters
  * without ceremony.
+ *
+ * 2026-09-08 (report 07/09 §9.4, §4.3): the paragraph under the search that
+ * explained filtering, the assistant, taste, budget, headcount and distance in
+ * one breath is gone; the placeholder and the sparkle button carry it. The
+ * results change rhythm: one lead (only with a photo), then **two candidates
+ * side by side** to compare, then the rest as rows. Frames without a photo
+ * show the category drawn by the art layer.
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -40,6 +47,7 @@ import {
   docDaLuu,
   docDanhMucCoLui,
   dongPhu,
+  guTheoLoai,
   locTheoTen,
   luuDiaDiem,
   type Gu,
@@ -47,11 +55,13 @@ import {
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, IconButton, ResponsiveRow, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import { Wordmark } from "../../ui/Wordmark";
+import { Canh } from "../../ui/art/Canh";
+import { GuGlyph } from "../../ui/art/Gu";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { useMotion } from "../../ui/useMotion";
-import { PlaceLead, PlaceRow, type DiaDiemHienThi } from "./HangDiaDiem";
+import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./HangDiaDiem";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -70,12 +80,6 @@ function loaiSauBam(dangChon: boolean, id: string): string | null {
   return id;
 }
 
-function tenNhom(phien: Phien): string {
-  const nhom = phien.contexts?.find((n) => n.id === phien.context_id);
-  if (nhom === undefined) return "nhóm của bạn";
-  return nhom.display_name;
-}
-
 /** The server's place, in the vocabulary the row and the lead draw. */
 export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
   const hop = matchLabel(place.match);
@@ -86,12 +90,16 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     sub: dongPhu(place),
     facts: chiTietNgan(place).map((m) => ({ icon: m.icon, text: m.chu })),
     glyph: bieuTuongLoai(place.category),
+    loai: place.category,
     // The picture comes with its credit or not at all (ADR-0017 §2.5).
     photo: bia === null ? null : bia.nguon,
     // «Quanh đây» travels with the credit: the importer geosearched within
     // 250 m, so the picture is from around here, not of this business.
     attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
     badge: hop !== null && hop.real ? hop.text : null,
+    // One grounded reason under the lead: the model's own sentence when the
+    // match is real, nothing otherwise. Never the tagline dressed as a reason.
+    lyDo: hop !== null && hop.real && place.match?.reason ? place.match.reason : undefined,
   };
 }
 
@@ -190,7 +198,9 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const daNhat = danhSach[0];
   const coAnhDan = daNhat !== undefined && anhBiaThe(daNhat) !== null;
   const dan = coAnhDan ? daNhat : undefined;
-  const conLai = coAnhDan ? danhSach.slice(1) : danhSach;
+  // Two candidates to compare before the list: the same axis for both, so the
+  // choice starts as a comparison (`taiSoSanh`).
+  const { soSanh, hang: conLai } = taiSoSanh(coAnhDan ? danhSach.slice(1) : danhSach);
   const rong = danhSach.length === 0;
 
   return (
@@ -220,7 +230,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               if (timKiem.kind !== "chua-tim") setTimKiem({ kind: "chua-tim" });
             }}
             onSubmitEditing={() => void hoi()}
-            placeholder="Tìm quán, hỏi AI..."
+            placeholder="Tìm quán, món… hoặc hỏi Rủ Đi AI"
             value={query}
           />
         </View>
@@ -228,9 +238,6 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
             tap drops a sample question in so the person sees what to ask. */}
         <IconButton accessibilityLabel="Hỏi Rủ Đi AI" icon="sparkles" onPress={() => setQuery(CAU_MAU)} selected tone="ai" />
       </View>
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>
-        Gõ tên để lọc ngay. Hỏi Rủ Đi AI một câu như «{CAU_MAU}» rồi bấm tìm: xếp theo gu {tenNhom(phien)}, ngân sách, số người và khoảng cách.
-      </Text>
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
           <SkeletonCard lines={1} media={200} />
@@ -247,9 +254,9 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
               const chon = loai === c.id;
               return (
                 <Chip
-                  icon={bieuTuongLoai(c.id)}
                   key={c.id}
                   label={c.label}
+                  leading={<GuGlyph id={guTheoLoai(c.id)} size={22} tone={chon ? "accent" : "ink"} />}
                   onPress={() => setLoai(loaiSauBam(chon, c.id))}
                   selected={chon}
                 />
@@ -320,6 +327,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
             <EmptyState
               action={{ label: "Xóa lọc", onPress: boTim }}
               body="Thử từ khóa khác, hoặc bỏ bớt bộ lọc để thấy lại cả danh mục."
+              illustration={<Canh id="tim-khong-ra" width={168} />}
               kind={query.trim() ? "no-results" : "filtered"}
               layout="inline"
               title="Chưa thấy nơi phù hợp"
@@ -332,6 +340,18 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
                   dd={hienThiDiaDiem(dan)}
                   onOpen={() => router.push(`/places/${dan.id}` as never)}
                   onSave={() => void doiLuu(dan)}
+                />
+              ) : null}
+              {soSanh !== null ? (
+                <PlaceCompare
+                  daLuu={(id) => daLuu.includes(id)}
+                  items={[hienThiDiaDiem(soSanh[0]), hienThiDiaDiem(soSanh[1])]}
+                  onOpen={(id) => router.push(`/places/${id}` as never)}
+                  onSave={(id) => {
+                    const place = soSanh.find((p) => p.id === id);
+                    if (place !== undefined) void doiLuu(place);
+                  }}
+                  testID="explore-compare"
                 />
               ) : null}
               {conLai.length > 0 ? (

@@ -10,11 +10,13 @@ import { DemoBadge, Heading, IconName } from "../ui";
 import { PressScale } from "../ui/PressScale";
 import { Sheet } from "../ui/Sheet";
 
-const ACTIONS: { icon: IconName; title: string; detail: string; href: string; tone: RudiTone }[] = [
-  { icon: "calendar-outline", title: "Tạo cuộc hẹn", detail: "Chốt thời gian, nơi đi và hội bạn", href: "/outings/new", tone: "accent" },
-  { icon: "receipt-outline", title: "Chia hóa đơn", detail: "Xem lại ảnh bill và gán món", href: "/smart-split/xom-leo/review", tone: "split" },
-  { icon: "images-outline", title: "Đăng kỷ niệm", detail: "Chia sẻ ảnh vào tường nhóm", href: "/moments/new", tone: "accent" },
-  { icon: "aperture-outline", title: "Đăng story", detail: "Một tấm ảnh 24 giờ, chỉ bạn bè thấy", href: "/stories/new", tone: "accent" },
+/** One line per action; a second line only where two of them could be
+ *  confused (a memory goes to the group's wall, a story to friends for a day). */
+const ACTIONS: { icon: IconName; title: string; detail?: string; href: string; tone: RudiTone }[] = [
+  { icon: "calendar-outline", title: "Tạo cuộc hẹn", href: "/outings/new", tone: "accent" },
+  { icon: "receipt-outline", title: "Chia hóa đơn", href: "/smart-split/xom-leo/review", tone: "split" },
+  { icon: "images-outline", title: "Đăng kỷ niệm", detail: "Ảnh lên tường nhóm", href: "/moments/new", tone: "accent" },
+  { icon: "aperture-outline", title: "Đăng story", detail: "Một tấm 24 giờ, chỉ bạn bè thấy", href: "/stories/new", tone: "accent" },
 ];
 
 /**
@@ -58,7 +60,7 @@ export function CreateSheet() {
                 </View>
                 <View style={styles.actionText}>
                   <Text style={[typography.title, { color: colors.ink }]}>{action.title}</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>{action.detail}</Text>
+                  {action.detail ? <Text style={[typography.note, { color: colors.inkFaint }]}>{action.detail}</Text> : null}
                 </View>
                 <Ionicons color={colors.inkFaint} name="arrow-forward" size={20} />
               </PressScale>

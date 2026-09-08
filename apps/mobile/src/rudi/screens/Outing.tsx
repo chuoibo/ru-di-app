@@ -245,7 +245,7 @@ export function TripTimelineScreen() {
               key={slot.time + slot.title + index}
               onPress={slot.placeId ? () => router.push(("/places/" + slot.placeId) as never) : undefined}
               phai={noi?.image ? <AnhChang alt={noi.name} source={noi.image} /> : undefined}
-              phu={slot.placeId ? "Đã gắn địa điểm · bấm để mở" : "Cả nhóm"}
+              phu={noi ? noi.name : slot.placeId ? "Địa điểm · bấm để mở" : "Cả nhóm"}
               phuTone={slot.placeId ? "accent" : "inkFaint"}
               tieuDe={slot.title}
             />
@@ -279,7 +279,7 @@ export function CheckInScreen() {
             {session.locationSharing ? "Đang chia sẻ vị trí đến 11:30" : "Chưa chia sẻ vị trí"}
           </Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Opt-in, có hạn. Bản trải nghiệm không đọc GPS máy; check-in là bạn tự đánh dấu. Trạng thái {noiLuu(session.luuTruSong)}.
+            Bản trải nghiệm không đọc GPS: bạn tự đánh dấu, trạng thái {noiLuu(session.luuTruSong)}.
           </Text>
         </View>
         <RudiButton
@@ -312,7 +312,9 @@ export function CheckInScreen() {
               <Avatar name={person.name} ring={here} size={40} tone="split" />
               <View style={styles.flex}>
                 <Text style={[typography.label, { color: colors.ink }]}>{person.name}</Text>
-                <Text style={[typography.caption, { color: here ? colors.split : colors.inkSoft }]}>{here ? "Đã check-in" : "Chưa tới"}</Text>
+                {/* The stamp is the state; a caption saying it again was the
+                    same word twice on one row (report 07/09 §4.6). */}
+                {here ? null : <Text style={[typography.note, { color: colors.inkSoft }]}>Chưa tới</Text>}
               </View>
               {here ? (
                 <Stamp dong={vuaToi === person.id} label="Đã tới" tilt={-2} tone="split" />

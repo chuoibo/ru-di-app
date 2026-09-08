@@ -1,5 +1,5 @@
 {
-  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8. Giữ cấu trúc hiện có để tương thích script.",
+  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script.",
   "source": "packages/shared/tokens.json",
   "measuredFrom": "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. Các tỷ lệ token không thay thế bằng chứng native của từng component.",
   "color": {
@@ -734,7 +734,7 @@
     "PressScale": "scale-only trên UI thread; 0.97 mặc định (con dấu CTA), 0.98 RudiButton, 0.985 ListRow/khay tạo, 0.96 Chip, 0.94 IconButton/FAB, 0.92 back; spring press {18,260,0.6} settle {20,180,0.8}; haptic select/impact; đợt 8 thay mọi nhánh pressed mờ trong kit (RudiButton, IconButton, Chip, ListRow), màn feature còn nhánh mờ riêng",
     "Sheet": "card, bo trên 20, pad ngang md / dưới max(insets.bottom,16), maxHeight 82% cửa sổ, ScrollView; scrim lopPhu.toi(0.42), spring vào / standard ra; back Android và scrim đóng; onClosed sau khi tấm rời; tay cầm là vùng nắm minHeight 36 rộng cả tấm, vạch 40x4 lineStrong, label «Tay cầm» hint «Kéo xuống để đóng»; Gesture.Pan activeOffsetY 6, tấm theo ngón tay, thả > 90dp hoặc > 900dp/s đóng, ngắn hơn spring về; scrim = progress × (1 − kéo/480); đặt qua RudiScreen overlay hoặc route trong suốt",
     "Skeleton": "xương line bo 10, băng card 0.55 1400ms, tắt dưới Reduce Motion",
-    "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline",
+    "EmptyState": "h2 + body inkSoft maxWidth 420, một RudiButton compact (outline khi failure) + ghost phụ; full/inline; illustration = <Canh width 168> (chua-co-keo, chua-co-anh, tim-khong-ra)",
     "useAdaptiveLayout": "helper compact <600 (columns 1, gutter 16, tab đáy, maxContent width) / medium 600..839 (columns 2, gutter 24, rail, maxContent 960, twoPane khi cao >=480) / expanded >=840 (columns 3, gutter 36, rail, twoPane, maxContent 1200); short <480. Đây là khả năng helper, không tự áp bố cục cho mọi màn.",
     "RudiScreen": "page = ground + Grain giayTrang; cover không top inset (CoverBand underStatusBar). Lề 16 compact / 24 medium+, maxWidth 960 tablet, gap 18, bottomInset 32 (112 dưới tab). footer ghim đáy (đệm về 8 khi bàn phím mở); overlay ngoài hộp cuộn; keepEnd scrollToEnd khi nội dung dài ra; avoidKeyboard theo màn; header (đợt 8) đứng trên hộp cuộn, kẻ tóc line dưới, dùng cho TopBar + dòng ghim chuyến ở chat",
     "RudiButton": "minHeight 52 (48 compact), bo 14, label 14/19 một dòng; solid dùng LinearGradient với hai đầu cùng màu tông nên nền phẳng, nhãn <tone>Ink theo scheme; outline card/lineStrong với accent, viền màu tông với split/ai; soft nền <tone>Soft; ghost trong suốt; nhấn PressScale 0.98, không mờ",
@@ -746,20 +746,27 @@
     "useMotion": "Đọc isReduceMotionEnabled và nghe reduceMotionChanged trong phiên; cleanup gỡ listener. instant 100 giữ nguyên, standard/shared/celebrate về 0 khi reduced; spring ReduceMotion.System. Chỉ mô tả primitive dùng hook, không bảo đảm mọi animation trong app đã dùng.",
     "DongTien": "dòng sổ: tên body (label khi dam) + phụ caption inkSoft, Money label (money khi dam) tone ink/split/warn, minHeight 52, paddingVertical 10, gap 12, hairline line dưới, cuoi bỏ kẻ",
     "KhungAnh": "card, hairline line, bo radius.small, cardShadow, padding 8 / paddingBottom 14, gap 8, ảnh bo 4 trên nền line; chuThich body ink, xuatXu caption inkFaint 1 dòng; tilt ±1/±2 tay, 0 danh sách",
-    "HangChang": "row minHeight 64 gap 10; giờ label tabular minWidth 46 canh phải; axis 14, node 12 bo 6 viền 2 ink (daToi tô split), line 2 lineStrong hoặc dashed 2 inkFaint khi phac; body label ink + caption phuTone + caption inkSoft, paddingBottom 18, minHeight 48; slot phai; cuoi không đường dưới; AnhChang (đợt 8): ảnh 44x44 expo-image cover trong khung padding 2 card + hairline line bo radius.small (ảnh bo 8, nền line), vào khe phai chỉ khi chặng có địa điểm có ảnh; dùng ở Outing (Lên plan) và Group (tờ lịch trình AI)",
-    "PlaceLead": "Photo ratio 16:10 compact / 21:9 medium+, bo 20, Stamp ai tilt -2 trên ảnh; tên h2, mô tả body inkSoft, sự thật icon 16 + label inkSoft; IconButton lưu",
+    "HangChang": "row minHeight 64 gap 10; giờ label tabular minWidth 46 canh phải; axis 14, node 12 bo 6 viền 2 ink (daToi tô split), line 2 lineStrong hoặc dashed 2 inkFaint khi phac; body label ink + caption phuTone + caption inkSoft, paddingBottom 18, minHeight 48; slot phai; cuoi không đường dưới; AnhChang (đợt 8): ảnh 44x44 expo-image cover trong khung padding 2 card + hairline line bo radius.small (ảnh bo 8, nền line), vào khe phai chỉ khi chặng có địa điểm có ảnh; dùng ở Outing (Lên plan) và Group (tờ lịch trình AI); phu = tên địa điểm khi có, «Chọn địa điểm» khi chưa (live «Mở địa điểm» khi chỉ có id); nháp nói một lần ở đầu màn",
+    "PlaceLead": "Photo ratio 16:10 compact / 21:9 medium+, bo 20, Stamp ai tilt -2 trên ảnh; tên h2, mô tả body inkSoft, sự thật icon 16 + label inkSoft; IconButton lưu; lyDo: một dòng label màu ai dưới tên khi match thật và có reason",
     "HaiCot": "twoPane → hàng 3:2 gap lg, mỗi cột gap 18; điện thoại xếp dọc; phaiChiKhiRong bỏ cột phải trên điện thoại; bill: AiCoGi (label + caption món, warn cho món chưa người) cạnh gán món, ai-đã-trả + tên khoản cạnh sổ",
     "TouchTarget": "mọi node bấm được ≥48dp kể cả TextInput trong Field (52/48), ô soạn chat, pill; Pressable chỉ khi còn bấm được; nhãn a11y phân biệt control cùng chữ; đo bằng scripts/a11y_native_audit.py",
     "ChatM15": "sticker vector 120 (từ vựng đóng, không GIF); trích dẫn trả lời TRÊN bong bóng: viền line, vạch trái 3 accent theme, caption; tin đã xoá: bong bóng giấy + caption nghiêng inkFaint; theme bong bóng (tokens.chatTheme, mac-dinh = accent scheme) chỉ tô bong bóng người gửi + viền chip mình; hàng hai pill dưới tiêu đề (thành viên|Xem hồ sơ, Cài đặt) caption inkSoft icon 15 cao 40; cặp = Avatar 44 + «Nhắn riêng»",
-    "PlaceRow": "thumb bo 10 (accentSoft khi trống), title 2 dòng, caption inkSoft, caption inkFaint, ghi công caption inkFaint ≤2 dòng khi thumb là ảnh có giấy phép (cauGhiCong), Stamp ai; paddingVertical 10 gap 8 hairline line dưới; không thẻ; 2 cột ở tablet",
+    "PlaceRow": "thumb 56 bo 10 (accentSoft khi trống, GuGlyph 32 coral khi có loai, Ionicons 24 khi không), Stamp ai cạnh tên trên cùng hàng (tên một dòng khi có dấu), caption inkSoft, caption inkFaint, ghi công caption inkFaint ≤2 dòng (cauGhiCong); paddingVertical 10 gap 8 hairline line dưới; không thẻ; 2 cột ở tablet",
     "AiNote": "ghi chú lề: sparkles 17 ai, label ink, caption ai «Rủ Đi AI gợi ý» dưới câu; hairline trên/dưới, paddingVertical 12, gap 11; không nền, không viền trái",
     "ToGiay": "TheAi.tsx: card, viền 1 line, bo base; ký chân icon 15 + caption tông (sparkles/ai hoặc receipt-outline/split); lịch trình bên trong là HangChang phac",
     "Composer": "Group: hàng bo 22 card viền 1 line pad 6 gap 6, ở footer; paddingBottom max(insets.bottom,8)",
     "nhip-keo": "sap-toi «Còn N ngày»/«Ngày mai», hom-nay «Hôm nay», dang-dien-ra «Đang đi · còn N ngày»/«· ngày cuối», da-qua «Hôm qua»/«N ngày trước», khong-ro rỗng; tính từ starts_on/ends_on máy chủ, in lên Stamp",
     "TopBar": "minHeight 52, hai bên đo max để tiêu đề title cân giữa, phụ đề caption inkSoft; trái = back chevron 48 hoặc Wordmark ink cao 18 khi là đầu tab (Discovery/ExploreLive tự vẽ Wordmark 20); phải = DemoBadge compactLabel hay IconButton quiet; ô icon app gradient chỉ còn ở Welcome/Login",
-    "Chip": "bấm được: minHeight 48, pill, viền lineStrong chữ inkSoft; chọn = <tone>Soft + viền tông + check; PressScale 0.96; AI match dùng hàng ScrollView ngang như Khám phá",
+    "Chip": "bấm được: minHeight 48, pill, viền lineStrong chữ inkSoft; chọn = <tone>Soft + viền tông + check; PressScale 0.96; AI match dùng hàng ScrollView ngang như Khám phá; leading?: ReactNode thế chỗ icon (GuGlyph 22), có leading thì bỏ check",
     "IconButton": "48x48 bo 16; quiet không viền không nền; viền lineStrong cạnh chip; PressScale 0.94",
-    "ListRow": "minHeight 58, icon 40 trong <tone>Soft, chevron inkFaint; PressScale 0.985, disabled khi không onPress"
+    "ListRow": "minHeight 58, icon 40 trong <tone>Soft, chevron inkFaint; PressScale 0.985, disabled khi không onPress",
+    "VeLop": "vẽ mảng LopVe bằng react-native-svg; nét tròn đầu tròn góc, tô phẳng, không bóng; mauLop đổi vai MauVe ra token (giay card, bong line, muc ink, gap accent, mo accentSoft, split, ai); doiMau đổi một vai; accessibilityLabel có → role image, không → ẩn khỏi cây",
+    "Nep": "mascot tờ hẹn gấp, sáu tư thế, ô 96; size < 72 vẽ bản 48; trang trí; chỉ trạng thái rỗng và cửa vào, không cạnh tiền/lỗi/xung đột",
+    "GuGlyph": "tám hình gu trên lưới 48, một cây bút, ≤ 1 chi tiết coral; tone accent đổi mực sang coral; id lạ = thẻ gấp; 40 ô Sở thích, 22 chip, 32 thumbnail",
+    "Motif": "VongHo (một nét coral, khe rộng, chỉ trang trí), DuongChuyen (đường S + chấm coral), GocGap (giấy gấp góc trên phải 0.28)",
+    "Canh": "năm cảnh rỗng 144×112, mỗi cảnh trọn vẹn khi nep=false, đọc thành một câu (accessibilityLabel = moTaCanh); khung chặt theo hopNgang + viewBox; width 168 trong EmptyState",
+    "PlaceCompare": "hai ứng viên trên một trục giữa ảnh dẫn và hàng (taiSoSanh); hàng gap 16 đệm dưới 12 hairline line; mỗi ô flex 1: MediaSlot 4:3 với IconButton tim góc dưới phải trên ảnh + Stamp ai nen khi có badge, title 2 dòng, note inkSoft 2 dòng, sự thật đầu nối « · » note inkFaint, sự thật cuối (giá) riêng dòng, ghi công note inkFaint; không thẻ",
+    "PlaceGlyph": "đĩa accentSoft đường kính 1.7×size; bên trong GuGlyph size×1.15 tô coral theo guTheoLoai (quan-an-local→an-uong, cafe, vui-choi→game, di-choi-dem→nightlife, khác→thẻ gấp); Ionicons chỉ khi thiếu loai"
   },
   "surfaces": {
     "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
@@ -767,14 +774,16 @@
     "Otp": "CoverBand underStatusBar với hero «Nhập mã 6 số»; OtpBoxes 6x 44x54 viền 1.5 (accent ô đang nhập); caption inkSoft đang kiểm/đếm ngược; lỗi body warn",
     "TabBar": "xem kit.RudiTabBar; các màn dưới tab dùng bottomInset 112",
     "BillSummary": "Phụ đề trên splitSoft dùng split; cặp split/splitSoft nằm trong bảng contrast, không dùng inkFaint cho cặp này.",
-    "ItineraryAI": "TopBar «Lịch trình AI» + Nháp; h1 tên chuyến, body ngày; AiNote tím; chip ngày pill; h2 ngày; HangChang phac toàn bộ (nét chì, «Có thể thay đổi»/«Đã gắn địa điểm»); footer RudiButton outline ai «Chỉnh lịch trình» + solid ai «Dùng plan này»",
+    "ItineraryAI": "TopBar «Lịch trình AI» + Nháp; h1 tên chuyến, body ngày; AiNote tím; chip ngày pill; h2 ngày; HangChang phac toàn bộ (nét chì; phu là tên địa điểm khi có, trạng thái nháp chỉ nói một lần ở đầu màn); footer RudiButton outline ai «Chỉnh lịch trình» + solid ai «Dùng plan này»",
     "Settlement": "TopBar «Quyết toán chuyến đi» + Demo; sổ DongTien (dam tổng, split), câu đếm «2 đã trả · 5 đang chờ · 8 thành viên», hàng người thu với Avatar viền split + Money display split + Stamp NGƯỜI THU BILL, Đã nhận/Còn chờ; SectionHeader h2 «Các khoản chuyển»; hàng chuyển với Money + Stamp ĐÃ TRẢ hoặc RudiButton outline split «Đánh dấu đã trả»; hairline giữa hàng, không thẻ; bấm «Đánh dấu đã trả» → Stamp ĐÃ TRẢ dong cho đúng hàng (clip-dau-tra)",
     "Finance": "TopBar «Tài chính của tôi» + Demo; sổ DongTien 4 dòng (split/warn/ink trên số); câu bộ lọc vắng; SectionHeader «Chi theo nhóm» với action accent; ListRow giao dịch icon 40 tròn + số tabular; câu chân «Chưa confirm sổ cái. Đây không phải số dư ngân hàng»",
-    "Album": "TopBar tiêu đề + phụ đề ngày, IconButton quiet «+»; KhungAnh ảnh dẫn với xuất xứ; h1 + caption «… · 4 ảnh» đếm thật; SectionHeader «Khoảnh khắc» + chip «Theo ngày» + IconButton chọn; ResponsiveRow maxColumns 6 ô trần bo 10; footer RudiButton solid accent «Thêm khoảnh khắc»",
+    "Album": "TopBar tiêu đề (không phụ đề ngày), IconButton quiet «+»; KhungAnh ảnh dẫn với xuất xứ = tên nhóm (live «Ảnh của nhóm»); h2 + note «17 - 19/10/2026 · 4 ảnh» đếm thật (mỗi sự thật một lần); SectionHeader «Khoảnh khắc» + chip «Theo ngày» + IconButton chọn; ResponsiveRow maxColumns 6 ô trần bo 10; footer RudiButton solid accent «Thêm khoảnh khắc»; live: ảnh gom theo ngày, nhãn note inkFaint, cặp vuông maxColumns 4 minItemWidth 150, ảnh lẻ cuối ngày đi ngang; rỗng = Canh chua-co-keo / chua-co-anh",
     "ExploreTablet": "rail 104 trái (vạch 4 accent, FAB trong rail); Logo + wordmark; SearchField pill + IconButton lọc + IconButton AI aiSoft; chip pill; SectionHeader h2; PlaceLead 21:9 với Stamp HỢP GU; PlaceRow 2 cột hairline",
     "Chat": "RudiScreen header = TopBar tên nhóm + phụ đề số thành viên + IconButton info, dòng ghim chuyến (icon 20 accentSoft bo 10, label + caption, chevron) trên kẻ tóc; luồng keepEnd cuộn dưới header; composer ở footer",
     "Plan": "TopBar wordmark + tiêu đề nhóm + ngày; Photo dẫn 16:10 với DemoBadge; Money display + avatar + Stamp nhịp kèo; chip ngày; h2 ngày + IconButton AI; HangChang với AnhChang ở chặng có địa điểm có ảnh",
-    "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet"
+    "CreateSheet": "Sheet kit qua route trong suốt trên tab hiện tại; xem kit.CreateSheet",
+    "Personalization": "TopBar back + «Bỏ qua»; Heading «Cho Rủ Đi biết gu của bạn» không phụ đề; lưới ô gu (GuGlyph 40 + label + vòng chọn, cao 64, bo 14, viền lineStrong; chọn = accentSoft + viền accent + check) minItemWidth round(150 × max(1, fontScale)) gap 12; câu đếm caption ink khi chưa đủ, note inkSoft khi đủ; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng» + chip pill; RudiButton; câu lưu trữ note inkFaint giữa",
+    "ExploreCompare": "Khám phá fixture và live: hàng chip danh mục với GuGlyph 22 (leading); SectionHeader; PlaceLead (Stamp HỢP GU trên ảnh, tên h2, lý do label ai, mô tả, sự thật); PlaceCompare hai ô 4:3 với tim trên góc ảnh; PlaceRow còn lại; rỗng = Canh tim-khong-ra 168 + h2 + một câu + RudiButton"
   },
   "implementationCheckpoint": {
     "date": "2026-09-06",
@@ -861,6 +870,31 @@
       {
         "name": "Luật Một Cú Đóng Mỗi Sự Kiện",
         "section": "motion"
+      },
+      {
+        "name": "Luật Vai Màu Của Nét Vẽ",
+        "body": "Lớp vẽ không biết màu: mỗi lớp gọi một vai MauVe (giay, bong, muc, gap, mo, split, ai) và VeLop.mauLop đổi vai ra token của scheme; doiMau chỉ đổi một vai tại chỗ; theme.ts vẫn là file duy nhất viết hex.",
+        "section": "colors"
+      },
+      {
+        "name": "Luật Nhãn Đậm, Câu Nhẹ",
+        "body": "Ở 13sp, nhãn ngắn đi caption 600; một câu có chủ ngữ đi note 400. note không bao giờ lên chip hay nhãn nút.",
+        "section": "typography"
+      },
+      {
+        "name": "Luật Nếp Đứng Xa Tiền",
+        "body": "Nếp chỉ ở trạng thái rỗng và cửa vào; không bao giờ cạnh số tiền, lỗi hay xung đột; không dấu chuyển động, không mặt hào hứng.",
+        "section": "components"
+      },
+      {
+        "name": "Luật Vòng Hở Không Tiến Độ",
+        "body": "Vòng hở không bao giờ là progress ring: không animate, không phần trăm, khe luôn rộng; đường chuyền mang nghĩa tiến độ phải có chữ.",
+        "section": "components"
+      },
+      {
+        "name": "Luật Nói Một Lần",
+        "body": "Mỗi trạng thái và mỗi sự thật có một chỗ trên màn: tên địa điểm ở HangChang phu, nháp ở đầu màn, check-in là một con dấu, luật tính sau «Cách tính», ngày album ở tiêu đề.",
+        "section": "components"
       }
     ],
     "notCanonized": [
@@ -873,7 +907,12 @@
       "iOS và OAuth chỉ đọc từ mã",
       "Nhánh pressed mờ opacity còn trong màn feature (Group tripPin/bình chọn, HangDiaDiem, Outing, Bill, Profile, GroupWallLive) và styles.pressed/buttonPressed mồ côi trong ui.tsx: nợ đồng bộ với PressScale, không phải kiểu phản hồi thứ hai",
       "/create mở lạnh từ deep link (app/create.tsx) chỉ đọc từ mã, chưa kiểm trên máy",
-      "số ms của cú đóng dấu đọc từ Stamp.tsx; clip 20 fps chỉ chứng minh thứ tự nhịp"
+      "số ms của cú đóng dấu đọc từ Stamp.tsx; clip 20 fps chỉ chứng minh thứ tự nhịp",
+      "Nút vô hiệu của kit («Tiếp tục» mờ, bs-03-so-thich): nợ tương phản có tên, không đo, không in tỉ lệ để hợp thức",
+      "Dark sau loạt sửa cuối: chỉ bảng art; cảnh, cặp so sánh, ô gu ở dark chưa có ảnh",
+      "Album theo ngày chỉ ở AlbumLive.tsx (đọc từ mã); Memories.tsx fixture vẫn lưới đều ba cột",
+      "Hai cảnh chua-co-hoi/chua-co-ban và bốn tư thế Nếp ngoài moi/ghi-lai chưa màn nào gọi",
+      "Ionicons vẫn là ngôn ngữ của control; lớp vẽ chỉ thay icon ở nội dung phân loại"
     ],
     "keyCharacteristics": [
       "Hai bề mặt vật chất đo được bằng pixel: vải bìa, giấy, mực con dấu",
@@ -1011,5 +1050,106 @@
       "lines": "24-54",
       "formSignature": "một cú đóng dấu khi một trạng thái thành đúng: tồn tại từ đợt 8"
     }
+  },
+  "shippedV5": {
+    "_": "Đợt «bản sắc và nhịp thị giác», nhánh claude/p0-w-ui3-hoan-thien-native, commit cdccb590 → 8c1d8600 trên 3d89f070. Finish review trả ship cho màn fixture (sáng 1.0) và Sở thích (1.3); chưa phủ: cửa live, tối sau loạt sửa, tương phản nút vô hiệu của kit.",
+    "date": "2026-09-08",
+    "headCommit": "8c1d8600",
+    "baseCommit": "3d89f070",
+    "verdict": "ship",
+    "evidence": {
+      "native": ".impeccable/review/ban-sac-2026-09-08/{sua2-sang-1.0,sua-sang-1.0,sua-ab,sua-sang-1.3/bs-03*,toi-1.3,art-preview.png}",
+      "artTable": "bảng art sáng + tối (scratchpad xem-art4/art.png): Nếp 96/48 sáu tư thế, gu 48/32, motif, cảnh 144 có/không Nếp",
+      "fromCodeOnly": [
+        "AlbumLive theo ngày",
+        "hai cảnh chua-co-hoi/chua-co-ban",
+        "tư thế Nếp ngoài moi/ghi-lai",
+        "dark sau loạt sửa cuối"
+      ]
+    },
+    "art": {
+      "files": "src/rudi/art/{net,nep,motif,gu,canh}.ts (hình học) + src/rudi/ui/art/{VeLop,Nep,Motif,Gu,Canh}.tsx (vẽ)",
+      "pathGrammar": "chỉ M/L/C/Z tuyệt đối, số thập phân trơn, dựng từ số lúc chạy; Q và A đổi ra C ở builder; tests/art-duong.test.mjs parse như Java PathParser",
+      "roles": {
+        "giay": "card",
+        "bong": "line",
+        "muc": "ink",
+        "gap": "accent",
+        "mo": "accentSoft",
+        "split": "split",
+        "ai": "ai"
+      },
+      "grids": {
+        "nep": 96,
+        "gu": 48,
+        "canh": "144x112"
+      },
+      "nep": {
+        "poses": [
+          "moi",
+          "giu-cho",
+          "gop-y",
+          "doi",
+          "ghi-lai",
+          "vui"
+        ],
+        "readings": "96 chi tiết (mày, nếp, đạo cụ); dưới 72dp vẽ bản 48 dày nét",
+        "placement": "chỉ trạng thái rỗng và cửa vào; không bao giờ cạnh tiền, lỗi, xung đột; không dấu chuyển động",
+        "a11y": "trang trí, ẩn khỏi cây"
+      },
+      "gu": {
+        "ids": [
+          "an-uong",
+          "cafe",
+          "nightlife",
+          "mon-local",
+          "outdoor",
+          "shopping",
+          "karaoke",
+          "game"
+        ],
+        "stroke": "2.4 chính / 1.7 mảnh trên lưới 48",
+        "coral": "tối đa một chi tiết mỗi hình",
+        "unknown": "thẻ gấp",
+        "sizes": {
+          "tileSoThich": 40,
+          "chipKhamPha": 22,
+          "thumbHang": 32,
+          "placeGlyph": "size×1.15"
+        }
+      },
+      "motifs": {
+        "vongHo": "một nét coral, khe > 60°, chỉ trang trí, không bao giờ progress ring",
+        "duongChuyen": "đường S của kit + chấm coral điểm đặt bút; tiến độ phải có chữ",
+        "gocGap": "tờ giấy gấp góc trên phải, tỉ lệ 0.28, cùng góc với Nếp"
+      },
+      "scenes": {
+        "chua-co-hoi": "Một chiếc ghế được kéo ra, chừa sẵn chỗ",
+        "chua-co-keo": "Một tờ hẹn trống, nét mực bắt đầu từ đó",
+        "chua-co-anh": "Một khung ảnh còn trống, góc giấy gấp",
+        "chua-co-ban": "Hai chiếc ghế, một chỗ còn trống",
+        "tim-khong-ra": "Một tấm bản đồ gấp, đường đi chưa tới nơi"
+      },
+      "sceneRule": "mỗi cảnh trọn vẹn khi nep=false; Canh khung chặt theo hopNgang + viewBox; width 168 trong EmptyState"
+    },
+    "typographyApp": {
+      "note": {
+        "size": 13,
+        "lineHeight": 18,
+        "weight": "400",
+        "purpose": "dòng phụ là một câu (siêu dữ liệu, chú thích, đếm, nhãn ngày); caption 600 giữ cho nhãn ngắn. Cùng cỡ micro của tokens.json, không phải bậc mới của thang chung."
+      }
+    },
+    "changes": [
+      "Chip.leading: ReactNode thế chỗ icon (GuGlyph 22); có leading thì check của trạng thái chọn nhường chỗ",
+      "PlaceCompare: hai ứng viên trên một trục sau ảnh dẫn (taiSoSanh: dẫn → cặp → hàng); 4:3, tim trên góc ảnh, title, note, sự thật; giá đứng riêng dòng",
+      "PlaceLead.lyDo: một dòng label màu ai dưới tên, chỉ khi match thật và máy chủ gửi reason",
+      "PlaceRow: Stamp cạnh tên trên cùng hàng; thumbnail trống vẽ GuGlyph 32",
+      "PlaceGlyph: hình gu của danh mục (guTheoLoai) trong đĩa accentSoft; Ionicons chỉ khi thiếu loai",
+      "AlbumLive: ảnh gom theo ngày lịch Việt Nam (nhomTheoNgay), cặp vuông maxColumns 4 minItemWidth 150, ảnh lẻ cuối ngày đi ngang; siêu dữ liệu viết một lần (bar = nơi, bản in = nhóm/«Ảnh của nhóm», tiêu đề = ngày + số ảnh)",
+      "Sở thích: ô GuGlyph 40 cao 64 gap 12, minItemWidth round(150 × max(1, fontScale)) → một cột ở 1.3; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng»",
+      "EmptyState.illustration nhận Canh 168: Album chua-co-keo / chua-co-anh, Khám phá tim-khong-ra",
+      "Câu chữ §8.5: HangChang phu = tên địa điểm hoặc «Chọn địa điểm»; nháp nói một lần đầu màn; check-in một con dấu; «Cách tính» mở luật ở Thành tích; khay tạo chi tiết chỉ nơi dễ nhầm; «Làm mới»; bill fixture «Bill mẫu»"
+    ]
   }
 }

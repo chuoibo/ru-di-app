@@ -118,7 +118,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
     <RudiScreen bottomInset={112} onRefresh={nap} testID="conversations-screen">
       <View style={styles.dau}>
         <View style={styles.flex}>
-          <Heading title="Tin nhắn" subtitle="Nhóm của bạn trên máy chủ" />
+          <Heading title="Tin nhắn" subtitle="Nhóm của bạn" />
         </View>
         {/* Not in the top-right corner: on the development build the
             dev-launcher's floating gear covers it. A compact button beside the

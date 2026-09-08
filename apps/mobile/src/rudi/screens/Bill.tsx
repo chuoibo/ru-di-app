@@ -120,7 +120,7 @@ export function ReceiptReviewScreen() {
           { uri: picked.assets[0].uri, bytes: picked.assets[0].fileSize ?? 0 },
           DEMO_PEOPLE[0].personId,
         );
-        setScanNote("Máy chủ nhận ảnh. Dòng trên giấy vẫn là payload canonical Xóm Lèo cho đến khi OCR thật thay thế.");
+        setScanNote("Đã gửi ảnh. Các dòng bên dưới vẫn là bill mẫu.");
       } catch (error) {
         const message = error instanceof ApiError ? error.message : `Không đọc được bill tại ${BASE_URL}.`;
         setScanNote(message);
@@ -136,7 +136,7 @@ export function ReceiptReviewScreen() {
       {/* The decision first, the paper after: what this bill is, and what to do with it. */}
       <Heading
         title="Giấy mẫu Tiệm Nướng Xóm Lèo"
-        subtitle={`${BILL_ITEMS.length} dòng canonical, tổng ${formatVnd(DEMO_GROUP.billTotalVnd)}. Đây không phải kết quả OCR; ảnh bạn chọn chỉ để thử đường gửi.`}
+        subtitle={`Bill mẫu · ${BILL_ITEMS.length} dòng · tổng ${formatVnd(DEMO_GROUP.billTotalVnd)}. Bạn đang thử bằng dữ liệu mẫu.`}
       />
       <Inline gap={10}>
         <RudiButton
@@ -162,9 +162,7 @@ export function ReceiptReviewScreen() {
         <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]}>{scanNote}</Text>
       ) : (
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          {session.receiptPicked
-            ? "Đã chọn ảnh trên máy. OCR chỉ chạy khi máy chủ nhận được POST /receipts/scan."
-            : "Chọn ảnh từ thư viện để thử OCR. Không có camera giả."}
+          {session.receiptPicked ? "Đã chọn ảnh trên máy." : "Chọn ảnh từ thư viện để thử đọc bill."}
         </Text>
       )}
       <View style={styles.wood}>

@@ -56,7 +56,7 @@ export const WELCOME_PAGES = [
   },
   {
     title: "Chia bill từng đồng",
-    body: "Gán món, xem ai nợ ai. Số trên quyết toán và tài chính phải cùng một nguồn, không bịa sổ cái.",
+    body: "Gán món, xem ai nợ ai. Quyết toán và tài chính đọc cùng một sổ.",
   },
   {
     title: "Giữ kỷ niệm của hội",

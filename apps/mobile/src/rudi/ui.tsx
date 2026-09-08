@@ -655,6 +655,7 @@ export function OtpBoxes({
 export function Chip({
   label,
   icon,
+  leading,
   selected = false,
   tone = "accent",
   onPress,
@@ -662,6 +663,8 @@ export function Chip({
 }: {
   label: string;
   icon?: IconName;
+  /** Authored artwork in the icon's place (a `GuGlyph`), so a taxonomy is drawn with one pen everywhere. */
+  leading?: ReactNode;
   selected?: boolean;
   tone?: RudiTone;
   onPress?: () => void;
@@ -685,7 +688,7 @@ export function Chip({
           },
         ]}
       >
-        {icon ? <Ionicons color={foreground} name={icon} size={14} /> : null}
+        {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={14} /> : null)}
         <Text numberOfLines={1} style={[typography.caption, { color: foreground }]}>
           {label}
         </Text>
@@ -711,8 +714,8 @@ export function Chip({
       ]}
     >
       {/* Selected is said twice: fill and a check, so it does not rest on color alone. */}
-      {icon ? <Ionicons color={foreground} name={icon} size={16} /> : null}
-      {icon === undefined && selected ? <Ionicons color={foreground} name="checkmark" size={16} /> : null}
+      {leading ?? (icon ? <Ionicons color={foreground} name={icon} size={16} /> : null)}
+      {icon === undefined && leading === undefined && selected ? <Ionicons color={foreground} name="checkmark" size={16} /> : null}
       <Text numberOfLines={1} style={[typography.caption, { color: foreground }]}>
         {label}
       </Text>

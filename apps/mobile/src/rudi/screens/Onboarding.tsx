@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { manDau } from "../duong-vao";
 import {
@@ -17,21 +17,11 @@ import { NGAN_SACH, SO_THICH, doiMuc } from "../../screens/vao-cua/so-thich";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { Chip, Heading, Inline, ResponsiveRow, RudiButton, RudiScreen, TopBar } from "../ui";
+import { GuGlyph } from "../ui/art/Gu";
 
-/** One icon per taste word the SERVER knows. The words themselves come from
- *  `so-thich.ts`, which `tests/test_interest_vocabulary_matches_client.py`
- *  keeps equal to the server's list; the icon is decoration and lives here. */
-const BIEU_TUONG: Record<string, keyof typeof Ionicons.glyphMap> = {
-  "an-uong": "restaurant-outline",
-  cafe: "cafe-outline",
-  nightlife: "wine-outline",
-  "mon-local": "fast-food-outline",
-  outdoor: "trail-sign-outline",
-  shopping: "bag-handle-outline",
-  karaoke: "mic-outline",
-  game: "game-controller-outline",
-};
-
+/** The words are the SERVER's (`so-thich.ts`, held equal to `GET /interests`
+ *  by `tests/test_interest_vocabulary_matches_client.py`); the picture for each
+ *  is decoration and lives in `art/gu.ts`, keyed by the same id. */
 const TOI_THIEU = 3;
 
 /**
@@ -45,10 +35,21 @@ const TOI_THIEU = 3;
  * and the button names the thing it does: save, or simply continue when there
  * is no account to save into. The words and their ids are the server's
  * vocabulary and are not edited here.
+ *
+ * 2026-09-08 (report 07/09 §9.3): the page had three tiers of words before the
+ * first choice (a lead paragraph, a second heading, a budget explanation) and
+ * eight identical tiles told apart only by a hairline icon. Now the question
+ * is the heading, the eight tastes are objects drawn with one pen
+ * (`GuGlyph`), and the budget is one labelled row. The heading and the button
+ * names are pinned by the Maestro board and stay as they are.
  */
 export function PersonalizationScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  // At a large font scale two columns leave a label the width of one word,
+  // and Android breaks «Shopping» in half rather than wrap it (dark/1.3
+  // board, 2026-09-08). The grid falls back to one column instead.
+  const { fontScale } = useWindowDimensions();
   const session = useRudiSession();
   const personId = session.phien?.person_id ?? null;
 
@@ -150,13 +151,9 @@ export function PersonalizationScreen() {
           </Pressable>
         }
       />
-      <Heading
-        title="Cho Rủ Đi biết gu của bạn"
-        subtitle="Rủ Đi xếp gợi ý theo đúng những gì bạn chọn. Sửa lại bất cứ lúc nào ở Cá nhân."
-      />
+      <Heading title="Cho Rủ Đi biết gu của bạn" />
       <View style={styles.block}>
-        <Text style={[typography.h2, { color: colors.ink }]}>Đi chơi, bạn thường mê gì?</Text>
-        <ResponsiveRow minItemWidth={140} gap={10}>
+        <ResponsiveRow minItemWidth={Math.round(150 * Math.max(1, fontScale))} gap={12}>
           {danhSach.map((m) => {
             const selected = muc.includes(m.id);
             return (
@@ -176,7 +173,7 @@ export function PersonalizationScreen() {
                   pressed && styles.pressed,
                 ]}
               >
-                <Ionicons color={selected ? colors.accent : colors.inkSoft} name={BIEU_TUONG[m.id] ?? "sparkles-outline"} size={22} />
+                <GuGlyph id={m.id} size={40} tone={selected ? "accent" : "ink"} />
                 <Text style={[typography.label, styles.tileLabel, { color: colors.ink }]}>{m.nhan}</Text>
                 {/* Chosen is said twice: the fill and a check, never colour alone. */}
                 <Ionicons
@@ -188,15 +185,16 @@ export function PersonalizationScreen() {
             );
           })}
         </ResponsiveRow>
-        <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: duDieuKien ? colors.inkSoft : colors.ink }]}>
+        <Text accessibilityLiveRegion="polite" style={[duDieuKien ? typography.note : typography.caption, { color: duDieuKien ? colors.inkSoft : colors.ink }]}>
           {demChon}
         </Text>
       </View>
-      <View style={styles.block}>
-        <Text style={[typography.h2, { color: colors.ink }]}>Mỗi lần đi chơi bạn tiêu khoảng</Text>
-        <Text style={[typography.body, { color: colors.inkSoft }]}>
-          Bỏ qua cũng được. Rủ Đi để trống chỗ này chứ không đoán thay bạn.
-        </Text>
+      <View style={styles.blockNganSach}>
+        {/* The question at question weight, then one note with what is
+            optional and what K means; no paragraph. Tapping the chosen band
+            again clears it (`doiKhoang`). */}
+        <Text style={[typography.title, { color: colors.ink }]}>Mỗi lần đi chơi, bạn thường tiêu khoảng</Text>
+        <Text style={[typography.note, { color: colors.inkSoft }]}>Không bắt buộc · K là nghìn đồng</Text>
         <Inline gap={8} wrap>
           {NGAN_SACH.map((k) => (
             <Chip key={k.id} label={k.nhan} onPress={() => doiKhoang(k.id)} selected={khoang === k.id} />
@@ -205,7 +203,7 @@ export function PersonalizationScreen() {
       </View>
       {loi !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
       <RudiButton disabled={!duDieuKien || dangLuu} label={nhanNut} loading={dangLuu} onPress={() => void xong()} />
-      <Text style={[typography.caption, styles.privacyText, { color: colors.inkFaint }]}>
+      <Text style={[typography.note, styles.privacyText, { color: colors.inkFaint }]}>
         {cauLuuTru(personId !== null)}
       </Text>
     </RudiScreen>
@@ -217,7 +215,8 @@ const styles = StyleSheet.create({
   personalization: { maxWidth: 640 },
   boQua: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
   block: { gap: 12 },
-  tile: { minHeight: 56, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, borderWidth: 1 },
+  blockNganSach: { gap: 8, marginTop: 10 },
+  tile: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, borderWidth: 1 },
   tileLabel: { flex: 1, flexShrink: 1 },
   privacyText: { textAlign: "center", paddingHorizontal: 18 },
 });

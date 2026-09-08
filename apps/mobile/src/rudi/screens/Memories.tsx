@@ -227,7 +227,7 @@ export function TripAlbumScreen() {
         style={({ pressed }) => [styles.gridPhoto, pressed && styles.pressed]}
       >
         {lead ? (
-          <KhungAnh xuatXu={`${DEMO_GROUP.name} · Đà Lạt · 17 - 19/10/2026`}>
+          <KhungAnh xuatXu={DEMO_GROUP.name}>
             <Photo radius={4} ratio={tiLeDan} source={photo.photo} />
           </KhungAnh>
         ) : (
@@ -246,14 +246,16 @@ export function TripAlbumScreen() {
     <RudiScreen testID="trip-album-screen">
       <TopBar
         title="Album Đà Lạt"
-        subtitle="17 - 19/10/2026"
         right={<IconButton accessibilityLabel="Thêm ảnh" icon="add" onPress={() => router.push("/moments/new")} quiet />}
       />
-      {/* The first photograph leads; the title and the date sit right under it. */}
+      {/* The first photograph leads; the title and the date sit right under it.
+          Each fact is written once: the place in the bar, the group on the
+          print, the dates and the count here (report 07/09 §9.18 counted the
+          date three times on one screen). */}
       {dan ? oAnh(dan, true) : null}
       <View style={styles.albumDau}>
         <Text style={[typography.h2, { color: colors.ink }]}>Những ngày mình đi cùng nhau</Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>Đà Lạt cuối tuần · 17 - 19/10/2026 · Team Đà Lạt · {MEMORY_PHOTOS.length} ảnh</Text>
+        <Text style={[typography.note, { color: colors.inkSoft }]}>17 - 19/10/2026 · {MEMORY_PHOTOS.length} ảnh</Text>
       </View>
       <View style={styles.albumToolbar}>
         <Text style={[typography.label, styles.flex, { color: colors.ink }]}>
@@ -302,7 +304,7 @@ export function ShareMomentScreen() {
     <RudiScreen contentStyle={styles.form} testID="share-moment-screen">
       <TopBar title="Chia sẻ khoảnh khắc" right={<DemoBadge />} />
       {/* The print: the picture, the sentence, and where it was taken. */}
-      <KhungAnh chuThich={caption.trim() === "" ? "Câu của bạn hiện ở đây" : caption.trim()} xuatXu={`${PEOPLE[COLLECTOR_INDEX].name} · Đà Lạt, Lâm Đồng · hôm nay`}>
+      <KhungAnh xuatXu={`${PEOPLE[COLLECTOR_INDEX].name} · Đà Lạt, Lâm Đồng · hôm nay`}>
         <Photo height={240} radius={4} source={demoAssets.dalatFriends} />
       </KhungAnh>
       <Field
