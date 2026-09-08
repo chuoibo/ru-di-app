@@ -1000,15 +1000,15 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-sang.png",
-      "sha256": "097435e7c3542a733e94acd51b0411cc21aad5865ffbabaab5525da15a5c842e",
+      "sha256": "a9df826b6727136caaf1493a9e4492ec377dec57eb0bc3b3afbee2ba1e5df1a3",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng. Hình vector do app dựng, không có dữ liệu người tham gia."
+      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng."
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
-      "sha256": "12d9b709e6af2c44b09d5cbf52368494cc6b8d882b0a5577cf0e30b1cb1ebfc0",
+      "sha256": "47810ffb61647ed1c4d31fbae6a2c3f238f7cb0512b0fe37c63ad1b723c659a4",
       "rules": [
         "controlled-artifact"
       ],
@@ -1016,11 +1016,59 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
-      "sha256": "26cdbe439d2b8a3581f5ff1332b9c91c6e88012eabed01d15943873d6b16bfff",
+      "sha256": "cd38fe495c4603c7334aa8a5225aea085ab0967bb695f74d4d16f6c3b9f96784",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng: chứng minh mỗi pose có dáng và mặt riêng."
+      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/bang-canh-sang.png",
+      "sha256": "512b18cc6649a9e4e389290a9fff525a8a87d315917bdef4f19b86d95936ad9d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mười cảnh im lặng, có Nếp và tắt Nếp, nền sáng. Hình vector do app dựng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/bang-canh-toi.png",
+      "sha256": "29a8f54ba6b6dc2fcbf72154531d1909b64465c77455aba4be46742c864ffbcb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/native-chua-co-nhom-1.0.png",
+      "sha256": "f8808209882011f419b29d3b4758b632bef8a290944c11fb05f5c2f36ee939ed",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: cảnh chua-co-hoi trên màn «Chưa có nhóm nào», cỡ chữ 1.0, nền sáng. Dữ liệu demo, không có người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/khay-tam-o-1.0.png",
+      "sha256": "ba91b6e37ef0082c68821ac56c15273ba4781ba36c6aa172fbcd4e8c7f6c1c63",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: khay sticker tám ô, cỡ chữ 1.0, nhãn «Cà phê không?» xuống hai dòng thay vì bị cắt. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/tam-sticker-hai-co-1.0.png",
+      "sha256": "46584d8ff324724fb5f9b57a0ab4c4da97b527c6de868a24dd102d2fc5903840",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: sáu sticker ở cả hai cỡ đọc trên bàn thử dev, cỡ chữ 1.0. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/canh-moi-ab-1.0.png",
+      "sha256": "2e4ad02ce282744cda9ebc9264641454b30510b1c69861a1bc308fc5b1c5fe46",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: bốn cảnh mới ở cả hai bản có Nếp và tắt Nếp, cỡ chữ 1.0. Dữ liệu demo."
     }
   ]
 }

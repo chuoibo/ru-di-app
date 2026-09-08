@@ -71,6 +71,45 @@ sẵn (tám ô bằng nhau), và số cột tụt theo `fontScale` (4 → 3 → 
 ghép chuỗi — cổng `receipt.test.mjs` đọc **mọi** «…%» một build sinh ra, vì ADR-0009 cấm hiện phần
 trăm của mô hình, và một bề rộng tính bằng template literal rơi đúng vào danh sách ấy.
 
+## Lượt chấm mỹ thuật bắt ba hình đọc sai
+
+Finish review trong context mới **mở ảnh ra nhìn** và trả `rebuild` cho ba hình. Cả ba đều là lỗi
+hình, không phải lỗi gu, và tôi đã không thấy khi tự chấm:
+
+| hình | lỗi | sửa |
+|---|---|---|
+| «Ăn gì?» | cả hai tay chạy từ vai TRÁI thành một thanh mực **bắc ngang thân và ngang miệng**; vành tô thấp hơn tay 4 đơn vị và rộng hơn khoảng tay 8, nên không tay nào chạm nó | thêm khuỷu như `dua-hai-tay` (chính pose bên cạnh đã ghi comment rằng chạy thẳng là sai); vành tô đặt đúng tầm tay, không rộng hơn khoảng tay |
+| «Trả tiền nè» | hai tờ lệch 5 đơn vị dính thành **một thẻ bo tròn**, vạch coral nằm ngang giữa thân = ký hiệu **dải từ**; trên nền tối đọc ra **thẻ ngân hàng**. Cả hai bàn tay nằm TRONG khung tờ tiền và tờ tiền vẽ đè lên người, nên **không bàn tay nào hiện ra** | tiền bắt đầu TỪ tay và chạy ra xa thân, mép gần gấp về phía người đưa, người vẽ SAU tiền |
+| «OK, chốt!» | **giống hệt «Trả tiền nè» ở 64dp**: cùng nghiêng, cùng khoảng chân, cùng mảng trắng cầm ngang hông phải; bàn tay ấn xuống lại bị giấy vẽ đè | ấn xuống sát sàn, tay kia chống ngược ra sau, giấy vẽ trước người |
+
+Lượt chấm thứ hai xác nhận **không cặp nào còn trùng bóng**. Cặp gần nhau nhất còn lại là «Đi
+thôi!» và «Tuyệt vời» (cùng một tay giơ lên tới dấu coral nhỏ góc trên phải); khoảng cách giữa
+chúng do **dáng chân** giữ, nên ai làm phẳng `nhun` hay `buoc` là hai hình nhập một. Ghi ra đây để
+người sau biết.
+
+Nó cũng bắt được một lỗi tài liệu đúng loại tôi hay mắc: lần sửa đầu tôi hạ mày `hoi` xuống rồi
+**viết comment nói đã tránh góc coral**, trong khi hình học nói ngược lại. Nay mày được nhướn là
+mày TRÁI, phía ngoài tam giác gấp.
+
+## Ảnh chụp máy thật
+
+![Khay tám ô trên máy ảo, cỡ chữ 1.0](native/khay-tam-o-1.0.png)
+
+Đây là câu trả lời cho hai câu hỏi mà bảng vector **không** trả lời được.
+
+- **Nhãn «Cà phê không?» xuống hai dòng, không còn bị cắt.** Đúng thứ review nêu, và chỉ ảnh chụp
+  máy mới chứng minh được vì nó phụ thuộc bề rộng thật của ô ở DPI thật.
+- **Tám ô đọc ra tám hành động khác nhau ở cỡ thật**, trên nền ô `ground`, hai hàng bốn cột, ô bằng
+  nhau vì chiều cao hai dòng nhãn được dành sẵn.
+
+![Sáu sticker ở hai cỡ đọc trên bàn thử](native/tam-sticker-hai-co-1.0.png)
+
+Bản 120 và bản rút gọn 64 cạnh nhau trên máy: bản nhỏ là hình vẽ thứ hai chứ không phải bản lớn thu
+lại.
+
+Một lỗi chỉ ảnh chụp máy mới lộ, đã sửa cùng lượt: nhãn trong hàng của bàn thử bị bóp còn một từ nên
+«Chờ tí» hiện ra «Chờ». `Text` đứng cuối một hàng `flexWrap` giữ bề rộng một từ.
+
 ## Cổng
 
 | Cổng | Kết quả |
@@ -84,11 +123,35 @@ trăm của mô hình, và một bề rộng tính bằng template literal rơi 
 Cổng `notDeepEqual` không còn ghim tên `cho-ti`: nay **lặp trên mọi id**, vì cả tám đều có bản đọc
 thứ hai cho khay. Dòng cũ khẳng định `di-thoi` **không** có bản rút gọn đã bỏ.
 
+## Bảng native: đi tới đâu, và tại sao dừng
+
+Bốn lượt bảng trên máy ảo dùng chung. Kết quả sau cùng:
+
+| flow | trạng thái | ghi chú |
+|---|---|---|
+| `00-smoke-deeplink` | xanh ở lượt 03:15 và 03:22, đỏ ở lượt cuối | app mở lại vào một trạng thái thứ ba mà nhánh đăng-xuất-nếu-có chưa xử |
+| `71-tam-sticker` | **xanh** | khay tám ô, bubble, hai cỡ đọc — ảnh trong doc này |
+| `73-canh-im-lang` | **xanh** | mười cảnh A/B — ảnh trong doc cảnh |
+| `72-hang-cho` | đỏ | ba lần sửa mới tới được tiêu đề mục; lần cuối vẫn chưa cuộn tới hàng |
+
+Ba lỗi flow đã sửa và đã ghi vào file: cuộn qua rồi đòi cuộn xuống; Maestro so **trọn** văn bản
+node nên `text: "Cảnh rỗng"` không khớp tiêu đề đầy đủ; và `visibilityPercentage` mặc định 100%
+làm phần tử cuối nội dung «không thấy» đúng lúc nó vừa ló ra.
+
+**Không tiếp tục lặp**: ảnh cần cho lát này đã có và đã ghim. `72-hang-cho` chụp trạng thái hàng
+chờ, thuộc PR #586 đã merge, và máy trạng thái ấy có mười ca test đơn vị. Ghi ra đây để lượt sau
+biết nó dừng ở đâu chứ không phải để bỏ qua.
+
 ## Chưa chứng minh
 
-- **Chưa chụp native.** Máy ảo đang do lane khác lái suốt lượt này. Ảnh ở trên là bảng vector dựng
-  qua Chrome headless từ chính `dist-test`, **không** phải ảnh chụp máy. Khay thật, bubble thật,
-  và cỡ chữ 1.3/2.0 chưa đo.
+- **Chưa chụp native, và lần này đã thử.** Máy ảo được lane khác trả lại lúc ~02:0x. Bảng
+  `.maestro-bs-r9` (khay tám ô, ba trạng thái hàng chờ, cảnh) đã viết xong nhưng harness báo
+  **máy chưa cài dev client**. Đã `expo prebuild` và `gradlew :app:assembleDebug` **thành công**
+  (JDK 21 trên PATH là JRE, không có `javac`; phải chỉ `-Dorg.gradle.java.home` sang JDK 17), ra
+  APK debug 263 MB gồm bốn ABI. `adb install` chạy **23 phút không tiến triển, 0% CPU**, rồi
+  `adb shell` ngừng trả lời hẳn. Đã dừng lại thay vì làm hỏng máy ảo của lane khác. Nên: **hình
+  đã được nhìn ở bảng vector, chưa được nhìn trên máy**. Lượt sau nên dựng APK **chỉ ABI x86_64**
+  cho máy ảo, không phải cả bốn.
 - **Chưa ai đọc mù.** Reviewer vòng trước nói đúng rằng biết trước đề bài thì không gọi là blind
   test. Bảng trên có nhãn ngay dưới hình; muốn đo thật thì che nhãn và hỏi người chưa đọc doc.
 - Bộ này thay **cả bảy** hình cũ cùng lúc, đúng lời review («trình một bộ có chủ đích để so sánh»,

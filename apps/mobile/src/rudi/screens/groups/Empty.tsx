@@ -24,6 +24,7 @@ import { cauTaiKhoanVuaTao } from "../../cai-dat/phien-cai-dat";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Canh } from "../../ui/art/Canh";
 
 type Trang = { pha: "yen" } | { pha: "dang-vao"; id: string } | { pha: "hong"; loi: string };
 
@@ -77,6 +78,12 @@ export function GroupsEmptyScreen() {
           {cauTaiKhoanVuaTao(phien.issued_via ?? "")}
         </Text>
       ) : null}
+      {/* The very first silence a new person sees. It gets the same scene as
+          the conversation list's own empty state, so «chưa có nhóm nào» looks
+          like one thing in the app rather than two. */}
+      <View style={styles.canh}>
+        <Canh id="chua-co-hoi" width={168} />
+      </View>
       {loiMoi.length > 0 ? (
         <View style={styles.khoi}>
           <Text style={[typography.h2, { color: colors.ink }]}>Lời mời đang chờ</Text>
@@ -127,6 +134,7 @@ export function GroupsEmptyScreen() {
 }
 
 const styles = StyleSheet.create({
+  canh: { alignItems: "center", paddingVertical: 4 },
   screen: { gap: 20, maxWidth: 560 },
   khoi: { gap: 8 },
   hang: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 60, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },

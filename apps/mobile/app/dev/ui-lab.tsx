@@ -279,7 +279,9 @@ export default function UiLab() {
           <View style={{ backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control, borderWidth: 1, padding: 6 }}>
             <Sticker id={id} size={64} />
           </View>
-          <Text style={{ ...typography.caption, color: colors.inkSoft }}>{nhanSticker(id)}</Text>
+          {/* `flex: 1`, or the row squeezes this Text to one word and «Chờ tí»
+              renders as «Chờ» -- seen only on the device, not in the sheet. */}
+          <Text numberOfLines={1} style={{ ...typography.caption, color: colors.inkSoft, flex: 1 }}>{nhanSticker(id)}</Text>
         </View>
       ))}
     </View>

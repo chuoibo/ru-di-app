@@ -12,6 +12,7 @@
  * does not scroll away under a form.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { Canh } from "../../ui/art/Canh";
 import { KhungAnh } from "../../ui/KhungAnh";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -244,7 +245,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
       ) : null}
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void chay(docTrangDau)} title="Chưa đọc được tường" /> : null}
       {trang.pha === "xong" && trang.kyNiem.length === 0 ? (
-        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm, hoặc check-in ở chỗ đang ngồi." kind="first-use" layout="inline" title="Chưa có kỷ niệm nào" />
+        <EmptyState body="Thả khoảnh khắc đầu tiên của nhóm, hoặc check-in ở chỗ đang ngồi." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ky-niem" width={168} />} title="Chưa có kỷ niệm nào" />
       ) : null}
       {trang.pha === "xong" ? (
         <View>

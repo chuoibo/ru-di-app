@@ -14,6 +14,7 @@
  * marked by a check as well as by colour; loading is the list's own shape.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { Canh } from "../../ui/art/Canh";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -104,7 +105,7 @@ export function DiemDenScreen() {
           body="Rủ Đi mới biết mười lăm nơi. Thử tên khác, hoặc xoá ô tìm để xem hết."
           kind="no-results"
           layout="inline"
-          title="Chưa có nơi nào khớp"
+          illustration={<Canh id="bo-loc-che-het" width={168} />} title="Chưa có nơi nào khớp"
         />
       ) : null}
       {loc.length > 0 ? (

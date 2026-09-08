@@ -10,6 +10,7 @@
  * App B called, with the bearer now doing the identifying.
  */
 import { Redirect, useFocusEffect, useRouter } from "expo-router";
+import { Canh } from "../../ui/art/Canh";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -150,7 +151,7 @@ export function FriendsScreen() {
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách bạn" /> : null}
       {trang.pha === "xong" && muc === 0 ? (
         trang.du.ban.length === 0 ? (
-          <EmptyState body="Thêm bạn bằng số điện thoại. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" title="Chưa có bạn nào" />
+          <EmptyState body="Thêm bạn bằng số điện thoại. Người ấy đồng ý thì hai bên là bạn." kind="first-use" layout="inline" illustration={<Canh id="chua-co-ban" width={168} />} title="Chưa có bạn nào" />
         ) : (
           <DanhSach
             hang={trang.du.ban.map((b) => (
@@ -179,7 +180,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 1 ? (
         trang.du.daNhan.length === 0 ? (
-          <EmptyState body="Khi ai đó gửi lời mời kết bạn, nó hiện ở đây." kind="first-use" layout="inline" title="Không có lời mời nào đang chờ" />
+          <EmptyState body="Khi ai đó gửi lời mời kết bạn, nó hiện ở đây." kind="first-use" layout="inline" illustration={<Canh id="chua-co-loi-moi" width={150} />} title="Không có lời mời nào đang chờ" />
         ) : (
           <DanhSach
             hang={trang.du.daNhan.map((lm) => (
@@ -214,7 +215,7 @@ export function FriendsScreen() {
       ) : null}
       {trang.pha === "xong" && muc === 2 ? (
         trang.du.daGui.length === 0 ? (
-          <EmptyState body="Lời mời bạn gửi và đang chờ trả lời hiện ở đây." kind="first-use" layout="inline" title="Bạn chưa gửi lời mời nào" />
+          <EmptyState body="Lời mời bạn gửi và đang chờ trả lời hiện ở đây." kind="first-use" layout="inline" illustration={<Canh id="chua-co-loi-moi" width={150} />} title="Bạn chưa gửi lời mời nào" />
         ) : (
           <DanhSach
             hang={trang.du.daGui.map((lm) => (

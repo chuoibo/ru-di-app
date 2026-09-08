@@ -26,6 +26,7 @@
  * private thread -- drawn by the same screen with the other person's name.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { Canh } from "../../ui/art/Canh";
 import { Image } from "expo-image";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -603,7 +604,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             body={nhanRieng ? `Nhắn gì đó cho ${tenNhom}, hoặc gõ / để rủ Rủ Đi AI vào.` : "Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào."}
             kind="first-use"
             layout="inline"
-            title="Chưa có tin nhắn nào"
+            illustration={<Canh id="chua-co-tin-nhan" width={168} />} title="Chưa có tin nhắn nào"
           />
         </View>
       ) : null}
