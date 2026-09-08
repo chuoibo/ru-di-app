@@ -15,4 +15,21 @@ appId: com.lakiet.rudi
     direction: DOWN
     timeout: 60000
     centerElement: false
+# Tiêu đề mục hiện ra ở đáy màn, còn hai cột cảnh nằm dưới nó. Cuộn thêm tới
+# caption của cảnh đầu rồi mới chụp, không thì ảnh chỉ có cái tiêu đề.
+- scrollUntilVisible:
+    element:
+      text: "Một chiếc ghế được kéo ra.*"
+    direction: DOWN
+    timeout: 30000
+    centerElement: false
+    visibilityPercentage: 30
 - takeScreenshot: r9-73-canh-ab
+- scrollUntilVisible:
+    element:
+      text: "Một tấm lưới che gần kín.*"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+    visibilityPercentage: 30
+- takeScreenshot: r9-73-canh-moi

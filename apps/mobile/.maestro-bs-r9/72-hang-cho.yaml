@@ -16,6 +16,10 @@ appId: com.lakiet.rudi
     direction: DOWN
     timeout: 90000
     centerElement: false
+    # Mặc định đòi phần tử hiện 100%. Tiêu đề này là mục CUỐI bàn thử, nên nó
+    # dừng ngay khi tiêu đề vừa ló ra mà chưa đủ 100% và báo không thấy (ảnh
+    # 72-hang-cho-FAILED của lượt 03:19 cho thấy đúng cảnh ấy).
+    visibilityPercentage: 30
 - extendedWaitUntil:
     visible: "Đang gửi…"
     timeout: 20000

@@ -91,6 +91,25 @@ Nó cũng bắt được một lỗi tài liệu đúng loại tôi hay mắc: l
 **viết comment nói đã tránh góc coral**, trong khi hình học nói ngược lại. Nay mày được nhướn là
 mày TRÁI, phía ngoài tam giác gấp.
 
+## Ảnh chụp máy thật
+
+![Khay tám ô trên máy ảo, cỡ chữ 1.0](native/khay-tam-o-1.0.png)
+
+Đây là câu trả lời cho hai câu hỏi mà bảng vector **không** trả lời được.
+
+- **Nhãn «Cà phê không?» xuống hai dòng, không còn bị cắt.** Đúng thứ review nêu, và chỉ ảnh chụp
+  máy mới chứng minh được vì nó phụ thuộc bề rộng thật của ô ở DPI thật.
+- **Tám ô đọc ra tám hành động khác nhau ở cỡ thật**, trên nền ô `ground`, hai hàng bốn cột, ô bằng
+  nhau vì chiều cao hai dòng nhãn được dành sẵn.
+
+![Sáu sticker ở hai cỡ đọc trên bàn thử](native/tam-sticker-hai-co-1.0.png)
+
+Bản 120 và bản rút gọn 64 cạnh nhau trên máy: bản nhỏ là hình vẽ thứ hai chứ không phải bản lớn thu
+lại.
+
+Một lỗi chỉ ảnh chụp máy mới lộ, đã sửa cùng lượt: nhãn trong hàng của bàn thử bị bóp còn một từ nên
+«Chờ tí» hiện ra «Chờ». `Text` đứng cuối một hàng `flexWrap` giữ bề rộng một từ.
+
 ## Cổng
 
 | Cổng | Kết quả |
