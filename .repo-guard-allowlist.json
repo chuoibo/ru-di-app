@@ -805,6 +805,142 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo, cỡ chữ 2.0): Khám phá cuối màn, giá và thanh tab đọc đủ (R4)."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-binh-chon-1.0.png",
+      "sha256": "ba859c887ca8c6e0b2a1d0594870d510f69e8b2c6b02a73da7ed647f81513eb5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture, không người thật) màn Bình chọn sau F21: ba lựa chọn đều hình vẽ theo loại, không ảnh stock. Nền sáng, cỡ chữ 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-binh-chon-toi.png",
+      "sha256": "dfc84dfdeee0d421d911bb9400f70526af1d8c5c74174b53a57d2b55f458faf0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-canh-ab-du-1.0.png",
+      "sha256": "259ee4c9d5776fbe3f70c9cddca11e6e1a10c0636f956208da003fe97c18261c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: năm cảnh rỗng A/B có và không Nếp, cảnh ghế chụp trọn (ghi chú F22)."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-chang-anh-hong-1.0.png",
+      "sha256": "bba87a032bb2e48d8f75f69023f64fae9bad302084cdba112a44c792a0e36c12",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: renderer chặng, ca ảnh hỏng (nguồn loopback đóng): hình gu trong khung 44 và chữ «Chưa tải được ảnh». Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-chang-anh-hong-toi.png",
+      "sha256": "6aa9fcebdc5a87b85789600289d8da59d1811f14dbc1665093b7ce5bcc1288be",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-chang-ghi-cong-1.0.png",
+      "sha256": "4e09af4ab96c30f5ed6610390e8ed298cb9471db18d427a51ba7775e9296bd57",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev (dữ liệu tổng hợp): renderer chặng, ca có ghi công. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-chang-ghi-cong-1.3.png",
+      "sha256": "33f7a7e048898a78d717f1a6682a4a6f2c3e067b334195c8078e6c4b13280f17",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cỡ chữ 1.3."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-chang-khong-anh-1.0.png",
+      "sha256": "d1906c64a07250e9aa46123b24b49a479ef2d59d55ff41d2543c2ec4e803f058",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: renderer chặng, ca không ảnh: chặng là dòng gọn."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-anh-hong-1.0.png",
+      "sha256": "5ced942be2a47f9bf55286c43b9c972a8079a75400c2f50fe76a8c176a0cca05",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: nhánh ảnh hỏng của Khám phá sau khi nền khung theo theme; hàng in «Chưa tải được ảnh». Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-anh-hong-toi.png",
+      "sha256": "62cc4bdf3bbd65626925a42952219e6037749b23c034cbaf2e889a8e2dbead36",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối: hết mảng beige."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-lich-trinh-cuoi-1.0.png",
+      "sha256": "752976ef394cace33a151a4323dc090510af06ed41b17ac4490d51ce128f65b1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture) lịch trình AI sau khi cuộn tới cuối: câu ghi công vẫn ở trong hàng chặng."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-lich-trinh-ngay-2-1.0.png",
+      "sha256": "79a7e9d8436d39f7d153ca0885b79b656a8518dddce25e6c698b6852c873b3b3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture) lịch trình AI ngày 2: hai chặng có ảnh minh hoạ in câu ghi công ngay trong hàng. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-lich-trinh-ngay-2-1.3.png",
+      "sha256": "1b68f76ada936db7022b4d6bf0114c48c37d52a9d25c28d08eef376b3c407309",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cỡ chữ hệ thống 1.3: câu ghi công xuống dòng, không ba chấm."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-lich-trinh-ngay-2-toi.png",
+      "sha256": "bc6fcfe0263436dbe7a6a3976285b605f2b709e191243f019376494d98cf86f3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-timeline-ngay-2-1.0.png",
+      "sha256": "75204c4ffbbd5d253e2face941c33c4244d10dd0674f27af802ed7ae071befb3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture) timeline chuyến mẫu ngày 2 qua deep link: cùng renderer chặng, cùng câu ghi công."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-dau-1.0.png",
+      "sha256": "35f82e15cba79150b0ecb77e42c81f5d2541da39844f69d67e2f6e7f3f74b975",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture) màn Khám phá đầu trang sau khi DiaDiemHienThi đổi sang một trường anh kèm ghi công: ảnh dẫn không ảnh, cặp so sánh. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-giua-1.0.png",
+      "sha256": "31ffe5a62a859ca6ed5f3e341ef747125e55103369f0d783e9dca176154660e7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cuộn tới hàng «Đồi Thiên Phúc Đức»: hàng có ảnh minh hoạ in ghi công."
     }
   ]
 }
