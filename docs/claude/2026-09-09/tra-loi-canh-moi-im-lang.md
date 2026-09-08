@@ -110,6 +110,13 @@ lý do không liên quan tới lát này: máy dùng chung đang có **phiên đ
 khác để lại, nên app mở thẳng vào «Nhóm của bạn» thay vì màn chào mà flow chờ. Ảnh vẫn là ảnh của
 màn thật do bundle của cây này dựng. Flow đã được sửa để **đăng xuất nếu có** trước khi vào.
 
+![Bốn cảnh mới, có Nếp và tắt Nếp, trên máy ảo](native/canh-moi-ab-1.0.png)
+
+Và đây là bốn cảnh **mới** trên máy, ở **cả hai bản**. Ba điều đọc được từ ảnh mà bảng vector chỉ
+gợi ý: mỗi cảnh đứng trọn vẹn khi tắt Nếp; câu cho trình đọc màn hình nằm ngay trên hình và **khớp
+với hình** (bong bóng thoại rỗng, phong thư còn nguyên, hai chiếc kẹp trống, một ô để nhìn qua); và
+ở cỡ thật, `bo-loc-che-het` đọc ra người ghé vào ô hở chứ không phải người đứng cạnh tấm lưới.
+
 ## Nợ ghi nhận, không sửa lượt này
 
 **Chi mực đi qua góc gấp coral.** Góc gấp là dấu nhận diện của Nếp, và một nét mực đè lên nó là mất

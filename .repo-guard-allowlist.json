@@ -1061,6 +1061,14 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo: sáu sticker ở cả hai cỡ đọc trên bàn thử dev, cỡ chữ 1.0. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/canh-moi-ab-1.0.png",
+      "sha256": "2e4ad02ce282744cda9ebc9264641454b30510b1c69861a1bc308fc5b1c5fe46",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: bốn cảnh mới ở cả hai bản có Nếp và tắt Nếp, cỡ chữ 1.0. Dữ liệu demo."
     }
   ]
 }

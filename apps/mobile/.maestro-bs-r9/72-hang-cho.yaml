@@ -20,9 +20,15 @@ appId: com.lakiet.rudi
     # dừng ngay khi tiêu đề vừa ló ra mà chưa đủ 100% và báo không thấy (ảnh
     # 72-hang-cho-FAILED của lượt 03:19 cho thấy đúng cảnh ấy).
     visibilityPercentage: 30
-- extendedWaitUntil:
-    visible: "Đang gửi…"
-    timeout: 20000
+# Tiêu đề mục hiện ra trước, ba hàng trạng thái nằm DƯỚI nó, nên chờ tại chỗ
+# là chờ một thứ chưa vào khung. Cuộn tiếp tới chính hàng ấy.
+- scrollUntilVisible:
+    element:
+      text: "Đang gửi…"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+    visibilityPercentage: 30
 - assertVisible: "Thử lại"
 # Lỗi vĩnh viễn phải nói ra lý do và KHÔNG mời bấm lại.
 - assertVisible: "Sticker này bản app chưa có."
