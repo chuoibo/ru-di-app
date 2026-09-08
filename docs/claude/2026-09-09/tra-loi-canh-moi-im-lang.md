@@ -129,6 +129,25 @@ Không sửa lượt này **có chủ ý**: đổi năm khuôn mặt là đổi 
 có, ở cuối một lượt đã dài; và hình gốc của Nếp đã được team duyệt với đúng hình học ấy. Ghi ra đây
 kèm toạ độ để lượt sau sửa một lần cho cả bộ, chứ không phải để quên.
 
+## Bảng native: đi tới đâu, và tại sao dừng
+
+Bốn lượt bảng trên máy ảo dùng chung. Kết quả sau cùng:
+
+| flow | trạng thái | ghi chú |
+|---|---|---|
+| `00-smoke-deeplink` | xanh ở lượt 03:15 và 03:22, đỏ ở lượt cuối | app mở lại vào một trạng thái thứ ba mà nhánh đăng-xuất-nếu-có chưa xử |
+| `71-tam-sticker` | **xanh** | khay tám ô, bubble, hai cỡ đọc — ảnh trong doc này |
+| `73-canh-im-lang` | **xanh** | mười cảnh A/B — ảnh trong doc cảnh |
+| `72-hang-cho` | đỏ | ba lần sửa mới tới được tiêu đề mục; lần cuối vẫn chưa cuộn tới hàng |
+
+Ba lỗi flow đã sửa và đã ghi vào file: cuộn qua rồi đòi cuộn xuống; Maestro so **trọn** văn bản
+node nên `text: "Cảnh rỗng"` không khớp tiêu đề đầy đủ; và `visibilityPercentage` mặc định 100%
+làm phần tử cuối nội dung «không thấy» đúng lúc nó vừa ló ra.
+
+**Không tiếp tục lặp**: ảnh cần cho lát này đã có và đã ghim. `72-hang-cho` chụp trạng thái hàng
+chờ, thuộc PR #586 đã merge, và máy trạng thái ấy có mười ca test đơn vị. Ghi ra đây để lượt sau
+biết nó dừng ở đâu chứ không phải để bỏ qua.
+
 ## Chưa chứng minh
 
 - **Chưa chụp native, và lần này đã thử.** Máy ảo được lane khác trả lại lúc ~02:0x. Bảng
