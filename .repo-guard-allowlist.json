@@ -757,6 +757,54 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 2.0."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/02-album-two-days.png",
+      "sha256": "2a01b81780c1a93b52d20a874e19625070d41b51956060f3bde24881d8cb266e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): album hai ngày sau R3. Không người tham gia thật."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/06-scenes-light.png",
+      "sha256": "440bb1a261109570d2b594f45acc214d6474732cd5a5e17cb3d0e77f7dea73a8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): năm cảnh A/B nền sáng, tay Nếp chạm ghế và khung."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/08-explore-error-dark.png",
+      "sha256": "4d0adb029117063845d41b45436fcf0e0f80b3ead34ae6838de255f78e45d690",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu tổng hợp, nguồn ảnh lỗi loopback): nhánh ảnh hỏng của Khám phá trên nền tối trước khi sửa nền khung."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/09-voting-missing-provenance.png",
+      "sha256": "c5e29a7dfc27acc5466ae896607be731b419b4d260a167e3a4916507181c4940",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, ô Bình chọn đặt ảnh stock cạnh tên quán mà không ghi công."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/10-itinerary-missing-provenance.png",
+      "sha256": "da22855ae80cc98a6ee88eab0776599dd6d33e993658ba703a9e2b79362ef087",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, lịch trình AI ngày 2 mất ghi công của hai ảnh minh hoạ."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/20-explore-bottom-font2.png",
+      "sha256": "4ee6b0d02351ccb8ab21b2ffd41e6dca5a30ec9723b03cbad50a193781d3da45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo, cỡ chữ 2.0): Khám phá cuối màn, giá và thanh tab đọc đủ (R4)."
     }
   ]
 }
