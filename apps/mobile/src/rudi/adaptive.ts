@@ -107,3 +107,18 @@ export function layoutFor(width: number, height: number): AdaptiveLayout {
       };
   }
 }
+
+/** The tab bar's height at font scale 1.0, the four destinations' labels on one line. */
+export const TAB_BAR_HEIGHT = 64;
+
+/**
+ * The tab bar's height at a given font scale. Labels are allowed two lines
+ * rather than an ellipsis («Khám …», «Lên pl…» measured at 2.0 by the review
+ * of 08/09), so the bar grows with the text instead of locking the text to
+ * fit the bar. Linear above 1.15, clamped at 2.0; screens under the tabs read
+ * the same number through `RudiScreen bottomInset="tab"`.
+ */
+export function tabBarHeight(fontScale: number): number {
+  const scale = Number.isFinite(fontScale) ? Math.min(Math.max(fontScale, 1), 2) : 1;
+  return TAB_BAR_HEIGHT + Math.round(Math.max(0, scale - 1.15) * 44);
+}

@@ -3,10 +3,11 @@ import { BlurView } from "expo-blur";
 import { Tabs, useRouter } from "expo-router";
 import type { ComponentProps } from "react";
 import { useEffect } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { TAB_BAR_HEIGHT, tabBarHeight } from "../adaptive";
 import { typography, useRudiTheme } from "../theme";
 import { PressScale } from "./PressScale";
 import { useAdaptiveLayout } from "./useAdaptiveLayout";
@@ -22,7 +23,7 @@ const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionico
   profile: ["person-circle-outline", "person-circle"],
 };
 
-export const TAB_BAR_HEIGHT = 64;
+export { TAB_BAR_HEIGHT };
 export const RAIL_WIDTH = 104;
 const FAB = 56;
 
@@ -38,6 +39,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { colors, brand, dark } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const layout = useAdaptiveLayout();
+  const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const motion = useMotion();
 
@@ -85,7 +87,9 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
         style={[styles.item, layout.rail && styles.railItem]}
       >
         <Ionicons color={focused ? colors.accent : colors.inkFaint} name={focused ? filled : outline} size={24} />
-        <Text numberOfLines={1} style={[typography.caption, styles.label, { color: focused ? colors.accent : colors.inkFaint }]}>
+        {/* Two lines before an ellipsis: at 2.0 «Khám …» stopped naming the
+            tab (review 08/09 F04); the bar grows with the text (`tabBarHeight`). */}
+        <Text numberOfLines={2} style={[typography.caption, styles.label, { color: focused ? colors.accent : colors.inkFaint }]}>
           {label}
         </Text>
       </Pressable>
@@ -125,7 +129,7 @@ export function RudiTabBar({ state, descriptors, navigation }: TabBarProps) {
           borderColor: colors.line,
           ...(layout.rail
             ? { width: RAIL_WIDTH, paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 12) }
-            : { height: TAB_BAR_HEIGHT + bottom, paddingBottom: bottom }),
+            : { height: tabBarHeight(fontScale) + bottom, paddingBottom: bottom }),
         },
       ]}
     >
@@ -159,7 +163,7 @@ const styles = StyleSheet.create({
   },
   item: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", gap: 2, paddingTop: 8 },
   railItem: { flex: 0, height: 72, paddingTop: 0 },
-  label: { fontSize: 12, lineHeight: 14 },
+  label: { fontSize: 12, lineHeight: 14, textAlign: "center" },
   fabSlot: { justifyContent: "flex-start" },
   fab: {
     width: FAB,

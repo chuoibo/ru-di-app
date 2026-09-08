@@ -12,10 +12,12 @@ import test from "node:test";
 import {
   SHORT_HEIGHT,
   SIZE_CLASS_BREAKPOINTS,
-  heightClassFor,
+  TAB_BAR_HEIGHT,
   gridFor,
+  heightClassFor,
   layoutFor,
   sizeClassFor,
+  tabBarHeight,
 } from "../dist-test/rudi/adaptive.js";
 
 test("grid đo hộp nội dung: 30 địa điểm không ép thành một hàng", () => {
@@ -111,4 +113,15 @@ test("đơn điệu theo bề rộng: rộng hơn không bao giờ ít cột hơ
     assert.ok(cur.maxContent >= Math.min(prev.maxContent, w), `measure giảm ở ${w}`);
     prev = cur;
   }
+});
+
+test("tab bar cao theo cỡ chữ: 64 ở 1.0, nhích ở 1.3, đủ hai dòng nhãn ở 2.0, kẹp trên 2.0, không ném với NaN", () => {
+  assert.equal(tabBarHeight(1), TAB_BAR_HEIGHT);
+  assert.equal(tabBarHeight(1.15), TAB_BAR_HEIGHT);
+  assert.equal(tabBarHeight(1.3), 71);
+  // Two lines of a 12sp label at 2.0 (lineHeight 14 × 2 × 2 = 56) + icon 24 + gap 2 + paddingTop 8 = 90.
+  assert.ok(tabBarHeight(2) >= 90, `${tabBarHeight(2)}`);
+  assert.equal(tabBarHeight(3), tabBarHeight(2));
+  assert.equal(tabBarHeight(NaN), TAB_BAR_HEIGHT);
+  assert.equal(tabBarHeight(0.85), TAB_BAR_HEIGHT);
 });

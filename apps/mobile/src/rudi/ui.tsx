@@ -5,26 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { Children, createContext, useContext, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
-import {
-  type LayoutChangeEvent,
-  ActivityIndicator,
-  DimensionValue,
-  GestureResponderEvent,
-  KeyboardAvoidingView,
-  Keyboard,
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextInputProps,
-  TextStyle,
-  View,
-  ViewStyle,
-} from "react-native";
+import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
@@ -34,7 +15,7 @@ import { Grain } from "./ui/Grain";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
-import { gridFor } from "./adaptive";
+import { gridFor, tabBarHeight } from "./adaptive";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -43,7 +24,8 @@ type ScreenProps = {
   scroll?: boolean;
   tone?: RudiTone;
   padded?: boolean;
-  bottomInset?: number;
+  /** Space under the content; `"tab"` is the tab bar's height at the current font scale plus a breath. */
+  bottomInset?: number | "tab";
   footer?: ReactNode;
   footerInset?: number;
   contentStyle?: StyleProp<ViewStyle>;
@@ -83,6 +65,7 @@ export function RudiScreen({
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
+  const { fontScale } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
   // Pull-to-refresh runs the screen's own read; the spinner is the only state
@@ -112,7 +95,7 @@ export function RudiScreen({
     // strip shows between the two.
     surface === "cover" && { paddingTop: 0 },
     padded && { paddingHorizontal: tablet ? space.lg : space.md },
-    { paddingBottom: bottomInset },
+    { paddingBottom: bottomInset === "tab" ? tabBarHeight(fontScale) + 48 : bottomInset },
     tablet && styles.tabletInner,
     contentStyle,
   ];

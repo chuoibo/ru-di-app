@@ -80,7 +80,7 @@ export function ProfileScreen() {
 
   if (panel === "account") {
     return (
-      <RudiScreen bottomInset={112} testID="profile-screen">
+      <RudiScreen bottomInset="tab" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Tài khoản" />
         <Text style={[typography.body, { color: colors.ink }]}>
           Đang xem với tư cách {session.phien?.profile?.display_name ?? session.displayName}.
@@ -107,7 +107,7 @@ export function ProfileScreen() {
   }
   if (panel === "edit") {
     return (
-      <RudiScreen bottomInset={112} contentStyle={styles.form} testID="profile-screen">
+      <RudiScreen bottomInset="tab" contentStyle={styles.form} testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Chỉnh hồ sơ" />
         <Field label="Tên" onChangeText={session.setDisplayName} value={session.displayName} />
         <Field label="Bio" multiline onChangeText={session.setBio} value={session.bio} />
@@ -117,7 +117,7 @@ export function ProfileScreen() {
   }
   if (panel === "saved") {
     return (
-      <RudiScreen bottomInset={112} testID="profile-screen">
+      <RudiScreen bottomInset="tab" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
           title={`${session.savedPlaceIds.length} địa điểm`}
@@ -132,7 +132,7 @@ export function ProfileScreen() {
   const dau = dauLich(isoTu(session.startDate));
 
   return (
-    <RudiScreen bottomInset={112} testID="profile-screen">
+    <RudiScreen bottomInset="tab" testID="profile-screen">
       <View style={styles.profileTop}>
         <View style={styles.flex}>
           <Heading title="Cá nhân" subtitle="Không gian của riêng bạn" />
