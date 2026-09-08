@@ -1045,10 +1045,18 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   lớp tháo được**, không phải nhân vật bắt buộc: mọi cảnh phải đọc được với
   `nep={false}`, và cổng A/B (`rudi://dev/ui-lab`, mục «Cảnh rỗng») dựng hai
   bản cạnh nhau trên cùng máy cùng dữ liệu để quyết định bằng ảnh. Giới hạn
-  đi kèm: nhân vật **không** vào màn có dữ liệu thật của nhóm (ảnh nhóm,
-  ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
+  đi kèm: nhân vật **không tự xuất hiện** ở màn có dữ liệu thật của nhóm (ảnh
+  nhóm, ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
   **không** thay `Stamp`/`GuGlyph` trong vai trò thông tin. Muốn đưa Nếp ra
   ngoài trạng thái rỗng và cửa vào thì mở quyết định mới, đừng suy từ mục này.
+- **Ngoại lệ sticker (đã bàn ở review đợt 1 dòng 125/132, chốt lại ở vòng 2
+  dòng 81).** Sticker trong chat là **phát ngôn do người gửi chọn**, không phải
+  mascot hệ thống, nên tám sticker của ADR-0021 được vẽ bằng ngôn ngữ Nếp mà
+  không vi phạm câu trên: Nếp không *tự* bước vào hội thoại, một người *gửi*
+  Nếp vào đó. Ranh giới: giữ đúng tám ID và nhãn; `tra-tien-ne` là lời người
+  gửi, **không bao giờ** là trạng thái giao dịch hay dấu xác nhận tiền của hệ
+  thống; Nếp-hệ-thống vẫn không đứng cạnh ledger, lỗi, conflict hay xác nhận
+  tiền. Muốn cấm cả sticker thì trình Lead, không vừa ghi cấm vừa vẽ tám mẫu.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
