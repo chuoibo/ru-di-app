@@ -1058,6 +1058,22 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   đứng); id lạ vẽ **thẻ gấp**, không rỗng, không ném. `GuGlyph` 40 trên ô Sở
   thích, 22 trong chip Khám phá, 32 trong thumbnail hàng, ×1.15 trong đĩa
   `PlaceGlyph`; `tone="accent"` đổi mực sang coral cho ô/chip đã chọn.
+- **Tư thế là bốn trục, không phải hai cánh tay** (09/09). Tới trước hôm ấy
+  `hinhNep` chỉ đổi TAY: thân, mặt và chân giống hệt nhau ở cả chín pose, nên
+  năm cảnh là một dáng người đổi đạo cụ và không sticker nào có hướng di
+  chuyển. Nay mỗi pose khai `{nghieng, nhin, bieuCam, dang}`:
+  **`BIEU_CAM`** (`binh-than` · `hao-hung` · `hoi` · `quyet` · `met` ·
+  `nhuong`) đổi **mày và miệng**; mắt vẫn là chấm và vẫn theo `nhin`, vì mắt
+  to má hồng là register concept note đã loại. **`DANG`** (`dung` · `buoc` ·
+  `nhun` · `ngoi` · `chong`) đổi **chân**; `dung` là bản cũ nguyên vẹn nên mọi
+  pose và cảnh đang có giữ nguyên hình. `dam` nhân **độ dày nét và bề dày chi**
+  mà không đụng hình học, dành cho hình phải vẽ nhỏ trong khung của nó. Bản rút
+  gọn vẫn bỏ mày, nên luật «rút gọn ít lớp hơn» giữ ở mọi biểu cảm.
+- **Khay sticker** (`KhaySticker`): nhãn **hai dòng** với chiều cao dành sẵn
+  nên tám ô bằng nhau, và số cột tụt theo `fontScale` (4 → 3 → 2). «Cà phê
+  không?» từng bị cắt thành «Cà phê khôn…»; từ vựng khoá ba nơi nên **layout
+  nhường, không phải chữ**. Bề rộng viết literal chứ không ghép chuỗi, vì cổng
+  `receipt.test.mjs` đọc mọi «…%» một build sinh ra (ADR-0009).
 - **Ba motif** (`motif.ts`): **vòng hở** (`vongHo`, một nét coral, khe hở
   hơn 60°, mặc định mở trên phải) là cái bàn còn trống một bên, **chỉ trang
   trí**; **đường chuyền** (`duongChuyen`, đường S của kit với chấm coral ở
@@ -1163,8 +1179,16 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   hai kim, chấm coral, không số); ở 64 ghế là đạo cụ chính, đồng hồ giữ cỡ,
   nét dày hơn. Nó đi qua adapter thuần `tuLopVe` đổi vai lớp vẽ
   (`giay/muc/gap/bong/split`) sang vai sticker và ném lúc nạp module nếu gặp
-  vai không có màu. Bảy hình còn lại **chưa đổi**, chờ Lead trả lời «nhận ra
-  “chờ tí” khi chưa đọc nhãn?» (`docs/claude/2026-09-08/tra-loi-sticker-cho-ti.md`).
+  vai không có màu. **Cả tám nay vẽ bằng ngôn ngữ Nếp** (09/09, sau khi review
+  delta duyệt pilot): tám HÀNH ĐỘNG khác nhau, không phải một dáng đổi đồ vật —
+  bước đi vẫy cờ · nâng tô hỏi · đẩy ly mời · ấn dấu chốt · giữ ghế nhìn đồng
+  hồ · ngồi trên xe không nhúc nhích · hai tay đưa tiền · nhảy lên. Ngân sách
+  đạo cụ mặc định là **một**: ba đồ vật đọc chậm hơn một khối. `tra-tien-ne`
+  **không** có dấu tick, đồng xu hay ký hiệu tiền tệ, và là hai tờ chồng nhau
+  chứ không phải tờ gấp góc (bản gấp góc đọc ra phong bì, đúng register concept
+  note loại). `cho-ti` giữ nguyên bố cục đã duyệt và chỉ được **cân lại nét**
+  qua `dam`, vì nó nhường nửa khung cho ghế nên đứng ở 0.726 và ra nhạt hơn bảy
+  hình bên cạnh; phóng to thì ghế rơi khỏi khung.
 - **Luật Một Lần Gửi Giữ Một Cái Chìa** (review delta 08/09, F32). Mỗi lần
   bấm gửi mint đúng một `Attempt`, và **hàng chờ giữ nó** (`chat/hang-cho.ts`,
   thuần): «Thử lại» gửi lại **cùng chìa ấy**, nên một yêu cầu máy chủ đã nhận

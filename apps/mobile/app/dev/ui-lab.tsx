@@ -10,6 +10,7 @@ import { PlaceCompare, PlaceLead, PlaceRow, type DiaDiemHienThi } from "../../sr
 import { HangChang } from "../../src/rudi/screens/keo/HangChang";
 import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
 import { Sticker } from "../../src/rudi/ui/stickers/Sticker";
+import { STICKER_IDS, nhanSticker } from "../../src/rudi/chat/sticker";
 import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
 import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
@@ -167,7 +168,7 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
 
 /** Synthetic native probe: gestures, and the album and explore renderers under invented states. Never in a production build. */
 export default function UiLab() {
-  const { colors } = useRudiTheme();
+  const { colors, radius } = useRudiTheme();
   const [items, setItems] = useState([
     { id: "a", label: "Chặng A · 18:00" },
     { id: "b", label: "Chặng B · 08:00" },
@@ -267,6 +268,21 @@ export default function UiLab() {
     <Inline gap={8} wrap>
       <RudiButton label="Mở khay sticker" onPress={() => setKhaySticker(true)} variant="outline" />
     </Inline>
+    <SectionHeader title="Chat · cả tám sticker ở hai cỡ đọc" />
+    <Text style={{ ...typography.caption, color: colors.inkSoft }}>
+      {"Chấm cả bộ cùng lúc, không phải từng hình: tám hành động khác nhau phải đọc ra khác nhau ở ô khay 64 trước khi đọc nhãn. Hàng trên là bản bubble 120, hàng dưới là bản rút gọn 64 trên nền ô khay."}
+    </Text>
+    <View style={{ gap: 10 }} testID="lab-tam-sticker">
+      {STICKER_IDS.map((id) => (
+        <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Sticker id={id} size={120} />
+          <View style={{ backgroundColor: colors.ground, borderColor: colors.line, borderRadius: radius.control, borderWidth: 1, padding: 6 }}>
+            <Sticker id={id} size={64} />
+          </View>
+          <Text style={{ ...typography.caption, color: colors.inkSoft }}>{nhanSticker(id)}</Text>
+        </View>
+      ))}
+    </View>
     <SectionHeader title="Chat · sticker đang gửi, hỏng, và gửi lại" />
     <Text style={{ ...typography.caption, color: colors.inkSoft }}>
       {"Ba trạng thái của một lần gửi, đúng hàng mà chat live vẽ (F32). Hình mờ là đang đi; hình rõ kèm câu lỗi là đã hỏng và giữ nguyên lần gửi ấy, nên «Thử lại» gửi lại đúng chìa cũ chứ không tạo tin thứ hai. Lỗi vĩnh viễn (bản app không có hình) không mời thử lại."}

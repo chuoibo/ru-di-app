@@ -997,6 +997,30 @@
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-sang.png",
+      "sha256": "31e2d2c9a373db75e75a631b1c3c900974084dee7b493b8ecb96bbf548cc280e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng. Hình vector do app dựng, không có dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
+      "sha256": "f5e2069d1968473ca274e6919d2234064809fd22a9818c76ce5c1fb43f2d0127",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
+      "sha256": "0f7c2039d86da64cba39661d243cc0f81adcc67a4a7e0c1f438b31a7b31caef1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng mười sáu pose Nếp ở ba cỡ, nền sáng: chứng minh mỗi pose có dáng và mặt riêng."
     }
   ]
 }
