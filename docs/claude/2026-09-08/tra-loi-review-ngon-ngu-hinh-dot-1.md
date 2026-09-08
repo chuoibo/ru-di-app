@@ -223,7 +223,7 @@ scripts/mobile_native.sh --flows .maestro-bs-r2 --port 8095         # bộ đủ
 scripts/mobile_native.sh --flows .maestro-bs-r2-font --port 8095    # bộ gọn cho các cỡ chữ
 ```
 
-## Finish review nội bộ đã bắt thêm bốn chỗ
+## Finish review nội bộ và bảng native đã bắt thêm sáu chỗ
 
 Trước khi gửi lại, batch này đi qua một lượt finish review trong context sạch. Bốn chỗ nó bắt được và
 đã sửa trong cùng nhánh:
