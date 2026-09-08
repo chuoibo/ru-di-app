@@ -100,7 +100,7 @@ function goiMoHinh(body: string): boolean {
  * row -- a retry button that will fail the same way is a worse answer than
  * none (review delta 08/09, F32).
  */
-function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
+export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
   const { colors, space } = useRudiTheme();
   const hong = tin.trangThai === "that-bai";
   return (
@@ -267,9 +267,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     setDangGuiThan(body);
     setNhap("");
     setThongBao(null);
-    const traLoiId = traLoi?.id ?? null;
+    const traLoiCu = traLoi;
     try {
-      const daGui = await chat.gui(body, traLoiId);
+      const daGui = await chat.gui(body, traLoiCu);
       setTraLoi(null);
       veCuoi();
       const cau = cauYDinh(daGui);
@@ -314,20 +314,28 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const caption = nhap.trim();
     setDangGuiAnh(true);
     setThongBao(null);
+    // Two stages with one press. The upload has no row of its own, so its
+    // failure is a notice; the message does, so its failure belongs there and
+    // saying it here as well would be the same news twice, further from the
+    // picture it is about (F32).
+    let daToiTin = false;
     try {
       await nenVaDung(daChon, async (anh) => {
         const daTai = await taiAnhNhom(contextId, anh, personId);
+        daToiTin = true;
         await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
       });
       setNhap("");
       veCuoi();
     } catch (error) {
       await boAnh(daChon);
-      setThongBao({
-        tu: "Rủ Đi",
-        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-        luc: new Date().toISOString(),
-      });
+      if (!daToiTin) {
+        setThongBao({
+          tu: "Rủ Đi",
+          cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
+          luc: new Date().toISOString(),
+        });
+      }
     } finally {
       setDangGuiAnh(false);
     }
@@ -610,13 +618,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ListHeaderComponent={
           <>
             {/* Everything on its way that has nowhere else to be seen. Words
-                have the composer, which gets them back on a failure, so only
-                pictures and stickers draw a row here. */}
-            {chat.hangCho
-              .filter((t) => t.kind !== "text")
-              .map((t) => (
-                <HangChoGui key={t.attempt.key} onBoQua={() => chat.boQua(t.attempt.key)} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
-              ))}
+                have the composer, which gets them back on a failure, so the
+                queue holds only pictures and stickers. */}
+            {chat.hangCho.map((t) => (
+              <HangChoGui key={t.attempt.key} onBoQua={() => chat.boQua(t.attempt.key)} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
+            ))}
             {dangGuiThan === null && thongBao !== null ? (
             <View style={styles.hang}>
               <View style={[styles.khoi, styles.khoiAi]}>

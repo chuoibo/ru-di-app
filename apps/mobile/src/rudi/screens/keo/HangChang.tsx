@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { guTheoLoai } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
 import { GuGlyph } from "../../ui/art/Gu";
-import { veKhung, type AnhCoGhiCong, type KhungDaVe } from "../../ui/ghi-cong";
+import { CAU_ANH_HONG, khoaNguon, veKhung, type AnhCoGhiCong, type KhungDaVe } from "../../ui/ghi-cong";
 
 /**
  * One stop on the ink route: the hour on the left axis, a node on the line,
@@ -56,7 +56,7 @@ function AnhChang({ ve, alt, loai, onHong }: { ve: KhungDaVe; alt: string; loai?
   return (
     <View style={[styles.khungAnhChang, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
       {ve.source === null ? (
-        <View accessible accessibilityLabel={`${ve.canhBao ?? "Chưa tải được ảnh"}: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
+        <View accessible accessibilityLabel={`${ve.canhBao ?? CAU_ANH_HONG}: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
           <GuGlyph id={guTheoLoai(loai ?? "")} size={28} tone="accent" />
         </View>
       ) : (
@@ -78,11 +78,14 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
   // shows the drawn object, and the stop says why in words (a state is always
   // also a word). Reset when the picture changes.
   const [hong, setHong] = useState(false);
-  const nguonAnh = anh?.anh ?? null;
-  useEffect(() => setHong(false), [nguonAnh]);
+  const nguon = anh ? ({ loai: "danh-muc", anh: anh.anh } as const) : null;
+  // Keyed on the picture, not on the object the itinerary rebuilds every
+  // render, or the failure word is cleared on the next frame (F31 follow-up).
+  const khoa = khoaNguon(nguon);
+  useEffect(() => setHong(false), [khoa]);
   // One decision for the picture, the credit and the failure word, so the
   // thumbnail below and the lines here cannot disagree (F31).
-  const ve = veKhung(anh === null ? null : { loai: "danh-muc", anh: anh.anh }, { hong });
+  const ve = veKhung(nguon, { hong });
   const muc = phac ? colors.inkFaint : colors.lineStrong;
   const body = (
     <>

@@ -7,7 +7,7 @@ import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
 import { MediaSlot } from "../../ui/MediaSlot";
-import { veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
+import { khoaNguon, veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
@@ -154,8 +154,13 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
   const [hong, setHong] = useState(false);
-  useEffect(() => setHong(false), [dd.anh]);
-  const ve = veKhung(dd.anh === null ? null : { loai: "danh-muc", anh: dd.anh }, { hong });
+  const nguon = dd.anh === null ? null : ({ loai: "danh-muc", anh: dd.anh } as const);
+  // Keyed on the picture, not on the object: the adapters rebuild that object
+  // on every render, so an effect keyed on it cleared this state on the next
+  // frame and the failure word could never be seen (F31 follow-up).
+  const khoa = khoaNguon(nguon);
+  useEffect(() => setHong(false), [khoa]);
+  const ve = veKhung(nguon, { hong });
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>

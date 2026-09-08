@@ -31,6 +31,7 @@ function moiGui(khoa, phan = {}) {
     attempt: { key: khoa, at: 1 },
     kind: "sticker",
     than: "cho-ti",
+    phuDe: null,
     traLoi: TRICH,
     trangThai: "dang-gui",
     loi: null,
@@ -110,6 +111,29 @@ test("bản nháp chữ chỉ dùng lại chìa khi từng byte giống hệt", 
   // Nothing failed, nothing to reuse.
   assert.equal(khoaDungLai(null, "Đi ăn nha", null), null);
   assert.equal(khoaDungLai({ ...rot, trangThai: "dang-gui" }, "Đi ăn nha", null), null);
+});
+
+test("trả lời một tin: bản nháp giữ được tin ấy nên bấm lại là DÙNG LẠI chìa, không phải tin thứ hai", () => {
+  // The row must carry the whole quote, not nothing: a draft that forgets what
+  // it was answering can never match on a retry, so every second press would
+  // mint a new key and a lost response would leave two identical replies.
+  const rot = moiGui("k-1", { kind: "text", than: "9h nhé", traLoi: TRICH, trangThai: "that-bai" });
+  assert.equal(khoaDungLai(rot, "9h nhé", TRICH.id).key, "k-1");
+  assert.equal(khoaDungLai(rot, "9h nhé", null), null, "bỏ trả lời là một lần gửi khác");
+  assert.equal(khoaDungLai(rot, "9h nhé", "m-khac"), null);
+});
+
+test("ảnh: phụ đề nằm trong thân yêu cầu nên nằm trong danh tính lần gửi", () => {
+  // Retrying with the caption dropped would send the SAME key with DIFFERENT
+  // bytes, which the server answers 422 and this app reads as permanent: the
+  // person would be told their message failed for good while it is already in
+  // the thread.
+  const rot = moiGui("k-1", { kind: "image", than: "/anh/a.jpg", phuDe: "Tối nay ở đây", traLoi: null, trangThai: "that-bai" });
+  assert.equal(khoaDungLai(rot, "/anh/a.jpg", null, "Tối nay ở đây").key, "k-1");
+  assert.equal(khoaDungLai(rot, "/anh/a.jpg", null, null), null);
+  assert.equal(khoaDungLai(rot, "/anh/a.jpg", null, "Khác"), null);
+  const khongPhuDe = moiGui("k-2", { kind: "image", than: "/anh/b.jpg", phuDe: null, traLoi: null, trangThai: "that-bai" });
+  assert.equal(khoaDungLai(khongPhuDe, "/anh/b.jpg", null, null).key, "k-2");
 });
 
 test("timTrongHang trả null cho chìa không còn, nên thử lại không dựng lại tin đã gửi", () => {

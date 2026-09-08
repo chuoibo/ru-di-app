@@ -35,7 +35,6 @@ import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
-  TIEN_TO_ANH,
   anhBiaThe,
   bieuTuongLoai,
   boLuuDiaDiem,

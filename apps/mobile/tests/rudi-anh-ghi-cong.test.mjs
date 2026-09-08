@@ -92,7 +92,10 @@ function tenImage(sf) {
 function biDanh(sf) {
   const doiTuong = new Set();
   const diaChi = new Set();
-  const quyetDinh = new Map(); // name -> { source: boolean, ghiCong: boolean }
+  // Names destructured out of a `veKhung(...)` result, so the rule below can
+  // ask whether the picture was drawn while the sentence was left behind.
+  const raSource = new Set();
+  const raGhiCong = new Set();
   const laAnh = (node) => {
     const t = node.getText(sf);
     return ANH_DANH_MUC.test(t) || doiTuong.has(t);
@@ -108,18 +111,14 @@ function biDanh(sf) {
           if (ts.isPropertyAccessExpression(init) && init.name.text === "source" && laAnh(init.expression)) {
             diaChi.add(node.name.text);
           }
-          if (ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung")) {
-            quyetDinh.set(node.name.text, { source: false, ghiCong: false });
-          }
         } else if (ts.isObjectBindingPattern(node.name)) {
+          const laVeKhung = ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung");
           for (const el of node.name.elements) {
             const goc = (el.propertyName ?? el.name).getText(sf);
             const ten = el.name.getText(sf);
             if (goc === "source" && laAnh(init)) diaChi.add(ten);
-            if (ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung")) {
-              if (goc === "source") quyetDinh.set(`::source::${ten}`, null);
-              if (goc === "ghiCong") quyetDinh.set(`::ghiCong::${ten}`, null);
-            }
+            if (laVeKhung && goc === "source") raSource.add(ten);
+            if (laVeKhung && goc === "ghiCong") raGhiCong.add(ten);
           }
         }
       }
@@ -127,7 +126,7 @@ function biDanh(sf) {
     };
     walk(sf);
   }
-  return { doiTuong, diaChi, quyetDinh };
+  return { doiTuong, diaChi, raSource, raGhiCong };
 }
 
 /**
@@ -144,7 +143,7 @@ function timAnhTran(text, fileName) {
   const kind = /\.tsx$/.test(fileName) ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, kind);
   const image = tenImage(sf);
-  const { doiTuong, diaChi } = biDanh(sf);
+  const { doiTuong, diaChi, raSource, raGhiCong } = biDanh(sf);
   // `AnhChang` is private to the file that declares it; the rule is about any
   // OTHER file reaching for it, which is what its export once allowed.
   const tuKhaiAnhChang = /function AnhChang\b/.test(text);
@@ -175,12 +174,13 @@ function timAnhTran(text, fileName) {
         them(node, "anh.source", node.getText(sf));
       }
       // Which halves of a `veKhung` decision this file actually renders.
-      const goc = node.expression.getText(sf);
-      if ((node.name.text === "source" || node.name.text === "ghiCong") && /^ve[A-Z]?|^ve$/.test(goc) === false) {
-        // handled below by the binding map
-      }
-      const da = dungQuyetDinh.get(goc);
+      const da = dungQuyetDinh.get(node.expression.getText(sf));
       if (da !== undefined) da.add(node.name.text);
+      // The key itself, however it is spelled: `x.anh.ve()`, `const f = x.anh.ve`
+      // and `x.anh["ve"]()` are the same act, and only the first was caught.
+      if (node.name.text === "ve" && laAnh(node.expression) && relative(APP, fileName) !== NHA_GIU_CHIA) {
+        them(node, "mở ảnh ngoài ghi-cong", node.getText(sf).slice(0, 60));
+      }
     }
     if (ts.isVariableDeclaration(node) && node.initializer) {
       const init = node.initializer;
@@ -194,11 +194,14 @@ function timAnhTran(text, fileName) {
         }
       }
     }
-    // The key to a catalogue photograph is turned in one module and nowhere else.
-    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "ve") {
-      if (relative(APP, fileName) !== NHA_GIU_CHIA && fileName !== NHA_GIU_CHIA) {
-        them(node, "mở ảnh ngoài ghi-cong", node.getText(sf).slice(0, 60));
-      }
+    // ... including the bracket spelling, which no property-access rule sees.
+    if (
+      ts.isElementAccessExpression(node) &&
+      ts.isStringLiteral(node.argumentExpression) &&
+      node.argumentExpression.text === "ve" &&
+      relative(APP, fileName) !== NHA_GIU_CHIA
+    ) {
+      them(node, "mở ảnh ngoài ghi-cong", node.getText(sf).slice(0, 60));
     }
     if (ts.isIdentifier(node) && node.text === "AnhChang" && ts.isImportSpecifier(node.parent)) {
       them(node, "import AnhChang", node.text);
@@ -212,6 +215,12 @@ function timAnhTran(text, fileName) {
     if (dung.has("source") && !dung.has("ghiCong")) {
       viPham.push({ line: 0, loai: "vẽ ảnh bỏ ghi công", bieuThuc: `${ten}.source không đi cùng ${ten}.ghiCong` });
     }
+  }
+  // The same fault written the other way: `const { source } = veKhung(...)`
+  // with no `ghiCong` beside it. This is the obvious refactor of a frame, and
+  // the first version of this rule only understood the named-binding spelling.
+  if (raSource.size > 0 && raGhiCong.size === 0) {
+    viPham.push({ line: 0, loai: "vẽ ảnh bỏ ghi công", bieuThuc: `tách {${[...raSource].join(", ")}} khỏi veKhung mà không lấy ghiCong` });
   }
   return Object.assign(viPham, { daXet });
 }
@@ -229,8 +238,10 @@ test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đề
     // The two shapes Codex's probe walked past on 08/09.
     `const picture = noi.anh; const src2 = picture.source; const G = () => <Image source={src2} />;`,
     `const { source } = noi.anh; const H = () => <Image source={source} />;`,
-    // Turning the key outside the module that owns it.
+    // Turning the key outside the module that owns it, in all three spellings.
     `const I = () => <Image source={noi.anh.ve().source} />;`,
+    `const mo = noi.anh.ve; const J = () => <Image source={mo().source} />;`,
+    `const K = () => <Image source={noi.anh["ve"]().source} />;`,
   ].join("\n");
   const thay = timAnhTran(mau, "mau.tsx");
   const loai = thay.map((v) => v.loai);
@@ -240,7 +251,7 @@ test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đề
   assert.ok(loai.filter((l) => l === "Image").length >= 5, `Image: ${loai.join(",")}`);
   assert.ok(loai.includes("anh.source"));
   assert.ok(loai.includes("tách source"), "destructure phải bị bắt (probe Codex mẫu 2)");
-  assert.ok(loai.includes("mở ảnh ngoài ghi-cong"));
+  assert.equal(loai.filter((l) => l === "mở ảnh ngoài ghi-cong").length, 3, "cả ba cách viết đều phải bị bắt");
   assert.equal(thay.filter((v) => v.bieuThuc.includes("wood")).length, 0, "một chất liệu không phải ảnh danh mục");
   // Object alias: `picture.source` where `picture = noi.anh` (probe Codex mẫu 1).
   assert.ok(
@@ -255,8 +266,12 @@ test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đề
 test("máy dò bắt được khung vẽ ảnh mà bỏ câu ghi công", () => {
   const xau = `const ve = veKhung(nguon, { hong });\nconst A = () => <Image source={ve.source} />;`;
   const tot = `const ve = veKhung(nguon, { hong });\nconst A = () => <><Image source={ve.source} /><Text>{ve.ghiCong}</Text></>;`;
+  const xauTach = `const { source } = veKhung(nguon, { hong });\nconst A = () => <Image source={source} />;`;
+  const totTach = `const { source, ghiCong } = veKhung(nguon, { hong });\nconst A = () => <><Image source={source} /><Text>{ghiCong}</Text></>;`;
   assert.ok(timAnhTran(xau, "xau.tsx").some((v) => v.loai === "vẽ ảnh bỏ ghi công"), "phải bắt");
+  assert.ok(timAnhTran(xauTach, "xau2.tsx").some((v) => v.loai === "vẽ ảnh bỏ ghi công"), "bản tách cũng phải bắt");
   assert.deepEqual(timAnhTran(tot, "tot.tsx").filter((v) => v.loai === "vẽ ảnh bỏ ghi công"), [], "không được báo nhầm");
+  assert.deepEqual(timAnhTran(totTach, "tot2.tsx").filter((v) => v.loai === "vẽ ảnh bỏ ghi công"), [], "không được báo nhầm");
 });
 
 test("không file nào trong vỏ tách ảnh danh mục khỏi ghi công, và AnhChang không còn ai gọi", () => {

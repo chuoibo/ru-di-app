@@ -29,6 +29,8 @@ export interface TinChoGui {
   kind: "sticker" | "text" | "image";
   /** The sticker id, the words, or the uploaded address. */
   than: string;
+  /** The photo's caption. Part of the request body, so part of its identity. */
+  phuDe: string | null;
   /** Kept so a retry answers the same message, not whatever is quoted now. */
   traLoi: TrichDan | null;
   trangThai: TrangThaiGui;
@@ -97,21 +99,26 @@ export function timTrongHang(hang: readonly TinChoGui[], khoa: string): TinChoGu
 }
 
 /**
- * The draft a failed text send left behind, so pressing send again reuses its
- * key instead of minting a new one.
+ * The key a failed send left behind, so pressing send again reuses it instead
+ * of minting a new one.
  *
- * Only when the bytes are identical: the server fingerprints method, path and
- * body, so the same key with different words is `422 idempotency_key_reuse`,
- * a refusal aimed at somebody who did nothing wrong. Different words are a
- * different send and get their own key.
+ * Only when the bytes are identical, and «identical» means EVERY field that
+ * reaches the request body: the words, the quoted message AND the caption.
+ * The server fingerprints method, path and canonical body, so the same key
+ * with anything else changed is `422 idempotency_key_reuse` -- a refusal aimed
+ * at somebody who did nothing wrong, and one this app classifies as permanent,
+ * so it would tell them their message failed for good while it is already in
+ * the thread. Anything different is a different send and gets its own key.
  */
 export function khoaDungLai(
   cho: TinChoGui | null,
   than: string,
   traLoiId: string | null,
+  phuDe: string | null = null,
 ): Attempt | null {
   if (cho === null || cho.trangThai !== "that-bai") return null;
   if (cho.than !== than) return null;
   if ((cho.traLoi?.id ?? null) !== traLoiId) return null;
+  if ((cho.phuDe ?? null) !== phuDe) return null;
   return cho.attempt;
 }

@@ -12,6 +12,7 @@ import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
 import { Sticker } from "../../src/rudi/ui/stickers/Sticker";
 import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
+import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
@@ -46,6 +47,7 @@ const CA_HANG_CHO = (() => {
     attempt: { key: "lab-1", at: 1 },
     kind: "sticker" as const,
     than: "cho-ti",
+    phuDe: null,
     traLoi: null,
     trangThai: "dang-gui" as const,
     loi: null,
@@ -273,22 +275,9 @@ export default function UiLab() {
       {CA_HANG_CHO.map((ca) => (
         <View key={ca.nhan} style={{ gap: 4 }}>
           <Text style={{ ...typography.caption, color: colors.inkFaint }}>{ca.nhan}</Text>
-          <View style={{ alignItems: "flex-end", gap: 4, opacity: ca.tin.trangThai === "that-bai" ? 1 : 0.62 }}>
-            <View style={{ paddingVertical: 2 }}>
-              <Sticker id={ca.tin.than} size={120} />
-            </View>
-            {ca.tin.trangThai === "that-bai" ? (
-              <>
-                <Text style={{ ...typography.caption, color: colors.warn }}>{ca.tin.loi}</Text>
-                <Inline gap={8} wrap>
-                  {ca.tin.thuLaiDuoc ? <RudiButton compact label="Thử lại" onPress={() => undefined} variant="outline" /> : null}
-                  <RudiButton compact label="Bỏ" onPress={() => undefined} variant="ghost" />
-                </Inline>
-              </>
-            ) : (
-              <Text style={{ ...typography.caption, color: colors.inkFaint }}>Đang gửi...</Text>
-            )}
-          </View>
+          {/* The chat screen's own row, not a copy of it: a board that
+              photographs a hand-drawn twin proves nothing about the screen. */}
+          <HangChoGui onBoQua={() => undefined} onThuLai={() => undefined} tin={ca.tin} />
         </View>
       ))}
     </View>

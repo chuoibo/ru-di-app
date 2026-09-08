@@ -80,6 +80,10 @@ export function useTinNhan(contextId: string, personId: string) {
   // re-render between the press and the reply must not be able to lose the
   // key and turn a retry into a second write (`api.ts`, `attemptFor`).
   const hangRef = useRef<TinChoGui[]>([]);
+  // The words of a failed text send, held only for their key. Not in `hangCho`:
+  // the composer gets the words back and the notice says why, so a row would be
+  // the same news twice -- and an invisible one used to eat the empty state.
+  const banNhapRef = useRef<TinChoGui | null>(null);
   const dangFocus = useRef(false);
   const daDanhDau = useRef<string | null>(null);
 
@@ -128,19 +132,19 @@ export function useTinNhan(contextId: string, personId: string) {
    * already held, so a retry cannot leave two messages behind.
    */
   const chay = useCallback(
-    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>): Promise<TinDaGui> => {
-      datHang(themVaoHang(hangRef.current, cho));
+    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>, hienHang = true): Promise<TinDaGui> => {
+      if (hienHang) datHang(themVaoHang(hangRef.current, cho));
       try {
         const daGui = await goi(cho.attempt);
         const them: Tin[] = [daGui];
         if (daGui.companion?.message) them.push(daGui.companion.message);
         if (daGui.expense_card) them.push(daGui.expense_card);
-        datHang(boKhoiHang(hangRef.current, cho.attempt.key));
+        if (hienHang) datHang(boKhoiHang(hangRef.current, cho.attempt.key));
         dat(gopTin(tinRef.current, them), { loi: null });
         void napMoi();
         return daGui;
       } catch (error) {
-        datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
+        if (hienHang) datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
         throw error;
       }
     },
@@ -195,22 +199,31 @@ export function useTinNhan(contextId: string, personId: string) {
   }, [trang.tin, contextId, personId]);
 
   const gui = useCallback(
-    async (body: string, replyToId: string | null = null): Promise<TinDaGui> => {
+    async (body: string, traLoi: TrichDan | null = null): Promise<TinDaGui> => {
       // Pressing send again after a failure, with the same words and the same
       // quoted message, is the SAME send: it reuses the key, so if the first
       // request actually landed the second one replays it instead of writing a
-      // second message. Changed words are a different send and mint a new key.
-      const cu = hangRef.current.find((t) => t.kind === "text" && t.trangThai === "that-bai") ?? null;
-      const attempt = khoaDungLai(cu, body, replyToId) ?? newAttempt();
-      // Different words: the old draft's key can never be used again, so drop
-      // its row rather than let dead keys pile up behind the composer.
-      if (cu !== null && cu.attempt.key !== attempt.key) datHang(boKhoiHang(hangRef.current, cu.attempt.key));
-      return chay(
-        { attempt, kind: "text", than: body, traLoi: null, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
-        (a) => guiTin(contextId, personId, body, a, { replyToId }),
-      );
+      // second message. Anything different is a different send and mints a new
+      // key -- the same key with different bytes would be a 422 aimed at
+      // somebody who did nothing wrong.
+      //
+      // The draft lives in a ref rather than in the visible queue, because the
+      // composer already holds the words and the notice already says why: a
+      // row here would be the same news twice.
+      const replyToId = traLoi?.id ?? null;
+      const attempt = khoaDungLai(banNhapRef.current, body, replyToId) ?? newAttempt();
+      const nhap: TinChoGui = { attempt, kind: "text", than: body, phuDe: null, traLoi, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() };
+      banNhapRef.current = nhap;
+      try {
+        const daGui = await chay(nhap, (a) => guiTin(contextId, personId, body, a, { replyToId }), false);
+        banNhapRef.current = null;
+        return daGui;
+      } catch (error) {
+        banNhapRef.current = { ...nhap, trangThai: "that-bai" };
+        throw error;
+      }
     },
-    [contextId, personId, chay, datHang],
+    [contextId, personId, chay],
   );
 
   /**
@@ -222,11 +235,14 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const guiAnhMoi = useCallback(
     async (imageUrl: string, caption: string | null): Promise<TinDaGui> => {
+      // The caption is part of the request body, so it is part of what the key
+      // stands for: retrying with it dropped would send the same key with
+      // different bytes and earn a 422 for a message that is already there.
       const cu = hangRef.current.find((t) => t.kind === "image" && t.than === imageUrl && t.trangThai === "that-bai") ?? null;
-      const attempt = khoaDungLai(cu, imageUrl, null) ?? newAttempt();
+      const attempt = khoaDungLai(cu, imageUrl, null, caption) ?? newAttempt();
       if (cu !== null && cu.attempt.key !== attempt.key) datHang(boKhoiHang(hangRef.current, cu.attempt.key));
       return chay(
-        { attempt, kind: "image", than: imageUrl, traLoi: null, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
+        { attempt, kind: "image", than: imageUrl, phuDe: caption, traLoi: null, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
         (a) => guiAnh(contextId, personId, imageUrl, caption, a),
       );
     },
@@ -239,7 +255,7 @@ export function useTinNhan(contextId: string, personId: string) {
       // Every press is its own send: choosing the same sticker twice on
       // purpose is two messages, and each carries its own key.
       return chay(
-        { attempt: newAttempt(), kind: "sticker", than: stickerId, traLoi, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
+        { attempt: newAttempt(), kind: "sticker", than: stickerId, phuDe: null, traLoi, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
         (a) => guiSticker(contextId, personId, stickerId, a, { replyToId: traLoi?.id ?? null }),
       );
     },

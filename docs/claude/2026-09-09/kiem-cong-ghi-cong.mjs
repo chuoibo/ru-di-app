@@ -41,6 +41,9 @@ const CA = [
   ["destructure", `const { source } = noi.anh;\nconst A = () => <Image source={source} />;`, true],
   ["mo-khoa-ngoai", `const A = () => <Image source={noi.anh.ve().source} />;`, true],
   ["ve-khung-bo-ghi-cong", `const ve = veKhung(n, { hong });\nconst A = () => <Image source={ve.source} />;`, true],
+  ["ve-khung-tach-bo-ghi-cong", `const { source } = veKhung(n, { hong });\nconst A = () => <Image source={source} />;`, true],
+  ["mo-khoa-bien", `const mo = noi.anh.ve;\nconst A = () => <Image source={mo().source} />;`, true],
+  ["mo-khoa-ngoac", `const A = () => <Image source={noi.anh["ve"]().source} />;`, true],
   ["ve-khung-du-doi", `const ve = veKhung(n, { hong });\nconst A = () => <><Image source={ve.source} /><Text>{ve.ghiCong}</Text></>;`, false],
   ["asset-thuong", `const A = () => <Image source={demoAssets.wood} />;`, false],
 ];

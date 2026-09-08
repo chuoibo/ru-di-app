@@ -982,9 +982,12 @@ không phải gì.
   `source` và `attribution?` **rời nhau**, và `PlaceCompare` đã đưa cho nó một
   địa chỉ trần thật. Nay bảo đảm ấy nằm trong kiểu, không nằm trong lời hứa:
   `AnhCoGhiCong` **giữ địa chỉ trong closure** và chỉ trả ra qua `ve()`, thứ
-  luôn trả **cả** `source` **lẫn** `ghiCong`. `p.source` và `const { source } =
-  noi.anh` — đúng hai đường thoát probe của Codex đi qua được — nay là **lỗi
-  biên dịch**, thứ tsc đọc trên mọi file mọi lần build. Một quyết định thuần
+  luôn trả **cả** `source` **lẫn** `ghiCong`. Cụ thể: `p.source` và
+  `const { source } = noi.anh` — đúng hai đường thoát probe của Codex đi qua
+  được — nay là **lỗi biên dịch**. Đó là mức bảo đảm của kiểu, không hơn: gọi
+  `ve()` rồi bỏ `ghiCong` vẫn biên dịch được, nên **chỗ ấy do máy dò gác**, và
+  máy dò khoá cả ba cách viết (`x.anh.ve()`, `const f = x.anh.ve`,
+  `x.anh["ve"]()`) cùng hai cách bỏ nửa quyết định. Một quyết định thuần
   `veKhung(nguon, {hong})` trả `{source, ghiCong, canhBao}` và khung chỉ render
   ba trường ấy, nên ảnh và câu chữ không còn là hai điều kiện phải tự khớp.
   Ảnh của nhóm đi nhánh `{loai:"nhom"}` và **không bịa giấy phép**.
@@ -1180,8 +1183,14 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   `permission_denied`, và ba mã idempotency — `idempotency_request_in_flight`
   nói thẳng là đừng bấm nữa. Hàng chờ **không** vào `chat.tin`: `cursorMoiNhat`
   poll từ đầu danh sách ấy, nên một cursor bịa ở đầu sẽ đầu độc mọi lần poll.
-  Gửi chữ dùng lại chìa **chỉ khi từng byte giống hệt** (thân và tin trả lời),
-  vì cùng chìa khác thân là `422 idempotency_key_reuse`.
+  Gửi chữ và gửi ảnh dùng lại chìa **chỉ khi từng byte giống hệt** — thân, tin
+  trả lời **và phụ đề ảnh**, vì cả ba đều vào thân yêu cầu — nên hàng chờ phải
+  giữ đủ chúng. Cùng chìa khác thân là `422 idempotency_key_reuse`, mà bảng mã
+  ở trên xếp là **vĩnh viễn**: gửi lại thiếu một trường sẽ báo người dùng rằng
+  tin hỏng hẳn trong khi nó đã nằm trong nhóm. Bản nháp chữ giữ chìa trong một
+  ref chứ không vào `hangCho`: ô soạn đã trả chữ về và thông báo đã nói lý do,
+  một hàng nữa là cùng một tin hai lần (và một hàng vô hình từng nuốt mất màn
+  rỗng của nhóm mới).
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
