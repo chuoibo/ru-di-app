@@ -10,6 +10,12 @@ export type DemoPerson = {
   color: string;
 };
 
+/** A sample photograph with the relation it may claim, credited (see assets/rudi/README.md). */
+export type AnhMau = {
+  source: ImageSource;
+  nguon: { prefix: string; author: string; license: string };
+};
+
 export type DemoPlace = {
   id: string;
   name: string;
@@ -21,7 +27,13 @@ export type DemoPlace = {
   match: number;
   tags: string[];
   category: PlaceCategory;
-  image: ImageSource;
+  /**
+   * The sample's picture, or null. A picture is kept only where its relation
+   * to the place is honest (review 08/09 F01): «Ảnh minh hoạ» is a stock
+   * photograph illustrating the kind of place, never passed off as the place
+   * itself. Null means the frame draws the category's object.
+   */
+  anh: AnhMau | null;
 };
 
 export type ItinerarySlot = {
@@ -68,6 +80,24 @@ export const PEOPLE: DemoPerson[] = [
 
 export const COLLECTOR_INDEX = 0;
 
+/** The catalogue's category id for each sample category, so a frame draws the same object the live screen does. */
+export const LOAI_MAU: Record<PlaceCategory, string> = {
+  "Quán ăn": "quan-an-local",
+  Cafe: "cafe",
+  "Vui chơi": "vui-choi",
+  "Đi chơi đêm": "di-choi-dem",
+};
+
+/**
+ * Two stock photographs kept as illustrations of a kind of place, credited.
+ * The other three files in assets/rudi are a wood grain, people at a table
+ * and friends on a rooftop: none is a place, so no place claims them.
+ */
+const ANH_MINH_HOA: Record<"cafe" | "doi", AnhMau> = {
+  cafe: { source: demoAssets.cafe, nguon: { prefix: "Ảnh minh hoạ: ", author: "Kien Tran", license: "Pexels License" } },
+  doi: { source: demoAssets.road, nguon: { prefix: "Ảnh minh hoạ: ", author: "Hieu Do Quang", license: "Unsplash License" } },
+};
+
 export const PLACES: DemoPlace[] = [
   {
     id: "xom-leo",
@@ -80,7 +110,7 @@ export const PLACES: DemoPlace[] = [
     match: 95,
     tags: ["Chill", "View đẹp", "Nhóm đông"],
     category: "Quán ăn",
-    image: demoAssets.cafe,
+    anh: null,
   },
   {
     id: "banh-can-le",
@@ -93,7 +123,7 @@ export const PLACES: DemoPlace[] = [
     match: 86,
     tags: ["Món local", "Bình dân"],
     category: "Quán ăn",
-    image: demoAssets.dalatFriends,
+    anh: null,
   },
   {
     id: "lau-ga-la-e",
@@ -106,7 +136,7 @@ export const PLACES: DemoPlace[] = [
     match: 91,
     tags: ["Lẩu", "Nhóm đông"],
     category: "Quán ăn",
-    image: demoAssets.wood,
+    anh: null,
   },
   {
     id: "still-cafe",
@@ -119,7 +149,7 @@ export const PLACES: DemoPlace[] = [
     match: 92,
     tags: ["Cà phê", "Nhẹ nhàng", "Ngoài trời"],
     category: "Cafe",
-    image: demoAssets.dalatFriends,
+    anh: ANH_MINH_HOA.cafe,
   },
   {
     id: "tiem-tra-suong",
@@ -132,7 +162,7 @@ export const PLACES: DemoPlace[] = [
     match: 81,
     tags: ["Trà", "Ngoài trời"],
     category: "Cafe",
-    image: demoAssets.cafe,
+    anh: null,
   },
   {
     id: "the-coffee-hill",
@@ -145,7 +175,7 @@ export const PLACES: DemoPlace[] = [
     match: 79,
     tags: ["Cà phê", "View đẹp"],
     category: "Cafe",
-    image: demoAssets.road,
+    anh: null,
   },
   {
     id: "puppy-farm",
@@ -158,7 +188,7 @@ export const PLACES: DemoPlace[] = [
     match: 88,
     tags: ["Outdoor", "Hoa", "Chụp ảnh"],
     category: "Vui chơi",
-    image: demoAssets.road,
+    anh: null,
   },
   {
     id: "doi-thien-phuc",
@@ -171,7 +201,7 @@ export const PLACES: DemoPlace[] = [
     match: 90,
     tags: ["Săn mây", "Ngoài trời"],
     category: "Vui chơi",
-    image: demoAssets.friends,
+    anh: ANH_MINH_HOA.doi,
   },
   {
     id: "thung-lung-tinh-yeu",
@@ -184,7 +214,7 @@ export const PLACES: DemoPlace[] = [
     match: 77,
     tags: ["Hoa", "Chụp ảnh"],
     category: "Vui chơi",
-    image: demoAssets.dalatFriends,
+    anh: null,
   },
   {
     id: "cho-dem",
@@ -197,7 +227,7 @@ export const PLACES: DemoPlace[] = [
     match: 84,
     tags: ["Món local", "Đi đêm", "Nhộn nhịp"],
     category: "Đi chơi đêm",
-    image: demoAssets.friends,
+    anh: null,
   },
   {
     id: "pho-di-bo-dem",
@@ -210,7 +240,7 @@ export const PLACES: DemoPlace[] = [
     match: 76,
     tags: ["Đi đêm", "Nhộn nhịp"],
     category: "Đi chơi đêm",
-    image: demoAssets.cafe,
+    anh: null,
   },
   {
     id: "ho-tuyen-lam-dem",
@@ -223,7 +253,7 @@ export const PLACES: DemoPlace[] = [
     match: 89,
     tags: ["BBQ", "Đi đêm"],
     category: "Đi chơi đêm",
-    image: demoAssets.wood,
+    anh: null,
   },
 ];
 

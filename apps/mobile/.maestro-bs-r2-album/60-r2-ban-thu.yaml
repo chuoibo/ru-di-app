@@ -1,0 +1,106 @@
+# Bằng chứng lượt sửa R1–R4 (08/09), phần renderer live trên bàn thử dev:
+# `AlbumAnh` (đúng bộ dựng màn album live) với các ca ảnh do flow bịa, cảnh rỗng
+# A/B có và không Nếp cạnh nhau, và ba bộ dựng của Khám phá ở ba nhánh ảnh.
+# Đây là bằng chứng component trên máy thật, KHÔNG phải E2E qua API.
+#
+# Mọi `tapOn` đều đi sau một `scrollUntilVisible`: chip nằm trên, nội dung nằm
+# dưới, và Maestro chỉ thấy phần đang hiển thị.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+# --- Album: các ca ngày và ảnh ---------------------------------------------
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "2 ngày, lead lẻ"
+      ANH: "r2-01-lab-album-hai-ngay"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "1 ảnh"
+      ANH: "r2-02-lab-album-mot-anh"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "4 ảnh, lẻ"
+      ANH: "r2-03-lab-album-le"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "caption dài"
+      ANH: "r2-04-lab-album-caption-dai"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "ảnh hỏng"
+      ANH: "r2-05-lab-album-anh-hong"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "0 ảnh"
+      ANH: "r2-06-lab-album-rong"
+- runFlow:
+    file: _ca-album.yaml
+    env:
+      CHIP: "2 ngày, lead lẻ"
+      ANH: "r2-06b-lab-album-hai-ngay-lai"
+# Chạm vào ảnh phải MỞ ảnh, không phải vào chế độ chọn (lỗi F03b của review).
+- scrollUntilVisible:
+    element:
+      text: "Mở ảnh: Ảnh tổng hợp 2"
+    direction: DOWN
+    timeout: 30000
+- tapOn: "Mở ảnh: Ảnh tổng hợp 2"
+- extendedWaitUntil:
+    visible: "Album tổng hợp"
+    timeout: 20000
+- takeScreenshot: r2-07-lab-album-mo-anh
+- tapOn: "Đóng"
+# Sau khi đóng, màn giữ chỗ cuộn ở giữa album: chờ thứ ĐANG thấy, không chờ
+# tiêu đề mục đã trôi lên trên.
+- extendedWaitUntil:
+    visible: "Cảnh rỗng · A/B có Nếp và tắt Nếp"
+    timeout: 20000
+# --- Cảnh rỗng: A/B ---------------------------------------------------------
+- scrollUntilVisible:
+    element:
+      text: "Một chiếc ghế được kéo ra, chừa sẵn chỗ"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r2-08-lab-canh-ab
+- scrollUntilVisible:
+    element:
+      text: "Một tấm bản đồ gấp, đường đi chưa tới nơi"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r2-09-lab-canh-ab-cuoi
+# --- Khám phá: không ảnh / có ảnh / ảnh hỏng --------------------------------
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Không ảnh"
+      ANH: "r2-10-lab-kham-pha-khong-anh"
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Có ảnh"
+      ANH: "r2-11-lab-kham-pha-co-anh"
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Ảnh hỏng"
+      ANH: "r2-12-lab-kham-pha-anh-hong"
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Cặp lệch"
+      ANH: "r2-13-lab-kham-pha-cap-lech"
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
+      CHIP: "Tên dài"
+      ANH: "r2-14-lab-kham-pha-ten-dai"

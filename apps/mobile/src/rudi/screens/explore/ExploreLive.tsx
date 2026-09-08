@@ -204,7 +204,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const rong = danhSach.length === 0;
 
   return (
-    <RudiScreen bottomInset={112} onRefresh={nap} testID="explore-screen">
+    <RudiScreen bottomInset="tab" onRefresh={nap} testID="explore-screen">
       <View style={styles.dau}>
         <Wordmark color={colors.ink} height={20} />
         {/* The destination is a control, not a caption. */}

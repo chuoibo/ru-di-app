@@ -12,7 +12,9 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DEMO_GROUP, PEOPLE, PLACES, VOTE_PLACE_IDS } from "../fixtures";
+import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, VOTE_PLACE_IDS } from "../fixtures";
+import { guTheoLoai } from "../kham-pha/dia-diem";
+import { GuGlyph } from "../ui/art/Gu";
 import { noiLuu } from "../luu-tru";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -313,8 +315,8 @@ export function AiItineraryScreen() {
                   <IconButton accessibilityLabel="Xuống" icon="chevron-down" onPress={() => session.moveItinerarySlot(activeDay, index, 1)} quiet />
                   <IconButton accessibilityLabel="Xóa" icon="trash-outline" onPress={() => session.removeItinerarySlot(activeDay, index)} quiet />
                 </Inline>
-              ) : noi?.image ? (
-                <AnhChang alt={noi.name} source={noi.image} />
+              ) : noi?.anh ? (
+                <AnhChang alt={noi.name} source={noi.anh.source} />
               ) : null
             }
             phu={noi?.name ?? null}
@@ -364,7 +366,13 @@ export function VotingScreen() {
                 pressed && styles.pressed,
               ]}
             >
-              <Image accessibilityLabel={place.name} contentFit="cover" source={place.image} style={[styles.voteThumb, { borderRadius: radius.small }]} />
+              {place.anh ? (
+                <Image accessibilityLabel={place.name} contentFit="cover" source={place.anh.source} style={[styles.voteThumb, { borderRadius: radius.small }]} />
+              ) : (
+                <View style={[styles.voteThumb, styles.voteThumbVe, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
+                  <GuGlyph id={guTheoLoai(LOAI_MAU[place.category])} size={30} tone="accent" />
+                </View>
+              )}
               <View style={styles.voteBody}>
                 <Text style={[typography.title, { color: colors.ink }]}>{place.name}</Text>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{place.distance} · {place.price}</Text>
@@ -428,6 +436,7 @@ const styles = StyleSheet.create({
   budgetLine: { gap: 2, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   voteOption: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 72 },
   voteThumb: { width: 56, height: 56 },
+  voteThumbVe: { alignItems: "center", justifyContent: "center" },
   voteBody: { flex: 1, gap: 3 },
   voteResult: { gap: 4, marginTop: 4 },
   voteSummary: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderWidth: 1, borderStyle: "dashed" },

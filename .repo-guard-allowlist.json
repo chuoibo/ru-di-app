@@ -613,6 +613,150 @@
         "controlled-artifact"
       ],
       "reason": "Ghép ảnh Android emulator màn Sở thích trước (khảo sát 07/09) và sau đợt 08/09. Fixture, không dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/nep-pose-sang.png",
+      "sha256": "d09d2686ac8f446fc7db201ef751b3497081fcf5f4dcd7dd7d066f3c276fed86",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ 144/96/48 trên nền sáng, xuất từ tầng art bằng script scratchpad. Vector do mã sinh, không ảnh người."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/nep-pose-toi.png",
+      "sha256": "c97d95513071e6f2d0cfab26c2befd92947a8f1c598ffcb5ddbd0d51067243ce",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ trên nền tối, cùng nguồn với bản sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/canh-nam-sang.png",
+      "sha256": "ce1f842fbb5f019ac69fb02a2b41edcd11585ccb18f467499a222b17fe959ecf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Năm cảnh rỗng, hàng trên có Nếp và hàng dưới nep={false}, nền sáng. Vector do mã sinh."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/canh-nam-toi.png",
+      "sha256": "6a34213c0b852e7b34c0df8c375ad6579f292178f441ce0f6ec9c9ca87f38d49",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Năm cảnh rỗng có và không Nếp trên nền tối, cùng nguồn với bản sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-1.0.png",
+      "sha256": "60ce0ff9dbe4b1027c547065c8bfad48cefc2e5adaff8868b6f93378d729d647",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) bàn thử dev: năm cảnh rỗng, trái có Nếp phải nep={false}. Không dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-khong-anh-1.0.png",
+      "sha256": "4cb0b98270ee3aabf899ae308f3017458d6f57b64ca5578642259fe53e4b1b44",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh không ảnh."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.0.png",
+      "sha256": "26cf567929bb5d09e4d5223cb6bd4fe58bbaeb95c345dda48f9c9b95c969144f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator màn Khám phá của bản trải nghiệm sau khi gỡ mapping ảnh sai. Fixture."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-1.0.png",
+      "sha256": "a7ff05f7885007b1f53ae22d9362ee86bf0f27b41d6d80fc0fa7bdaa63c672ce",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: album hai ngày, ảnh dẫn là ảnh duy nhất của ngày đầu. Dữ liệu tổng hợp."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-album-anh-hong-1.0.png",
+      "sha256": "107257851ee8a3af3a3bae697a338a5d64b9ce76cb539c0d5f8ab23f7866deeb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: nhánh ảnh tải hỏng của album. Nguồn ảnh là loopback đóng, không gọi mạng ngoài."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-album-mo-anh-1.0.png",
+      "sha256": "a4f991493ec83f73374de04c12c6f202f0925b5fae96204cd4b12c491e69ec4c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator album bản trải nghiệm: chạm ảnh mở trình xem đúng ảnh. Fixture."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-toi.png",
+      "sha256": "04c24e06a1fabf3133ad818d4d71905b6c344979422c8656b307cc8a9f19bc80",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-toi.png",
+      "sha256": "90af44ad80848d1a79c4df52764cf8d5402095717e9d91fea4bfce9c67f63b06",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-cap-lech-1.0.png",
+      "sha256": "e612c896dba2868dde57d78365b890f43ae5190d91835e14bef9119a2e325f6f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) cặp so sánh lệch: một ứng viên có ảnh, một không, cùng một khung."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-co-anh-1.0.png",
+      "sha256": "138656d3114adeef1061b991a9b6fcce8b45c4c7741a5188b5784362a99f8044",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh có ảnh."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.3.png",
+      "sha256": "6df07372c3e007d4255370bb51e40fd9c1a3b3f42a458675846f5be8a297b779",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cỡ chữ hệ thống 1.3."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-2.0.png",
+      "sha256": "71ce496c9d2f5cc023bd4632539b45a572b6df615504f7c4ce41298f8ce94875",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cỡ chữ hệ thống 2.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-1.3.png",
+      "sha256": "01be8582bf6a9c624561a744fe21823463a828348d64bf19eeabfb763d554575",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 1.3."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-2.0.png",
+      "sha256": "c86e41a6f9963b755782972dcbbf8279d2f8d72a54f67c7476145a1215e00d28",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 2.0."
     }
   ]
 }

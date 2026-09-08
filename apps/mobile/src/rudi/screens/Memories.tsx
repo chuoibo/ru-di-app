@@ -31,6 +31,7 @@ import {
 } from "../ui";
 import { Avatar, AvatarStack } from "../ui/Avatar";
 import { KhungAnh } from "../ui/KhungAnh";
+import { PhotoViewer } from "../ui/PhotoViewer";
 import { RosterPicker } from "../ui/RosterPicker";
 
 function FeedPost({
@@ -191,6 +192,11 @@ export function TripAlbumScreen() {
   const [newestFirst, setNewestFirst] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
+  // «Mở ảnh N» opens the viewer on that print. A review (Codex 08/09, F03b)
+  // found the press entering selection instead, so the label lied; selection
+  // is entered only through its own button now.
+  const [xem, setXem] = useState<number | null>(null);
+  const boAnhXem = MEMORY_PHOTOS.map((source, i) => ({ id: `mau-${i + 1}`, source, caption: `Ảnh ${i + 1} · ${DEMO_GROUP.name}` }));
   const visiblePhotos = MEMORY_PHOTOS.map((photo, originalIndex) => ({ photo, originalIndex }));
   if (newestFirst) visiblePhotos.reverse();
   const [dan, ...conLai] = visiblePhotos;
@@ -221,13 +227,13 @@ export function TripAlbumScreen() {
         accessibilityRole={selecting ? "checkbox" : "button"}
         aria-checked={selecting ? selected : undefined}
         onPress={() => {
-          if (!selecting) setSelecting(true);
-          togglePhoto(photo.originalIndex);
+          if (selecting) togglePhoto(photo.originalIndex);
+          else setXem(photo.originalIndex);
         }}
         style={({ pressed }) => [styles.gridPhoto, pressed && styles.pressed]}
       >
         {lead ? (
-          <KhungAnh xuatXu={DEMO_GROUP.name}>
+          <KhungAnh dauGiu xuatXu={DEMO_GROUP.name}>
             <Photo radius={4} ratio={tiLeDan} source={photo.photo} />
           </KhungAnh>
         ) : (
@@ -244,6 +250,7 @@ export function TripAlbumScreen() {
 
   return (
     <RudiScreen testID="trip-album-screen">
+      {xem !== null ? <PhotoViewer initialIndex={xem} onClose={() => setXem(null)} photos={boAnhXem} /> : null}
       <TopBar
         title="Album Đà Lạt"
         right={<IconButton accessibilityLabel="Thêm ảnh" icon="add" onPress={() => router.push("/moments/new")} quiet />}

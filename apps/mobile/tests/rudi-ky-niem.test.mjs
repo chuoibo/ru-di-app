@@ -16,6 +16,7 @@ import {
   cauCapDo,
   cauKyNiem,
   cauThongKeAlbum,
+  chiaAlbumTheoNgay,
   ngayVietNam,
   nhomTheoNgay,
   cauThuocPhim,
@@ -150,4 +151,40 @@ test("ảnh gom theo ngày, giữ thứ tự máy chủ, ngày hỏng gom riêng
   const nhom = nhomTheoNgay(anh);
   assert.deepEqual(nhom.map((n) => [n.nhan, n.anh.map((a) => a.id)]), [["17/10", ["a", "b"]], ["18/10", ["c"]], ["Chưa rõ ngày", ["d"]]]);
   assert.deepEqual(nhomTheoNgay([]), []);
+});
+
+test("album hai ảnh hai ngày: lead là ảnh duy nhất của ngày đầu vẫn ra HAI ngày, có nhãn cho lead (F03a)", () => {
+  const hai = chiaAlbumTheoNgay([
+    { id: "a", created_at: "2026-10-17T12:00:00+07:00" },
+    { id: "b", created_at: "2026-10-18T12:00:00+07:00" },
+  ]);
+  assert.equal(hai.nhieuNgay, true);
+  assert.equal(hai.nhanDan, "17/10");
+  assert.deepEqual(hai.sau.map((n) => [n.nhan, n.anh.map((a) => a.viTri)]), [["18/10", [1]]]);
+  // The midnight boundary in +07, to the second.
+  const bien = chiaAlbumTheoNgay([
+    { id: "a", created_at: "2026-10-17T23:59:59+07:00" },
+    { id: "b", created_at: "2026-10-18T00:00:00+07:00" },
+  ]);
+  assert.equal(bien.nhieuNgay, true);
+  assert.equal(bien.nhanDan, "17/10");
+  // Same day twice: one day, no labels, and nothing after the lead is lost.
+  const mot = chiaAlbumTheoNgay([
+    { id: "a", created_at: "2026-10-17T10:00:00+07:00" },
+    { id: "b", created_at: "2026-10-17T11:00:00+07:00" },
+  ]);
+  assert.equal(mot.nhieuNgay, false);
+  assert.deepEqual(mot.sau.map((n) => n.anh.map((a) => a.viTri)), [[1]]);
+  // Lead shares its day with the group right after it: the label belongs to the
+  // group, and printing it twice in a row would read as two days.
+  const chung = chiaAlbumTheoNgay([
+    { id: "a", created_at: "2026-10-17T09:00:00+07:00" },
+    { id: "b", created_at: "2026-10-17T10:00:00+07:00" },
+    { id: "c", created_at: "2026-10-18T09:00:00+07:00" },
+  ]);
+  assert.equal(chung.nhieuNgay, true);
+  assert.equal(chung.nhanDan, null);
+  assert.deepEqual(chung.sau.map((n) => [n.nhan, n.anh.map((a) => a.viTri)]), [["17/10", [1]], ["18/10", [2]]]);
+  // Empty album: nothing to label, nothing thrown.
+  assert.deepEqual(chiaAlbumTheoNgay([]), { nhieuNgay: false, nhanDan: null, sau: [] });
 });

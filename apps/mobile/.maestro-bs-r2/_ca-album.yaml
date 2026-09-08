@@ -1,0 +1,24 @@
+# Chọn một ca của album rồi cuộn xuống chính bộ ảnh để chụp. Cùng lý do hai
+# bước cuộn như `_ca-kham-pha.yaml`.
+appId: com.lakiet.rudi
+---
+- scrollUntilVisible:
+    element:
+      text: "Cảnh rỗng · A/B có Nếp và tắt Nếp"
+    direction: DOWN
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "${CHIP}"
+    direction: UP
+    timeout: 20000
+- tapOn: "${CHIP}"
+# Hai ảnh cho mỗi ca: một ảnh ngay tại dãy chip (thấy đầu album: tiêu đề, nhãn
+# ngày của ảnh dẫn, bản in dẫn) và một ảnh cuộn xuống hết bộ ảnh.
+- takeScreenshot: ${ANH}-tren
+- scrollUntilVisible:
+    element:
+      text: "Cảnh rỗng · A/B có Nếp và tắt Nếp"
+    direction: DOWN
+    timeout: 20000
+- takeScreenshot: ${ANH}

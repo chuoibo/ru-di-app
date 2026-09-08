@@ -107,3 +107,33 @@ export function layoutFor(width: number, height: number): AdaptiveLayout {
       };
   }
 }
+
+/** The tab bar's height at font scale 1.0, the four destinations' labels on one line. */
+export const TAB_BAR_HEIGHT = 64;
+
+/**
+ * The tab bar's height at a given font scale. Labels are allowed two lines
+ * rather than an ellipsis («Khám …», «Lên pl…» measured at 2.0 by the review
+ * of 08/09), so the bar grows with the text instead of locking the text to
+ * fit the bar. Linear above 1.15, clamped at 2.0; screens under the tabs read
+ * the same number through `RudiScreen bottomInset="tab"`.
+ */
+export function tabBarHeight(fontScale: number): number {
+  const scale = Number.isFinite(fontScale) ? Math.min(Math.max(fontScale, 1), 2) : 1;
+  return TAB_BAR_HEIGHT + Math.round(Math.max(0, scale - 1.15) * 44);
+}
+
+/**
+ * Whether the system text is big enough that a half-width column stops
+ * holding a name and a price whole.
+ *
+ * The threshold is 1.28, not 1.3, on purpose. Android stores `font_scale` as
+ * a float and hands React Native `Math.fround(1.3)` for the setting a user
+ * reads as «1.3» -- a hair BELOW 1.3, since 1.3 is not representable in a
+ * 32-bit float. A bare `fontScale >= 1.3` is false there, and the pair kept
+ * two columns on a device set to large text (measured on emulator 08/09).
+ * Anything at or above the 1.3 step counts as large text here.
+ */
+export function chuLon(fontScale: number): boolean {
+  return Number.isFinite(fontScale) && fontScale >= 1.28;
+}
