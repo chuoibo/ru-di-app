@@ -16,6 +16,8 @@
  * question mark -- never nothing and never a throw.
  */
 import stickers from "../../../../../packages/shared/stickers.json";
+import { CHAN_NEP, hinhGhe, hinhNep } from "../art/nep";
+import { netGay, tron as tronVe, type LopVe } from "../art/net";
 
 export const STICKER_IDS = [
   "di-thoi",
@@ -29,9 +31,10 @@ export const STICKER_IDS = [
 ] as const;
 export type StickerId = (typeof STICKER_IDS)[number];
 
-/** Palette roles, resolved to theme colours by the component. `coral` is brand. */
-export type MauSticker = "accent" | "ink" | "split" | "card" | "coral";
-export type LopSticker = { d: string; mau: MauSticker };
+/** Palette roles, resolved to theme colours by the component. `coral` is brand; `line` is the paper's shade. */
+export type MauSticker = "accent" | "ink" | "split" | "card" | "coral" | "line";
+/** One path. `net` > 0 draws it as a stroke of that width (round caps), otherwise it is filled. */
+export type LopSticker = { d: string; mau: MauSticker; net?: number };
 export type HinhSticker = { id: string; nhan: string; lop: LopSticker[] };
 
 /** Every shape is drawn in this square; the component scales it. */
@@ -117,6 +120,55 @@ function ngoiSao(cx: number, cy: number, R: number, r: number, n = 5): string {
   return daGiac(diem);
 }
 
+// ---- the art layer's pen, in sticker roles -------------------------------------
+
+/**
+ * A drawing made with the art layer's pen (`art/*`, roles giay/muc/gap/bong)
+ * re-labelled in sticker roles, so a sticker can be a Nếp scene and still go
+ * through the same table, the same Java-grammar test and the same renderer as
+ * the seven older shapes. Roles the stickers have no colour for throw here,
+ * at module load, so the node test fails before an emulator does.
+ */
+function tuLopVe(lop: readonly LopVe[]): LopSticker[] {
+  const vai: Partial<Record<LopVe["mau"], MauSticker>> = { giay: "card", muc: "ink", gap: "accent", bong: "line", split: "split" };
+  return lop.map((l) => {
+    const mau = vai[l.mau];
+    if (mau === undefined) throw new Error(`sticker: vai màu «${l.mau}» không có trong bảng sticker`);
+    return l.net === undefined ? { d: l.d, mau } : { d: l.d, mau, net: l.net };
+  });
+}
+
+/**
+ * «Chờ tí»: Nếp keeps a chair -- one hand on its back rail -- and looks up at
+ * a clock that is a sign, not a detail. The chair is the main prop: at 64dp
+ * the reader has to see «a seat being kept» before reading the label, so the
+ * chair takes the right half at 0.95 of its scene size and the figure stands
+ * at 0.82, leaning toward it (`nghieng` 6). The eyes go to the clock
+ * (`nhin` up-right). Geometry: hand (88, 48) of the 96-box → (63.2, 55.7),
+ * on the chair's cross rail (y 53..58.7, between the posts x 57.7..84.3);
+ * bounding box x 0.2..92, inside the Java test's [−1, 97].
+ *
+ * The compact reading (`chiTiet` false) is the same drawing with the art
+ * layer's own 48dp simplifications (no brow, no crease, thicker limbs, plain
+ * chair) and a heavier clock stroke; the clock keeps its size.
+ */
+function choTi(chiTiet: boolean): LopVe[] {
+  const tiLeNep = 0.82, x0 = -8.5, tiLeGhe = 0.95, gheX = 52;
+  const y0 = CHAN_NEP - CHAN_NEP * tiLeNep;
+  const nguoi = hinhNep("giu-cho", { x0, y0, tiLe: tiLeNep, chiTiet, nghieng: 6, nhin: [1.5, -1.2] });
+  const ghe = hinhGhe(gheX, CHAN_NEP - 64 * tiLeGhe, { tiLe: tiLeGhe, chiTiet });
+  const [cx, cy, r] = [80, 16, 13];
+  const w = chiTiet ? 2.2 : 2.8;
+  const dongHo: LopVe[] = [
+    { d: tronVe(cx, cy, r), mau: "giay" },
+    { d: tronVe(cx, cy, r), mau: "muc", net: w },
+    { d: netGay([[cx, cy], [cx, cy - r * 0.62]]), mau: "muc", net: w * 0.9 },
+    { d: netGay([[cx, cy], [cx + r * 0.5, cy + r * 0.28]]), mau: "muc", net: w * 0.9 },
+    { d: tronVe(cx, cy, chiTiet ? 1.6 : 2), mau: "gap" },
+  ];
+  return [...ghe, ...dongHo, ...nguoi];
+}
+
 // ---- the shapes --------------------------------------------------------------
 
 const HINH: Record<StickerId, LopSticker[]> = {
@@ -147,13 +199,8 @@ const HINH: Record<StickerId, LopSticker[]> = {
     { d: khungBo(18, 26, 60, 44, 7), mau: "card" },
     { d: daGiac([[30, 48], [36, 42], [44, 50], [62, 32], [68, 38], [44, 62]]), mau: "accent" },
   ],
-  "cho-ti": [
-    { d: tron(48, 48, 34), mau: "ink" },
-    { d: tron(48, 48, 28), mau: "card" },
-    { d: khungBo(45, 30, 6, 22, 3), mau: "ink" },
-    { d: daGiac([[46, 46], [66, 54], [64, 60], [44, 52]]), mau: "ink" },
-    { d: tron(48, 48, 4), mau: "accent" },
-  ],
+  // The first sticker drawn in the Nếp language (08/09, one before eight): see `choTi`.
+  "cho-ti": [...tuLopVe(choTi(true))],
   "ket-xe": [
     { d: daGiac([[20, 58], [40, 58], [50, 40], [66, 40], [70, 48], [60, 48], [56, 58], [78, 58], [78, 64], [20, 64]]), mau: "accent" },
     { d: khungBo(62, 26, 14, 5, 2), mau: "ink" },
@@ -184,7 +231,17 @@ const HINH_KHAC: LopSticker[] = [
   { d: duong("M", 36, 40, "C", 36, 30, 60, 30, 60, 40, "C", 60, 48, 48, 48, 48, 56, "L", 48, 58, "L", 42, 58, "L", 42, 54, "C", 42, 44, 54, 46, 54, 40, "C", 54, 36, 42, 36, 42, 40, "Z"), mau: "ink" },
 ];
 
-export function hinhSticker(id: string): HinhSticker {
-  if (laStickerHopLe(id)) return { id, nhan: nhanSticker(id), lop: HINH[id] };
+/**
+ * A second reading for the small tile: an optical size, not a scale-down.
+ * Only the shapes that have one appear here; the rest are legible as drawn.
+ */
+const HINH_RUT_GON: Partial<Record<StickerId, LopSticker[]>> = {
+  "cho-ti": tuLopVe(choTi(false)),
+};
+
+/** `chiTiet` false picks the compact reading, for tiles under 72dp (the tray draws 64). */
+export function hinhSticker(id: string, tuyChon: { chiTiet?: boolean } = {}): HinhSticker {
+  const { chiTiet = true } = tuyChon;
+  if (laStickerHopLe(id)) return { id, nhan: nhanSticker(id), lop: (chiTiet ? undefined : HINH_RUT_GON[id]) ?? HINH[id] };
   return { id, nhan: "Sticker", lop: HINH_KHAC };
 }

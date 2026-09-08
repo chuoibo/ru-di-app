@@ -51,25 +51,36 @@ test("danh sách id khớp packages/shared/stickers.json, đúng thứ tự", ()
   for (const s of shared.stickers) assert.equal(nhanSticker(s.id), s.label);
 });
 
-test("mọi sticker có hình, mọi đường qua được ngữ pháp Java, mọi điểm nằm trong khung", () => {
+test("mọi sticker có hình ở cả hai cỡ đọc, mọi đường qua được ngữ pháp Java, mọi điểm nằm trong khung", () => {
   for (const id of STICKER_IDS) {
-    const hinh = hinhSticker(id);
-    assert.equal(hinh.id, id);
-    assert.ok(hinh.lop.length >= 2, `${id}: cần ít nhất hai lớp`);
-    for (const lop of hinh.lop) {
-      const cmds = phanTich(lop.d);
-      assert.equal(cmds[0].c, "M", `${id}: đường phải mở bằng M`);
-      assert.equal(cmds.at(-1).c, "Z", `${id}: đường phải kín`);
-      assert.ok(!/L\s+Z/.test(lop.d) && !/-0\b/.test(lop.d) && !/e/.test(lop.d), `${id}: ${lop.d.slice(0, 40)}`);
-      for (const { args } of cmds) {
-        for (let k = 0; k < args.length; k += 2) {
-          assert.ok(args[k] >= -1 && args[k] <= KHUNG_STICKER + 1, `${id}: x ngoài khung ${args[k]}`);
-          assert.ok(args[k + 1] >= -1 && args[k + 1] <= KHUNG_STICKER + 1, `${id}: y ngoài khung ${args[k + 1]}`);
+    for (const chiTiet of [true, false]) {
+      const hinh = hinhSticker(id, { chiTiet });
+      assert.equal(hinh.id, id);
+      assert.ok(hinh.lop.length >= 2, `${id}: cần ít nhất hai lớp`);
+      for (const lop of hinh.lop) {
+        const cmds = phanTich(lop.d);
+        assert.equal(cmds[0].c, "M", `${id}: đường phải mở bằng M`);
+        // A filled layer is a closed shape; a stroke (the art layer's pen) may
+        // stay open, but it is a line, so it has at least two points.
+        if (lop.net === undefined) assert.equal(cmds.at(-1).c, "Z", `${id}: lớp tô phải kín`);
+        else {
+          assert.ok(lop.net > 0 && Number.isFinite(lop.net), `${id}: nét phải dương`);
+          assert.ok(cmds.length >= 2, `${id}: nét phải có ít nhất hai điểm`);
         }
+        assert.ok(!/L\s+Z/.test(lop.d) && !/-0(?![.\d])/.test(lop.d) && !/e/.test(lop.d), `${id}: ${lop.d.slice(0, 40)}`);
+        for (const { args } of cmds) {
+          for (let k = 0; k < args.length; k += 2) {
+            assert.ok(args[k] >= -1 && args[k] <= KHUNG_STICKER + 1, `${id}: x ngoài khung ${args[k]}`);
+            assert.ok(args[k + 1] >= -1 && args[k + 1] <= KHUNG_STICKER + 1, `${id}: y ngoài khung ${args[k + 1]}`);
+          }
+        }
+        assert.ok(["accent", "ink", "split", "card", "coral", "line"].includes(lop.mau), `${id}: màu lạ ${lop.mau}`);
       }
-      assert.ok(["accent", "ink", "split", "card", "coral"].includes(lop.mau), `${id}: màu lạ ${lop.mau}`);
     }
   }
+  // The compact reading is a different drawing where one exists, and the same table entry where none does.
+  assert.notDeepEqual(hinhSticker("cho-ti", { chiTiet: false }).lop, hinhSticker("cho-ti").lop);
+  assert.deepEqual(hinhSticker("di-thoi", { chiTiet: false }).lop, hinhSticker("di-thoi").lop);
 });
 
 test("id lạ vẽ ô «khac» có dấu hỏi, nhãn «Sticker», không ném", () => {
