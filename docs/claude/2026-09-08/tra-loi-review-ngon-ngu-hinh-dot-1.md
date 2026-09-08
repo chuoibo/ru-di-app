@@ -4,7 +4,7 @@
 - Trả lời cho: [`docs/codex/2026-09-08/review-ngon-ngu-hinh-dot-1.md`](../../codex/2026-09-08/review-ngon-ngu-hinh-dot-1.md) (VERDICT: REQUEST_CHANGES).
 - Phạm vi đúng bằng bốn gói của review. **Không** làm B2 (lời rủ trong ô so sánh),
   **không** làm B3 (tám sticker), **không** làm C2 (token disabled toàn kit): review nói làm xong bốn
-  gói rồi review lại một batch mới mở rộng, nên bốn thứ đó chờ.
+  gói rồi review lại một batch mới mở rộng, nên ba thứ đó chờ.
 
 ## Tóm tắt: đã sửa gì
 
@@ -35,6 +35,11 @@ câu «Chưa tải được ảnh», nên ba nhánh có ảnh / không ảnh / �
 Ghi công đi theo từng ảnh trong kiểu `AnhMau` (`{ source, nguon: { prefix, author, license } }`) chứ
 không nằm rời ở màn, nên không thể quên khi thêm ảnh mới. Manifest quan hệ, cỡ dùng thật và crop ghi ở
 `apps/mobile/assets/rudi/README.md`.
+
+**Một hệ quả cố ý.** Trên màn thật, hai tấm ảnh còn lại rơi xuống hàng danh sách (thumbnail 56dp) chứ
+không lên ảnh dẫn, vì thứ tự do độ hợp gu quyết định chứ không do việc chúng tôi tình cờ có ảnh của
+nơi nào. Đảo thứ tự để khoe ảnh chính là kiểu sai mà review đang bắt, nên không đảo. Nhánh ảnh ở cỡ
+lớn (ảnh dẫn và ô so sánh) được đo trên bàn thử bằng chip «Có ảnh» và «Cặp lệch».
 
 **Chưa làm:** bộ ảnh đúng quan hệ cho mười địa điểm còn lại. Review xếp việc đó vào A3 và cho phép
 «B có biên tập»; ở đây tôi chọn để trống có chủ ý thay vì lấp bằng ảnh sai, và nhánh không ảnh là
@@ -114,9 +119,12 @@ trong doc đó.
 | Cổng | Kết quả |
 |---|---|
 | `npx tsc --noEmit` (apps/mobile) | exit 0 |
-| `rm -rf dist-test && npm test` | **750 pass**, 0 fail (gồm `art-duong`, `adaptive`, `rudi-ky-niem`, `kham-pha`, `rudi-khong-hex`, `dau-gach-dai`, `mac-dinh-am-tham-id`) |
+| `rm -rf dist-test && npm test` | **751 pass**, 0 fail (gồm `art-duong`, `adaptive`, `rudi-ky-niem`, `kham-pha`, `rudi-khong-hex`, `dau-gach-dai`, `mac-dinh-am-tham-id`) |
 | `python3 -m pytest services/api/tests tests -q` (gốc repo) | **3433 passed**, 711 skipped, 5465 subtests, exit 0 |
 | `python3 scripts/repo_guard.py staged` | pass ở từng lát commit |
+| `impeccable detect --json` trên các file đã đổi | `[]` |
+| Bảng native `.maestro-bs-r2` (sáng 1.0) | **XANH**, 6 flow, canary đỏ đúng thiết kế |
+| Bảng native `.maestro-bs-r2-font` (2.0) | **XANH**, 4 flow |
 
 `tests/art-duong.test.mjs` chạy chín pose × hai cách đọc × có/không phép đặt qua đúng bộ đọc của Java
 `PathParser`, cộng năm cảnh có và không Nếp, và bắt được một lỗi thật trong lượt này: cảnh «chưa có
@@ -144,8 +152,8 @@ nên tắt nhân vật vẫn là một bức tranh đủ nghĩa.
   tại chỗ. Nó chứng minh **component trên máy thật** dựng đúng ở các trạng thái đó, **không** chứng
   minh đường OTP → API → màn. `ExploreLiveScreen` và `TripAlbumLiveScreen` bọc cùng bộ dựng ấy, nhưng
   phần tải dữ liệu của hai màn đó chưa được đo trong lượt này.
-- **Chỉ Android.** `emulator-5554`, 1080×2400, density 420. Chưa có iOS, chưa có TalkBack/VoiceOver,
-  chưa có bản release, chưa có máy rộng.
+- **Chỉ Android.** `emulator-5554`, 1080×2400, density 420, sáng và tối, cỡ chữ 1.0/1.3/2.0. Chưa có
+  iOS, chưa có TalkBack/VoiceOver, chưa có bản release, chưa có máy rộng.
 - **Ảnh minh hoạ, không phải ảnh của địa điểm thật.** Hai ảnh còn lại đúng loại và đúng vùng, có ghi
   công; chúng không phải ảnh chụp chính hai địa điểm ấy, và tiền tố «Ảnh minh hoạ: » nói đúng điều đó.
 - **Mười địa điểm chưa có ảnh.** Đó là lựa chọn, không phải thiếu sót được giấu: A3 đóng khi có bộ ảnh
@@ -171,6 +179,10 @@ lên đỉnh cọc lưng ghế và thân ngả theo lực kéo; ngòi bút chạ
 
 ![Hàng dẫn, ô so sánh và hàng danh sách khi không có ảnh](sua-review/native-kham-pha-khong-anh-1.0.png)
 
+![Cùng ba bộ dựng khi có ảnh](sua-review/native-kham-pha-co-anh-1.0.png)
+
+![Cặp lệch: một bên có ảnh, một bên không, vẫn một khung](sua-review/native-kham-pha-cap-lech-1.0.png)
+
 ![Khám phá của bản trải nghiệm: ô so sánh, các hàng và thanh tab](sua-review/native-kham-pha-hang-1.0.png)
 
 Ảnh thứ hai là màn thật của bản trải nghiệm sau khi gỡ mapping sai: «Still Cafe» giữ ảnh cà phê đúng
@@ -181,6 +193,8 @@ tượng của nó.
 
 ![Album hai ngày với ảnh dẫn là ảnh duy nhất của ngày đầu](sua-review/native-album-hai-ngay-1.0.png)
 
+Thứ tự đọc: «2 khoảnh khắc» → «17/10» → bản in dẫn có dấu góc gấp → «18/10» → ảnh của ngày sau.
+
 ![Ảnh không tải được vẫn có khối vẽ và câu nói rõ](sua-review/native-album-anh-hong-1.0.png)
 
 ![Chạm ảnh mở đúng ảnh đó](sua-review/native-album-mo-anh-1.0.png)
@@ -188,6 +202,15 @@ tượng của nó.
 Ảnh đầu là ca F03a của review: ngày 17/10 chỉ có ảnh dẫn, ngày 18/10 có một ảnh, và cả hai mốc đều
 hiện. Ảnh cuối là ca F03b: chạm «Mở ảnh 1» ở album của bản trải nghiệm mở trình xem đúng ảnh, không
 vào chế độ chọn.
+
+### Nền tối
+
+![Album hai ngày trên nền tối](sua-review/native-album-hai-ngay-toi.png)
+
+![Năm cảnh có và tắt Nếp trên nền tối](sua-review/native-canh-ab-toi.png)
+
+Nền tối là **giấy đậm mực sáng**, không phải bản sáng phủ filter: silhouette của nhân vật, nét ghế và
+góc coral giữ nguyên vai trò ở cả hai nền, và bản in album vẫn là một tờ giấy chứ không phải một ô đen.
 
 ### Chạy lại bằng chứng này
 
@@ -200,6 +223,41 @@ scripts/mobile_native.sh --flows .maestro-bs-r2 --port 8095         # bộ đủ
 scripts/mobile_native.sh --flows .maestro-bs-r2-font --port 8095    # bộ gọn cho các cỡ chữ
 ```
 
+## Finish review nội bộ đã bắt thêm bốn chỗ
+
+Trước khi gửi lại, batch này đi qua một lượt finish review trong context sạch. Bốn chỗ nó bắt được và
+đã sửa trong cùng nhánh:
+
+1. **Ô ảnh hỏng của album vẽ hình, không phải khối màu.** Nhánh `onError` cũ là một hình chữ nhật tô
+   phẳng, đúng thứ vật liệu mà thế giới này không dùng. Giờ nó dựng khung ảnh trống (`Canh id="chua-co-anh"`,
+   `nep={false}`) với câu «Chưa tải được ảnh» làm chú thích, cùng đồ vật mà địa điểm không ảnh nhận.
+2. **Cặp so sánh lệch giờ vẫn so trên một trục.** Trước đó, một ứng viên có ảnh và một không thì ô này
+   là ảnh 4:3 còn ô kia là dải glyph, hai hình khác nhau. Giờ: **không ai có ảnh** thì cả hai dùng bản
+   gọn; **một bên có ảnh** thì cả hai giữ khung 4:3 và bên thiếu ảnh vẽ đồ vật trong đúng khung đó. Bàn
+   thử có chip «Cặp lệch» để nhìn thẳng ca này.
+3. **Nhãn ngày của album đọc thành một mạch.** Tiêu đề «N khoảnh khắc» chuyển lên trước nhãn ngày của
+   ảnh dẫn, nên thứ tự là «2 khoảnh khắc → 17/10 → ảnh dẫn → 18/10» thay vì bị cắt làm đôi.
+4. **Hai bảng năm cảnh đã vẽ lại.** Bản gửi kèm trước đó bị bộ chụp lát gạch: khối tiêu đề lặp và cảnh
+   bên phải bị cắt ngang người. Lỗi ở script xuất, không ở app; nguyên nhân là đổi cỡ viewport **sau**
+   khi trang đã dựng. Bảng trong doc này là bản vẽ lại.
+
+Và hai chỗ nữa mà chính bảng nền tối và bảng sáng lượt cuối bắt được:
+
+5. **Nền ô ảnh hỏng là giấy, không phải coral.** `accentSoft` ở theme tối biến ô ấy thành mảng nâu đỏ
+   to bằng tấm ảnh. Đổi sang `card`, đúng thứ giấy một bản in làm bằng.
+6. **Không in nhãn ngày của ảnh dẫn khi nhóm ngay sau cùng ngày.** Album ba ảnh (hai ảnh 17/10, một
+   ảnh 18/10) in «17/10» hai lần liền nhau, đọc thành hai ngày. Ca F03a của review không đổi: khi ảnh
+   dẫn là ảnh duy nhất của ngày đầu thì nhãn vẫn ở đó.
+
+Ba điều nó nêu mà tôi **không** sửa trong lượt này, nói thẳng ra đây:
+
+- Ở 48dp, `moi`, `keo-ghe` và `giu-cho` rút về gần cùng một dáng tay. Dưới 72dp chỉ silhouette là thứ
+  được bảo đảm; ba tư thế ấy chỉ khác nhau ở bản 96 trở lên.
+- Glyph theo danh mục còn gọi sai vật ở vài chỗ: «Puppy Farm Đà Lạt» là nông trại hoa nhưng danh mục
+  `vui-choi` vẽ tay cầm game. Gỡ ảnh sai đã chữa lời nói dối; từ vựng đồ vật nằm ngoài bốn gói này.
+- Phép cộng chiều cao thanh tab đúng trên Android vì `lineHeight` co theo cỡ chữ ở đó. Trên iOS thì
+  không, nên con số này phải đo lại khi có lượt iOS; iOS vốn đã nằm trong danh sách chưa kiểm.
+
 ## Xin xem lại đúng bốn điểm
 
 1. **R2**: trong ảnh A/B, quan hệ giữa nhân vật và đồ vật có đọc ra không, và bản tắt Nếp có còn là
@@ -210,3 +268,25 @@ scripts/mobile_native.sh --flows .maestro-bs-r2-font --port 8095    # bộ gọn
 
 Nếu bốn điểm này đạt, xin cho phép chuyển sang B2, B3 và C2 theo roadmap. Nếu chưa, xin nói rõ ảnh nào
 và chỗ nào trong ảnh, để lượt sau sửa đúng chỗ chứ không mở lại cả hướng.
+### R4 · cỡ chữ 1.3 và 2.0
+
+![Khám phá ở cỡ chữ 1.3](sua-review/native-kham-pha-hang-1.3.png)
+
+![Khám phá ở cỡ chữ 2.0](sua-review/native-kham-pha-hang-2.0.png)
+
+Ở 2.0 nhãn tab xuống hai dòng và đọc trọn («Khám phá», «Lên plan», «Tin nhắn», «Cá nhân»); giá kèm
+đơn vị vẫn nguyên câu («100K - 180K/người»); tên địa điểm không bị cắt. Chỉ dòng mô tả một dòng là
+cố ý rút bằng dấu ba chấm.
+
+![Sở thích ở cỡ chữ 1.3](sua-review/native-so-thich-1.3.png)
+
+![Sở thích ở cỡ chữ 2.0](sua-review/native-so-thich-2.0.png)
+
+Lưới Sở thích giữ nguyên như review chốt; ở cỡ chữ lớn nó tự về một cột và tám nhãn vẫn đọc trọn.
+
+**Một lỗi do chính bảng này bắt được.** Ở lượt 1.3 đầu tiên, ô so sánh vẫn hai cột dù mã có nhánh
+xuống một cột từ 1.3. Android lưu `font_scale` trong một float 32 bit, nên nấc người dùng đọc là «1.3»
+tới tay React Native là `Math.fround(1.3)`, nhỏ hơn 1.3 một chút, và phép so `fontScale >= 1.3` sai ở
+đúng nấc ấy. Đã gộp phép so vào `chuLon(fontScale)` trong `adaptive.ts` với ngưỡng 1.28, dùng chung
+cho `PlaceRow` và `PlaceCompare`, kèm test ghim đúng con số máy trả.
+
