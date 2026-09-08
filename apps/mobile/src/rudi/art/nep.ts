@@ -495,17 +495,21 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       break;
     }
     case "voi-len":
-      // One arm straight up to a line overhead at box (72, 10); the other
-      // holds what is about to go on it, out to the side at box (8, 62), which
-      // is the coordinate the scene hangs the print from.
-      tuThe = [...tay(R, P(72, 10)), ...tay(L, P(8, 62))];
+      // One arm up and OUT to a line overhead at box (86, 16); the other holds
+      // what is about to go on it, out to the side at box (8, 62), which is
+      // the coordinate the scene hangs the print from. Out, not straight up:
+      // a vertical reach from that shoulder runs along the fold triangle's
+      // right edge and darkens the coral corner.
+      tuThe = [...tay(R, P(86, 16)), ...tay(L, P(8, 62))];
       break;
     case "ghe-nhin":
-      // Leaning in to look through a gap: the far hand braces at box (72, 26),
-      // which is where the scene puts the one open square, and the near arm
-      // hangs DOWN. Held out straight it made a T, and a T reads as a shrug
-      // however far the body leans.
-      tuThe = [...tay(R, P(72, 26)), ...tay(L, P(10, 72))];
+      // Leaning in to look through a gap: the far hand braces at box (78, 44),
+      // where the scene puts the one open square, and the near arm hangs DOWN.
+      // Held out straight it made a T, and a T reads as a shrug however far
+      // the body leans. The brace point is BELOW y 38 on purpose: a limb run
+      // up to the shoulder's own height crosses the sheared fold triangle and
+      // puts a dark bar across the coral corner, which is the identity mark.
+      tuThe = [...tay(R, P(78, 44)), ...tay(L, P(10, 72))];
       break;
     case "vui":
     default: {

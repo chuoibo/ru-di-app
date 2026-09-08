@@ -1016,7 +1016,7 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
-      "sha256": "894cfa94eed2756e26cc7c26c52b97344a09844203e1fb5cdd988d8eee9700a4",
+      "sha256": "cd38fe495c4603c7334aa8a5225aea085ab0967bb695f74d4d16f6c3b9f96784",
       "rules": [
         "controlled-artifact"
       ],
@@ -1024,7 +1024,7 @@
     },
     {
       "path": "docs/claude/2026-09-09/canh/bang-canh-sang.png",
-      "sha256": "cb9ad655f1bc2ca87418d576b3a156aeb20c20efa5b1d68f9b812de765a5805b",
+      "sha256": "512b18cc6649a9e4e389290a9fff525a8a87d315917bdef4f19b86d95936ad9d",
       "rules": [
         "controlled-artifact"
       ],
@@ -1032,7 +1032,7 @@
     },
     {
       "path": "docs/claude/2026-09-09/canh/bang-canh-toi.png",
-      "sha256": "ba36d7db937cc43a5b02afc8dfeb73ac601d9a1db036684d39a642f45b688e19",
+      "sha256": "29a8f54ba6b6dc2fcbf72154531d1909b64465c77455aba4be46742c864ffbcb",
       "rules": [
         "controlled-artifact"
       ],

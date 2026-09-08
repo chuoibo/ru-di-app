@@ -91,6 +91,18 @@ với cái đầu; tấm ảnh trong tay thấp thành mảng trắng **sau ốn
 | `art-duong` | mười cảnh, có và không Nếp, trong khung 144×112 |
 | repo guard | pass, hai bảng ảnh ghim sha256 |
 
+## Nợ ghi nhận, không sửa lượt này
+
+**Chi mực đi qua góc gấp coral.** Góc gấp là dấu nhận diện của Nếp, và một nét mực đè lên nó là mất
+dấu. Lượt này sửa hai chỗ **tôi vừa gây ra** (tay của `ghe-nhin` và `voi-len`) và một chỗ cũ (mày
+`hoi`). Nhưng **năm khuôn mặt còn lại** — `binh-than`, `hao-hung`, `quyet`, `met`, `nhuong` — đều
+kết thúc mày phải trong dải x ≥ 50, y < 38, tức bên trong tam giác gấp H(50,20)·G(69,38)·Bp(50,38).
+Thấy rõ nhất ở `chua-co-ky-niem` (mặt `binh-than`).
+
+Không sửa lượt này **có chủ ý**: đổi năm khuôn mặt là đổi hình của **mọi** pose và **mọi** cảnh đang
+có, ở cuối một lượt đã dài; và hình gốc của Nếp đã được team duyệt với đúng hình học ấy. Ghi ra đây
+kèm toạ độ để lượt sau sửa một lần cho cả bộ, chứ không phải để quên.
+
 ## Chưa chứng minh
 
 - **Chưa chụp native.** Máy ảo do lane khác lái suốt lượt này. Ảnh trên là bảng vector dựng qua

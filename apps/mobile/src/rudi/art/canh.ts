@@ -160,16 +160,16 @@ const NEN: Record<CanhId, () => LopVe[]> = {
   // print is not on the line -- it is still in a hand below, which is what the
   // screen reader is told too.
   "chua-co-ky-niem": () => [
-    { d: qCong([44, 26], [90, 38], [136, 22]), mau: "muc", net: 2.4 },
+    { d: qCong([40, 40], [88, 54], [136, 36]), mau: "muc", net: 2.4 },
     // Two clips, both empty: one clip alone reads as a peg, two read as a line
     // that photographs belong on and none of them are here yet.
-    // The coral clip sits where the raised hand reaches (box (72, 10) of a
-    // figure at x0 8, scale 0.74 → scene (61.3, 42.1)); the second one is
+    // The coral clip sits where the raised hand reaches (box (86, 16) of a
+    // figure at x0 8, scale 0.74 → scene (71.6, 46.5)); the second one is
     // further along the line, so the line reads as a line and not a peg.
-    { d: khungBo(57, 36, 9, 13, 3), mau: "gap" },
-    { d: khungBo(57, 36, 9, 13, 3), mau: "muc", net: 1.8 },
-    { d: khungBo(108, 30, 9, 13, 3), mau: "gap" },
-    { d: khungBo(108, 30, 9, 13, 3), mau: "muc", net: 1.8 },
+    { d: khungBo(67, 47, 9, 13, 3), mau: "gap" },
+    { d: khungBo(67, 47, 9, 13, 3), mau: "muc", net: 1.8 },
+    { d: khungBo(110, 42, 9, 13, 3), mau: "gap" },
+    { d: khungBo(110, 42, 9, 13, 3), mau: "muc", net: 1.8 },
   ],
   // The filter hides everything: a mesh drawn across, with one gap left.
   "bo-loc-che-het": () => {
@@ -185,8 +185,8 @@ const NEN: Record<CanhId, () => LopVe[]> = {
       // x0 -1, scale 0.76 → scene (53.7, 43.3). Out at x 97 it was across the
       // panel from the head and the pose read as standing beside a screen
       // (finish review 09/09).
-      { d: khungBo(52, 34, 18, 18, 2), mau: "giay" },
-      ...vongHo(61, 43, 12, { moTai: Math.PI * 0.7, net: 2.6 }),
+      { d: khungBo(50, 58, 18, 18, 2), mau: "giay" },
+      ...vongHo(59, 67, 12, { moTai: Math.PI * 0.7, net: 2.6 }),
     ];
   },
 };
@@ -241,10 +241,11 @@ const NEP: Record<CanhId, () => LopVe[]> = {
       ...nepTrenSan("voi-len", 8, 0.74),
     ];
   },
-  // Leaning in at the one open square: the far hand at box (72, 26) → scene
-  // (53.7, 43.3), which IS the square, so the brace point and the hole are the
-  // same place. A body bent sideways with the other arm down, not the
-  // two-handed grip `tim-khong-ra` already uses.
+  // Leaning in at the one open square: the far hand at box (78, 44) → scene
+  // (58.3, 66.3), which IS the square, so the brace point and the hole are the
+  // same place -- and it sits at eye height rather than above the head, so the
+  // figure is looking through it. A body bent sideways with the other arm
+  // down, not the two-handed grip `tim-khong-ra` already uses.
   "bo-loc-che-het": () => nepTrenSan("ghe-nhin", -1, 0.76),
 };
 
