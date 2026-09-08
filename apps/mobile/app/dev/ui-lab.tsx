@@ -20,11 +20,12 @@ import { PhotoViewer } from "../../src/rudi/ui/PhotoViewer";
  */
 const ANH_HONG = { uri: "http://127.0.0.1:1/khong-co-anh.jpg" };
 
-type CaAnh = "khong" | "co" | "hong";
+type CaAnh = "khong" | "co" | "hong" | "lech";
 const CA_ANH: { id: CaAnh; nhan: string }[] = [
   { id: "khong", nhan: "Không ảnh" },
   { id: "co", nhan: "Có ảnh" },
   { id: "hong", nhan: "Ảnh hỏng" },
+  { id: "lech", nhan: "Cặp lệch" },
 ];
 
 type CaAlbum = "0" | "1" | "2-ngay" | "le" | "ngay-la" | "caption-dai" | "anh-hong";
@@ -79,7 +80,14 @@ function anhAlbumMau(ca: CaAlbum): AnhAlbumHienThi[] {
 
 /** Invented places for the renderers Khám phá ships: no picture, a picture, a picture that fails. */
 function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
-  const anh = (that: ImageSource): ImageSource | null => (caAnh === "khong" ? null : caAnh === "hong" ? ANH_HONG : that);
+  // «Cặp lệch»: only the second candidate has a picture, which is the case the
+  // finish review asked to see -- the pair must still compare on one axis.
+  const anh = (that: ImageSource, thuTu: number): ImageSource | null => {
+    if (caAnh === "khong") return null;
+    if (caAnh === "hong") return ANH_HONG;
+    if (caAnh === "lech") return thuTu === 2 ? that : null;
+    return that;
+  };
   const ten = (ngan: string, dai: string) => (tenDai ? dai : ngan);
   const facts = (sao: string, xa: string, gia: string): DiaDiemHienThi["facts"] => [
     { icon: "star", text: sao },
@@ -87,10 +95,10 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
     { icon: "wallet-outline", text: gia },
   ];
   return [
-    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.cafe), badge: "Hợp gu", lyDo: "Hợp gu nhờ hai gu tổng hợp" },
-    { id: "lab-b", name: ten("Lẩu gà lá é", "Lẩu Gà Lá É Gốc Đường Ba Tháng Hai Phường Một"), sub: "Đủ chỗ nhóm tám, tổng hợp", facts: facts("4.7 (214)", "1,6 km", "180K - 260K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.road), badge: null },
-    { id: "lab-c", name: ten("Still Cafe", "Still Cafe Đà Lạt Chi Nhánh Đường Trần Hưng Đạo"), sub: "Cà phê view đồi, tổng hợp", facts: facts("4.7 (512)", "1,8 km", "120K - 200K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.cafe), badge: "Hợp gu" },
-    { id: "lab-d", name: ten("Tiệm trà Sương", "Tiệm Trà Sương Sớm Trên Đồi Thông Phường Mười"), sub: "Trà thảo mộc, tổng hợp", facts: facts("4.5 (143)", "2,1 km", "80K - 140K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.road), badge: null },
+    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.cafe, 0), badge: "Hợp gu", lyDo: "Hợp gu nhờ hai gu tổng hợp" },
+    { id: "lab-b", name: ten("Lẩu gà lá é", "Lẩu Gà Lá É Gốc Đường Ba Tháng Hai Phường Một"), sub: "Đủ chỗ nhóm tám, tổng hợp", facts: facts("4.7 (214)", "1,6 km", "180K - 260K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.road, 1), badge: null },
+    { id: "lab-c", name: ten("Still Cafe", "Still Cafe Đà Lạt Chi Nhánh Đường Trần Hưng Đạo"), sub: "Cà phê view đồi, tổng hợp", facts: facts("4.7 (512)", "1,8 km", "120K - 200K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.cafe, 2), badge: "Hợp gu" },
+    { id: "lab-d", name: ten("Tiệm trà Sương", "Tiệm Trà Sương Sớm Trên Đồi Thông Phường Mười"), sub: "Trà thảo mộc, tổng hợp", facts: facts("4.5 (143)", "2,1 km", "80K - 140K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.road, 3), badge: null },
   ];
 }
 

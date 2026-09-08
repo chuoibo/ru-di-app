@@ -97,5 +97,10 @@ appId: com.lakiet.rudi
 - runFlow:
     file: _ca-kham-pha.yaml
     env:
+      CHIP: "Cặp lệch"
+      ANH: "r2-13-lab-kham-pha-cap-lech"
+- runFlow:
+    file: _ca-kham-pha.yaml
+    env:
       CHIP: "Tên dài"
-      ANH: "r2-13-lab-kham-pha-ten-dai"
+      ANH: "r2-14-lab-kham-pha-ten-dai"

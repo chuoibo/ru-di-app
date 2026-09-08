@@ -3,6 +3,7 @@ import { Image, type ImageSource } from "expo-image";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
+import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
 import { MediaSlot, cauGhiCong, type Attribution } from "../../ui/MediaSlot";
@@ -145,7 +146,7 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   const facts = dd.facts.map((f) => f.text);
   const dauFacts = facts.slice(0, -1).join(" · ");
   const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
-  const chuLon = fontScale >= 1.3;
+  const chuLonHon = chuLon(fontScale);
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
   const [hong, setHong] = useState(false);
@@ -166,14 +167,14 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
           <View style={styles.rowTen}>
             <Text numberOfLines={2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
-            {dd.badge && !chuLon ? <Stamp label={dd.badge} tone="ai" /> : null}
+            {dd.badge && !chuLonHon ? <Stamp label={dd.badge} tone="ai" /> : null}
           </View>
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
           {dauFacts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
           {cuoiFact ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
-          {dd.badge && chuLon ? <Stamp label={dd.badge} style={styles.rowBadgeDuoi} tone="ai" /> : null}
+          {dd.badge && chuLonHon ? <Stamp label={dd.badge} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
@@ -226,7 +227,13 @@ export function PlaceCompare({
   // Two columns compare across; once the text is big enough that a half-width
   // column cannot hold a name and a price whole, the two stack and compare
   // down the same fields in the same order (review 08/09 F04).
-  const xepDoc = fontScale >= 1.3;
+  const xepDoc = chuLon(fontScale);
+  // One axis means one frame. When neither candidate has a picture, both take
+  // the compact header and the pair costs less height; when one of them does,
+  // BOTH keep the 4:3 frame and the photoless one draws its object inside that
+  // frame. A photo tile beside a glyph strip is two shapes and the eye stops
+  // comparing (finish review of this batch).
+  const khongAnhNao = items.every((dd) => !dd.photo);
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -248,9 +255,10 @@ export function PlaceCompare({
             ) : null}
           </>
         );
-        if (dd.photo === null) {
-          // No honest picture: the object, the seal and the heart on one line,
-          // then the same words as the picture tile, so the two still compare.
+        if (khongAnhNao) {
+          // No honest picture on one side: BOTH tiles take the object, the seal
+          // and the heart on one line, then the same words, so the two still
+          // compare on one axis. A photo tile beside a glyph strip does not.
           return (
             <View key={dd.id} style={styles.ungVien}>
               <View style={styles.ungVienDau}>

@@ -6,6 +6,7 @@ import { chiaAlbumTheoNgay } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { ResponsiveRow, SectionHeader } from "../../ui";
 import { KhungAnh } from "../../ui/KhungAnh";
+import { Canh } from "../../ui/art/Canh";
 
 export interface AnhAlbumHienThi {
   id: string;
@@ -15,9 +16,13 @@ export interface AnhAlbumHienThi {
 }
 
 /**
- * A photograph that says so when it fails to load, keeping its place: an
- * empty tinted rectangle used to stand in for a broken address for a whole
- * board run (review 08/09 F01).
+ * A photograph that says so when it fails to load, keeping its place.
+ *
+ * The failed slot draws the empty-frame scene, the same object a place with
+ * no picture gets, with the sentence as its caption: a flat tinted rectangle
+ * stood in for a broken address for a whole board run, and a tinted rectangle
+ * is the one material this world does not use (review 08/09 F01, and the
+ * finish review of this batch).
  */
 function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; caption: string; ratio: number; radius: number }) {
   const { colors } = useRudiTheme();
@@ -25,7 +30,8 @@ function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; 
   useEffect(() => setHong(false), [source]);
   if (hong) {
     return (
-      <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.line }]}>
+      <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.accentSoft }]}>
+        <Canh id="chua-co-anh" nep={false} width={132} />
         <Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text>
       </View>
     );
@@ -56,13 +62,13 @@ export function AlbumAnh({ photos, tiLeDan, onMo }: { photos: readonly AnhAlbumH
   );
   return (
     <>
+      {photos.length > 1 ? <SectionHeader title={`${photos.length} khoảnh khắc`} /> : null}
       {nhieuNgay && nhanDan !== null ? <Text style={[typography.note, { color: colors.inkFaint }]}>{nhanDan}</Text> : null}
       <Pressable accessibilityLabel={`Mở ảnh: ${dan.caption}`} accessibilityRole="button" onPress={() => onMo(0)}>
         <KhungAnh chuThich={dan.caption} dauGiu xuatXu="Ảnh của nhóm">
           <AnhHoacHong caption={dan.caption} radius={4} ratio={tiLeDan} source={dan.source} />
         </KhungAnh>
       </Pressable>
-      {photos.length > 1 ? <SectionHeader title={`${photos.length} khoảnh khắc`} /> : null}
       {theoNgay.map((ngay) => {
         const chan = ngay.anh.length - (ngay.anh.length % 2);
         return (
@@ -84,5 +90,5 @@ export function AlbumAnh({ photos, tiLeDan, onMo }: { photos: readonly AnhAlbumH
 
 const styles = StyleSheet.create({
   ngay: { gap: 6 },
-  hong: { width: "100%", alignItems: "center", justifyContent: "center" },
+  hong: { width: "100%", alignItems: "center", justifyContent: "center", gap: 4 },
 });

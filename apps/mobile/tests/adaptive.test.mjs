@@ -13,6 +13,7 @@ import {
   SHORT_HEIGHT,
   SIZE_CLASS_BREAKPOINTS,
   TAB_BAR_HEIGHT,
+  chuLon,
   gridFor,
   heightClassFor,
   layoutFor,
@@ -124,4 +125,17 @@ test("tab bar cao theo cỡ chữ: 64 ở 1.0, nhích ở 1.3, đủ hai dòng n
   assert.equal(tabBarHeight(3), tabBarHeight(2));
   assert.equal(tabBarHeight(NaN), TAB_BAR_HEIGHT);
   assert.equal(tabBarHeight(0.85), TAB_BAR_HEIGHT);
+});
+
+test("chuLon: bậc 1.3 của Android tính là chữ lớn, kể cả khi float trả 1.2999999", () => {
+  assert.equal(chuLon(1), false);
+  assert.equal(chuLon(1.15), false);
+  // Android giữ font_scale trong một float 32 bit, nên nấc người dùng đọc là
+  // «1.3» tới tay React Native nhỏ hơn 1.3 một chút.
+  const nhip13 = Math.fround(1.3);
+  assert.ok(nhip13 < 1.3, `${nhip13}`);
+  assert.equal(chuLon(nhip13), true);
+  assert.equal(chuLon(1.3), true);
+  assert.equal(chuLon(2), true);
+  assert.equal(chuLon(Number.NaN), false);
 });
