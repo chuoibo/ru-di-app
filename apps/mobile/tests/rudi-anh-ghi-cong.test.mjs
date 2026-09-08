@@ -178,7 +178,10 @@ function timAnhTran(text, fileName) {
       if (da !== undefined) da.add(node.name.text);
       // The key itself, however it is spelled: `x.anh.ve()`, `const f = x.anh.ve`
       // and `x.anh["ve"]()` are the same act, and only the first was caught.
-      if (node.name.text === "ve" && laAnh(node.expression) && relative(APP, fileName) !== NHA_GIU_CHIA) {
+      // Unconditional on the receiver, like the bracket rule below: a prop
+      // typed `AnhCoGhiCong` is not spelled `…anh`, and narrowing this to the
+      // spelling let `buc.ve()` through (finish review 09/09, R1).
+      if (node.name.text === "ve" && relative(APP, fileName) !== NHA_GIU_CHIA) {
         them(node, "mở ảnh ngoài ghi-cong", node.getText(sf).slice(0, 60));
       }
     }
@@ -242,6 +245,8 @@ test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đề
     `const I = () => <Image source={noi.anh.ve().source} />;`,
     `const mo = noi.anh.ve; const J = () => <Image source={mo().source} />;`,
     `const K = () => <Image source={noi.anh["ve"]().source} />;`,
+    // A frame that takes the value as a prop: not spelled «anh», same act.
+    `function L({ buc }) { const { source } = buc.ve(); return <Image source={source} />; }`,
   ].join("\n");
   const thay = timAnhTran(mau, "mau.tsx");
   const loai = thay.map((v) => v.loai);
@@ -251,7 +256,7 @@ test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đề
   assert.ok(loai.filter((l) => l === "Image").length >= 5, `Image: ${loai.join(",")}`);
   assert.ok(loai.includes("anh.source"));
   assert.ok(loai.includes("tách source"), "destructure phải bị bắt (probe Codex mẫu 2)");
-  assert.equal(loai.filter((l) => l === "mở ảnh ngoài ghi-cong").length, 3, "cả ba cách viết đều phải bị bắt");
+  assert.equal(loai.filter((l) => l === "mở ảnh ngoài ghi-cong").length, 4, "mọi cách viết đều phải bị bắt, kể cả khi người nhận không tên là «anh»");
   assert.equal(thay.filter((v) => v.bieuThuc.includes("wood")).length, 0, "một chất liệu không phải ảnh danh mục");
   // Object alias: `picture.source` where `picture = noi.anh` (probe Codex mẫu 1).
   assert.ok(

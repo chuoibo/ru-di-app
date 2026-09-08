@@ -125,7 +125,7 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
               </View>
             </>
           ) : (
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi...</Text>
+            <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi…</Text>
           )}
         </View>
       </View>
@@ -643,7 +643,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                   <View style={[styles.bong, { backgroundColor: mauChat.bubble, borderColor: mauChat.bubble }]}>
                     <Text style={[typography.body, { color: mauChat.bubbleInk }]}>{dangGuiThan}</Text>
                   </View>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi...</Text>
+                  <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi…</Text>
                 </View>
               </View>
               {goiMoHinh(dangGuiThan) ? (

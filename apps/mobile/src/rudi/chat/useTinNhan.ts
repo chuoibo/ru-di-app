@@ -98,6 +98,16 @@ export function useTinNhan(contextId: string, personId: string) {
   }, []);
 
 
+  // A key stands for one request to one path, so nothing in flight may cross a
+  // conversation. `navigate()` to the same route with different params updates
+  // this instance instead of remounting it, which is exactly how a draft could
+  // have been carried into another group (finish review 09/09, R2).
+  useEffect(() => {
+    hangRef.current = [];
+    banNhapRef.current = null;
+    setTrang((cu) => ({ ...cu, hangCho: [] }));
+  }, [contextId, personId]);
+
   const napDau = useCallback(async () => {
     try {
       const page = await docTrangTin(contextId, personId);
@@ -274,12 +284,12 @@ export function useTinNhan(contextId: string, personId: string) {
       const cho = timTrongHang(hangRef.current, khoa);
       if (cho === null || cho.trangThai !== "that-bai") return null;
       datHang(danhDauThuLai(hangRef.current, khoa));
+      // Only stickers and pictures are ever queued: the composer holds the
+      // words, so there is no text row here to retry.
       const goi = (a: Attempt): Promise<TinDaGui> =>
-        cho.kind === "sticker"
-          ? guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null })
-          : cho.kind === "image"
-            ? guiAnh(contextId, personId, cho.than, null, a)
-            : guiTin(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
+        cho.kind === "image"
+          ? guiAnh(contextId, personId, cho.than, cho.phuDe, a)
+          : guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
       return chay({ ...cho, trangThai: "dang-gui", loi: null }, goi);
     },
     [contextId, personId, chay, datHang],
