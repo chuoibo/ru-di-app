@@ -1,0 +1,14 @@
+# Cảnh trên màn thật: danh sách bạn bè rỗng và hai tab lời mời rỗng.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Cảnh rỗng"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r9-73-canh-ab

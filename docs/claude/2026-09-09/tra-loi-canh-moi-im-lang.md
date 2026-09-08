@@ -105,8 +105,12 @@ kèm toạ độ để lượt sau sửa một lần cho cả bộ, chứ không
 
 ## Chưa chứng minh
 
-- **Chưa chụp native.** Máy ảo do lane khác lái suốt lượt này. Ảnh trên là bảng vector dựng qua
-  Chrome headless từ `dist-test`, **không** phải ảnh chụp máy. Ba mươi chỗ nối chưa được nhìn trên
-  màn thật, và đó là phần dễ sai nhất: một cảnh 168dp trong `EmptyState layout="inline"` giữa một
-  danh sách có thể quá to hoặc quá gần chữ.
+- **Chưa chụp native, và lần này đã thử.** Máy ảo được lane khác trả lại lúc ~02:0x. Bảng
+  `.maestro-bs-r9` (khay tám ô, ba trạng thái hàng chờ, cảnh) đã viết xong nhưng harness báo
+  **máy chưa cài dev client**. Đã `expo prebuild` và `gradlew :app:assembleDebug` **thành công**
+  (JDK 21 trên PATH là JRE, không có `javac`; phải chỉ `-Dorg.gradle.java.home` sang JDK 17), ra
+  APK debug 263 MB gồm bốn ABI. `adb install` chạy **23 phút không tiến triển, 0% CPU**, rồi
+  `adb shell` ngừng trả lời hẳn. Đã dừng lại thay vì làm hỏng máy ảo của lane khác. Nên: **hình
+  đã được nhìn ở bảng vector, chưa được nhìn trên máy**. Lượt sau nên dựng APK **chỉ ABI x86_64**
+  cho máy ảo, không phải cả bốn.
 - Cỡ chữ 1.3/2.0 chưa đo với cảnh mới.

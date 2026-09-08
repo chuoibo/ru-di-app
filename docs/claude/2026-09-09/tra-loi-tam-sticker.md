@@ -106,9 +106,14 @@ thứ hai cho khay. Dòng cũ khẳng định `di-thoi` **không** có bản rú
 
 ## Chưa chứng minh
 
-- **Chưa chụp native.** Máy ảo đang do lane khác lái suốt lượt này. Ảnh ở trên là bảng vector dựng
-  qua Chrome headless từ chính `dist-test`, **không** phải ảnh chụp máy. Khay thật, bubble thật,
-  và cỡ chữ 1.3/2.0 chưa đo.
+- **Chưa chụp native, và lần này đã thử.** Máy ảo được lane khác trả lại lúc ~02:0x. Bảng
+  `.maestro-bs-r9` (khay tám ô, ba trạng thái hàng chờ, cảnh) đã viết xong nhưng harness báo
+  **máy chưa cài dev client**. Đã `expo prebuild` và `gradlew :app:assembleDebug` **thành công**
+  (JDK 21 trên PATH là JRE, không có `javac`; phải chỉ `-Dorg.gradle.java.home` sang JDK 17), ra
+  APK debug 263 MB gồm bốn ABI. `adb install` chạy **23 phút không tiến triển, 0% CPU**, rồi
+  `adb shell` ngừng trả lời hẳn. Đã dừng lại thay vì làm hỏng máy ảo của lane khác. Nên: **hình
+  đã được nhìn ở bảng vector, chưa được nhìn trên máy**. Lượt sau nên dựng APK **chỉ ABI x86_64**
+  cho máy ảo, không phải cả bốn.
 - **Chưa ai đọc mù.** Reviewer vòng trước nói đúng rằng biết trước đề bài thì không gọi là blind
   test. Bảng trên có nhãn ngay dưới hình; muốn đo thật thì che nhãn và hỏi người chưa đọc doc.
 - Bộ này thay **cả bảy** hình cũ cùng lúc, đúng lời review («trình một bộ có chủ đích để so sánh»,

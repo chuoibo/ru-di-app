@@ -1,0 +1,22 @@
+# Ba trạng thái của một lần gửi sticker, dựng qua CHÍNH máy trạng thái của màn
+# chat (`chat/hang-cho.ts`) trên bàn thử dev: đang gửi, hỏng còn gửi lại được,
+# và hỏng vĩnh viễn không mời thử lại.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chat · sticker đang gửi, hỏng, và gửi lại"
+    direction: DOWN
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Đang gửi…"
+    timeout: 20000
+- assertVisible: "Thử lại"
+# Lỗi vĩnh viễn phải nói ra lý do và KHÔNG mời bấm lại.
+- assertVisible: "Sticker này bản app chưa có."
+- takeScreenshot: r9-72-hang-cho

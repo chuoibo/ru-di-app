@@ -1,0 +1,43 @@
+# Tám sticker Nếp trong khay thật và trong bubble thật (PR tám sticker).
+# Câu hỏi bảng này trả lời: bộ tám có đọc ra tám HÀNH ĐỘNG khác nhau ở ô 64
+# không, và nhãn «Cà phê không?» còn bị cắt không.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Chat · cả tám sticker ở hai cỡ đọc"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r9-71-tam-sticker-tren
+- scrollUntilVisible:
+    element:
+      text: "Tuyệt vời"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r9-71-tam-sticker-duoi
+# Khay thật: nhãn hai dòng, bốn cột ở cỡ chữ thường.
+- scrollUntilVisible:
+    element:
+      text: "Mở khay sticker"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Mở khay sticker"
+- extendedWaitUntil:
+    visible: "Khay sticker"
+    timeout: 20000
+- extendedWaitUntil:
+    visible: "Chờ tí"
+    timeout: 20000
+# Nhãn dài nhất của từ vựng: trước lượt này nó ra «Cà phê khôn…».
+- assertVisible: "Cà phê không?"
+- takeScreenshot: r9-71-khay-tam-o
+- tapOn: "Cà phê không?"
+- extendedWaitUntil:
+    visible: "Sticker: Cà phê không?"
+    timeout: 20000
+- takeScreenshot: r9-71-bubble-ca-phe
