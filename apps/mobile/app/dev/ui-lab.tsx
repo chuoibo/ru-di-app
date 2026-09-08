@@ -7,6 +7,8 @@ import { demoAssets } from "../../src/rudi/fixtures";
 import { typography, useRudiTheme } from "../../src/rudi/theme";
 import { AlbumAnh, type AnhAlbumHienThi } from "../../src/rudi/screens/ky-niem/AlbumAnh";
 import { PlaceCompare, PlaceLead, PlaceRow, type DiaDiemHienThi } from "../../src/rudi/screens/explore/HangDiaDiem";
+import { HangChang } from "../../src/rudi/screens/keo/HangChang";
+import { TIEN_TO_MINH_HOA, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
@@ -27,6 +29,26 @@ const CA_ANH: { id: CaAnh; nhan: string }[] = [
   { id: "hong", nhan: "Ảnh hỏng" },
   { id: "lech", nhan: "Cặp lệch" },
 ];
+
+/** A made-up credit, so the words a frame prints can be seen without claiming a real author. */
+const GHI_CONG_MAU = { prefix: TIEN_TO_MINH_HOA, author: "Tác giả tổng hợp", license: "Giấy phép tổng hợp" };
+
+type CaChang = "ghi-cong" | "hong" | "khong";
+const CA_CHANG: { id: CaChang; nhan: string }[] = [
+  { id: "ghi-cong", nhan: "Chặng có ghi công" },
+  { id: "hong", nhan: "Chặng ảnh hỏng" },
+  { id: "khong", nhan: "Chặng không ảnh" },
+];
+
+/**
+ * Two stops of an invented route for the renderer the itinerary and the
+ * timeline ship (`HangChang.anh`): the credit must be a line of the stop, and a
+ * picture that fails must give way to the category's object in the frame.
+ */
+function anhChangMau(ca: CaChang, that: ImageSource): AnhCoGhiCong | null {
+  if (ca === "khong") return null;
+  return { source: ca === "hong" ? ANH_HONG : that, nguon: GHI_CONG_MAU };
+}
 
 type CaAlbum = "0" | "1" | "2-ngay" | "le" | "ngay-la" | "caption-dai" | "anh-hong";
 const CA_ALBUM: { id: CaAlbum; nhan: string }[] = [
@@ -88,6 +110,8 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
     if (caAnh === "lech") return thuTu === 2 ? that : null;
     return that;
   };
+  // A picture never travels without its credit, so the rows print the line too.
+  const ghiCong = (photo: ImageSource | null) => (photo ? GHI_CONG_MAU : undefined);
   const ten = (ngan: string, dai: string) => (tenDai ? dai : ngan);
   const facts = (sao: string, xa: string, gia: string): DiaDiemHienThi["facts"] => [
     { icon: "star", text: sao },
@@ -95,10 +119,10 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
     { icon: "wallet-outline", text: gia },
   ];
   return [
-    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.cafe, 0), badge: "Hợp gu", lyDo: "Hợp gu nhờ hai gu tổng hợp" },
-    { id: "lab-b", name: ten("Lẩu gà lá é", "Lẩu Gà Lá É Gốc Đường Ba Tháng Hai Phường Một"), sub: "Đủ chỗ nhóm tám, tổng hợp", facts: facts("4.7 (214)", "1,6 km", "180K - 260K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.road, 1), badge: null },
-    { id: "lab-c", name: ten("Still Cafe", "Still Cafe Đà Lạt Chi Nhánh Đường Trần Hưng Đạo"), sub: "Cà phê view đồi, tổng hợp", facts: facts("4.7 (512)", "1,8 km", "120K - 200K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.cafe, 2), badge: "Hợp gu" },
-    { id: "lab-d", name: ten("Tiệm trà Sương", "Tiệm Trà Sương Sớm Trên Đồi Thông Phường Mười"), sub: "Trà thảo mộc, tổng hợp", facts: facts("4.5 (143)", "2,1 km", "80K - 140K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.road, 3), badge: null },
+    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.cafe, 0), attribution: ghiCong(anh(demoAssets.cafe, 0)), badge: "Hợp gu", lyDo: "Hợp gu nhờ hai gu tổng hợp" },
+    { id: "lab-b", name: ten("Lẩu gà lá é", "Lẩu Gà Lá É Gốc Đường Ba Tháng Hai Phường Một"), sub: "Đủ chỗ nhóm tám, tổng hợp", facts: facts("4.7 (214)", "1,6 km", "180K - 260K/người"), glyph: "location-outline", loai: "quan-an-local", photo: anh(demoAssets.road, 1), attribution: ghiCong(anh(demoAssets.road, 1)), badge: null },
+    { id: "lab-c", name: ten("Still Cafe", "Still Cafe Đà Lạt Chi Nhánh Đường Trần Hưng Đạo"), sub: "Cà phê view đồi, tổng hợp", facts: facts("4.7 (512)", "1,8 km", "120K - 200K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.cafe, 2), attribution: ghiCong(anh(demoAssets.cafe, 2)), badge: "Hợp gu" },
+    { id: "lab-d", name: ten("Tiệm trà Sương", "Tiệm Trà Sương Sớm Trên Đồi Thông Phường Mười"), sub: "Trà thảo mộc, tổng hợp", facts: facts("4.5 (143)", "2,1 km", "80K - 140K/người"), glyph: "location-outline", loai: "cafe", photo: anh(demoAssets.road, 3), attribution: ghiCong(anh(demoAssets.road, 3)), badge: null },
   ];
 }
 
@@ -115,6 +139,7 @@ export default function UiLab() {
   const [caAlbum, setCaAlbum] = useState<CaAlbum>("2-ngay");
   const [xemAlbum, setXemAlbum] = useState<number | null>(null);
   const [caAnh, setCaAnh] = useState<CaAnh>("khong");
+  const [caChang, setCaChang] = useState<CaChang>("ghi-cong");
   const [tenDai, setTenDai] = useState(false);
   const [daLuu, setDaLuu] = useState<string[]>([]);
   const anhAlbum = anhAlbumMau(caAlbum);
@@ -160,6 +185,29 @@ export default function UiLab() {
       <PlaceRow daLuu={daLuu.includes(conLai[2].id)} dd={conLai[2]} onOpen={() => undefined} onSave={() => luu(conLai[2].id)} testID="lab-row" />
     </View>
 
+    <SectionHeader title="Chặng · renderer live, dữ liệu tổng hợp" />
+    <Inline gap={8} wrap>
+      {CA_CHANG.map((ca) => <Chip key={ca.id} label={ca.nhan} onPress={() => setCaChang(ca.id)} selected={caChang === ca.id} />)}
+    </Inline>
+    <View testID="lab-chang">
+      <HangChang
+        anh={(() => { const a = anhChangMau(caChang, demoAssets.road); return a ? { anh: a, alt: "Đồi tổng hợp", loai: "vui-choi" } : null; })()}
+        gio="06:30"
+        phac
+        phu="Đồi tổng hợp"
+        phuTone="inkSoft"
+        tieuDe="Săn mây tổng hợp"
+      />
+      <HangChang
+        anh={(() => { const a = anhChangMau(caChang, demoAssets.cafe); return a ? { anh: a, alt: "Quán tổng hợp", loai: "cafe" } : null; })()}
+        cuoi
+        gio="09:00"
+        phac
+        phu="Quán tổng hợp"
+        phuTone="inkSoft"
+        tieuDe="Cà phê sáng tổng hợp"
+      />
+    </View>
     <SectionHeader title="Cử chỉ: kéo thả và bộ ảnh" />
     <Text style={[typography.body, { color: colors.ink }]}>Thứ tự: {items.map((item) => item.id).join(" → ")}</Text>
     <ReorderList items={items} itemKey={(item) => item.id} label={(item) => item.label}

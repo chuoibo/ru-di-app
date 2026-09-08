@@ -6,7 +6,6 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -31,7 +30,7 @@ import {
 } from "../ui";
 import { Avatar } from "../ui/Avatar";
 import { Money } from "../ui/Money";
-import { AnhChang, HangChang } from "./keo/HangChang";
+import { HangChang } from "./keo/HangChang";
 
 function ChatBubble({
   person,
@@ -304,6 +303,7 @@ export function AiItineraryScreen() {
           const noi = slot.placeId ? PLACES.find((p) => p.id === slot.placeId) : undefined;
           return (
           <HangChang
+            anh={!session.itineraryEditing && noi?.anh ? { anh: noi.anh, alt: noi.name, loai: LOAI_MAU[noi.category] } : null}
             cuoi={index === day.items.length - 1}
             gio={slot.time}
             key={slot.time + slot.title + index}
@@ -315,8 +315,6 @@ export function AiItineraryScreen() {
                   <IconButton accessibilityLabel="Xuống" icon="chevron-down" onPress={() => session.moveItinerarySlot(activeDay, index, 1)} quiet />
                   <IconButton accessibilityLabel="Xóa" icon="trash-outline" onPress={() => session.removeItinerarySlot(activeDay, index)} quiet />
                 </Inline>
-              ) : noi?.anh ? (
-                <AnhChang alt={noi.name} source={noi.anh.source} />
               ) : null
             }
             phu={noi?.name ?? null}
@@ -366,13 +364,14 @@ export function VotingScreen() {
                 pressed && styles.pressed,
               ]}
             >
-              {place.anh ? (
-                <Image accessibilityLabel={place.name} contentFit="cover" source={place.anh.source} style={[styles.voteThumb, { borderRadius: radius.small }]} />
-              ) : (
-                <View style={[styles.voteThumb, styles.voteThumbVe, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
-                  <GuGlyph id={guTheoLoai(LOAI_MAU[place.category])} size={30} tone="accent" />
-                </View>
-              )}
+              {/* Every option is the category drawn with one pen, never a
+                  photograph: a ballot is fair only when no option stands out
+                  because the catalogue happens to hold a stock picture of its
+                  kind, and a 56dp tile has no room for the credit such a
+                  picture must be shown under (review 08/09 vòng 2, F21). */}
+              <View style={[styles.voteThumb, styles.voteThumbVe, { borderRadius: radius.small, backgroundColor: colors.card, borderColor: colors.line }]}>
+                <GuGlyph id={guTheoLoai(LOAI_MAU[place.category])} size={30} tone="accent" />
+              </View>
               <View style={styles.voteBody}>
                 <Text style={[typography.title, { color: colors.ink }]}>{place.name}</Text>
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>{place.distance} · {place.price}</Text>
@@ -436,7 +435,7 @@ const styles = StyleSheet.create({
   budgetLine: { gap: 2, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   voteOption: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 72 },
   voteThumb: { width: 56, height: 56 },
-  voteThumbVe: { alignItems: "center", justifyContent: "center" },
+  voteThumbVe: { alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth },
   voteBody: { flex: 1, gap: 3 },
   voteResult: { gap: 4, marginTop: 4 },
   voteSummary: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderWidth: 1, borderStyle: "dashed" },

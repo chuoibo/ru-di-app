@@ -1,6 +1,7 @@
 import { ImageSource } from "expo-image";
 
 import type { PlaceCategory } from "./places";
+import { TIEN_TO_MINH_HOA, type AnhCoGhiCong } from "./ui/ghi-cong";
 import { bangMauFixture, mauSang, mauSao } from "./theme";
 
 export type DemoPerson = {
@@ -10,11 +11,12 @@ export type DemoPerson = {
   color: string;
 };
 
-/** A sample photograph with the relation it may claim, credited (see assets/rudi/README.md). */
-export type AnhMau = {
-  source: ImageSource;
-  nguon: { prefix: string; author: string; license: string };
-};
+/**
+ * A sample photograph with the relation it may claim, credited (see
+ * assets/rudi/README.md). `nguon` is the same `Attribution` the frames print,
+ * and it is required: a frame that receives an `AnhMau` receives its credit.
+ */
+export type AnhMau = AnhCoGhiCong;
 
 export type DemoPlace = {
   id: string;
@@ -94,8 +96,8 @@ export const LOAI_MAU: Record<PlaceCategory, string> = {
  * and friends on a rooftop: none is a place, so no place claims them.
  */
 const ANH_MINH_HOA: Record<"cafe" | "doi", AnhMau> = {
-  cafe: { source: demoAssets.cafe, nguon: { prefix: "Ảnh minh hoạ: ", author: "Kien Tran", license: "Pexels License" } },
-  doi: { source: demoAssets.road, nguon: { prefix: "Ảnh minh hoạ: ", author: "Hieu Do Quang", license: "Unsplash License" } },
+  cafe: { source: demoAssets.cafe, nguon: { prefix: TIEN_TO_MINH_HOA, author: "Kien Tran", license: "Pexels License" } },
+  doi: { source: demoAssets.road, nguon: { prefix: TIEN_TO_MINH_HOA, author: "Hieu Do Quang", license: "Unsplash License" } },
 };
 
 export const PLACES: DemoPlace[] = [

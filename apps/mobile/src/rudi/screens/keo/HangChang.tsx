@@ -1,8 +1,11 @@
-import type { ReactNode } from "react";
-import { Image, type ImageSource } from "expo-image";
+import { Image } from "expo-image";
+import { useEffect, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { guTheoLoai } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
+import { GuGlyph } from "../../ui/art/Gu";
+import { cauGhiCong, type AnhCoGhiCong } from "../../ui/ghi-cong";
 
 /**
  * One stop on the ink route: the hour on the left axis, a node on the line,
@@ -29,6 +32,15 @@ export interface HangChangProps {
   accessibilityLabel?: string;
   /** Right-hand slot: a stamp, a button, a menu. */
   phai?: ReactNode;
+  /**
+   * The photograph beside a main stop, with the credit it may be shown under.
+   * The row draws both -- the 44dp thumbnail at the right and the credit as
+   * the stop's last line -- so a screen cannot pass the picture and forget the
+   * words (review 08/09 vòng 2, F21: the vote and the itinerary did exactly
+   * that). A picture that fails to load gives way to the category's object in
+   * the same frame; `loai` names that category.
+   */
+  anh?: { anh: AnhCoGhiCong; alt: string; loai?: string } | null;
   children?: ReactNode;
 }
 
@@ -36,17 +48,33 @@ export interface HangChangProps {
  * The photograph beside a main stop of the route. A stop with a place the
  * group has a picture of reads as a destination; a stop without one stays a
  * compact line, and that difference is the timeline's rhythm (report §5.2 B).
+ * Not exported: the only way to put a picture on a stop is `HangChang.anh`,
+ * which carries the credit with it.
  */
-export function AnhChang({ source, alt }: { source: ImageSource; alt: string }) {
+function AnhChang({ anh, alt, loai }: { anh: AnhCoGhiCong; alt: string; loai?: string }) {
   const { colors, radius } = useRudiTheme();
+  const [hong, setHong] = useState(false);
+  useEffect(() => setHong(false), [anh.source]);
   return (
     <View style={[styles.khungAnhChang, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
-      <Image accessibilityLabel={alt} contentFit="cover" source={source} style={[styles.anhChang, { borderRadius: radius.small - 2, backgroundColor: colors.line }]} />
+      {hong ? (
+        <View accessibilityLabel={`Chưa tải được ảnh: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
+          <GuGlyph id={guTheoLoai(loai ?? "")} size={28} tone="accent" />
+        </View>
+      ) : (
+        <Image
+          accessibilityLabel={alt}
+          contentFit="cover"
+          onError={() => setHong(true)}
+          source={anh.source}
+          style={[styles.anhChang, { borderRadius: radius.small - 2, backgroundColor: colors.line }]}
+        />
+      )}
     </View>
   );
 }
 
-export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, phai, children }: HangChangProps) {
+export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, phai, anh = null, children }: HangChangProps) {
   const { colors } = useRudiTheme();
   const muc = phac ? colors.inkFaint : colors.lineStrong;
   const body = (
@@ -55,6 +83,11 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
       {phu ? <Text style={[typography.caption, { color: colors[phuTone] }]}>{phu}</Text> : null}
       {ghiChu ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{ghiChu}</Text> : null}
       {children}
+      {/* The credit is a line of the stop, beside the thumbnail it qualifies,
+          so it scrolls with the picture and never ends up a screen away from
+          it (ADR-0017 §2.5). Two lines: a long author name wraps rather than
+          ends in an ellipsis. */}
+      {anh ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(anh.anh.nguon)}</Text> : null}
     </>
   );
   return (
@@ -84,7 +117,13 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
       ) : (
         <View style={styles.body}>{body}</View>
       )}
-      {phai ? <View style={styles.phai}>{phai}</View> : null}
+      {anh ? (
+        <View style={styles.phai}>
+          <AnhChang alt={anh.alt} anh={anh.anh} loai={anh.loai} />
+        </View>
+      ) : phai ? (
+        <View style={styles.phai}>{phai}</View>
+      ) : null}
     </View>
   );
 }
@@ -96,6 +135,7 @@ const styles = StyleSheet.create({
   gio: { minWidth: 46, flexShrink: 0, textAlign: "right", paddingTop: 2, fontVariant: ["tabular-nums"] },
   khungAnhChang: { padding: 2, borderWidth: StyleSheet.hairlineWidth },
   anhChang: { width: 44, height: 44 },
+  anhChangVe: { alignItems: "center", justifyContent: "center" },
   axis: { width: 14, alignItems: "center" },
   node: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginTop: 4 },
   line: { flex: 1, width: 2, marginTop: 4, marginBottom: -4, minHeight: 20 },
