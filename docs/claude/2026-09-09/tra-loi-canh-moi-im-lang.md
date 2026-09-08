@@ -77,6 +77,12 @@ Finish review trả `rebuild`: **ba cảnh MỚI dùng lại pose của ba cản
 Vẽ lại bằng **ba pose mới** (`nang-bong`, `voi-len`, `ghe-nhin`) và **hai motif nền mới**, nên nay
 mười cảnh khác nhau trên cả hai trục. Lượt chấm thứ hai xác nhận điều đó.
 
+Hai lượt sau nữa bắt tiếp: một lỗi **quy trình** (ghi chú của tôi mô tả hình học **không có trong
+commit** — lệnh sửa viết `cd apps/mobile && python3 <<PY` trong khi shell đã ở sẵn trong
+`apps/mobile`, nên `cd` hỏng và cả chuỗi ngắt trước khi python chạy; tôi đọc dòng test xanh ngay
+sau đó rồi báo là đã sửa), và một **hồi quy do chính lần sửa trước gây ra** (dời tay `ghe-nhin` làm
+chi mực chạy xuyên tam giác gấp coral, đúng thứ vừa gỡ khỏi mày `hoi`, đến bằng đường khác).
+
 Nó còn bắt bốn chỗ đặt sai mà tôi không thấy khi tự chấm: chiếc ghế đang ngồi bị thân người che
 kín nên đọc ra «đứng trên ghế»; bàn tay mời dừng cách mặt bàn 15 đơn vị; `ghe-nhin` với hai tay
 dang thẳng đọc ra **nhún vai** chứ không phải ghé nhìn, và ô hở của lưới nằm bên kia tấm lưới so
