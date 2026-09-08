@@ -6,8 +6,8 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-na
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
-import { MediaSlot, cauGhiCong } from "../../ui/MediaSlot";
-import type { AnhCoGhiCong } from "../../ui/ghi-cong";
+import { MediaSlot } from "../../ui/MediaSlot";
+import { veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
@@ -128,11 +128,10 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
         <MediaSlot
           alt={dd.name}
-          attribution={dd.anh.nguon}
           fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={44} />}
+          nguon={{ loai: "danh-muc", anh: dd.anh }}
           overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
           ratio={tiLe}
-          source={dd.anh.source}
         />
         <View style={styles.leadText}>{chu}</View>
       </Pressable>
@@ -156,12 +155,13 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
   const [hong, setHong] = useState(false);
   useEffect(() => setHong(false), [dd.anh]);
+  const ve = veKhung(dd.anh === null ? null : { loai: "danh-muc", anh: dd.anh }, { hong });
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
         <View style={[styles.thumb, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
-          {dd.anh && !hong ? (
-            <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={dd.anh.source} style={StyleSheet.absoluteFill} />
+          {ve.source !== null ? (
+            <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
           ) : dd.loai !== undefined ? (
             <GuGlyph id={guTheoLoai(dd.loai)} size={32} tone="accent" />
           ) : (
@@ -184,9 +184,9 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
           {/* A failed picture is a state the reader is told about, not only the screen reader (finish review 08/09). */}
-          {dd.anh && hong ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa tải được ảnh</Text> : null}
-          {dd.anh ? (
-            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(dd.anh.nguon)}</Text>
+          {ve.canhBao !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{ve.canhBao}</Text> : null}
+          {ve.ghiCong !== null ? (
+            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text>
           ) : null}
         </View>
       </Pressable>
@@ -257,9 +257,6 @@ export function PlaceCompare({
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
             {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
             {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
-            {dd.anh ? (
-              <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.anh.nguon)}</Text>
-            ) : null}
           </>
         );
         if (khongAnhNao) {
@@ -306,8 +303,11 @@ export function PlaceCompare({
                     </View>
                   </>
                 }
+                // The credit is the frame's own line now, printed under the
+                // picture instead of after the facts: it was the one call site
+                // that handed this frame a bare address (review 08/09, F31).
+                nguon={dd.anh === null ? null : { loai: "danh-muc", anh: dd.anh }}
                 ratio={4 / 3}
-                source={dd.anh?.source ?? null}
               />
               {chu}
             </Pressable>

@@ -9,6 +9,10 @@ import { typography, useRudiTheme } from "../theme";
 import { boundPhotoOffset, viewerIndex } from "../photo-viewer";
 import { useMotion } from "./useMotion";
 
+/**
+ * One picture in the full-screen pager: the group's own, or an authored asset.
+ * A catalogue photograph cannot get here without its credit (F31).
+ */
 export type ViewerPhoto = { id: string; source: ImageSource; caption: string };
 
 /** Native pager; callers must supply the existing authenticated source adapter. */

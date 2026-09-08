@@ -23,6 +23,7 @@ import {
 } from "../../screens/kham-pha/places";
 import type { TimKiemState } from "../../screens/kham-pha/tim-kiem";
 import { quenDiemDen } from "./diem-den";
+import { anhDanhMuc, type AnhCoGhiCong } from "../ui/ghi-cong";
 import type { IconName } from "../ui";
 
 const LOI_DIA_DIEM: Record<string, string> = {
@@ -308,17 +309,23 @@ export const CAU_NGUON_ANH =
  */
 export function anhBiaThe(
   place: Pick<Place, "photoUrl" | "photoAuthor" | "photoLicense">,
-): { nguon: { uri: string }; giayPhep: string } | null {
+): AnhCoGhiCong | null {
   if (place.photoUrl === null || place.photoAuthor === null || place.photoLicense === null) {
     return null;
   }
-  return {
-    // `parsePlace` ran the cover through `nguonAnhAnToan` already, so this is
-    // the finished address. Prepending the base here is the bug that drew an
-    // empty frame under a correct credit.
-    nguon: { uri: place.photoUrl },
-    giayPhep: cauGiayPhep({ author: place.photoAuthor, license: place.photoLicense }),
-  };
+  // One decision, not two. Two screens used to ask this function whether the
+  // picture may be drawn and then rebuild the credit themselves from the same
+  // three fields, which is two expressions that had to agree by hand (review
+  // 08/09, F31). `anhDanhMuc` returns the address and the sentence as one
+  // value that cannot be split.
+  //
+  // `parsePlace` ran the cover through `nguonAnhAnToan` already, so this is
+  // the finished address. Prepending the base here is the bug that drew an
+  // empty frame under a correct credit.
+  return anhDanhMuc(
+    { uri: place.photoUrl },
+    { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
+  );
 }
 
 /**

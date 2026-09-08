@@ -10,7 +10,7 @@ import { PlaceCompare, PlaceLead, PlaceRow, type DiaDiemHienThi } from "../../sr
 import { HangChang } from "../../src/rudi/screens/keo/HangChang";
 import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
 import { Sticker } from "../../src/rudi/ui/stickers/Sticker";
-import { TIEN_TO_MINH_HOA, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
+import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
@@ -49,7 +49,7 @@ const CA_CHANG: { id: CaChang; nhan: string }[] = [
  */
 function anhChangMau(ca: CaChang, that: ImageSource): AnhCoGhiCong | null {
   if (ca === "khong") return null;
-  return { source: ca === "hong" ? ANH_HONG : that, nguon: GHI_CONG_MAU };
+  return anhDanhMuc(ca === "hong" ? ANH_HONG : that, GHI_CONG_MAU);
 }
 
 type CaAlbum = "0" | "1" | "2-ngay" | "le" | "ngay-la" | "caption-dai" | "anh-hong";
@@ -115,7 +115,7 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
   // A picture never travels without its credit: the frames take both in one object.
   const anhLab = (that: ImageSource, thuTu: number): AnhCoGhiCong | null => {
     const p = anh(that, thuTu);
-    return p ? { source: p, nguon: GHI_CONG_MAU } : null;
+    return p ? anhDanhMuc(p, GHI_CONG_MAU) : null;
   };
   const ten = (ngan: string, dai: string) => (tenDai ? dai : ngan);
   const facts = (sao: string, xa: string, gia: string): DiaDiemHienThi["facts"] => [

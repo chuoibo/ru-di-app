@@ -37,7 +37,6 @@ import {
 import { Wordmark } from "../ui/Wordmark";
 import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
-import { khungAnh } from "../ui/ghi-cong";
 import { GuGlyph } from "../ui/art/Gu";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { EmptyState } from "../ui/EmptyState";
@@ -386,8 +385,8 @@ export function PlaceDetailScreen() {
             alt={place.name}
             height={rong ? 400 : 300}
             overlay={<View style={styles.detailTop}>{nutDau}</View>}
+            nguon={{ loai: "danh-muc", anh: place.anh }}
             radius={rong ? 24 : 0}
-            {...khungAnh(place.anh)}
           />
         ) : (
           <View style={styles.detailTopTron}>{nutDau}</View>

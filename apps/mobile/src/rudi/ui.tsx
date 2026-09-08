@@ -756,6 +756,12 @@ export function AvatarStack({ people, max = 4 }: { people: DemoPerson[]; max?: n
   );
 }
 
+/**
+ * A picture the group owns: an authored asset, or a photograph the group took
+ * and the server released to a member. Never a catalogue photograph -- those
+ * are `AnhCoGhiCong`, which does not hand out an address on its own, so one
+ * cannot reach this frame and lose its credit on the way (F31).
+ */
 export function Photo({
   source,
   height = 190,

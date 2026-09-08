@@ -1,18 +1,25 @@
-import { Image, type ImageSource } from "expo-image";
+import { Image } from "expo-image";
 import { useEffect, useState, type ReactNode } from "react";
 import { StyleSheet, Text, View, type DimensionValue, type StyleProp, type ViewStyle } from "react-native";
 
 import { MOTION_MS } from "../motion";
 import { typography, useRudiTheme } from "../theme";
-import { cauGhiCong, type Attribution } from "./ghi-cong";
+import { khoaNguon, veKhung, type NguonKhung } from "./ghi-cong";
 import { useMotion } from "./useMotion";
 
-/** The credit sentence and its type live in `ghi-cong.ts` (pure); re-exported so callers keep one import. */
-export { cauGhiCong, type Attribution } from "./ghi-cong";
+/** The credit sentence, its type and the catalogue value live in `ghi-cong.ts` (pure); re-exported so callers keep one import. */
+export { anhDanhMuc, cauGhiCong, veKhung, type AnhCoGhiCong, type Attribution, type NguonKhung } from "./ghi-cong";
 
 export interface MediaSlotProps {
-  /** An authenticated source from `nguonAnh`, or null when there is no photo. */
-  source: ImageSource | null;
+  /**
+   * Where the picture comes from: a catalogue photograph carrying its credit,
+   * the group's own authenticated address from `nguonAnh`, or nothing.
+   *
+   * It is one prop rather than a `source` beside an optional `attribution`
+   * because those were two independent decisions that had to agree by hand,
+   * and one of the three call sites already disagreed (review 08/09, F31).
+   */
+  nguon: NguonKhung;
   /** Width / height. 16/10 for a place, 1 for a tile, 4/5 for a polaroid. */
   ratio?: number;
   /** Fixed height instead of a ratio, when the parent sets the width. */
@@ -21,8 +28,6 @@ export interface MediaSlotProps {
   radius?: number;
   /** What a viewer with a screen reader hears; required, never decorative. */
   alt: string;
-  /** Provenance line under a licensed photo. Required whenever `source` is not the group's own. */
-  attribution?: Attribution;
   /** Authored artwork for the empty slot (an SVG per category). */
   fallback?: ReactNode;
   /** Content laid over the picture: a tag, a counter, a title on a scrim. */
@@ -33,7 +38,13 @@ export interface MediaSlotProps {
 }
 
 /**
- * The one place a photograph may appear in the shell.
+ * The frame a CATALOGUE photograph appears in.
+ *
+ * Not the only place the shell draws a picture: the group's own photographs
+ * also reach `ui.tsx Photo`, `AlbumAnh` and `PhotoViewer`. What is true, and
+ * what F31 asked to be made true by construction rather than by convention,
+ * is that a licensed photograph cannot be drawn anywhere without its credit,
+ * because `AnhCoGhiCong` hands out its address and its sentence together.
  *
  * Today live screens have no images on the wire, and the rule in DESIGN.md is
  * blunt: a stock photo standing in for a real place is a fabrication. This slot
@@ -45,13 +56,12 @@ export interface MediaSlotProps {
  * anywhere else is refused by that helper before it reaches here.
  */
 export function MediaSlot({
-  source,
+  nguon,
   ratio = 16 / 10,
   height,
   width = "100%",
   radius,
   alt,
-  attribution,
   fallback,
   overlay,
   contentFit = "cover",
@@ -68,15 +78,20 @@ export function MediaSlot({
   // correct, every assertion passed, and the two pictures were never there.
   // Saying it out loud costs one line and gives a flow something to assert.
   const [hong, setHong] = useState(false);
-  useEffect(() => setHong(false), [source]);
+  // Reset on the picture, not on the address object: a live screen rebuilds
+  // that object every render, and an effect keyed on it would clear the
+  // failure state on the next frame forever.
+  const khoa = khoaNguon(nguon);
+  useEffect(() => setHong(false), [khoa]);
+  const ve = veKhung(nguon, { hong });
   const frame: ViewStyle = height !== undefined ? { width, height } : { width, aspectRatio: ratio };
   return (
     <View testID={testID} style={style}>
       <View style={[frame, { borderRadius: radius ?? r.small, backgroundColor: colors.card, overflow: "hidden" }]}>
-        {source && !hong ? (
+        {ve.source !== null ? (
           <Image
             accessibilityLabel={alt}
-            source={source}
+            source={ve.source}
             contentFit={contentFit}
             onError={() => setHong(true)}
             transition={motion.reduced ? 0 : MOTION_MS.standard}
@@ -89,12 +104,10 @@ export function MediaSlot({
         )}
         {overlay ? <View style={StyleSheet.absoluteFill} pointerEvents="box-none">{overlay}</View> : null}
       </View>
-      {source && hong ? (
-        <Text style={[typography.caption, { color: colors.warn, marginTop: space.xs }]}>
-          Chưa tải được ảnh
-        </Text>
+      {ve.canhBao !== null ? (
+        <Text style={[typography.caption, { color: colors.warn, marginTop: space.xs }]}>{ve.canhBao}</Text>
       ) : null}
-      {source && attribution ? (
+      {ve.ghiCong !== null ? (
         // Two lines, not one: this credit is the condition on which the picture
         // above it is allowed to be here, so a long author name has to wrap
         // rather than end in an ellipsis.
@@ -102,7 +115,7 @@ export function MediaSlot({
           numberOfLines={2}
           style={[typography.caption, { color: colors.inkFaint, marginTop: space.xs }]}
         >
-          {cauGhiCong(attribution)}
+          {ve.ghiCong}
         </Text>
       ) : null}
     </View>

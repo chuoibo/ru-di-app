@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { guTheoLoai } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
 import { GuGlyph } from "../../ui/art/Gu";
-import { cauGhiCong, type AnhCoGhiCong } from "../../ui/ghi-cong";
+import { veKhung, type AnhCoGhiCong, type KhungDaVe } from "../../ui/ghi-cong";
 
 /**
  * One stop on the ink route: the hour on the left axis, a node on the line,
@@ -51,12 +51,12 @@ export interface HangChangProps {
  * Not exported: the only way to put a picture on a stop is `HangChang.anh`,
  * which carries the credit with it.
  */
-function AnhChang({ anh, alt, loai, hong, onHong }: { anh: AnhCoGhiCong; alt: string; loai?: string; hong: boolean; onHong: () => void }) {
+function AnhChang({ ve, alt, loai, onHong }: { ve: KhungDaVe; alt: string; loai?: string; onHong: () => void }) {
   const { colors, radius } = useRudiTheme();
   return (
     <View style={[styles.khungAnhChang, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
-      {hong ? (
-        <View accessible accessibilityLabel={`Chưa tải được ảnh: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
+      {ve.source === null ? (
+        <View accessible accessibilityLabel={`${ve.canhBao ?? "Chưa tải được ảnh"}: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
           <GuGlyph id={guTheoLoai(loai ?? "")} size={28} tone="accent" />
         </View>
       ) : (
@@ -64,7 +64,7 @@ function AnhChang({ anh, alt, loai, hong, onHong }: { anh: AnhCoGhiCong; alt: st
           accessibilityLabel={alt}
           contentFit="cover"
           onError={onHong}
-          source={anh.source}
+          source={ve.source}
           style={[styles.anhChang, { borderRadius: radius.small - 2, backgroundColor: colors.line }]}
         />
       )}
@@ -78,8 +78,11 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
   // shows the drawn object, and the stop says why in words (a state is always
   // also a word). Reset when the picture changes.
   const [hong, setHong] = useState(false);
-  const nguonAnh = anh?.anh.source;
+  const nguonAnh = anh?.anh ?? null;
   useEffect(() => setHong(false), [nguonAnh]);
+  // One decision for the picture, the credit and the failure word, so the
+  // thumbnail below and the lines here cannot disagree (F31).
+  const ve = veKhung(anh === null ? null : { loai: "danh-muc", anh: anh.anh }, { hong });
   const muc = phac ? colors.inkFaint : colors.lineStrong;
   const body = (
     <>
@@ -92,8 +95,8 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
           it (ADR-0017 §2.5). No line cap: the column beside the hour and the
           thumbnail is narrow, and at font 1.3 a long author name has to wrap
           rather than end in an ellipsis; the stop simply grows. */}
-      {anh && hong ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa tải được ảnh</Text> : null}
-      {anh ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(anh.anh.nguon)}</Text> : null}
+      {ve.canhBao !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{ve.canhBao}</Text> : null}
+      {ve.ghiCong !== null ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{ve.ghiCong}</Text> : null}
     </>
   );
   return (
@@ -125,7 +128,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
       )}
       {anh ? (
         <View style={styles.phai}>
-          <AnhChang alt={anh.alt} anh={anh.anh} hong={hong} loai={anh.loai} onHong={() => setHong(true)} />
+          <AnhChang alt={anh.alt} loai={anh.loai} onHong={() => setHong(true)} ve={ve} />
         </View>
       ) : phai ? (
         <View style={styles.phai}>{phai}</View>

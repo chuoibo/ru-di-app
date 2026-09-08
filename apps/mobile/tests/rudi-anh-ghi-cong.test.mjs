@@ -1,15 +1,26 @@
 /* A photograph never travels without its credit (ADR-0017 §2.5; review 08/09
- * vòng 2, F21).
+ * vòng 2 F21, review delta 08/09 F31).
  *
  * Run from apps/mobile:
  *     npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs
  *
- * The fixture type kept the credit and three screens still lost it, because
- * each of them read `.anh.source` and handed the bare address to an `Image`.
- * A type that carries metadata does not prove a renderer prints it, so this
- * test reads the consumers: outside the few frames that print the credit,
- * no `<Image>` in the shell may receive a catalogue photograph. The frames
- * themselves are named here, and a new one has to be added here on purpose.
+ * Two layers, in this order, because the first one is the one that actually
+ * holds:
+ *
+ * 1. THE TYPE. `AnhCoGhiCong` keeps its address in a closure and hands it out
+ *    only beside the sentence, and `veKhung` is the single decision every frame
+ *    renders. So «draw the picture, drop the words» is not a shape a screen can
+ *    write: it is a compile error, checked on every build of every file. What
+ *    this file adds is the part tsc cannot state -- that the decision itself is
+ *    right for every input, and that a version of it which forgot the credit
+ *    would be caught.
+ * 2. THE SCAN. A backstop for what types cannot see: an `any` cast, a future
+ *    author reintroducing a `{ source, nguon }` pair, or a frame that computes
+ *    the decision and then renders half of it. The first version of this scan
+ *    exempted three files whole and then only checked that the string
+ *    `cauGhiCong(` appeared somewhere in them, comments included; Codex's probe
+ *    of 08/09 showed two ordinary refactors that walked straight past it. No
+ *    file is exempt here, and both of those probes are in the fixture below.
  */
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
@@ -18,32 +29,36 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-import { TIEN_TO_MINH_HOA, cauGhiCong } from "../dist-test/rudi/ui/ghi-cong.js";
+import {
+  CAU_ANH_HONG,
+  TIEN_TO_MINH_HOA,
+  anhDanhMuc,
+  cauGhiCong,
+  khoaNguon,
+  veKhung,
+} from "../dist-test/rudi/ui/ghi-cong.js";
 
 const APP = fileURLToPath(new URL("..", import.meta.url));
 const GOC = [join(APP, "src/rudi"), join(APP, "app")];
 
-/** The frames allowed to draw a catalogue photograph, because each prints its credit. */
-const KHUNG_IN_GHI_CONG = new Set([
-  "src/rudi/ui/MediaSlot.tsx",
-  "src/rudi/screens/keo/HangChang.tsx",
-  "src/rudi/screens/explore/HangDiaDiem.tsx",
-]);
+/** The one module allowed to open a catalogue photograph; everyone else goes through `veKhung`. */
+const NHA_GIU_CHIA = "src/rudi/ui/ghi-cong.ts";
 
 /**
- * An expression that names a catalogue photograph: `x.anh.source`,
- * `x.anh?.source`, `dd.photo`. Optional chaining is the shape the adapters
- * already wrote, so a regex that only knew `anh.source` would have let a new
- * consumer through (finish review 08/09).
+ * An expression that names a catalogue photograph the old way: `x.anh`,
+ * `x.anh?`, `dd.photo`. The current type has no such property, so nothing in
+ * the tree matches; the rule stands so that reintroducing the split pair is
+ * caught the day it is written rather than the day a screen loses its credit.
  */
-const ANH_DANH_MUC = /(\banh\??\.source\b|\.photo\b)/;
+const ANH_DANH_MUC = /(\banh\??$|\.photo$)/;
+const ANH_DANH_MUC_TRONG = /(\banh\??\.source\b|\.photo\b)/;
 
 function sourceFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);
     if (entry.isDirectory()) out.push(...sourceFiles(p));
-    else if (/\.tsx$/.test(entry.name)) out.push(p);
+    else if (/\.tsx?$/.test(entry.name)) out.push(p);
   }
   return out.sort();
 }
@@ -66,43 +81,142 @@ function tenImage(sf) {
 }
 
 /**
- * Every `<Image … source={X}>` (under any import alias) whose `X` names a
- * catalogue photograph, every bare read of `anh.source` / `anh?.source`
- * anywhere in the file, and every mention of the old `AnhChang` component.
+ * Names bound to a catalogue photograph (`const p = noi.anh`) and names bound
+ * to a bare address taken out of one (`const src = p.source`, `const { source }
+ * = noi.anh`), plus the names bound to a `veKhung(...)` decision.
+ *
+ * Collected in a first pass over the whole file, because `const p = noi.anh`
+ * and the `<Image>` that uses it are not in the same subtree and the second one
+ * is often written first.
+ */
+function biDanh(sf) {
+  const doiTuong = new Set();
+  const diaChi = new Set();
+  const quyetDinh = new Map(); // name -> { source: boolean, ghiCong: boolean }
+  const laAnh = (node) => {
+    const t = node.getText(sf);
+    return ANH_DANH_MUC.test(t) || doiTuong.has(t);
+  };
+  // Two sweeps: `const a = noi.anh; const b = a; const src = b.source` needs
+  // the alias set to be complete before the address set is read off it.
+  for (let vong = 0; vong < 2; vong += 1) {
+    const walk = (node) => {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
+        const init = node.initializer;
+        if (ts.isIdentifier(node.name)) {
+          if (laAnh(init)) doiTuong.add(node.name.text);
+          if (ts.isPropertyAccessExpression(init) && init.name.text === "source" && laAnh(init.expression)) {
+            diaChi.add(node.name.text);
+          }
+          if (ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung")) {
+            quyetDinh.set(node.name.text, { source: false, ghiCong: false });
+          }
+        } else if (ts.isObjectBindingPattern(node.name)) {
+          for (const el of node.name.elements) {
+            const goc = (el.propertyName ?? el.name).getText(sf);
+            const ten = el.name.getText(sf);
+            if (goc === "source" && laAnh(init)) diaChi.add(ten);
+            if (ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung")) {
+              if (goc === "source") quyetDinh.set(`::source::${ten}`, null);
+              if (goc === "ghiCong") quyetDinh.set(`::ghiCong::${ten}`, null);
+            }
+          }
+        }
+      }
+      ts.forEachChild(node, walk);
+    };
+    walk(sf);
+  }
+  return { doiTuong, diaChi, quyetDinh };
+}
+
+/**
+ * Everything that separates a catalogue picture from its words, in one file.
+ *
+ * `<Image source={…}>` fed a catalogue address under any import alias; a bare
+ * read of `.source` off a catalogue object, whether spelled out or reached
+ * through a local name; a destructured `source`; a call of `ve()` outside the
+ * module that owns the key; a `veKhung` decision whose picture is rendered
+ * while its sentence is not; and any surviving mention of the retired
+ * `AnhChang` component.
  */
 function timAnhTran(text, fileName) {
-  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const kind = /\.tsx$/.test(fileName) ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, kind);
   const image = tenImage(sf);
+  const { doiTuong, diaChi } = biDanh(sf);
+  // `AnhChang` is private to the file that declares it; the rule is about any
+  // OTHER file reaching for it, which is what its export once allowed.
+  const tuKhaiAnhChang = /function AnhChang\b/.test(text);
   const viPham = [];
+  let daXet = 0;
   const dong = (node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+  const laAnh = (node) => ANH_DANH_MUC.test(node.getText(sf)) || doiTuong.has(node.getText(sf));
+  const dungQuyetDinh = new Map(); // veKhung binding -> fields read
+  const them = (node, loai, bieuThuc) => viPham.push({ line: dong(node), loai, bieuThuc });
   const walk = (node) => {
+    daXet += 1;
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const ten = node.tagName.getText(sf);
       if (image.has(ten)) {
         for (const attr of node.attributes.properties) {
           if (ts.isJsxAttribute(attr) && attr.name.getText(sf) === "source" && attr.initializer) {
             const bieuThuc = attr.initializer.getText(sf);
-            if (ANH_DANH_MUC.test(bieuThuc)) viPham.push({ line: dong(node), loai: "Image", bieuThuc });
+            const tran = bieuThuc.replace(/[{}\s]/g, "");
+            if (ANH_DANH_MUC_TRONG.test(bieuThuc) || diaChi.has(tran)) them(node, "Image", bieuThuc);
           }
         }
       }
-      if (ten === "AnhChang") viPham.push({ line: dong(node), loai: "AnhChang", bieuThuc: ten });
+      if (ten === "AnhChang" && !tuKhaiAnhChang) them(node, "AnhChang", ten);
     }
-    // A bare read of the address, wherever it flows next (a variable, a spread, a prop).
-    if (ts.isPropertyAccessExpression(node) && node.name.text === "source") {
-      const doiTuong = node.expression.getText(sf);
-      if (/(^|\.)anh\??$/.test(doiTuong)) viPham.push({ line: dong(node), loai: "anh.source", bieuThuc: node.getText(sf) });
+    if (ts.isPropertyAccessExpression(node)) {
+      // The address read off a catalogue object, spelled out or via a local name.
+      if (node.name.text === "source" && laAnh(node.expression)) {
+        them(node, "anh.source", node.getText(sf));
+      }
+      // Which halves of a `veKhung` decision this file actually renders.
+      const goc = node.expression.getText(sf);
+      if ((node.name.text === "source" || node.name.text === "ghiCong") && /^ve[A-Z]?|^ve$/.test(goc) === false) {
+        // handled below by the binding map
+      }
+      const da = dungQuyetDinh.get(goc);
+      if (da !== undefined) da.add(node.name.text);
+    }
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      const init = node.initializer;
+      if (ts.isCallExpression(init) && init.expression.getText(sf).endsWith("veKhung") && ts.isIdentifier(node.name)) {
+        dungQuyetDinh.set(node.name.text, new Set());
+      }
+      if (ts.isObjectBindingPattern(node.name)) {
+        for (const el of node.name.elements) {
+          const goc = (el.propertyName ?? el.name).getText(sf);
+          if (goc === "source" && laAnh(init)) them(node, "tách source", node.getText(sf));
+        }
+      }
+    }
+    // The key to a catalogue photograph is turned in one module and nowhere else.
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "ve") {
+      if (relative(APP, fileName) !== NHA_GIU_CHIA && fileName !== NHA_GIU_CHIA) {
+        them(node, "mở ảnh ngoài ghi-cong", node.getText(sf).slice(0, 60));
+      }
     }
     if (ts.isIdentifier(node) && node.text === "AnhChang" && ts.isImportSpecifier(node.parent)) {
-      viPham.push({ line: dong(node), loai: "import AnhChang", bieuThuc: node.text });
+      them(node, "import AnhChang", node.text);
     }
     ts.forEachChild(node, walk);
   };
   walk(sf);
-  return viPham;
+  // A frame that computed the decision and then drew only the picture. This is
+  // the check the file-level exemption used to hide.
+  for (const [ten, dung] of dungQuyetDinh) {
+    if (dung.has("source") && !dung.has("ghiCong")) {
+      viPham.push({ line: 0, loai: "vẽ ảnh bỏ ghi công", bieuThuc: `${ten}.source không đi cùng ${ten}.ghiCong` });
+    }
+  }
+  return Object.assign(viPham, { daXet });
 }
 
-test("máy dò không mù: Image nhận ảnh danh mục (kể cả anh?.source, bí danh import, biến trung gian) và import AnhChang đều bị bắt", () => {
+test("máy dò không mù: mọi cách tách địa chỉ khỏi ghi công đều bị bắt, kể cả hai mẫu probe của Codex", () => {
   const mau = [
     `import { Image as ExpoImage } from "expo-image";`,
     `import { AnhChang } from "./keo/HangChang";`,
@@ -112,35 +226,111 @@ test("máy dò không mù: Image nhận ảnh danh mục (kể cả anh?.source,
     `const D = () => <Image source={demoAssets.wood} />;`,
     `const E = () => <ExpoImage source={place.anh?.source ?? null} />;`,
     `const src = noi.anh.source; const F = () => <Image source={src} />;`,
+    // The two shapes Codex's probe walked past on 08/09.
+    `const picture = noi.anh; const src2 = picture.source; const G = () => <Image source={src2} />;`,
+    `const { source } = noi.anh; const H = () => <Image source={source} />;`,
+    // Turning the key outside the module that owns it.
+    `const I = () => <Image source={noi.anh.ve().source} />;`,
   ].join("\n");
   const thay = timAnhTran(mau, "mau.tsx");
   const loai = thay.map((v) => v.loai);
-  assert.deepEqual(loai, ["import AnhChang", "Image", "anh.source", "Image", "AnhChang", "anh.source", "Image", "anh.source", "anh.source"]);
+  // Every line above that separates a picture from its words is named at least once.
+  assert.ok(loai.includes("import AnhChang"));
+  assert.ok(loai.includes("AnhChang"));
+  assert.ok(loai.filter((l) => l === "Image").length >= 5, `Image: ${loai.join(",")}`);
+  assert.ok(loai.includes("anh.source"));
+  assert.ok(loai.includes("tách source"), "destructure phải bị bắt (probe Codex mẫu 2)");
+  assert.ok(loai.includes("mở ảnh ngoài ghi-cong"));
   assert.equal(thay.filter((v) => v.bieuThuc.includes("wood")).length, 0, "một chất liệu không phải ảnh danh mục");
-  // The bare-read rule alone catches the variable case where the Image rule cannot.
-  assert.ok(thay.some((v) => v.loai === "anh.source" && v.bieuThuc === "noi.anh.source"));
+  // Object alias: `picture.source` where `picture = noi.anh` (probe Codex mẫu 1).
+  assert.ok(
+    thay.some((v) => v.loai === "anh.source" && v.bieuThuc === "picture.source"),
+    "bí danh object phải bị bắt (probe Codex mẫu 1)",
+  );
+  // And the two `<Image>` fed from those locals.
+  assert.ok(thay.some((v) => v.loai === "Image" && v.bieuThuc.includes("src2")));
+  assert.ok(thay.some((v) => v.loai === "Image" && v.bieuThuc.includes("source")));
 });
 
-test("ngoài các khung in ghi công, không Image nào trong vỏ nhận ảnh danh mục, và AnhChang không còn ai gọi", () => {
+test("máy dò bắt được khung vẽ ảnh mà bỏ câu ghi công", () => {
+  const xau = `const ve = veKhung(nguon, { hong });\nconst A = () => <Image source={ve.source} />;`;
+  const tot = `const ve = veKhung(nguon, { hong });\nconst A = () => <><Image source={ve.source} /><Text>{ve.ghiCong}</Text></>;`;
+  assert.ok(timAnhTran(xau, "xau.tsx").some((v) => v.loai === "vẽ ảnh bỏ ghi công"), "phải bắt");
+  assert.deepEqual(timAnhTran(tot, "tot.tsx").filter((v) => v.loai === "vẽ ảnh bỏ ghi công"), [], "không được báo nhầm");
+});
+
+test("không file nào trong vỏ tách ảnh danh mục khỏi ghi công, và AnhChang không còn ai gọi", () => {
   const loi = [];
   let daQuet = 0;
+  let daXet = 0;
   for (const goc of GOC) {
     for (const file of sourceFiles(goc)) {
       daQuet += 1;
       const rel = relative(APP, file);
-      if (KHUNG_IN_GHI_CONG.has(rel)) continue;
-      for (const v of timAnhTran(readFileSync(file, "utf8"), rel)) loi.push(`${rel}:${v.line} ${v.loai} ${v.bieuThuc}`);
+      const thay = timAnhTran(readFileSync(file, "utf8"), rel);
+      daXet += thay.daXet;
+      for (const v of thay) loi.push(`${rel}:${v.line} ${v.loai} ${v.bieuThuc}`);
     }
   }
-  assert.ok(daQuet > 40, `quét quá ít file (${daQuet}): gốc quét sai`);
-  assert.deepEqual(loi, [], "ảnh danh mục tới Image mà không qua khung in ghi công:\n" + loi.join("\n"));
+  // Two floors, so «không có vi phạm» can never be produced by a walk that read
+  // nothing: that is how a source gate dies without a sound.
+  assert.ok(daQuet >= 130, `quét quá ít file (${daQuet}): gốc quét sai`);
+  assert.ok(daXet >= 100000, `duyệt quá ít nút (${daXet}): máy dò dừng sớm`);
+  assert.deepEqual(loi, [], "ảnh danh mục bị tách khỏi ghi công:\n" + loi.join("\n"));
 });
 
-test("các khung được phép vẫn tồn tại và vẫn gọi cauGhiCong", () => {
-  for (const rel of KHUNG_IN_GHI_CONG) {
-    const text = readFileSync(join(APP, rel), "utf8");
-    assert.ok(text.includes("cauGhiCong("), `${rel} không còn in ghi công: bỏ khỏi danh sách hoặc in lại`);
+test("veKhung: ảnh danh mục không bao giờ vẽ ra mà thiếu câu ghi công", () => {
+  const anh = anhDanhMuc({ uri: "https://x/y.jpg" }, { prefix: TIEN_TO_MINH_HOA, author: "Kien Tran", license: "Pexels License" });
+  const nhom = { uri: "https://x/nhom.jpg" };
+  const dauVao = [
+    null,
+    { loai: "danh-muc", anh },
+    { loai: "nhom", source: nhom },
+  ];
+  for (const nguon of dauVao) {
+    for (const hong of [false, true]) {
+      const ve = veKhung(nguon, { hong });
+      if (nguon !== null && nguon.loai === "danh-muc") {
+        // The invariant, over every input: a licensed picture and its sentence
+        // are one decision, and the sentence stays even when the bytes failed.
+        assert.equal(typeof ve.ghiCong, "string");
+        assert.ok(ve.ghiCong.startsWith(TIEN_TO_MINH_HOA));
+      } else {
+        assert.equal(ve.ghiCong, null, "ảnh của nhóm không bịa giấy phép");
+      }
+      assert.equal(ve.source === null, nguon === null || hong);
+      assert.equal(ve.canhBao, nguon !== null && hong ? CAU_ANH_HONG : null);
+    }
   }
+});
+
+test("đột biến: một veKhung quên ghi công phải làm bất biến trên đỏ", () => {
+  const veKhungQuen = (nguon, o) =>
+    nguon === null || nguon.loai === "nhom"
+      ? { source: nguon === null || o.hong ? null : nguon.source, ghiCong: null, canhBao: null }
+      : { source: o.hong ? null : nguon.anh.ve().source, ghiCong: null, canhBao: null };
+  const anh = anhDanhMuc({ uri: "u" }, { author: "A", license: "B" });
+  const ve = veKhungQuen({ loai: "danh-muc", anh }, { hong: false });
+  assert.throws(() => assert.equal(typeof ve.ghiCong, "string"), "bất biến phải bắt được bản quên");
+});
+
+test("ảnh danh mục không có cửa nào ra địa chỉ ngoài ve()", () => {
+  const anh = anhDanhMuc({ uri: "u" }, { author: "A", license: "B" });
+  assert.deepEqual(Object.keys(anh), ["ve"]);
+  assert.equal(anh.source, undefined);
+  assert.equal(anh.nguon, undefined);
+  // The same object every call, so a frame may key an effect on it.
+  assert.equal(anh.ve(), anh.ve());
+  assert.deepEqual(anh.ve(), { source: { uri: "u" }, ghiCong: "A · B" });
+});
+
+test("khoá nguồn ổn định và phân biệt được hai ảnh", () => {
+  const a = anhDanhMuc({ uri: "u1" }, { author: "A", license: "B" });
+  const b = anhDanhMuc({ uri: "u2" }, { author: "A", license: "B" });
+  assert.equal(khoaNguon({ loai: "danh-muc", anh: a }), khoaNguon({ loai: "danh-muc", anh: a }));
+  assert.notEqual(khoaNguon({ loai: "danh-muc", anh: a }), khoaNguon({ loai: "danh-muc", anh: b }));
+  assert.equal(khoaNguon(null), "");
+  assert.equal(khoaNguon({ loai: "nhom", source: { uri: "u1" } }), khoaNguon({ loai: "danh-muc", anh: a }));
 });
 
 test("câu ghi công của ảnh minh hoạ mở bằng tiền tố và nêu tác giả · giấy phép", () => {

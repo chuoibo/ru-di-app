@@ -8,6 +8,11 @@ import { ResponsiveRow, SectionHeader } from "../../ui";
 import { KhungAnh } from "../../ui/KhungAnh";
 import { Canh } from "../../ui/art/Canh";
 
+/**
+ * A photograph of the group's own album. It owes no author and no licence,
+ * and it cannot be a catalogue photograph: `AnhCoGhiCong` yields its address
+ * only together with its credit sentence (F31).
+ */
 export interface AnhAlbumHienThi {
   id: string;
   source: ImageSource;

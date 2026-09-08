@@ -354,14 +354,17 @@ test("ảnh bìa của thẻ cũng là địa chỉ trọn vẹn, không nối h
     photoAuthor: "Nguyễn A",
     photoLicense: "CC BY-SA 4.0",
   });
-  assert.equal(bia.nguon.uri, BASE_URL + "/places/p-1/photos/a");
-  assert.equal(bia.nguon.uri.match(/https?:\/\//g).length, 1);
+  // Địa chỉ chỉ ra được cùng câu ghi công (F31), nên mở một lần lấy cả hai.
+  const daMo = bia.ve();
+  assert.equal(daMo.source.uri, BASE_URL + "/places/p-1/photos/a");
+  assert.equal(daMo.source.uri.match(/https?:\/\//g).length, 1);
+  assert.equal(Object.keys(bia).join(","), "ve", "không có cửa nào ra địa chỉ trần");
 });
 
 test("thẻ chỉ vẽ ảnh bìa khi giấy phép đi cùng; thiếu một vế thì quay về dải chữ", () => {
   const co = anhBiaThe({ photoUrl: "/places/p-1/photos/a", photoAuthor: "Nguyễn A", photoLicense: "CC BY-SA 4.0" });
   assert.ok(co !== null);
-  assert.equal(co.giayPhep, "Ảnh quanh đây: Nguyễn A · CC BY-SA 4.0");
+  assert.equal(co.ve().ghiCong, "Ảnh quanh đây: Nguyễn A · CC BY-SA 4.0");
   assert.equal(anhBiaThe({ photoUrl: "/places/p-1/photos/a", photoAuthor: null, photoLicense: "CC BY-SA 4.0" }), null);
   assert.equal(anhBiaThe({ photoUrl: "/places/p-1/photos/a", photoAuthor: "Nguyễn A", photoLicense: null }), null);
   assert.equal(anhBiaThe({ photoUrl: null, photoAuthor: "Nguyễn A", photoLicense: "CC BY-SA 4.0" }), null);
