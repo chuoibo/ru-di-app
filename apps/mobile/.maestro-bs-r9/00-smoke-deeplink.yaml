@@ -9,6 +9,19 @@ appId: com.lakiet.rudi
 # Fired twice: on this shared emulator the first VIEW intent is sometimes
 # dropped and Expo Go stays on its own home. The second is a no-op once the
 # app is up. Same reason as _vao-app.yaml.
+# Máy dùng chung: một lane khác có thể để lại phiên đăng nhập THẬT qua cửa
+# Google, và phiên ấy sống qua `pm clear` vì tài khoản nằm ở tầng thiết bị chứ
+# không ở app. Khi ấy app mở thẳng vào «Nhóm của bạn». Chờ MỘT TRONG HAI màn
+# rồi mới rẽ nhánh -- chờ đúng màn chào thì hết 120 s và đỏ ở flow đầu tiên,
+# kéo cả bảng theo.
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Chưa có nhóm nào"
+    timeout: 120000
+- runFlow:
+    when:
+      visible: "Đăng xuất"
+    commands:
+      - tapOn: "Đăng xuất"
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
     timeout: 120000
