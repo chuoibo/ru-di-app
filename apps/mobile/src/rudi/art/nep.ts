@@ -4,8 +4,9 @@
  * Drawn after the 2026-09-08 concept sheet (docs/codex/2026-09-08/nep-concept),
  * not after the rectangular sketch of 07/09: a short, slightly wide sheet with
  * a diagonal fold across the lower body like two lapels, ONE coral corner
- * folded down over the top right, small ink eyes under an uneven brow, a
- * sidelong smile, short tapered ink legs and mitten hands that do something.
+ * folded down over the top right, small ink eyes under ONE uneven brow (the
+ * folded corner covers where the other would go), a sidelong smile, short
+ * tapered ink legs and mitten hands that do something.
  * The concept's paper-plane seal and the two dashes on the body are left off
  * on purpose (they read as a mail app), and the body is a little shorter than
  * the sheet's so it stops looking like an envelope.
@@ -43,7 +44,6 @@ export const POSE_NEP = [
   // 09/09 finish review: three scenes had reused an existing pose beside a
   // different rectangle, which is the one thing the brief forbade. These are
   // the bodies that make them different situations.
-  "nang-bong",
   "voi-len",
   "ghe-nhin",
 ] as const;
@@ -107,7 +107,6 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   // Both feet off the ground.
   nhay: { nghieng: 0, nhin: [0, -0.9], bieuCam: "hao-hung", dang: "nhun" },
   // Holding something light up in front of the face and looking into it.
-  "nang-bong": { nghieng: -2, nhin: [1.1, -1.2], bieuCam: "hoi", dang: "dung" },
   // Reaching up for a line overhead, weight on the front foot.
   // Reaching up for a line overhead. `dung`, not `buoc`: the stride threw a
   // foot out to the left, straight under whatever the low hand is holding.
@@ -195,8 +194,8 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     { d: daGiac([H, G, Bp]), mau: "muc", net: net(chiTiet ? 1.8 : 2.4) },
   ];
 
-  // The eyes sit where the pose looks; the brows and the mouth carry the
-  // feeling. The compact reading drops the brows and thickens what is left,
+  // The eyes sit where the pose looks; the brow and the mouth carry the
+  // feeling. The compact reading drops the brow and thickens what is left,
   // which is what keeps it a second drawing rather than a shrunk first one.
   const mieng = (rong: boolean): LopVe => {
     const w = net(rong ? 2.4 : 2);
@@ -229,50 +228,50 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     }
   };
 
+  // ONE brow, over the left eye, and never a second one.
+  //
+  // The folded corner (H 50,20 · G 69,38 · Bp 50,38) owns everything above the
+  // eyes from x 50 rightwards. A right brow has nowhere to live: drawn where a
+  // brow belongs it puts a black bar across the coral -- the identity mark --
+  // and pushed below the fold's own outline it fuses with the right eye into a
+  // single dark blob. Both readings were rendered side by side on 09/09 before
+  // this was decided. So the flap covers that brow, which is what a folded
+  // sheet does, and the header's "uneven brow" becomes literal: the left brow
+  // carries the whole amplitude, the mouth carries the rest.
+  //
+  // `khongCatNepGap` in tests/art-duong.test.mjs holds the corner clear from
+  // now on -- a mechanism, not a promise. It measures PAINT (centre plus half
+  // the stroke), bounds each curve rather than spot-sampling it, identifies
+  // the fold by shape so the lean cannot blind it, and runs over every pose ×
+  // expression × lean × ink weight, and over the composed stickers and scenes
+  // that actually reach a screen.
   const may = (): LopVe[] => {
     const w = net(1.9);
     switch (bieuCam) {
       case "hao-hung":
-        // Both up, both arched.
-        return [
-          { d: qCong(S(34, 38), S(38.5, 35.5), S(43, 37.5)), mau: "muc", net: w },
-          { d: qCong(S(48, 35.5), S(52, 33), S(56, 35)), mau: "muc", net: w },
-        ];
+        // Arched high: the brow of somebody already halfway out the door.
+        return [{ d: qCong(S(33.5, 38), S(38.5, 34.6), S(43.5, 37.2)), mau: "muc", net: w }];
       case "hoi":
-        // One far up, one level: the shape of «ơ?». The RAISED one is the LEFT
-        // brow on purpose. The fold triangle (H 50,20 · G 69,38 · Bp 50,38)
-        // owns everything from x 50 rightwards above y 38, so a right brow
-        // lifted into that band draws a black bar across the coral corner --
-        // the identity mark. The left brow is outside it at any height, and
-        // the right one stays below the triangle's base.
-        return [
-          { d: netGay([S(33, 34), S(42, 31.5)]), mau: "muc", net: w },
-          { d: netGay([S(48, 38.6), S(55, 39.8)]), mau: "muc", net: w },
-        ];
+        // Far up and tilted in: the shape of «ơ?».
+        return [{ d: netGay([S(33, 34.6), S(42.5, 31.8)]), mau: "muc", net: w }];
       case "quyet":
-        // Both lowered toward the middle: concentration, not anger.
-        return [
-          { d: netGay([S(34, 36.5), S(42, 39)]), mau: "muc", net: w },
-          { d: netGay([S(48, 38), S(56, 35)]), mau: "muc", net: w },
-        ];
+        // Inner end DOWN toward the eyes: decided, bearing down on the thing.
+        return [{ d: netGay([S(33.5, 35.4), S(42.5, 39.2)]), mau: "muc", net: net(2.1) }];
       case "met":
-        // Outer ends up, inner ends down: resigned.
-        return [
-          { d: netGay([S(34, 36), S(42, 39.5)]), mau: "muc", net: w },
-          { d: netGay([S(48, 39), S(56, 35.5)]), mau: "muc", net: w },
-        ];
+        // Inner end UP, outer end down -- the opposite of `quyet`, and the
+        // reason the two used to be indistinguishable: this one was drawn with
+        // the determined slope by mistake until 09/09. Resigned, not angry.
+        return [{ d: netGay([S(33.5, 39.4), S(42.5, 35.8)]), mau: "muc", net: w }];
       case "nhuong":
-        // Level and soft, so nothing competes with the offered hand.
-        return [
-          { d: netGay([S(34.5, 37.5), S(42, 37)]), mau: "muc", net: w },
-          { d: netGay([S(48, 36), S(55.5, 36.5)]), mau: "muc", net: w },
-        ];
+        // A shallow arc bowed DOWNWARD, the mirror of `hao-hung`: warm and
+        // asking rather than announcing, so the face yields to the hand doing
+        // the offering. Straight and merely tilted, it was within one unit of
+        // `binh-than` and the two were the same face (caught 09/09).
+        return [{ d: qCong(S(33.8, 36.4), S(38.5, 39), S(43, 36.8)), mau: "muc", net: w }];
       case "binh-than":
       default:
-        return [
-          { d: netGay([S(35, 38), S(42, 37)]), mau: "muc", net: w },
-          { d: netGay([S(48, 34), S(55, 36.5)]), mau: "muc", net: w },
-        ];
+        // Nearly level: no feeling claimed, which is the point of the default.
+        return [{ d: netGay([S(34.5, 37.5), S(42.5, 37.1)]), mau: "muc", net: w }];
     }
   };
 
@@ -487,13 +486,6 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // quieter raise for the scenes.
       tuThe = [...tay(L, P(4, 22)), ...tay(R, P(93, 18))];
       break;
-    case "nang-bong": {
-      // A paper speech bubble held up at box (52, 34) and (76, 30): both hands
-      // under its lower edge, arms up rather than across.
-      const khuyu = P(32, 62);
-      tuThe = [...tay(R, P(76, 30)), { d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(52, 34))];
-      break;
-    }
     case "voi-len":
       // One arm up and OUT to a line overhead at box (86, 16); the other holds
       // what is about to go on it, out to the side at box (8, 62), which is

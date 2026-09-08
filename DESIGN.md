@@ -1036,7 +1036,7 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   `cam-ban-do` · `giu-khung` · `doi` · `ghi-lai` · `vui`): tờ hẹn gấp, thân
   giấy hơi rộng chân, một nếp chéo
   (`bong`) như hai ve áo, **một** góc coral gấp xuống trên phải, mắt mực
-  dưới cặp mày lệch, nụ cười nghiêng khép, chân thon và tay bao (`vien`)
+  dưới **một** mày lệch, nụ cười nghiêng khép, chân thon và tay bao (`vien`)
   luôn đang làm gì đó. **Hai bản đọc**: 96 có mày, nếp, đạo cụ; dưới 72dp
   (`Nep size < 72`) vẽ **bản 48** dày nét bỏ chi tiết, không co bản 96.
   Trang trí, ẩn khỏi cây trợ năng; chữ bên cạnh mới nói.
@@ -1069,6 +1069,53 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   pose và cảnh đang có giữ nguyên hình. `dam` nhân **độ dày nét và bề dày chi**
   mà không đụng hình học, dành cho hình phải vẽ nhỏ trong khung của nó. Bản rút
   gọn vẫn bỏ mày, nên luật «rút gọn ít lớp hơn» giữ ở mọi biểu cảm.
+- **Nếp có MỘT mày, và không nét mực nào SƠN lên góc coral** (09/09). Góc gấp
+  (H 50,20 · G 69,38 · Bp 50,38) chiếm trọn phần trên phải của mặt, nên mày
+  phải không có chỗ ở: vẽ đúng chỗ của một cái mày thì nó kẻ **vạch đen ngang
+  dấu nhận diện**, còn hạ xuống dưới đường viền của chính nếp gấp thì nó dính
+  vào mắt phải thành một khối tối. Hai cách đều đã dựng ra ảnh và so cạnh nhau
+  trước khi chốt. Nay **nếp gấp che chỗ ấy** — đúng việc một tờ giấy gấp làm —
+  và «mày lệch» của concept thành nghĩa đen: mày trái gánh toàn bộ biên độ,
+  miệng gánh phần còn lại. Hai biểu cảm từng trùng nhau nay tách: `met` vẽ
+  **nhầm chiều** (đầu trong chúc xuống, tức dáng quyết tâm) nên không phân biệt
+  được với `quyet`, và `nhuong` lệch `binh-than` chưa tới một đơn vị nên cũng là
+  cùng một khuôn mặt; nay `met` hếch đầu trong, `nhuong` là **cung cong xuống**,
+  ảnh gương của `hao-hung`. Pose `nang-bong` **đã gỡ**: nó nâng một vật ngang
+  đầu đúng chỗ góc gấp, không có vị trí tay nào vừa giữ được ý pose vừa tránh
+  được coral trên cả dải nghiêng, và chưa màn nào dùng nó.
+- **Cổng `khongCatNepGap`** (`tests/art-duong.test.mjs`) là cơ chế giữ luật
+  trên, không phải lời hứa. Bốn điều nó phải làm đúng — và bản nháp đầu làm sai
+  cả bốn, lượt chấm context mới bắt được:
+  1. **Đo SƠN, không đo tâm nét.** Một nét dày 2.4 có tâm nằm ngoài 0.4 vẫn phủ
+     1.6 đơn vị mực lên coral. Luật là `sâu + net/2 <= 0`.
+  2. **Chặn trên từng đường cong, không chấm điểm.** Lấy N+1 mẫu để lại sai số
+     dây cung tối đa `max|B''|/(8N²)`, tính được từ chính điểm điều khiển; cộng
+     nó vào là thành chặn đúng nghĩa. Bao lồi cũng đúng nhưng quá rộng: bao của
+     một hình tròn vượt bán kính ~14%, tức là vu oan mọi bàn tay và cả hai mắt.
+  3. **Nhận DIỆN nếp gấp, không đoán.** «Mảng coral đầu tiên» không phải phép
+     nhận diện — ngòi bút chì của `ghi-lai` cũng là tam giác coral ba đỉnh mà
+     mực chạm vào là đúng. Nếp gấp nhận theo **hình dạng bất biến với phép đặt**
+     (hai đỉnh cùng một đường ngang, đáy : cao = 19 : 18), vì cảnh và sticker
+     đều truyền `x0`·`y0`·`tiLe` nên toạ độ 20/38 không còn.
+  4. **Chạy trên thứ thật sự lên màn.** `hinhNep` đứng một mình không phải cái
+     màn hình vẽ; cổng quét cả tám sticker (hai bản đọc) lẫn mười cảnh, và bỏ
+     qua lớp nằm **trước** nếp gấp vì chúng bị chính mảng coral phủ lên.
+  Phạm vi quét là `nghieng ∈ [−8, 13]` × `dam ∈ {1, 1.3}` chứ không chỉ giá trị
+  mặc định của pose, vì cả hai là **override công khai** và sticker «Chờ tí»
+  đang dùng cả hai. Sàn số điểm đọc từ số đo thật (8.577.360 điểm / 9.504 bản
+  vẽ), không lấy tròn. **15 đột biến trên chính cổng đều đỏ**, gồm ba cái từng
+  sống sót: bỏ bề dày nét, bỏ qua mọi lớp nét, và miễn trừ nhầm mọi lớp tô.
+- **Chỗ hẹp nhất hiện nay là MẮT PHẢI, không phải mày hay tay.** Đo trên toàn
+  bộ tám sticker: «Chờ tí» bản chi tiết còn cách mép nếp gấp **0,29 đơn vị**
+  (bản rút gọn 0,58), rồi mới tới «Tuyệt vời» 0,95. Đó là biên sẽ vỡ trước, và
+  nó đang là **hệ quả của cái chặn ±1.6 của `nhin`** chứ không phải một luật có
+  tên. Ai dời mắt, đổi `nhin`, hay tăng `dam` cho một pose nghiêng nhiều thì
+  nhìn số này trước — cổng sẽ đỏ, nhưng biết trước thì đỡ mất một vòng.
+- **Cái cổng hình học không đo được thì ghim bằng ca riêng.** «Mày này đọc ra
+  mệt hay đọc ra cáu» không phải chuyện hình học, nên vẽ `met` ngược chiều lại
+  **không** làm cổng nếp gấp đỏ. Quyết định thiết kế được ghim thẳng: **sáu biểu
+  cảm cho sáu đường mày khác nhau**, và **`met` dốc ngược `quyet`** — đó là cái
+  bị vi phạm, chứ không phải một toạ độ cụ thể.
 - **Khay sticker** (`KhaySticker`): nhãn **hai dòng** với chiều cao dành sẵn
   nên tám ô bằng nhau, và số cột tụt theo `fontScale` (4 → 3 → 2). «Cà phê
   không?» từng bị cắt thành «Cà phê khôn…»; từ vựng khoá ba nơi nên **layout
