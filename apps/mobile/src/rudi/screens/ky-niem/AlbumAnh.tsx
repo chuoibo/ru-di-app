@@ -22,7 +22,9 @@ export interface AnhAlbumHienThi {
  * no picture gets, with the sentence as its caption: a flat tinted rectangle
  * stood in for a broken address for a whole board run, and a tinted rectangle
  * is the one material this world does not use (review 08/09 F01, and the
- * finish review of this batch).
+ * finish review of this batch). The ground is `card`, the paper a print is
+ * made of, not `accentSoft`: on the dark theme the coral tint turns into a
+ * maroon slab the size of a photograph (measured on emulator 08/09).
  */
 function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; caption: string; ratio: number; radius: number }) {
   const { colors } = useRudiTheme();
@@ -30,7 +32,7 @@ function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; 
   useEffect(() => setHong(false), [source]);
   if (hong) {
     return (
-      <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.accentSoft }]}>
+      <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.card }]}>
         <Canh id="chua-co-anh" nep={false} width={132} />
         <Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text>
       </View>
