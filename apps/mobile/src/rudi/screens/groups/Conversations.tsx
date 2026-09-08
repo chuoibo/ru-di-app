@@ -31,6 +31,7 @@ import { StoryRail } from "../story/StoryRail";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
+import { Canh } from "../../ui/art/Canh";
 import { ErrorState } from "../../ui/ErrorState";
 import { Avatar } from "../../ui/Avatar";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
@@ -139,6 +140,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
         <EmptyState
           action={{ label: "Tạo nhóm", onPress: () => router.push("/groups/new") }}
           body="Mở một nhóm mới, hoặc nhận lời mời của người đã ở trong nhóm."
+          illustration={<Canh id="chua-co-hoi" width={168} />}
           kind="first-use"
           layout="inline"
           secondary={{ label: "Tôi có lời mời", onPress: () => router.push("/moi") }}

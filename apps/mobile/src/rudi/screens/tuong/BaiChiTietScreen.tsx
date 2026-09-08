@@ -9,6 +9,7 @@
  * -- and from nothing the client could derive itself.
  */
 import { Image } from "expo-image";
+import { Canh } from "../../ui/art/Canh";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
@@ -236,7 +237,7 @@ export function BaiChiTietScreen() {
       {bl.pha === "dang-doc" ? <SkeletonRow lines={2} /> : null}
       {bl.pha === "hong" ? <ErrorState body={bl.loi} onRetry={() => void napBl()} title="Chưa đọc được bình luận" /> : null}
       {bl.pha === "xong" && bl.danhSach.length === 0 ? (
-        <EmptyState body="Ai đọc được bài này thì đều thấy bình luận ở đây." kind="first-use" layout="inline" title="Chưa có bình luận" />
+        <EmptyState body="Ai đọc được bài này thì đều thấy bình luận ở đây." kind="first-use" layout="inline" illustration={<Canh id="chua-co-tin-nhan" width={150} />} title="Chưa có bình luận" />
       ) : null}
     </View>
   );

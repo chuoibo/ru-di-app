@@ -71,6 +71,26 @@ sẵn (tám ô bằng nhau), và số cột tụt theo `fontScale` (4 → 3 → 
 ghép chuỗi — cổng `receipt.test.mjs` đọc **mọi** «…%» một build sinh ra, vì ADR-0009 cấm hiện phần
 trăm của mô hình, và một bề rộng tính bằng template literal rơi đúng vào danh sách ấy.
 
+## Lượt chấm mỹ thuật bắt ba hình đọc sai
+
+Finish review trong context mới **mở ảnh ra nhìn** và trả `rebuild` cho ba hình. Cả ba đều là lỗi
+hình, không phải lỗi gu, và tôi đã không thấy khi tự chấm:
+
+| hình | lỗi | sửa |
+|---|---|---|
+| «Ăn gì?» | cả hai tay chạy từ vai TRÁI thành một thanh mực **bắc ngang thân và ngang miệng**; vành tô thấp hơn tay 4 đơn vị và rộng hơn khoảng tay 8, nên không tay nào chạm nó | thêm khuỷu như `dua-hai-tay` (chính pose bên cạnh đã ghi comment rằng chạy thẳng là sai); vành tô đặt đúng tầm tay, không rộng hơn khoảng tay |
+| «Trả tiền nè» | hai tờ lệch 5 đơn vị dính thành **một thẻ bo tròn**, vạch coral nằm ngang giữa thân = ký hiệu **dải từ**; trên nền tối đọc ra **thẻ ngân hàng**. Cả hai bàn tay nằm TRONG khung tờ tiền và tờ tiền vẽ đè lên người, nên **không bàn tay nào hiện ra** | tiền bắt đầu TỪ tay và chạy ra xa thân, mép gần gấp về phía người đưa, người vẽ SAU tiền |
+| «OK, chốt!» | **giống hệt «Trả tiền nè» ở 64dp**: cùng nghiêng, cùng khoảng chân, cùng mảng trắng cầm ngang hông phải; bàn tay ấn xuống lại bị giấy vẽ đè | ấn xuống sát sàn, tay kia chống ngược ra sau, giấy vẽ trước người |
+
+Lượt chấm thứ hai xác nhận **không cặp nào còn trùng bóng**. Cặp gần nhau nhất còn lại là «Đi
+thôi!» và «Tuyệt vời» (cùng một tay giơ lên tới dấu coral nhỏ góc trên phải); khoảng cách giữa
+chúng do **dáng chân** giữ, nên ai làm phẳng `nhun` hay `buoc` là hai hình nhập một. Ghi ra đây để
+người sau biết.
+
+Nó cũng bắt được một lỗi tài liệu đúng loại tôi hay mắc: lần sửa đầu tôi hạ mày `hoi` xuống rồi
+**viết comment nói đã tránh góc coral**, trong khi hình học nói ngược lại. Nay mày được nhướn là
+mày TRÁI, phía ngoài tam giác gấp.
+
 ## Cổng
 
 | Cổng | Kết quả |

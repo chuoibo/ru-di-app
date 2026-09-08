@@ -8,6 +8,7 @@
  * action per row says what it does.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { Canh } from "../../ui/art/Canh";
 import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -106,7 +107,7 @@ export function PickOutingLiveScreen({ phien }: { phien: Phien }) {
               body="Tạo kèo trước ở Lên plan, rồi quay lại thêm địa điểm này."
               kind="first-use"
               layout="inline"
-              title="Nhóm chưa có kèo nào"
+              illustration={<Canh id="chua-co-keo" width={168} />} title="Nhóm chưa có kèo nào"
             />
           ) : null}
           {trang.keo.map((k) => {

@@ -1004,7 +1004,7 @@
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng. Hình vector do app dựng, không có dữ liệu người tham gia."
+      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng."
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
@@ -1020,7 +1020,23 @@
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng: chứng minh mỗi pose có dáng và mặt riêng."
+      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/bang-canh-sang.png",
+      "sha256": "0e134b5ff9c34a68b98166e5ada3c214769d8d37ffcc5a92e4f04d6ffc91d8e6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mười cảnh im lặng, có Nếp và tắt Nếp, nền sáng. Hình vector do app dựng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/bang-canh-toi.png",
+      "sha256": "638883c107e2785170cf8743ad8b51c9f5f31271a7e39caa97ecc6d64a637aab",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
     }
   ]
 }

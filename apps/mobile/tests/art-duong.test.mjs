@@ -19,7 +19,7 @@ import { MAU_VE, bienDoi, cungTron, giot, khungBo, qCong, tron, vien } from "../
 import { KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../dist-test/rudi/art/nep.js";
 import { duongChuyen, gocGap, vongHo } from "../dist-test/rudi/art/motif.js";
 import { GU_IDS, KHUNG_GU, hinhGu, laGuId } from "../dist-test/rudi/art/gu.js";
-import { CANH_IDS, KHUNG_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
+import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
 
 const ARITY = { M: 2, L: 2, C: 6, Z: 0 };
 const SO = /^-?\d+(\.\d+)?$/;
@@ -133,16 +133,29 @@ test("gu: tám glyph trong lưới 48, mỗi glyph có nét mực và tối đa 
   assert.deepEqual(hinhGu(""), la);
 });
 
-test("cảnh: năm cảnh hợp lệ có và không có Nếp; cảnh không Nếp là phần đầu của cảnh có Nếp", () => {
+test("mọi cảnh hợp lệ có và không có Nếp; cảnh không Nếp là phần đầu của cảnh có Nếp", () => {
   for (const id of CANH_IDS) {
     const co = hinhCanh(id);
     const khong = hinhCanh(id, { nep: false });
     kiemLop(`cảnh ${id} có Nếp`, co, KHUNG_CANH.w, KHUNG_CANH.h);
     kiemLop(`cảnh ${id} không Nếp`, khong, KHUNG_CANH.w, KHUNG_CANH.h);
-    assert.ok(khong.length >= 3 && khong.length < co.length, `${id}: cảnh phải đứng được một mình`);
-    assert.deepEqual(co.slice(0, khong.length), khong, `${id}: Nếp là lớp trên cùng, không xáo trộn cảnh nền`);
+    assert.ok(khong.length >= 3, `${id}: cảnh phải đứng được một mình`);
+    if (CANH_KHONG_NEP.has(id)) {
+      // A failure or a money screen never gets the character, and asking for
+      // it must not change the drawing: the rule lives in `hinhCanh`, not in
+      // twenty callers remembering to pass `nep={false}` (DESIGN.md, «Nếp
+      // đứng xa tiền»).
+      assert.deepEqual(co, khong, `${id}: cảnh này không bao giờ có Nếp, kể cả khi được yêu cầu`);
+    } else {
+      assert.ok(khong.length < co.length, `${id}: phải có lớp Nếp thêm vào`);
+      assert.deepEqual(co.slice(0, khong.length), khong, `${id}: Nếp là lớp trên cùng, không xáo trộn cảnh nền`);
+    }
     assert.match(moTaCanh(id), /^[^—]{8,80}$/, `${id}: mô tả ngắn, không gạch dài`);
   }
+  // Named, not merely non-empty: emptying the set of the FAILURE scene and
+  // adding some decorative id would keep the branch above green while «Nếp
+  // đứng xa tiền» silently lapsed on about twenty error and ledger screens.
+  assert.ok(CANH_KHONG_NEP.has("chua-doc-duoc"), "cảnh lỗi phải nằm trong tập không-Nếp");
   assert.equal(laCanhId("chua-co-anh"), true);
   assert.deepEqual(hinhCanh("khong-co"), hinhCanh("chua-co-hoi"));
   assert.equal(moTaCanh("khong-co"), moTaCanh("chua-co-hoi"));

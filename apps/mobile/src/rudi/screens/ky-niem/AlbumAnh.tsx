@@ -38,7 +38,7 @@ function AnhHoacHong({ source, caption, ratio, radius }: { source: ImageSource; 
   if (hong) {
     return (
       <View accessibilityLabel={`Chưa tải được ảnh: ${caption}`} style={[styles.hong, { aspectRatio: ratio, borderRadius: radius, backgroundColor: colors.card }]}>
-        <Canh id="chua-co-anh" nep={false} width={132} />
+        <Canh id="chua-co-anh" width={132} />
         <Text style={[typography.note, { color: colors.inkFaint }]}>Chưa tải được ảnh</Text>
       </View>
     );

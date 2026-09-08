@@ -1085,7 +1085,29 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   CHAN_NEP × tiLe`) cùng kết thúc ở đó, nên không nhân vật nào lơ lửng cạnh
   đồ vật. Cảnh `chua-co-keo` là ngoại lệ có chủ ý: tờ hẹn bay, nhân vật viết
   bên cạnh, không có sàn nào để đứng.
-- **Năm cảnh** (`hinhCanh`, `CANH_IDS`), mỗi cảnh **trọn vẹn khi không có
+- **Mười cảnh** (`hinhCanh`, `CANH_IDS`, 09/09). Trước đó có năm, và ba trong
+  số đó dùng **cùng một dáng người đổi đạo cụ** — chính điều review cấm nhân
+  lên. Lượt đầu của bản mười cảnh **tái phạm đúng lỗi ấy** ở ba cảnh mới (cùng
+  pose `ghi-lai`/`giu-khung`/`cam-ban-do` với ba cảnh cũ, chỉ đổi hình chữ
+  nhật); lượt chấm bắt được và ba cảnh ấy được **vẽ lại bằng pose mới**
+  (`nang-bong`, `voi-len`, `ghe-nhin`). Nay mỗi cảnh có **một tình huống, một
+  dáng và một khuôn mặt riêng**:
+  `chua-co-hoi` kéo ghế (mặt `nhuong`) · `chua-co-keo` cúi viết (`quyet`) ·
+  `chua-co-anh` nhìn xuyên khung rỗng (`hoi`) · `chua-co-ban` **ngồi** ở bàn
+  hai chỗ, tay mời sang ghế trống (`nhuong`, `ngoi`) · `tim-khong-ra` dò bản đồ
+  (`hoi`) · `chua-co-tin-nhan` · `chua-co-loi-moi` · `chua-co-ky-niem` ·
+  `bo-loc-che-het` · và `chua-doc-duoc`.
+- **`CANH_KHONG_NEP` là cơ chế, không phải lời hứa.** `chua-doc-duoc` **không
+  bao giờ** vẽ Nếp, kể cả khi người gọi truyền `nep`: `hinhCanh` bỏ qua yêu
+  cầu ấy. Lý do là luật «Nếp Đứng Xa Tiền» phải đúng ở **khoảng hai mươi** màn
+  lỗi, trong đó có màn sổ, và một luật do hai mươi nơi tự nhớ là một luật sẽ
+  hỏng. `ErrorState` gắn sẵn cảnh này nên mọi màn lỗi có hình mà không nơi nào
+  phải nhớ gì. Cổng `art-duong` biết tập ấy và đòi bản có/không Nếp **giống hệt
+  nhau** cho các id trong đó.
+- **Im lặng hành chính cố ý để trống**: «Bạn chưa chặn ai», «Chưa có phiên
+  nào». Không phải quên: một danh sách quản trị rỗng không cần ai kể chuyện,
+  và review đã cấm đưa hình kể chuyện vào mọi hàng dữ liệu.
+- **Mỗi cảnh trọn vẹn khi không có
   Nếp** (`nep: false`, so `sua-ab/A-co-nep` với `B-khong-nep`) và được trình
   đọc màn hình đọc thành **một câu**: `chua-co-hoi` «Một chiếc ghế được kéo
   ra, chừa sẵn chỗ» · `chua-co-keo` «Một tờ hẹn trống, nét mực bắt đầu từ

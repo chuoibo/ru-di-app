@@ -10,6 +10,7 @@
  * posts are rows on the paper with a hairline between them.
  */
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { Canh } from "../../ui/art/Canh";
 import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -279,7 +280,7 @@ export function HoSoNguoiScreen() {
           ) : null}
           {tuong.pha === "hong" ? <ErrorState body={tuong.loi} onRetry={() => void napTuong()} title="Chưa đọc được tường" /> : null}
           {tuong.pha === "xong" && tuong.bai.length === 0 ? (
-            <EmptyState kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
+            <EmptyState illustration={<Canh id="chua-co-ky-niem" width={150} />} kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
           ) : null}
           {tuong.pha === "xong" && tuong.bai.length > 0 ? (
             <View>

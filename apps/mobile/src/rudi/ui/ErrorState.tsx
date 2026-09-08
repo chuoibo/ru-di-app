@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { EmptyState } from "./EmptyState";
+import { Canh } from "./art/Canh";
 
 export interface ErrorStateProps {
   /** What failed, in the product's words; never a raw server code. */
@@ -42,7 +43,13 @@ export function ErrorState({
       body={body}
       action={{ label: "Thử lại", onPress: onRetry, loading: retrying }}
       secondary={secondary}
-      illustration={illustration}
+      // The failure scene by default, in ONE place: about twenty screens draw
+      // this component, and the alternative is twenty screens each remembering
+      // to pass a picture. It is deliberately a props-only scene -- `hinhCanh`
+      // refuses the figure for it -- because «Luật Nếp Đứng Xa Tiền» keeps the
+      // character away from errors, conflicts and money, and several of these
+      // twenty are the ledger's own.
+      illustration={illustration ?? <Canh id="chua-doc-duoc" width={168} />}
       layout={layout}
       style={style}
       testID={testID ?? "error-state"}

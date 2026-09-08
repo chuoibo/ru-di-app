@@ -21,6 +21,7 @@
  * bytes come back.
  */
 import { Ionicons } from "@expo/vector-icons";
+import { Canh } from "../../ui/art/Canh";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -189,7 +190,7 @@ export function XemStoryScreen() {
             body="Có thể story đã qua 24 giờ, hoặc người đăng đã gỡ."
             kind="no-results"
             layout="inline"
-            title="Không còn story nào"
+            illustration={<Canh id="chua-co-ky-niem" width={150} />} title="Không còn story nào"
           />
         </View>
       ) : null}
