@@ -26,6 +26,10 @@ export function KhaySticker({
     <Sheet accessibilityLabel="Khay sticker" onClose={onClose} open={open} testID="khay-sticker">
       <Heading size="h2" subtitle="Một hình thay cho một câu." title="Sticker" />
       <View style={styles.luoi}>
+        {/* Each tile is a well of `ground` inside the `card` sheet, so a sticker
+            drawn in paper (`card`) shows its faces here exactly as it does in a
+            bubble on the page; on `card` tiles the paper vanished on the dark
+            scheme (finish review 08/09). */}
         {STICKER_IDS.map((id, i) => (
           <Pressable
             accessibilityLabel={nhanSticker(id)}
@@ -34,7 +38,7 @@ export function KhaySticker({
             onPress={() => onChon(id)}
             style={({ pressed }) => [
               styles.o,
-              { borderColor: colors.line, borderRadius: radius.control, backgroundColor: pressed ? colors.accentSoft : colors.card },
+              { borderColor: colors.line, borderRadius: radius.control, backgroundColor: pressed ? colors.accentSoft : colors.ground },
             ]}
           >
             <Sticker id={id} size={64} tilt={i % 2 === 0 ? -1 : 1} />

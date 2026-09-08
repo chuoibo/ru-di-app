@@ -139,31 +139,38 @@ function tuLopVe(lop: readonly LopVe[]): LopSticker[] {
 }
 
 /**
- * «Chờ tí»: Nếp keeps a chair -- one hand on its back rail -- and looks up at
- * a clock that is a sign, not a detail. The chair is the main prop: at 64dp
- * the reader has to see «a seat being kept» before reading the label, so the
- * chair takes the right half at 0.95 of its scene size and the figure stands
- * at 0.82, leaning toward it (`nghieng` 6). The eyes go to the clock
- * (`nhin` up-right). Geometry: hand (88, 48) of the 96-box → (63.2, 55.7),
- * on the chair's cross rail (y 53..58.7, between the posts x 57.7..84.3);
- * bounding box x 0.2..92, inside the Java test's [−1, 97].
+ * «Chờ tí»: Nếp keeps a chair -- one hand gripping the top of its back post --
+ * and looks up at a clock that is a sign, not a detail. The chair is the main
+ * prop: at 64dp the reader has to see «a seat being kept» before reading the
+ * label, so the chair takes the right half at 0.9 of its scene size and the
+ * figure stands at 0.726, leaning toward it (`nghieng` 5; the scene's
+ * `keo-ghe` leans back, a pull, and here nobody pulls). The pose is `keo-ghe`
+ * because its far hand is the one that grips a chair back's top (P(90, 34) of
+ * the 96-box) and its near hand opens to whoever the seat is for; `giu-cho`
+ * rests the hand mid-back, which at sticker size read as an arm through the
+ * frame (finish review 08/09). Geometry: hand → (62.4, 49.6) = top of the near
+ * post of `hinhGhe(57, …, 0.9)`, present in both readings (the compact chair
+ * drops its cross rail, not its posts). Eyes go to the clock (`nhin` up-right
+ * at the clamp). Clock at (72, 17) r 12 above the chair back with an 8-unit
+ * gap; hands at 12 and about 1: a small angle is the one-glance sign of «một
+ * tí», where a wide one would say «a time». Bounding box x 0.4..94.8.
  *
  * The compact reading (`chiTiet` false) is the same drawing with the art
  * layer's own 48dp simplifications (no brow, no crease, thicker limbs, plain
  * chair) and a heavier clock stroke; the clock keeps its size.
  */
 function choTi(chiTiet: boolean): LopVe[] {
-  const tiLeNep = 0.82, x0 = -8.5, tiLeGhe = 0.95, gheX = 52;
+  const tiLeNep = 0.726, x0 = -2.9, tiLeGhe = 0.9, gheX = 57;
   const y0 = CHAN_NEP - CHAN_NEP * tiLeNep;
-  const nguoi = hinhNep("giu-cho", { x0, y0, tiLe: tiLeNep, chiTiet, nghieng: 6, nhin: [1.5, -1.2] });
+  const nguoi = hinhNep("keo-ghe", { x0, y0, tiLe: tiLeNep, chiTiet, nghieng: 5, nhin: [1.4, -1.6] });
   const ghe = hinhGhe(gheX, CHAN_NEP - 64 * tiLeGhe, { tiLe: tiLeGhe, chiTiet });
-  const [cx, cy, r] = [80, 16, 13];
+  const [cx, cy, r] = [72, 17, 12];
   const w = chiTiet ? 2.2 : 2.8;
   const dongHo: LopVe[] = [
     { d: tronVe(cx, cy, r), mau: "giay" },
     { d: tronVe(cx, cy, r), mau: "muc", net: w },
     { d: netGay([[cx, cy], [cx, cy - r * 0.62]]), mau: "muc", net: w * 0.9 },
-    { d: netGay([[cx, cy], [cx + r * 0.5, cy + r * 0.28]]), mau: "muc", net: w * 0.9 },
+    { d: netGay([[cx, cy], [cx + r * 0.25, cy - r * 0.43]]), mau: "muc", net: w * 0.9 },
     { d: tronVe(cx, cy, chiTiet ? 1.6 : 2), mau: "gap" },
   ];
   return [...ghe, ...dongHo, ...nguoi];
