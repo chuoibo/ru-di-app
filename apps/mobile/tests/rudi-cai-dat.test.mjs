@@ -12,7 +12,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { BASE_URL, datTokenPhien, newAttempt } from "../dist-test/api.js";
-import { cauPhien, docPhien, nhanCua, thuHoiPhien } from "../dist-test/rudi/cai-dat/phien-cai-dat.js";
+import {
+  cauPhien,
+  cauTaiKhoanVuaTao,
+  docPhien,
+  nhanCua,
+  thuHoiPhien,
+} from "../dist-test/rudi/cai-dat/phien-cai-dat.js";
 import {
   LY_DO_BAO_CAO,
   baoCao,
@@ -190,4 +196,30 @@ test("giao diện: rác trên đĩa về «theo hệ thống», và sáu tổ h�
   assert.equal(toiHay("he-thong", true), true);
   assert.equal(toiHay("he-thong", false), false);
   assert.deepEqual(NHAN_GIAO_DIEN.map((m) => m.ma), ["sang", "toi", "he-thong"]);
+});
+
+test("câu «tài khoản vừa tạo» nói đúng cửa đã tạo nó, không mặc định là số điện thoại", () => {
+  // Câu này chỉ hiện đúng một lần trong đời một tài khoản, ngay sau khi đăng
+  // nhập lần đầu. Trước khi cửa Google chạy được thật thì mọi tài khoản đều
+  // tới bằng số, nên câu ghi cứng «số điện thoại» chưa ai thấy sai; đo trên
+  // máy 2026-09-09 với một tài khoản Google mới thì nó nói sai ngay dòng đầu.
+  const google = cauTaiKhoanVuaTao("google");
+  assert.match(google, /Google/);
+  assert.doesNotMatch(google, /số điện thoại/i);
+
+  const otp = cauTaiKhoanVuaTao("otp");
+  assert.match(otp, /số điện thoại/i);
+  assert.doesNotMatch(otp, /Google/);
+
+  const loiMoi = cauTaiKhoanVuaTao("invite");
+  assert.match(loiMoi, /lời mời/i);
+
+  // Cửa mà bản này chưa biết: nói rằng tài khoản vừa được tạo, và KHÔNG
+  // khẳng định cửa nào. Bịa một cửa còn tệ hơn im lặng về nó.
+  const la = cauTaiKhoanVuaTao("qua-cua-nao-do");
+  assert.doesNotMatch(la, /số điện thoại/i);
+  assert.doesNotMatch(la, /Google/);
+
+  // Mọi biến thể đều phải chỉ chỗ đổi tên hiển thị, vì đó là việc câu này làm.
+  for (const cau of [google, otp, loiMoi, la]) assert.match(cau, /Cá nhân/);
 });

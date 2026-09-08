@@ -172,8 +172,27 @@ adb -s emulator-5554 emu kill
 
 ## Cái gì CHƯA chạy tay — đọc trước khi kết luận
 
-- **Google**: nút «Tiếp tục với Google» nói thật là chờ client id; leader tạo
-  client id từ SHA-1 keystore debug (ghi ở #527) rồi mới có đường này.
+- **Google**: ĐÃ CHẠY THẬT trên emulator 2026-09-09. Leader đã tạo project
+  `rudi-prod` (consent screen External, trạng thái Testing) với hai client:
+  Android (`com.lakiet.rudi` + SHA-1 keystore debug) và Web. Cách chạy:
+
+  ```bash
+  # máy chủ: khai CẢ HAI client id, phân cách bằng dấu phẩy
+  MOBILE_GOOGLE_CLIENT_IDS=<web-id>,<android-id> uvicorn app.api.main:app ...
+  # Metro: Web client id là audience của ID token, app KHÔNG cần dựng lại APK
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web-id> EXPO_PUBLIC_API_URL=http://localhost:<cổng> \
+    npx expo start --dev-client --localhost --port <cổng metro>
+  ```
+
+  Máy ảo phải có một tài khoản Google đã thêm; nếu chưa có, bấm nút sẽ mở
+  thẳng luồng thêm tài khoản của Play Services. Tài khoản đó phải nằm trong
+  Test users của consent screen, vì app đang ở trạng thái Testing.
+
+  Đã đo: chưa cấu hình → 503; token rác → 401; JWT giả đúng audience nhưng chữ
+  ký sai → 401; token thật → 201 và `account_identities` có hàng `google`.
+  Đăng nhập lần hai KHÔNG sinh người mới, `last_login_at` nhích, phiên cũ bị
+  thu hồi khi đăng xuất. **Chưa đo**: máy thật, iOS, và token của một project
+  Google khác.
 - **Máy thật**: mọi bằng chứng là emulator x86_64; máy thật cần APK arm64 (chưa dựng)
   và `EXPO_PUBLIC_API_URL` là IP LAN, không phải `localhost`.
 - **Tablet, iOS**: chưa đo.

@@ -20,6 +20,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { vaoNhom, type NhomTomTat } from "../../../phien";
+import { cauTaiKhoanVuaTao } from "../../cai-dat/phien-cai-dat";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -73,7 +74,7 @@ export function GroupsEmptyScreen() {
       />
       {phien.is_new_person ? (
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Tài khoản vừa được tạo bằng số điện thoại của bạn. Tên hiển thị sửa được ở mục Cá nhân.
+          {cauTaiKhoanVuaTao(phien.issued_via ?? "")}
         </Text>
       ) : null}
       {loiMoi.length > 0 ? (

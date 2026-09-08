@@ -25,13 +25,42 @@ export const LOI_PHIEN: Record<string, string> = {
   authentication_required: "Bạn cần đăng nhập lại.",
 };
 
+/**
+ * One table per door, read from two places.
+ *
+ * `nhan` is the noun a session row is labelled with; `qua` is the clause the
+ * welcome line uses. They are different words for the same fact, so they live
+ * in one row: a second hand-written list is a list that drifts, and the way it
+ * drifts is that a door added later gets one of the two and not the other.
+ *
+ * `qua` is empty where no honest clause exists. A genesis session is seeded out
+ * of band and has no story to tell a person, and saying nothing is better than
+ * naming a door they did not walk through.
+ */
+const CUA: Record<CuaCapPhien, { nhan: string; qua: string }> = {
+  otp: { nhan: "Số điện thoại", qua: "bằng số điện thoại của bạn" },
+  google: { nhan: "Google", qua: "bằng tài khoản Google của bạn" },
+  invite: { nhan: "Lời mời", qua: "từ lời mời bạn vừa nhận" },
+  genesis: { nhan: "Bản dựng", qua: "" },
+};
+
 /** Câu dưới mỗi hàng: cửa nào đã cấp phiên này. */
 export function nhanCua(cua: string): string {
-  if (cua === "otp") return "Số điện thoại";
-  if (cua === "google") return "Google";
-  if (cua === "invite") return "Lời mời";
-  if (cua === "genesis") return "Bản dựng";
-  return "Cách khác";
+  return CUA[cua as CuaCapPhien]?.nhan ?? "Cách khác";
+}
+
+/**
+ * Câu chào hiện đúng một lần, ngay sau lần đăng nhập đầu của một tài khoản.
+ *
+ * Trước khi cửa Google chạy được thật, mọi tài khoản đều tới bằng số điện
+ * thoại, nên câu ghi cứng «bằng số điện thoại của bạn» chưa ai thấy sai. Đo
+ * trên máy 2026-09-09 với một tài khoản Google mới: nó nói sai ngay dòng đầu
+ * tiên người ta đọc. Một cửa bản này chưa biết thì không khẳng định cửa nào.
+ */
+export function cauTaiKhoanVuaTao(cua: string): string {
+  const qua = CUA[cua as CuaCapPhien]?.qua ?? "";
+  const mo = qua ? `Tài khoản vừa được tạo ${qua}.` : "Tài khoản vừa được tạo.";
+  return `${mo} Tên hiển thị sửa được ở mục Cá nhân.`;
 }
 
 /** «Đang dùng máy này» hoặc ngày mở phiên; không có nhãn thiết bị để nói. */
