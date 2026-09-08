@@ -92,7 +92,7 @@ export function MediaSlot({
   return (
     <View testID={testID} style={style}>
       <View style={[frame, { borderRadius: radius ?? r.small, backgroundColor: nenAnhTrong, overflow: "hidden" }]}>
-        {source ? (
+        {source && !hong ? (
           <Image
             accessibilityLabel={alt}
             source={source}

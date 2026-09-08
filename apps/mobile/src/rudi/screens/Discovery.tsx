@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
-import { PLACES, type DemoPlace } from "../fixtures";
+import { LOAI_MAU, PLACES, type DemoPlace } from "../fixtures";
 import { PLACE_CATEGORIES, filterPlaces, type PlaceCategory } from "../places";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
@@ -36,24 +36,17 @@ import {
 } from "../ui";
 import { Wordmark } from "../ui/Wordmark";
 import { Canh } from "../ui/art/Canh";
+import { MediaSlot } from "../ui/MediaSlot";
 import { GuGlyph } from "../ui/art/Gu";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { EmptyState } from "../ui/EmptyState";
-import { PlaceCompare, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
+import { PlaceCompare, PlaceGlyph, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
 
 const GLYPH: Record<PlaceCategory, IconName> = {
   "Quán ăn": "restaurant-outline",
   Cafe: "cafe-outline",
   "Vui chơi": "game-controller-outline",
   "Đi chơi đêm": "moon-outline",
-};
-
-/** The catalogue's id for each sample category, so the frame draws the same object the live screen does. */
-const LOAI: Record<PlaceCategory, string> = {
-  "Quán ăn": "quan-an-local",
-  Cafe: "cafe",
-  "Vui chơi": "vui-choi",
-  "Đi chơi đêm": "di-choi-dem",
 };
 
 /** The sample place in the row/lead vocabulary. `song`: a real session, so no invented match badge. */
@@ -68,8 +61,9 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
       { icon: "wallet-outline", text: place.price },
     ],
     glyph: GLYPH[place.category],
-    loai: LOAI[place.category],
-    photo: place.image,
+    loai: LOAI_MAU[place.category],
+    photo: place.anh?.source ?? null,
+    attribution: place.anh?.nguon,
     badge: !song && place.match >= 90 ? "Hợp gu" : null,
     // The sample's reason is the two tags it was matched on (the same two
     // `AiMatchScreen` shows), and only while the sample badge is shown.
@@ -139,7 +133,7 @@ export function ExploreScreen() {
   const { soSanh, hang } = taiSoSanh(conLai);
 
   return (
-    <RudiScreen bottomInset={112} testID="explore-screen">
+    <RudiScreen bottomInset="tab" testID="explore-screen">
       <View style={styles.exploreHeader}>
         <View style={styles.exploreBrand}>
           <Wordmark color={colors.ink} height={20} />
@@ -197,7 +191,7 @@ export function ExploreScreen() {
       <ScrollView contentContainerStyle={styles.hangLoai} horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={false} style={styles.cuonLoai}>
         {PLACE_CATEGORIES.map((label) => {
           const active = category === label;
-          return <Chip key={label} label={label} leading={<GuGlyph id={guTheoLoai(LOAI[label])} size={22} tone={active ? "accent" : "ink"} />} onPress={() => setCategory(active ? null : label)} selected={active} />;
+          return <Chip key={label} label={label} leading={<GuGlyph id={guTheoLoai(LOAI_MAU[label])} size={22} tone={active ? "accent" : "ink"} />} onPress={() => setCategory(active ? null : label)} selected={active} />;
         })}
       </ScrollView>
       <SectionHeader
@@ -290,8 +284,9 @@ export function AiMatchScreen() {
       { icon: "wallet-outline", text: place.price },
     ],
     glyph: GLYPH[place.category],
-    loai: LOAI[place.category],
-    photo: place.image,
+    loai: LOAI_MAU[place.category],
+    photo: place.anh?.source ?? null,
+    attribution: place.anh?.nguon,
     badge: dau ? "Gợi ý" : null,
   });
 
@@ -358,39 +353,50 @@ export function PlaceDetailScreen() {
   );
   const saved = session.savedPlaceIds.includes(place.id);
   const rong = width >= 700;
+  const nutDau = (
+    <>
+      <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => router.back()} />
+      <Inline gap={8}>
+        <IconButton
+          accessibilityLabel="Chia sẻ"
+          icon="share-social-outline"
+          onPress={() =>
+            void Share.share({
+              message: `${place.name}: ${place.subtitle}`,
+            })
+          }
+        />
+        <IconButton
+          accessibilityLabel={saved ? "Bỏ lưu" : "Lưu địa điểm"}
+          icon={saved ? "heart" : "heart-outline"}
+          onPress={() => session.toggleSaved(place.id)}
+          selected={saved}
+        />
+      </Inline>
+    </>
+  );
 
   return (
     <RudiScreen padded={false} testID="place-detail-screen">
       <View style={styles.detailShell}>
-        <Photo
-          height={rong ? 400 : 300}
-          radius={rong ? 24 : 0}
-          source={place.image}
-          overlay={
-            <View style={styles.detailTop}>
-              <IconButton accessibilityLabel="Quay lại" icon="chevron-back" onPress={() => router.back()} />
-              <Inline gap={8}>
-                <IconButton
-                  accessibilityLabel="Chia sẻ"
-                  icon="share-social-outline"
-                  onPress={() =>
-                    void Share.share({
-                      message: `${place.name}: ${place.subtitle}`,
-                    })
-                  }
-                />
-                <IconButton
-                  accessibilityLabel={saved ? "Bỏ lưu" : "Lưu địa điểm"}
-                  icon={saved ? "heart" : "heart-outline"}
-                  onPress={() => session.toggleSaved(place.id)}
-                  selected={saved}
-                />
-              </Inline>
-            </View>
-          }
-        />
+        {/* Buttons over the picture when there is one; on a plain row when
+            there is not. A place without an honest picture gets no 300dp
+            frame of nothing (review 08/09 F01). */}
+        {place.anh ? (
+          <MediaSlot
+            alt={place.name}
+            attribution={place.anh.nguon}
+            height={rong ? 400 : 300}
+            overlay={<View style={styles.detailTop}>{nutDau}</View>}
+            radius={rong ? 24 : 0}
+            source={place.anh.source}
+          />
+        ) : (
+          <View style={styles.detailTopTron}>{nutDau}</View>
+        )}
         <View style={styles.detailContent}>
           <DemoBadge />
+          {place.anh ? null : <PlaceGlyph glyph={GLYPH[place.category]} loai={LOAI_MAU[place.category]} size={36} />}
           <Heading title={place.name} subtitle={place.subtitle} />
           {/* The three facts that decide, on the paper, each one text node. */}
           <Inline gap={14} wrap>
@@ -413,16 +419,6 @@ export function PlaceDetailScreen() {
           <View style={styles.khoi}>
             <SectionHeader title={`Vì sao hợp ${tenNhomHienTai(session)}?`} />
             <AiNote>View thoáng, món nướng dễ chia sẻ và đủ chỗ cho nhóm 8 người.</AiNote>
-          </View>
-          <View style={styles.khoi}>
-            <SectionHeader title="Không gian" />
-            <ResponsiveRow minItemWidth={260}>
-              {[PLACES[1].image, PLACES[2].image].map((image, index) => (
-                <View key={index} style={styles.galleryCell}>
-                  <Photo height={150} radius={14} source={image} />
-                </View>
-              ))}
-            </ResponsiveRow>
           </View>
           <RudiButton
             icon="add-circle-outline"
@@ -451,6 +447,7 @@ const styles = StyleSheet.create({
   khoi: { gap: 8 },
   detailShell: { width: "100%", maxWidth: 960, alignSelf: "center" },
   detailTop: { position: "absolute", left: 14, right: 14, top: 14, flexDirection: "row", justifyContent: "space-between" },
+  detailTopTron: { paddingHorizontal: 14, paddingTop: 14, flexDirection: "row", justifyContent: "space-between" },
   detailContent: { paddingHorizontal: 16, paddingTop: 19, gap: 19 },
   galleryCell: { flex: 1 },
 });

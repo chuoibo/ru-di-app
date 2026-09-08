@@ -139,7 +139,7 @@ export function TripTimelineScreen() {
 
   return (
     <RudiScreen
-      bottomInset={112}
+      bottomInset="tab"
       overlay={
         <Sheet accessibilityLabel="Tùy chọn chuyến đi" onClose={() => setMenuOpen(false)} open={menuOpen}>
           <View style={styles.khay}>
@@ -244,7 +244,7 @@ export function TripTimelineScreen() {
               gio={slot.time}
               key={slot.time + slot.title + index}
               onPress={slot.placeId ? () => router.push(("/places/" + slot.placeId) as never) : undefined}
-              phai={noi?.image ? <AnhChang alt={noi.name} source={noi.image} /> : undefined}
+              phai={noi?.anh ? <AnhChang alt={noi.name} source={noi.anh.source} /> : undefined}
               phu={noi ? noi.name : slot.placeId ? "Địa điểm · bấm để mở" : "Cả nhóm"}
               phuTone={slot.placeId ? "accent" : "inkFaint"}
               tieuDe={slot.title}

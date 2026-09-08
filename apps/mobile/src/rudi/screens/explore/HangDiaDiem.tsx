@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, type ImageSource } from "expo-image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
@@ -75,6 +76,47 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // 16:10 fills a phone's width at reading height; on a tablet the same ratio
   // is a screenful of photograph before the first name, so the frame widens.
   const tiLe = sizeClass === "compact" ? 16 / 10 : 21 / 9;
+  const chu = (
+    <>
+      <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
+      {dd.lyDo ? <Text style={[typography.label, { color: colors.ai }]}>{dd.lyDo}</Text> : null}
+      {dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
+      {dd.facts.length > 0 ? (
+        <Inline gap={12} wrap>
+          {dd.facts.map((f) => (
+            <Inline gap={5} key={f.icon + f.text}>
+              <Ionicons color={f.icon === "star" ? colors.accent : colors.inkFaint} name={f.icon} size={15} />
+              <Text style={[typography.label, { color: colors.inkSoft }]}>{f.text}</Text>
+            </Inline>
+          ))}
+        </Inline>
+      ) : null}
+    </>
+  );
+  const tim = (
+    <IconButton
+      accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+      icon={daLuu ? "heart" : "heart-outline"}
+      onPress={onSave}
+      selected={daLuu}
+    />
+  );
+  if (dd.photo === null) {
+    // No honest picture: an editorial header of object, name and facts, not a
+    // 16:10 frame with an icon in the middle (review 08/09 F01, report §9.4).
+    return (
+      <View style={[styles.leadGon, { borderBottomColor: colors.line }]} testID={testID}>
+        <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadGonPress, pressed && styles.pressed]}>
+          <PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={34} />
+          <View style={[styles.leadText, styles.flex1, styles.leadGonChu]}>
+            {dd.badge ? <Stamp label={dd.badge} style={styles.leadGonDau} tone="ai" /> : null}
+            {chu}
+          </View>
+        </Pressable>
+        {tim}
+      </View>
+    );
+  }
   return (
     <View style={styles.lead} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
@@ -86,43 +128,34 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           ratio={tiLe}
           source={dd.photo}
         />
-        <View style={styles.leadText}>
-          <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
-          {dd.lyDo ? <Text style={[typography.label, { color: colors.ai }]}>{dd.lyDo}</Text> : null}
-          {dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-          {dd.facts.length > 0 ? (
-            <Inline gap={12} wrap>
-              {dd.facts.map((f) => (
-                <Inline gap={5} key={f.icon + f.text}>
-                  <Ionicons color={f.icon === "star" ? colors.accent : colors.inkFaint} name={f.icon} size={15} />
-                  <Text style={[typography.label, { color: colors.inkSoft }]}>{f.text}</Text>
-                </Inline>
-              ))}
-            </Inline>
-          ) : null}
-        </View>
+        <View style={styles.leadText}>{chu}</View>
       </Pressable>
-      <View style={styles.leadSave}>
-        <IconButton
-          accessibilityLabel={daLuu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
-          icon={daLuu ? "heart" : "heart-outline"}
-          onPress={onSave}
-          selected={daLuu}
-        />
-      </View>
+      <View style={styles.leadSave}>{tim}</View>
     </View>
   );
 }
 
 export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   const { colors, radius } = useRudiTheme();
-  const facts = dd.facts.map((f) => f.text).join(" · ");
+  const { fontScale } = useWindowDimensions();
+  // The facts that decide come first and whole: rating and distance on one
+  // line, the price band with its unit on its own, so a large font truncates
+  // the prose and never the price (review 08/09 F04). The seal sits beside
+  // the name at 1.0 and under the facts once the text is big.
+  const facts = dd.facts.map((f) => f.text);
+  const dauFacts = facts.slice(0, -1).join(" · ");
+  const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
+  const chuLon = fontScale >= 1.3;
+  // A thumbnail that fails to load shows the category's object, never an
+  // empty tinted square (review 08/09 F01). Reset when the picture changes.
+  const [hong, setHong] = useState(false);
+  useEffect(() => setHong(false), [dd.photo]);
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
         <View style={[styles.thumb, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
-          {dd.photo ? (
-            <Image accessibilityLabel={dd.name} contentFit="cover" source={dd.photo} style={StyleSheet.absoluteFill} />
+          {dd.photo && !hong ? (
+            <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={dd.photo} style={StyleSheet.absoluteFill} />
           ) : dd.loai !== undefined ? (
             <GuGlyph id={guTheoLoai(dd.loai)} size={32} tone="accent" />
           ) : (
@@ -132,13 +165,15 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
         <View style={styles.rowText}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
           <View style={styles.rowTen}>
-            <Text numberOfLines={dd.badge ? 1 : 2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
-            {dd.badge ? <Stamp label={dd.badge} tone="ai" /> : null}
+            <Text numberOfLines={2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
+            {dd.badge && !chuLon ? <Stamp label={dd.badge} tone="ai" /> : null}
           </View>
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-          {/* One text node: a row of several short texts keeps its first
-              measurement when the row wraps and strands one word alone. */}
-          {facts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{facts}</Text> : null}
+          {/* One text node per line: a row of several short texts keeps its
+              first measurement when the row wraps and strands one word alone. */}
+          {dauFacts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+          {cuoiFact ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+          {dd.badge && chuLon ? <Stamp label={dd.badge} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
@@ -187,8 +222,13 @@ export function PlaceCompare({
   testID?: string;
 }) {
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  // Two columns compare across; once the text is big enough that a half-width
+  // column cannot hold a name and a price whole, the two stack and compare
+  // down the same fields in the same order (review 08/09 F04).
+  const xepDoc = fontScale >= 1.3;
   return (
-    <View style={[styles.soSanh, { borderBottomColor: colors.line }]} testID={testID}>
+    <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
         const luu = daLuu(dd.id);
         // The same facts the rows print, so the two really compare; the last
@@ -197,6 +237,40 @@ export function PlaceCompare({
         const facts = dd.facts.map((f) => f.text);
         const dauFacts = facts.slice(0, -1).join(" · ");
         const cuoiFact = facts.length > 0 ? facts[facts.length - 1] : "";
+        const chu = (
+          <>
+            <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
+            {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
+            {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
+            {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
+            {dd.photo && dd.attribution ? (
+              <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
+            ) : null}
+          </>
+        );
+        if (dd.photo === null) {
+          // No honest picture: the object, the seal and the heart on one line,
+          // then the same words as the picture tile, so the two still compare.
+          return (
+            <View key={dd.id} style={styles.ungVien}>
+              <View style={styles.ungVienDau}>
+                <PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={24} />
+                {dd.badge ? <Stamp label={dd.badge} tone="ai" /> : null}
+                <View style={styles.flex1} />
+                <IconButton
+                  accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
+                  icon={luu ? "heart" : "heart-outline"}
+                  onPress={() => onSave(dd.id)}
+                  quiet
+                  selected={luu}
+                />
+              </View>
+              <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
+                {chu}
+              </Pressable>
+            </View>
+          );
+        }
         return (
           <View key={dd.id} style={styles.ungVien}>
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
@@ -220,13 +294,7 @@ export function PlaceCompare({
                 ratio={4 / 3}
                 source={dd.photo}
               />
-              <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
-              {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
-              {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
-              {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
-              {dd.photo && dd.attribution ? (
-                <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
-              ) : null}
+              {chu}
             </Pressable>
           </View>
         );
@@ -237,8 +305,15 @@ export function PlaceCompare({
 
 const styles = StyleSheet.create({
   soSanh: { flexDirection: "row", gap: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  soSanhDoc: { flexDirection: "column", gap: 20 },
+  rowBadgeDuoi: { alignSelf: "flex-start", marginTop: 4 },
   ungVien: { flex: 1, minWidth: 0 },
   ungVienPress: { gap: 6 },
+  ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  leadGon: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  leadGonPress: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 12, minWidth: 0 },
+  leadGonChu: { paddingRight: 0 },
+  leadGonDau: { alignSelf: "flex-start" },
   timOnMedia: { position: "absolute", right: 6, bottom: 6 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
   flex1: { flex: 1, minWidth: 0 },
