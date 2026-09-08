@@ -632,7 +632,7 @@
     },
     {
       "path": "docs/claude/2026-09-08/sua-review/canh-nam-sang.png",
-      "sha256": "ce1f842fbb5f019ac69fb02a2b41edcd11585ccb18f467499a222b17fe959ecf",
+      "sha256": "5917e2018ed05eecce817c51a867773adab5a74b8f3a62a0a409ae1a393bc29c",
       "rules": [
         "controlled-artifact"
       ],
