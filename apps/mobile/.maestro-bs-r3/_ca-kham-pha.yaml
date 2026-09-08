@@ -1,0 +1,29 @@
+# Chọn một nhánh ảnh của Khám phá rồi cuộn xuống chính các hàng để chụp.
+#
+# Hai bước cuộn, không phải một: sau mỗi lần chụp màn đang đứng DƯỚI dãy chip,
+# còn lần đầu thì đứng TRÊN. Cuộn xuống mốc dưới cùng trước, rồi cuộn ngược lên
+# tới chip, thì cả hai vị trí xuất phát đều tới được (đo 08/09: chỉ cuộn xuống
+# thì lần thứ hai đỏ «No visible element found»).
+appId: com.lakiet.rudi
+---
+- scrollUntilVisible:
+    element:
+      text: "Cử chỉ: kéo thả và bộ ảnh"
+    direction: DOWN
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "${CHIP}"
+    direction: UP
+    timeout: 20000
+- tapOn: "${CHIP}"
+# Căn giữa hàng danh sách cuối («Tiệm trà Sương», chỉ có trên bàn thử) thì ô so
+# sánh nằm trọn ở nửa trên màn và hàng ấy ở giữa; neo vào tiêu đề mục «Chặng»
+# (đo 08/09) chỉ còn hàng cuối, ô so sánh bị đẩy khỏi mép trên.
+- scrollUntilVisible:
+    element:
+      text: "Tiệm trà Sương"
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
+- takeScreenshot: ${ANH}

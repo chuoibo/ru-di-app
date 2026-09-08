@@ -1,0 +1,21 @@
+# Chọn một ca của mục «Chặng» trên bàn thử rồi chụp chính hai chặng. Hai bước
+# cuộn như _ca-kham-pha: xuống mốc dưới cùng, rồi ngược lên tới chip.
+appId: com.lakiet.rudi
+---
+- scrollUntilVisible:
+    element:
+      text: "Cử chỉ: kéo thả và bộ ảnh"
+    direction: DOWN
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "${CHIP}"
+    direction: UP
+    timeout: 20000
+- tapOn: "${CHIP}"
+- scrollUntilVisible:
+    element:
+      text: "Cử chỉ: kéo thả và bộ ảnh"
+    direction: DOWN
+    timeout: 20000
+- takeScreenshot: ${ANH}

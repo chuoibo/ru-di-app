@@ -5,13 +5,12 @@
  * counted from the sample trip's dates rather than typed.
  */
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
-import { DEMO_GROUP, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
+import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
 import { homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
@@ -35,7 +34,7 @@ import { Money } from "../ui/Money";
 import { RosterPicker } from "../ui/RosterPicker";
 import { Sheet } from "../ui/Sheet";
 import { Stamp } from "../ui/Stamp";
-import { AnhChang, HangChang } from "./keo/HangChang";
+import { HangChang } from "./keo/HangChang";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -244,7 +243,7 @@ export function TripTimelineScreen() {
               gio={slot.time}
               key={slot.time + slot.title + index}
               onPress={slot.placeId ? () => router.push(("/places/" + slot.placeId) as never) : undefined}
-              phai={noi?.anh ? <AnhChang alt={noi.name} source={noi.anh.source} /> : undefined}
+              anh={noi?.anh ? { anh: noi.anh, alt: noi.name, loai: LOAI_MAU[noi.category] } : null}
               phu={noi ? noi.name : slot.placeId ? "Địa điểm · bấm để mở" : "Cả nhóm"}
               phuTone={slot.placeId ? "accent" : "inkFaint"}
               tieuDe={slot.title}

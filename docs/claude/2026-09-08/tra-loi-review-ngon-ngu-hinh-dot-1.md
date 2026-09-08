@@ -1,10 +1,19 @@
 # Trả lời review «ngôn ngữ hình đợt 1» — bốn gói R1–R4
 
+> **Đính chính 08/09 (sau [review vòng 2](../../codex/2026-09-08/review-ngon-ngu-hinh-vong-2.md), F21 và F23).**
+> Bốn chỗ trong bản này đã được sửa tại chỗ và đánh dấu *Đính chính*: phạm vi B2/B3/C2 theo đúng bảng
+> roadmap §13.1; `AlbumAnh` dùng chung cho `AlbumLive` và bàn thử dev, không phải «live và fixture»;
+> câu «kiểu dữ liệu giữ ghi công nên không thể quên» là sai và đã được thay; «mười ảnh» nghĩa là mười
+> mapping địa điểm bị gỡ trên năm asset tái dùng, không phải mười file stock đã xoá. Bản trả lời vòng 2 ở
+> [`tra-loi-review-ngon-ngu-hinh-vong-2.md`](tra-loi-review-ngon-ngu-hinh-vong-2.md).
+
 - Nhánh: `claude/p0-w-ui4-ban-sac-sua-review`, dựng trên `main` tại `16ac824d`.
 - Trả lời cho: [`docs/codex/2026-09-08/review-ngon-ngu-hinh-dot-1.md`](../../codex/2026-09-08/review-ngon-ngu-hinh-dot-1.md) (VERDICT: REQUEST_CHANGES).
-- Phạm vi đúng bằng bốn gói của review. **Không** làm B2 (lời rủ trong ô so sánh),
-  **không** làm B3 (tám sticker), **không** làm C2 (token disabled toàn kit): review nói làm xong bốn
-  gói rồi review lại một batch mới mở rộng, nên ba thứ đó chờ.
+- Phạm vi đúng bằng bốn gói của review. **Không** làm B2 · R04/R07 (Tạo kèo, Plan, lịch trình và
+  expanded), **không** làm B3 · R01/R06 (AI typed cards, chat keyboard, khay sticker), **không** làm
+  C2 · R02/R08 (Empty, profile, wall, badges, share); lát token disabled là một lát kit riêng, không
+  phải C2. Review nói làm xong bốn gói rồi review lại một batch mới mở rộng, nên các thứ đó chờ.
+  *(Đính chính 08/09 theo review vòng 2 F23: bản đầu gọi sai phạm vi ba mã này.)*
 
 ## Tóm tắt: đã sửa gì
 
@@ -12,7 +21,7 @@
 |---|---|---|
 | R1 · ảnh sai | Gỡ mười mapping ảnh sai; hai ảnh còn lại có quan hệ thật và ghi công; mọi nhánh không ảnh và ảnh lỗi có hình để nhìn | `fixtures.ts`, `HangDiaDiem.tsx`, `Discovery.tsx`, `Group.tsx`, `Outing.tsx`, `MediaSlot.tsx`, `assets/rudi/README.md` |
 | R2 · Nếp không diễn | Ba pose diễn mới có điểm tay chạm vật; thân nghiêng và hướng mắt thành tham số; cả năm cảnh đứng trên một mặt sàn | `art/nep.ts`, `art/canh.ts` |
-| R3 · Album | Chạm ảnh mở đúng ảnh (F03b); đếm ngày trên toàn bộ ảnh nên album hai ngày hiện đủ hai mốc (F03a); tách `AlbumAnh` để live và fixture dùng chung bộ dựng | `ky-niem.ts`, `AlbumAnh.tsx`, `AlbumLive.tsx`, `Memories.tsx`, `KhungAnh.tsx` |
+| R3 · Album | Chạm ảnh mở đúng ảnh (F03b); đếm ngày trên toàn bộ ảnh nên album hai ngày hiện đủ hai mốc (F03a); tách `AlbumAnh` cho `AlbumLive` và bàn thử dev dùng chung bộ dựng (`Memories.tsx` giữ renderer riêng, chỉ dùng chung `PhotoViewer`/`KhungAnh`) | `ky-niem.ts`, `AlbumAnh.tsx`, `AlbumLive.tsx`, `Memories.tsx`, `KhungAnh.tsx` |
 | R4 · cỡ chữ lớn | Thanh tab nở theo `fontScale`, nhãn hai dòng; `RudiScreen bottomInset="tab"`; hàng và ô so sánh xuống cột ở cỡ chữ lớn | `adaptive.ts`, `RudiTabBar.tsx`, `ui.tsx`, `HangDiaDiem.tsx` |
 
 ## R1 — ảnh sai đối tượng
@@ -33,7 +42,10 @@ dấu, hàng danh sách dùng `PlaceGlyph` theo `loai`. Ảnh tải hỏng (`onE
 câu «Chưa tải được ảnh», nên ba nhánh có ảnh / không ảnh / ảnh lỗi đều có thứ để nhìn.
 
 Ghi công đi theo từng ảnh trong kiểu `AnhMau` (`{ source, nguon: { prefix, author, license } }`) chứ
-không nằm rời ở màn, nên không thể quên khi thêm ảnh mới. Manifest quan hệ, cỡ dùng thật và crop ghi ở
+không nằm rời ở màn. *Đính chính (review vòng 2 F21):* kiểu dữ liệu giữ metadata **không** chứng minh
+renderer in metadata; ở bản này Bình chọn, lịch trình AI và timeline vẫn đọc `.anh.source` rồi bỏ
+`nguon`. PR vòng 2 sửa: khung nào vẽ ảnh thì khung ấy in ghi công (`HangChang.anh`), Bình chọn bỏ ảnh,
+và có test consumer `tests/rudi-anh-ghi-cong.test.mjs` canh việc đó. Manifest quan hệ, cỡ dùng thật và crop ghi ở
 `apps/mobile/assets/rudi/README.md`.
 
 **Một hệ quả cố ý.** Trên màn thật, hai tấm ảnh còn lại rơi xuống hàng danh sách (thumbnail 56dp) chứ
@@ -77,8 +89,9 @@ mở `PhotoViewer` đúng ảnh đó; chế độ chọn chỉ vào bằng nút 
 cả ảnh dẫn, nên album có ảnh dẫn ngày 17/10 và một ảnh ngày 18/10 hiện đủ hai mốc thay vì im lặng. Ba
 ca biên có test node: mốc 23:59:59 và 00:00:00 cùng múi giờ, cùng ngày, danh sách rỗng.
 
-**Một bộ dựng cho cả hai màn.** Phần dựng ảnh tách ra `screens/ky-niem/AlbumAnh.tsx`, dùng chung bởi
-`AlbumLive.tsx` (màn live) và bàn thử. Review đúng ở chỗ ảnh fixture không chứng minh bố cục live;
+**Một bộ dựng cho màn live và bàn thử.** Phần dựng ảnh tách ra `screens/ky-niem/AlbumAnh.tsx`, dùng chung bởi
+`AlbumLive.tsx` (màn live) và bàn thử dev; `Memories.tsx` (album fixture) vẫn có renderer riêng và chỉ
+dùng chung `PhotoViewer`/`KhungAnh`, nên bằng chứng dưới đây là của component live, không phải của fixture. Review đúng ở chỗ ảnh fixture không chứng minh bố cục live;
 bằng chứng lần này chụp `AlbumAnh` — đúng bộ dựng màn live nạp — với dữ liệu tổng hợp.
 
 **Dấu góc gấp.** Ảnh in dẫn đầu album mang `NepGoc`, nối motif góc gấp sang màn có dữ liệu mà không
@@ -158,8 +171,9 @@ nên tắt nhân vật vẫn là một bức tranh đủ nghĩa.
   công; chúng không phải ảnh chụp chính hai địa điểm ấy, và tiền tố «Ảnh minh hoạ: » nói đúng điều đó.
 - **Mười địa điểm chưa có ảnh.** Đó là lựa chọn, không phải thiếu sót được giấu: A3 đóng khi có bộ ảnh
   đúng quan hệ, và tới lúc đó nhánh không ảnh là đường chính thức.
-- **Chưa làm trong lượt này:** B2 (lời rủ trong ô so sánh), B3 (tám sticker theo hình Nếp), C2 (token
-  disabled cho cả kit). Review xếp ba việc đó sau batch này.
+- **Chưa làm trong lượt này:** B2 · R04/R07 (Tạo kèo, Plan, lịch trình và expanded), B3 · R01/R06
+  (AI typed cards, chat keyboard, khay sticker), C2 · R02/R08 (Empty, profile, wall, badges, share).
+  Token disabled là lát kit riêng. Review xếp các việc đó sau batch này. *(Đính chính F23 vòng 2.)*
 
 ## Bằng chứng native
 

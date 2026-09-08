@@ -91,11 +91,14 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     facts: chiTietNgan(place).map((m) => ({ icon: m.icon, text: m.chu })),
     glyph: bieuTuongLoai(place.category),
     loai: place.category,
-    // The picture comes with its credit or not at all (ADR-0017 §2.5).
-    photo: bia === null ? null : bia.nguon,
-    // «Quanh đây» travels with the credit: the importer geosearched within
-    // 250 m, so the picture is from around here, not of this business.
-    attribution: bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH },
+    // The picture comes with its credit or not at all (ADR-0017 §2.5), in one
+    // object, so no adapter can hand the frame the address alone. «Quanh đây»
+    // travels with the credit: the importer geosearched within 250 m, so the
+    // picture is from around here, not of this business.
+    anh:
+      bia === null || place.photoAuthor === null || place.photoLicense === null
+        ? null
+        : { source: bia.nguon, nguon: { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH } },
     badge: hop !== null && hop.real ? hop.text : null,
     // One grounded reason under the lead: the model's own sentence when the
     // match is real, nothing otherwise. Never the tagline dressed as a reason.

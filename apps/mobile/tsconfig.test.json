@@ -296,6 +296,8 @@
     // an unknown id must draw «khac» and never throw, and only node can run the
     // shape table against the Java grammar. See `tests/rudi-chat-sticker.test.mjs`.
     "src/rudi/chat/sticker.ts",
+    // The credit sentence every photo frame prints (MediaSlot, the rows, a route stop): one pure module, one test.
+    "src/rudi/ui/ghi-cong.ts",
     // Five chat themes × two schemes must all exist and clear 4.5:1, and an
     // unknown slug must fall back to the default rather than to nothing.
     "src/rudi/mau-chat.ts",

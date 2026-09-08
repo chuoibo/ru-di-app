@@ -1,0 +1,30 @@
+# Lịch trình AI ngày 2: hai chặng có ảnh minh hoạ in đúng câu ghi công trong
+# hàng (so trọn văn bản node, đúng chuỗi `cauGhiCong`), và câu ấy vẫn ở đó sau
+# khi cuộn tới cuối màn.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- tapOn: "Tin nhắn"
+- scrollUntilVisible:
+    element:
+      text: "Xem lịch trình"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Xem lịch trình"
+- extendedWaitUntil:
+    visible: "Ngày 2"
+    timeout: 30000
+- tapOn: "Ngày 2"
+- extendedWaitUntil:
+    visible: "Ảnh minh hoạ: Hieu Do Quang · Unsplash License"
+    timeout: 30000
+- assertVisible: "Ảnh minh hoạ: Kien Tran · Pexels License"
+- takeScreenshot: r3-66-lich-trinh-ngay-2
+- scrollUntilVisible:
+    element:
+      text: "dự kiến một người · số tham chiếu của chuyến"
+    direction: DOWN
+    timeout: 30000
+- assertVisible: "Ảnh minh hoạ: Kien Tran · Pexels License"
+- takeScreenshot: r3-66-lich-trinh-cuoi

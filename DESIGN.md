@@ -791,11 +791,15 @@ Hình dạng đặc trưng của thế giới, mỗi cái mang một nghĩa:
   -2, «HỢP GU» trên ảnh -2), 0 trong bảng. Đặt lên ảnh thì có **miếng giấy**
   `card` dưới con dấu viền (`nen`), để mực không đọc trên ảnh (ảnh
   `dot8/04-explore`: «HỢP GU» trên ảnh dẫn).
-- **Ảnh chặng** (`AnhChang`): ảnh 44×44 trong khung giấy 2dp (`card` + kẻ
-  tóc `line`, bo 10, ảnh bo 8; 48 tổng) ở khe `phai` của chặng có địa điểm
+- **Ảnh chặng** (`HangChang anh`): ảnh 44×44 trong khung giấy 2dp (`card` +
+  kẻ tóc `line`, bo 10, ảnh bo 8; 48 tổng) ở khe phải của chặng có địa điểm
   **có ảnh**; chặng khác vẫn là một dòng gọn. Chênh lệch đó là nhịp của dòng
   thời gian (ảnh `dot8/07-plan`: 12:30 «Bánh căn Lệ» có ảnh, 07:00/11:00
-  không).
+  không). `AnhChang` không còn export (vòng 2, 08/09): ảnh vào chặng qua
+  `anh: { anh: AnhCoGhiCong, alt, loai? }`, chặng tự in dòng ghi công
+  (`caption inkFaint`, không trần số dòng) làm dòng cuối; ảnh hỏng thì cùng
+  khung 44 vẽ hình gu theo `loai` và chặng in «Chưa tải được ảnh» (`caption
+  warn`).
 - **Nét chì đứt** (`HangChang phac`): đường 2dp `borderStyle: "dashed"` màu
   `inkFaint`, nút tròn viền `inkFaint`; là bản nháp/đề xuất AI chưa ai chốt.
   Ảnh `09-itinerary`: toàn bộ lịch trình AI là nét chì.
@@ -829,10 +833,11 @@ Kit nằm ở `src/rudi/ui.tsx` (`RudiScreen`, `TopBar`, `Heading`,
 `ReorderList`, `CoverBand`, `Washi`, `RouteLine`, `Wordmark`, `Grain`,
 `PressScale`, `PhotoViewer`). Hai hàng feature dùng lại nhiều nơi:
 `screens/explore/HangDiaDiem.tsx` (`PlaceLead`, `PlaceRow`) và
-`screens/keo/HangChang.tsx` (`HangChang`, `AnhChang`). Số màn gọi (đếm `grep`
+`screens/keo/HangChang.tsx` (`HangChang`; ảnh chặng chỉ qua prop `anh`,
+`AnhChang` không export). Số màn gọi (đếm `grep`
 trong `screens/` ở `d2c51977`): `Stamp` 12 (3 truyền `dong`, 6 truyền `nen`),
 `Heading` 25, `ListRow` 5, `AiNote` 4, `HangChang` 4, `Sheet` 4 (thêm khay
-tạo), `KhungAnh` 3, `AnhChang` 2, `DongTien` 2, `StampButton` 2, `CoverBand` 2,
+tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampButton` 2, `CoverBand` 2,
 `Washi` 1, `RudiScreen header` 1.
 
 ### Khi nào dùng cái gì
@@ -844,14 +849,14 @@ tạo), `KhungAnh` 3, `AnhChang` 2, `DongTien` 2, `StampButton` 2, `CoverBand` 2
 | Một trạng thái **đã đúng** | `Stamp` có chữ | chip màu không chữ, chữ inline đổi màu |
 | Bản nháp / đề xuất AI chưa chốt | `HangChang phac` (nét chì), nhãn «Nháp» | con dấu (chưa đúng thì chưa đóng dấu) |
 | Một khoản tiền trong danh sách | `DongTien` + `Money` | thẻ số to, `Stat`, thanh tiến độ |
-| Ảnh dẫn / ảnh có xuất xứ | `KhungAnh` (album, tường) hoặc `MediaSlot` có `attribution` | ảnh tràn không nguồn |
+| Ảnh dẫn / ảnh có xuất xứ | `KhungAnh` (album, tường) hoặc `MediaSlot` có `attribution` (spread `khungAnh(anh)`) | ảnh tràn không nguồn; đọc trần `anh.source` |
 | Ô ảnh nhỏ trong lưới | `Photo` trần bo 10 | khung in cho từng ô |
 | Thứ máy sinh ra | `AiNote` (ghi chú lề) hay tờ `ToGiay` ký ở chân | nhãn «AI» trên đầu, tô cả khối tím |
 | Danh sách nhiều mục | hàng + kẻ tóc (`ListRow`, `PlaceRow`) | thẻ mỗi mục |
 | Sheet trên nội dung cuộn | `RudiScreen overlay={<Sheet/>}` | sheet trong hộp cuộn |
 | Trạng thái vừa thành đúng **dưới ngón tay** | `Stamp dong` cho đúng hàng vừa bấm | hoạt hình khi mount, confetti, toast |
 | Con dấu đặt lên ảnh | `Stamp nen` (miếng giấy dưới) | con dấu viền trơn trên ảnh |
-| Chặng có địa điểm có ảnh | `HangChang phai={<AnhChang/>}` | thẻ ảnh cho mọi chặng |
+| Chặng có địa điểm có ảnh | `HangChang anh={{ anh, alt, loai }}` (chặng tự in ghi công) | thẻ ảnh cho mọi chặng; `Image` tự đặt vào khe `phai` |
 | Phản hồi bấm | `PressScale` (lò xo scale) | mờ `opacity` khi `pressed` |
 
 ### Buttons
@@ -962,9 +967,27 @@ không phải gì.
   trên một màn.
 - **`MediaSlot`**: nơi duy nhất ảnh được phép xuất hiện trên màn live; khung
   vẽ trước, fallback là artwork của thế giới, ảnh có giấy phép rơi vào cùng
-  khung với `Attribution` (tác giả, giấy phép) in `caption inkFaint` bên dưới;
-  URL không qua `nguonAnh` bị từ chối trước khi tới đây.
-- **`Photo`**: `ratio` hoặc `height` (mặc định 190), bo mặc định 20, `overlay`
+  khung với `Attribution` (tác giả, giấy phép) in `caption inkFaint` tối đa
+  hai dòng bên dưới (`cauGhiCong`, thuần, ở `ui/ghi-cong.ts`); URL không qua
+  `nguonAnh` bị từ chối trước khi tới đây. Nền khung trước/khi không có ảnh là
+  `colors.card` của theme, không còn hằng beige tĩnh (`nenAnhTrong` đã xoá
+  khỏi `theme.ts`; trên nền tối hằng ấy đọc thành mảng, review 08/09 vòng 2
+  §4). Ảnh tải hỏng: khung giữ nguyên, in «Chưa tải được ảnh» `caption warn`
+  dưới khung, ghi công vẫn in.
+- **Luật Khung Nào Vẽ Ảnh Thì Khung Ấy In Ghi Công** (08/09 vòng 2, F21):
+  ảnh catalogue chỉ tới một `Image` bên trong `MediaSlot`, `HangDiaDiem`
+  (`PlaceLead`/`PlaceCompare`/`PlaceRow`) hay `HangChang`; ba khung ấy nhận
+  `AnhCoGhiCong` (`{ source, nguon }`) nên không có cách đưa ảnh mà bỏ ghi
+  công, và mỗi khung tự in `cauGhiCong(nguon)`. `tests/rudi-anh-ghi-cong.test.mjs`
+  đọc AST mọi `.tsx` dưới `src/rudi` và `app`: ngoài ba khung đó, không
+  `<Image>` (kể cả bí danh import) nhận `anh.source`/`anh?.source`/`.photo`,
+  không chỗ nào đọc trần `x.anh.source`, không ai import `AnhChang`; thêm
+  khung mới thì thêm tên vào danh sách của test. Bình chọn **không có ảnh**
+  (lead chọn 08/09): ba lựa chọn đều là ô vẽ `GuGlyph` 30 trên `card` viền
+  hairline `line`, vì ô 56 không có chỗ cho câu ghi công và một phiếu bầu
+  không được để một lựa chọn nổi hơn chỉ vì catalogue tình cờ có ảnh stock.
+- **`Photo`**: `ratio` hoặc `height` (mặc định 190), bo mặc định 20, nền
+  `colors.card` dưới ảnh (không hằng beige), `overlay`
   cho con dấu trên ảnh; `PhotoShade` gradient `lopPhu.xam(0.78)` từ 0.3 xuống
   đáy khi có chữ trên ảnh. Ô album 104 tối thiểu, gap 6, tối đa 6 cột.
 - **Số ảnh thật**: «4 ảnh» đếm từ mảng ảnh, không từ chuỗi.
@@ -1045,10 +1068,18 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   lớp tháo được**, không phải nhân vật bắt buộc: mọi cảnh phải đọc được với
   `nep={false}`, và cổng A/B (`rudi://dev/ui-lab`, mục «Cảnh rỗng») dựng hai
   bản cạnh nhau trên cùng máy cùng dữ liệu để quyết định bằng ảnh. Giới hạn
-  đi kèm: nhân vật **không** vào màn có dữ liệu thật của nhóm (ảnh nhóm,
-  ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
+  đi kèm: nhân vật **không tự xuất hiện** ở màn có dữ liệu thật của nhóm (ảnh
+  nhóm, ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
   **không** thay `Stamp`/`GuGlyph` trong vai trò thông tin. Muốn đưa Nếp ra
   ngoài trạng thái rỗng và cửa vào thì mở quyết định mới, đừng suy từ mục này.
+- **Ngoại lệ sticker (đã bàn ở review đợt 1 dòng 125/132, chốt lại ở vòng 2
+  dòng 81).** Sticker trong chat là **phát ngôn do người gửi chọn**, không phải
+  mascot hệ thống, nên tám sticker của ADR-0021 được vẽ bằng ngôn ngữ Nếp mà
+  không vi phạm câu trên: Nếp không *tự* bước vào hội thoại, một người *gửi*
+  Nếp vào đó. Ranh giới: giữ đúng tám ID và nhãn; `tra-tien-ne` là lời người
+  gửi, **không bao giờ** là trạng thái giao dịch hay dấu xác nhận tiền của hệ
+  thống; Nếp-hệ-thống vẫn không đứng cạnh ledger, lỗi, conflict hay xác nhận
+  tiền. Muốn cấm cả sticker thì trình Lead, không vừa ghi cấm vừa vẽ tám mẫu.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
@@ -1059,14 +1090,18 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
 ### Hàng địa điểm (`PlaceLead`, `PlaceCompare`, `PlaceRow`, `PlaceGlyph`)
 Một từ vựng `DiaDiemHienThi` cho catalogue fixture và màn live; đợt 08/09
 thêm `loai` (id danh mục, để khung trống vẽ hình gu) và `lyDo` (một lý do có
-căn cứ). Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
+căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay bằng
+**một** trường `anh: AnhCoGhiCong | null`, nên ảnh và ghi công đi cùng nhau
+ở tầng kiểu và cả ba khung tự in `cauGhiCong(anh.nguon)`. Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
 **một cặp so sánh** (khi còn ≥ 2) → **các hàng** (`sua2-sang-1.0/bs-04-kham-pha*`).
 - **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20, `Stamp` tím nghiêng
   -2 ở góc trên trái khi có `badge`; dưới ảnh tên `h2`, **một dòng lý do**
   `label` màu `ai` ngay dưới tên («Hợp gu nhờ Chill và View đẹp») chỉ khi
   match là thật và máy chủ gửi `reason`, không bao giờ là tagline hoá trang
   làm lý do; rồi mô tả `body inkSoft`, ba sự thật với icon 16 (`label
-  inkSoft`); nút lưu `IconButton` phải.
+  inkSoft`); nút lưu `IconButton` phải. Ảnh là `MediaSlot` nhận
+  `attribution={anh.nguon}` nên ghi công in ngay dưới khung; `anh === null`
+  thì không khung 16:10 mà là đầu bài gọn (`PlaceGlyph` 34 + tên + sự thật).
 - **`PlaceCompare`**: hai ứng viên **trên một trục**, không thẻ quanh ô nào:
   hàng `gap` 16, đệm dưới 12, kẻ tóc `line` dưới; mỗi ô `flex 1` gồm
   `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
@@ -1082,12 +1117,16 @@ căn cứ). Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi
   hàng có match cao bằng hàng thường; mô tả `caption inkSoft` một dòng, sự
   thật `caption inkFaint` một dòng, ghi công `caption inkFaint` tối đa hai
   dòng (`cauGhiCong`); nút tim phải; đệm dọc 10, gap 8, kẻ tóc dưới. Hàng
-  nằm trên giấy, **không thẻ**; ở tablet hai cột.
+  nằm trên giấy, **không thẻ**; ở tablet hai cột. Ảnh hỏng (`onError`): ô
+  56 vẽ lại hình gu và hàng in «Chưa tải được ảnh» `caption warn` dưới sự
+  thật, ghi công vẫn in (ảnh `sua-review-2/native-kham-pha-anh-hong-*`).
 - **`PlaceGlyph`**: đĩa `accentSoft` đường kính 1.7 × size, bên trong hình
   gu của danh mục (`guTheoLoai`: `quan-an-local → an-uong`, `cafe`, `vui-choi
   → game`, `di-choi-dem → nightlife`, còn lại → thẻ gấp) tô coral; Ionicons
   chỉ còn là fallback khi caller không truyền `loai`. Khung trống **không
-  bao giờ** là ảnh stock.
+  bao giờ** là ảnh stock. Đĩa **giữ** `accentSoft` cả trên nền tối (quyết
+  định bằng ảnh, 08/09 vòng 2): đứng trên `card` nó đọc là tint ấm cùng họ
+  accent; `ground` trên `card` tối gần như không thấy đĩa. Không thêm token.
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
@@ -1136,11 +1175,19 @@ Giờ trái (`label` tabular, rộng tối thiểu 46, canh phải), trục 14 v
 tên địa điểm khi có, «Chọn địa điểm» khi chưa có; trạng thái nháp nói **một
 lần** ở đầu màn (badge «Nháp», AiNote), không lặp «Có thể thay đổi» dưới từng
 hàng (báo cáo 07/09 §4.6).
-**`AnhChang`** vào khe `phai`: ảnh 44 (`expo-image` `cover`, `alt` = tên địa
+**Ảnh chặng qua `anh`** (`{ anh: AnhCoGhiCong, alt, loai? } | null`, thay
+`AnhChang` ở khe `phai`): ảnh 44 (`expo-image` `cover`, `alt` = tên địa
 điểm) trong khung giấy đệm 2 `card` + kẻ tóc `line` bo 10, nền `line` khi
-chưa tải; chỉ cho chặng có địa điểm **có ảnh** (`PLACES.find(...).image`),
-nên tab Lên plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đường
-đi» (`dot8/07-plan` đã mở; `09-itinerary` và `phone-dark-font13-plan` là bằng chứng reviewer, không mở ở đây).
+chưa tải; chặng **tự** in `cauGhiCong(anh.nguon)` là dòng cuối của thân
+(`caption inkFaint`, không trần số dòng: cột hẹp cạnh giờ và ảnh, ở 1.3 tên
+tác giả xuống dòng chứ không ba chấm; ảnh
+`sua-review-2/native-lich-trinh-ngay-2-1.3`). Ảnh hỏng: cùng khung vẽ
+`GuGlyph` theo `loai`, nhãn a11y «Chưa tải được ảnh: <alt>», và chặng in
+«Chưa tải được ảnh» `caption warn` trước dòng ghi công. Khi có `anh`, khe
+`phai` nhường chỗ cho ảnh; chế độ chỉnh ở Outing giữ ba nút ở `phai` và
+không ảnh. Chỉ cho chặng có địa điểm **có ảnh** (`place.anh`), nên tab Lên
+plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đường đi»
+(`dot8/07-plan` đã mở; `09-itinerary` và `phone-dark-font13-plan` là bằng chứng reviewer, không mở ở đây).
 
 ### Ghi chú AI (`AiNote`) và tờ AI (`ToGiay`)
 - **`AiNote`**: ghi chú **lề**: hàng với icon `sparkles` 17 tím, câu `label
@@ -1365,8 +1412,11 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   `success` chỉ ở nhịp chạm của con dấu.
 - **Do** truyền `Stamp dong` cho đúng hàng vừa bấm, và ở màn live chỉ sau khi
   máy chủ xác nhận; `nen` khi con dấu nằm trên ảnh.
-- **Do** cho chặng có địa điểm có ảnh một `AnhChang` 44 trong khung giấy;
-  chặng khác để trống khe `phai`.
+- **Do** cho chặng có địa điểm có ảnh `HangChang anh={{ anh, alt, loai }}`;
+  chặng tự vẽ khung 44 và in ghi công; chặng khác để trống khe `phai`.
+- **Do** đưa ảnh catalogue vào màn chỉ qua `MediaSlot`, `HangDiaDiem` hay
+  `HangChang` (kiểu `AnhCoGhiCong`, spread `khungAnh(anh)`); thêm khung mới
+  thì thêm tên vào `tests/rudi-anh-ghi-cong.test.mjs`.
 - **Do** cấp mọi màu mới qua `tokens.json` → script → `guest.css` + DESIGN.md
   cùng PR; `rudi-khong-hex` giữ `theme.ts` là file duy nhất viết hex.
 - **Do** vẽ minh hoạ qua `art/*.ts` → `VeLop`: chỉ `M`/`L`/`C`/`Z` tuyệt
@@ -1491,6 +1541,7 @@ python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sin
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
+cd apps/mobile && npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs   # ảnh catalogue chỉ tới Image trong ba khung in ghi công; không ai đọc trần anh.source, không ai gọi AnhChang
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
 ```
 

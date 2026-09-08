@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, type ImageSource } from "expo-image";
+import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { IconButton, Inline, type IconName } from "../../ui";
-import { MediaSlot, cauGhiCong, type Attribution } from "../../ui/MediaSlot";
+import { MediaSlot, cauGhiCong } from "../../ui/MediaSlot";
+import type { AnhCoGhiCong } from "../../ui/ghi-cong";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
@@ -45,8 +46,12 @@ export interface DiaDiemHienThi {
   glyph: IconName;
   /** Catalogue category id; with it the fallback is the drawn object, without it the icon above. */
   loai?: string;
-  photo: ImageSource | null;
-  attribution?: Attribution;
+  /**
+   * The picture together with its credit, or null. One field, not two: a
+   * screen cannot hand these frames the address without the words the
+   * picture is allowed to be shown under (ADR-0017 §2.5; review 08/09 vòng 2).
+   */
+  anh: AnhCoGhiCong | null;
   /** «Rất hợp gu» from a computed match; null otherwise. */
   badge: string | null;
   /** One grounded reason for the lead, from the match payload; absent → no line. */
@@ -102,7 +107,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
       selected={daLuu}
     />
   );
-  if (dd.photo === null) {
+  if (dd.anh === null) {
     // No honest picture: an editorial header of object, name and facts, not a
     // 16:10 frame with an icon in the middle (review 08/09 F01, report §9.4).
     return (
@@ -123,11 +128,11 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
         <MediaSlot
           alt={dd.name}
-          attribution={dd.attribution}
+          attribution={dd.anh.nguon}
           fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={44} />}
           overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
           ratio={tiLe}
-          source={dd.photo}
+          source={dd.anh.source}
         />
         <View style={styles.leadText}>{chu}</View>
       </Pressable>
@@ -150,13 +155,13 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   // A thumbnail that fails to load shows the category's object, never an
   // empty tinted square (review 08/09 F01). Reset when the picture changes.
   const [hong, setHong] = useState(false);
-  useEffect(() => setHong(false), [dd.photo]);
+  useEffect(() => setHong(false), [dd.anh]);
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
         <View style={[styles.thumb, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
-          {dd.photo && !hong ? (
-            <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={dd.photo} style={StyleSheet.absoluteFill} />
+          {dd.anh && !hong ? (
+            <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={dd.anh.source} style={StyleSheet.absoluteFill} />
           ) : dd.loai !== undefined ? (
             <GuGlyph id={guTheoLoai(dd.loai)} size={32} tone="accent" />
           ) : (
@@ -178,8 +183,10 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
-          {dd.photo && dd.attribution ? (
-            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
+          {/* A failed picture is a state the reader is told about, not only the screen reader (finish review 08/09). */}
+          {dd.anh && hong ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa tải được ảnh</Text> : null}
+          {dd.anh ? (
+            <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(dd.anh.nguon)}</Text>
           ) : null}
         </View>
       </Pressable>
@@ -233,7 +240,7 @@ export function PlaceCompare({
   // BOTH keep the 4:3 frame and the photoless one draws its object inside that
   // frame. A photo tile beside a glyph strip is two shapes and the eye stops
   // comparing (finish review of this batch).
-  const khongAnhNao = items.every((dd) => !dd.photo);
+  const khongAnhNao = items.every((dd) => !dd.anh);
   return (
     <View style={[styles.soSanh, xepDoc && styles.soSanhDoc, { borderBottomColor: colors.line }]} testID={testID}>
       {items.map((dd) => {
@@ -250,8 +257,8 @@ export function PlaceCompare({
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
             {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
             {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
-            {dd.photo && dd.attribution ? (
-              <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.attribution)}</Text>
+            {dd.anh ? (
+              <Text numberOfLines={2} style={[typography.note, { color: colors.inkFaint }]}>{cauGhiCong(dd.anh.nguon)}</Text>
             ) : null}
           </>
         );
@@ -300,7 +307,7 @@ export function PlaceCompare({
                   </>
                 }
                 ratio={4 / 3}
-                source={dd.photo}
+                source={dd.anh?.source ?? null}
               />
               {chu}
             </Pressable>

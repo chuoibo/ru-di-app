@@ -3,33 +3,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import { StyleSheet, Text, View, type DimensionValue, type StyleProp, type ViewStyle } from "react-native";
 
 import { MOTION_MS } from "../motion";
-import { nenAnhTrong, typography, useRudiTheme } from "../theme";
+import { typography, useRudiTheme } from "../theme";
+import { cauGhiCong, type Attribution } from "./ghi-cong";
 import { useMotion } from "./useMotion";
 
-export interface Attribution {
-  /** Photographer or uploader, as the licence requires it to be named. */
-  author: string;
-  /** Licence short name, e.g. «CC BY-SA 4.0», or «Ảnh của nhóm». */
-  license: string;
-  /** Where the file came from; shown as text, opened by the screen if it wants. */
-  source?: string;
-  /**
-   * A qualifier the credit must not be read without, e.g. «Ảnh quanh đây: ».
-   *
-   * It belongs here rather than in a line the screen draws next to the slot,
-   * because a qualifier that can be laid out separately is a qualifier that
-   * can end up on the other side of a scroll from the picture it qualifies.
-   */
-  prefix?: string;
-}
-
-/**
- * The credit as one sentence: qualifier, author, licence, source. The row
- * thumbnail and the slot print the same words because they call this.
- */
-export function cauGhiCong(a: Attribution): string {
-  return `${a.prefix ?? ""}${a.author} · ${a.license}${a.source ? ` · ${a.source}` : ""}`;
-}
+/** The credit sentence and its type live in `ghi-cong.ts` (pure); re-exported so callers keep one import. */
+export { cauGhiCong, type Attribution } from "./ghi-cong";
 
 export interface MediaSlotProps {
   /** An authenticated source from `nguonAnh`, or null when there is no photo. */
@@ -81,6 +60,8 @@ export function MediaSlot({
 }: MediaSlotProps) {
   const { colors, radius: r, space } = useRudiTheme();
   const motion = useMotion();
+  // The frame's ground is the theme's paper, never a fixed beige: on the dark
+  // scheme a fixed light ground read as a slab (review 08/09 vòng 2 §4).
   // A picture that fails to load leaves the frame drawn and empty, which reads
   // as «this place looks like nothing» rather than as a broken address. It
   // stayed invisible for a whole board run: the credit under the frame was
@@ -91,7 +72,7 @@ export function MediaSlot({
   const frame: ViewStyle = height !== undefined ? { width, height } : { width, aspectRatio: ratio };
   return (
     <View testID={testID} style={style}>
-      <View style={[frame, { borderRadius: radius ?? r.small, backgroundColor: nenAnhTrong, overflow: "hidden" }]}>
+      <View style={[frame, { borderRadius: radius ?? r.small, backgroundColor: colors.card, overflow: "hidden" }]}>
         {source && !hong ? (
           <Image
             accessibilityLabel={alt}
@@ -102,7 +83,7 @@ export function MediaSlot({
             style={StyleSheet.absoluteFill}
           />
         ) : (
-          <View accessibilityLabel={alt} style={[StyleSheet.absoluteFill, styles.center]}>
+          <View accessible accessibilityLabel={alt} style={[StyleSheet.absoluteFill, styles.center]}>
             {fallback}
           </View>
         )}
