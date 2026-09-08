@@ -9,8 +9,20 @@ appId: com.lakiet.rudi
 - launchApp
 - runFlow: _bo-qua-dev-menu.yaml
 - extendedWaitUntil:
-    visible: "Khám phá|Chưa có nhóm nào"
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
     timeout: 150000
+# Flow này chạy SAU cả bảng, và flow cuối bảng (46) kết thúc bằng một máy đã
+# đăng xuất — nó vừa xoá một tài khoản qua đúng đường của sản phẩm. Nên tự
+# đăng nhập lấy, bằng số C: người xem story ở flow 43 là C, và nếu đăng nhập
+# nhầm người thì phép «vòng story đã biến mất» xanh mà không chứng minh gì
+# (story là của người kia, và trên máy của chính tác giả nó mang nhãn khác).
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-c.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
 - tapOn: "Tin nhắn"
 - extendedWaitUntil:
     visible: "Đăng story"

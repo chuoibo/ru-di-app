@@ -53,6 +53,7 @@ from app.api.routes import (
     preferences,
     recap,
     receipts,
+    reports,
     screenshots,
     sessions,
     social_map,
@@ -213,6 +214,7 @@ def create_app(
     application.include_router(places.router)
     application.include_router(finance.router)
     application.include_router(recap.router)
+    application.include_router(reports.router)
     application.include_router(receipts.router)
     application.include_router(screenshots.router)
     application.include_router(suggestions.router)

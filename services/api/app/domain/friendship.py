@@ -29,11 +29,18 @@ moves between them are the table below.
     ACCEPTED -block---> BLOCKED       either party -- friendship can end badly
     DECLINED -----> (reopen)          a new request, not a transition
 
+    BLOCKED --unblock-> DECLINED      the blocker only
+
 DECLINED is deliberately not terminal: being turned down once is not a life
 sentence, and the alternative is a product where a mistyped tap permanently
-removes somebody from your reachable set. BLOCKED *is* terminal, because that
-is what the word is for. `open_request` refuses to reopen a blocked edge, and
-refuses it without saying who blocked whom -- see `BLOCKED_IS_SILENT`.
+removes somebody from your reachable set. BLOCKED is terminal *for the person
+who was blocked*: `open_request` refuses to reopen a blocked edge and refuses
+it without saying who blocked whom (see `BLOCKED_IS_SILENT`), so from that
+side the wall has no door in it. The person who put the wall up may take it
+down -- `unblock`, ADR-0023 §2.3.3 -- and what they get back is DECLINED, not
+a friendship: undoing a block must not silently re-create a relationship the
+other person agreed to under different circumstances. Blocking twice is the
+same wall, not an error.
 
 ## Pair keys
 
@@ -60,8 +67,10 @@ __all__ = [
     "are_friends",
     "decide",
     "is_live_edge",
+    "open_block",
     "open_request",
     "pair_key",
+    "unblock",
 ]
 
 
@@ -203,6 +212,48 @@ def decide(*, edge: dict, actor_id: str, decision: str) -> dict:
             FriendState.ACCEPTED if answer is Decision.ACCEPT else FriendState.DECLINED
         ),
     }
+
+
+def open_block(*, blocker_id: str, addressee_id: str, existing: dict | None) -> dict:
+    """Block somebody, whether or not an edge exists yet (ADR-0023 §2.3).
+
+    Three starting points, one ending: no edge at all (a stranger, or somebody
+    whose earlier request was declined), a live edge, and an edge that is
+    already a block. The first writes a fresh `blocked` row whose requester is
+    the blocker -- there was no question, so there is nobody to have asked;
+    the second is `decide(BLOCK)`, which either party may call; the third is
+    the same wall and answers `ALREADY_BLOCKED` for the caller to read as
+    «done», not as a failure.
+
+    `decided_by_id` is the blocker in every case. `blocker_of` reads that
+    field, and `unblock` is the only door it opens.
+    """
+    pair_key(blocker_id, addressee_id)  # raises on self-edge / empty
+    if existing is None or FriendState(existing["state"]) is FriendState.DECLINED:
+        return {
+            "requester_id": blocker_id,
+            "addressee_id": addressee_id,
+            "state": str(FriendState.BLOCKED),
+            "decided_by_id": blocker_id,
+            "pair": list(pair_key(blocker_id, addressee_id)),
+        }
+    return decide(edge=existing, actor_id=blocker_id, decision=str(Decision.BLOCK))
+
+
+def unblock(*, edge: dict | None, actor_id: str) -> dict:
+    """Lift a block. Only whoever put it up, and never back into friendship.
+
+    `NOT_BLOCKED` for an edge in any other state, so a client that lost track
+    cannot turn an accepted friendship into a declined one by pressing the
+    wrong button. `ONLY_BLOCKER_MAY_UNBLOCK` for the person on the wrong side
+    of the wall -- that predicate is the whole point of the feature, and it is
+    proved here on the row as well as in the permission table.
+    """
+    if edge is None or FriendState(edge["state"]) is not FriendState.BLOCKED:
+        raise FriendshipError("NOT_BLOCKED")
+    if edge.get("decided_by_id") != actor_id:
+        raise FriendshipError("ONLY_BLOCKER_MAY_UNBLOCK")
+    return {**edge, "state": str(FriendState.DECLINED), "decided_by_id": actor_id}
 
 
 def are_friends(edge: dict | None) -> bool:

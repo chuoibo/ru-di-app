@@ -26,7 +26,7 @@ Backend do Claude làm theo uỷ quyền ADR-0016 §2.3; charter không đổi.
    - **giữ**: tin nhắn, kỷ niệm và bình luận kỷ niệm trong nhóm (hiện tên ẩn danh), check-in, bình chọn, kèo, ảnh nhóm người đó đã tải, `contexts.created_by_id`, và **mọi bảng tiền**.
 2. Kết bằng một `AuditEvent(event_type='account.deleted', aggregate_type='person')` với `event_data` chỉ chứa số đếm — không tên, không bio, không số.
 3. Ca Postgres so `md5` của **từng** bảng tiền trước và sau; khác một byte là đỏ.
-4. `get_actor` từ chối phiên của người có `deleted_at` (lớp hai; phiên đã thu hồi là lớp một). `GET /people/{id}` của người đã xoá trả 404; `find_person_by_phone` trả **cùng câu 404** với «không tồn tại».
+4. `get_actor` từ chối phiên của người có `deleted_at` (lớp hai; phiên đã thu hồi là lớp một). `GET /people/{id}` của người đã xoá trả **403 `person_not_visible`, cùng byte với một id chưa bao giờ tồn tại** — không phải 404: xoá tài khoản gỡ mọi quan hệ, nên cửa hồ sơ từ chối ở đúng chỗ nó vẫn từ chối, và một 404 chỉ tới được cho tài khoản đã kết thúc sẽ nói cho người hỏi biết id nào TỪNG là người; `find_person_by_phone` trả **cùng câu 404** với «không tồn tại».
 5. Xoá file ảnh là việc sau transaction, best-effort, ghi log số file; thiếu file không làm request thất bại.
 
 ### 2.2 Đăng ký lại cùng số điện thoại tạo một người mới

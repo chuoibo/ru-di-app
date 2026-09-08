@@ -1,0 +1,147 @@
+# Chặn và báo cáo một người (L5, ADR-0023 §2.3) trên API prod.
+#
+# Chạy SAU flow 44 với người đang đăng nhập (C nếu 37 đã chạy, D nếu không).
+# `chuan_bi_cho_45` đã dựng bằng curl: người F («Ut QA») là BẠN của người lái và
+# cùng ở nhóm «Nhom Chan QA» với người lái. Hai điều đó tách được hai hệ quả mà
+# ADR-0023 nói khác nhau: chặn làm mất tình bạn, nhưng nhóm chung ở nguyên.
+#
+# Đối chứng dương nằm ngay trước bước phủ định, trên CÙNG màn đã tải: «Nhắn tin»
+# có mặt khi còn là bạn, và biến mất sau khi chặn. Một `assertNotVisible` đứng
+# một mình xanh cả khi màn không tải được.
+#
+# Sau đó bỏ chặn từ màn «Người đã chặn» — và tình bạn KHÔNG quay lại (ADR-0023
+# §2.3: gỡ chặn để lại cạnh `declined`), nên «Ut QA» không còn trong danh sách
+# bạn bè. Đó cũng là điều kiện mà canary `_canary-dm-bi-chan.yaml` đo ngay sau
+# flow này: F mở hồ sơ người lái bằng deep link và KHÔNG mở được cuộc trò chuyện.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Cá nhân"
+- extendedWaitUntil:
+    visible: "Bạn bè, lời mời đã nhận và đã gửi"
+    timeout: 60000
+- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- extendedWaitUntil:
+    visible: "Xem hồ sơ Ut QA"
+    timeout: 60000
+- tapOn: "Xem hồ sơ Ut QA"
+- extendedWaitUntil:
+    visible: "Tường cá nhân"
+    timeout: 60000
+# Đối chứng dương: còn là bạn thì cửa nhắn riêng MỞ. Hai người vẫn chung nhóm
+# sau khi chặn, nên nút «Nhắn tin» vẫn còn trên màn — dạng khoá, kèm câu «Kết
+# bạn để nhắn riêng.». Chính câu ấy là thứ phân biệt hai trạng thái, không phải
+# sự có mặt của cái nút.
+- assertVisible: "Nhắn tin"
+- assertNotVisible: "Kết bạn để nhắn riêng."
+- takeScreenshot: 45-truoc-khi-chan
+# --- chặn ---------------------------------------------------------------------
+- tapOn: "Thêm hành động"
+- extendedWaitUntil:
+    visible: "Chặn Ut QA"
+    timeout: 20000
+- tapOn: "Chặn Ut QA"
+- extendedWaitUntil:
+    visible: "Chặn Ut QA? Hai người sẽ không đọc được bài và story của nhau. Nhóm chung vẫn giữ nguyên."
+    timeout: 20000
+- tapOn: "Chặn"
+- extendedWaitUntil:
+    visible: "Đã chặn"
+    timeout: 30000
+# Màn hỏi lại máy chủ ngay sau khi chặn: quan hệ rơi từ «bạn» xuống «cùng nhóm»,
+# nên cửa nhắn riêng đóng trong cùng khung hình chứ không đợi lần mở màn sau.
+# Nhóm chung giữ nguyên — đó là lý do hồ sơ vẫn đọc được.
+- extendedWaitUntil:
+    visible: "Kết bạn để nhắn riêng."
+    timeout: 30000
+- takeScreenshot: 45-da-chan
+# --- báo cáo ------------------------------------------------------------------
+- tapOn: "Thêm hành động"
+- extendedWaitUntil:
+    visible: "Báo cáo"
+    timeout: 20000
+- tapOn: "Báo cáo"
+- extendedWaitUntil:
+    visible: "Vì sao bạn báo cáo?"
+    timeout: 20000
+- tapOn: "Làm phiền, quấy rối"
+- tapOn: "Gửi báo cáo"
+- extendedWaitUntil:
+    visible: "Đã gửi báo cáo"
+    timeout: 30000
+- assertVisible: "Người vận hành sẽ đọc. Bạn không nhận được trả lời tự động, và người kia không biết ai báo cáo."
+- takeScreenshot: 45-da-bao-cao
+- tapOn: "Xong"
+# --- danh sách đã chặn, rồi bỏ chặn -------------------------------------------
+# Back từ hồ sơ về màn BẠN BÈ (tiêu đề «Bạn bè»), không về màn Cá nhân: câu
+# «Bạn bè, lời mời đã nhận và đã gửi» là dòng phụ của hàng trên màn Cá nhân,
+# một màn nữa mới tới.
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Đã là bạn"
+    timeout: 30000
+# Chặn đã cắt tình bạn: người vừa bị chặn rời khỏi danh sách ngay.
+- assertNotVisible: "Xem hồ sơ Ut QA"
+- pressKey: Back
+- scrollUntilVisible:
+    element:
+      text: "Cài đặt"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Cài đặt"
+- extendedWaitUntil:
+    visible: "Đổi ảnh đại diện"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Người đã chặn"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- tapOn: "Người đã chặn"
+- extendedWaitUntil:
+    visible: "Ut QA"
+    timeout: 30000
+- takeScreenshot: 45-danh-sach-chan
+- tapOn: "Bỏ chặn"
+- extendedWaitUntil:
+    visible: "Bạn chưa chặn ai"
+    timeout: 30000
+# Gỡ chặn KHÔNG trả lại tình bạn: cạnh còn ở trạng thái đã từ chối.
+- pressKey: Back
+# Màn Cài đặt giữ nguyên chỗ đã cuộn tới, nên chờ chính hàng vừa bấm.
+- extendedWaitUntil:
+    visible: "Người đã chặn"
+    timeout: 30000
+- pressKey: Back
+# Về màn Cá nhân, ở đúng chỗ đã cuộn tới lúc nãy — tức là hàng «Bạn bè» nằm
+# PHÍA TRÊN khung hình. Cuộn NGƯỢC lên tới nó thay vì chờ nó tự hiện.
+- extendedWaitUntil:
+    visible: "Cài đặt"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Bạn bè, lời mời đã nhận và đã gửi"
+    direction: UP
+    centerElement: true
+    timeout: 30000
+- tapOn: "Bạn bè, lời mời đã nhận và đã gửi"
+- extendedWaitUntil:
+    visible: "Đã là bạn"
+    timeout: 30000
+# Bỏ chặn xong vẫn KHÔNG phải bạn: cạnh dừng ở «đã từ chối» (ADR-0023 §2.3).
+- assertNotVisible: "Xem hồ sơ Ut QA"
+- takeScreenshot: 45-khong-con-la-ban

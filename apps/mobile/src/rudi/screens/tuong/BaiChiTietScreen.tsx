@@ -42,6 +42,8 @@ import {
   type LoaiPhanUng,
 } from "../../tuong/bai-chi-tiet";
 import { Card, Divider, Field, IconButton, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Sheet } from "../../ui/Sheet";
+import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonCard, SkeletonRow } from "../../ui/Skeleton";
@@ -65,6 +67,9 @@ export function BaiChiTietScreen() {
   const [ban, setBan] = useState(false);
   const [loiViet, setLoiViet] = useState<string | null>(null);
   const [anhHong, setAnhHong] = useState(false);
+  // ADR-0023 §2.4: báo cáo bài của người khác. Nút nằm dưới cùng, sau bình
+  // luận: nó là việc hiếm và không nên tranh chỗ với việc thường.
+  const [baoCaoMo, setBaoCaoMo] = useState(false);
   const attempts = useRef<Record<string, Attempt>>({});
   const toi = phien?.person_id ?? "";
 
@@ -254,6 +259,9 @@ export function BaiChiTietScreen() {
           <Text style={[typography.caption, { color: colors.inkFaint }]}>{CAU_KHONG_BINH_LUAN}</Text>
         )
       ) : null}
+      {bai.pha === "xong" && bai.bai.author_id !== toi ? (
+        <RudiButton icon="flag-outline" label="Báo cáo bài này" onPress={() => setBaoCaoMo(true)} variant="ghost" />
+      ) : null}
     </View>
   );
 
@@ -285,6 +293,17 @@ export function BaiChiTietScreen() {
           </Card>
         )}
       />
+      <Sheet accessibilityLabel="Báo cáo bài đăng" onClose={() => setBaoCaoMo(false)} open={baoCaoMo}>
+        {bai.pha === "xong" ? (
+          <NoiDungBaoCao
+            actorId={toi}
+            loai="post"
+            onThoi={() => setBaoCaoMo(false)}
+            onXong={() => setBaoCaoMo(false)}
+            targetId={bai.bai.id}
+          />
+        ) : null}
+      </Sheet>
     </RudiScreen>
   );
 }

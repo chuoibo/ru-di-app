@@ -1,0 +1,20 @@
+# Đăng nhập bằng số F — người của L5 (chặn/báo cáo ở flow 45, xoá tài khoản ở
+# flow 46). Tách riêng khỏi `_dang-nhap-d.yaml` để không ai lỡ tay xoá tài khoản
+# của D, người mà mọi phép kiểm sau bảng còn hỏi tới.
+appId: com.lakiet.rudi
+---
+- tapOn: "Rủ Đi thôi!"
+- extendedWaitUntil:
+    visible: "Chào bạn"
+    timeout: 30000
+- tapOn: "Ô số điện thoại"
+- inputText: "${OTP_PHONE_F}"
+- hideKeyboard
+- tapOn: "Gửi mã"
+- extendedWaitUntil:
+    visible: "Nhập mã 6 số"
+    timeout: 60000
+- tapOn: "Ô nhập mã"
+- inputText: "${OTP_CODE}"
+- runFlow:
+    file: _bo-qua-so-thich.yaml

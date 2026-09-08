@@ -79,6 +79,7 @@ from app.db.models import (
     PostComment,
     PostReaction,
     ReceiptConfirmation,
+    Report,
     SavedPlace,
     Story,
     StoryView,
@@ -88,6 +89,7 @@ from app.db.models import (
     VoteBallot,
     VoteOption,
 )
+from app.domain.account_lifecycle import anonymised_person
 from app.domain.capability import capability_scope
 from app.domain.direct import display_name_for
 from app.domain.friendship import Decision, FriendshipError
@@ -127,6 +129,10 @@ class PersonRecord:
     budget_band: str | None = None
     #: ADR-0022 §2.2; defaulted so a fake that predates it still builds.
     wall_comment_policy: str = "readers"
+    #: ADR-0023 §2.5: findable by telephone number at all.
+    discoverable_by_phone: bool = True
+    #: ADR-0023 §2.1: the account ended. The row stays for the ledger.
+    deleted_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,6 +300,24 @@ class UploadedImageRecord:
     created_at: datetime
     #: ADR-0022 §2.1: `group`, `avatar` or `personal`.
     purpose: str = "group"
+
+
+@dataclass(frozen=True, slots=True)
+class ReportRecord:
+    """What `POST /reports` answers with: an id and a time, and nothing the
+    reporter wrote. Echoing the note back would put it in one more log."""
+
+    id: uuid.UUID
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ErasureReport:
+    """What one ended account left behind: how many rows went from each
+    table, and the storage keys the caller unlinks after committing."""
+
+    counts: dict[str, int]
+    storage_keys: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1425,6 +1449,41 @@ class ApiRepository(Protocol):
 
     # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
 
+    def list_account_sessions(
+        self, person_id: uuid.UUID, *, now: datetime
+    ) -> list[AccountSessionRecord]: ...
+
+    def get_account_session(
+        self, session_id: uuid.UUID
+    ) -> AccountSessionRecord | None: ...
+
+    def revoke_all_account_sessions(
+        self, person_id: uuid.UUID, *, now: datetime
+    ) -> int: ...
+
+    def open_block_edge(
+        self, *, blocker_id: uuid.UUID, addressee_id: uuid.UUID, now: datetime
+    ) -> FriendEdgeRecord: ...
+
+    def lift_block_edge(
+        self, *, blocker_id: uuid.UUID, addressee_id: uuid.UUID, now: datetime
+    ) -> FriendEdgeRecord: ...
+
+    def list_blocked(self, person_id: uuid.UUID) -> list[FriendEdgeRecord]: ...
+
+    def create_report(
+        self,
+        *,
+        reporter_id: uuid.UUID,
+        target_type: str,
+        target_id: uuid.UUID,
+        reason: str,
+        note: str | None,
+        now: datetime,
+    ) -> ReportRecord: ...
+
+    def erase_person(self, person_id: uuid.UUID, *, now: datetime) -> ErasureReport: ...
+
     def create_story(
         self,
         *,
@@ -2032,6 +2091,8 @@ class SqlAlchemyApiRepository:
             city=person.city,
             budget_band=person.budget_band,
             wall_comment_policy=person.wall_comment_policy,
+            discoverable_by_phone=person.discoverable_by_phone,
+            deleted_at=person.deleted_at,
         )
 
     @staticmethod
@@ -3096,7 +3157,11 @@ class SqlAlchemyApiRepository:
         exactly that role plus `is_invitee`.
         """
 
-        if self.session.get(Person, person_id) is None:
+        person = self.session.get(Person, person_id)
+        if person is None or person.deleted_at is not None:
+            # ADR-0023 §2.1.4: the second layer. Erasure revokes every session
+            # first; this catches a bearer minted in the same instant, and any
+            # future door that forgets to look.
             return ActorGrants(
                 person_exists=False, roles=frozenset(), context_ids=frozenset()
             )
@@ -4080,6 +4145,286 @@ class SqlAlchemyApiRepository:
             or self.session.scalar(shown_by_story) is not None
         )
 
+    # --- sessions, blocks, reports, and the end of an account (ADR-0023) ---
+
+    def list_account_sessions(
+        self, person_id: uuid.UUID, *, now: datetime
+    ) -> list[AccountSessionRecord]:
+        """This person's sessions that a bearer could still use: not revoked,
+        not expired. `now` is the service's clock, never the database's, so a
+        test can stand either side of an expiry."""
+        rows = self.session.scalars(
+            select(AccountSession)
+            .where(
+                AccountSession.person_id == person_id,
+                AccountSession.revoked_at.is_(None),
+                AccountSession.expires_at > now,
+            )
+            .order_by(AccountSession.created_at.desc(), AccountSession.id)
+        )
+        return [self._account_session_record(row) for row in rows]
+
+    def get_account_session(self, session_id: uuid.UUID) -> AccountSessionRecord | None:
+        row = self.session.get(AccountSession, session_id)
+        return None if row is None else self._account_session_record(row)
+
+    def revoke_all_account_sessions(
+        self, person_id: uuid.UUID, *, now: datetime
+    ) -> int:
+        """Every live session of one person. Answers how many were live --
+        the number the audit event records."""
+        rows = list(
+            self.session.scalars(
+                select(AccountSession).where(
+                    AccountSession.person_id == person_id,
+                    AccountSession.revoked_at.is_(None),
+                )
+            )
+        )
+        for row in rows:
+            row.revoked_at = now
+        self.session.flush()
+        return len(rows)
+
+    def _friend_edge_row(
+        self, a: uuid.UUID, b: uuid.UUID, *, for_update: bool = False
+    ) -> FriendRequest | None:
+        statement = select(FriendRequest).where(
+            or_(
+                and_(FriendRequest.requester_id == a, FriendRequest.addressee_id == b),
+                and_(FriendRequest.requester_id == b, FriendRequest.addressee_id == a),
+            ),
+            FriendRequest.state != FriendRequestState.DECLINED,
+        )
+        if for_update:
+            statement = statement.with_for_update()
+        return self.session.scalar(statement.limit(1))
+
+    def open_block_edge(
+        self, *, blocker_id: uuid.UUID, addressee_id: uuid.UUID, now: datetime
+    ) -> FriendEdgeRecord:
+        """Block, whether or not an edge exists (ADR-0023 §2.3.1).
+
+        The live edge is locked before it is read, because `uq_friend_edge_live`
+        allows exactly one and two people pressing «chặn» at the same instant
+        would otherwise both insert. A pair whose only edge is `declined` has
+        no live edge, so this inserts one -- the same rule
+        `friendship.open_block` states in Python.
+        """
+        existing = self._friend_edge_row(blocker_id, addressee_id, for_update=True)
+        if existing is not None:
+            existing.state = FriendRequestState.BLOCKED
+            existing.decided_by_id = blocker_id
+            existing.decided_at = now
+            self.session.flush()
+            return self._friend_edge(
+                existing,
+                blocker_id,
+                self._display_names({existing.addressee_id, existing.requester_id})[
+                    existing.addressee_id
+                    if existing.requester_id == blocker_id
+                    else existing.requester_id
+                ],
+            )
+        edge = FriendRequest(
+            id=uuid.uuid4(),
+            requester_id=blocker_id,
+            addressee_id=addressee_id,
+            state=FriendRequestState.BLOCKED,
+            decided_by_id=blocker_id,
+            created_at=now,
+            decided_at=now,
+        )
+        try:
+            with self.session.begin_nested():
+                self.session.add(edge)
+                self.session.flush()
+        except IntegrityError as exc:
+            raise RepositoryConflict("EDGE_EXISTS") from exc
+        names = self._display_names({addressee_id})
+        return self._friend_edge(edge, blocker_id, names[addressee_id])
+
+    def lift_block_edge(
+        self, *, blocker_id: uuid.UUID, addressee_id: uuid.UUID, now: datetime
+    ) -> FriendEdgeRecord:
+        """Take the block down. The edge becomes `declined`, never `accepted`:
+        undoing a block must not re-create a friendship (§2.3.3)."""
+        edge = self._friend_edge_row(blocker_id, addressee_id, for_update=True)
+        if edge is None or edge.state is not FriendRequestState.BLOCKED:
+            raise RepositoryConflict("NOT_BLOCKED")
+        if edge.decided_by_id != blocker_id:
+            raise RepositoryConflict("ONLY_BLOCKER_MAY_UNBLOCK")
+        edge.state = FriendRequestState.DECLINED
+        edge.decided_by_id = blocker_id
+        edge.decided_at = now
+        self.session.flush()
+        other = (
+            edge.addressee_id if edge.requester_id == blocker_id else edge.requester_id
+        )
+        return self._friend_edge(edge, blocker_id, self._display_names({other})[other])
+
+    def list_blocked(self, person_id: uuid.UUID) -> list[FriendEdgeRecord]:
+        """People this person is blocking -- not people blocking them. The
+        screen this feeds is «bỏ chặn», and only the blocker may."""
+        rows = list(
+            self.session.scalars(
+                select(FriendRequest)
+                .where(
+                    FriendRequest.state == FriendRequestState.BLOCKED,
+                    FriendRequest.decided_by_id == person_id,
+                )
+                .order_by(FriendRequest.decided_at.desc(), FriendRequest.id)
+            )
+        )
+        names = self._display_names(
+            {
+                row.addressee_id if row.requester_id == person_id else row.requester_id
+                for row in rows
+            }
+        )
+        out = []
+        for row in rows:
+            other = (
+                row.addressee_id if row.requester_id == person_id else row.requester_id
+            )
+            out.append(self._friend_edge(row, person_id, names[other]))
+        return out
+
+    def create_report(
+        self,
+        *,
+        reporter_id: uuid.UUID,
+        target_type: str,
+        target_id: uuid.UUID,
+        reason: str,
+        note: str | None,
+        now: datetime,
+    ) -> ReportRecord:
+        row = Report(
+            id=uuid.uuid4(),
+            reporter_id=reporter_id,
+            target_type=target_type,
+            target_id=target_id,
+            reason=reason,
+            note=note,
+            created_at=now,
+        )
+        self.session.add(row)
+        self.session.flush()
+        return ReportRecord(id=row.id, created_at=row.created_at)
+
+    def erase_person(self, person_id: uuid.UUID, *, now: datetime) -> ErasureReport:
+        """End one account, in one transaction, by the map in
+        `app.domain.account_lifecycle.ERASURE` (§2.1).
+
+        Order is by foreign key, not by taste: what points at a row goes
+        before the row. Money tables appear nowhere in here -- that is the
+        whole design, and `tests/postgres/test_delete_account_postgres.py`
+        compares their md5 before and after to prove it rather than trust it.
+
+        Photograph FILES are not unlinked here. The keys come back in the
+        report and the caller removes them after committing, the same order
+        `story_purge` uses: a commit that fails after the file is gone is a
+        photograph lost.
+        """
+        counts: dict[str, int] = {}
+
+        def wipe(model, *conditions) -> None:
+            table = model.__tablename__
+            result = self.session.execute(delete(model).where(*conditions))
+            counts[table] = counts.get(table, 0) + (result.rowcount or 0)
+
+        images = list(
+            self.session.scalars(
+                select(UploadedImage).where(UploadedImage.owner_person_id == person_id)
+            )
+        )
+        storage_keys = tuple(image.storage_key for image in images)
+
+        # Children first: comments and reactions point at posts, views point
+        # at stories, and both would fail their foreign keys the other way.
+        own_posts = select(Post.id).where(Post.author_id == person_id)
+        own_stories = select(Story.id).where(Story.author_id == person_id)
+        wipe(
+            PostComment,
+            or_(PostComment.author_id == person_id, PostComment.post_id.in_(own_posts)),
+        )
+        wipe(
+            PostReaction,
+            or_(
+                PostReaction.person_id == person_id, PostReaction.post_id.in_(own_posts)
+            ),
+        )
+        wipe(
+            StoryView,
+            or_(StoryView.viewer_id == person_id, StoryView.story_id.in_(own_stories)),
+        )
+        wipe(Post, Post.author_id == person_id)
+        wipe(Story, Story.author_id == person_id)
+        wipe(UploadedImage, UploadedImage.owner_person_id == person_id)
+        wipe(PersonInterest, PersonInterest.person_id == person_id)
+        wipe(SavedPlace, SavedPlace.person_id == person_id)
+        wipe(ContextReadMark, ContextReadMark.person_id == person_id)
+        wipe(AccountIdentity, AccountIdentity.person_id == person_id)
+        wipe(
+            FriendRequest,
+            or_(
+                FriendRequest.requester_id == person_id,
+                FriendRequest.addressee_id == person_id,
+            ),
+        )
+
+        revoked = self.revoke_all_account_sessions(person_id, now=now)
+        counts["account_sessions"] = revoked
+
+        memberships = list(
+            self.session.scalars(
+                select(Membership)
+                .where(
+                    Membership.person_id == person_id,
+                    Membership.left_at.is_(None),
+                )
+                .with_for_update()
+            )
+        )
+        for membership in memberships:
+            membership.state = MembershipState.LEFT
+            membership.left_at = now
+        counts["memberships"] = len(memberships)
+
+        person = self.session.get(Person, person_id, with_for_update=True)
+        if person is None:
+            raise RepositoryConflict("PERSON_NOT_FOUND")
+        anonymous = anonymised_person(
+            {
+                "display_name": person.display_name,
+                "bio": person.bio,
+                "city": person.city,
+                "budget_band": person.budget_band,
+                "discoverable_by_phone": person.discoverable_by_phone,
+                "wall_comment_policy": person.wall_comment_policy,
+            },
+            now,
+        )
+        for field, value in anonymous.items():
+            setattr(person, field, value)
+        self.session.flush()
+
+        # Counts only. A name or a sentence in here would be the very thing
+        # the erasure just removed, kept in a table nobody thinks to look at.
+        self.session.add(
+            AuditEvent(
+                actor_id=person_id,
+                event_type="account.deleted",
+                aggregate_type="person",
+                aggregate_id=person_id,
+                event_data={"counts": counts},
+                occurred_at=now,
+            )
+        )
+        self.session.flush()
+        return ErasureReport(counts=counts, storage_keys=storage_keys)
+
     # --- 24-hour stories (ADR-0022 §2.3) ----------------------------------
 
     @staticmethod
@@ -4110,9 +4455,35 @@ class SqlAlchemyApiRepository:
             )
             .exists()
         )
+        # A block hides a story both ways (ADR-0023 §2.3.2). Stories have one
+        # audience and no group arm, so unlike posts there is nothing left
+        # once the block lands. `story_visibility.can_view` says the same in
+        # Python, with `is_blocked` as a required fact.
+        blocked = (
+            select(FriendRequest.id)
+            .where(
+                FriendRequest.state == FriendRequestState.BLOCKED,
+                or_(
+                    and_(
+                        FriendRequest.requester_id == reader_id,
+                        FriendRequest.addressee_id == Story.author_id,
+                    ),
+                    and_(
+                        FriendRequest.addressee_id == reader_id,
+                        FriendRequest.requester_id == Story.author_id,
+                    ),
+                ),
+            )
+            .exists()
+        )
         return or_(
             Story.author_id == reader_id,
-            and_(Story.audience == "friends", Story.expires_at > now, friendship),
+            and_(
+                ~blocked,
+                Story.audience == "friends",
+                Story.expires_at > now,
+                friendship,
+            ),
         )
 
     def _story_record(
@@ -4632,10 +5003,32 @@ class SqlAlchemyApiRepository:
             )
             .exists()
         )
+        # ADR-0023 §2.3.2: a block hides `public` and `friends` both ways. The
+        # `group` arm below deliberately does not carry it -- a shared group's
+        # wall stays whole -- and the author's own arm cannot be blocked from
+        # themselves. This is the SQL spelling of
+        # `post_audience.visible_to`; change either and change both.
+        blocked = (
+            select(FriendRequest.id)
+            .where(
+                FriendRequest.state == FriendRequestState.BLOCKED,
+                or_(
+                    and_(
+                        FriendRequest.requester_id == reader_id,
+                        FriendRequest.addressee_id == Post.author_id,
+                    ),
+                    and_(
+                        FriendRequest.addressee_id == reader_id,
+                        FriendRequest.requester_id == Post.author_id,
+                    ),
+                ),
+            )
+            .exists()
+        )
         return or_(
             Post.author_id == reader_id,
-            Post.audience == PostAudience.PUBLIC,
-            and_(Post.audience == PostAudience.FRIENDS, friendship),
+            and_(~blocked, Post.audience == PostAudience.PUBLIC),
+            and_(~blocked, Post.audience == PostAudience.FRIENDS, friendship),
             and_(
                 Post.audience == PostAudience.GROUP,
                 Post.context_id.is_not(None),

@@ -188,6 +188,35 @@ start_api() {
       && MOBILE_DATABASE_URL="$DATABASE_URL" python3 -m app.places.seed_catalog ) || {
     echo "seed danh mục hỏng" >&2; return 1; }
 
+  # `seed_catalog` cố ý chỉ mang HAI thành phố: mười hai hàng mẫu của nó nằm ở
+  # hai thành phố ấy, và tầng Postgres đọc chung module đó nên đừng nới nó.
+  # Nhưng bảng Maestro lái tới một thành phố KHÔNG có hàng mẫu nào («Hội An»,
+  # flow 35) đúng để chứng minh màn Khám phá đọc điểm đến từ máy chủ chứ không
+  # in cứng. Thiếu danh sách đầy đủ thì flow ấy đỏ ở bước cuộn, và cái đỏ ấy nói
+  # về stack chứ không nói về app (đo 2026-09-07: 2 điểm đến, flow 35 đỏ).
+  echo "--- seed 15 điểm đến của danh mục thật"
+  ( cd "$REPO_ROOT/services/api" && MOBILE_DATABASE_URL="$DATABASE_URL" python3 - <<'PYDD'
+import os
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+from app.db.models import Destination
+from app.places.destinations_vn import DESTINATIONS_VN
+
+with Session(create_engine(os.environ["MOBILE_DATABASE_URL"])) as session:
+    for row in DESTINATIONS_VN:
+        existing = session.get(Destination, row["id"])
+        if existing is None:
+            session.add(Destination(**row))
+            continue
+        for key, value in row.items():
+            if key != "id" and getattr(existing, key) != value:
+                setattr(existing, key, value)
+    session.commit()
+PYDD
+  ) || { echo "seed điểm đến hỏng" >&2; return 1; }
+
   local port
   port="$(python3 -c "import socket
 s = socket.socket()

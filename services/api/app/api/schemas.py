@@ -709,6 +709,11 @@ class ContextSummary(ApiModel):
     theme: ChatTheme = "mac-dinh"
     kind: ContextKind = "group"
     counterpart: ContextCounterpart | None = None
+    #: ADR-0023 §2.3.2: a pair whose other side blocked, was blocked, or
+    #: deleted their account. The conversation stays readable -- the
+    #: messages are the other person's too -- but it takes no new ones.
+    #: Always false for a group, which has no «other person» to be gone.
+    unavailable: bool = False
 
 
 class PersonContextListResponse(ApiModel):
@@ -759,6 +764,9 @@ class ProfileResponse(ApiModel):
     #: ADR-0022 §2.2. The person's own setting; `PublicPersonResponse`
     #: deliberately does not carry it.
     wall_comment_policy: WallCommentPolicy = "readers"
+    #: ADR-0023 §2.5. Off means a telephone lookup answers the same 404 as
+    #: «nobody uses this number».
+    discoverable_by_phone: StrictBool = True
 
 
 class InterestTagResponse(ApiModel):
@@ -832,6 +840,7 @@ class ProfileUpdateRequest(ApiModel):
     bio: Annotated[StrictStr, Field(max_length=500)] | None = None
     city: Annotated[StrictStr, Field(max_length=120)] | None = None
     wall_comment_policy: WallCommentPolicy | None = None
+    discoverable_by_phone: StrictBool | None = None
 
     @model_validator(mode="after")
     def _something_to_change(self) -> ProfileUpdateRequest:
@@ -840,6 +849,7 @@ class ProfileUpdateRequest(ApiModel):
             and self.bio is None
             and self.city is None
             and self.wall_comment_policy is None
+            and self.discoverable_by_phone is None
         ):
             raise ValueError("cần ít nhất một trường để sửa")
         if self.display_name is not None and not self.display_name.strip():
@@ -889,6 +899,71 @@ class SessionBootstrapRequest(ApiModel):
     """
 
     invite_token: Annotated[StrictStr, Field(min_length=1, max_length=512)]
+
+
+class SessionSummary(ApiModel):
+    """One live session of the caller's own (ADR-0023 §2.5).
+
+    No device label, no IP, no user agent: the table stores none of those, and
+    inventing «iPhone của Minh» from a header nobody verified would be a
+    sentence the product cannot stand behind. What it can say is which door
+    minted the session, when, and whether it is the one asking.
+    """
+
+    id: UUID
+    issued_via: Literal["invite", "otp", "google", "genesis"]
+    created_at: datetime
+    expires_at: datetime
+    #: True for the session the request arrived on: the one screen that must
+    #: not offer «đăng xuất phiên này» as if it were somebody else's.
+    current: StrictBool = False
+
+
+class SessionListResponse(ApiModel):
+    sessions: list[SessionSummary]
+
+
+class BlockedPersonSummary(ApiModel):
+    person_id: UUID
+    display_name: StrictStr
+    blocked_at: datetime
+
+
+class BlockedListResponse(ApiModel):
+    blocked: list[BlockedPersonSummary]
+
+
+class BlockResponse(ApiModel):
+    """The edge after the button. `blocked` after blocking, `declined` after
+    lifting it -- undoing a block does not restore a friendship."""
+
+    person_id: UUID
+    state: Literal["blocked", "declined"]
+
+
+class ReportCreateRequest(ApiModel):
+    """What one person tells the operators (ADR-0023 §2.4). Two closed
+    vocabularies mirrored from `app.domain.reports`."""
+
+    target_type: Literal["person", "post", "message", "comment", "story"]
+    target_id: UUID
+    reason: Literal["spam", "harassment", "inappropriate", "impersonation", "other"]
+    note: Annotated[StrictStr, Field(max_length=500)] | None = None
+
+
+class ReportResponse(ApiModel):
+    """An id and a time. The note is deliberately not echoed: it would put the
+    reporter's own words through one more log on the way back."""
+
+    id: UUID
+    created_at: datetime
+
+
+class AccountDeleteRequest(ApiModel):
+    """`{"confirm": true}` and nothing else. A DELETE with an empty body is
+    one mistyped route away from being an accident (ADR-0023 §2.1)."""
+
+    confirm: StrictBool
 
 
 class SessionResponse(ApiModel):

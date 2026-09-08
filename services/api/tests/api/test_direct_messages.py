@@ -232,3 +232,32 @@ def test_a_pair_is_not_a_group_on_the_profile_counts(client, repository):
     ]
     assert after["contexts"] == 1, "một cuộc trò chuyện riêng không phải một nhóm"
     assert after["friends"] == before["friends"]
+
+
+def test_a_blocked_pair_says_so_on_the_row_for_both_people(client, repository):
+    """ADR-0023 §2.3.2: hàng trong danh sách nói ra, không đợi lúc gửi hỏng.
+
+    Một người gõ xong một câu rồi mới biết cuộc trò chuyện đã chết là một cách
+    nói thật muộn nhất có thể. Cờ này là cùng một câu trả lời của
+    `dm_allowed`, đọc ở chỗ người ta còn chưa gõ gì.
+    """
+    _seed(repository)
+    pair_id = _open(client, ME, FRIEND).json()["id"]
+
+    def hang(ai):
+        cau = client.get("/people/me/contexts", headers=actor_headers(actor_id=ai))
+        return {row["id"]: row for row in cau.json()["contexts"]}
+
+    truoc = hang(ME)
+    assert truoc[pair_id]["unavailable"] is False
+    assert truoc[str(GROUP)]["unavailable"] is False, "nhóm không có «người kia» để mất"
+
+    chan = client.post(
+        f"/people/{FRIEND}/block", headers=actor_headers(actor_id=ME, roles="member")
+    )
+    assert chan.status_code == 200, chan.json()
+
+    assert hang(ME)[pair_id]["unavailable"] is True
+    assert hang(FRIEND)[pair_id]["unavailable"] is True, (
+        "người bị chặn cũng phải thấy cuộc trò chuyện đóng, không chỉ người chặn"
+    )

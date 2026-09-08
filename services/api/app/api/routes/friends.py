@@ -46,6 +46,7 @@ from app.api.person_identity import (
     PersonIdKeyMissing,
     canonical_mobile,
     derive_person_id,
+    derive_phone_digest,
     read_key,
 )
 from app.api.repository import ApiRepository
@@ -244,9 +245,11 @@ async def find_person_by_phone(
             "Máy chủ chưa cấu hình khoá danh tính nên chưa tìm bạn được.",
         ) from missing
 
-    # The number ends here. What continues is an opaque id, so nothing
-    # downstream -- service, repository, logs, error handlers -- is holding a
-    # telephone number it could accidentally render.
-    return ApiService(repository).find_person_by_person_id(
-        derive_person_id(canonical, key), actor
+    # The number ends here. What continues is an opaque id and an opaque
+    # digest, so nothing downstream -- service, repository, logs, error
+    # handlers -- is holding a telephone number it could accidentally render.
+    return ApiService(repository).find_person_by_phone_identity(
+        digest_hex=derive_phone_digest(canonical, key).hex(),
+        derived_id=derive_person_id(canonical, key),
+        actor=actor,
     )

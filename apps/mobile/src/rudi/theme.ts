@@ -1,6 +1,8 @@
+import { createContext, useContext } from "react";
 import { Platform, TextStyle, useColorScheme, ViewStyle } from "react-native";
 
 import tokens from "../../../../packages/shared/tokens.json";
+import { toiHay, type CheDoGiaoDien } from "./giao-dien";
 
 // Chat bubble themes (ADR-0021 §2.4) live in a leaf module so this file stays
 // importable from `session.tsx`; re-exported so screens read them from theme.
@@ -9,9 +11,20 @@ export { THEME_CHAT, bangMauChat, laThemeChat, nhanTheme, type BangMauChat, type
 export type RudiTone = "accent" | "ai" | "split";
 export type RudiPalette = typeof tokens.color.light;
 
+/**
+ * The person's own light/dark choice, when they made one (L5, ADR-0023 §2.5).
+ *
+ * Declared here rather than in a provider file because `theme.ts` must stay a
+ * leaf: `session.tsx` imports it, so importing anything of the app's back
+ * would close a cycle. `ui/GiaoDienProvider.tsx` reads the stored value and
+ * supplies this context; with no provider the default is «theo hệ thống»,
+ * which is exactly what the app did before this slice.
+ */
+export const GiaoDienContext = createContext<CheDoGiaoDien>("he-thong");
+
 export function useRudiTheme() {
   const scheme = useColorScheme();
-  const dark = scheme === "dark";
+  const dark = toiHay(useContext(GiaoDienContext), scheme === "dark");
   const colors = dark ? tokens.color.dark : tokens.color.light;
 
   return {
