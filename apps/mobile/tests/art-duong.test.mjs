@@ -15,8 +15,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MAU_VE, bienDoi, cungTron, giot, khungBo, qCong, tron, vien } from "../dist-test/rudi/art/net.js";
-import { KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../dist-test/rudi/art/nep.js";
+import { MAU_VE, bienDoi, cungTron, daGiac, giot, khungBo, netGay, qCong, tron, vien } from "../dist-test/rudi/art/net.js";
+import { BIEU_CAM, KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../dist-test/rudi/art/nep.js";
+import { STICKER_IDS, hinhSticker } from "../dist-test/rudi/chat/sticker.js";
 import { duongChuyen, gocGap, vongHo } from "../dist-test/rudi/art/motif.js";
 import { GU_IDS, KHUNG_GU, hinhGu, laGuId } from "../dist-test/rudi/art/gu.js";
 import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
@@ -88,7 +89,7 @@ test("net.ts: từng builder ra đường hợp lệ và số thập phân thư�
   assert.deepEqual(bienDoi(10, 20, 0.5)(4, 6), [12, 23]);
 });
 
-test("Nếp: chín pose, hai cách đọc, có và không có phép đặt, đều qua ngữ pháp Java và nằm trong khung", () => {
+test("Nếp: mọi pose trong POSE_NEP, hai cách đọc, có và không có phép đặt, đều qua ngữ pháp Java và nằm trong khung", () => {
   for (const pose of POSE_NEP) {
     for (const chiTiet of [true, false]) {
       kiemLop(`nep ${pose} chiTiet=${chiTiet}`, hinhNep(pose, { chiTiet }), KHUNG_NEP, KHUNG_NEP);
@@ -159,4 +160,396 @@ test("mọi cảnh hợp lệ có và không có Nếp; cảnh không Nếp là 
   assert.equal(laCanhId("chua-co-anh"), true);
   assert.deepEqual(hinhCanh("khong-co"), hinhCanh("chua-co-hoi"));
   assert.equal(moTaCanh("khong-co"), moTaCanh("chua-co-hoi"));
+});
+
+
+/* ---------------------------------------------------------------------------
+ * The folded coral corner is the identity mark. No ink may be painted on it.
+ *
+ * Until 09/09 five of the six expressions ended their right brow inside the
+ * triangle, `nang-bong`'s raised hand planted a filled disc 2.8 units into it,
+ * and a limb had done the same earlier and been re-routed by hand. Every one of
+ * those was found by looking at a render, which is the kind of check that
+ * lapses. The rule lives here now.
+ *
+ * Three things this gate has to get right, each of which it got WRONG in its
+ * first draft (finish review, 09/09):
+ *
+ *  1. It measures PAINT, not centre lines. A 2.4-wide stroke whose centre is
+ *     0.4 units inside puts 1.6 units of ink on the coral -- worse than the old
+ *     brow this was written to stop -- and the first draft accepted it, because
+ *     it compared the centre against a half-unit tolerance instead of adding
+ *     the stroke's own half-width. The rule is `depth + net/2 <= 0`.
+ *  2. It BOUNDS each curve instead of spot-checking it. Sampling a cubic at a
+ *     few interior points is not a bound: a curve can bulge between samples.
+ *     Sampling N+1 points leaves a chord error of at most max|B''|/(8N²), which
+ *     is computable from the control points, so the bound is the worst sample
+ *     PLUS that error. It is tight (order 1e-3 here) and it is sound.
+ *     A convex hull of the control points is also sound but far too loose: the
+ *     hull of a circle's cubics overshoots the circle by ~14% of its radius,
+ *     which falsely accuses every hand and both eyes.
+ *  3. It IDENTIFIES the fold instead of guessing it. «the first filled coral
+ *     layer» is not an identity check -- `ghi-lai`'s pencil nib is also a
+ *     three-point coral triangle, and ink legitimately overlaps it. The fold is
+ *     the triangle S(50,20)·S(69,38)·S(50,38) for some lean, which is a shape
+ *     test that survives any reordering.
+ * ------------------------------------------------------------------------ */
+
+/** Samples per cubic. The error term below is what makes this a bound. */
+const MAU_CUBIC = 24;
+
+/*
+ * Two colour vocabularies reach this gate. `art/*.ts` names roles
+ * `giay·bong·muc·gap`; `chat/sticker.ts` re-labels the same drawing through
+ * `tuLopVe` into `card·line·ink·accent`. Looking only for «gap» found the fold
+ * in the nine scenes and in NONE of the sixteen sticker readings, and the count
+ * assertion below is what said so out loud instead of reporting a clean scan.
+ */
+const VAI_ART = { coral: "gap", muc: "muc" };
+const VAI_STICKER = { coral: "accent", muc: "ink" };
+
+/**
+ * Points to test on one path, each with the error bound that applies to it.
+ *
+ * Straight commands are exact. A cubic contributes `MAU_CUBIC` samples plus the
+ * chord error max|B''|/(8N²), computed from its own control points.
+ */
+function diemCua(d) {
+  const ra = [];
+  let cur = [0, 0];
+  for (const { c, args } of phanTich(d)) {
+    if (c === "Z") continue;
+    if (c === "M" || c === "L") {
+      cur = [args[0], args[1]];
+      ra.push({ p: cur, saiSo: 0 });
+      continue;
+    }
+    const p0 = cur;
+    const c1 = [args[0], args[1]];
+    const c2 = [args[2], args[3]];
+    const p3 = [args[4], args[5]];
+    const nhi = (a, b, e) => Math.hypot(a[0] - 2 * b[0] + e[0], a[1] - 2 * b[1] + e[1]);
+    const saiSo = (6 * Math.max(nhi(p0, c1, c2), nhi(c1, c2, p3))) / (8 * MAU_CUBIC * MAU_CUBIC);
+    for (let k = 0; k <= MAU_CUBIC; k++) {
+      const t = k / MAU_CUBIC;
+      const u = 1 - t;
+      ra.push({
+        saiSo,
+        p: [
+          u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p3[0],
+          u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p3[1],
+        ],
+      });
+    }
+    cur = p3;
+  }
+  return ra;
+}
+
+/** Signed twice-area; the sign says which side of a→b the point p is on. */
+const ben = (a, b, p) => (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+
+/** How far inside the triangle p lies, in grid units. Negative means outside. */
+function sauTrong(tam, p) {
+  const [A, B, C] = tam;
+  const huong = Math.sign(ben(A, B, C)) || 1;
+  let it = Infinity;
+  for (const [u, v] of [[A, B], [B, C], [C, A]]) {
+    const canh = Math.hypot(v[0] - u[0], v[1] - u[1]);
+    it = Math.min(it, (huong * ben(u, v, p)) / canh);
+  }
+  return it;
+}
+
+/** Coordinates are emitted rounded to two decimals, so shapes match to ~0.01. */
+const LAM_TRON = 0.02;
+
+/** The three points of a triangle path, or null if it is not a triangle. */
+function tamGiac(d) {
+  const diem = phanTich(d).filter((x) => x.c !== "Z").map((x) => [x.args[0], x.args[1]]);
+  return diem.length === 3 ? diem : null;
+}
+
+/**
+ * Is this triangle the fold, i.e. S(50,20)·S(69,38)·S(50,38)?
+ *
+ * It has to hold wherever the figure is PLACED, not just at the bare 96 grid:
+ * scenes and stickers pass `x0`, `y0` and `tiLe`, so the literal 20 and 38 are
+ * gone by the time a screen draws it. Checking the placed coordinates was the
+ * first draft's bug -- it recognised nothing in any real composition and
+ * reported «no fold here» for all 25 of them.
+ *
+ * What survives placement is the SHAPE. The shear moves x by `k·(91−y)/71` and
+ * leaves y alone, so the fold is always: two vertices on one horizontal, one
+ * above them, and a base-to-height ratio of exactly 19:18. `ghi-lai`'s pencil
+ * nib (y = 21, 18, 25) fails the first clause; the ratio and the sane-lean
+ * bound rule out an accidental match.
+ */
+function laNepGap(dinh) {
+  const y = dinh.map((p) => p[1]);
+  const tren = Math.min(...y);
+  const duoi = Math.max(...y);
+  const cao = duoi - tren;
+  const dinhTren = dinh.filter((p) => Math.abs(p[1] - tren) < LAM_TRON);
+  const dinhDuoi = dinh.filter((p) => Math.abs(p[1] - duoi) < LAM_TRON);
+  if (dinhTren.length !== 1 || dinhDuoi.length !== 2) return false;
+  const [trai, phai] = [...dinhDuoi].sort((a, b) => a[0] - b[0]);
+  const day = phai[0] - trai[0];
+  // Base : height is 19 : 18 at every scale. Tolerance scales with the drawing.
+  if (Math.abs(day / cao - 19 / 18) > LAM_TRON / cao + 1e-9) return false;
+  // And the lean the top vertex implies has to be one a body could have.
+  const tiLe = cao / 18;
+  const k = ((dinhTren[0][0] - trai[0]) * 71) / (18 * tiLe);
+  return Number.isFinite(k) && Math.abs(k) <= 30;
+}
+
+/**
+ * The rule `nep.ts` cites by name: no ink is painted inside the coral fold.
+ *
+ * Returns the number of points examined and the fold's vertices, or null when
+ * the drawing has no fold at all (a scene with the figure turned off). Throws
+ * on any violation.
+ */
+function khongCatNepGap(ten, lop, vai = VAI_ART) {
+  let nepGap = null;
+  for (const [i, l] of lop.entries()) {
+    if (l.mau !== vai.coral || l.net !== undefined) continue;
+    const t = tamGiac(l.d);
+    if (t && laNepGap(t)) {
+      nepGap = { dinh: t, d: l.d, i };
+      break;
+    }
+  }
+  if (nepGap === null) return null;
+  // Two exemptions, both by identity rather than by position.
+  //
+  // Anything drawn BEFORE the fold is painted over by the fold's own coral, so
+  // it cannot end up on the identity mark however close it passes. In a scene
+  // that is most of the picture -- props are composed before the figure.
+  //
+  // And a stroke whose path is exactly a filled shape in the same drawing is
+  // that shape's OUTLINE, not a mark upon it: the sheet's outline runs along
+  // the fold's hypotenuse by construction, and the fold's own outline traces
+  // the fold. Looking up «the first paper fill» instead was the first draft's
+  // second bug -- in a scene it found the CHAIR's paper and then accused the
+  // body outline of painting 0.96 units onto the coral.
+  // Built from NON-ink fills only, and applied only to STROKES. Written as
+  // «every fill» and applied to every layer, it silently exempted every ink
+  // FILL -- both eyes, every hand -- because each one trivially matches itself.
+  // The fill canary below is what caught that; the point floors did not.
+  const dMang = new Set(
+    lop.filter((l) => l.net === undefined && l.mau !== vai.muc).map((l) => l.d),
+  );
+  let daXet = 0;
+  for (const [i, l] of lop.entries()) {
+    if (i < nepGap.i) continue;
+    if (l.mau !== vai.muc) continue;
+    if (l.net !== undefined && dMang.has(l.d)) continue;
+    const nua = (l.net ?? 0) / 2;
+    for (const { p, saiSo } of diemCua(l.d)) {
+      daXet += 1;
+      const son = sauTrong(nepGap.dinh, p) + nua + saiSo;
+      assert.ok(
+        son <= 0,
+        `${ten}: lớp mực ${i} sơn ${son.toFixed(2)} đơn vị lên nếp gấp tại ${p.map((n) => n.toFixed(1)).join(",")}`,
+      );
+    }
+  }
+  return { daXet, dinh: nepGap.dinh };
+}
+
+/*
+ * `nghieng` and `dam` are public overrides on `TuyChonNep`, and a shipped
+ * sticker uses both at once (`sticker.ts`, «Chờ tí»: nghieng 5, dam 1.16). A
+ * scan over pose defaults alone would never have looked at the drawing that
+ * actually ships. The contract is therefore the whole usable band: every
+ * declared lean falls inside −8…13, and `dam` is scanned at both ends because
+ * it scales stroke width and limb thickness linearly.
+ */
+const NGHIENG_QUET = Array.from({ length: 22 }, (_, i) => i - 8);
+const DAM_QUET = [1, 1.3];
+
+test("không nét mực nào sơn lên nếp gấp coral, qua mọi pose · biểu cảm · độ nghiêng · độ đậm", () => {
+  let daXet = 0;
+  let itNhat = Infinity;
+  let banVe = 0;
+  for (const pose of POSE_NEP) {
+    for (const bieuCam of BIEU_CAM) {
+      for (const chiTiet of [true, false]) {
+        for (const nghieng of NGHIENG_QUET) {
+          for (const dam of DAM_QUET) {
+            const ten = `${pose}/${bieuCam}/${chiTiet ? "chi tiết" : "rút gọn"}/ng${nghieng}/dam${dam}`;
+            const ra = khongCatNepGap(ten, hinhNep(pose, { chiTiet, bieuCam, nghieng, dam }));
+            assert.ok(ra !== null, `${ten}: không nhận ra nếp gấp trong bản vẽ`);
+            daXet += ra.daXet;
+            itNhat = Math.min(itNhat, ra.daXet);
+            banVe += 1;
+          }
+        }
+      }
+    }
+  }
+  assert.equal(banVe, POSE_NEP.length * BIEU_CAM.length * 2 * NGHIENG_QUET.length * DAM_QUET.length);
+  // Floors read off the MEASURED count, not picked round: 8_577_360 ink points
+  // over 9_504 drawings on 09/09, the thinnest single drawing giving 826. The
+  // first version of this guard asserted «> 4000» against a true figure ten
+  // times larger, and would have stayed green after the scan dropped nine
+  // layers in ten. A floor whose denominator nobody re-derives is decoration.
+  assert.ok(daXet > 7_000_000, `chỉ xét ${daXet} điểm mực trên toàn bộ — máy quét đã ngừng nhìn`);
+  assert.ok(itNhat > 700, `có bản vẽ chỉ được xét ${itNhat} điểm mực`);
+});
+
+test("bound của cubic: sai số lấy từ chính điểm điều khiển, và đủ nhỏ để là biên", () => {
+  // Straight commands are exact; a cubic carries max|B''|/(8N²), which is what
+  // turns N samples into a bound instead of a spot check. Pinned here because
+  // no drawing today passes close enough to the fold to exercise it, so
+  // deleting the term would otherwise leave every test green.
+  // Paths are built with the real builders, not written out as literals: a
+  // literal like «M 0 0 C 0 10 …» is a long run of digits and the repo guard
+  // reads those as possible account numbers. The guard is right to; the test
+  // is what gives way.
+  const thang = netGay([[0, 0], [10, 0]]);
+  for (const x of diemCua(thang)) assert.equal(x.saiSo, 0, "đoạn thẳng không có sai số");
+  // qCong lifts a quadratic to a cubic: c1 = p0 + ⅔(q−p0), c2 = p1 + ⅔(q−p1),
+  // so with q at (5,15) both second differences come to (0,−10).
+  const cong = diemCua(qCong([0, 0], [5, 15], [10, 0]));
+  assert.equal(cong.length, 1 + (MAU_CUBIC + 1), "một điểm đầu cộng N+1 mẫu");
+  const mau = cong[cong.length - 1];
+  const cho = (6 * 10) / (8 * MAU_CUBIC * MAU_CUBIC);
+  // Coordinates are emitted at two decimals, so the control points the parser
+  // reads back differ from the exact ⅔ in the last digits.
+  assert.ok(Math.abs(mau.saiSo - cho) < 1e-6, `sai số ${mau.saiSo} khác công thức ${cho}`);
+  assert.ok(mau.saiSo > 0 && mau.saiSo < 0.02, "sai số phải dương và nhỏ hơn bề dày một nét");
+});
+
+test("cổng nếp gấp cũng chạy trên thứ thật sự lên màn: tám sticker và mười cảnh", () => {
+  // `hinhNep` in isolation is not what a screen draws. Scenes and stickers
+  // compose props with the figure, and the pencil nib in `ghi-lai` is a second
+  // coral triangle that ink legitimately touches -- the reason the fold is
+  // identified by shape rather than by «the first coral layer».
+  let coNep = 0;
+  for (const id of STICKER_IDS) {
+    for (const chiTiet of [true, false]) {
+      const ra = khongCatNepGap(`sticker ${id}/${chiTiet}`, hinhSticker(id, { chiTiet }).lop, VAI_STICKER);
+      if (ra !== null) coNep += 1;
+    }
+  }
+  for (const id of CANH_IDS) {
+    for (const nep of [true, false]) {
+      const ra = khongCatNepGap(`cảnh ${id}/nep=${nep}`, hinhCanh(id, { nep }));
+      if (ra !== null) coNep += 1;
+    }
+  }
+  // Every sticker carries the figure; among the scenes only the ones that are
+  // allowed the figure, and only in their `nep: true` reading, do.
+  assert.equal(coNep, STICKER_IDS.length * 2 + (CANH_IDS.length - CANH_KHONG_NEP.size));
+});
+
+test("cổng nếp gấp thật sự đỏ: nét, mảng, và bản vẽ không có nếp gấp", () => {
+  const than = hinhNep("moi", { chiTiet: true });
+  const ra = khongCatNepGap("moi", than);
+  assert.ok(ra !== null);
+  const [H, G, Bp] = ra.dinh;
+  const giua = [(H[0] + G[0] + Bp[0]) / 3, (H[1] + G[1] + Bp[1]) / 3];
+  assert.ok(sauTrong(ra.dinh, giua) > 2, "trọng tâm phải nằm sâu trong tam giác");
+  for (const d of ra.dinh) {
+    assert.ok(Math.abs(sauTrong(ra.dinh, d)) < 0.001, "đỉnh nằm ĐÚNG trên biên");
+  }
+
+  // A stroke through the middle of the fold.
+  assert.throws(
+    () => khongCatNepGap("canary nét", [...than, { d: netGay([giua, [giua[0] + 4, giua[1] + 2]]), mau: "muc", net: 1.9 }]),
+    /sơn .* lên nếp gấp/,
+    "một nét mực giữa nếp gấp phải làm cổng đỏ",
+  );
+  // A filled blob in the middle of the fold: strokes and fills are different
+  // code paths (`net` present or absent) and both have to be watched.
+  assert.throws(
+    () => khongCatNepGap("canary mảng", [...than, { d: tron(giua[0], giua[1], 1.4), mau: "muc" }]),
+    /sơn .* lên nếp gấp/,
+    "một mảng mực giữa nếp gấp phải làm cổng đỏ",
+  );
+  // Paint, not centre lines. The centre of this hairline is OUTSIDE the fold --
+  // asserted, not assumed -- and only its width carries ink onto the coral. It
+  // is the case the first draft accepted, and the premise has to be a real
+  // negative depth or the canary passes for the wrong reason and stops biting.
+  const giuaCanh = [H[0] + (Bp[0] - H[0]) * 0.6, H[1] + (Bp[1] - H[1]) * 0.6];
+  const nganh = [giuaCanh[0] - 0.5, giuaCanh[1]];
+  const sauNganh = sauTrong(ra.dinh, nganh);
+  assert.ok(sauNganh < 0, `tiền đề: tâm nét phải nằm NGOÀI nếp gấp, đo được ${sauNganh.toFixed(2)}`);
+  assert.ok(sauNganh > -1.2, "tiền đề: và đủ gần để bề dày 2.4 với tới");
+  assert.throws(
+    () => khongCatNepGap("canary bề dày", [...than, { d: netGay([nganh, [nganh[0], nganh[1] - 3]]), mau: "muc", net: 2.4 }]),
+    /sơn .* lên nếp gấp/,
+    "bề dày của nét phải được tính, không chỉ tâm nét",
+  );
+  // The outline exemption is for STROKES only. An ink FILL that happens to
+  // trace the same path as some other filled shape is still a blob of ink, not
+  // an outline of one -- and written without that distinction the exemption
+  // swallowed every eye and every hand.
+  const trung = tron(giua[0], giua[1], 1.4);
+  assert.throws(
+    () => khongCatNepGap("canary mảng trùng đường", [
+      ...than,
+      { d: trung, mau: "gap" },
+      { d: trung, mau: "muc" },
+    ]),
+    /sơn .* lên nếp gấp/,
+    "mảng mực trùng đường với một mảng khác vẫn là mực trên coral",
+  );
+  // A triangle with the fold's exact 19:18 proportions but an apex no lean
+  // could put there is not the fold either. Without this the sanity bound on
+  // the lean is dead code that no drawing exercises.
+  assert.equal(
+    khongCatNepGap("nghiêng vô lý", [
+      { d: daGiac([[200, 20], [69, 38], [50, 38]]), mau: "gap" },
+      { d: netGay([[106, 32], [110, 33]]), mau: "muc", net: 2 },
+    ]),
+    null,
+    "đúng tỉ lệ nhưng nghiêng vô lý thì không phải nếp gấp",
+  );
+  // And a drawing whose only coral triangle is NOT the fold must read as «no
+  // fold here», never as «scanned and clean».
+  assert.equal(
+    khongCatNepGap("không có nếp gấp", [
+      { d: daGiac([[92, 21], [96, 18], [95, 25]]), mau: "gap" },
+      { d: netGay([[92, 21], [95, 25]]), mau: "muc", net: 2 },
+    ]),
+    null,
+    "tam giác coral khác nếp gấp không được nhận nhầm là nếp gấp",
+  );
+});
+
+test("sáu biểu cảm là sáu cái mày khác nhau, và met ngược chiều quyet", () => {
+  // The brow is the only ink stroke that lives entirely above the eyes, once
+  // the fold's own outline (a stroke retracing a filled shape) is set aside.
+  const may = (bieuCam) => {
+    const lop = hinhNep("moi", { chiTiet: true, bieuCam, nghieng: 0 });
+    const dMang = new Set(lop.filter((l) => l.net === undefined).map((l) => l.d));
+    const ung = lop.filter(
+      (l) => l.mau === "muc" && l.net !== undefined && !dMang.has(l.d) &&
+        phanTich(l.d).filter((x) => x.c !== "Z").every((x) => x.args[1] < 41 && (x.args.length < 4 || x.args[3] < 41)),
+    );
+    assert.equal(ung.length, 1, `${bieuCam}: phải nhận ra đúng MỘT cái mày, thấy ${ung.length}`);
+    return ung[0];
+  };
+
+  // Six drawings, six paths. Two expressions sharing a brow path is the bug
+  // that made `binh-than` and `nhuong` the same face until 09/09.
+  const duong = BIEU_CAM.map((bc) => may(bc).d);
+  assert.equal(new Set(duong).size, BIEU_CAM.length, "hai biểu cảm đang dùng chung một cái mày");
+
+  // And the two that were confusable are now mirror images. `met` is resigned:
+  // the end toward the nose lifts. `quyet` bears down: that end drops. Drawn
+  // with the same slope they are one face, whatever the mouth does.
+  const doc = (bc) => {
+    const d = phanTich(may(bc).d).filter((x) => x.c !== "Z");
+    const dau = d[0].args;
+    const cuoi = d[d.length - 1].args;
+    return (cuoi[cuoi.length - 1] - dau[1]) / (cuoi[cuoi.length - 2] - dau[0]);
+  };
+  const met = doc("met");
+  const quyet = doc("quyet");
+  assert.ok(quyet > 0.2, `quyet: đầu trong phải chúc XUỐNG, dốc đo được ${quyet.toFixed(2)}`);
+  assert.ok(met < -0.2, `met: đầu trong phải hếch LÊN, dốc đo được ${met.toFixed(2)}`);
 });

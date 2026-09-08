@@ -1069,6 +1069,54 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo: bốn cảnh mới ở cả hai bản có Nếp và tắt Nếp, cỡ chữ 1.0. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/01-sau-mat-truoc.png",
+      "sha256": "2d78abce206b0fea7baa191a6316559f5c9e6868a9b893f81d8e703c17827bbc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng dựng sáu biểu cảm Nếp TRƯỚC khi sửa, crop đầu ba cỡ: mày phải cắt vào góc coral. Hình vẽ vector, không có dữ liệu người dùng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/02-ba-phuong-an.png",
+      "sha256": "15fe21628aadd07023cb8c03ffb7c6323bf5b848d017945fb805e27b1e5a2f17",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ba phương án mày phải cạnh nhau cho sáu biểu cảm, để chọn bằng mắt chứ không bằng toạ độ. Hình vẽ vector."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/03-sau-mat-sau.png",
+      "sha256": "d6ab386c03478c032e61202f9cd2ade79cccb8661f77feaae6a43a1b45894b76",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng dựng sáu biểu cảm Nếp SAU khi sửa: một mày, góc coral sạch. Hình vẽ vector."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/04-tam-sticker-sau.png",
+      "sha256": "49a0ad289b8e4c0483838803dbbc91c653c1fab5d45117317524ab376d662a1c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Tám sticker ở 120dp và 64dp sau khi sửa mày. Hình vẽ vector."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/05-muoi-canh-sau.png",
+      "sha256": "3079b0f489214d80614ca0139cef7923418ea9e40b9580c40bab8c91400bad62",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Mười cảnh im lặng, bản có Nếp và bản tắt Nếp, sau khi sửa mày. Hình vẽ vector."
+    },
+    {
+      "path": "docs/claude/2026-09-09/may-nep/06-bang-pose-sau.png",
+      "sha256": "4a3f534dc74246e6eada49227f4eec115a0abe06e17fcde8aa097a5183fdefeb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng dựng mười tám pose Nếp còn lại sau khi gỡ `nang-bong`, ba cỡ đọc. Hình vẽ vector, không có dữ liệu người dùng."
     }
   ]
 }
