@@ -1037,6 +1037,14 @@
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-09/canh/native-chua-co-nhom-1.0.png",
+      "sha256": "f8808209882011f419b29d3b4758b632bef8a290944c11fb05f5c2f36ee939ed",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: cảnh chua-co-hoi trên màn «Chưa có nhóm nào», cỡ chữ 1.0, nền sáng. Dữ liệu demo, không có người tham gia."
     }
   ]
 }

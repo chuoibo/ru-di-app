@@ -25,6 +25,17 @@ appId: com.lakiet.rudi
 # Launcher của dev client («Development servers») nghĩa là KHÔNG có bundle nào
 # đang chạy — app chết, không phải thiếu tính năng. Nói ra ngay tại đây.
 - assertNotVisible: "Fetch development servers"
+# Máy này dùng chung: một lane khác có thể để lại phiên đăng nhập THẬT (cửa
+# Google). Phiên ấy sống qua `stopApp`, nên màn đầu là «Nhóm của bạn» chứ không
+# phải màn chào, và mọi phép chờ bên dưới đỏ. Đăng xuất trước NẾU CÓ.
+- runFlow:
+    when:
+      visible: "Đăng xuất"
+    commands:
+      - tapOn: "Đăng xuất"
+      - extendedWaitUntil:
+          visible: "Rủ Đi thôi!"
+          timeout: 60000
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
     timeout: 150000

@@ -97,6 +97,19 @@ với cái đầu; tấm ảnh trong tay thấp thành mảng trắng **sau ốn
 | `art-duong` | mười cảnh, có và không Nếp, trong khung 144×112 |
 | repo guard | pass, hai bảng ảnh ghim sha256 |
 
+## Một ảnh chụp máy thật
+
+![Cảnh «chưa có hội» trên màn «Chưa có nhóm nào», máy ảo, cỡ chữ 1.0](canh/native-chua-co-nhom-1.0.png)
+
+Ảnh này chụp **trên máy ảo**, không phải bảng vector: cảnh `chua-co-hoi` ở 168dp trong màn «Chưa
+có nhóm nào» của người mới — đúng chỗ lát này nối thêm. Nó dựng đúng cỡ, đứng trên nền giấy, cách
+hai nút một khoảng đọc được.
+
+**Nói rõ nguồn:** đây là ảnh `00-smoke-deeplink-FAILED.png` của một lượt bảng **đỏ**, và nó đỏ vì
+lý do không liên quan tới lát này: máy dùng chung đang có **phiên đăng nhập Google thật** do lane
+khác để lại, nên app mở thẳng vào «Nhóm của bạn» thay vì màn chào mà flow chờ. Ảnh vẫn là ảnh của
+màn thật do bundle của cây này dựng. Flow đã được sửa để **đăng xuất nếu có** trước khi vào.
+
 ## Nợ ghi nhận, không sửa lượt này
 
 **Chi mực đi qua góc gấp coral.** Góc gấp là dấu nhận diện của Nếp, và một nét mực đè lên nó là mất
