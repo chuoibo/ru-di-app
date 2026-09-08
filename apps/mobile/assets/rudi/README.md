@@ -25,11 +25,18 @@ nào như vậy trong repo), *quanh đây* (khu vực, không phải quán), *mi
 
 | File | Quan hệ được phép | Dùng ở | Cỡ dùng thật |
 |---|---|---|---|
-| `dalat-cafe.jpg` | minh hoạ · quán cà phê | `PLACES` «Still Cafe Đà Lạt» với tiền tố «Ảnh minh hoạ: »; album mẫu | lead 16:10 và 21:9 · ô 4:3 · thumb 56 · ô 1:1 |
-| `vietnam-road.jpg` | minh hoạ · đồi, đường đèo | `PLACES` «Đồi Thiên Phúc Đức» với tiền tố «Ảnh minh hoạ: »; ảnh bìa chuyến mẫu; album mẫu | như trên |
+| `dalat-cafe.jpg` | minh hoạ · quán cà phê | `PLACES` «Still Cafe Đà Lạt» với tiền tố «Ảnh minh hoạ: » (Khám phá, chi tiết, lịch trình AI và timeline in ghi công ngay trong hàng chặng; **không** ở Bình chọn, xem dưới); album mẫu | lead 16:10 và 21:9 · ô 4:3 · thumb 56 · chặng 44 · ô 1:1 |
+| `vietnam-road.jpg` | minh hoạ · đồi, đường đèo | `PLACES` «Đồi Thiên Phúc Đức» với tiền tố «Ảnh minh hoạ: » (cùng các khung như trên); ảnh bìa chuyến mẫu; album mẫu | như trên |
 | `dalat-friends.jpg` | ảnh nhóm (người, không phải nơi) | album mẫu, ảnh đăng mẫu | 4:3 · 1:1 |
 | `friends-rooftop.jpg` | ảnh nhóm | album mẫu, tường nhóm mẫu | 4:3 · 1:1 |
 | `dark-wood-grain.jpg` | chất liệu (mặt bàn dưới tờ bill) | `Bill.tsx` | nền |
+
+Khung nào vẽ ảnh thì khung ấy in ghi công: `MediaSlot`, các hàng của
+`HangDiaDiem` và `HangChang.anh` (review 08/09 vòng 2, F21). Không có đường
+truyền `source` trần tới `Image` cho ảnh danh mục; `tests/rudi-anh-ghi-cong.test.mjs`
+đọc consumer để canh. **Bình chọn không dùng ảnh**: ba lựa chọn đều là hình vẽ
+theo loại, vì một ô 56dp không có chỗ cho dòng ghi công và một phiếu bầu không
+được để một lựa chọn nổi hơn chỉ vì tình cờ có ảnh stock của loại đó.
 
 Không dùng `dark-wood-grain`, `dalat-friends` hay `friends-rooftop` làm ảnh của
 một địa điểm. Ba đối tượng đầu của danh sách Khám phá mẫu (Tiệm Nướng, Bánh căn,
