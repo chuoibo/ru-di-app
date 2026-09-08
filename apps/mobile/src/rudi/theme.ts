@@ -161,8 +161,6 @@ export const mauSang = tokens.color.light;
 export const mauThuongHieu = tokens.brand;
 /** Ink on photos, gradients and tone fills. */
 export const mucTrenAnh = "#FFFFFF";
-/** Ground of an image slot before the photo arrives. */
-export const nenAnhTrong = "#E7DACE";
 export const bongDen = "#000000";
 export const mauLogo = { diem: "#FF9F1C" };
 export const mauSao = { dam: "#F59E0B", sang: "#FBBF24" };

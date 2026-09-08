@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
 import { useRudiSession } from "./session";
-import { cardShadow, lopPhu, mucTrenAnh, nenAnhTrong, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
+import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
 import { Grain } from "./ui/Grain";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
@@ -774,8 +774,11 @@ export function Photo({
   style?: StyleProp<ViewStyle>;
   contentFit?: "cover" | "contain";
 }) {
+  const { colors } = useRudiTheme();
+  // The ground before the picture arrives is the theme's paper, so a slow or
+  // failed load on the dark scheme is a dark frame, not a light slab.
   return (
-    <View style={[styles.photo, ratio !== undefined ? { aspectRatio: ratio } : { height }, { borderRadius: radius }, style]}>
+    <View style={[styles.photo, ratio !== undefined ? { aspectRatio: ratio } : { height }, { borderRadius: radius, backgroundColor: colors.card }, style]}>
       <Image contentFit={contentFit} source={source} style={StyleSheet.absoluteFill} transition={180} />
       {overlay}
     </View>
@@ -1062,7 +1065,7 @@ const styles = StyleSheet.create({
   avatarStack: { flexDirection: "row", alignItems: "center" },
   avatarMore: { width: 34, height: 34, marginLeft: -10, borderRadius: 17, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   avatarMoreText: { color: mucTrenAnh, fontSize: 10, fontWeight: "800" },
-  photo: { position: "relative", overflow: "hidden", backgroundColor: nenAnhTrong },
+  photo: { position: "relative", overflow: "hidden" },
   photoShade: { justifyContent: "flex-end", padding: 16 },
   stat: { flex: 1, minWidth: 88, alignItems: "center", gap: 4, paddingVertical: 5 },
   statIcon: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", marginBottom: 2 },
