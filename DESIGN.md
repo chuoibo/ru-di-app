@@ -965,24 +965,35 @@ không phải gì.
   (`xuatXu` «Team Đà Lạt»; live là «Ảnh của nhóm»), ngày và số ảnh trên
   tiêu đề («17 - 19/10/2026 · 4 ảnh», `note inkSoft`). Không lặp ngày ba lần
   trên một màn.
-- **`MediaSlot`**: nơi duy nhất ảnh được phép xuất hiện trên màn live; khung
-  vẽ trước, fallback là artwork của thế giới, ảnh có giấy phép rơi vào cùng
-  khung với `Attribution` (tác giả, giấy phép) in `caption inkFaint` tối đa
-  hai dòng bên dưới (`cauGhiCong`, thuần, ở `ui/ghi-cong.ts`); URL không qua
+- **`MediaSlot`**: khung của ảnh **catalogue**. Không phải nơi duy nhất vỏ vẽ
+  ảnh: ảnh của chính nhóm còn tới `ui.tsx Photo`, `AlbumAnh` và `PhotoViewer`
+  (câu cũ ở đây nói «nơi duy nhất» là sai, review delta 08/09 F31). Khung vẽ
+  trước, fallback là artwork của thế giới; nhận **một** prop `nguon:
+  NguonKhung` chứ không phải `source` cạnh `attribution?` rời nhau, và in
+  `caption inkFaint` tối đa hai dòng bên dưới; URL không qua
   `nguonAnh` bị từ chối trước khi tới đây. Nền khung trước/khi không có ảnh là
   `colors.card` của theme, không còn hằng beige tĩnh (`nenAnhTrong` đã xoá
   khỏi `theme.ts`; trên nền tối hằng ấy đọc thành mảng, review 08/09 vòng 2
   §4). Ảnh tải hỏng: khung giữ nguyên, in «Chưa tải được ảnh» `caption warn`
   dưới khung, ghi công vẫn in.
-- **Luật Khung Nào Vẽ Ảnh Thì Khung Ấy In Ghi Công** (08/09 vòng 2, F21):
-  ảnh catalogue chỉ tới một `Image` bên trong `MediaSlot`, `HangDiaDiem`
-  (`PlaceLead`/`PlaceCompare`/`PlaceRow`) hay `HangChang`; ba khung ấy nhận
-  `AnhCoGhiCong` (`{ source, nguon }`) nên không có cách đưa ảnh mà bỏ ghi
-  công, và mỗi khung tự in `cauGhiCong(nguon)`. `tests/rudi-anh-ghi-cong.test.mjs`
-  đọc AST mọi `.tsx` dưới `src/rudi` và `app`: ngoài ba khung đó, không
-  `<Image>` (kể cả bí danh import) nhận `anh.source`/`anh?.source`/`.photo`,
-  không chỗ nào đọc trần `x.anh.source`, không ai import `AnhChang`; thêm
-  khung mới thì thêm tên vào danh sách của test. Bình chọn **không có ảnh**
+- **Luật Địa Chỉ Đi Cùng Câu Chữ** (08/09 vòng 2 F21, siết lại ở review delta
+  F31). Câu cũ ở đây nói ba khung nhận `AnhCoGhiCong` «nên không có cách đưa
+  ảnh mà bỏ ghi công»; **điều đó không đúng với API lúc ấy**: `MediaSlot` nhận
+  `source` và `attribution?` **rời nhau**, và `PlaceCompare` đã đưa cho nó một
+  địa chỉ trần thật. Nay bảo đảm ấy nằm trong kiểu, không nằm trong lời hứa:
+  `AnhCoGhiCong` **giữ địa chỉ trong closure** và chỉ trả ra qua `ve()`, thứ
+  luôn trả **cả** `source` **lẫn** `ghiCong`. `p.source` và `const { source } =
+  noi.anh` — đúng hai đường thoát probe của Codex đi qua được — nay là **lỗi
+  biên dịch**, thứ tsc đọc trên mọi file mọi lần build. Một quyết định thuần
+  `veKhung(nguon, {hong})` trả `{source, ghiCong, canhBao}` và khung chỉ render
+  ba trường ấy, nên ảnh và câu chữ không còn là hai điều kiện phải tự khớp.
+  Ảnh của nhóm đi nhánh `{loai:"nhom"}` và **không bịa giấy phép**.
+  `tests/rudi-anh-ghi-cong.test.mjs` là **lớp hai**, cho thứ kiểu không thấy
+  (`as any`, ai đó dựng lại cặp `{source, nguon}`, hay một khung vẽ ảnh mà bỏ
+  nửa quyết định): quét AST **mọi `.ts` và `.tsx`**, **không bỏ qua file nào**,
+  và tự kiểm bằng chính hai mẫu thoát ấy cùng ca «vẽ `ve.source` mà không in
+  `ve.ghiCong`». Kiểm chuỗi `cauGhiCong(` có mặt trong file (đọc cả comment)
+  đã bị bỏ; thay bằng bất biến trên `veKhung` kèm ca đột biến. Bình chọn **không có ảnh**
   (lead chọn 08/09): ba lựa chọn đều là ô vẽ `GuGlyph` 30 trên `card` viền
   hairline `line`, vì ô 56 không có chỗ cho câu ghi công và một phiếu bầu
   không được để một lựa chọn nổi hơn chỉ vì catalogue tình cờ có ảnh stock.
@@ -1151,6 +1162,26 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   (`giay/muc/gap/bong/split`) sang vai sticker và ném lúc nạp module nếu gặp
   vai không có màu. Bảy hình còn lại **chưa đổi**, chờ Lead trả lời «nhận ra
   “chờ tí” khi chưa đọc nhãn?» (`docs/claude/2026-09-08/tra-loi-sticker-cho-ti.md`).
+- **Luật Một Lần Gửi Giữ Một Cái Chìa** (review delta 08/09, F32). Mỗi lần
+  bấm gửi mint đúng một `Attempt`, và **hàng chờ giữ nó** (`chat/hang-cho.ts`,
+  thuần): «Thử lại» gửi lại **cùng chìa ấy**, nên một yêu cầu máy chủ đã nhận
+  mà client mất phản hồi được phát lại chứ không thành tin thứ hai
+  (`app/api/idempotency.py`, `Replay`; `gopTin` dedupe theo id máy chủ). Chọn
+  lại cùng một sticker **cố ý** là chìa mới và là tin thứ hai: hai việc khác
+  nhau. Trước đó `useTinNhan` gọi `newAttempt()` **bên trong** hành động, trái
+  đúng câu `api.ts` viết sẵn («mint on the press, never inside a retry»), nên
+  cả sticker, chữ lẫn ảnh đều có nguy cơ ghi đôi; nay cả ba đi qua một đường.
+  Trạng thái nằm **trên đúng tin**, không phải một thông báo chung: hàng đang
+  đi vẽ chính sticker ấy mờ `opacity 0.62` kèm «Đang gửi...»; hàng hỏng vẽ rõ
+  nét kèm câu của máy chủ và nút **«Thử lại»** viền (nhãn nhà, như
+  `ErrorState`; **không** dùng «Gửi lại», chữ ấy đã có nghĩa «gửi cho người
+  này lần nữa» ở đợt thu) cùng nút «Bỏ». Lỗi **vĩnh viễn** không mời thử lại:
+  `sticker_unknown` (bản app không có hình), `reply_target_deleted`,
+  `permission_denied`, và ba mã idempotency — `idempotency_request_in_flight`
+  nói thẳng là đừng bấm nữa. Hàng chờ **không** vào `chat.tin`: `cursorMoiNhat`
+  poll từ đầu danh sách ấy, nên một cursor bịa ở đầu sẽ đầu độc mọi lần poll.
+  Gửi chữ dùng lại chìa **chỉ khi từng byte giống hệt** (thân và tin trả lời),
+  vì cùng chìa khác thân là `422 idempotency_key_reuse`.
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
