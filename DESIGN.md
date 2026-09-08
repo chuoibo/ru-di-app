@@ -1105,6 +1105,12 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   đang dùng cả hai. Sàn số điểm đọc từ số đo thật (8.577.360 điểm / 9.504 bản
   vẽ), không lấy tròn. **15 đột biến trên chính cổng đều đỏ**, gồm ba cái từng
   sống sót: bỏ bề dày nét, bỏ qua mọi lớp nét, và miễn trừ nhầm mọi lớp tô.
+- **Chỗ hẹp nhất hiện nay là MẮT PHẢI, không phải mày hay tay.** Đo trên toàn
+  bộ tám sticker: «Chờ tí» bản chi tiết còn cách mép nếp gấp **0,29 đơn vị**
+  (bản rút gọn 0,58), rồi mới tới «Tuyệt vời» 0,95. Đó là biên sẽ vỡ trước, và
+  nó đang là **hệ quả của cái chặn ±1.6 của `nhin`** chứ không phải một luật có
+  tên. Ai dời mắt, đổi `nhin`, hay tăng `dam` cho một pose nghiêng nhiều thì
+  nhìn số này trước — cổng sẽ đỏ, nhưng biết trước thì đỡ mất một vòng.
 - **Cái cổng hình học không đo được thì ghim bằng ca riêng.** «Mày này đọc ra
   mệt hay đọc ra cáu» không phải chuyện hình học, nên vẽ `met` ngược chiều lại
   **không** làm cổng nếp gấp đỏ. Quyết định thiết kế được ghim thẳng: **sáu biểu

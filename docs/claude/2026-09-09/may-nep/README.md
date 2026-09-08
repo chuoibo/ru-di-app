@@ -89,6 +89,20 @@ nháp: bỏ bề dày nét, bỏ qua mọi lớp nét, và miễn trừ nhầm m
 thu dải quét `nghieng` về một giá trị, khi bỏ quét sticker hoặc cảnh, và khi hạ
 số mẫu trên mỗi cubic.
 
+## Chỗ hẹp nhất còn lại
+
+Không phải mày, cũng không phải tay: là **mắt phải**. Đo trên cả tám sticker,
+tính từ mép nếp gấp:
+
+| | cách mép |
+|---|---|
+| «Chờ tí» chi tiết | **0,29** |
+| «Chờ tí» rút gọn | 0,58 |
+| «Tuyệt vời» chi tiết | 0,95 |
+
+0,29 là biên sẽ vỡ trước, và nó đang là **hệ quả của cái chặn ±1.6 của `nhin`**
+chứ không phải một luật có tên. Ai dời mắt hoặc đổi `nhin` thì nhìn số này trước.
+
 ## Cái cổng KHÔNG đo được
 
 Hình học thì gác được; «cái mày này đọc ra mệt hay đọc ra cáu» thì không. Vẽ
