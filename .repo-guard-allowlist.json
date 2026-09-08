@@ -941,6 +941,62 @@
         "controlled-artifact"
       ],
       "reason": "Như trên, cuộn tới hàng «Đồi Thiên Phúc Đức»: hàng có ảnh minh hoạ in ghi công."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-sang.png",
+      "sha256": "785a478d390bc83859153f0710a72e3d4091225bd54a61400e3472581463780f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng tám sticker của bảng HINH đã ship, cỡ bubble 120 và khay 64, nền sáng, xuất từ dist-test bằng script scratchpad. Vector do mã sinh."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-toi.png",
+      "sha256": "4b614104b2525f4aada9002731bebeeea0c9aa15f489a61efd50925e5384c80c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-1.0.png",
+      "sha256": "25301923e82594f2e293ddb2e5c239f7c4fad8fe109296d1e85b03a940923bb7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev (dữ liệu tổng hợp): sticker «Chờ tí» vẽ bằng ngôn ngữ Nếp trong hai bubble 120 (người khác / mình). Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-toi.png",
+      "sha256": "36e0522f3fa99d0030915d000366fc0a32ea32782f5f1f835a54dc6d1ad2bee6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-di-thoi-1.0.png",
+      "sha256": "a61e805f088c4c7e573467bc399eff92a1bbdc0df16ce9b17af1f0394d0c946f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: bubble với «Đi thôi!» (hình cũ) để so cùng cỡ cùng chỗ. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-1.0.png",
+      "sha256": "212b0d2c88520979bb4f6af133a3dfc727b4cd652bd220dae7d298ef9289f3f0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: khay sticker thật (KhaySticker, ô 64) với «Chờ tí» cạnh bảy hình cũ. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-toi.png",
+      "sha256": "8a64bcdb1c667bc3a85fd6ce94278325c4d286a268e2e6a0949a92a4302594b7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
     }
   ]
 }
