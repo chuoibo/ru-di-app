@@ -66,10 +66,11 @@ import { useTinNhan } from "../../chat/useTinNhan";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
-import { IconButton, TopBar } from "../../ui";
+import { IconButton, RudiButton, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { Sticker } from "../../ui/stickers/Sticker";
+import type { TinChoGui } from "../../chat/hang-cho";
 import { Sheet } from "../../ui/Sheet";
 import { CaiDatNhomSheet } from "./CaiDatNhom";
 import { KhaySticker } from "./KhaySticker";
@@ -87,6 +88,49 @@ const LENH = [
 /** A body that calls on the model (not `/vote`, which the server answers itself). */
 function goiMoHinh(body: string): boolean {
   return /^\/(plan|chia-?bill)\b/i.test(body) || /@(rủ đi|ru di|rudi)/i.test(body);
+}
+
+/**
+ * One send that has not landed yet, drawn where the message will be.
+ *
+ * The picture is the state: dimmed while it travels, solid again when it
+ * failed, with the server's own sentence under it and the house's «Thử lại»
+ * beside it. A refusal that pressing again cannot fix (an id this build does
+ * not know, a quoted message that is gone) says so and offers only to drop the
+ * row -- a retry button that will fail the same way is a worse answer than
+ * none (review delta 08/09, F32).
+ */
+function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLai: () => void; onBoQua: () => void }) {
+  const { colors, space } = useRudiTheme();
+  const hong = tin.trangThai === "that-bai";
+  return (
+    <View style={styles.choGui}>
+      <View style={[styles.hang, styles.hangToi]}>
+        <View style={[styles.khoi, styles.khoiToi, hong ? undefined : styles.mo]}>
+          {tin.kind === "sticker" ? (
+            <View style={styles.stickerHang}>
+              <Sticker id={tin.than} size={120} />
+            </View>
+          ) : (
+            <View style={[styles.bong, { backgroundColor: colors.card, borderColor: colors.line }]}>
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>Ảnh</Text>
+            </View>
+          )}
+          {hong ? (
+            <>
+              <Text style={[typography.caption, { color: colors.warn }]}>{tin.loi ?? "Chưa gửi được."}</Text>
+              <View style={[styles.hang, { gap: space.sm }]}>
+                {tin.thuLaiDuoc ? <RudiButton compact label="Thử lại" onPress={onThuLai} variant="outline" /> : null}
+                <RudiButton compact label="Bỏ" onPress={onBoQua} variant="ghost" />
+              </View>
+            </>
+          ) : (
+            <Text style={[typography.caption, { color: colors.inkFaint }]}>Đang gửi...</Text>
+          )}
+        </View>
+      </View>
+    </View>
+  );
 }
 
 export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
@@ -289,21 +333,38 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     }
   };
 
-  /** One sticker from the tray, optionally as a reply to the quoted message. */
+  /**
+   * One sticker from the tray, optionally as a reply to the quoted message.
+   *
+   * Not guarded by `dangGui`: that is the flag of the words being typed, and a
+   * sticker is a different send. What the person sees while it travels is the
+   * picture itself, dimmed, at the newest end of the thread -- and if it fails
+   * it stays there with the reason and a way to send it again, instead of
+   * vanishing behind a notice that does not say which picture was lost (F32).
+   */
   const guiStickerChon = async (id: string) => {
     setKhaySticker(false);
-    if (dangGui) return;
     setThongBao(null);
+    const tra = traLoi;
+    // The queued row carries the quoted message from here on, so the composer
+    // strip clears at once and a retry still answers the right message.
+    setTraLoi(null);
     try {
-      await chat.guiSticker(id, traLoi?.id ?? null);
-      setTraLoi(null);
+      await chat.guiSticker(id, tra);
       veCuoi();
-    } catch (error) {
-      setThongBao({
-        tu: "Rủ Đi",
-        cau: error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null),
-        luc: new Date().toISOString(),
-      });
+    } catch {
+      // The row says what happened, in place. A general notice would say it a
+      // second time and further from the picture it is about.
+    }
+  };
+
+  /** Send a failed row again, with the key it was minted with. */
+  const thuLaiGui = async (khoa: string) => {
+    try {
+      await chat.thuLaiMot(khoa);
+      veCuoi();
+    } catch {
+      // Same as above: the row itself carries the second refusal.
     }
   };
 
@@ -528,7 +589,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       </View>
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. */}
-      {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null ? (
+      {!chat.dangNap && chat.tin.length === 0 && dangGuiThan === null && chat.hangCho.length === 0 ? (
         <View style={[styles.rong, { paddingHorizontal: space.md }]}>
           <EmptyState
             body={nhanRieng ? `Nhắn gì đó cho ${tenNhom}, hoặc gõ / để rủ Rủ Đi AI vào.` : "Nhắn gì đó cho hội, hoặc gõ / để rủ Rủ Đi AI vào."}
@@ -547,7 +608,16 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         // Inverted, so the header sits at the newest end: what is being sent
         // shows there at once, and a command shows the model is being asked.
         ListHeaderComponent={
-          dangGuiThan === null && thongBao !== null ? (
+          <>
+            {/* Everything on its way that has nowhere else to be seen. Words
+                have the composer, which gets them back on a failure, so only
+                pictures and stickers draw a row here. */}
+            {chat.hangCho
+              .filter((t) => t.kind !== "text")
+              .map((t) => (
+                <HangChoGui key={t.attempt.key} onBoQua={() => chat.boQua(t.attempt.key)} onThuLai={() => void thuLaiGui(t.attempt.key)} tin={t} />
+              ))}
+            {dangGuiThan === null && thongBao !== null ? (
             <View style={styles.hang}>
               <View style={[styles.khoi, styles.khoiAi]}>
                 <View style={[styles.choAi, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
@@ -586,7 +656,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
                 </View>
               ) : null}
             </View>
-          ) : null
+          ) : null}
+          </>
         }
         ListFooterComponent={
           chat.dangNapCu ? (

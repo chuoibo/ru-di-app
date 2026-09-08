@@ -16,7 +16,16 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
-import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../api";
+import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../api";
+import {
+  boKhoiHang,
+  danhDauLoi,
+  danhDauThuLai,
+  khoaDungLai,
+  themVaoHang,
+  timTrongHang,
+  type TinChoGui,
+} from "./hang-cho";
 import {
   boPhanUng,
   cursorCuNhat,
@@ -34,6 +43,7 @@ import {
   type LoaiPhanUng,
   type Tin,
   type TinDaGui,
+  type TrichDan,
 } from "./tin-song";
 
 export const NHIP_POLL_MS = 4000;
@@ -44,6 +54,12 @@ export type TrangThaiChat = {
   dangNapCu: boolean;
   hetTinCu: boolean;
   loi: string | null;
+  /**
+   * What is on its way or has failed, newest first. Deliberately NOT part of
+   * `tin`: that list is the server's, and `cursorMoiNhat` polls from its head,
+   * so a row with an invented cursor at the front would poison every poll.
+   */
+  hangCho: TinChoGui[];
 };
 
 function loiRaChu(error: unknown): string {
@@ -57,8 +73,13 @@ export function useTinNhan(contextId: string, personId: string) {
     dangNapCu: false,
     hetTinCu: false,
     loi: null,
+    hangCho: [],
   });
   const tinRef = useRef<Tin[]>([]);
+  // Held in a ref as well as in state, for the same reason `tin` is: a
+  // re-render between the press and the reply must not be able to lose the
+  // key and turn a retry into a second write (`api.ts`, `attemptFor`).
+  const hangRef = useRef<TinChoGui[]>([]);
   const dangFocus = useRef(false);
   const daDanhDau = useRef<string | null>(null);
 
@@ -66,6 +87,12 @@ export function useTinNhan(contextId: string, personId: string) {
     tinRef.current = tin;
     setTrang((cu) => ({ ...cu, tin, ...phan }));
   }, []);
+
+  const datHang = useCallback((hang: TinChoGui[]) => {
+    hangRef.current = hang;
+    setTrang((cu) => ({ ...cu, hangCho: hang }));
+  }, []);
+
 
   const napDau = useCallback(async () => {
     try {
@@ -88,6 +115,37 @@ export function useTinNhan(contextId: string, personId: string) {
       // tries again and a send surfaces its own failure.
     }
   }, [contextId, personId, dat]);
+
+  /** The code behind a refusal, so a permanent one offers no retry. */
+  const maLoi = (error: unknown): string | null => (error instanceof ApiError ? error.code : null);
+
+  /**
+   * One logical send, from the press to the server's row.
+   *
+   * `attempt` is minted by the caller on the press and then carried by the
+   * queued row, so `thuLaiMot` below hands the SAME key back to the server.
+   * A replay returns the original 201 and `gopTin` dedupes it against the row
+   * already held, so a retry cannot leave two messages behind.
+   */
+  const chay = useCallback(
+    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>): Promise<TinDaGui> => {
+      datHang(themVaoHang(hangRef.current, cho));
+      try {
+        const daGui = await goi(cho.attempt);
+        const them: Tin[] = [daGui];
+        if (daGui.companion?.message) them.push(daGui.companion.message);
+        if (daGui.expense_card) them.push(daGui.expense_card);
+        datHang(boKhoiHang(hangRef.current, cho.attempt.key));
+        dat(gopTin(tinRef.current, them), { loi: null });
+        void napMoi();
+        return daGui;
+      } catch (error) {
+        datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
+        throw error;
+      }
+    },
+    [dat, datHang, napMoi],
+  );
 
   const napCuHon = useCallback(async () => {
     const before = cursorCuNhat(tinRef.current);
@@ -138,16 +196,21 @@ export function useTinNhan(contextId: string, personId: string) {
 
   const gui = useCallback(
     async (body: string, replyToId: string | null = null): Promise<TinDaGui> => {
-      const daGui = await guiTin(contextId, personId, body, newAttempt(), { replyToId });
-      const them: Tin[] = [daGui];
-      if (daGui.companion?.message) them.push(daGui.companion.message);
-      if (daGui.expense_card) them.push(daGui.expense_card);
-      dat(gopTin(tinRef.current, them), { loi: null });
-      // A poll card or anything else the server wrote arrives on the next poll.
-      void napMoi();
-      return daGui;
+      // Pressing send again after a failure, with the same words and the same
+      // quoted message, is the SAME send: it reuses the key, so if the first
+      // request actually landed the second one replays it instead of writing a
+      // second message. Changed words are a different send and mint a new key.
+      const cu = hangRef.current.find((t) => t.kind === "text" && t.trangThai === "that-bai") ?? null;
+      const attempt = khoaDungLai(cu, body, replyToId) ?? newAttempt();
+      // Different words: the old draft's key can never be used again, so drop
+      // its row rather than let dead keys pile up behind the composer.
+      if (cu !== null && cu.attempt.key !== attempt.key) datHang(boKhoiHang(hangRef.current, cu.attempt.key));
+      return chay(
+        { attempt, kind: "text", than: body, traLoi: null, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
+        (a) => guiTin(contextId, personId, body, a, { replyToId }),
+      );
     },
-    [contextId, personId, dat, napMoi],
+    [contextId, personId, chay, datHang],
   );
 
   /**
@@ -159,24 +222,55 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const guiAnhMoi = useCallback(
     async (imageUrl: string, caption: string | null): Promise<TinDaGui> => {
-      const daGui = await guiAnh(contextId, personId, imageUrl, caption, newAttempt());
-      dat(gopTin(tinRef.current, [daGui]), { loi: null });
-      void napMoi();
-      return daGui;
+      const cu = hangRef.current.find((t) => t.kind === "image" && t.than === imageUrl && t.trangThai === "that-bai") ?? null;
+      const attempt = khoaDungLai(cu, imageUrl, null) ?? newAttempt();
+      if (cu !== null && cu.attempt.key !== attempt.key) datHang(boKhoiHang(hangRef.current, cu.attempt.key));
+      return chay(
+        { attempt, kind: "image", than: imageUrl, traLoi: null, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
+        (a) => guiAnh(contextId, personId, imageUrl, caption, a),
+      );
     },
-    [contextId, personId, dat, napMoi],
+    [contextId, personId, chay, datHang],
   );
 
   /** One sticker, by id; the server refuses an id outside the vocabulary. */
   const guiStickerMoi = useCallback(
-    async (stickerId: string, replyToId: string | null = null): Promise<TinDaGui> => {
-      const daGui = await guiSticker(contextId, personId, stickerId, newAttempt(), { replyToId });
-      dat(gopTin(tinRef.current, [daGui]), { loi: null });
-      void napMoi();
-      return daGui;
+    async (stickerId: string, traLoi: TrichDan | null = null): Promise<TinDaGui> => {
+      // Every press is its own send: choosing the same sticker twice on
+      // purpose is two messages, and each carries its own key.
+      return chay(
+        { attempt: newAttempt(), kind: "sticker", than: stickerId, traLoi, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() },
+        (a) => guiSticker(contextId, personId, stickerId, a, { replyToId: traLoi?.id ?? null }),
+      );
     },
-    [contextId, personId, dat, napMoi],
+    [contextId, personId, chay],
   );
+
+  /**
+   * Send that row again, with the key it was minted with.
+   *
+   * This is the difference between a retry and a second send: the server
+   * recognises the key, and either writes the message once or replays the
+   * answer it already gave. Nothing here mints a new attempt.
+   */
+  const thuLaiMot = useCallback(
+    async (khoa: string): Promise<TinDaGui | null> => {
+      const cho = timTrongHang(hangRef.current, khoa);
+      if (cho === null || cho.trangThai !== "that-bai") return null;
+      datHang(danhDauThuLai(hangRef.current, khoa));
+      const goi = (a: Attempt): Promise<TinDaGui> =>
+        cho.kind === "sticker"
+          ? guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null })
+          : cho.kind === "image"
+            ? guiAnh(contextId, personId, cho.than, null, a)
+            : guiTin(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
+      return chay({ ...cho, trangThai: "dang-gui", loi: null }, goi);
+    },
+    [contextId, personId, chay, datHang],
+  );
+
+  /** Give up on a row that failed: it leaves the queue and nothing was written. */
+  const boQua = useCallback((khoa: string) => datHang(boKhoiHang(hangRef.current, khoa)), [datHang]);
 
   /**
    * Take back one's own message. The held row flips at once from the 204
@@ -202,5 +296,5 @@ export function useTinNhan(contextId: string, personId: string) {
     [contextId, personId, dat],
   );
 
-  return { ...trang, napCuHon, napMoi, gui, guiAnhMoi, guiSticker: guiStickerMoi, xoaTin: xoaTinCuaToi, doiPhanUng, taiLai: napDau };
+  return { ...trang, napCuHon, napMoi, gui, guiAnhMoi, guiSticker: guiStickerMoi, thuLaiMot, boQua, xoaTin: xoaTinCuaToi, doiPhanUng, taiLai: napDau };
 }

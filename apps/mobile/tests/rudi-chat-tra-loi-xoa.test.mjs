@@ -71,6 +71,32 @@ test("guiTin không mang reply_to_id khi không trả lời; mang đúng id khi 
   }
 });
 
+test("thử lại là GỬI LẠI CÙNG MỘT CHÌA: hai lời gọi cùng Attempt ra cùng header, thân giống từng byte", async () => {
+  // Điều kiện đóng của F32: máy chủ nhận diện chìa và phát lại câu trả lời cũ
+  // (`app/api/idempotency.py`, `Replay`), nên lần thử lại sau khi mất phản hồi
+  // không thể thành tin thứ hai. Chứng minh ở phía client: chìa và thân đi ra
+  // dây giống hệt nhau ở cả hai lần.
+  datTokenPhien("tok");
+  const daGoi = [];
+  const truoc = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    daGoi.push({ url, init });
+    return traLoi({ ...tin("s", { kind: "sticker", body: "cho-ti" }), intent: null }, 201);
+  };
+  const attempt = { key: "k-thu-lai", at: 1 };
+  try {
+    await guiSticker(CTX, ME, "cho-ti", attempt, { replyToId: "m-1" });
+    await guiSticker(CTX, ME, "cho-ti", attempt, { replyToId: "m-1" });
+    assert.equal(daGoi.length, 2);
+    assert.equal(daGoi[0].init.headers["Idempotency-Key"], "k-thu-lai");
+    assert.equal(daGoi[1].init.headers["Idempotency-Key"], daGoi[0].init.headers["Idempotency-Key"]);
+    assert.equal(daGoi[1].init.body, daGoi[0].init.body, "khác một byte là 422 idempotency_key_reuse");
+    assert.equal(daGoi[1].url, daGoi[0].url);
+  } finally {
+    globalThis.fetch = truoc;
+  }
+});
+
 test("guiSticker gửi kind sticker với thân là id, không ảnh, không thẻ; có Idempotency-Key", async () => {
   datTokenPhien("tok");
   const daGoi = [];
