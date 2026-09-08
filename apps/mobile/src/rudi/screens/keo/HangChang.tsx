@@ -58,7 +58,7 @@ function AnhChang({ anh, alt, loai }: { anh: AnhCoGhiCong; alt: string; loai?: s
   return (
     <View style={[styles.khungAnhChang, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
       {hong ? (
-        <View accessibilityLabel={`Chưa tải được ảnh: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
+        <View accessible accessibilityLabel={`Chưa tải được ảnh: ${alt}`} style={[styles.anhChang, styles.anhChangVe, { borderRadius: radius.small - 2 }]}>
           <GuGlyph id={guTheoLoai(loai ?? "")} size={28} tone="accent" />
         </View>
       ) : (
@@ -85,9 +85,10 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
       {children}
       {/* The credit is a line of the stop, beside the thumbnail it qualifies,
           so it scrolls with the picture and never ends up a screen away from
-          it (ADR-0017 §2.5). Two lines: a long author name wraps rather than
-          ends in an ellipsis. */}
-      {anh ? <Text numberOfLines={2} style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(anh.anh.nguon)}</Text> : null}
+          it (ADR-0017 §2.5). No line cap: the column beside the hour and the
+          thumbnail is narrow, and at font 1.3 a long author name has to wrap
+          rather than end in an ellipsis; the stop simply grows. */}
+      {anh ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(anh.anh.nguon)}</Text> : null}
     </>
   );
   return (

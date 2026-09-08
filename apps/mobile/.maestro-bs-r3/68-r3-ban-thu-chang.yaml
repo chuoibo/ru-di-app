@@ -8,10 +8,14 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
+# Neo vào caption của cảnh đầu và căn giữa: cảnh ghế nằm trọn phía trên caption,
+# không bị mép trên cắt (review vòng 2 ghi chú ở F22). Không neo vào tiêu đề mục:
+# tiêu đề hiện ở đáy màn thì cảnh vẫn nằm dưới mép.
 - scrollUntilVisible:
     element:
-      text: "Cảnh rỗng · A/B có Nếp và tắt Nếp"
+      text: "Một chiếc ghế được kéo ra, chừa sẵn chỗ"
     direction: DOWN
+    centerElement: true
     timeout: 20000
 - takeScreenshot: r3-68-canh-ab-du
 - runFlow:
