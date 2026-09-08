@@ -7,11 +7,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
+# Không centerElement: với nút gần cuối nội dung, Maestro báo «không thấy» dù nút
+# nằm trọn giữa màn (ảnh FAILED lượt tối 08/09) — bẫy đã ghi ở bảng chính.
 - scrollUntilVisible:
     element:
       text: "Mở khay sticker"
     direction: DOWN
-    centerElement: true
     timeout: 20000
 - assertVisible: "Sticker: Chờ tí"
 - takeScreenshot: r4-70-bubble-cho-ti
