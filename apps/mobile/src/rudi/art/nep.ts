@@ -40,6 +40,12 @@ export const POSE_NEP = [
   "ngoi-xe",
   "dua-hai-tay",
   "nhay",
+  // 09/09 finish review: three scenes had reused an existing pose beside a
+  // different rectangle, which is the one thing the brief forbade. These are
+  // the bodies that make them different situations.
+  "nang-bong",
+  "voi-len",
+  "ghe-nhin",
 ] as const;
 export type PoseNep = (typeof POSE_NEP)[number];
 
@@ -100,6 +106,12 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   "dua-hai-tay": { nghieng: 3, nhin: [1.2, 0.8], bieuCam: "nhuong", dang: "dung" },
   // Both feet off the ground.
   nhay: { nghieng: 0, nhin: [0, -0.9], bieuCam: "hao-hung", dang: "nhun" },
+  // Holding something light up in front of the face and looking into it.
+  "nang-bong": { nghieng: -2, nhin: [1.1, -1.2], bieuCam: "hoi", dang: "dung" },
+  // Reaching up for a line overhead, weight on the front foot.
+  "voi-len": { nghieng: 4, nhin: [0.8, -1.4], bieuCam: "binh-than", dang: "buoc" },
+  // Bending sideways to look through something narrow.
+  "ghe-nhin": { nghieng: 11, nhin: [1.6, 0.2], bieuCam: "hoi", dang: "chong" },
 };
 
 /** The feet stand on this line of the 96-box; a scene puts its floor here. */
@@ -225,7 +237,9 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
         // One far up, one level: the shape of «ơ?».
         return [
           { d: netGay([S(34, 38.5), S(42, 37.5)]), mau: "muc", net: w },
-          { d: netGay([S(47.5, 32), S(56, 34)]), mau: "muc", net: w },
+          // Kept clear of the coral fold (H..G..Bp): a brow drawn across the
+          // corner puts a black bar through the identity mark.
+          { d: netGay([S(48, 33.5), S(55, 35.5)]), mau: "muc", net: w },
         ];
       case "quyet":
         // Both lowered toward the middle: concentration, not anger.
@@ -353,10 +367,11 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       tuThe = [...tay(R, P(90, 34)), ...tay(L, P(8, 66))];
       break;
     case "giu-cho":
-      // Keeping a seat: a hand rests on the rail of the chair beside it
-      // (x 88, at chest height), the other arm at rest, looking across to
-      // the seat still free.
-      tuThe = [...tay(R, P(88, 48)), ...tay(L, P(14, 68))];
+      // Keeping a seat: the far hand reaches ACROSS and DOWN, to box (90, 66),
+      // where a table top or a rail is; the near arm rests. It used to stop at
+      // chest height, which left the gesture ending in mid-air once the figure
+      // sat down at a table (finish review 09/09).
+      tuThe = [...tay(R, P(90, 66)), ...tay(L, P(14, 68))];
       break;
     case "gop-y": {
       // Reading a small folded route map held out to the right.
@@ -424,30 +439,37 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // small flag at box (90, 26); the near arm swings back behind the body.
       tuThe = [...tay(R, P(90, 26)), ...tay(L, P(6, 62))];
       break;
-    case "nang-to":
-      // Both hands cradle something at chest height in front, box (64, 62):
-      // an empty bowl, held up to ask what goes in it.
-      tuThe = [...tay(R, P(88, 56)), ...tay(L, P(66, 60))];
+    case "nang-to": {
+      // Both hands cradle an empty bowl held out in front, at box (62, 58) and
+      // (84, 58) -- LEVEL, so a rim can rest on both. The near arm bends at an
+      // elbow for the same reason `dua-hai-tay` does: run it straight from the
+      // far shoulder and one capsule crosses the whole torso and the mouth,
+      // which is what the finish review saw at 64dp.
+      const khuyu = P(34, 70);
+      tuThe = [...tay(R, P(84, 58)), { d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(62, 58))];
       break;
+    }
     case "moi-ly":
-      // Offering: the far arm straightens out and DOWN to the near edge of the
-      // table at box (92, 68), where the sticker stands the cup, and the near
-      // arm stays back. The reach is what says «this one is for you».
+      // Offering: the far arm straightens out to box (88, 60), where the
+      // sticker stands the cup, and the near arm stays back. The reach is what
+      // says «this one is for you».
       tuThe = [...tay(R, P(88, 60)), ...tay(L, P(10, 62))];
       break;
     case "dat-tay":
-      // Concluding: the far arm goes straight down onto the sheet at box
-      // (80, 74) with the weight over it; the near arm hangs.
-      tuThe = [...tay(R, P(80, 74)), ...tay(L, P(12, 66))];
+      // Concluding: the far arm comes DOWN onto the sheet at box (78, 84),
+      // near the floor, and the near arm braces back. Pressing something down
+      // low is a different silhouette from holding something out at the waist;
+      // at 64dp the two used to be the same shape with a different mark in it.
+      tuThe = [...tay(R, P(78, 84)), ...tay(L, P(10, 54))];
       break;
     case "ngoi-xe":
       // Stuck: one hand still on the bar at box (86, 54), the other dropped.
       tuThe = [...tay(R, P(86, 54)), ...tay(L, P(22, 72))];
       break;
     case "dua-hai-tay": {
-      // Handing something over with both hands: the near arm bends at the
-      // elbow so the two hands meet in front, around box (76, 70), instead of
-      // one arm crossing the body.
+      // Handing something over with both hands: the far hand at box (82, 66),
+      // the near one at (70, 72) after an elbow, so the two meet in front
+      // instead of one arm crossing the body.
       const khuyu = P(40, 70);
       tuThe = [...tay(R, P(82, 66)), { d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(70, 72))];
       break;
@@ -456,6 +478,23 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // Off the ground, arms wide and up: wider than `vui`, which keeps its
       // quieter raise for the scenes.
       tuThe = [...tay(L, P(4, 22)), ...tay(R, P(93, 18))];
+      break;
+    case "nang-bong": {
+      // A paper speech bubble held up at box (52, 34) and (76, 30): both hands
+      // under its lower edge, arms up rather than across.
+      const khuyu = P(32, 62);
+      tuThe = [...tay(R, P(76, 30)), { d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(52, 34))];
+      break;
+    }
+    case "voi-len":
+      // One arm straight up to a line overhead at box (72, 10); the other
+      // holds what is about to go on it, low at box (16, 74).
+      tuThe = [...tay(R, P(72, 10)), ...tay(L, P(16, 74))];
+      break;
+    case "ghe-nhin":
+      // Leaning sideways to look through a gap: the near hand braces on the
+      // thing at box (86, 44), the far arm goes back for balance.
+      tuThe = [...tay(R, P(86, 44)), ...tay(L, P(6, 48))];
       break;
     case "vui":
     default: {

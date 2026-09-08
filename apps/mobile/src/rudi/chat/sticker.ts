@@ -224,9 +224,12 @@ function diThoi(chiTiet: boolean): LopVe[] {
 /** «Ăn gì?»: an empty bowl held up in both hands, and a face that is asking. */
 function anGi(chiTiet: boolean): LopVe[] {
   const { nguoi, P } = dat("nang-to", 0.84, -2, chiTiet);
-  const [tx] = P(88, 56);
-  const [nx, ny] = P(66, 60);
-  const cx = (tx + nx) / 2, cy = ny + 4, r = 15;
+  const [tx, ty] = P(84, 58);
+  const [nx] = P(62, 58);
+  // The rim sits AT hand height and no wider than the two hands, so both of
+  // them are on it. It used to hang 4 units below and 8 units wider, which is
+  // «a bowl near a figure» rather than «a bowl being held».
+  const cx = (tx + nx) / 2, cy = ty, r = (tx - nx) / 2 + 3;
   const w = chiTiet ? 2.4 : 3;
   const to: LopVe[] = [
     { d: quatVe(cx, cy, r, 0, Math.PI), mau: "gap" },
@@ -239,7 +242,7 @@ function anGi(chiTiet: boolean): LopVe[] {
 /** «Cà phê không?»: the cup pushed across to whoever is being asked. */
 function caPheKhong(chiTiet: boolean): LopVe[] {
   const { nguoi, P } = dat("moi-ly", 0.78, -2, chiTiet);
-  const [hx, hy] = P(92, 68);
+  const [hx, hy] = P(88, 60);
   const w = chiTiet ? 2.4 : 3;
   const x = hx - 5, y = hy - 4, bw = 20, bh = 20;
   const ly: LopVe[] = [
@@ -253,17 +256,19 @@ function caPheKhong(chiTiet: boolean): LopVe[] {
 
 /** «OK, chốt!»: the mark being pressed down on the plan. Weight over the hand. */
 function okChot(chiTiet: boolean): LopVe[] {
-  const { nguoi, P } = dat("dat-tay", 0.78, -6, chiTiet);
-  const [hx, hy] = P(80, 74);
+  const { nguoi, P } = dat("dat-tay", 0.74, -3, chiTiet);
+  const [hx, hy] = P(78, 84);
   const w = chiTiet ? 2.2 : 2.8;
-  const to: [number, number][] = [[hx - 14, hy - 2], [hx + 26, hy - 6], [hx + 29, hy + 15], [hx - 11, hy + 19]];
+  const to: [number, number][] = [[hx - 16, hy - 10], [hx + 22, hy - 14], [hx + 25, hy + 2], [hx - 13, hy + 6]];
   const giay: LopVe[] = [
     { d: daGiacVe(to), mau: "giay" },
     { d: daGiacVe(to), mau: "muc", net: w },
     // The tick is being MADE, not printed: two strokes of the same pen.
-    { d: netGay([[hx + 4, hy + 6], [hx + 10, hy + 12], [hx + 22, hy - 1]]), mau: "gap", net: w * 1.7 },
+    { d: netGay([[hx + 3, hy - 5], [hx + 9, hy], [hx + 20, hy - 10]]), mau: "gap", net: w * 1.7 },
   ];
-  return [...nguoi, ...giay];
+  // Sheet first, THEN the figure: the hand that presses it has to be visible,
+  // or the gesture that carries «chốt» is behind the paper (finish review).
+  return [...giay, ...nguoi];
 }
 
 /** «Kẹt xe»: sitting on something that is not moving, one foot down. */
@@ -302,25 +307,28 @@ function traTienNe(chiTiet: boolean): LopVe[] {
   const [ax, ay] = P(82, 66);
   const [bx, by] = P(70, 72);
   const w = chiTiet ? 2.2 : 2.8;
-  const tor = (dx: number, dy: number): [number, number][] => [
-    [bx - 7 + dx, by - 10 + dy],
-    [ax + 18 + dx, ay - 13 + dy],
-    [ax + 20 + dx, ay + 2 + dy],
-    [bx - 5 + dx, by + 5 + dy],
-  ];
-  const truoc = tor(0, 5);
+  // The note starts AT the hands and runs away from the body, so both hands
+  // stay outside it and in front of it. The first version built the quad
+  // around the hand coordinates, so it swallowed them and painted over the
+  // figure: what was left was an object, and an object handed by nobody is the
+  // transaction artifact the ADR boundary rules out.
+  const tren: [number, number][] = [[ax + 1, ay - 9], [ax + 26, ay - 14], [ax + 28, ay - 1], [ax + 3, ay + 4]];
+  const duoi: [number, number][] = [[bx + 1, by - 5], [bx + 26, by - 10], [bx + 28, by + 3], [bx + 3, by + 8]];
+  const nep: [number, number][] = [tren[0], [tren[0][0] + 9, tren[0][1] - 1.6], [tren[3][0] + 9, tren[3][1] - 1.6], tren[3]];
   const tien: LopVe[] = [
-    // Two notes, offset. Not an envelope with a folded corner: that read as
-    // mail, which is the register the concept note ruled out. And no tick, no
-    // coin and no currency mark, because this is a person saying «here», not
-    // the system saying the money arrived.
-    { d: daGiacVe(tor(0, 0)), mau: "giay" },
-    { d: daGiacVe(tor(0, 0)), mau: "muc", net: w },
-    { d: daGiacVe(truoc), mau: "giay" },
-    { d: daGiacVe(truoc), mau: "muc", net: w },
-    { d: netGay([[truoc[0][0] + 4, truoc[0][1] + 4], [truoc[1][0] - 4, truoc[1][1] + 4]]), mau: "gap", net: w * 1.4 },
+    // Two notes, fanned, with the near one's short edge FOLDED back toward the
+    // giver. Deliberately not a centred horizontal band across a rounded card:
+    // that is the magnetic-stripe glyph, and on the dark scheme it read as a
+    // bank card. No tick, no coin, no currency mark either.
+    { d: daGiacVe(duoi), mau: "giay" },
+    { d: daGiacVe(duoi), mau: "muc", net: w },
+    { d: daGiacVe(tren), mau: "giay" },
+    { d: daGiacVe(tren), mau: "muc", net: w },
+    { d: daGiacVe(nep), mau: "gap" },
+    { d: daGiacVe(nep), mau: "muc", net: w },
   ];
-  return [...nguoi, ...tien];
+  // Notes first, figure second: the hands must be seen giving them.
+  return [...tien, ...nguoi];
 }
 
 /** «Tuyệt vời»: both feet off the ground, and one burst. */
@@ -359,7 +367,8 @@ const HINH_KHAC: LopSticker[] = [
 
 /**
  * A second reading for the small tile: an optical size, not a scale-down.
- * Only the shapes that have one appear here; the rest are legible as drawn.
+ * Since 09/09 ALL eight have one: the tray draws a second, simpler drawing
+ * rather than the 120dp one shrunk, so there is no fallback left to describe.
  */
 const HINH_RUT_GON: Record<StickerId, LopSticker[]> = {
   "di-thoi": tuLopVe(diThoi(false)),

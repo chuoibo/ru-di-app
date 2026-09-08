@@ -1000,7 +1000,7 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-sang.png",
-      "sha256": "31e2d2c9a373db75e75a631b1c3c900974084dee7b493b8ecb96bbf548cc280e",
+      "sha256": "097435e7c3542a733e94acd51b0411cc21aad5865ffbabaab5525da15a5c842e",
       "rules": [
         "controlled-artifact"
       ],
@@ -1008,7 +1008,7 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
-      "sha256": "f5e2069d1968473ca274e6919d2234064809fd22a9818c76ce5c1fb43f2d0127",
+      "sha256": "12d9b709e6af2c44b09d5cbf52368494cc6b8d882b0a5577cf0e30b1cb1ebfc0",
       "rules": [
         "controlled-artifact"
       ],
@@ -1016,11 +1016,11 @@
     },
     {
       "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
-      "sha256": "0f7c2039d86da64cba39661d243cc0f81adcc67a4a7e0c1f438b31a7b31caef1",
+      "sha256": "26cdbe439d2b8a3581f5ff1332b9c91c6e88012eabed01d15943873d6b16bfff",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng mười sáu pose Nếp ở ba cỡ, nền sáng: chứng minh mỗi pose có dáng và mặt riêng."
+      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng: chứng minh mỗi pose có dáng và mặt riêng."
     }
   ]
 }
