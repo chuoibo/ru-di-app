@@ -83,7 +83,7 @@ export function MediaSlot({
             style={StyleSheet.absoluteFill}
           />
         ) : (
-          <View accessibilityLabel={alt} style={[StyleSheet.absoluteFill, styles.center]}>
+          <View accessible accessibilityLabel={alt} style={[StyleSheet.absoluteFill, styles.center]}>
             {fallback}
           </View>
         )}

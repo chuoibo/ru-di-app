@@ -17,11 +17,12 @@ appId: com.lakiet.rudi
     direction: UP
     timeout: 20000
 - tapOn: "${CHIP}"
-# Mục «Chặng» giờ nằm ngay dưới các bộ dựng Khám phá: căn giữa tiêu đề của nó
-# thì ô so sánh và hàng danh sách ở ngay trên còn trọn trong màn.
+# Căn giữa hàng danh sách cuối («Tiệm trà Sương», chỉ có trên bàn thử) thì ô so
+# sánh nằm trọn ở nửa trên màn và hàng ấy ở giữa; neo vào tiêu đề mục «Chặng»
+# (đo 08/09) chỉ còn hàng cuối, ô so sánh bị đẩy khỏi mép trên.
 - scrollUntilVisible:
     element:
-      text: "Chặng · renderer live, dữ liệu tổng hợp"
+      text: "Tiệm trà Sương"
     direction: DOWN
     centerElement: true
     timeout: 20000
