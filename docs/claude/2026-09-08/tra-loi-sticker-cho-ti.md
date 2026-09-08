@@ -79,6 +79,14 @@ hai theme.
 
 ## Trạng thái gửi / lỗi / gửi lại trên chat live
 
+> **Đính chính 09/09 (review delta, F32).** Câu dưới đây nói sai. Lúc viết PR #585, `GroupChatLive` **không có**
+> vòng gửi/lỗi/gửi lại cho sticker: `guiStickerChon` đóng khay rồi await, không đặt trạng thái nào, và khi hỏng
+> thì hiện một thông báo chung **đã mất id sticker**, nên không có gì để bấm lại. Cờ `loading` mà câu này viện
+> dẫn là cờ của nút gửi **chữ** (`dangGui`), không phải của sticker. Nặng hơn: `useTinNhan` mint
+> `newAttempt()` **bên trong** hành động, nên một lần bấm lại sau khi mất phản hồi có thể ghi hai tin. Đúng ra
+> phải viết «chưa có». Đã sửa trong PR đóng F31/F32; xem
+> [tra-loi-review-delta-584-585.md](../2026-09-09/tra-loi-review-delta-584-585.md).
+
 **Chưa chụp trong PR này.** Trạng thái gửi / lỗi / gửi lại là của `GroupChatLive` (nút gửi `loading`, thông báo
 lỗi, bấm lại), chỉ đo được trên chat live: cần stack API chế độ prod với `MOBILE_OTP_DEBUG_CODE`, roster seed và
 các flow tiền đề 22 (đăng nhập) → 24 (nhóm) → 34 (ảnh trong chat) → 37 (sticker) của bảng `--otp`, và cách đo

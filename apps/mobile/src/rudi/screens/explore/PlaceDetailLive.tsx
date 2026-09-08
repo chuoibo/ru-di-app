@@ -17,7 +17,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -55,6 +55,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { AiNote, Chip, Divider, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { MediaSlot } from "../../ui/MediaSlot";
+import { anhDanhMuc } from "../../ui/ghi-cong";
 import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceGlyph } from "./HangDiaDiem";
@@ -241,17 +242,16 @@ function ThanChiTiet({
   // The cover is drawn only with its credit (ADR-0017 §2.5); the gallery
   // strip carries the other licensed photographs, each with its own line.
   const bia = anhBiaThe(place);
-  const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== bia.nguon.uri);
+  const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== place.photoUrl);
   const viec = cauHoatDong(place.activities);
   return (
     <>
       <MediaSlot
         alt={place.name}
-        attribution={bia === null || place.photoAuthor === null || place.photoLicense === null ? undefined : { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH }}
         fallback={<PlaceGlyph glyph={bieuTuongLoai(place.category)} size={56} />}
+        nguon={bia === null ? null : { loai: "danh-muc", anh: bia }}
         overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null}
         ratio={16 / 10}
-        source={bia === null ? null : bia.nguon}
       />
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
@@ -377,15 +377,25 @@ function ThanChiTiet({
  */
 function DaiAnh({ anh }: { anh: AnhDiaDiem[] }) {
   const { radius } = useRudiTheme();
+  // Built once per list, not per render: each frame keys its «did not load»
+  // state on the picture, and a value rebuilt every frame resets that state.
+  const co = useMemo(
+    () =>
+      anh.map((a) => ({
+        id: a.id,
+        alt: a.title ?? "Ảnh có giấy phép chụp quanh đây",
+        anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }),
+      })),
+    [anh],
+  );
   return (
     <ScrollView contentContainerStyle={styles.dai} horizontal showsHorizontalScrollIndicator={false} testID="place-photos">
-      {anh.map((a) => (
+      {co.map((a) => (
         <MediaSlot
-          alt={a.title ?? "Ảnh có giấy phép chụp quanh đây"}
-          attribution={{ author: a.author, license: a.license, prefix: TIEN_TO_ANH }}
+          alt={a.alt}
           key={a.id}
+          nguon={{ loai: "danh-muc", anh: a.anh }}
           radius={radius.base}
-          source={nguonAnhDiaDiem(a)}
           style={styles.oAnh}
           width="100%"
         />
@@ -410,7 +420,7 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
           if (nguon === null) return null;
           return (
             <View key={a.id} style={styles.oAnh}>
-              <MediaSlot alt={a.caption ?? "Ảnh của nhóm bạn ở đây"} radius={radius.base} source={nguon} width="100%" />
+              <MediaSlot alt={a.caption ?? "Ảnh của nhóm bạn ở đây"} nguon={{ loai: "nhom", source: nguon }} radius={radius.base} width="100%" />
               {a.caption === null ? null : (
                 <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
                   {a.caption}

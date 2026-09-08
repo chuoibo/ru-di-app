@@ -10,7 +10,9 @@ import { PlaceCompare, PlaceLead, PlaceRow, type DiaDiemHienThi } from "../../sr
 import { HangChang } from "../../src/rudi/screens/keo/HangChang";
 import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
 import { Sticker } from "../../src/rudi/ui/stickers/Sticker";
-import { TIEN_TO_MINH_HOA, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
+import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
+import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
+import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
@@ -35,6 +37,38 @@ const CA_ANH: { id: CaAnh; nhan: string }[] = [
 /** A made-up credit, so the words a frame prints can be seen without claiming a real author. */
 const GHI_CONG_MAU = { prefix: TIEN_TO_MINH_HOA, author: "Tác giả tổng hợp", license: "Giấy phép tổng hợp" };
 
+/**
+ * The three states of one logical send, built through the SAME pure module the
+ * chat screen uses, so what the board photographs is the real machine rather
+ * than a hand-drawn copy of it (F32).
+ */
+const CA_HANG_CHO = (() => {
+  const goc = {
+    attempt: { key: "lab-1", at: 1 },
+    kind: "sticker" as const,
+    than: "cho-ti",
+    phuDe: null,
+    traLoi: null,
+    trangThai: "dang-gui" as const,
+    loi: null,
+    thuLaiDuoc: true,
+    luc: "2026-09-09T00:00:00Z",
+  };
+  const dangGui = themVaoHang([], goc)[0];
+  const hong = danhDauLoi(themVaoHang([], goc), "lab-1", "Không nối được máy chủ. Kiểm tra mạng rồi thử lại.", null)[0];
+  const vinhVien = danhDauLoi(
+    themVaoHang([], { ...goc, than: "di-thoi" }),
+    "lab-1",
+    "Sticker này bản app chưa có.",
+    "sticker_unknown",
+  )[0];
+  return [
+    { nhan: "Đang gửi", tin: dangGui },
+    { nhan: "Hỏng, gửi lại được", tin: hong },
+    { nhan: "Hỏng vĩnh viễn, không mời thử lại", tin: vinhVien },
+  ];
+})();
+
 type CaChang = "ghi-cong" | "hong" | "khong";
 const CA_CHANG: { id: CaChang; nhan: string }[] = [
   { id: "ghi-cong", nhan: "Chặng có ghi công" },
@@ -49,7 +83,7 @@ const CA_CHANG: { id: CaChang; nhan: string }[] = [
  */
 function anhChangMau(ca: CaChang, that: ImageSource): AnhCoGhiCong | null {
   if (ca === "khong") return null;
-  return { source: ca === "hong" ? ANH_HONG : that, nguon: GHI_CONG_MAU };
+  return anhDanhMuc(ca === "hong" ? ANH_HONG : that, GHI_CONG_MAU);
 }
 
 type CaAlbum = "0" | "1" | "2-ngay" | "le" | "ngay-la" | "caption-dai" | "anh-hong";
@@ -115,7 +149,7 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
   // A picture never travels without its credit: the frames take both in one object.
   const anhLab = (that: ImageSource, thuTu: number): AnhCoGhiCong | null => {
     const p = anh(that, thuTu);
-    return p ? { source: p, nguon: GHI_CONG_MAU } : null;
+    return p ? anhDanhMuc(p, GHI_CONG_MAU) : null;
   };
   const ten = (ngan: string, dai: string) => (tenDai ? dai : ngan);
   const facts = (sao: string, xa: string, gia: string): DiaDiemHienThi["facts"] => [
@@ -233,6 +267,20 @@ export default function UiLab() {
     <Inline gap={8} wrap>
       <RudiButton label="Mở khay sticker" onPress={() => setKhaySticker(true)} variant="outline" />
     </Inline>
+    <SectionHeader title="Chat · sticker đang gửi, hỏng, và gửi lại" />
+    <Text style={{ ...typography.caption, color: colors.inkSoft }}>
+      {"Ba trạng thái của một lần gửi, đúng hàng mà chat live vẽ (F32). Hình mờ là đang đi; hình rõ kèm câu lỗi là đã hỏng và giữ nguyên lần gửi ấy, nên «Thử lại» gửi lại đúng chìa cũ chứ không tạo tin thứ hai. Lỗi vĩnh viễn (bản app không có hình) không mời thử lại."}
+    </Text>
+    <View style={{ gap: 12 }} testID="lab-hang-cho">
+      {CA_HANG_CHO.map((ca) => (
+        <View key={ca.nhan} style={{ gap: 4 }}>
+          <Text style={{ ...typography.caption, color: colors.inkFaint }}>{ca.nhan}</Text>
+          {/* The chat screen's own row, not a copy of it: a board that
+              photographs a hand-drawn twin proves nothing about the screen. */}
+          <HangChoGui onBoQua={() => undefined} onThuLai={() => undefined} tin={ca.tin} />
+        </View>
+      ))}
+    </View>
     <SectionHeader title="Cử chỉ: kéo thả và bộ ảnh" />
     <Text style={[typography.body, { color: colors.ink }]}>Thứ tự: {items.map((item) => item.id).join(" → ")}</Text>
     <ReorderList items={items} itemKey={(item) => item.id} label={(item) => item.label}

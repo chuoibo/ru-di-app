@@ -35,7 +35,6 @@ import { askSearch, hieuDuocGi, type TimKiemState } from "../../../screens/kham-
 import { SO_THICH } from "../../../screens/vao-cua/so-thich";
 import { docDiemDenDaChon } from "../../kham-pha/diem-den";
 import {
-  TIEN_TO_ANH,
   anhBiaThe,
   bieuTuongLoai,
   boLuuDiaDiem,
@@ -92,13 +91,11 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     glyph: bieuTuongLoai(place.category),
     loai: place.category,
     // The picture comes with its credit or not at all (ADR-0017 §2.5), in one
-    // object, so no adapter can hand the frame the address alone. «Quanh đây»
-    // travels with the credit: the importer geosearched within 250 m, so the
-    // picture is from around here, not of this business.
-    anh:
-      bia === null || place.photoAuthor === null || place.photoLicense === null
-        ? null
-        : { source: bia.nguon, nguon: { author: place.photoAuthor, license: place.photoLicense, prefix: TIEN_TO_ANH } },
+    // value whose address cannot be taken out on its own, so no adapter can
+    // hand the frame the picture alone. «Quanh đây» travels with the credit:
+    // the importer geosearched within 250 m, so the picture is from around
+    // here, not of this business.
+    anh: bia,
     badge: hop !== null && hop.real ? hop.text : null,
     // One grounded reason under the lead: the model's own sentence when the
     // match is real, nothing otherwise. Never the tagline dressed as a reason.
