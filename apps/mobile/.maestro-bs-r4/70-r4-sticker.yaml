@@ -19,7 +19,11 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Khay sticker"
     timeout: 20000
-- assertVisible: "Chờ tí"
+# Sheet trượt lên: nhãn khay có ngay lúc mount, ô bên trong tới sau vài khung
+# hình. assertVisible không chờ (đo 08/09: đỏ ngay khi tấm sheet còn ở đáy).
+- extendedWaitUntil:
+    visible: "Chờ tí"
+    timeout: 20000
 - takeScreenshot: r4-70-khay
 # Chọn một hình cũ để so bubble: cùng cỡ, cùng chỗ, khác ngôn ngữ vẽ.
 - tapOn: "Đi thôi!"
