@@ -260,17 +260,24 @@ export function nhomTheoNgay<T extends { created_at: string }>(anh: readonly T[]
 export function chiaAlbumTheoNgay<T extends { created_at: string }>(anh: readonly T[]): {
   /** More than one calendar day among all photographs, so day labels are printed. */
   nhieuNgay: boolean;
-  /** The lead print's day label, for the label above it when `nhieuNgay`. */
+  /**
+   * The lead print's day label, for the label above it when `nhieuNgay`, and
+   * `null` when the group right after the lead is the same day: printing the
+   * date twice in a row reads as two days when there is one (emulator 08/09).
+   */
   nhanDan: string | null;
   /** The photographs after the lead, by day, each carrying its index into `anh`. */
   sau: NhomNgay<T & { viTri: number }>[];
 } {
   const tatCa = nhomTheoNgay(anh);
   const danhSo = anh.map((a, viTri) => ({ ...a, viTri }));
+  const sau = nhomTheoNgay(danhSo.slice(1));
+  const ngayDan = tatCa.length > 0 ? tatCa[0].ngay : null;
+  const trungNgaySau = sau.length > 0 && sau[0].ngay === ngayDan;
   return {
     nhieuNgay: tatCa.length > 1,
-    nhanDan: tatCa.length > 0 ? tatCa[0].nhan : null,
-    sau: nhomTheoNgay(danhSo.slice(1)),
+    nhanDan: tatCa.length > 0 && !trungNgaySau ? tatCa[0].nhan : null,
+    sau,
   };
 }
 

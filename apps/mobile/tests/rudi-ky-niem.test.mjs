@@ -175,6 +175,16 @@ test("album hai ảnh hai ngày: lead là ảnh duy nhất của ngày đầu v�
   ]);
   assert.equal(mot.nhieuNgay, false);
   assert.deepEqual(mot.sau.map((n) => n.anh.map((a) => a.viTri)), [[1]]);
+  // Lead shares its day with the group right after it: the label belongs to the
+  // group, and printing it twice in a row would read as two days.
+  const chung = chiaAlbumTheoNgay([
+    { id: "a", created_at: "2026-10-17T09:00:00+07:00" },
+    { id: "b", created_at: "2026-10-17T10:00:00+07:00" },
+    { id: "c", created_at: "2026-10-18T09:00:00+07:00" },
+  ]);
+  assert.equal(chung.nhieuNgay, true);
+  assert.equal(chung.nhanDan, null);
+  assert.deepEqual(chung.sau.map((n) => [n.nhan, n.anh.map((a) => a.viTri)]), [["17/10", [1]], ["18/10", [2]]]);
   // Empty album: nothing to label, nothing thrown.
   assert.deepEqual(chiaAlbumTheoNgay([]), { nhieuNgay: false, nhanDan: null, sau: [] });
 });
