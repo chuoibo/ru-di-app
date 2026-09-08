@@ -6,9 +6,13 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
+# Maestro so TRỌN văn bản node, và tiêu đề mục là «Cảnh rỗng · A/B có Nếp và
+# tắt Nếp». Không có `.*` thì không khớp, flow cuộn thẳng qua nó xuống tận mục
+# sticker rồi hết giờ (đo 09/09).
 - scrollUntilVisible:
     element:
-      text: "Cảnh rỗng"
+      text: "Cảnh rỗng.*"
     direction: DOWN
-    timeout: 30000
+    timeout: 60000
+    centerElement: false
 - takeScreenshot: r9-73-canh-ab

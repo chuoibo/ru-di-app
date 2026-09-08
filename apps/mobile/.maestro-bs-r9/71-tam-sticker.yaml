@@ -8,24 +8,15 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
-- scrollUntilVisible:
-    element:
-      text: "Chat · cả tám sticker ở hai cỡ đọc"
-    direction: DOWN
-    timeout: 30000
-- takeScreenshot: r9-71-tam-sticker-tren
-- scrollUntilVisible:
-    element:
-      text: "Tuyệt vời"
-    direction: DOWN
-    timeout: 30000
-- takeScreenshot: r9-71-tam-sticker-duoi
-# Khay thật: nhãn hai dòng, bốn cột ở cỡ chữ thường.
+# Khay TRƯỚC: nút mở khay nằm TRÊN mục tám sticker, nên cuộn xuống mục ấy rồi
+# mới đòi cuộn DOWN tới nút là đòi một thứ đã trôi qua phía trên (đo 09/09).
+# Không centerElement: bẫy đã ghi với phần tử gần cuối nội dung cuộn.
 - scrollUntilVisible:
     element:
       text: "Mở khay sticker"
     direction: DOWN
-    timeout: 20000
+    timeout: 30000
+    centerElement: false
 - tapOn: "Mở khay sticker"
 - extendedWaitUntil:
     visible: "Khay sticker"
@@ -41,3 +32,18 @@ appId: com.lakiet.rudi
     visible: "Sticker: Cà phê không?"
     timeout: 20000
 - takeScreenshot: r9-71-bubble-ca-phe
+# Rồi mới tới mục dựng cả tám ở hai cỡ đọc, nằm dưới nút khay.
+- scrollUntilVisible:
+    element:
+      text: "Chat · cả tám sticker ở hai cỡ đọc"
+    direction: DOWN
+    timeout: 30000
+    centerElement: false
+- takeScreenshot: r9-71-tam-sticker-tren
+- scrollUntilVisible:
+    element:
+      text: "Tuyệt vời"
+    direction: DOWN
+    timeout: 30000
+    centerElement: false
+- takeScreenshot: r9-71-tam-sticker-duoi

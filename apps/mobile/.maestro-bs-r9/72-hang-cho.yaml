@@ -8,11 +8,14 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
+# Mục này nằm CUỐI bàn thử, sau mục dựng cả tám sticker (tám hàng 120dp), nên
+# 30 s cuộn không tới. Không centerElement: bẫy đã ghi với phần tử gần cuối.
 - scrollUntilVisible:
     element:
-      text: "Chat · sticker đang gửi, hỏng, và gửi lại"
+      text: "Chat · sticker đang gửi.*"
     direction: DOWN
-    timeout: 30000
+    timeout: 90000
+    centerElement: false
 - extendedWaitUntil:
     visible: "Đang gửi…"
     timeout: 20000
