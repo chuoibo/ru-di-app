@@ -45,3 +45,12 @@ export function cauGhiCong(a: Attribution): string {
  * picture alone.
  */
 export type AnhCoGhiCong = { source: ImageSource; nguon: Attribution };
+
+/**
+ * The two props `MediaSlot` takes, produced from one picture-with-credit so a
+ * screen spreads them together (`{...khungAnh(anh)}`) instead of reading the
+ * address on its own. Null in, an empty frame out.
+ */
+export function khungAnh(anh: AnhCoGhiCong | null): { source: ImageSource | null; attribution?: Attribution } {
+  return anh === null ? { source: null } : { source: anh.source, attribution: anh.nguon };
+}

@@ -1,0 +1,22 @@
+# Khám phá trên dữ liệu mẫu sau khi gỡ các ảnh gán sai: hàng dẫn không ảnh, ô so
+# sánh, hàng danh sách, và thanh tab. Chụp ở cỡ chữ do bảng đặt trước khi chạy.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
+- tapOn: "Khám phá"
+- extendedWaitUntil:
+    visible: "Gần bạn, đúng gu"
+    timeout: 30000
+- takeScreenshot: r3-69-kham-pha-dau
+- scrollUntilVisible:
+    element:
+      text: "Đồi Thiên Phúc Đức"
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: r3-69-kham-pha-giua
+- swipe:
+    direction: UP
+- takeScreenshot: r3-69-kham-pha-cuoi

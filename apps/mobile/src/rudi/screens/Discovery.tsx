@@ -37,6 +37,7 @@ import {
 import { Wordmark } from "../ui/Wordmark";
 import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
+import { khungAnh } from "../ui/ghi-cong";
 import { GuGlyph } from "../ui/art/Gu";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { EmptyState } from "../ui/EmptyState";
@@ -62,8 +63,7 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
     ],
     glyph: GLYPH[place.category],
     loai: LOAI_MAU[place.category],
-    photo: place.anh?.source ?? null,
-    attribution: place.anh?.nguon,
+    anh: place.anh,
     badge: !song && place.match >= 90 ? "Hợp gu" : null,
     // The sample's reason is the two tags it was matched on (the same two
     // `AiMatchScreen` shows), and only while the sample badge is shown.
@@ -285,8 +285,7 @@ export function AiMatchScreen() {
     ],
     glyph: GLYPH[place.category],
     loai: LOAI_MAU[place.category],
-    photo: place.anh?.source ?? null,
-    attribution: place.anh?.nguon,
+    anh: place.anh,
     badge: dau ? "Gợi ý" : null,
   });
 
@@ -385,11 +384,10 @@ export function PlaceDetailScreen() {
         {place.anh ? (
           <MediaSlot
             alt={place.name}
-            attribution={place.anh.nguon}
             height={rong ? 400 : 300}
             overlay={<View style={styles.detailTop}>{nutDau}</View>}
             radius={rong ? 24 : 0}
-            source={place.anh.source}
+            {...khungAnh(place.anh)}
           />
         ) : (
           <View style={styles.detailTopTron}>{nutDau}</View>

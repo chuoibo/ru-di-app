@@ -51,10 +51,8 @@ export interface HangChangProps {
  * Not exported: the only way to put a picture on a stop is `HangChang.anh`,
  * which carries the credit with it.
  */
-function AnhChang({ anh, alt, loai }: { anh: AnhCoGhiCong; alt: string; loai?: string }) {
+function AnhChang({ anh, alt, loai, hong, onHong }: { anh: AnhCoGhiCong; alt: string; loai?: string; hong: boolean; onHong: () => void }) {
   const { colors, radius } = useRudiTheme();
-  const [hong, setHong] = useState(false);
-  useEffect(() => setHong(false), [anh.source]);
   return (
     <View style={[styles.khungAnhChang, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
       {hong ? (
@@ -65,7 +63,7 @@ function AnhChang({ anh, alt, loai }: { anh: AnhCoGhiCong; alt: string; loai?: s
         <Image
           accessibilityLabel={alt}
           contentFit="cover"
-          onError={() => setHong(true)}
+          onError={onHong}
           source={anh.source}
           style={[styles.anhChang, { borderRadius: radius.small - 2, backgroundColor: colors.line }]}
         />
@@ -76,6 +74,12 @@ function AnhChang({ anh, alt, loai }: { anh: AnhCoGhiCong; alt: string; loai?: s
 
 export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, phai, anh = null, children }: HangChangProps) {
   const { colors } = useRudiTheme();
+  // The picture's failure is the stop's state, not the thumbnail's: the frame
+  // shows the drawn object, and the stop says why in words (a state is always
+  // also a word). Reset when the picture changes.
+  const [hong, setHong] = useState(false);
+  const nguonAnh = anh?.anh.source;
+  useEffect(() => setHong(false), [nguonAnh]);
   const muc = phac ? colors.inkFaint : colors.lineStrong;
   const body = (
     <>
@@ -88,6 +92,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
           it (ADR-0017 §2.5). No line cap: the column beside the hour and the
           thumbnail is narrow, and at font 1.3 a long author name has to wrap
           rather than end in an ellipsis; the stop simply grows. */}
+      {anh && hong ? <Text style={[typography.caption, { color: colors.warn }]}>Chưa tải được ảnh</Text> : null}
       {anh ? <Text style={[typography.caption, { color: colors.inkFaint }]}>{cauGhiCong(anh.anh.nguon)}</Text> : null}
     </>
   );
@@ -120,7 +125,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
       )}
       {anh ? (
         <View style={styles.phai}>
-          <AnhChang alt={anh.alt} anh={anh.anh} loai={anh.loai} />
+          <AnhChang alt={anh.alt} anh={anh.anh} hong={hong} loai={anh.loai} onHong={() => setHong(true)} />
         </View>
       ) : phai ? (
         <View style={styles.phai}>{phai}</View>
