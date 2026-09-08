@@ -8,6 +8,8 @@ import { typography, useRudiTheme } from "../../src/rudi/theme";
 import { AlbumAnh, type AnhAlbumHienThi } from "../../src/rudi/screens/ky-niem/AlbumAnh";
 import { PlaceCompare, PlaceLead, PlaceRow, type DiaDiemHienThi } from "../../src/rudi/screens/explore/HangDiaDiem";
 import { HangChang } from "../../src/rudi/screens/keo/HangChang";
+import { KhaySticker } from "../../src/rudi/screens/chat/KhaySticker";
+import { Sticker } from "../../src/rudi/ui/stickers/Sticker";
 import { TIEN_TO_MINH_HOA, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
@@ -143,13 +145,18 @@ export default function UiLab() {
   const [xemAlbum, setXemAlbum] = useState<number | null>(null);
   const [caAnh, setCaAnh] = useState<CaAnh>("khong");
   const [caChang, setCaChang] = useState<CaChang>("ghi-cong");
+  const [khaySticker, setKhaySticker] = useState(false);
+  const [stickerChon, setStickerChon] = useState<string>("cho-ti");
   const [tenDai, setTenDai] = useState(false);
   const [daLuu, setDaLuu] = useState<string[]>([]);
   const anhAlbum = anhAlbumMau(caAlbum);
   const [dan, ...conLai] = diaDiemMau(caAnh, tenDai);
   const luu = (id: string) => setDaLuu((ds) => (ds.includes(id) ? ds.filter((x) => x !== id) : [...ds, id]));
   if (!CUA_FIXTURE_DEV) return <Redirect href="/welcome" />;
-  return <RudiScreen scrollEnabled={!dragging}>
+  // The tray is a sheet over the whole screen, so it goes in the screen's
+  // overlay slot; inside the scroll content it would rise below the viewport
+  // (measured 08/09: the board saw only its top edge).
+  return <RudiScreen overlay={<KhaySticker onChon={(id) => { setStickerChon(id); setKhaySticker(false); }} onClose={() => setKhaySticker(false)} open={khaySticker} />} scrollEnabled={!dragging}>
     <TopBar title="Thử tương tác native" />
     <Heading title="Dữ liệu tổng hợp" subtitle="Chỉ đo gesture và hiển thị. Không phải dữ liệu nhóm hay bằng chứng API live." />
     <SectionHeader title="Album · renderer live, dữ liệu tổng hợp" />
@@ -211,6 +218,21 @@ export default function UiLab() {
         tieuDe="Cà phê sáng tổng hợp"
       />
     </View>
+    <SectionHeader title="Chat · khay sticker và bong bóng, dữ liệu tổng hợp" />
+    <Text style={{ ...typography.caption, color: colors.inkSoft }}>
+      {"Cùng component chat live dùng: khay (ô 64) và bubble (Sticker 120, không nền không viền). Chọn một hình trong khay để đặt vào bubble; hai bản: của người khác (trái) và của mình (phải)."}
+    </Text>
+    <View style={{ gap: 4, paddingVertical: 4 }} testID="lab-sticker-bubble">
+      <View style={{ alignSelf: "flex-start", paddingVertical: 2 }}>
+        <Sticker id={stickerChon} size={120} />
+      </View>
+      <View style={{ alignSelf: "flex-end", paddingVertical: 2 }}>
+        <Sticker id={stickerChon} size={120} />
+      </View>
+    </View>
+    <Inline gap={8} wrap>
+      <RudiButton label="Mở khay sticker" onPress={() => setKhaySticker(true)} variant="outline" />
+    </Inline>
     <SectionHeader title="Cử chỉ: kéo thả và bộ ảnh" />
     <Text style={[typography.body, { color: colors.ink }]}>Thứ tự: {items.map((item) => item.id).join(" → ")}</Text>
     <ReorderList items={items} itemKey={(item) => item.id} label={(item) => item.label}

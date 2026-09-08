@@ -1067,7 +1067,9 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
 - **Quyết định mở rộng nhận diện (08/09, sau review đợt 1).** Nếp là **một
   lớp tháo được**, không phải nhân vật bắt buộc: mọi cảnh phải đọc được với
   `nep={false}`, và cổng A/B (`rudi://dev/ui-lab`, mục «Cảnh rỗng») dựng hai
-  bản cạnh nhau trên cùng máy cùng dữ liệu để quyết định bằng ảnh. Giới hạn
+  bản cạnh nhau trên cùng máy cùng dữ liệu để quyết định bằng ảnh (bàn thử
+  còn mục «Chat · khay sticker và bong bóng»: `KhaySticker` thật qua khe
+  `RudiScreen overlay`, bubble `Sticker` 120 hai hàng trái/phải). Giới hạn
   đi kèm: nhân vật **không tự xuất hiện** ở màn có dữ liệu thật của nhóm (ảnh
   nhóm, ledger, hội thoại), **không** vào thanh điều hướng hay biểu tượng app,
   **không** thay `Stamp`/`GuGlyph` trong vai trò thông tin. Muốn đưa Nếp ra
@@ -1080,6 +1082,8 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   gửi, **không bao giờ** là trạng thái giao dịch hay dấu xác nhận tiền của hệ
   thống; Nếp-hệ-thống vẫn không đứng cạnh ledger, lỗi, conflict hay xác nhận
   tiền. Muốn cấm cả sticker thì trình Lead, không vừa ghi cấm vừa vẽ tám mẫu.
+  Sticker đầu tiên theo ngoại lệ này đã có: `cho-ti` (mục Chat bên dưới);
+  bằng chứng khay/bubble sáng-tối ở `docs/claude/2026-09-08/tra-loi-sticker-cho-ti.md`.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
@@ -1130,9 +1134,23 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
-  danh sách với `packages/shared/stickers.json` và máy chủ), vẽ bằng
-  `ui/stickers/Sticker` cỡ 120 trong hàng, không nền không viền; giữ lâu mở
-  cùng `MenuTin` như bong bóng chữ. Không GIF, không ảnh raster.
+  danh sách với `packages/shared/stickers.json` và máy chủ, test ba chiều;
+  bảng `HINH` giữ đúng tám key `"id": [`), vẽ bằng `ui/stickers/Sticker` cỡ
+  120 trong hàng, không nền không viền; giữ lâu mở cùng `MenuTin` như bong
+  bóng chữ. Không GIF, không ảnh raster. Một lớp (`LopSticker`) là mảng tô
+  hoặc **nét** (`net` > 0, stroke bo tròn đầu và góc); vai màu `MauSticker`
+  có `line` (sắc giấy) bên cạnh `accent`/`ink`/`split`/`card`/`coral`. **Hai
+  cỡ đọc**: `hinhSticker(id, { chiTiet })` trả bản rút gọn (`HINH_RUT_GON`)
+  khi có; `Sticker.tsx` chọn `chiTiet = size >= 72` như `Nep.tsx` (khay
+  `KhaySticker` vẽ ô 64, bubble vẽ 120) — bản nhỏ là hình vẽ thứ hai, không
+  phải bản 120 thu lại. Hình đầu tiên vẽ bằng ngôn ngữ Nếp là `cho-ti`
+  («Chờ tí», 08/09): Nếp giữ một ghế, tay nắm đầu trụ lưng ghế,
+  thân nghiêng về ghế, mắt hướng đồng hồ lớn tối giản góc trên phải (vòng,
+  hai kim, chấm coral, không số); ở 64 ghế là đạo cụ chính, đồng hồ giữ cỡ,
+  nét dày hơn. Nó đi qua adapter thuần `tuLopVe` đổi vai lớp vẽ
+  (`giay/muc/gap/bong/split`) sang vai sticker và ném lúc nạp module nếu gặp
+  vai không có màu. Bảy hình còn lại **chưa đổi**, chờ Lead trả lời «nhận ra
+  “chờ tí” khi chưa đọc nhãn?» (`docs/claude/2026-09-08/tra-loi-sticker-cho-ti.md`).
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
@@ -1424,6 +1442,9 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   `tests/art-duong.test.mjs`.
 - **Do** để Nếp chỉ ở trạng thái rỗng và cửa vào, dưới 72dp thì bản 48; cảnh
   phải đứng được khi `nep={false}` và đọc thành một câu.
+- **Do** vẽ sticker ở cả hai cỡ đọc (`chiTiet` true/false) và nhìn ô khay 64
+  trước khi đọc nhãn; hình mới thêm vào `tests/rudi-chat-sticker.test.mjs`
+  chạy cả hai cỡ.
 - **Do** vẽ phân loại bằng `GuGlyph` (chip `leading`, ô gu, khung trống
   `PlaceGlyph`), mực đổi coral khi chọn; id lạ là thẻ gấp.
 - **Do** dùng `note` (13/400) cho dòng phụ là một câu và giữ `caption` (600)
@@ -1480,6 +1501,8 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** phát `Q`/`A`/lệnh tương đối hay số mũ trong `d`; đừng gõ đường
   SVG bằng literal chín chữ số.
 - **Don't** đưa hex hay màu vào `art/*.ts`; lớp vẽ chỉ biết vai.
+- **Don't** thu bản sticker 120 xuống 64 cho khay; dưới 72dp là bản rút gọn
+  riêng, hoặc hình đã đủ đọc như vẽ.
 - **Don't** lặp một sự thật hai chỗ trên màn (ngày ba lần ở album, «Đã
   check-in» cạnh dấu «ĐÃ TỚI», «Có thể thay đổi» dưới mỗi chặng).
 - **Don't** vẽ ảnh địa điểm mà không nói được nguồn (M12, ADR-0017 §2.5): ảnh có giấy phép thì tác giả + giấy phép ngay dưới ảnh (kể cả ô nhỏ trên hàng); ảnh của nhóm chỉ người trong nhóm thấy và máy chủ lọc; không xuất xứ thì về dải typographic, không mượn ảnh khác.
@@ -1529,6 +1552,9 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - Hai cảnh `chua-co-hoi`, `chua-co-ban` và bốn tư thế Nếp ngoài `moi`,
   `ghi-lai` mới có trên bảng art, chưa màn nào gọi; ghi ở đây để không bị vẽ
   lại khác, không phải để nói chúng đã lên máy.
+- Bảy sticker cũ (`di-thoi` … `tuyet-voi`, khối màu lớn, chỉ lớp tô) và
+  `cho-ti` (nét + hai mảng sắc độ) đang là hai ngữ pháp trong một khay; sự
+  lệch ấy là trạng thái chờ quyết định, không phải hai kiểu sticker của hệ.
 - Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
   không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
   phải một cuộc thay icon toàn hệ.
@@ -1541,6 +1567,7 @@ python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sin
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
+cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
 cd apps/mobile && npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs   # ảnh catalogue chỉ tới Image trong ba khung in ghi công; không ai đọc trần anh.source, không ai gọi AnhChang
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
 ```

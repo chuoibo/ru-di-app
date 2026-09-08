@@ -88,7 +88,7 @@ test("net.ts: từng builder ra đường hợp lệ và số thập phân thư�
   assert.deepEqual(bienDoi(10, 20, 0.5)(4, 6), [12, 23]);
 });
 
-test("Nếp: sáu pose, hai cách đọc, có và không có phép đặt, đều qua ngữ pháp Java và nằm trong khung", () => {
+test("Nếp: chín pose, hai cách đọc, có và không có phép đặt, đều qua ngữ pháp Java và nằm trong khung", () => {
   for (const pose of POSE_NEP) {
     for (const chiTiet of [true, false]) {
       kiemLop(`nep ${pose} chiTiet=${chiTiet}`, hinhNep(pose, { chiTiet }), KHUNG_NEP, KHUNG_NEP);
