@@ -250,6 +250,30 @@ export function nhomTheoNgay<T extends { created_at: string }>(anh: readonly T[]
   return ra;
 }
 
+/**
+ * How an album lays its photographs out by day: the first print leads, the
+ * rest are gathered by day. Whether the album spans more than one day is
+ * decided over ALL photographs, lead included; a review (Codex 08/09, F03a)
+ * caught the screen deciding it over the rest only, so an album with one
+ * photo on the 17th and one on the 18th showed no day at all.
+ */
+export function chiaAlbumTheoNgay<T extends { created_at: string }>(anh: readonly T[]): {
+  /** More than one calendar day among all photographs, so day labels are printed. */
+  nhieuNgay: boolean;
+  /** The lead print's day label, for the label above it when `nhieuNgay`. */
+  nhanDan: string | null;
+  /** The photographs after the lead, by day, each carrying its index into `anh`. */
+  sau: NhomNgay<T & { viTri: number }>[];
+} {
+  const tatCa = nhomTheoNgay(anh);
+  const danhSo = anh.map((a, viTri) => ({ ...a, viTri }));
+  return {
+    nhieuNgay: tatCa.length > 1,
+    nhanDan: tatCa.length > 0 ? tatCa[0].nhan : null,
+    sau: nhomTheoNgay(danhSo.slice(1)),
+  };
+}
+
 function nhanNgay(ngay: string): string {
   const [, m, d] = ngay.split("-");
   return `${Number(d)}/${Number(m)}`;

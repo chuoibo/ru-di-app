@@ -12,7 +12,7 @@
  * All three are paths from `net.ts`: absolute M/L/C/Z only.
  */
 import { duongCongS } from "../ui/duong-svg";
-import { type LopVe, cungTron, daGiac, tron } from "./net";
+import { type LopVe, cungTron, daGiac, netGay, tron } from "./net";
 
 export interface TuyChonVongHo {
   /** Centre of the gap, radians, y down; default top-right. */
@@ -50,6 +50,18 @@ export function duongChuyen(x0: number, y0: number, w: number, h: number, huong:
 function so(n: number): string {
   const s = n.toFixed(2).replace(/\.?0+$/, "");
   return s === "-0" ? "0" : s;
+}
+
+/**
+ * The flap alone, for the corner of something already drawn (a print in an
+ * album): the same triangle `gocGap` folds, without the sheet. `c` is the
+ * fold's size; (x, y) the top-right corner it folds from.
+ */
+export function nepGoc(x: number, y: number, c: number): LopVe[] {
+  return [
+    { d: daGiac([[x - c, y], [x - c, y + c], [x, y + c]]), mau: "gap" },
+    { d: netGay([[x - c, y], [x - c, y + c], [x, y + c]]), mau: "muc", net: Math.max(1.4, c * 0.11) },
+  ];
 }
 
 /** A sheet at (x, y), `w`×`h`, with its top-right corner folded down. */

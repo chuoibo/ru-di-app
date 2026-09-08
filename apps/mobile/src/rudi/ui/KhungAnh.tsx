@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 
 import { cardShadow, typography, useRudiTheme } from "../theme";
+import { NepGoc } from "./art/Motif";
 
 /**
  * A print stuck onto the page: the photograph in a paper frame with a thick
@@ -17,6 +18,7 @@ export function KhungAnh({
   children,
   chuThich,
   xuatXu,
+  dauGiu = false,
   tilt = 0,
   style,
   testID,
@@ -24,6 +26,8 @@ export function KhungAnh({
   children: ReactNode;
   chuThich?: string;
   xuatXu?: string;
+  /** The kept-corner fold on the print's top-right corner: this one belongs to the group's story (review 08/09 §5.2). */
+  dauGiu?: boolean;
   /** A hair of rotation for a print laid by hand; 0 in lists. */
   tilt?: -2 | -1 | 0 | 1 | 2;
   style?: StyleProp<ViewStyle>;
@@ -42,6 +46,7 @@ export function KhungAnh({
       testID={testID}
     >
       <View style={[styles.anh, { backgroundColor: colors.line }]}>{children}</View>
+      {dauGiu ? <NepGoc size={22} style={styles.gocGap} /> : null}
       {chuThich ? <Text style={[typography.body, styles.chu, { color: colors.ink }]}>{chuThich}</Text> : null}
       {xuatXu ? <Text numberOfLines={1} style={[typography.caption, styles.chu, { color: colors.inkFaint }]}>{xuatXu}</Text> : null}
     </View>
@@ -52,4 +57,5 @@ const styles = StyleSheet.create({
   khung: { padding: 8, paddingBottom: 14, borderWidth: StyleSheet.hairlineWidth, gap: 8 },
   anh: { borderRadius: 4, overflow: "hidden" },
   chu: { paddingHorizontal: 4 },
+  gocGap: { position: "absolute", top: 0, right: 0 },
 });
