@@ -30,8 +30,13 @@ const KHUNG_IN_GHI_CONG = new Set([
   "src/rudi/screens/explore/HangDiaDiem.tsx",
 ]);
 
-/** An expression that names a catalogue photograph: `x.anh.source`, `anh.source`, `dd.photo`, `.photo`. */
-const ANH_DANH_MUC = /(\banh\.source\b|\.photo\b)/;
+/**
+ * An expression that names a catalogue photograph: `x.anh.source`,
+ * `x.anh?.source`, `dd.photo`. Optional chaining is the shape the adapters
+ * already wrote, so a regex that only knew `anh.source` would have let a new
+ * consumer through (finish review 08/09).
+ */
+const ANH_DANH_MUC = /(\banh\??\.source\b|\.photo\b)/;
 
 function sourceFiles(dir) {
   const out = [];
@@ -43,18 +48,37 @@ function sourceFiles(dir) {
   return out.sort();
 }
 
+/** Local names bound to an image component: `Image` from expo-image or react-native, under any alias. */
+function tenImage(sf) {
+  const ten = new Set(["Image"]);
+  for (const st of sf.statements) {
+    if (!ts.isImportDeclaration(st) || !ts.isStringLiteral(st.moduleSpecifier)) continue;
+    if (!["expo-image", "react-native"].includes(st.moduleSpecifier.text)) continue;
+    const bindings = st.importClause?.namedBindings;
+    if (bindings && ts.isNamedImports(bindings)) {
+      for (const el of bindings.elements) {
+        const goc = (el.propertyName ?? el.name).text;
+        if (goc === "Image") ten.add(el.name.text);
+      }
+    }
+  }
+  return ten;
+}
+
 /**
- * Every `<Image … source={X}>` whose `X` names a catalogue photograph, and
- * every mention of the old `AnhChang` component, with their lines.
+ * Every `<Image … source={X}>` (under any import alias) whose `X` names a
+ * catalogue photograph, every bare read of `anh.source` / `anh?.source`
+ * anywhere in the file, and every mention of the old `AnhChang` component.
  */
 function timAnhTran(text, fileName) {
   const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const image = tenImage(sf);
   const viPham = [];
   const dong = (node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
   const walk = (node) => {
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const ten = node.tagName.getText(sf);
-      if (ten === "Image") {
+      if (image.has(ten)) {
         for (const attr of node.attributes.properties) {
           if (ts.isJsxAttribute(attr) && attr.name.getText(sf) === "source" && attr.initializer) {
             const bieuThuc = attr.initializer.getText(sf);
@@ -63,6 +87,11 @@ function timAnhTran(text, fileName) {
         }
       }
       if (ten === "AnhChang") viPham.push({ line: dong(node), loai: "AnhChang", bieuThuc: ten });
+    }
+    // A bare read of the address, wherever it flows next (a variable, a spread, a prop).
+    if (ts.isPropertyAccessExpression(node) && node.name.text === "source") {
+      const doiTuong = node.expression.getText(sf);
+      if (/(^|\.)anh\??$/.test(doiTuong)) viPham.push({ line: dong(node), loai: "anh.source", bieuThuc: node.getText(sf) });
     }
     if (ts.isIdentifier(node) && node.text === "AnhChang" && ts.isImportSpecifier(node.parent)) {
       viPham.push({ line: dong(node), loai: "import AnhChang", bieuThuc: node.text });
@@ -73,17 +102,23 @@ function timAnhTran(text, fileName) {
   return viPham;
 }
 
-test("máy dò không mù: một Image nhận ảnh danh mục trần và một import AnhChang đều bị bắt", () => {
+test("máy dò không mù: Image nhận ảnh danh mục (kể cả anh?.source, bí danh import, biến trung gian) và import AnhChang đều bị bắt", () => {
   const mau = [
+    `import { Image as ExpoImage } from "expo-image";`,
     `import { AnhChang } from "./keo/HangChang";`,
     `const A = () => <Image accessibilityLabel={p.name} source={p.anh.source} />;`,
     `const B = () => <Image source={dd.photo} style={s} />;`,
     `const C = () => <AnhChang alt="x" source={p.anh.source} />;`,
     `const D = () => <Image source={demoAssets.wood} />;`,
+    `const E = () => <ExpoImage source={place.anh?.source ?? null} />;`,
+    `const src = noi.anh.source; const F = () => <Image source={src} />;`,
   ].join("\n");
   const thay = timAnhTran(mau, "mau.tsx");
-  assert.deepEqual(thay.map((v) => v.loai), ["import AnhChang", "Image", "Image", "AnhChang"]);
+  const loai = thay.map((v) => v.loai);
+  assert.deepEqual(loai, ["import AnhChang", "Image", "anh.source", "Image", "AnhChang", "anh.source", "Image", "anh.source", "anh.source"]);
   assert.equal(thay.filter((v) => v.bieuThuc.includes("wood")).length, 0, "một chất liệu không phải ảnh danh mục");
+  // The bare-read rule alone catches the variable case where the Image rule cannot.
+  assert.ok(thay.some((v) => v.loai === "anh.source" && v.bieuThuc === "noi.anh.source"));
 });
 
 test("ngoài các khung in ghi công, không Image nào trong vỏ nhận ảnh danh mục, và AnhChang không còn ai gọi", () => {
