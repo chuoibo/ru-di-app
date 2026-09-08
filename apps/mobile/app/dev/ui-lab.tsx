@@ -153,7 +153,10 @@ export default function UiLab() {
   const [dan, ...conLai] = diaDiemMau(caAnh, tenDai);
   const luu = (id: string) => setDaLuu((ds) => (ds.includes(id) ? ds.filter((x) => x !== id) : [...ds, id]));
   if (!CUA_FIXTURE_DEV) return <Redirect href="/welcome" />;
-  return <RudiScreen scrollEnabled={!dragging}>
+  // The tray is a sheet over the whole screen, so it goes in the screen's
+  // overlay slot; inside the scroll content it would rise below the viewport
+  // (measured 08/09: the board saw only its top edge).
+  return <RudiScreen overlay={<KhaySticker onChon={(id) => { setStickerChon(id); setKhaySticker(false); }} onClose={() => setKhaySticker(false)} open={khaySticker} />} scrollEnabled={!dragging}>
     <TopBar title="Thử tương tác native" />
     <Heading title="Dữ liệu tổng hợp" subtitle="Chỉ đo gesture và hiển thị. Không phải dữ liệu nhóm hay bằng chứng API live." />
     <SectionHeader title="Album · renderer live, dữ liệu tổng hợp" />
@@ -230,7 +233,6 @@ export default function UiLab() {
     <Inline gap={8} wrap>
       <RudiButton label="Mở khay sticker" onPress={() => setKhaySticker(true)} variant="outline" />
     </Inline>
-    <KhaySticker onChon={(id) => { setStickerChon(id); setKhaySticker(false); }} onClose={() => setKhaySticker(false)} open={khaySticker} />
     <SectionHeader title="Cử chỉ: kéo thả và bộ ảnh" />
     <Text style={[typography.body, { color: colors.ink }]}>Thứ tự: {items.map((item) => item.id).join(" → ")}</Text>
     <ReorderList items={items} itemKey={(item) => item.id} label={(item) => item.label}
