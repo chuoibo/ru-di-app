@@ -109,9 +109,14 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   // Holding something light up in front of the face and looking into it.
   "nang-bong": { nghieng: -2, nhin: [1.1, -1.2], bieuCam: "hoi", dang: "dung" },
   // Reaching up for a line overhead, weight on the front foot.
-  "voi-len": { nghieng: 4, nhin: [0.8, -1.4], bieuCam: "binh-than", dang: "buoc" },
+  // Reaching up for a line overhead. `dung`, not `buoc`: the stride threw a
+  // foot out to the left, straight under whatever the low hand is holding.
+  "voi-len": { nghieng: 4, nhin: [0.8, -1.4], bieuCam: "binh-than", dang: "dung" },
   // Bending sideways to look through something narrow.
-  "ghe-nhin": { nghieng: 11, nhin: [1.6, 0.2], bieuCam: "hoi", dang: "chong" },
+  // Bending sideways to look through something narrow. `dung`, not `chong`:
+  // planted legs hold the body upright and the shear stops reading, which is
+  // how the first version came out as a shrug (finish review 09/09).
+  "ghe-nhin": { nghieng: 13, nhin: [1.6, 0.3], bieuCam: "hoi", dang: "dung" },
 };
 
 /** The feet stand on this line of the 96-box; a scene puts its floor here. */
@@ -234,12 +239,15 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
           { d: qCong(S(48, 35.5), S(52, 33), S(56, 35)), mau: "muc", net: w },
         ];
       case "hoi":
-        // One far up, one level: the shape of «ơ?».
+        // One far up, one level: the shape of «ơ?». The RAISED one is the LEFT
+        // brow on purpose. The fold triangle (H 50,20 · G 69,38 · Bp 50,38)
+        // owns everything from x 50 rightwards above y 38, so a right brow
+        // lifted into that band draws a black bar across the coral corner --
+        // the identity mark. The left brow is outside it at any height, and
+        // the right one stays below the triangle's base.
         return [
-          { d: netGay([S(34, 38.5), S(42, 37.5)]), mau: "muc", net: w },
-          // Kept clear of the coral fold (H..G..Bp): a brow drawn across the
-          // corner puts a black bar through the identity mark.
-          { d: netGay([S(48, 33.5), S(55, 35.5)]), mau: "muc", net: w },
+          { d: netGay([S(33, 34), S(42, 31.5)]), mau: "muc", net: w },
+          { d: netGay([S(48, 38.6), S(55, 39.8)]), mau: "muc", net: w },
         ];
       case "quyet":
         // Both lowered toward the middle: concentration, not anger.
@@ -488,13 +496,16 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     }
     case "voi-len":
       // One arm straight up to a line overhead at box (72, 10); the other
-      // holds what is about to go on it, low at box (16, 74).
-      tuThe = [...tay(R, P(72, 10)), ...tay(L, P(16, 74))];
+      // holds what is about to go on it, out to the side at box (8, 62), which
+      // is the coordinate the scene hangs the print from.
+      tuThe = [...tay(R, P(72, 10)), ...tay(L, P(8, 62))];
       break;
     case "ghe-nhin":
-      // Leaning sideways to look through a gap: the near hand braces on the
-      // thing at box (86, 44), the far arm goes back for balance.
-      tuThe = [...tay(R, P(86, 44)), ...tay(L, P(6, 48))];
+      // Leaning in to look through a gap: the far hand braces at box (72, 26),
+      // which is where the scene puts the one open square, and the near arm
+      // hangs DOWN. Held out straight it made a T, and a T reads as a shrug
+      // however far the body leans.
+      tuThe = [...tay(R, P(72, 26)), ...tay(L, P(10, 72))];
       break;
     case "vui":
     default: {

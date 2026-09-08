@@ -58,9 +58,9 @@ const MO_TA: Record<CanhId, string> = {
   "chua-co-anh": "Một khung ảnh còn trống, góc giấy gấp",
   "chua-co-ban": "Hai chiếc ghế, một chỗ còn trống",
   "tim-khong-ra": "Một tấm bản đồ gấp, đường đi chưa tới nơi",
-  "chua-doc-duoc": "Một tờ giấy rách góc, dòng chữ dừng giữa chừng",
+  "chua-doc-duoc": "Một tờ giấy rách ngang, dòng chữ dừng ở vết rách",
   "chua-co-tin-nhan": "Một bong bóng thoại bằng giấy, bên trong còn trống",
-  "chua-co-loi-moi": "Một phong thư mở, bên trong còn trống",
+  "chua-co-loi-moi": "Một phong thư còn nguyên, chưa có ai gửi đi",
   "chua-co-ky-niem": "Một sợi dây phơi ảnh, hai chiếc kẹp còn trống",
   "bo-loc-che-het": "Một tấm lưới che gần kín, còn một ô để nhìn qua",
 };
@@ -181,11 +181,12 @@ const NEN: Record<CanhId, () => LopVe[]> = {
       ...[70, 88, 106].map((x) => ({ d: netGay([[x, 26], [x, 86]] as const), mau: "bong" as const, net: 3 })),
       // The one square left open: the reason to lift a filter rather than give up.
       // The open square sits at the NEAR edge, level with the figure's eyes,
-      // so the one thing not covered is the thing being looked through. Out at
-      // x 97 it was across the panel from the head and the pose read as
-      // standing beside a screen (finish review 09/09).
-      { d: khungBo(56, 36, 18, 17, 2), mau: "giay" },
-      ...vongHo(65, 44, 12, { moTai: Math.PI * 0.7, net: 2.6 }),
+      // and it is the SAME place the hand braces: box (72, 26) of a figure at
+      // x0 -1, scale 0.76 → scene (53.7, 43.3). Out at x 97 it was across the
+      // panel from the head and the pose read as standing beside a screen
+      // (finish review 09/09).
+      { d: khungBo(52, 34, 18, 18, 2), mau: "giay" },
+      ...vongHo(61, 43, 12, { moTai: Math.PI * 0.7, net: 2.6 }),
     ];
   },
 };
@@ -226,6 +227,9 @@ const NEP: Record<CanhId, () => LopVe[]> = {
   // print that has not gone up yet. Reaching, not framing: `chua-co-anh`
   // already owns the two-hands-on-a-rectangle body.
   "chua-co-ky-niem": () => {
+    // Read off the pose's own low hand (box (8, 62) of `voi-len`), not a point
+    // near it: a prop anchored to a coordinate no pose owns is how a hand ends
+    // up holding nothing.
     const P = (x: number, y: number): Diem => [8 + x * 0.74, SAN - CHAN_NEP * 0.74 + y * 0.74];
     const [gx, gy] = P(8, 62);
     return [
@@ -237,10 +241,10 @@ const NEP: Record<CanhId, () => LopVe[]> = {
       ...nepTrenSan("voi-len", 8, 0.74),
     ];
   },
-  // Leaning in at the one open square, which sits at scene (65, 44) -- level
-  // with the eyes. The far hand braces on the mesh face at box (88, 42) →
-  // scene (65.9, 60.3), just under the gap. A body bent sideways with the
-  // other arm down, not the two-handed grip `tim-khong-ra` already uses.
+  // Leaning in at the one open square: the far hand at box (72, 26) → scene
+  // (53.7, 43.3), which IS the square, so the brace point and the hole are the
+  // same place. A body bent sideways with the other arm down, not the
+  // two-handed grip `tim-khong-ra` already uses.
   "bo-loc-che-het": () => nepTrenSan("ghe-nhin", -1, 0.76),
 };
 
