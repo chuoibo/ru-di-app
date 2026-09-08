@@ -78,9 +78,17 @@ test("mọi sticker có hình ở cả hai cỡ đọc, mọi đường qua đư
       }
     }
   }
-  // The compact reading is a different drawing where one exists, and the same table entry where none does.
-  assert.notDeepEqual(hinhSticker("cho-ti", { chiTiet: false }).lop, hinhSticker("cho-ti").lop);
-  assert.deepEqual(hinhSticker("di-thoi", { chiTiet: false }).lop, hinhSticker("di-thoi").lop);
+  // Since 09/09 all eight are drawn in the Nếp language, so EVERY id has a
+  // second, simpler drawing for the tray rather than the 120dp one shrunk.
+  // The loop, not a named id, is the point: the day someone adds a ninth
+  // shape without a compact reading, this is what says so.
+  for (const id of STICKER_IDS) {
+    assert.notDeepEqual(
+      hinhSticker(id, { chiTiet: false }).lop,
+      hinhSticker(id).lop,
+      `${id}: bản khay phải là hình vẽ thứ hai, không phải bản 120 thu lại`,
+    );
+  }
 });
 
 test("id lạ vẽ ô «khac» có dấu hỏi, nhãn «Sticker», không ném", () => {
