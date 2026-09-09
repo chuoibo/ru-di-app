@@ -191,7 +191,7 @@ async function doc<T>(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's own localhost.
-    throw new AlbumError(0, `Không gọi được ${BASE_URL}`);
+    throw new AlbumError(0, "Không gọi được máy chủ.");
   }
   if (!response.ok) {
     let code = "";

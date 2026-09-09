@@ -264,16 +264,39 @@ const DAU_TIENG_VIET =
  * not a next step, and a person who reads "500" has learned nothing except
  * that something is wrong, which the screen already told them.
  */
+/**
+ * Nothing answered. One sentence, used by every path that dials the server.
+ *
+ * It names the one thing the person can do (check the network) and says nothing
+ * about what the server did or did not write: a lost connection is the one
+ * failure where the client genuinely cannot know, and «chưa ghi gì» would be a
+ * promise (audit native 09/09, F43). It also carries no address. The old
+ * sentence printed `BASE_URL` and asked whether the server was running -- a
+ * question for whoever is debugging, not for someone planning a trip; the
+ * address goes to the dev console instead (see `call`).
+ */
+export const LOI_KHONG_NOI_DUOC = "Không nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+
+declare const __DEV__: boolean | undefined;
+
+/** Development-only trace of WHICH address failed; never part of what a person reads. */
+function ghiKhongNoiDuoc(path: string): void {
+  if (typeof __DEV__ !== "undefined" && __DEV__) console.warn("[api] unreachable: " + BASE_URL + path);
+}
+
 export function thongDiepNguoiDoc(status: number, detail: unknown): string {
   if (typeof detail === "string" && detail.trim() !== "" && DAU_TIENG_VIET.test(detail)) {
     return detail.trim();
   }
-  if (status === 0) return `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`;
+  if (status === 0) return LOI_KHONG_NOI_DUOC;
   if (status === 401 || status === 403) {
     return "Tài khoản đang dùng chưa được phép làm việc này trong nhóm. Nhờ người tạo nhóm cấp quyền rồi thử lại.";
   }
   if (status === 404) {
-    return "Máy chủ không có phần này. Nhiều khả năng app đang trỏ vào một bản API cũ hơn, kiểm tra lại địa chỉ máy chủ ghi ở cuối màn hình.";
+    // A route the server does not have: the app and the server are out of step.
+    // What the person can do is update the app; checking «the address at the
+    // bottom of the screen» was an instruction for a developer.
+    return "Bản app này và máy chủ chưa khớp nhau nên chưa mở được phần này. Cập nhật app rồi thử lại.";
   }
   if (status === 409) {
     return "Lần bấm trước chưa chạy xong nên chưa biết máy chủ đã ghi hay chưa. Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.";
@@ -412,11 +435,8 @@ async function send<T>(
   } catch {
     // Never reached is not the same as returned an error, and saying "500"
     // when nothing answered sends a person to debug the wrong machine.
-    throw new ApiError(
-      0,
-      "unreachable",
-      `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`,
-    );
+    ghiKhongNoiDuoc(path);
+    throw new ApiError(0, "unreachable", LOI_KHONG_NOI_DUOC);
   }
 
   if (!response.ok) {
@@ -1198,11 +1218,7 @@ export async function scanReceipt(
   try {
     response = await fetch(BASE_URL + "/receipts/scan", { method: "POST", headers, body: form });
   } catch {
-    throw new ApiError(
-      0,
-      "unreachable",
-      `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`,
-    );
+    throw new ApiError(0, "unreachable", LOI_KHONG_NOI_DUOC);
   }
 
   if (!response.ok) {
@@ -1305,11 +1321,7 @@ export async function quetAnhChupMan(
   try {
     response = await fetch(BASE_URL + "/screenshots/scan", { method: "POST", headers, body: form });
   } catch {
-    throw new ApiError(
-      0,
-      "unreachable",
-      `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`,
-    );
+    throw new ApiError(0, "unreachable", LOI_KHONG_NOI_DUOC);
   }
 
   if (!response.ok) {
@@ -1512,11 +1524,7 @@ async function guiAnhLen(
   try {
     response = await fetch(BASE_URL + path, { method: "POST", headers, body: form });
   } catch {
-    throw new ApiError(
-      0,
-      "unreachable",
-      `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`,
-    );
+    throw new ApiError(0, "unreachable", LOI_KHONG_NOI_DUOC);
   }
 
   if (!response.ok) {
@@ -1656,11 +1664,7 @@ export async function taiAnhCoQuyen(
   try {
     response = await fetch(url, { headers });
   } catch {
-    throw new ApiError(
-      0,
-      "unreachable",
-      `Không nối được ${BASE_URL}. Máy chủ có đang chạy không?`,
-    );
+    throw new ApiError(0, "unreachable", LOI_KHONG_NOI_DUOC);
   }
 
   if (!response.ok) {

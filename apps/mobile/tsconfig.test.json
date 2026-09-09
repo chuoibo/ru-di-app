@@ -313,6 +313,11 @@
     // written into B. That is a claim about effect ordering and closures,
     // which only the real hook under the real React can settle.
     "src/rudi/chat/useTinNhan.ts",
+    // F44 (audit native 09/09). The kit text field, split out of `ui.tsx` (which
+    // cannot load under node) so a test can read the markup its placeholder
+    // really emits: the claim is that the input carries NO native hint and the
+    // sentence is a text node of its own, which only the rendered output shows.
+    "src/rudi/ui/Field.tsx",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the

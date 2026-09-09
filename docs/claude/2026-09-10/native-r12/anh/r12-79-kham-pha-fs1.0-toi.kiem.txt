@@ -1,0 +1,3 @@
+cỡ chữ 1 · một dòng ≈ 63px · trần 85px · 1 placeholder
+  ok   «Tìm quán, món...» cao 63px rộng 544px [161,365]→[705,428]
+XANH: mọi placeholder một dòng, không URL trên màn

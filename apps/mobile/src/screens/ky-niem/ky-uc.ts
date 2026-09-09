@@ -158,7 +158,7 @@ export async function timNhomDemo(
       body: JSON.stringify({ display_name: DEMO_GROUP_NAME }),
     });
   } catch {
-    throw new KyUcError(0, `Không gọi được ${BASE_URL}`);
+    throw new KyUcError(0, "Không gọi được máy chủ.");
   }
   if (!response.ok) {
     throw new KyUcError(response.status, loiKyUc(response.status, ""));
@@ -205,7 +205,7 @@ export async function layKyUc(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's localhost.
-    throw new KyUcError(0, `Không gọi được ${BASE_URL}`);
+    throw new KyUcError(0, "Không gọi được máy chủ.");
   }
   if (!response.ok) {
     let code = "";

@@ -14,7 +14,7 @@ import { STICKER_IDS, nhanSticker } from "../../src/rudi/chat/sticker";
 import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/ui/ghi-cong";
 import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
 import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
-import { Chip, Heading, Inline, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../src/rudi/ui";
+import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
 import { EmptyState } from "../../src/rudi/ui/EmptyState";
@@ -298,6 +298,15 @@ export default function UiLab() {
           <HangChoGui onBoQua={() => undefined} onThuLai={() => undefined} tin={ca.tin} />
         </View>
       ))}
+    </View>
+    <SectionHeader title="Ô tìm · placeholder dài ở ba cỡ chữ" />
+    <Text style={{ ...typography.caption, color: colors.inkSoft }}>
+      {"Placeholder là chữ của nhà vẽ, một dòng, cắt bằng «…» — không phải hint native của Android, vốn xuống dòng rồi bị cắt ở đáy ô khi chữ lớn (F44). Ba ô: câu dài của Khám phá live, câu của «Đi đâu?», và một ô đã gõ."}
+    </Text>
+    <View style={{ gap: 12 }} testID="lab-o-tim">
+      <SearchField accessibilityLabel="Ô tìm địa điểm" onChangeText={() => undefined} placeholder="Tìm quán, món… hoặc hỏi Rủ Đi AI" value="" />
+      <SearchField onChangeText={() => undefined} placeholder="Tìm thành phố hoặc tỉnh" value="" />
+      <SearchField onChangeText={() => undefined} placeholder="Tìm quán, món… hoặc hỏi Rủ Đi AI" value="Bún bò Huế O Xuân" />
     </View>
     <SectionHeader title="Cử chỉ: kéo thả và bộ ảnh" />
     <Text style={[typography.body, { color: colors.ink }]}>Thứ tự: {items.map((item) => item.id).join(" → ")}</Text>

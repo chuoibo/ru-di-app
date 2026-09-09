@@ -1237,6 +1237,142 @@
         "controlled-artifact"
       ],
       "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/bang-r12-77-fs1.0-sang.png",
+      "sha256": "2b62899d08e4b6820add5c8b3e308b50c293d4a366f3b7e751ba10e9cc7fad6e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/bang-r12-78-fs1.0-sang.png",
+      "sha256": "7bdf112e2a80d7bc8096391d4c71f486836f52071ca78ef15fcf1a68f7336583",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/bang-r12-79-fs1.0-sang.png",
+      "sha256": "6fe97415dcf4f124a00581961ed0bce59f70b9a678511bbb33a1bf2c0ad8d0a8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-77-loi-mang-fs1.0-toi.png",
+      "sha256": "92046600c56f567a9aa21049364a0762a377646d3c9475ebb826d107cfc34d17",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-77-loi-mang-fs2.0-sang.png",
+      "sha256": "d3b47879117dc699a139a981c1165f99b22a5822b722cead01a2cb076f098efc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs1.0-sang.png",
+      "sha256": "3d8779b55d3fbab2e914a233ecfeab253fedae5fb086893b0f45595e42212ac1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs1.0-toi.png",
+      "sha256": "ab38e7b16bafdd36e6d2a32437b3a6eea183ef4f5d38c1de605cd4a2e80d5f45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs1.3-sang.png",
+      "sha256": "20710645c6bd8161f59cbed74236c2e0e89ff84f0bf089a3fd60b180a8cac3fc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs1.3-toi.png",
+      "sha256": "242264dd83f36b3bf4ea443b0d1605a21c802a481a63fcc688c67dd64dc621e4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs2.0-sang.png",
+      "sha256": "ff83d60e5b42848b821a1c870c01d82153d4e33a50c086540c7c6600533f33ba",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-78-o-tim-fs2.0-toi.png",
+      "sha256": "96993a779b8521eb9820024bac4d0209638c6bf15d33a2acbed45925b84b13b7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs1.0-sang.png",
+      "sha256": "7fba0101d92cc22fb0ff776f09d2bbae08c9999ccc2dc807e869b4ffca866a51",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs1.0-toi.png",
+      "sha256": "5ae0e7b9fed92d7293996973d990a4e1f7f40a92678f066e5cb7029631349290",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs1.3-sang.png",
+      "sha256": "f948bc243aa1c66db68b51b4946b20ea5f2f950ac0179d50b95ab52d80832c65",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs1.3-toi.png",
+      "sha256": "ec84e703357559f5df3108a3d2cfa964f07e3b09a8a2d03245fe33740dc22773",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs2.0-sang.png",
+      "sha256": "c572690f422b0f468bec32aa59e3d6c0fe691a3812972c0ecbc33c3b168b5378",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r12/anh/r12-79-kham-pha-fs2.0-toi.png",
+      "sha256": "34a31d5bf3ec24b9fee02d17144c12b6a900cd4845cc839c1bf183506891fd6c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
     }
   ]
 }

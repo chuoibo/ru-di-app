@@ -103,6 +103,78 @@ code — không có ảnh nào chấm được chúng, nên reviewer hình khôn
 
 ---
 
+## PR 2 — F43 · F44 (`claude/p0-w-ui5-loi-noi-voi-nguoi`, xếp trên PR 1)
+
+### F43 — câu lỗi nói với lập trình viên (P1)
+
+**Rộng hơn audit ghi.** Ngoài `thongDiepNguoiDoc(0)` và nhánh 404, còn **năm** chỗ dựng thẳng
+`ApiError(0, "unreachable", \`Không nối được ${BASE_URL}…\`)` trong `api.ts`, **bốn** câu dự phòng in
+`BASE_URL` ở `Bill.tsx`/`Profile.tsx`, và **sáu** chuỗi legacy («Không gọi được ${BASE_URL}», «Địa chỉ
+đã thử: ${url}», «Không nối được ${state.url}…»). Quét nguồn tìm ra tất cả; audit thấy hai.
+
+**Sửa.** Một hằng `LOI_KHONG_NOI_DUOC` («Không nối được máy chủ. Kiểm tra mạng rồi thử lại.» — câu nhà
+đã dùng ở `dia-diem.ts`), dùng ở mọi chỗ mất kết nối; **không hứa «chưa ghi gì»** vì đây là ca duy nhất
+client không biết máy chủ đã ghi hay chưa (đúng lời audit). 404: «Bản app này và máy chủ chưa khớp nhau
+nên chưa mở được phần này. Cập nhật app rồi thử lại.» (bản đầu còn «báo cho nhóm kỹ thuật» — reviewer chỉ ra app không có kênh ấy, đã bỏ) Câu Việt của
+máy chủ (`invite_not_found`…) vẫn đi qua nguyên — không thay lời từ chối nghiệp vụ bằng câu chung. Địa chỉ
+đi kênh dev: một `console.warn` gác `__DEV__` ở `call`, tiếng Anh, không template. Mười chuỗi màn/legacy
+bỏ địa chỉ, giữ động từ.
+
+**Cổng.** `trang-thai.test.mjs` thêm hai ca: (1) status 0 và 404 không chứa `http`, `localhost`, IP,
+cổng, «đang chạy», «API», «địa chỉ», «cuối màn hình»; status 0 phải nói «mạng» và không nói «chưa ghi»;
+(2) **quét nguồn** `src/**` (sàn ≥ 180 file, đo 203): không template literal nào trộn chữ Việt với
+`${BASE_URL}`/`${state.url}`/`${url}`. Bản đầu của (2) quét mọi `*url` và **vu oan** `dot-thu.ts` — tin
+chia sẻ của đợt thu mang **link khách** (`envelope.url`), link là nội dung, không phải rò — nên luật thu
+về đúng ba biến giữ địa chỉ máy chủ. Trước sửa: (1) đỏ đúng câu cũ, (2) liệt kê 17 chỗ; sau: xanh.
+
+**Bằng chứng native.** flow 77 (`rudi://destinations` không có máy chủ — đúng cách audit tạo ảnh 22): bảng
+`.maestro-bs-r12` XANH ở 1.0 sáng, vòng đo thêm 1.0 tối và 2.0 sáng — câu mới hiện, `assertNotVisible
+"http.*"` và `kiem-placeholder.mjs` (từ chối mọi node chữ mang URL) đều xanh. **Chưa đo trên máy**: 404 và
+5xx (cần stack trả mã ấy; câu gác bằng unit test); «Retry thể hiện đang xử lý» — `DiemDenScreen` về skeleton
+rồi kết quả, chưa chụp giữa chừng.
+
+### F44 — placeholder ô tìm cắt ở 2.0 (P2)
+
+**Nguyên nhân gốc.** Android dàn hint native theo bề rộng view và cho xuống dòng **ngay cả ở ô một dòng**,
+rồi cắt dòng hai ở đáy ô; RN không lộ `ellipsize` cho `TextInput`, `numberOfLines` mặc định đã là 1 nên
+không phải cách sửa; câu 30 ký tự của Khám phá live trong ô ~230dp cạnh hai nút hỏng từ 1.3.
+
+**Sửa.** Lõi `Field` tách ra `ui/Field.tsx` (không import native → node test render được; `ui.tsx` giữ
+`Field`/`SearchField` làm vỏ mỏng gắn `Ionicons`, consumer không đổi). Ô một dòng vẽ placeholder bằng
+`Text numberOfLines={1}` phủ đúng ô input khi rỗng và **không** truyền `placeholder` xuống native; ô nhiều
+dòng giữ hint native. Tên trợ năng vẫn trọn câu (phương án B của audit: nhãn ngắn hơn về hình, mô tả trợ
+năng đầy đủ); lớp phủ ẩn khỏi screen reader. **Hàng tìm thích ứng** ở `chuLon(fontScale)`: ô chiếm cả
+hàng, nút xuống dòng canh phải (Khám phá fixture + live). Không tắt font scaling.
+
+**Cổng.** `o-tim-placeholder.test.mjs` (RNW): input **không** có attribute `placeholder`, câu là node chữ
+riêng, `aria-label` trọn câu, có chữ đã gõ thì node biến mất — đỏ trước sửa ở «`<input placeholder=…`».
+Nó **không** chứng minh xuống dòng; cái đó là `native-r12/kiem-placeholder.mjs` trên hierarchy: node
+placeholder phải cao ≤ 1,5 dòng ở cỡ chữ đang đo (hint native không là node chữ nên không đo được — tự
+kiểm trên XML 20 của Codex ra ĐỎ vì «không có node»).
+
+**Bằng chứng native.** bảng r12 XANH; vòng đo **14/14** (flow 78 bàn thử và 79 Khám phá × 1.0/1.3/2.0 ×
+sáng/tối, flow 77 hai lượt): mọi node placeholder cao **một dòng** (63/70/95px ≤ trần 95/123/189), câu 30
+ký tự ở 2.0 cắt «…» trên một dòng, glyph không cắt chân; hàng Khám phá đổi từ 544px (cùng hàng hai nút) ở
+1.0 sang 838px (ô chiếm cả hàng, nút xuống dòng) từ 1.3; chữ đã gõ và placeholder cùng mép trái (ảnh bàn
+thử, ô 1–2 so ô 3). Ảnh + XML + số đo ở `native-r12/anh/`. **Chưa đo**: Khám phá **live** (cần stack
+`--otp`; hàng thích ứng cùng mã với fixture), màn hẹp hơn 411dp, iOS, và **caret trong ô đang focus** (không
+ảnh nào chụp lúc focus — reviewer ghi là chưa xác minh, không phải hỏng).
+
+**Vòng review context mới (`impeccable-finish-reviewer`) → `ship`**, mở đủ 15 ảnh, đo tương phản placeholder
+từ pixel: sáng ≈ 5,1:1, tối ≈ 5,6:1 (≥ 4,5). Không có material fix; ba trong bốn gợi ý không chặn đã làm
+ngay vì rẻ và đúng: default placeholder của kit «Tìm quán, món...» → «…» (ba chấm ASCII cạnh «…» cắt của kit
+sẽ đọc thành «món... …»; bốn flow `tapOn` chuỗi ấy cập nhật theo); câu 404 bỏ «báo cho nhóm kỹ thuật» vì app
+không có kênh ấy; trần một dòng của `kiem-placeholder.mjs` đổi từ giả định tuyến tính (biên 1px ở 2.0) sang
+số đo thật `max(24dp, 17sp × cỡ) × 1,35`. Gợi ý còn lại — mồ côi «lại.» ở 1.0 — giữ câu nhà đang dùng ở ba
+nơi; reviewer cũng ghi không vi phạm.
+
+**Cổng tương phản biên control của backend** (`services/api/tests/web/test_contrast_floor.py`) đọc kit dạng
+chữ và lấy **khối đầu tiên** khớp mốc «exported function Field» để đo `borderColor` ≥ 3:1. Tách lõi làm nó
+rơi vào vỏ trong `ui.tsx` (không có viền) → 3 ca đỏ ở pytest gốc. Sửa ở phía mình, không đụng test của
+Codex: vỏ là `export const Field = …`, gate rơi đúng lõi `ui/Field.tsx` nơi `lineStrong` được khai — comment
+trên vỏ nói rõ và **không** lặp chuỗi mốc (bản đầu của comment lặp và lại đỏ). 9/9 ca contrast xanh,
+pytest gốc chạy lại trọn bộ.
+
 ## Cố ý không làm trong lượt này (nói rõ, không nhận vơ)
 
 - Nợ cũ §4 của audit: ghi công ảnh Album/timeline demo, `Photo` trần thiếu chữ lỗi, nút vô hiệu coral

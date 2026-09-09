@@ -31,7 +31,10 @@
  * pins that they still arrive untouched.
  */
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { confirmReceipt, scanReceipt, thongDiepNguoiDoc } from "../dist-test/api.js";
 
@@ -167,4 +170,55 @@ test("thongDiepNguoiDoc: mỗi nhóm mã trả về một việc để làm ti�
     cau.set(noi, (cau.get(noi) ?? 0) + 1);
   }
   assert.ok(cau.size >= 4, `chỉ có ${cau.size} câu khác nhau cho 7 nhóm mã, quá chung chung`);
+});
+
+// Audit native 09/09, F43. The connection-failure sentence printed the server's
+// address and asked whether it was running; the 404 fallback told the reader to
+// check the API version at the bottom of the screen. Both talk to whoever is
+// debugging, and a URL is not a next step for the person holding the phone.
+test("thongDiepNguoiDoc: mất kết nối và 404 nói với người dùng, không nói với lập trình viên", () => {
+  const matKetNoi = thongDiepNguoiDoc(0, null);
+  doiSach(matKetNoi, "status 0");
+  for (const may of [/https?:\/\//i, /\blocalhost\b/i, /\d+\.\d+\.\d+\.\d+/, /:\d{2,5}\b/, /đang chạy/i, /máy chủ có/i]) {
+    assert.doesNotMatch(matKetNoi, may, `status 0 nói với lập trình viên: ${matKetNoi}`);
+  }
+  // Names the one thing the person can do, and promises nothing about what the
+  // server did or did not write -- the client is the one party that cannot know.
+  assert.match(matKetNoi, /mạng/i, `status 0 không nói việc làm tiếp: ${matKetNoi}`);
+  assert.doesNotMatch(matKetNoi, /chưa (có gì )?(bị )?ghi/i, `status 0 hứa điều client không biết: ${matKetNoi}`);
+
+  const thieuRoute = thongDiepNguoiDoc(404, "Not Found");
+  doiSach(thieuRoute, "status 404");
+  for (const may of [/\bAPI\b/, /địa chỉ/i, /cuối màn hình/i, /bản .* cũ/i, /kiểm tra lại/i]) {
+    assert.doesNotMatch(thieuRoute, may, `404 nói với lập trình viên: ${thieuRoute}`);
+  }
+});
+
+// The same leak, wherever a screen builds its own fallback sentence: a template
+// literal that mixes Vietnamese prose with the SERVER's address -- `BASE_URL`,
+// or the request address a legacy state carries as `state.url` / `url`.
+// `fetch(BASE_URL + path)` and `f(BASE_URL)` are fine: an address inside a
+// request is not copy. And a GUEST LINK is not this leak either: `dot-thu.ts`
+// puts `envelope.url` into the text a person shares with a friend, where the
+// link IS the message -- so the pattern names the server-address variables and
+// nothing wider.
+test("không câu nào trong app nội suy địa chỉ máy chủ vào chữ cho người đọc", () => {
+  const goc = fileURLToPath(new URL("../src", import.meta.url));
+  const tep = [];
+  (function di(d) {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const duong = join(d, e.name);
+      if (e.isDirectory()) di(duong);
+      else if (/\.tsx?$/.test(e.name)) tep.push(duong);
+    }
+  })(goc);
+  assert.ok(tep.length >= 180, `chỉ quét ${tep.length} file: cây nguồn không phải ở đây`);
+  const loi = [];
+  for (const t of tep) {
+    const src = readFileSync(t, "utf8");
+    for (const m of src.matchAll(/`[^`]*\$\{(?:BASE_URL|state\.url|url)\}[^`]*`/g)) {
+      if (DAU_TIENG_VIET.test(m[0])) loi.push(`${relative(goc, t)}: ${m[0].slice(0, 90)}`);
+    }
+  }
+  assert.deepEqual(loi, [], `câu cho người đọc mang địa chỉ máy chủ:\n${loi.join("\n")}`);
 });

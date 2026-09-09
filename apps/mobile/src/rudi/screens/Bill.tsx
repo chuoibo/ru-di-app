@@ -122,7 +122,7 @@ export function ReceiptReviewScreen() {
         );
         setScanNote("Đã gửi ảnh. Các dòng bên dưới vẫn là bill mẫu.");
       } catch (error) {
-        const message = error instanceof ApiError ? error.message : `Không đọc được bill tại ${BASE_URL}.`;
+        const message = error instanceof ApiError ? error.message : "Không đọc được bill.";
         setScanNote(message);
       }
     } finally {
@@ -361,7 +361,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
       });
       router.push(`/batches/${dot.batchId}` as never);
     } catch (error) {
-      setLoiDot(error instanceof ApiError ? error.message : `Không mở được đợt thu tại ${BASE_URL}.`);
+      setLoiDot(error instanceof ApiError ? error.message : "Không mở được đợt thu.");
     } finally {
       setDangMo(false);
     }
@@ -381,7 +381,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         setLoi(
           error instanceof ApiError
             ? error.message
-            : `Không đọc được quyết toán tại ${BASE_URL}.`,
+            : "Không đọc được quyết toán.",
         );
       });
     return () => {

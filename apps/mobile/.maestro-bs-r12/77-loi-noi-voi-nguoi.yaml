@@ -1,0 +1,17 @@
+# F43 (audit native 09/09): mất kết nối phải nói với người dùng, không in địa
+# chỉ máy chủ, không hỏi «máy chủ có đang chạy không». `DiemDenScreen` gọi máy
+# chủ lúc mount; không có stack thì rơi vào ErrorState với câu status 0 — đúng
+# đường ảnh 22 của Codex đi. `assertNotVisible "http.*"` đọc cây view: một node
+# chữ nào mang URL là đỏ.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://destinations
+- extendedWaitUntil:
+    visible: "Chưa đọc được danh sách nơi đến"
+    timeout: 30000
+- assertVisible: "Không nối được máy chủ. Kiểm tra mạng rồi thử lại."
+- assertNotVisible: "http.*"
+- assertNotVisible: ".*đang chạy.*"
+- assertVisible: "Thử lại"
+- takeScreenshot: r12-77-loi-mang

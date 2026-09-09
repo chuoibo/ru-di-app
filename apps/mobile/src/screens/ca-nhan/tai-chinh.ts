@@ -228,7 +228,7 @@ export async function layTaiChinh(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's localhost.
-    throw new FinanceError(0, `Không gọi được ${BASE_URL}`);
+    throw new FinanceError(0, "Không gọi được máy chủ.");
   }
   if (!response.ok) {
     let code = "";

@@ -1,0 +1,3 @@
+cỡ chữ 2 · một dòng ≈ 89px · trần 120px · 1 placeholder
+  ok   «Tìm thành phố hoặc tỉnh» cao 95px rộng 838px [161,354]→[999,449]
+XANH: mọi placeholder một dòng, không URL trên màn

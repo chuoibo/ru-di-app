@@ -119,8 +119,9 @@ export type AiTurnState =
  * those words cannot drift into an error tone without the test noticing.
  * Names the work item and the address; does not say "lỗi".
  */
-export function cauAiChuaNoiDuoc(url: string): string {
-  return `AI chưa nối vào máy chủ này. Việc còn nợ là ${AI_WORK_ITEM}. Địa chỉ đã thử: ${url}.`;
+// `_url` stays in the signature for its callers; the sentence no longer prints it (F43).
+export function cauAiChuaNoiDuoc(_url: string): string {
+  return `AI chưa nối vào máy chủ này. Việc còn nợ là ${AI_WORK_ITEM}.`;
 }
 
 /**
