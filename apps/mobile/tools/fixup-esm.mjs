@@ -44,6 +44,11 @@ function walk(dir) {
         // loud instead of resolving to the native package, which Node cannot
         // parse at all.
         .replace(/from "react-native"/g, 'from "react-native-web"')
+        // `useTinNhan.ts` imports `useFocusEffect`. The real expo-router needs a
+        // navigation container node does not have; `#expo-router` is the
+        // package `imports` alias for `tests/stubs/expo-router.mjs`, resolved
+        // from the nearest package.json so it works at any depth of dist-test.
+        .replace(/from "expo-router"/g, 'from "#expo-router"')
         // `theme.ts` reads `tokens.json`. tsc emits a bare JSON import and
         // Node refuses it without the attribute.
         .replace(/from "([^"]*\.json)"/g, 'from "$1" with { type: "json" }');

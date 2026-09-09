@@ -1051,7 +1051,10 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, padding: 16 },
   cardPressed: { opacity: 0.94, transform: [{ scale: 0.992 }] },
   pressed: { opacity: 0.68 },
-  button: { minHeight: 52, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
+  // `minWidth` pairs with `minHeight`: a content-sized button («Bỏ», `full={false}`)
+  // measured 47.2dp wide on device once it stopped being full-width (finish
+  // review 10/09, F41). The floor lives here so every future short label gets it.
+  button: { minHeight: 52, minWidth: 48, flexShrink: 0, overflow: "hidden", borderWidth: 1, borderColor: "transparent", paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   buttonFull: { width: "100%" },
   buttonCompact: { minHeight: 48, paddingHorizontal: 14 },
   buttonLabel: { zIndex: 1 },

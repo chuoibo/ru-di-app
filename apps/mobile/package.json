@@ -2,6 +2,9 @@
   "name": "mobile",
   "version": "1.0.0",
   "main": "expo-router/entry",
+  "imports": {
+    "#expo-router": "./tests/stubs/expo-router.mjs"
+  },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -37,6 +40,7 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "puppeteer-core": "24.43.1",
+    "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3"
   },
   "scripts": {

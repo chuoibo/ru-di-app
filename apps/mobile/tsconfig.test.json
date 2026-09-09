@@ -307,6 +307,12 @@
     // The PATCH body carries only the keys the person changed; a screen that
     // renames must not reset the theme. Provable without a renderer.
     "src/rudi/chat/nhom-cai-dat.ts",
+    // F42 (audit native 09/09). The conversation hook itself, compiled so a
+    // test can run it under React with a fetch that answers late: a response
+    // for group A arriving after the hook has moved to group B must not be
+    // written into B. That is a claim about effect ordering and closures,
+    // which only the real hook under the real React can settle.
+    "src/rudi/chat/useTinNhan.ts",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
