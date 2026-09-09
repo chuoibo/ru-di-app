@@ -1134,16 +1134,21 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   bên cạnh, không có sàn nào để đứng.
 - **Mười cảnh** (`hinhCanh`, `CANH_IDS`, 09/09). Trước đó có năm, và ba trong
   số đó dùng **cùng một dáng người đổi đạo cụ** — chính điều review cấm nhân
-  lên. Lượt đầu của bản mười cảnh **tái phạm đúng lỗi ấy** ở ba cảnh mới (cùng
-  pose `ghi-lai`/`giu-khung`/`cam-ban-do` với ba cảnh cũ, chỉ đổi hình chữ
-  nhật); lượt chấm bắt được và ba cảnh ấy được **vẽ lại bằng pose mới**
-  (`nang-bong`, `voi-len`, `ghe-nhin`). Nay mỗi cảnh có **một tình huống, một
-  dáng và một khuôn mặt riêng**:
-  `chua-co-hoi` kéo ghế (mặt `nhuong`) · `chua-co-keo` cúi viết (`quyet`) ·
-  `chua-co-anh` nhìn xuyên khung rỗng (`hoi`) · `chua-co-ban` **ngồi** ở bàn
-  hai chỗ, tay mời sang ghế trống (`nhuong`, `ngoi`) · `tim-khong-ra` dò bản đồ
-  (`hoi`) · `chua-co-tin-nhan` · `chua-co-loi-moi` · `chua-co-ky-niem` ·
-  `bo-loc-che-het` · và `chua-doc-duoc`.
+  lên. *Lịch sử 09/09:* lượt đầu của bản mười cảnh tái phạm đúng lỗi ấy ở ba
+  cảnh mới; lượt chấm bắt được và ba cảnh ấy được vẽ lại bằng pose mới — trong
+  đó `nang-bong` (vẽ 08/09, **gỡ 09/09** cùng ngày, xem mục mày Nếp ở trên) đã
+  được thay bằng `dua-hai-tay` ở `chua-co-loi-moi`. *Hiện hành (10/09, audit
+  F45a):* mỗi cảnh có Nếp đứng bằng **một pose riêng**, và điều ấy là **dữ liệu**
+  chứ không phải lời hứa — `POSE_CANH` trong `canh.ts` đọc từ đúng entry
+  `hinhCanh` vẽ, `tests/art-duong.test.mjs` đòi mười giá trị không trùng:
+  `chua-co-hoi` `keo-ghe` (mặt `nhuong`) · `chua-co-keo` `ghi-lai` cúi viết
+  (`quyet`) · `chua-co-anh` `giu-khung` nhìn xuyên khung rỗng (`hoi`) ·
+  `chua-co-ban` `giu-cho` **ngồi** ở bàn hai chỗ, tay mời sang ghế trống
+  (`nhuong`, `ngoi`) · `tim-khong-ra` `cam-ban-do` (`hoi`) · `chua-co-tin-nhan`
+  `goi-loi` **gọi lời** — tay khum cạnh miệng, bong bóng mọc từ miệng (trước
+  đó cùng `ghi-lai` với `chua-co-keo`: hai cảnh một dáng, audit F45a) ·
+  `chua-co-loi-moi` `dua-hai-tay` · `chua-co-ky-niem` `voi-len` ·
+  `bo-loc-che-het` `ghe-nhin` · và `chua-doc-duoc` **không pose**.
 - **`CANH_KHONG_NEP` là cơ chế, không phải lời hứa.** `chua-doc-duoc` **không
   bao giờ** vẽ Nếp, kể cả khi người gọi truyền `nep`: `hinhCanh` bỏ qua yêu
   cầu ấy. Lý do là luật «Nếp Đứng Xa Tiền» phải đúng ở **khoảng hai mươi** màn
@@ -1364,6 +1369,29 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   `native-r12/kiem-placeholder.mjs` đòi node placeholder cao ≤ 1,5 dòng ở cỡ chữ
   đang đo (hint native **không** là node chữ nên không đo được — thêm một lý do
   để nó là chữ của nhà vẽ).
+- **Nghĩa hình phải tự đứng; sửa bằng hành động, không bằng chi tiết** (audit
+  native 09/09, F45). Bốn hình đọc sai nghĩa được sửa theo cùng một phép: dựng
+  ứng viên bằng chính primitives, render cạnh bản cũ, **nhìn** rồi chọn
+  (`docs/claude/2026-09-10/nghia-hinh/`). «Kẹt xe»: xe + mặt mệt chỉ nói «đi
+  xe»; nay **đuôi xe buýt** (khối cao, dải kính `bong`, một vạch cản) chạm bánh
+  trước và người **chống cằm** (`ngoi-xe` đổi tay, mắt chúc xuống) — hai đèn hậu
+  coral bị loại vì hai chấm trên một vạch **thành khuôn mặt**; vệt khói sau bánh
+  cũng bỏ (reviewer 10/09): một tín hiệu **chuyển động** trong bức tranh nói
+  «không đi». «Trả tiền nè»:
+  hai tờ chồng góc coral đọc ra vé; nay **ba tờ xoè** ngang hơn cao — silhouette
+  tiền mặt không cần ký hiệu tiền, giữ ranh giới ADR-0021; hoá đơn xé đôi bị
+  loại vì **đưa hoá đơn** là đòi tiền. `chua-co-tin-nhan` từng cùng dáng `ghi-lai`
+  với `chua-co-keo`; nay pose **`goi-loi`** — tay khum cạnh miệng ở (37,58), tay
+  xa mở ra (92,66), và bong bóng có **đuôi trỏ vào miệng**, vẽ trước người để
+  mặt che đầu đuôi; bong bóng cầm trên tay bị loại vì đọc như cầm bảng.
+  `chua-doc-duoc` bỏ **`vongHo`** (đọc như spinner đứng yên — vòng hở của
+  `motif.ts` là «bàn trống một bên», sai nghĩa ở cảnh lỗi): coral nằm **trên vết
+  rách**, mảnh rách trượt sang bên — «đã rách», không «đang tải». Cơ chế: bảng
+  `NEP` của `canh.ts` là **dữ liệu** `{pose, x0, y0?, tiLe, them?, truoc?}` và
+  `POSE_CANH` đọc từ đúng entry `hinhCanh` vẽ, nên `art-duong.test.mjs` đòi mười
+  pose không trùng và cảnh lỗi không có cung tròn coral; refactor bảng so byte
+  10/10 cảnh với mốc trước khi đổi pose nào. Việc còn của team: kiểm chứng
+  **không nhãn** với người chưa đọc brief bằng `khong-nhan-sang/toi.png`.
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
@@ -1762,12 +1790,16 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - Album theo ngày chỉ ở `AlbumLive.tsx` và chỉ đọc từ mã; album fixture
   `Memories.tsx` vẫn lưới đều ba cột (ảnh `bs-18-album`), là hai nhịp của
   hai cây, không phải hai kiểu album của hệ.
-- Hai cảnh `chua-co-hoi`, `chua-co-ban` và bốn tư thế Nếp ngoài `moi`,
-  `ghi-lai` mới có trên bảng art, chưa màn nào gọi; ghi ở đây để không bị vẽ
-  lại khác, không phải để nói chúng đã lên máy.
-- Bảy sticker cũ (`di-thoi` … `tuyet-voi`, khối màu lớn, chỉ lớp tô) và
-  `cho-ti` (nét + hai mảng sắc độ) đang là hai ngữ pháp trong một khay; sự
-  lệch ấy là trạng thái chờ quyết định, không phải hai kiểu sticker của hệ.
+- *Lịch sử tới 08/09 (`a03f563d`):* hai cảnh `chua-co-hoi`, `chua-co-ban` và
+  bốn tư thế Nếp ngoài `moi`, `ghi-lai` mới có trên bảng art, chưa màn nào
+  gọi. **Hiện hành (09/09, #588):** mười cảnh đều đã nối vào màn — xem mục
+  «Mười cảnh» và bảng ở `docs/claude/2026-09-09/tra-loi-canh-moi-im-lang.md`.
+- *Lịch sử tới 08/09:* bảy sticker cũ (khối màu lớn, chỉ lớp tô) và `cho-ti`
+  (nét + hai mảng sắc độ) là hai ngữ pháp trong một khay, chờ quyết định.
+  **Hiện hành (09/09, #587):** cả tám cùng một ngữ pháp nét–giấy–nếp gấp, hai cỡ
+  đọc, cùng sàn `CHAN_NEP`; audit 09/09 §2 xác nhận «không còn khay pha hai
+  phong cách». Ghi hai dòng cũ lại để người sau không khôi phục quyết định cũ
+  (audit F46).
 - Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
   không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
   phải một cuộc thay icon toàn hệ.

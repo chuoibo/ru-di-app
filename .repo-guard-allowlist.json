@@ -1373,6 +1373,127 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/truoc-f45-sang.png",
+      "sha256": "6a1d308ff7ecf53fa50000824220308f4cd3a6b99474053dbc176f92d0accb34",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-vong-1-sang.png",
+      "sha256": "fca950688dcf634264a082dbe5b27a4b3c7a832fe09d6f461eb12386024954d7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-sang.png",
+      "sha256": "1c9c519867979626edd4d811aa9c6d9a6307b9b42af50bbf396979ae3931cd78",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-sang.png",
+      "sha256": "50b8900a2f326efd4083c20244b197326d23cca7618f1b609895bc3ec7100a48",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-toi.png",
+      "sha256": "e3504d1f6b97391e99e2ee66844e260805eb70faf73bdf55ae77026adb624d98",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-sang.png",
+      "sha256": "618b809730edefb05e0be0b28ad8cf1f764c5eea1153e5bd89a9253d5a090488",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-toi.png",
+      "sha256": "762ba5c4a69930ca71b2d54d3b7c7493c38c5acb45d4d7ec2bf849edf4413d06",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-71-bubble-ca-phe.png",
+      "sha256": "68164f56caf5ef2a6f21f28d52d068d7ef2ca0a8ec62fe3c13871dcd1d1d2a08",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-71-khay-tam-o.png",
+      "sha256": "4ee3b97743813dde11297ac8a272cd680f1f5cfed13f37cea7b26de690f4ff5c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-71-tam-sticker-duoi.png",
+      "sha256": "2890c59f30b97ae6da5509c556d9942628a325d0babe391e34870ca7eac69010",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-71-tam-sticker-tren.png",
+      "sha256": "2aaf4ed26cfcacdf3c36c1067b2930ac325f9383e6af1a43c24756db1e298c9b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-73-canh-ab.png",
+      "sha256": "4cf5f3d9a6ab8bcc00572ac139ee842f2bbdba47e99b01d50e7efd30f1bb1389",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-73-canh-moi.png",
+      "sha256": "a295cf4d9fd8351adf1230b9049abb743f9500e7ee848c8f7bfacd3025d22a15",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r13/anh/r13-77-loi-canh-moi.png",
+      "sha256": "37c5202f2b46f61e86825f6b244d2a42456e46d6f38ea1dc32e1f4f139ed2819",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F45, audit 09/09): tám sticker hai cỡ và khay, cảnh có/không Nếp, màn lỗi thật với cảnh chua-doc-duoc mới. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/nghia-hinh/canh-truoc.json",
+      "sha256": "fe25d1b120fd5d2fec8d760a1a92e1a26f3abbfc541147098bdd8efb11a35dd1",
+      "rules": [
+        "long-number",
+        "vn-phone"
+      ],
+      "reason": "Mốc so byte cho tái cấu trúc bảng NEP (F45, 10/09): JSON các lớp vẽ của mười cảnh, mọi dãy số là toạ độ SVG (M/L/C) — không có số điện thoại hay tài khoản. Đổi một byte là phải pin lại."
     }
   ]
 }
