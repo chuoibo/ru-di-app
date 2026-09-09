@@ -20,7 +20,7 @@ import { BIEU_CAM, KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../d
 import { STICKER_IDS, hinhSticker } from "../dist-test/rudi/chat/sticker.js";
 import { duongChuyen, gocGap, vongHo } from "../dist-test/rudi/art/motif.js";
 import { GU_IDS, KHUNG_GU, hinhGu, laGuId } from "../dist-test/rudi/art/gu.js";
-import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
+import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, POSE_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
 
 const ARITY = { M: 2, L: 2, C: 6, Z: 0 };
 const SO = /^-?\d+(\.\d+)?$/;
@@ -160,6 +160,32 @@ test("mọi cảnh hợp lệ có và không có Nếp; cảnh không Nếp là 
   assert.equal(laCanhId("chua-co-anh"), true);
   assert.deepEqual(hinhCanh("khong-co"), hinhCanh("chua-co-hoi"));
   assert.equal(moTaCanh("khong-co"), moTaCanh("chua-co-hoi"));
+});
+
+// Audit native 09/09, F45a. Two scenes drawn with the same body beside a
+// different prop is the one thing the brief forbade, and `chua-co-keo` /
+// `chua-co-tin-nhan` were both `ghi-lai`. The pose a scene stands in is data
+// (`POSE_CANH`, read from the same entry `hinhCanh` draws from), so this can be
+// checked instead of remembered.
+test("mười cảnh: mỗi cảnh có Nếp đứng bằng một pose riêng, cảnh lỗi không có pose", () => {
+  assert.deepEqual(Object.keys(POSE_CANH).sort(), [...CANH_IDS].sort(), "POSE_CANH phải nói về đúng mười cảnh");
+  for (const id of CANH_KHONG_NEP) assert.equal(POSE_CANH[id], null, `${id}: cảnh không Nếp thì không có pose`);
+  const dung = Object.entries(POSE_CANH).filter(([id]) => !CANH_KHONG_NEP.has(id));
+  for (const [id, pose] of dung) assert.ok(pose !== null && laPoseNep(pose), `${id}: pose «${pose}» không có trong POSE_NEP`);
+  const theoPose = new Map();
+  for (const [id, pose] of dung) theoPose.set(pose, [...(theoPose.get(pose) ?? []), id]);
+  const lap = [...theoPose.entries()].filter(([, ids]) => ids.length > 1);
+  assert.deepEqual(lap, [], `cùng một dáng chỉ đổi đạo cụ: ${JSON.stringify(lap)}`);
+});
+
+// Audit native 09/09, F45d. The open ring under the torn sheet read as a
+// loading spinner standing still; the coral in the failure scene has to sit ON
+// the tear -- a jagged line -- and there must be no coral arc anywhere in it.
+test("cảnh lỗi: coral nằm trên vết rách, không có cung tròn coral nào", () => {
+  const lop = hinhCanh("chua-doc-duoc");
+  const cung = lop.filter((l) => l.mau === "gap" && l.net !== undefined && /C/.test(l.d) && !/L/.test(l.d));
+  assert.deepEqual(cung, [], "cảnh lỗi còn một cung tròn coral (vòng hở đọc như spinner)");
+  assert.ok(lop.some((l) => l.mau === "gap" && l.net !== undefined && /L/.test(l.d)), "coral phải là nét gấp khúc của vết rách");
 });
 
 

@@ -175,10 +175,57 @@ Codex: vỏ là `export const Field = …`, gate rơi đúng lõi `ui/Field.tsx`
 trên vỏ nói rõ và **không** lặp chuỗi mốc (bản đầu của comment lặp và lại đỏ). 9/9 ca contrast xanh,
 pytest gốc chạy lại trọn bộ.
 
+## PR 3 — F45 · F46 (`claude/p0-w-ui5-nghia-hinh`, xếp trên PR 2)
+
+### F45 — nghĩa hình chưa tự đứng (P2)
+
+Làm đúng lời audit: **giữ khung Nếp, sửa hành động/quan hệ, không thêm chi tiết li ti**, không vẽ thêm
+cảnh. Cách chọn như lượt mày Nếp: dựng ứng viên bằng chính primitives đã biên dịch, render cạnh bản cũ,
+**nhìn** rồi chọn — không suy từ toạ độ. Bảng ứng viên và bảng trước/sau ở `docs/claude/2026-09-10/nghia-hinh/`.
+
+| Hình | Trước (audit đọc ra) | Ứng viên đã thử | Chọn, và vì sao |
+|---|---|---|---|
+| «Kẹt xe» | «đi xe»: xe + mặt mệt, không có gì nói *vì sao* không đi | A khối chặn trơn · A2 khối + hai đèn hậu coral · A3 khối + dải kính + cản · B ba thanh (hàng xe) | **A3**: đuôi xe buýt chạm bánh trước, kèm tay chống cằm (`ngoi-xe` đổi tay, mắt chúc xuống). A2 bỏ vì hai chấm + vạch **thành một khuôn mặt**; B đọc ra hàng rào |
+| «Trả tiền nè» | «đưa vé»: hai tờ chồng góc coral | A ba tờ xoè · B hoá đơn xé đôi | **A**: xoè ba tờ, ngang hơn cao, là silhouette tiền mặt duy nhất không cần ký hiệu tiền (giữ ranh giới ADR-0021: không xu/tick/₫/QR/ngân hàng). B bỏ vì **đưa hoá đơn** đọc thành đòi tiền — ngược câu |
+| `chua-co-tin-nhan` | cùng dáng `ghi-lai` với `chua-co-keo`, chỉ đổi đạo cụ | A tay giơ bong bóng như cờ · B `moi-ly` giơ bong bóng · C bong bóng mọc từ **miệng**, tay khum cạnh miệng, tay xa mở | **C** → pose mới `goi-loi`. A/B đều đọc như cầm **bảng**; lời nói phải mọc từ miệng |
+| `chua-doc-duoc` | vòng coral rời dưới tờ rách ≈ spinner đứng yên | D1 bỏ vòng, coral **ở vết rách**, mảnh rách trượt sang | **D1**: «đã rách» thay «đang tải» |
+
+**Cơ chế thay lời hứa.** (1) Pose của cảnh nay là **dữ liệu**: bảng `NEP` trong `canh.ts` là
+`{pose, x0, y0?, tiLe, them?, truoc?}` và `POSE_CANH` đọc từ đúng entry `hinhCanh` vẽ — `art-duong.test.mjs`
+đòi mười giá trị **không trùng** (đỏ trước khi đổi pose: `ghi-lai` hai lần); refactor bảng là thuần — 10/10 cảnh
+so byte với mốc trước khi đổi bất cứ pose nào. (2) Cảnh lỗi: test đòi **không cung tròn coral** và coral phải là
+**nét gấp khúc** của vết rách (đỏ trước sửa: `vongHo` là cung). (3) Pose `goi-loi` và tay mới của `ngoi-xe` qua
+sweep `khongCatNepGap` (nghiêng −8..13 × đậm) và cổng hai cỡ đọc — tay khum ở (37,58) nằm trái miệng (x ≥ 44)
+và cách nếp gấp hơn hai mươi đơn vị theo thiết kế, không phải tình cờ.
+
+**Kiểm chứng người dùng không nhãn** — của team: `nghia-hinh/khong-nhan-sang.png` / `-toi.png` là bảng **không
+nhãn** (Kẹt xe · Trả tiền nè ở 120/64, `chua-co-tin-nhan` · `chua-co-keo` · `chua-doc-duoc` · `chua-co-loi-moi`).
+Hỏi vài người chưa đọc brief «hình này nói gì», ghi nguyên văn. Tôi **không** làm và không bịa tỉ lệ nhận biết.
+
+**Vòng review context mới → `ship`.** Reviewer đọc **mù** bảng không nhãn (trước khi đọc README) ra đúng bốn
+nghĩa: «đứng sau đuôi xe buýt, chán» · «đây, cầm lấy» · «gọi mà chưa ai trả lời» · «tài liệu rách, mảnh rơi
+ra». Không material fix. Hai ghi chú không chặn được nhận: bỏ **vệt khói** sau bánh «Kẹt xe» (một lớp; tín hiệu
+chuyển động ngược nghĩa), và `bo-loc-che-het` còn dùng `vongHo` trên lưới — cùng hình vừa bị loại ở cảnh lỗi →
+**để team quyết**, ngoài phạm vi F45. Reviewer đòi hiện vật của phép so byte: `nghia-hinh/canh-truoc.json` là
+mốc, README ghi lệnh so.
+
+**Bằng chứng native** (`native-r13/`): bảng `.maestro-bs-r13` XANH hai lượt (lượt 2 sau khi bỏ vệt khói) — tám
+sticker ở 120/64 và khay thật (flow 71), cảnh có/không Nếp gồm `chua-co-tin-nhan` mới (flow 73), và **màn lỗi
+thật** «Đi đâu?» với cảnh `chua-doc-duoc` mới (flow 77, cùng đường ảnh 22 của audit). Không path nào làm
+`PathParser` ném. **Chưa đo trên máy**: theme tối (bảng art phủ), iOS, máy thật.
+
+### F46 — DESIGN.md drift (P3)
+
+Đoạn «Mười cảnh» viết lại thì hiện tại với pose thật (`nang-bong` ghi «vẽ 08/09, gỡ 09/09»; `chua-co-loi-moi` =
+`dua-hai-tay`); bốn dòng lịch sử ở mục bằng chứng gắn tiền tố «Lịch sử tới 08/09 (`a03f563d`)» + dòng hiện hành
+(#587, #588). Không xoá bằng chứng cũ.
+
 ## Cố ý không làm trong lượt này (nói rõ, không nhận vơ)
 
 - Nợ cũ §4 của audit: ghi công ảnh Album/timeline demo, `Photo` trần thiếu chữ lỗi, nút vô hiệu coral
   nhạt, dấu phân cách credit, glyph Puppy Farm.
 - Kiểm chứng người dùng **không nhãn** cho F45 — của team, với bảng không nhãn tôi giao ở PR 3.
+- `bo-loc-che-het` còn dùng `vongHo` trên lưới lọc (reviewer PR 3 chỉ ra: cùng hình vòng hở vừa bị loại ở
+  cảnh lỗi, và nghĩa «bàn trống một bên» không hợp lưới) — quyết định mỹ thuật của team, không phải chỗ thiếu.
 - iOS · máy thật · TalkBack · tablet · IME trong chat live.
 - Animation mới có nghĩa (§5 bước 3) — quyết định sau khi có số đo ở PR 4.

@@ -17,7 +17,7 @@
  */
 import stickers from "../../../../../packages/shared/stickers.json";
 import { CHAN_NEP, hinhGhe, hinhNep } from "../art/nep";
-import { bau as bauVe, cong as congVe, daGiac as daGiacVe, netGay, quat as quatVe, tron as tronVe, vien as vienVe, type LopVe } from "../art/net";
+import { cong as congVe, daGiac as daGiacVe, netGay, quat as quatVe, tron as tronVe, vien as vienVe, type LopVe } from "../art/net";
 
 export const STICKER_IDS = [
   "di-thoi",
@@ -271,13 +271,31 @@ function okChot(chiTiet: boolean): LopVe[] {
   return [...giay, ...nguoi];
 }
 
-/** «Kẹt xe»: sitting on something that is not moving, one foot down. */
+/**
+ * «Kẹt xe»: sitting on something that is not moving, because the road ahead is
+ * full -- the back of a bus stands right at the front wheel.
+ *
+ * The first version was the bike and the tired face alone, and it read as «đi
+ * xe» (audit 09/09, F45b): nothing in the picture said WHY it was not moving.
+ * What says it now is silhouette, not detail: one tall mass touching the front
+ * wheel, a window band and a bumper line so it is a vehicle and not a wall,
+ * and the rider's chin on a hand (`ngoi-xe`). Two coral tail lights were tried
+ * and rejected: two dots over a line is a face.
+ */
 function ketXe(chiTiet: boolean): LopVe[] {
   const { nguoi, P } = dat("ngoi-xe", 0.76, -4, chiTiet);
   const [hx, hy] = P(86, 54);
   const [mx, my] = P(46, 78);
   const w = chiTiet ? 2.6 : 3.2;
   const rBanh = 8.5, ySan = CHAN_NEP - rBanh;
+  // The bus: its near edge is the front wheel's far edge plus two units.
+  const bx = hx - 4 + rBanh + 2, bTop = 32;
+  const xeTruoc: LopVe[] = [
+    { d: khungBo(bx, bTop, 95 - bx, CHAN_NEP - bTop, 3), mau: "giay" },
+    { d: khungBo(bx + 4, bTop + 6, 95 - bx - 8, 20, 2), mau: "bong" },
+    { d: khungBo(bx, bTop, 95 - bx, CHAN_NEP - bTop, 3), mau: "muc", net: w },
+    { d: netGay([[bx + 3, 80], [92, 80]]), mau: "muc", net: w },
+  ];
   const xe: LopVe[] = [
     { d: netGay([[mx - 10, my + 2], [mx + 12, my + 2]]), mau: "muc", net: w * 1.8 },
     { d: netGay([[mx + 10, my + 3], [hx - 2, hy + 4]]), mau: "muc", net: w },
@@ -289,44 +307,49 @@ function ketXe(chiTiet: boolean): LopVe[] {
     { d: tronVe(hx - 4, ySan, rBanh), mau: "gap" },
     { d: tronVe(hx - 4, ySan, rBanh), mau: "muc", net: w },
   ];
-  // One tired puff, only where there is room for it to be seen.
-  const khoi: LopVe[] = chiTiet ? [{ d: bauVe(10, 58, 7, 4.5), mau: "bong" }] : [];
-  return [...khoi, ...xe, ...nguoi];
+  // No exhaust puff: it was the one motion cue left in a picture whose whole
+  // point is «not moving» (finish review 10/09). Bus first, then the bike, then
+  // the rider: the hand that props the chin has to be seen.
+  return [...xeTruoc, ...xe, ...nguoi];
 }
 
 /**
- * «Trả tiền nè»: a folded note held out in both hands, with a small bow.
+ * «Trả tiền nè»: three notes fanned out of both hands, with a small bow.
  *
- * Deliberately NOT a coin, a tick or a currency mark: this is a sentence the
- * sender says, and it must never be mistaken for the system confirming that
- * money moved (ADR-0021 boundary, DESIGN.md «ngoại lệ sticker»). What carries
- * the meaning is the gesture of handing something over.
+ * Deliberately NOT a coin, a tick, a currency mark, a QR or a bank: this is a
+ * sentence the sender says, and it must never be mistaken for the system
+ * confirming that money moved (ADR-0021 boundary, DESIGN.md «ngoại lệ
+ * sticker»). What carries the meaning is the gesture of handing over one's
+ * share. Two stacked notes with a coral corner read as a ticket or a card
+ * (audit 09/09, F45c); a fan of three, wider than tall, is the one silhouette
+ * that reads as cash without drawing any money symbol on it. A torn half of a
+ * bill was tried and rejected: handing over the bill reads as asking for
+ * money, the opposite sentence.
  */
 function traTienNe(chiTiet: boolean): LopVe[] {
   const { nguoi, P } = dat("dua-hai-tay", 0.82, -8, chiTiet);
   const [ax, ay] = P(82, 66);
-  const [bx, by] = P(70, 72);
   const w = chiTiet ? 2.2 : 2.8;
-  // The note starts AT the hands and runs away from the body, so both hands
-  // stay outside it and in front of it. The first version built the quad
-  // around the hand coordinates, so it swallowed them and painted over the
-  // figure: what was left was an object, and an object handed by nobody is the
-  // transaction artifact the ADR boundary rules out.
-  const tren: [number, number][] = [[ax + 1, ay - 9], [ax + 26, ay - 14], [ax + 28, ay - 1], [ax + 3, ay + 4]];
-  const duoi: [number, number][] = [[bx + 1, by - 5], [bx + 26, by - 10], [bx + 28, by + 3], [bx + 3, by + 8]];
-  const nep: [number, number][] = [tren[0], [tren[0][0] + 9, tren[0][1] - 1.6], [tren[3][0] + 9, tren[3][1] - 1.6], tren[3]];
-  const tien: LopVe[] = [
-    // Two notes, fanned, with the near one's short edge FOLDED back toward the
-    // giver. Deliberately not a centred horizontal band across a rounded card:
-    // that is the magnetic-stripe glyph, and on the dark scheme it read as a
-    // bank card. No tick, no coin, no currency mark either.
-    { d: daGiacVe(duoi), mau: "giay" },
-    { d: daGiacVe(duoi), mau: "muc", net: w },
-    { d: daGiacVe(tren), mau: "giay" },
-    { d: daGiacVe(tren), mau: "muc", net: w },
-    { d: daGiacVe(nep), mau: "gap" },
-    { d: daGiacVe(nep), mau: "muc", net: w },
-  ];
+  // The fan pivots just past the far hand, so the hands stay outside the notes
+  // and in front of them: an object handed by nobody is the transaction
+  // artifact the ADR boundary rules out.
+  const goc: [number, number] = [ax + 2, ay + 2];
+  const xoay = (x: number, y: number, deg: number): [number, number] => {
+    const a = (deg * Math.PI) / 180, dx = x - goc[0], dy = y - goc[1];
+    return [goc[0] + dx * Math.cos(a) - dy * Math.sin(a), goc[1] + dx * Math.sin(a) + dy * Math.cos(a)];
+  };
+  const to = (deg: number): [number, number][] =>
+    [[goc[0], goc[1] - 6], [goc[0] + 27, goc[1] - 6], [goc[0] + 27, goc[1] + 6], [goc[0], goc[1] + 6]].map(([x, y]) => xoay(x, y, deg));
+  const tien: LopVe[] = [];
+  for (const deg of [14, 0, -14]) {
+    const pts = to(deg);
+    tien.push({ d: daGiacVe(pts), mau: "giay" }, { d: daGiacVe(pts), mau: "muc", net: w });
+    if (deg === -14) {
+      // The top note keeps the folded coral corner: the same fold Nếp wears.
+      const c: [number, number][] = [pts[1], [pts[1][0] - 7, pts[1][1] + 1], [pts[1][0] - 1, pts[1][1] + 6]];
+      tien.push({ d: daGiacVe(c), mau: "gap" }, { d: daGiacVe(c), mau: "muc", net: w });
+    }
+  }
   // Notes first, figure second: the hands must be seen giving them.
   return [...tien, ...nguoi];
 }

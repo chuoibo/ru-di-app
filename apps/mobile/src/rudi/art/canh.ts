@@ -11,7 +11,7 @@
  * figure is used anywhere else (concept note 08/09, §hợp đồng 6).
  */
 import { type Diem, type LopVe, bau, daGiac, khungBo, netGay, qCong, tron } from "./net";
-import { CHAN_NEP, hinhGhe, hinhNep, type TuyChonNep } from "./nep";
+import { CHAN_NEP, hinhGhe, hinhNep, type PoseNep, type TuyChonNep } from "./nep";
 import { duongChuyen, gocGap, vongHo } from "./motif";
 
 /** Landscape, so the figure and the thing it points at can stand side by side. */
@@ -19,11 +19,6 @@ export const KHUNG_CANH = { w: 144, h: 112 } as const;
 
 /** One floor for every scene: chair legs, the foot of a frame or a map, and Nếp's feet all end here. */
 const SAN = 102;
-
-/** Place the figure so its feet stand on the floor at `x0`. */
-function nepTrenSan(pose: string, x0: number, tiLe: number, them: TuyChonNep = {}): LopVe[] {
-  return hinhNep(pose, { x0, y0: SAN - CHAN_NEP * tiLe, tiLe, ...them });
-}
 
 export const CANH_IDS = [
   "chua-co-hoi",
@@ -58,8 +53,8 @@ const MO_TA: Record<CanhId, string> = {
   "chua-co-anh": "Một khung ảnh còn trống, góc giấy gấp",
   "chua-co-ban": "Hai chiếc ghế, một chỗ còn trống",
   "tim-khong-ra": "Một tấm bản đồ gấp, đường đi chưa tới nơi",
-  "chua-doc-duoc": "Một tờ giấy rách ngang, dòng chữ dừng ở vết rách",
-  "chua-co-tin-nhan": "Một bong bóng thoại bằng giấy, bên trong còn trống",
+  "chua-doc-duoc": "Một tờ giấy rách, mảnh rách trượt sang bên",
+  "chua-co-tin-nhan": "Một bong bóng thoại còn trống, vừa được mở lời",
   "chua-co-loi-moi": "Một phong thư còn nguyên, chưa có ai gửi đi",
   "chua-co-ky-niem": "Một sợi dây phơi ảnh, hai chiếc kẹp còn trống",
   "bo-loc-che-het": "Một tấm lưới che gần kín, còn một ô để nhìn qua",
@@ -120,29 +115,40 @@ const NEN: Record<CanhId, () => LopVe[]> = {
     { d: qCong([70, 90], [80, 48], [106, 54]), mau: "muc", net: 2.4 },
     ...vongHo(116, 54, 8, { moTai: Math.PI * 0.75, moRong: 1.3, net: 2.4 }),
   ],
-  // The server did not answer: a sheet torn across, the line of ink stopping
-  // where the tear begins. No figure here, ever (`CANH_KHONG_NEP`).
+  // The server did not answer: a sheet torn, the torn-off corner slid a little
+  // to the side, and the coral ON the tear. No ring: the open ring under the
+  // sheet read as a loading spinner standing still (audit 09/09, F45d), and a
+  // failure has to look finished, not pending. No figure here, ever
+  // (`CANH_KHONG_NEP`).
   "chua-doc-duoc": () => {
-    const to: readonly Diem[] = [[34, 22], [104, 18], [106, 66], [36, 70]];
+    const to: readonly Diem[] = [[34, 24], [104, 20], [106, 46], [90, 48], [84, 56], [92, 62], [88, 72], [36, 76]];
+    const manh: readonly Diem[] = [[96, 50], [112, 48], [114, 78], [98, 80], [94, 66], [102, 60], [96, 56]];
+    const rach: readonly Diem[] = [[90, 48], [84, 56], [92, 62], [88, 72]];
+    const rachManh: readonly Diem[] = [[94, 66], [102, 60], [96, 56]];
     return [
       { d: daGiac(to), mau: "giay" },
       { d: daGiac(to), mau: "muc", net: 2.2 },
-      { d: netGay([[46, 34], [86, 32]]), mau: "bong", net: 3 },
-      { d: netGay([[46, 46], [72, 45]]), mau: "bong", net: 3 },
-      // The tear: a jagged edge and nothing past it.
-      { d: netGay([[78, 44], [86, 52], [78, 58], [88, 66]]), mau: "muc", net: 2.4 },
-      ...vongHo(60, 88, 14, { moTai: Math.PI * 0.9, net: 3 }),
+      { d: netGay([[46, 36], [86, 34]]), mau: "bong", net: 3 },
+      { d: netGay([[46, 48], [72, 47]]), mau: "bong", net: 3 },
+      { d: netGay([[46, 60], [76, 59]]), mau: "bong", net: 3 },
+      { d: netGay(rach), mau: "gap", net: 3 },
+      { d: daGiac(manh), mau: "giay" },
+      { d: daGiac(manh), mau: "muc", net: 2.2 },
+      { d: netGay(rachManh), mau: "gap", net: 3 },
     ];
   },
-  // No message yet: an empty paper speech bubble, held up. Deliberately NOT a
-  // second folded sheet: `chua-co-keo` already owns that motif, and two scenes
-  // sharing a base is the same fault as two sharing a pose.
+  // No message yet: an empty speech bubble whose tail lands ON THE MOUTH of the
+  // figure calling out (`goi-loi` at x0 -4, y0 16, scale 0.78: the mouth is at
+  // scene (30..41, 57..61), the tail tip at (41, 55)). Drawn before the figure,
+  // so the face covers the tip and the bubble is seen to come out of it. It
+  // used to sit beside a writing body -- the same body `chua-co-keo` writes
+  // with -- and read as a second plan sheet (audit 09/09, F45a).
   "chua-co-tin-nhan": () => {
-    const than: readonly Diem[] = [[54, 20], [124, 16], [126, 60], [78, 63], [66, 76], [64, 63], [56, 64]];
+    const than: readonly Diem[] = [[51, 45], [57, 11], [125, 15], [123, 57], [61, 59], [41, 55]];
     return [
       { d: daGiac(than), mau: "giay" },
       { d: daGiac(than), mau: "muc", net: 2.2 },
-      { d: tron(94, 40, 3.4), mau: "gap" },
+      { d: tron(91, 35, 3.4), mau: "gap" },
     ];
   },
   // No invitation: an open envelope with nothing inside it yet.
@@ -192,62 +198,94 @@ const NEN: Record<CanhId, () => LopVe[]> = {
 };
 
 /**
- * The figure, placed so that each pose's contact points land on the prop:
- * `x0 + 96-box x * tiLe` equals the prop's edge. Feet on the floor, always.
+ * Where the figure stands in each scene, as DATA: which pose, at what scale,
+ * where the 96-box lands (`y0` defaults to feet on the floor), the face and
+ * legs that override the pose's own, and any prop the figure has to be drawn
+ * OVER. `hinhCanh` draws from this entry and `POSE_CANH` is read from the same
+ * entry, so the pose a test sees is the pose the screen gets -- a separate list
+ * of poses would be a second place to be wrong (audit native 09/09, F45a).
+ *
+ * Each pose's contact points land on the prop: `x0 + 96-box x * tiLe` equals
+ * the prop's edge. Feet on the floor unless `y0` says otherwise.
  */
-const NEP: Record<CanhId, () => LopVe[]> = {
+type ChoNep = {
+  pose: PoseNep;
+  x0: number;
+  y0?: number;
+  tiLe: number;
+  them?: Omit<TuyChonNep, "x0" | "y0" | "tiLe">;
+  /** Layers the figure is drawn over: the print in its hand, not the wall. */
+  truoc?: () => LopVe[];
+} | null;
+
+const NEP: Record<CanhId, ChoNep> = {
   // Hand at box (90, 34) → scene (90, 56.4): the top of the chair's left post.
   // Offering, not merely standing there: the face is the one the pose is for.
-  "chua-co-hoi": () => nepTrenSan("keo-ghe", 18, 0.8, { bieuCam: "nhuong" }),
+  "chua-co-hoi": { pose: "keo-ghe", x0: 18, tiLe: 0.8, them: { bieuCam: "nhuong" } },
   // The sheet floats; the figure writes beside it, off the floor line on purpose.
   // Concentrating on the first line rather than smiling at it.
-  "chua-co-keo": () => hinhNep("ghi-lai", { x0: -2, y0: 14, tiLe: 0.8, bieuCam: "quyet" }),
+  "chua-co-keo": { pose: "ghi-lai", x0: -2, y0: 14, tiLe: 0.8, them: { bieuCam: "quyet" } },
   // Hands at box (74, 18) and (76, 70) → scene x 58.2 and 59.8: the frame's near edge,
   // a sliver of which stays visible between the body and the frame. Looking
   // THROUGH the empty frame, which is what makes it a viewfinder and not a board.
-  "chua-co-anh": () => nepTrenSan("giu-khung", -1, 0.8, { bieuCam: "hoi" }),
+  "chua-co-anh": { pose: "giu-khung", x0: -1, tiLe: 0.8, them: { bieuCam: "hoi" } },
   // SEATED on the near chair, hand open across the table to the seat still
   // free: a different situation from the pulled-out chair above, not the same
   // figure beside a different prop. Placed by the SEAT, not by the floor: the
   // hips (box y 76) have to meet `hinhGhe(54, …, 0.7)`'s seat at scene y 86.6,
-  // so `nepTrenSan` is the wrong helper and the feet land in front of the chair.
-  "chua-co-ban": () =>
-    hinhNep("giu-cho", { x0: 30, y0: 86.6 - 76 * 0.7, tiLe: 0.7, bieuCam: "nhuong", dang: "ngoi" }),
+  // so the floor default is wrong here and the feet land in front of the chair.
+  "chua-co-ban": { pose: "giu-cho", x0: 30, y0: 86.6 - 76 * 0.7, tiLe: 0.7, them: { bieuCam: "nhuong", dang: "ngoi" } },
   // Hands at box (75, 26) and (78, 66) → scene x 61 and 63.4: the map's near edge.
-  "tim-khong-ra": () => nepTrenSan("cam-ban-do", 1, 0.8, { bieuCam: "hoi" }),
+  "tim-khong-ra": { pose: "cam-ban-do", x0: 1, tiLe: 0.8, them: { bieuCam: "hoi" } },
   // The one scene the figure may never enter: a failure (`CANH_KHONG_NEP`).
-  "chua-doc-duoc": () => [],
-  // Crouched over the blank page, pen just set down.
-  "chua-co-tin-nhan": () => hinhNep("ghi-lai", { x0: -4, y0: 16, tiLe: 0.78, bieuCam: "hoi" }),
+  "chua-doc-duoc": null,
+  // Calling out, off the floor line like `chua-co-keo` so the two silences of
+  // the chat and the plan sit at the same height -- but a different act: the
+  // hand is at the mouth, not on a pencil, and the bubble starts at the mouth.
+  "chua-co-tin-nhan": { pose: "goi-loi", x0: -4, y0: 16, tiLe: 0.78 },
   // Holding the empty envelope out, offering it to whoever is not here yet.
   // Hands at box (82, 66) and (70, 72) → scene x 61.9 and 52.6: the near edge
   // of the envelope, so it is being HELD OUT rather than standing beside one.
-  "chua-co-loi-moi": () => nepTrenSan("dua-hai-tay", -2, 0.78, { bieuCam: "nhuong" }),
+  "chua-co-loi-moi": { pose: "dua-hai-tay", x0: -2, tiLe: 0.78, them: { bieuCam: "nhuong" } },
   // One arm straight up to the empty clip on the line, the other holding the
   // print that has not gone up yet. Reaching, not framing: `chua-co-anh`
   // already owns the two-hands-on-a-rectangle body.
-  "chua-co-ky-niem": () => {
-    // Read off the pose's own low hand (box (8, 62) of `voi-len`), not a point
-    // near it: a prop anchored to a coordinate no pose owns is how a hand ends
-    // up holding nothing.
-    const P = (x: number, y: number): Diem => [8 + x * 0.74, SAN - CHAN_NEP * 0.74 + y * 0.74];
-    const [gx, gy] = P(8, 62);
-    return [
-      // The print hanging from the low hand, drawn first so the fingers stay
-      // in front of it. Kept above the floor and clear of both legs: at the
-      // old hand it read as a white square behind a shin.
-      { d: khungBo(gx - 9, gy, 22, 20, 3), mau: "giay" },
-      { d: khungBo(gx - 9, gy, 22, 20, 3), mau: "muc", net: 2.2 },
-      ...nepTrenSan("voi-len", 8, 0.74),
-    ];
+  "chua-co-ky-niem": {
+    pose: "voi-len",
+    x0: 8,
+    tiLe: 0.74,
+    // The print hanging from the low hand, drawn first so the fingers stay in
+    // front of it. Read off the pose's own low hand (box (8, 62) of `voi-len`),
+    // not a point near it: a prop anchored to a coordinate no pose owns is how
+    // a hand ends up holding nothing. Kept above the floor and clear of both
+    // legs: at the old hand it read as a white square behind a shin.
+    truoc: () => {
+      const P = (x: number, y: number): Diem => [8 + x * 0.74, SAN - CHAN_NEP * 0.74 + y * 0.74];
+      const [gx, gy] = P(8, 62);
+      return [
+        { d: khungBo(gx - 9, gy, 22, 20, 3), mau: "giay" },
+        { d: khungBo(gx - 9, gy, 22, 20, 3), mau: "muc", net: 2.2 },
+      ];
+    },
   },
   // Leaning in at the one open square: the far hand at box (78, 44) → scene
   // (58.3, 66.3), which IS the square, so the brace point and the hole are the
   // same place -- and it sits at eye height rather than above the head, so the
   // figure is looking through it. A body bent sideways with the other arm
   // down, not the two-handed grip `tim-khong-ra` already uses.
-  "bo-loc-che-het": () => nepTrenSan("ghe-nhin", -1, 0.76),
+  "bo-loc-che-het": { pose: "ghe-nhin", x0: -1, tiLe: 0.76 },
 };
+
+/** The pose each scene stands in; `null` for a scene that never has the figure. */
+export const POSE_CANH: Readonly<Record<CanhId, PoseNep | null>> = Object.fromEntries(
+  CANH_IDS.map((id) => [id, NEP[id]?.pose ?? null]),
+) as Record<CanhId, PoseNep | null>;
+
+function veNep(cho: ChoNep): LopVe[] {
+  if (cho === null) return [];
+  const y0 = cho.y0 ?? SAN - CHAN_NEP * cho.tiLe;
+  return [...(cho.truoc?.() ?? []), ...hinhNep(cho.pose, { x0: cho.x0, y0, tiLe: cho.tiLe, ...cho.them })];
+}
 
 /**
  * The horizontal extent of a layer list, read from every x in its paths, so a
@@ -281,6 +319,6 @@ export function hinhCanh(id: string, tuyChon: TuyChonCanh = {}): LopVe[] {
   // A scene in `CANH_KHONG_NEP` never draws the figure, whatever the caller
   // passes: the rule that keeps the character away from errors and money is
   // carried here, not by twenty screens each remembering `nep={false}`.
-  const veNep = nep && !CANH_KHONG_NEP.has(canh);
-  return veNep ? [...NEN[canh](), ...NEP[canh]()] : NEN[canh]();
+  const veNepDuoc = nep && !CANH_KHONG_NEP.has(canh);
+  return veNepDuoc ? [...NEN[canh](), ...veNep(NEP[canh])] : NEN[canh]();
 }

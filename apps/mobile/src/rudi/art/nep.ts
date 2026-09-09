@@ -46,6 +46,10 @@ export const POSE_NEP = [
   // the bodies that make them different situations.
   "voi-len",
   "ghe-nhin",
+  // 10/09 (audit F45a): «no message yet» used the writing body beside a
+  // speech bubble, the same body `chua-co-keo` writes with. Opening a
+  // conversation is a different act from starting a plan: this one calls out.
+  "goi-loi",
 ] as const;
 export type PoseNep = (typeof POSE_NEP)[number];
 
@@ -100,8 +104,9 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   "moi-ly": { nghieng: 7, nhin: [1.5, 0.6], bieuCam: "nhuong", dang: "dung" },
   // Pressing a mark down on the plan: weight over the hand, eyes on it.
   "dat-tay": { nghieng: 6, nhin: [1.2, 1.4], bieuCam: "quyet", dang: "chong" },
-  // Sitting on something that is not moving, one hand still on the bar.
-  "ngoi-xe": { nghieng: 1, nhin: [1.1, 0.3], bieuCam: "met", dang: "ngoi" },
+  // Sitting on something that is not moving: one hand still on the bar, the
+  // other propping the chin, eyes down. Bored, not riding (audit 10/09, F45b).
+  "ngoi-xe": { nghieng: 1, nhin: [1.2, 1.4], bieuCam: "met", dang: "ngoi" },
   // Both hands out, offering something small, with a small bow.
   "dua-hai-tay": { nghieng: 3, nhin: [1.2, 0.8], bieuCam: "nhuong", dang: "dung" },
   // Both feet off the ground.
@@ -116,6 +121,9 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   // planted legs hold the body upright and the shear stops reading, which is
   // how the first version came out as a shrug (finish review 09/09).
   "ghe-nhin": { nghieng: 13, nhin: [1.6, 0.3], bieuCam: "hoi", dang: "dung" },
+  // Calling out: the near hand cupped beside the mouth, the far hand open toward
+  // whoever it is for. The speech bubble a scene draws starts at the mouth.
+  "goi-loi": { nghieng: 3, nhin: [1.4, 0.2], bieuCam: "hao-hung", dang: "dung" },
 };
 
 /** The feet stand on this line of the 96-box; a scene puts its floor here. */
@@ -469,10 +477,15 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // at 64dp the two used to be the same shape with a different mark in it.
       tuThe = [...tay(R, P(78, 84)), ...tay(L, P(10, 54))];
       break;
-    case "ngoi-xe":
-      // Stuck: one hand still on the bar at box (86, 54), the other dropped.
-      tuThe = [...tay(R, P(86, 54)), ...tay(L, P(22, 72))];
+    case "ngoi-xe": {
+      // Stuck: one hand still on the bar at box (86, 54); the near arm bends at
+      // an elbow and the hand comes up to the chin at (34, 58) -- the one
+      // gesture that says waiting rather than riding (audit 10/09, F45b). The
+      // hand sits left of the mouth (x 44+) and well below the fold (y 38-).
+      const khuyu = P(20, 72);
+      tuThe = [...tay(R, P(86, 54)), { d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(34, 58))];
       break;
+    }
     case "dua-hai-tay": {
       // Handing something over with both hands: the far hand at box (82, 66),
       // the near one at (70, 72) after an elbow, so the two meet in front
@@ -503,6 +516,16 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // puts a dark bar across the coral corner, which is the identity mark.
       tuThe = [...tay(R, P(78, 44)), ...tay(L, P(10, 72))];
       break;
+    case "goi-loi": {
+      // Calling out: the near arm bends at an elbow (16, 70) and the hand cups
+      // beside the mouth at (37, 58) -- left of the mouth, which starts at x 44,
+      // and twenty units under the fold; the far arm opens out and down to
+      // (92, 66), toward whoever the word is for. The bubble is the scene's:
+      // it starts where this mouth is (`canh.ts`, `chua-co-tin-nhan`).
+      const khuyu = P(16, 70);
+      tuThe = [{ d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(37, 58)), ...tay(R, P(92, 66))];
+      break;
+    }
     case "vui":
     default: {
       // Both arms up, quietly. No motion marks: the concept forbids an
