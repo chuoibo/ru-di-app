@@ -139,7 +139,7 @@
     },
     {
       "path": "apps/mobile/package-lock.json",
-      "sha256": "5e8d591ae2b0eb0da057dc523b8427e604781e3cf4a14c391609a14711824ea0",
+      "sha256": "694d838aaa9e5964f56be11342b8dbd67bb6e7124fa94ab4b126f1d8e7835e07",
       "rules": [
         "aggregate-base64-fragments",
         "long-number"
