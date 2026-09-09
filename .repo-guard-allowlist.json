@@ -1117,6 +1117,46 @@
         "controlled-artifact"
       ],
       "reason": "Bảng dựng mười tám pose Nếp còn lại sau khi gỡ `nang-bong`, ba cỡ đọc. Hình vẽ vector, không có dữ liệu người dùng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native-r10/01-khay-tam-o.png",
+      "sha256": "5aba5c8ad7b2982046d567850ddb389e99b9f09f3aa929bda2acde7c2a2169aa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: khay tám sticker, nhãn «Cà phê không?» hiện trọn. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native-r10/02-tam-sticker-120.png",
+      "sha256": "9511e622ba7f0024bab1c272df319fce724dca9f317c17fd1aca43f1fd10ca92",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: sáu sticker ở 120dp sau khi sửa mày, góc coral sạch. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native-r10/03-canh-moi-ab.png",
+      "sha256": "baf94319732b777871e1ab04268b53b4904af0948a8617f027b5b2c75fc92646",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: bốn cảnh mới, bản có Nếp và bản tắt Nếp. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native-r10/04-tim-khong-ra-man-that.png",
+      "sha256": "3c4694ab663524dc3c64c05b6b4270ae6104cbb30b0c422f6021d9f7f347314b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: cảnh tim-khong-ra trên màn Khám phá thật. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native-r10/05-loi-co-canh-man-that.png",
+      "sha256": "020ab3daa68432fe3de81ff5de097262b6994ee01351345be5d93cf5f02538cd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: màn lỗi thật với cảnh mặc định chua-doc-duoc, không có Nếp. Dữ liệu demo."
     }
   ]
 }
