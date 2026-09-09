@@ -113,7 +113,7 @@ export class TuongError extends Error {
 export function loiTuong(status: number, code: string, _detail = ""): string {
   const known = LOI_TUONG[code.toLowerCase()];
   if (known) return known;
-  if (status === 0) return `Không gọi được ${BASE_URL}`;
+  if (status === 0) return "Không gọi được máy chủ.";
   if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
   return cauMayChuLoi(status);
 }

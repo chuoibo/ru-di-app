@@ -1,0 +1,4 @@
+cỡ chữ 2 · một dòng ≈ 89px · trần 120px · 2 placeholder
+  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 95px rộng 838px [161,1506]→[999,1601]
+  ok   «Tìm thành phố hoặc tỉnh» cao 95px rộng 838px [161,1674]→[999,1769]
+XANH: mọi placeholder một dòng, không URL trên màn

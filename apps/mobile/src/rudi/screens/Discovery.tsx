@@ -18,6 +18,7 @@ import { LOAI_MAU, PLACES, type DemoPlace } from "../fixtures";
 import { PLACE_CATEGORIES, filterPlaces, type PlaceCategory } from "../places";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
+import { chuLon } from "../adaptive";
 import {
   AiNote,
   Chip,
@@ -87,6 +88,12 @@ function tenNhomHienTai(session: ReturnType<typeof useRudiSession>): string {
 }
 
 export function ExploreScreen() {
+  // At large text the search box and its two buttons no longer share a row:
+  // the box takes the line and the buttons drop under it, right-aligned. The
+  // placeholder draws itself on one line now (F44), but a 230dp box at font
+  // scale 2.0 would still show three words of it; the full width shows most.
+  const { fontScale } = useWindowDimensions();
+  const chuLonHang = chuLon(fontScale);
   const router = useRouter();
   const { colors } = useRudiTheme();
   const session = useRudiSession();
@@ -163,8 +170,8 @@ export function ExploreScreen() {
           title="Thông báo"
         />
       ) : null}
-      <View style={styles.searchRow}>
-        <View style={styles.flex}>
+      <View style={[styles.searchRow, chuLonHang && styles.searchRowXuongDong]}>
+        <View style={[styles.flex, chuLonHang && styles.flexTronHang]}>
           <SearchField
             onChangeText={setQuery}
             onSubmitEditing={() => setFiltersOpen(false)}
@@ -439,6 +446,9 @@ const styles = StyleSheet.create({
   exploreBrand: { gap: 6, flexShrink: 1 },
   location: { minHeight: 24 },
   searchRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  // Large text: the box wraps onto its own line, the buttons onto the next.
+  searchRowXuongDong: { flexWrap: "wrap", justifyContent: "flex-end" },
+  flexTronHang: { flexBasis: "100%" },
   cuonLoai: { marginHorizontal: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   ketQua: { gap: 20 },

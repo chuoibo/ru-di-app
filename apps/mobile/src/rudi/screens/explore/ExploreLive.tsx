@@ -24,7 +24,7 @@
  */
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -52,6 +52,7 @@ import {
   type Gu,
 } from "../../kham-pha/dia-diem";
 import { typography, useRudiTheme } from "../../theme";
+import { chuLon } from "../../adaptive";
 import { Chip, IconButton, ResponsiveRow, RudiScreen, SearchField, SectionHeader } from "../../ui";
 import { Wordmark } from "../../ui/Wordmark";
 import { Canh } from "../../ui/art/Canh";
@@ -106,6 +107,11 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
 export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  // Large text: the search box takes the whole line and the assistant button
+  // drops under it. The placeholder here is thirty characters; it draws itself
+  // on one line now (F44), and the full width is what keeps most of it legible.
+  const { fontScale } = useWindowDimensions();
+  const chuLonHang = chuLon(fontScale);
   const motion = useMotion();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [daLuu, setDaLuu] = useState<string[]>([]);
@@ -221,8 +227,8 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
           <Ionicons color={colors.inkFaint} name="chevron-down" size={14} />
         </Pressable>
       </View>
-      <View style={styles.timRow}>
-        <View style={styles.flex}>
+      <View style={[styles.timRow, chuLonHang && styles.timRowXuongDong]}>
+        <View style={[styles.flex, chuLonHang && styles.flexTronHang]}>
           <SearchField
             accessibilityLabel="Ô tìm địa điểm"
             onChangeText={(t) => {
@@ -380,6 +386,8 @@ const styles = StyleSheet.create({
   dau: { gap: 6 },
   viTri: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, alignSelf: "flex-start" },
   timRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  timRowXuongDong: { flexWrap: "wrap", justifyContent: "flex-end" },
+  flexTronHang: { flexBasis: "100%" },
   khung: { gap: 12 },
   cuonLoai: { marginHorizontal: -16 },
   hangLoai: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },

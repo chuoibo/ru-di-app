@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DemoPerson } from "./fixtures";
 import { useRudiSession } from "./session";
 import { cardShadow, lopPhu, mucTrenAnh, RudiTone, toneColor, toneSoftColor, typography, useRudiTheme, displayFace } from "./theme";
+import { Field as FieldCore, type FieldCoreProps } from "./ui/Field";
 import { Grain } from "./ui/Grain";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
@@ -533,45 +534,25 @@ export function IconButton({
   );
 }
 
-export function Field({
-  label,
-  icon,
-  trailing,
-  multiline,
-  style,
-  ...inputProps
-}: TextInputProps & {
-  label?: string;
-  icon?: IconName;
-  trailing?: ReactNode;
-  style?: StyleProp<TextStyle>;
-}) {
-  const { colors, radius } = useRudiTheme();
-  return (
-    <View style={styles.fieldBlock}>
-      {label ? <Text style={[typography.label, { color: colors.ink }]}>{label}</Text> : null}
-      <View
-        style={[
-          styles.field,
-          multiline && styles.fieldMultiline,
-          { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.control },
-        ]}
-      >
-        {icon ? <Ionicons color={colors.inkFaint} name={icon} size={20} /> : null}
-        <TextInput
-          {...inputProps}
-          accessibilityLabel={inputProps.accessibilityLabel ?? label ?? inputProps.placeholder}
-          multiline={multiline}
-          placeholderTextColor={colors.inkFaint}
-          style={[styles.fieldInput, typography.body, { color: colors.ink }, style]}
-        />
-        {trailing}
-      </View>
-    </View>
-  );
-}
+/**
+ * The kit's text field. The box, the input and the placeholder live in
+ * `ui/Field.tsx`, which imports nothing native so a node test can render it
+ * (audit native 09/09, F44); this wrapper only turns an icon NAME into the
+ * `Ionicons` element that file cannot import.
+ *
+ * A `const`, not a `function` declaration, on purpose: the non-text contrast
+ * gate (`services/api/tests/web/test_contrast_floor.py`) reads the kit as text
+ * and takes the FIRST exported function named Field as the component that owns
+ * the control boundary. That is the core in `ui/Field.tsx`, where the
+ * `lineStrong` border is declared; this glue owns no border and must not be
+ * the block the gate measures -- nor may this comment spell the marker out.
+ */
+export const Field = ({ icon, ...props }: FieldCoreProps & { icon?: IconName }) => {
+  const { colors } = useRudiTheme();
+  return <FieldCore {...props} leading={icon ? <Ionicons color={colors.inkFaint} name={icon} size={20} /> : undefined} />;
+};
 
-export function SearchField({ placeholder = "Tìm quán, món...", ...props }: TextInputProps) {
+export function SearchField({ placeholder = "Tìm quán, món…", ...props }: TextInputProps) {
   return <Field {...props} icon="search-outline" placeholder={placeholder} returnKeyType="search" />;
 }
 
@@ -1061,12 +1042,6 @@ const styles = StyleSheet.create({
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.45 },
   iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  fieldBlock: { gap: 7 },
-  field: { minHeight: 52, borderWidth: 1, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 10 },
-  fieldMultiline: { minHeight: 108, alignItems: "flex-start", paddingTop: 13 },
-  // The input is the node a finger and a screen reader land on, not the box
-  // around it: 48dp on its own (Material target), inside the 52dp field.
-  fieldInput: { flex: 1, minHeight: 48, paddingVertical: 0 },
   chipTinh: { minHeight: 30, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5 },
   chip: { minHeight: 48, flexShrink: 0, borderWidth: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
   avatar: { alignItems: "center", justifyContent: "center" },

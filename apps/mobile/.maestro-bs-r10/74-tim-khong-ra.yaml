@@ -12,9 +12,9 @@ appId: com.lakiet.rudi
 - runFlow: _vao-app-sach.yaml
 # `_vao-app-sach` kết thúc ở tab Khám phá.
 - extendedWaitUntil:
-    visible: "Tìm quán, món..."
+    visible: "Tìm quán, món…"
     timeout: 30000
-- tapOn: "Tìm quán, món..."
+- tapOn: "Tìm quán, món…"
 - inputText: "zzzqqq"
 - extendedWaitUntil:
     visible: "Chưa thấy nơi phù hợp"

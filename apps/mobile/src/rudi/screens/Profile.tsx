@@ -20,7 +20,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
-import { BASE_URL } from "../../api";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
 import { layTaiChinh, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
@@ -328,7 +327,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
       })
       .catch((error: unknown) => {
         if (!song) return;
-        setLoi(error instanceof Error ? error.message : `Không đọc được tài chính tại ${BASE_URL}.`);
+        setLoi(error instanceof Error ? error.message : "Không đọc được tài chính.");
       });
     return () => {
       song = false;

@@ -1328,6 +1328,42 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   reviewer context mới đo được: «Bỏ» theo nội dung còn **47,2dp** ngang — nên
   `RudiButton` có `minWidth: 48` cạnh `minHeight`, ở kit chứ không vá riêng hàng
   này, và cổng bounds đòi mỗi nút ≥ 48dp cả hai chiều.
+- **Câu lỗi nói với người cầm máy, không nói với người đang debug** (audit native
+  09/09, F43). Mất kết nối là **một câu** cho cả app — `LOI_KHONG_NOI_DUOC` trong
+  `api.ts`: «Không nối được máy chủ. Kiểm tra mạng rồi thử lại.» — dùng ở
+  `thongDiepNguoiDoc(0)` **và** năm chỗ dựng `ApiError(0, "unreachable")` thẳng,
+  thay câu cũ in `BASE_URL` rồi hỏi «máy chủ có đang chạy không?». Nó gọi tên
+  việc duy nhất người ấy làm được và **không hứa** «chưa ghi gì»: mất kết nối là
+  ca duy nhất client thật sự không biết máy chủ đã ghi hay chưa. 404 không có câu
+  Việt của máy chủ nói app và máy chủ chưa khớp, việc làm tiếp là cập nhật app —
+  không «kiểm tra địa chỉ máy chủ ở cuối màn hình», và không «báo cho nhóm kỹ
+  thuật» vì app không có kênh ấy (reviewer 10/09). Địa chỉ đi kênh dev: một
+  `console.warn` gác `__DEV__` ở `call`, viết tiếng Anh không template. Cùng luật
+  cho câu dự phòng của màn: `Bill`/`Profile` và sáu chuỗi legacy bỏ «tại
+  `${BASE_URL}`». Cổng là **quét nguồn** (`trang-thai.test.mjs`): không template
+  literal nào trong `src/**` trộn chữ Việt với `${BASE_URL}`/`${state.url}`/`${url}`
+  — hẹp đúng các biến giữ địa chỉ máy chủ, vì **link khách** trong tin chia sẻ
+  của đợt thu (`envelope.url`) là nội dung, không phải rò; bản đầu quét mọi
+  `*url` và vu oan chỗ ấy.
+- **Placeholder của ô nhập là chữ của nhà vẽ, không phải hint native** (audit
+  native 09/09, F44). Android dàn hint theo bề rộng view và cho **xuống dòng ngay
+  cả ở ô một dòng**, rồi cắt dòng hai ở đáy ô (ảnh 20: «Tìm quán,» / «món…»
+  cụt); RN không lộ `ellipsize` cho `TextInput`, và `numberOfLines` mặc định đã là
+  1 nên không phải cách sửa. `ui/Field.tsx` (lõi tách khỏi `ui.tsx` để node test
+  render được — `ui.tsx` kéo `expo-image`/vector-icons/Reanimated, không nạp được
+  dưới node) vẽ `Text numberOfLines={1}` phủ đúng ô input khi giá trị rỗng, **không
+  truyền `placeholder` xuống native** ở ô một dòng; ô nhiều dòng giữ hint native
+  vì ở đó xuống dòng là đúng. Tên trợ năng vẫn trọn câu, lớp phủ ẩn khỏi screen
+  reader để không đọc hai lần; `paddingHorizontal: 0` ở input để mép chữ vẽ và
+  caret trùng nhau. **Hàng tìm thích ứng**: ở `chuLon(fontScale)` ô tìm chiếm cả
+  hàng (`flexBasis: "100%"`, hàng `flexWrap` canh phải) và các nút icon xuống
+  dòng — cùng mẫu khay sticker; câu 30 ký tự của Khám phá live ở 2.0 vẫn «…» kể
+  cả full-width, đó là điểm dừng chấp nhận. Cổng: markup RNW không có attribute
+  `placeholder` trên input, câu là node chữ riêng, `aria-label` trọn câu
+  (`o-tim-placeholder.test.mjs`); xuống dòng chỉ đo được trên máy —
+  `native-r12/kiem-placeholder.mjs` đòi node placeholder cao ≤ 1,5 dòng ở cỡ chữ
+  đang đo (hint native **không** là node chữ nên không đo được — thêm một lý do
+  để nó là chữ của nhà vẽ).
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm

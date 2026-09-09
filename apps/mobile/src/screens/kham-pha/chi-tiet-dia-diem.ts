@@ -214,7 +214,7 @@ export function loiChiTiet(state: ChiTietState): string | null {
     case "chua-co-endpoint":
       return `Máy chủ đang chạy nhưng chưa có route GET /places/{id} (${state.work}). Phần trên vẫn là dữ liệu thật từ danh sách.`;
     case "khong-noi-duoc":
-      return `Không nối được ${state.url} để lấy giới thiệu và đánh giá.`;
+      return "Không nối được máy chủ để lấy giới thiệu và đánh giá.";
     case "may-chu-loi":
       return `Máy chủ trả HTTP ${state.status} khi hỏi chi tiết địa điểm này.`;
     case "du-lieu-sai":
