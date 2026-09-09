@@ -1,0 +1,21 @@
+# Cổng motion §5 (audit 09/09): đổi tab qua lại — chuỗi thao tác đo frame time.
+# Không assert gì ngoài việc màn đổi: số đo lấy từ `dumpsys gfxinfo` bên ngoài.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-live.yaml
+- repeat:
+    times: 5
+    commands:
+      - tapOn: "Lên plan"
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - tapOn: "Tin nhắn"
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - tapOn: "Cá nhân"
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - tapOn: "Khám phá"
+      - waitForAnimationToEnd:
+          timeout: 1500
+- takeScreenshot: motion-live-m1-cuoi

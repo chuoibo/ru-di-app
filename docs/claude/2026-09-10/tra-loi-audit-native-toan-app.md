@@ -220,6 +220,42 @@ thật** «Đi đâu?» với cảnh `chua-doc-duoc` mới (flow 77, cùng đư�
 `dua-hai-tay`); bốn dòng lịch sử ở mục bằng chứng gắn tiền tố «Lịch sử tới 08/09 (`a03f563d`)» + dòng hiện hành
 (#587, #588). Không xoá bằng chứng cũ.
 
+## PR 4 — cổng motion hữu hạn (§5)
+
+Đúng phạm vi audit đề nghị: **đo**, không thêm animation. Build release x86_64 (Hermes, bundle nhúng, env
+fixture) cài đè dev client trên `emulator-5554`; bốn chuỗi thao tác Maestro (đổi tab · cuộn Khám phá · mở/đóng
+sheet «Tạo mới» · vào chi tiết rồi Back), mỗi chuỗi `gfxinfo reset` → chạy → đọc tổng khung, % janky,
+p50/p90/p95/p99, khung chậm/đóng băng; lượt hai với ba `*_animation_scale = 0` (Reduce Motion của hệ).
+Phương pháp, bảng số và giới hạn ở `docs/claude/2026-09-10/motion/README.md`.
+
+**Tầng 1 — dev client + bundle dev trên fixture (đo xong).** Cửa fixture đòi `__DEV__` theo thiết kế nên release
+không vào được bản trải nghiệm (lượt release đầu đỏ ở màn «Chào bạn»); tầng này là **giới hạn trên** của jank.
+Lượt thường:
+
+| chuỗi | khung | janky | p50 | p90 | p95 | p99 | slow UI | slow draw | missed vsync | maestro |
+|---|---|---|---|---|---|---|---|---|---|---|
+| m1-doi-tab | 804 | 12.69% | 26ms | 36ms | 61ms | 150ms | 54 | 87 | 16 | rc=0 |
+| m2-cuon-kham-pha | 1482 | 6.34% | 16ms | 32ms | 36ms | 117ms | 30 | 78 | 17 | rc=0 |
+| m3-sheet-tao | 933 | 11.79% | 26ms | 36ms | 53ms | 150ms | 32 | 97 | 16 | rc=0 |
+| m4-back-chi-tiet | 812 | 12.81% | 28ms | 36ms | 65ms | 150ms | 47 | 87 | 18 | rc=0 |
+
+Lượt Reduce Motion (`*_animation_scale` = 0): mọi chuỗi vẫn `rc=0`, số khung giảm 2–4 lần vì khung chuyển cảnh
+không còn, nên **% janky không so được giữa hai lượt** (đổi tab 804 → 226 khung, UI chậm 54 → 44); p99 = 150ms là
+trần bucket của histogram, không phải giá trị đo. Bảng đầy đủ + gfxinfo thô + ảnh cuối chuỗi ở
+`motion/dev-client/`.
+
+**Tầng 2 — release + stack live (đăng nhập OTP).** Đã thử hai lần, **chưa có số hợp lệ**: (1) release + fixture đỏ ở màn «Chào bạn»
+vì cửa fixture đòi `__DEV__` theo thiết kế; (2) release + stack live (`e2e_slice --keep`, `adb reverse`, `healthz`
+xanh) đỏ ở «Gửi mã» với chính câu F43 mới «Không nối được máy chủ…» — bản release **chặn HTTP cleartext**
+(chỉ manifest debug bật). Bảng lượt ấy mọi chuỗi `rc=1`, không dùng. Đo tiếp cần **quyết định của team**: bật
+cleartext tạm/cục bộ cho bản đo (đổi tư thế bảo mật release dù không commit — bộ phân loại chặn, tôi không
+vòng qua) hoặc đặt stack sau HTTPS local. Chuỗi đo đã sẵn, chạy được ngay khi có một trong hai
+(`motion/README.md` tầng 2, `motion/release-thu/`).
+
+**Nói thẳng**: máy ảo trên WSL2 không phải điện thoại — số này là **đường cơ sở hồi quy của rig**, không phải
+phán quyết «mượt». Khung hình giữa chuyển cảnh khi Reduce Motion bật chưa chụp được xác định. «Dấu giấy khi
+chốt kèo» (§5 bước 3) là đề xuất cho team sau khi có số — không làm lượt này.
+
 ## Cố ý không làm trong lượt này (nói rõ, không nhận vơ)
 
 - Nợ cũ §4 của audit: ghi công ảnh Album/timeline demo, `Photo` trần thiếu chữ lỗi, nút vô hiệu coral
