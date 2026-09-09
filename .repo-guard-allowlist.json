@@ -1494,6 +1494,86 @@
         "vn-phone"
       ],
       "reason": "Mốc so byte cho tái cấu trúc bảng NEP (F45, 10/09): JSON các lớp vẽ của mười cảnh, mọi dãy số là toạ độ SVG (M/L/C) — không có số điện thoại hay tài khoản. Đổi một byte là phải pin lại."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m1-cuoi.png",
+      "sha256": "55769fd72084b98201cfcb38aa23b28ee9e2943a4a7ecbeb1b8223bcebaf6819",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m2-cuoi.png",
+      "sha256": "17f6321ef5dac7cd6c96112b2fa41196da67679d6a397260b4c10df728b48d5c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m3-cuoi.png",
+      "sha256": "6b806efee7014985443332ba8b002fbff0d526621deb6196d3709361970855aa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m4-cuoi.png",
+      "sha256": "9afb24f8efbfbd907b4b4cfaef90081923af65feeb2db5c6dda849b1f89f01bf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m1-cuoi.png",
+      "sha256": "6968bff0b49837cc6617dcef4c68ccace08ae28e976e4b6fa64945e14e2caac9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m2-cuoi.png",
+      "sha256": "99084d26bf77bdb86900d8df18deb83e8c21d3b8e60bcdeda5ce1b43695cf07e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m3-cuoi.png",
+      "sha256": "0b2aae7c3852f50b5187a0fc27b5eba75201bfbde771f731d09c4c173c5bff92",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m4-cuoi.png",
+      "sha256": "327b9b4ed0c986e87f0ee6fcef268638fb26c2e1319953c39f6d6f1dcd01fa10",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/release-thu/release-fixture-khong-co-cua.png",
+      "sha256": "8d9246c4558ceabaa9fb587d9bef45d9e64868845e6d279ae924dc1aed568f1f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/release-thu/release-live-chan-o-gui-ma.png",
+      "sha256": "e9a60b00885266daa9be76e9f5d18f38d5ac14d4f400b397569a2601fefe8097",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
     }
   ]
 }

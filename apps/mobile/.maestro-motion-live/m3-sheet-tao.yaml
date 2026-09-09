@@ -1,0 +1,14 @@
+# Mở/đóng sheet «Tạo» (nút + giữa tab bar) — spring của kit Sheet + fade của route.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-live.yaml
+- repeat:
+    times: 5
+    commands:
+      - tapOn: "Tạo mới"
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - pressKey: Back
+      - waitForAnimationToEnd:
+          timeout: 2000
+- takeScreenshot: motion-live-m3-cuoi

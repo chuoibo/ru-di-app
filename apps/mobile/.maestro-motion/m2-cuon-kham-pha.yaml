@@ -1,0 +1,20 @@
+# Cuộn danh sách Khám phá xuống rồi lên nhiều lần.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- repeat:
+    times: 4
+    commands:
+      - swipe:
+          direction: UP
+          duration: 400
+      - swipe:
+          direction: UP
+          duration: 400
+      - swipe:
+          direction: DOWN
+          duration: 400
+      - swipe:
+          direction: DOWN
+          duration: 400
+- takeScreenshot: motion-m2-cuoi

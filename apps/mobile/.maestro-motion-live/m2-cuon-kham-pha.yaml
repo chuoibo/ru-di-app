@@ -1,0 +1,32 @@
+# Cuộn Khám phá live: chọn điểm đến đầu tiên của stack rồi cuộn xuống/lên.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-live.yaml
+- tapOn: "Khám phá"
+- openLink: rudi://destinations
+- extendedWaitUntil:
+    visible: "Đi đâu.*"
+    timeout: 30000
+- tapOn:
+    text: "Chọn .*"
+    index: 0
+    optional: true
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
+- repeat:
+    times: 4
+    commands:
+      - swipe:
+          direction: UP
+          duration: 400
+      - swipe:
+          direction: UP
+          duration: 400
+      - swipe:
+          direction: DOWN
+          duration: 400
+      - swipe:
+          direction: DOWN
+          duration: 400
+- takeScreenshot: motion-live-m2-cuoi

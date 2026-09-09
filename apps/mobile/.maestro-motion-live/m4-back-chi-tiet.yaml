@@ -1,0 +1,18 @@
+# Push/pop một màn của stack (chọn điểm đến) rồi Back — chuyển cảnh slide, lặp.
+# Dùng «Đi đâu?» thay chi tiết địa điểm vì tên địa điểm live không cố định.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-live.yaml
+- repeat:
+    times: 5
+    commands:
+      - openLink: rudi://destinations
+      - extendedWaitUntil:
+          visible: "Đi đâu.*"
+          timeout: 20000
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - pressKey: Back
+      - waitForAnimationToEnd:
+          timeout: 1500
+- takeScreenshot: motion-live-m4-cuoi

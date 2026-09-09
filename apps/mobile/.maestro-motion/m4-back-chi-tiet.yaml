@@ -1,0 +1,14 @@
+# Vào chi tiết một địa điểm rồi Back — chuyển cảnh slide của stack, lặp.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- repeat:
+    times: 5
+    commands:
+      - tapOn: "Tiệm Nướng Xóm Lèo"
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - pressKey: Back
+      - waitForAnimationToEnd:
+          timeout: 2000
+- takeScreenshot: motion-m4-cuoi

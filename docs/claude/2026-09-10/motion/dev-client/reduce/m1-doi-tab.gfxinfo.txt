@@ -1,0 +1,72 @@
+Applications Graphics Acceleration Info:
+
+** Graphics info for pid 6085 [com.lakiet.rudi] **
+
+Stats since: 224511737784735ns
+Total frames rendered: 226
+Janky frames: 98 (43.36%)
+Janky frames (legacy): 166 (73.45%)
+50th percentile: 30ms
+90th percentile: 89ms
+95th percentile: 129ms
+99th percentile: 150ms
+Number Missed Vsync: 17
+Number High input latency: 238
+Number Slow UI thread: 44
+Number Slow bitmap uploads: 2
+Number Slow issue draw commands: 83
+Number Frame deadline missed: 98
+Number Frame deadline missed (legacy): 71
+HISTOGRAM: 5ms=0 6ms=0 7ms=1 8ms=0 9ms=2 10ms=4 11ms=1 12ms=1 13ms=1 14ms=0 15ms=1 16ms=34 17ms=6 18ms=2 19ms=3 20ms=0 21ms=3 22ms=1 23ms=1 24ms=4 25ms=6 26ms=3 27ms=4 28ms=14 29ms=14 30ms=14 31ms=15 32ms=22 34ms=11 36ms=2 38ms=4 40ms=2 42ms=2 44ms=2 46ms=1 48ms=2 53ms=2 57ms=4 61ms=0 65ms=6 69ms=1 73ms=3 77ms=0 81ms=3 85ms=1 89ms=2 93ms=1 97ms=2 101ms=2 105ms=0 109ms=0 113ms=1 117ms=1 121ms=1 125ms=1 129ms=1 133ms=0 150ms=9 200ms=0 250ms=2 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 21ms
+90th gpu percentile: 4950ms
+95th gpu percentile: 4950ms
+99th gpu percentile: 4950ms
+GPU HISTOGRAM: 1ms=1 2ms=2 3ms=0 4ms=0 5ms=1 6ms=12 7ms=10 8ms=2 9ms=8 10ms=5 11ms=9 12ms=6 13ms=4 14ms=15 15ms=8 16ms=4 17ms=7 18ms=4 19ms=8 20ms=2 21ms=11 22ms=4 23ms=9 24ms=17 25ms=8 4950ms=69
+
+Pipeline=Skia (OpenGL)
+Memory policy:
+  Max surface area: 2592000
+  Max resource usage: 124.42MB (x48)
+  Background retention: 50% (altUiHidden = true)
+  GPU Context timeout: 10
+Contexts: 1 (stopped = 0)
+CPU Caches:
+  Glyph Cache: 2.03 MB (1 entry)
+  Glyph Count: 131 
+Total CPU memory usage:
+  2123447 bytes, 2.03 MB (0.00 bytes is purgeable)
+GPU Caches:
+  Other:
+    Other: 31.64 KB (1 entry)
+    Buffer Object: 2.50 KB (4 entries)
+    StencilAttachment: 128.00 KB (1 entry)
+  Image:
+    Texture: 37.25 MB (55 entries)
+  Scratch:
+    RenderTarget: 38.78 MB (7 entries)
+    Buffer Object: 206.00 KB (6 entries)
+    Texture: 9.71 MB (40 entries)
+Total GPU memory usage:
+  90289272 bytes, 86.11 MB (60.38 MB is purgeable)
+
+GraphicBufferAllocator buffers:
+        Handle |        Size |     W (Stride) x H | Layers |   Format |      Usage | Requestor
+0x71136e365150 |     unknown | 1080 (   0) x 2400 |      1 |        1 | 0x     b00 | VRI[MainActivity]#1(BLAST Consumer)1
+0x71136e366110 |     unknown | 1080 (   0) x 2400 |      1 |        1 | 0x     b00 | VRI[MainActivity]#1(BLAST Consumer)1
+0x71136e367940 |     unknown | 1080 (   0) x 2400 |      1 |        1 | 0x     b00 | VRI[MainActivity]#1(BLAST Consumer)1
+Total allocated by GraphicBufferAllocator (estimate): 0.00 KB
+GoldfishAllocator::dumpDebugInfo is not implemented
+Profile data in ms:
+
+	com.lakiet.rudi/com.lakiet.rudi.MainActivity/android.view.ViewRootImpl@a41e8b8 (visibility=0)
+View hierarchy:
+
+  com.lakiet.rudi/com.lakiet.rudi.MainActivity/android.view.ViewRootImpl@a41e8b8
+  390 views, 725.63 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 390
+Total RenderNode     : 725.63 kB (used) / 2477.88 kB (capacity)
+
