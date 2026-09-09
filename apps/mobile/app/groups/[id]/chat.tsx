@@ -12,7 +12,12 @@ export default function GroupChatRoute() {
   // fixture chat the default Maestro table drives.
   if (phien !== null) {
     if (typeof id !== "string") return <Redirect href="/messages" />;
-    return <GroupChatLiveScreen contextId={id} />;
+    // Keyed by conversation: a `rudi://groups/<id>/chat` link opened while
+    // another chat is in front changes the param IN PLACE, and a screen that
+    // survived that carried its notice, draft and quoted message into the next
+    // group. A remount empties all of it; the hook's generations handle what a
+    // remount cannot reach, the replies still in flight (audit 09/09, F42).
+    return <GroupChatLiveScreen key={id} contextId={id} />;
   }
   return <GroupChatScreen />;
 }

@@ -1289,6 +1289,45 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   ref chứ không vào `hangCho`: ô soạn đã trả chữ về và thông báo đã nói lý do,
   một hàng nữa là cùng một tin hai lần (và một hàng vô hình từng nuốt mất màn
   rỗng của nhóm mới).
+- **Luật Phản Hồi Về Đúng Nhà** (audit native 09/09, F42). Một phản hồi chỉ
+  được ghi vào **cuộc hội thoại đã sinh ra nó**. `useTinNhan` đánh số **thế hệ**
+  (`theHeRef`): mọi đường async chụp số ấy trước `await` đầu và so lại sau
+  **mỗi** `await`, ở cả nhánh thành công lẫn `catch`; lệch là **bỏ trọn** — không
+  ghép tin, không đặt lỗi, không poll, không ném. Số chỉ tăng ở **một** chỗ: cleanup
+  của effect `[contextId, personId]`, chạy trước lượt đọc đầu của cuộc hội thoại
+  kế và cả khi unmount, nên hai cửa là một. Vì sao không đủ nếu chỉ reset mảng:
+  `navigate()` cùng route khác param **cập nhật tại chỗ** instance, và một
+  sticker gửi ở nhóm A hạ cánh sau khi đã sang B từng được ghép vào danh sách B
+  rồi `napMoi` **đóng trên A** đọc A bằng cursor của B (probe của Codex: lượt
+  đọc `[A, B, A]`). Hai lớp vì hai loại state: route `groups/[id]/chat` **key
+  theo id** để remount làm sạch state của màn (thông báo, chữ đang soạn, tin đang
+  trả lời, khay đang mở); thế hệ lo thứ remount không với tới — lượt GET mà một
+  phản hồi muộn còn kéo theo. `chay` trả `null` cho «không phải của mình», người
+  gọi không cuộn, không báo. Read-mark có thêm điều kiện `trang.tin ===
+  tinRef.current`: ở commit đổi nhóm effect ấy còn thấy danh sách **cũ** dưới id
+  **mới**, và không có nó thì PUT read-mark của B mang id tin của A (đột biến bỏ
+  điều kiện này đỏ ở `tests/rudi-chat-useTinNhan.test.mjs`). Chi phí chấp nhận:
+  hàng chờ **không** đi theo người sang nhóm khác (R2 09/09) — một tin của A hỏng
+  sau khi đã sang B mất nút thử lại; quay lại A thì trang đầu đọc lại và tin đã
+  hạ cánh có sẵn ở đó. Cổng là hook thật chạy dưới React thật
+  (`react-test-renderer` ghim đúng phiên bản React, `fetch` trả tay), bảy ca:
+  gửi muộn, trang đầu muộn, lỗi muộn, unmount, đổi người, read-mark, và F32 giữ
+  nguyên chìa khi thử lại trong cùng cuộc hội thoại.
+- **Hai nút cùng một hàng thì cả hai `full={false}` và hàng được wrap** (audit
+  native 09/09, F41). `RudiButton` mặc định `full` — `width: "100%"`,
+  `flexShrink: 0` — nên hai nút đặt cạnh nhau là hai lần trọn bề rộng: «Thử
+  lại» của hàng sticker hỏng bị đẩy khỏi **mép trái màn**, còn `assertVisible`
+  vẫn xanh vì node có trong cây (XML của Codex có nút mà **không có node chữ**
+  con). Sửa bằng layout, không bằng chữ: nút theo nội dung, hàng
+  `flexWrap: "wrap"` canh phải, nên ở chữ lớn hai nút **xuống dòng** thay vì
+  thu nhãn hay giấu «Thử lại». Cổng cho lỗi này không phải «có trong cây» mà là
+  **bounds**: `docs/claude/2026-09-10/native-r11/kiem-bounds.mjs` đòi mỗi nút có
+  node chữ con nằm trong nút với lề ≥ 30px hai bên và nút nằm trong màn —
+  `uiautomator` **kẹp** bounds về mép màn nên `x ≥ 0` không chứng minh gì, và
+  chữ rơi khỏi màn thì **không có node**. Hệ quả thứ hai của `full={false}`,
+  reviewer context mới đo được: «Bỏ» theo nội dung còn **47,2dp** ngang — nên
+  `RudiButton` có `minWidth: 48` cạnh `minHeight`, ở kit chứ không vá riêng hàng
+  này, và cổng bounds đòi mỗi nút ≥ 48dp cả hai chiều.
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
