@@ -1152,8 +1152,13 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   phải nhớ gì. Cổng `art-duong` biết tập ấy và đòi bản có/không Nếp **giống hệt
   nhau** cho các id trong đó.
 - **Im lặng hành chính cố ý để trống**: «Bạn chưa chặn ai», «Chưa có phiên
-  nào». Không phải quên: một danh sách quản trị rỗng không cần ai kể chuyện,
-  và review đã cấm đưa hình kể chuyện vào mọi hàng dữ liệu.
+  nào», và dải «Thông báo» ở Khám phá. Không phải quên: hai cái đầu là danh
+  sách quản trị rỗng, không cần ai kể chuyện, và review đã cấm đưa hình kể
+  chuyện vào mọi hàng dữ liệu; cái thứ ba là **ghi chú kỹ thuật của bản trải
+  nghiệm** («chưa có hộp thư máy chủ»), tức lời của hệ thống nói về chính nó,
+  không phải im lặng của người dùng. Ba chỗ này là **toàn bộ** các ô rỗng không
+  có hình; kiểm lại bằng cách quét `illustration=` trên mọi chỗ mount
+  `EmptyState`, đừng tin danh sách này tự biết mình thiếu.
 - **Mỗi cảnh trọn vẹn khi không có
   Nếp** (`nep: false`, so `sua-ab/A-co-nep` với `B-khong-nep`) và được trình
   đọc màn hình đọc thành **một câu**: `chua-co-hoi` «Một chiếc ghế được kéo

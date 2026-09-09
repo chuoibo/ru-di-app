@@ -304,6 +304,7 @@ export function AiMatchScreen() {
         <EmptyState
           action={{ label: "Xem tất cả", onPress: () => setFilter("Tất cả") }}
           body="Không có nơi mẫu nào trong bộ lọc này."
+          illustration={<Canh id="bo-loc-che-het" width={168} />}
           kind="filtered"
           layout="inline"
           title="Chưa có gợi ý"
