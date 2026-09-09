@@ -120,9 +120,9 @@ export function HangChoGui({ tin, onThuLai, onBoQua }: { tin: TinChoGui; onThuLa
           {hong ? (
             <>
               <Text style={[typography.caption, { color: colors.warn }]}>{tin.loi ?? "Chưa gửi được."}</Text>
-              <View style={[styles.hang, { gap: space.sm }]}>
-                {tin.thuLaiDuoc ? <RudiButton compact label="Thử lại" onPress={onThuLai} variant="outline" /> : null}
-                <RudiButton compact label="Bỏ" onPress={onBoQua} variant="ghost" />
+              <View style={[styles.hang, styles.nutHong, { gap: space.sm }]}>
+                {tin.thuLaiDuoc ? <RudiButton compact full={false} label="Thử lại" onPress={onThuLai} variant="outline" /> : null}
+                <RudiButton compact full={false} label="Bỏ" onPress={onBoQua} variant="ghost" />
               </View>
             </>
           ) : (
@@ -271,6 +271,8 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     const traLoiCu = traLoi;
     try {
       const daGui = await chat.gui(body, traLoiCu);
+      // Landed for a conversation that has left the screen: nothing to show here.
+      if (daGui === null) return;
       setTraLoi(null);
       veCuoi();
       const cau = cauYDinh(daGui);
@@ -320,12 +322,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // saying it here as well would be the same news twice, further from the
     // picture it is about (F32).
     let daToiTin = false;
+    let daGui: Awaited<ReturnType<typeof chat.guiAnhMoi>> = null;
     try {
       await nenVaDung(daChon, async (anh) => {
         const daTai = await taiAnhNhom(contextId, anh, personId);
         daToiTin = true;
-        await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
+        daGui = await chat.guiAnhMoi(daTai.url, caption === "" ? null : caption);
       });
+      if (daGui === null) return;
       setNhap("");
       veCuoi();
     } catch (error) {
@@ -359,8 +363,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     // strip clears at once and a retry still answers the right message.
     setTraLoi(null);
     try {
-      await chat.guiSticker(id, tra);
-      veCuoi();
+      if ((await chat.guiSticker(id, tra)) !== null) veCuoi();
     } catch {
       // The row says what happened, in place. A general notice would say it a
       // second time and further from the picture it is about.
@@ -370,8 +373,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   /** Send a failed row again, with the key it was minted with. */
   const thuLaiGui = async (khoa: string) => {
     try {
-      await chat.thuLaiMot(khoa);
-      veCuoi();
+      if ((await chat.thuLaiMot(khoa)) !== null) veCuoi();
     } catch {
       // Same as above: the row itself carries the second refusal.
     }
@@ -851,6 +853,11 @@ const styles = StyleSheet.create({
   dau: { paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   rong: { paddingVertical: 24 },
   choGui: { gap: 12 },
+  // Two content-sized buttons that may wrap. `RudiButton` is full-width by
+  // default, and two full-width buttons in one row pushed «Thử lại» off the
+  // left edge of the screen (audit native 09/09, F41). At large text the pair
+  // stacks, right-aligned, instead of shrinking or hiding its label.
+  nutHong: { flexWrap: "wrap", justifyContent: "flex-end" },
   mo: { opacity: 0.62 },
   choAi: { gap: 6, padding: 14, borderWidth: 1 },
   dauAi: { flexDirection: "row", alignItems: "center", gap: 6 },

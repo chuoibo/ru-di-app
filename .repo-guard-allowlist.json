@@ -1157,6 +1157,86 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo: màn lỗi thật với cảnh mặc định chua-doc-duoc, không có Nếp. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/bang-r11-76-fs1.0-sang.png",
+      "sha256": "aabdf2edf79fa16bfaa531772d1cbbb5e2d68032422f6e7eda31a7beac76b082",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs1.0-sang.png",
+      "sha256": "a7c31bb550f12910b0d711699d0136c1a017c149878a30d8c960cb1fd8b2f669",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs1.0-toi.png",
+      "sha256": "5bffe984ce7a271da3f96250f338e9e50462dea42c730be08cb5714b32d4b34d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs1.3-sang.png",
+      "sha256": "3c8821f75f345a06058d4b532c0cdaa9d3761af366117b55e80a7a6f6fcbe800",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs1.3-toi.png",
+      "sha256": "2b2d3394d0536ec17ac02733ecafad3f7e9e5f5dc04ce41a046cba907393b13f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs2.0-sang.png",
+      "sha256": "f49d0832e197bf5b5abee866e842077c4512f97d9af7e0fd7400bca3e899b725",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-10/native-r11/anh/fs2.0-toi.png",
+      "sha256": "83b4fa6cffe7209352166366d99d49fd601765c0c7b4b7402f056babe99bc425",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/16-failed-sticker-dark.png",
+      "sha256": "5d00a30eb461590226c8b552dc9518e68308e409b1d3e3f7e16b141cf0d1e0aa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/20-explore-font2-dark.png",
+      "sha256": "e09f69e693ec9ccbc7995d71a01e25a62dd19bd06b8aef6805a3bf54b3f2c32f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/22-network-error.png",
+      "sha256": "9e86b41c186179c0353162de2bb8ebfc267660d66d7b71bf60a817cd329a120f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
     }
   ]
 }

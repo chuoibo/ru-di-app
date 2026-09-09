@@ -11,6 +11,11 @@
  *   fall as the person reads.
  *
  * State is a plain object rather than a reducer: five fields, one owner.
+ *
+ * Generations: every request is stamped with the conversation it was made for,
+ * and a reply that arrives after the hook has moved on -- another group,
+ * another person, or unmounted -- is dropped, never merged (audit native
+ * 09/09, F42). See `theHeRef`.
  */
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -66,16 +71,11 @@ function loiRaChu(error: unknown): string {
   return error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null);
 }
 
+const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, hetTinCu: false, loi: null, hangCho: [] };
+
 export function useTinNhan(contextId: string, personId: string) {
-  const [trang, setTrang] = useState<TrangThaiChat>({
-    tin: [],
-    dangNap: true,
-    dangNapCu: false,
-    hetTinCu: false,
-    loi: null,
-    hangCho: [],
-  });
-  const tinRef = useRef<Tin[]>([]);
+  const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
+  const tinRef = useRef<Tin[]>(TRANG_DAU.tin);
   // Held in a ref as well as in state, for the same reason `tin` is: a
   // re-render between the press and the reply must not be able to lose the
   // key and turn a retry into a second write (`api.ts`, `attemptFor`).
@@ -86,6 +86,12 @@ export function useTinNhan(contextId: string, personId: string) {
   const banNhapRef = useRef<TinChoGui | null>(null);
   const dangFocus = useRef(false);
   const daDanhDau = useRef<string | null>(null);
+  // Which conversation, and which mount, the requests in flight belong to.
+  // Read before the first await of every async path below and compared after
+  // each one; a mismatch means the reply is for a conversation that has left
+  // the screen, and it is dropped in full -- success, failure, and the poll a
+  // success would have triggered.
+  const theHeRef = useRef(0);
 
   const dat = useCallback((tin: Tin[], phan: Partial<TrangThaiChat> = {}) => {
     tinRef.current = tin;
@@ -98,31 +104,51 @@ export function useTinNhan(contextId: string, personId: string) {
   }, []);
 
 
-  // A key stands for one request to one path, so nothing in flight may cross a
-  // conversation. `navigate()` to the same route with different params updates
-  // this instance instead of remounting it, which is exactly how a draft could
-  // have been carried into another group (finish review 09/09, R2).
+  // One conversation, one generation. `navigate()` to the same route with
+  // different params updates this instance instead of remounting it (the route
+  // now keys the screen by id as well, but a person change and an unmount still
+  // arrive here), and a reply for the previous conversation must be dropped
+  // rather than merged into this one: a sticker sent in group A that landed
+  // after the switch to B used to be written into B's list, and the poll that
+  // followed read A with B's cursor (audit native 09/09, F42; finish review
+  // 09/09, R2 for the draft). The cleanup is the ONE place the generation
+  // moves. React runs it before the next conversation's first read is issued,
+  // and on unmount, so both are the same door.
+  //
+  // The queue does not follow the person: a row of A that fails after the
+  // switch loses its retry button, and coming back to A re-reads the first
+  // page, where anything that did land is already waiting.
   useEffect(() => {
+    tinRef.current = TRANG_DAU.tin;
     hangRef.current = [];
     banNhapRef.current = null;
-    setTrang((cu) => ({ ...cu, hangCho: [] }));
+    daDanhDau.current = null;
+    setTrang(TRANG_DAU);
+    return () => {
+      theHeRef.current += 1;
+    };
   }, [contextId, personId]);
 
   const napDau = useCallback(async () => {
+    const theHe = theHeRef.current;
     try {
       const page = await docTrangTin(contextId, personId);
+      if (theHe !== theHeRef.current) return;
       dat(gopTin([], page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null });
     } catch (error) {
+      if (theHe !== theHeRef.current) return;
       setTrang((cu) => ({ ...cu, dangNap: false, loi: loiRaChu(error) }));
     }
   }, [contextId, personId, dat]);
 
   const napMoi = useCallback(async () => {
+    const theHe = theHeRef.current;
     const after = cursorMoiNhat(tinRef.current);
     try {
       const page = after === null
         ? await docTrangTin(contextId, personId)
         : await docTrangTin(contextId, personId, { after });
+      if (theHe !== theHeRef.current) return;
       if (page.messages.length > 0) dat(gopTin(tinRef.current, page.messages), { loi: null });
     } catch {
       // A missed poll is not an error the person needs to read; the next tick
@@ -140,12 +166,19 @@ export function useTinNhan(contextId: string, personId: string) {
    * queued row, so `thuLaiMot` below hands the SAME key back to the server.
    * A replay returns the original 201 and `gopTin` dedupes it against the row
    * already held, so a retry cannot leave two messages behind.
+   *
+   * Resolves to `null` when the reply is for a conversation that has since left
+   * the screen: nothing is written, nothing is thrown, and the poll is NOT run
+   * -- `napMoi` here is closed over the old context, so it would read the old
+   * group with the new group's cursor. Callers treat `null` as «not ours».
    */
   const chay = useCallback(
-    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>, hienHang = true): Promise<TinDaGui> => {
+    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>, hienHang = true): Promise<TinDaGui | null> => {
+      const theHe = theHeRef.current;
       if (hienHang) datHang(themVaoHang(hangRef.current, cho));
       try {
         const daGui = await goi(cho.attempt);
+        if (theHe !== theHeRef.current) return null;
         const them: Tin[] = [daGui];
         if (daGui.companion?.message) them.push(daGui.companion.message);
         if (daGui.expense_card) them.push(daGui.expense_card);
@@ -154,6 +187,7 @@ export function useTinNhan(contextId: string, personId: string) {
         void napMoi();
         return daGui;
       } catch (error) {
+        if (theHe !== theHeRef.current) return null;
         if (hienHang) datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
         throw error;
       }
@@ -164,11 +198,14 @@ export function useTinNhan(contextId: string, personId: string) {
   const napCuHon = useCallback(async () => {
     const before = cursorCuNhat(tinRef.current);
     if (before === null || trang.hetTinCu || trang.dangNapCu) return;
+    const theHe = theHeRef.current;
     setTrang((cu) => ({ ...cu, dangNapCu: true }));
     try {
       const page = await docTrangTin(contextId, personId, { before });
+      if (theHe !== theHeRef.current) return;
       dat(gopTin(tinRef.current, page.messages), { dangNapCu: false, hetTinCu: !page.has_more });
     } catch (error) {
+      if (theHe !== theHeRef.current) return;
       setTrang((cu) => ({ ...cu, dangNapCu: false, loi: loiRaChu(error) }));
     }
   }, [contextId, personId, dat, trang.hetTinCu, trang.dangNapCu]);
@@ -201,15 +238,18 @@ export function useTinNhan(contextId: string, personId: string) {
   );
 
   // Read mark follows the newest message the person has in front of them.
+  // On the commit that switches conversation this effect still sees the OLD
+  // list under the NEW context id; `tinRef` was just reset, so a list that is
+  // not the one the ref holds is not this conversation's and is not marked.
   useEffect(() => {
     const moiNhat = trang.tin[0]?.id;
-    if (!moiNhat || !dangFocus.current || daDanhDau.current === moiNhat) return;
+    if (!moiNhat || !dangFocus.current || daDanhDau.current === moiNhat || trang.tin !== tinRef.current) return;
     daDanhDau.current = moiNhat;
     void danhDauDaDoc(contextId, personId, moiNhat).catch(() => undefined);
   }, [trang.tin, contextId, personId]);
 
   const gui = useCallback(
-    async (body: string, traLoi: TrichDan | null = null): Promise<TinDaGui> => {
+    async (body: string, traLoi: TrichDan | null = null): Promise<TinDaGui | null> => {
       // Pressing send again after a failure, with the same words and the same
       // quoted message, is the SAME send: it reuses the key, so if the first
       // request actually landed the second one replays it instead of writing a
@@ -226,9 +266,14 @@ export function useTinNhan(contextId: string, personId: string) {
       banNhapRef.current = nhap;
       try {
         const daGui = await chay(nhap, (a) => guiTin(contextId, personId, body, a, { replyToId }), false);
+        // Not ours any more: the ref was reset with the conversation, and
+        // writing this draft back would hand A's key to a same-words send in B
+        // (`422 idempotency_key_reuse`, since the path is part of the fingerprint).
+        if (daGui === null) return null;
         banNhapRef.current = null;
         return daGui;
       } catch (error) {
+        // Only a live failure reaches here: `chay` swallows a stale one.
         banNhapRef.current = { ...nhap, trangThai: "that-bai" };
         throw error;
       }
@@ -244,7 +289,7 @@ export function useTinNhan(contextId: string, personId: string) {
    * leaves no half-message behind, and the caller sees the upload's own words.
    */
   const guiAnhMoi = useCallback(
-    async (imageUrl: string, caption: string | null): Promise<TinDaGui> => {
+    async (imageUrl: string, caption: string | null): Promise<TinDaGui | null> => {
       // The caption is part of the request body, so it is part of what the key
       // stands for: retrying with it dropped would send the same key with
       // different bytes and earn a 422 for a message that is already there.
@@ -261,7 +306,7 @@ export function useTinNhan(contextId: string, personId: string) {
 
   /** One sticker, by id; the server refuses an id outside the vocabulary. */
   const guiStickerMoi = useCallback(
-    async (stickerId: string, traLoi: TrichDan | null = null): Promise<TinDaGui> => {
+    async (stickerId: string, traLoi: TrichDan | null = null): Promise<TinDaGui | null> => {
       // Every press is its own send: choosing the same sticker twice on
       // purpose is two messages, and each carries its own key.
       return chay(
@@ -305,7 +350,14 @@ export function useTinNhan(contextId: string, personId: string) {
    */
   const xoaTinCuaToi = useCallback(
     async (messageId: string): Promise<void> => {
-      await xoaTin(contextId, messageId, personId);
+      const theHe = theHeRef.current;
+      try {
+        await xoaTin(contextId, messageId, personId);
+      } catch (error) {
+        if (theHe !== theHeRef.current) return;
+        throw error;
+      }
+      if (theHe !== theHeRef.current) return;
       dat(thayTinDaXoa(tinRef.current, messageId, new Date().toISOString()), { loi: null });
       void napMoi();
     },
@@ -314,9 +366,17 @@ export function useTinNhan(contextId: string, personId: string) {
 
   const doiPhanUng = useCallback(
     async (messageId: string, kind: LoaiPhanUng, dangCoCuaToi: boolean) => {
-      const ket = dangCoCuaToi
-        ? await boPhanUng(contextId, messageId, personId, kind)
-        : await themPhanUng(contextId, messageId, personId, kind);
+      const theHe = theHeRef.current;
+      let ket;
+      try {
+        ket = dangCoCuaToi
+          ? await boPhanUng(contextId, messageId, personId, kind)
+          : await themPhanUng(contextId, messageId, personId, kind);
+      } catch (error) {
+        if (theHe !== theHeRef.current) return;
+        throw error;
+      }
+      if (theHe !== theHeRef.current) return;
       dat(thayPhanUng(tinRef.current, messageId, ket.reactions));
     },
     [contextId, personId, dat],
