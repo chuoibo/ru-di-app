@@ -1,142 +1,61 @@
-/** Native MapLibre. Web uses BanDo.tsx (maplibre-gl). */
+/** Native map host. Web uses BanDo.tsx (maplibre-gl).
+ *
+ * A static import of `@maplibre/maplibre-react-native` crashes any APK built
+ * before the plugin: TurboModuleRegistry.getEnforcing('MLRNCameraModule').
+ * Plan tab imports this module, so the whole tab went red. Load MapLibre only
+ * when the native binary actually registered the module.
+ */
 
-import { useEffect, useMemo, useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Camera, GeoJSONSource, Layer, Map, Marker, type CameraRef } from "@maplibre/maplibre-react-native";
+import { useMemo, type ReactElement } from "react";
+import { NativeModules, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, KIEU_BAN_DO, tapHop, type BanDoProps } from "./kieu-ban-do";
+import { typography, useRudiTheme } from "../theme";
+import type { BanDoProps } from "./kieu-ban-do";
 
-export function BanDo({
-  mocs,
-  doan,
-  mauMoc,
-  mauMocInk,
-  mauMocChon,
-  mauDuong,
-  mauDuongMo,
-  mauVien,
-  mauNen,
-  fitDem,
-  toi,
-  onUserMove,
-  onChonMoc,
-  onChonDoan,
-  onNen,
-}: BanDoProps) {
-  const cam = useRef<CameraRef>(null);
-  const vuaMoc = useRef(false);
-  const duLieu = useMemo(() => tapHop(doan) as never, [doan]);
-  const hopBanDau = hopGioi(mocs);
+type BanDoFn = (props: BanDoProps) => ReactElement | null;
 
-  useEffect(() => {
-    if (fitDem === 0) return;
-    const hop = hopGioi(mocs);
-    if (!hop) {
-      void cam.current?.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration: 400 });
-      return;
-    }
-    void cam.current?.fitBounds(hop, { padding: DEM_KHOP, duration: 600 });
-    // Only Fit Journey (fitDem) may yank the camera.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitDem]);
+function coMapLibreNative(): boolean {
+  const n = NativeModules as Record<string, unknown>;
+  return Boolean(n.MLRNCameraModule || n.MLRNModule);
+}
 
-  useEffect(() => {
-    if (!toi) return;
-    void cam.current?.easeTo({ center: [toi.lng, toi.lat], zoom: 14, duration: 500 });
-  }, [toi]);
+function layBanDoThat(): BanDoFn | null {
+  if (!coMapLibreNative()) return null;
+  try {
+    return require("./BanDoMapLibre").BanDo as BanDoFn;
+  } catch {
+    return null;
+  }
+}
 
+export function BanDo(props: BanDoProps) {
+  const That = useMemo(layBanDoThat, []);
+  if (That) return <That {...props} />;
+  return <BanDoThieu {...props} />;
+}
+
+function BanDoThieu({ mauNen, mocs, onNen }: BanDoProps) {
+  const { colors } = useRudiTheme();
   return (
-    <Map
-      attribution
-      attributionPosition={{ bottom: 8, left: 8 }}
-      compass
-      compassPosition={{ top: 8, right: 8 }}
-      mapStyle={KIEU_BAN_DO}
-      onPress={(e) => {
-        if (vuaMoc.current) {
-          vuaMoc.current = false;
-          return;
-        }
-        const feats = "features" in e.nativeEvent ? e.nativeEvent.features : [];
-        const id = feats?.[0]?.properties?.id;
-        if (typeof id === "string") {
-          onChonDoan(id);
-          return;
-        }
-        onNen();
-      }}
-      onRegionDidChange={(e) => {
-        if (e.nativeEvent.userInteraction) onUserMove();
-      }}
-      scaleBar={false}
+    <Pressable
+      accessibilityLabel="Bản đồ hành trình — cần bản native có MapLibre"
+      onPress={onNen}
       style={[styles.fill, { backgroundColor: mauNen }]}
     >
-      <Camera
-        ref={cam}
-        initialViewState={
-          hopBanDau
-            ? { bounds: hopBanDau, padding: DEM_KHOP }
-            : { center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12 }
-        }
-      />
-      <GeoJSONSource id="hanh-trinh-duong" data={duLieu}>
-        <Layer
-          id="hanh-trinh-duong-line"
-          paint={{
-            "line-color": ["case", ["==", ["get", "chon"], 1], mauDuong, mauDuongMo],
-            "line-opacity": ["case", ["==", ["get", "chon"], 1], 1, 0.45],
-            "line-width": ["case", ["==", ["get", "chon"], 1], 5, 3],
-          }}
-          type="line"
-        />
-      </GeoJSONSource>
-      {mocs.map((moc) => {
-        const chon = moc.chon;
-        const nen = chon ? mauMocChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauMocChon);
-        const co = chon ? 36 : 28;
-        return (
-          <Marker
-            id={moc.id}
-            key={moc.id}
-            lngLat={[moc.lng, moc.lat]}
-            onPress={() => {
-              vuaMoc.current = true;
-              onChonMoc(moc.id);
-            }}
-          >
-            <View
-              accessibilityLabel={`Mốc ${moc.so}`}
-              accessibilityRole="button"
-              style={[
-                styles.moc,
-                {
-                  width: co,
-                  height: chon ? 44 : co,
-                  backgroundColor: nen,
-                  borderColor: mauVien,
-                },
-              ]}
-            >
-              <Text style={[styles.so, { color: mauMocInk }]}>{moc.so}</Text>
-              {chon ? <Text style={[styles.gio, { color: mauMocInk }]}>{moc.gio}</Text> : null}
-            </View>
-          </Marker>
-        );
-      })}
-    </Map>
+      <View style={styles.giua}>
+        <Text style={[typography.label, { color: colors.ink }]}>Chưa vẽ được bản đồ native</Text>
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+          APK đang chạy chưa gắn MapLibre. Timeline, mốc đánh số và tóm tắt vẫn dùng được. Rebuild dev client rồi bản đồ hiện.
+        </Text>
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>
+          {mocs.length === 0 ? "Chưa có chặng nào có vị trí trên bản đồ" : `${mocs.length} chặng có toạ độ`}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 220 },
-  moc: {
-    borderRadius: 999,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-  so: { fontSize: 13, fontWeight: "700", lineHeight: 14 },
-  gio: { fontSize: 9, fontWeight: "600", lineHeight: 11 },
+  giua: { flex: 1, justifyContent: "center", paddingHorizontal: 24, gap: 8 },
 });

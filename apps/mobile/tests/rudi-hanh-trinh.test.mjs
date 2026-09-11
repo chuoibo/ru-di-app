@@ -9,6 +9,7 @@
  * back to a geodesic rather than hanging the view.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -282,4 +283,11 @@ test("toạ độ mẫu Đà Lạt có cho mọi placeId trên lịch, không b�
     assert.ok(t.lat > 11.85 && t.lat < 12.05, `${id} lat ${t.lat}`);
     assert.ok(t.lng > 108.35 && t.lng < 108.55, `${id} lng ${t.lng}`);
   }
+});
+
+test("BanDo.native không import MapLibre ở top-level — APK cũ không được redbox cả tab Plan", () => {
+  const src = readFileSync(new URL("../src/rudi/hanh-trinh/BanDo.native.tsx", import.meta.url), "utf8");
+  assert.equal(src.includes("from \"@maplibre/maplibre-react-native\""), false);
+  assert.equal(src.includes("NativeModules"), true);
+  assert.equal(src.includes("BanDoThieu"), true);
 });
