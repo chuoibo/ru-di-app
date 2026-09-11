@@ -176,7 +176,10 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
             </View>
             <View style={styles.tripPinText}>
               <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{DEMO_GROUP.tripName}</Text>
-              <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>Chuyến đi sắp tới · 17 - 19/10/2026 · 8 người</Text>
+              {/* Keep the decision-bearing dates readable at large text. The
+                  group size is already in the header above; do not spend the
+                  pinned row on repeated prose or truncate the date range. */}
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>17 - 19/10/2026</Text>
             </View>
             <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
           </Pressable>

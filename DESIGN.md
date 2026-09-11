@@ -1833,13 +1833,15 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   dẫn của Khám phá và ở đầu bài chi tiết không bìa nhận **một tờ ký hoạ** (`KyHoa`, `art/ky-hoa.ts`) — tờ `paper` rộng
   hết cột, 3:1 ở chữ 1.0 và 4:1 ở chữ lớn, **một hình, hai khung cắt** (`preserveAspectRatio slice`, bản `gon` ít lớp
   hơn). Hình gồm **sân khấu theo loại nơi** (`quan-an-local` hiên quán bàn dài · `cafe` góc cửa kính · `vui-choi` đồi
-  thông nhìn từ lan can · `di-choi-dem` quầy đêm dưới dây đèn · loại lạ: tờ ghi gấp trên sàn), **tối đa hai đạo cụ theo
+  nhìn từ lan can · `di-choi-dem` quầy đêm dưới dây đèn · loại lạ: tờ ghi gấp trên sàn), **tối đa hai đạo cụ theo
   tag có thật** («View đẹp» đồi phía sau · «Nhóm đông»/«Lẩu» bốn bát · «Chill»/«Nhẹ nhàng» rèm, cây treo · «Món local»
   nồi · «Ngoài trời»/«Săn mây» mây · «Đi đêm»/«Nhộn nhịp» thêm đèn · «BBQ» khói · «Hoa»/«Chụp ảnh» hoa · «Cà phê»/«Trà»
   cốc) và **đúng một điểm coral = nguồn sáng** (bóng đèn dưới mái, đèn thả, mặt trời sát đồi, bóng đèn giữa dây). Ba cỡ
   nét theo độ sâu (gần 3.0 · vừa 2.4 · xa 1.7), bóng là mảng `bong`, mọi mảng tô đi theo đúng đường cong của nét
   viền. **Thật thà:** ký hoạ vẽ *một loại nơi*, không vẽ nơi cụ thể — không tên, không bảng hiệu, không giả ảnh; câu
-  a11y mở bằng «Ký hoạ …» và **chỉ kể đạo cụ mà khung đọc ấy thật sự vẽ** (bản gọn bớt đạo cụ thì câu cũng bớt; test
+  a11y mở bằng «Ký hoạ …» và **chỉ kể sân khấu/đạo cụ mà khung đọc ấy thật sự vẽ**; bản đồi gọn không có cây gọi
+  «đồi nhìn từ lan can», không gọi «đồi thông». Bộ đọc không nhãn chỉ mang mã trung tính trong cả pixel, alt,
+  title và tên file; caption/đáp án phải nằm ngoài thư mục phát cho người đọc. (Bản gọn bớt đạo cụ thì câu cũng bớt; test
   «bỏ một tag làm câu đổi ⇔ làm hình đổi»); **bản gọn là tập con của bản đủ** — hai đạo cụ chọn cho bản đủ, bản gọn
   chỉ bỏ, không bù bằng tag sau; live chỉ có loại (không tag) nên hai quán ăn nhận cùng một hiên — đó là sự
   thật của dữ liệu.

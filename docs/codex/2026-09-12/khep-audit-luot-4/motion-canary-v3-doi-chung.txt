@@ -1,0 +1,65 @@
+nhánh         chếđộ | exit      hợp lệ maestro    put    scale sau | kết
+xanh           reduce  | 0  →0     4→4     5→5        6      goc       | đúng
+xanh-thuong    thuong  | 0  →0     4→4     5→5        0      goc       | đúng
+maestro-42     reduce  | 1  →1     0→0     1→1        6      goc       | đúng
+pid-doi        reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+pid-rong       reduce  | 1  →1     0→0     1→1        6      goc       | đúng
+pid-sai        reduce  | 1  →1     0→0     1→1        6      goc       | đúng
+khung-0        reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+dump-rong      reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+dump-thieu     reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+dump-pid-khac  reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+hist-lech      reduce  | 1  →1     0→0     5→5        6      goc       | đúng
+hist-chu       reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-thieu-ms  reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-dem-am    reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-dem-le    reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-trung     reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-dao       reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-rac       reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-hai-dong  reduce  | 1  →0     0→4     5→5        6      goc       | SAI hợp lệ
+hist-xanh-cham reduce  | 0  →0     4→4     5→5        6      goc       | đúng
+reset-hong     reduce  | 1  →1     0→0     1→1        6      goc       | đúng
+goc-rong       reduce  | 3  →3     0→0     0→0        0      goc       | đúng
+goc-rc         reduce  | 3  →0     0→4     0→5        6      goc       | SAI put
+doclai-rc      reduce  | 4  →0     0→4     0→5        6      goc       | SAI maestro
+tra-doc-rc     reduce  | 5  →0     4→4     5→5        6      goc       | SAI exit
+cua-so-doc-rc  reduce  | 1  →0     0→4     1→5        6      goc       | SAI maestro
+scale-truoc    reduce  | 1  →0     0→4     1→5        6      goc       | SAI maestro
+scale-sau      reduce  | 1  →0     0→4     2→5        6      goc       | SAI maestro
+put-hong       reduce  | 4  →4     0→0     0→0        4      goc       | đúng
+tra-hong       reduce  | 5  →5     4→4     5→5        6      0         | đúng
+ngat           reduce  | 130→130   0→0     2→2        6      goc       | đúng
+
+lý do runner in ra ở từng nhánh đỏ:
+maestro-42     KHÔNG HỢP LỆ (warm-up đỏ)
+pid-doi        KHÔNG HỢP LỆ (pid 22206→22207; dump của pid «22205» ≠ 22206)
+pid-rong       KHÔNG HỢP LỆ (pid trước «» không phải số)
+pid-sai        KHÔNG HỢP LỆ (pid trước «pid-not-known» không phải số)
+khung-0        KHÔNG HỢP LỆ (frames «0»; histogram 271 ≠ frames 0)
+dump-rong      KHÔNG HỢP LỆ (dump của pid «?» ≠ 22205; frames «?»; thiếu janky; thiếu p50; thiếu p90; thiếu p95; thiếu p99; thiếu sui; thiếu sdr; thiếu vsync; thiếu HISTOGRAM)
+dump-thieu     KHÔNG HỢP LỆ (dump của pid «?» ≠ 22205; thiếu janky; thiếu p50; thiếu p90; thiếu p95; thiếu p99; thiếu sui; thiếu sdr; thiếu vsync; thiếu HISTOGRAM)
+dump-pid-khac  KHÔNG HỢP LỆ (dump của pid «22206» ≠ 22205)
+hist-lech      KHÔNG HỢP LỆ (histogram 272 ≠ frames 271)
+hist-chu       (không in lý do — kết thúc bằng mã 0)
+hist-thieu-ms  (không in lý do — kết thúc bằng mã 0)
+hist-dem-am    (không in lý do — kết thúc bằng mã 0)
+hist-dem-le    (không in lý do — kết thúc bằng mã 0)
+hist-trung     (không in lý do — kết thúc bằng mã 0)
+hist-dao       (không in lý do — kết thúc bằng mã 0)
+hist-rac       (không in lý do — kết thúc bằng mã 0)
+hist-hai-dong  (không in lý do — kết thúc bằng mã 0)
+reset-hong     KHÔNG HỢP LỆ (reset gfxinfo thất bại)
+goc-rong       không đọc được animator_duration_scale ban đầu («») — dừng trước mọi thay đổi, không đo
+goc-rc         (không in lý do — kết thúc bằng mã 0)
+doclai-rc      (không in lý do — kết thúc bằng mã 0)
+tra-doc-rc     (không in lý do — kết thúc bằng mã 0)
+cua-so-doc-rc  (không in lý do — kết thúc bằng mã 0)
+scale-truoc    (không in lý do — kết thúc bằng mã 0)
+scale-sau      (không in lý do — kết thúc bằng mã 0)
+put-hong       không ghi được window_animation_scale = 0 — không đo
+tra-hong       KHÔNG TRẢ ĐƯỢC window_animation_scale: muốn 0.5, đọc «0»
+ngat           (không in lý do — kết thúc bằng mã 130)
+
+hàng xanh mẫu:
+| m1-doi-tab | 271 | 13.28% | 26 | 31 | 32 | 85 | 0 | 21 | 34 | 0 | rc=0 | 22205 |
