@@ -1,7 +1,7 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12
-Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 16).
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 17).
 Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
 Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
 
@@ -629,20 +629,44 @@ Ba luật kèm theo:
 | Encoding độ mới | `places.category`, `places.destination_id`, `places.price_min_vnd`/`price_max_vnd`, `destinations` |
 | Ký ức, bản đồ của hai người | `memories` (có toạ độ **của địa điểm**), `memory_reactions`, `memory_comments`; chế độ xem Hành trình của ADR-0026 |
 | Ảnh trong mảnh giấy | `uploaded_images.purpose = 'personal'` + `/people/{id}/photos/{id}` (ADR-0022 §2.1) |
-| Thông báo và push | `notifications`, `notification_devices`, `people.notify_prefs` (ADR-0024) |
+| Tắt từng loại thông báo | **chỉ** `people.notify_prefs` (JSONB). Xem cảnh báo dưới bảng |
 | Gu cá nhân (riêng) | `person_interests`, `saved_places` |
 | Chi tiêu chung | `confirmed_allocations` trong context đó — `spend_vnd` là **phần** của người, nên «chi tiêu chung tháng này» là **một phép đọc**, không cần luật domain mới |
 | Người kia chưa cài app | `guest_links` (tồn tại một lần, máy chủ chỉ giữ digest) |
+
+**Cảnh báo, đã kiểm trên cây ngày 12/09:** ADR-0024 đã **CHẤP NHẬN** nhưng
+**lát thông báo chưa có trên `main`**. `services/api/app/db/models.py` chỉ có
+`people.notify_prefs` (comment ngay tại cột nói nó được tạo sớm «so the
+notifications slice does not…»); **không có bảng `notifications`, không có
+`notification_devices`, không có migration nào chứa `notification`** trong 36
+bản. Nên **Nếp chưa có đường nói ra ngoài app**, và Đợt 1 phải thiết kế để
+không cần nó (mục 12).
 
 ### 9.2 Khái niệm mới cần thêm — đề xuất để Codex quyết hình
 
 Liệt kê theo **khái niệm**, không phải theo DDL, vì hình bảng là quyền của Codex.
 
-1. **Trạng thái «đôi» trên một `pair`.** Ai gấp giấy, ngày gấp, ai giữ vai nào, khung tuần đã khai, routine đã khai, khấc núm độ mới. Một bảng một hàng cho mỗi `pair` đã bật, hoặc cột trên `contexts` — Codex chọn. **Ràng buộc bắt buộc:** bật được chỉ khi `kind = 'pair'`, và cần **hai** hàng chấp thuận (nghi thức gấp giấy), không phải một.
+1. **Trạng thái «đôi» trên một `pair`.** Ai gấp giấy, ngày gấp, ai giữ vai nào, khung tuần đã khai, routine đã khai, khấc núm độ mới. **Phải là một bảng một hàng cho mỗi `pair` đã bật.**
+
+   **CẤM thêm giá trị thứ ba vào `contexts.kind`.** Đã tra bốn chỗ vỡ nếu làm
+   vậy: `schemas.py` `ContextKind = Literal["group", "pair"]` (hợp đồng wire),
+   `service.py` `if summary.kind != "pair" or summary.counterpart is None:
+   continue` (một `kind` thứ ba **rơi khỏi** đường nhắn riêng, mất tên người
+   đối diện), `repository.py` `pair_ids = [… if context.kind == "pair"]`, và
+   hai chỗ `display_name_for("pair", …)`; cộng CHECK `kind IN ('group','pair')`
+   trong migration `6d2b8f4e0c53`. Một đôi **vẫn là một `pair`** theo mọi
+   nghĩa hệ thống; «đôi» chỉ là một hàng phụ trỏ vào nó.
+
+   **Ràng buộc bắt buộc:** bật được chỉ khi `kind = 'pair'`, và cần **hai**
+   hàng chấp thuận (nghi thức gấp giấy), không phải một.
 2. **Mảnh giấy.** Tác giả · context · nội dung (chữ, hoặc `PersonPhotoUrl` của chính tác giả, hoặc `place_id`, hoặc trỏ tới một ký ức) · **mốc mở được** · **điều kiện mở** (bây giờ / tối nay / lần tới đi cùng / một năm sau) · lúc đã mở · lúc đã báo. Không hết hạn. **Đọc được khi và chỉ khi** đã qua mốc, và người đọc là một trong hai người.
 3. **Túi riêng.** Đơn giản nhất: một nhãn trên mảnh giấy nói ai đọc được — **người kia** hay **chỉ mình**. Không nên thành bảng thứ hai.
 4. **Trang sổ.** Chủ sổ · viết về ai · context · **mục** (một trong bảy, tập đóng) · nội dung · **nhãn chia** (riêng / cho người kia đọc) · ai tạo (mình / Nếp đề nghị / người kia ghim) · lần ôn cuối. **Một bảng phục vụ cả hai quyển** nhờ cặp «chủ sổ, viết về ai». Ôn thẻ chỉ cần cột lần-ôn-cuối, **không** cần bảng riêng.
-5. **Kèo tuần.** Một kèo là một buổi đi **được đề nghị**. `outings` hiện **không có cột trạng thái**, nên cần một trong hai: thêm trạng thái (`đề nghị` / `đã chốt` / `đã bỏ`), hoặc một bảng kèo riêng sinh ra `outings` khi được chốt. **Tôi nghiêng về cách thứ hai**: giữ `outings` đúng nghĩa «kế hoạch đã có thật», và kèo chưa ai ừ thì chưa phải kế hoạch.
+5. **Kèo tuần.** Một kèo là một buổi đi **được đề nghị**. `outings` hiện **không có cột trạng thái**, và **không được thêm**: `outings` là bảng **dùng chung với hội bạn** (Timeline,
+   Hành trình ADR-0026, ngân sách, check-in đều đọc nó), nên một cột trạng thái
+   mới ở đó đổi hành vi của nhóm. **Luật: một bảng kèo riêng, sinh ra một hàng
+   `outings` khi kèo được chốt.** Giữ `outings` đúng nghĩa «kế hoạch đã có
+   thật»; kèo chưa ai ừ thì chưa phải kế hoạch.
 6. **Nhãn Ừ / Đổi.** Kèo · người · phán quyết · lúc nào. Đây là **dữ liệu học của cặp** và là số đo chính ở mục 13.
 7. **Thêm loại thông báo.** `notifications.kind` là **tập đóng** (ADR-0024 §2.1) nên các loại mới phải khai vào đó: **kèo tuần**, **mảnh giấy tới**, **nhắc ngày trong sổ**. Kèm `notify_prefs` cho từng loại.
    **Ôn thẻ không phải thông báo**: nó là một thẻ nằm trên màn sổ, im lặng, không sinh hàng, không bao giờ push (mục 8).
@@ -745,7 +769,14 @@ Ba đợt. Mỗi đợt **tự nó có nghĩa** nếu đợt sau không bao gi�
 
 ### Đợt 1 — quyết định
 
-Cần đúng bốn khái niệm mới ở mục 9.2: **trạng thái «đôi»** (1), **kèo tuần** (5), **nhãn Ừ/Đổi** (6), **một loại thông báo** (7). Không cần sổ, không cần mảnh giấy, không cần túi riêng.
+Cần đúng ba khái niệm mới ở mục 9.2: **trạng thái «đôi»** (1), **kèo tuần**
+(5), **nhãn Ừ/Đổi** (6). Không cần sổ, không cần mảnh giấy, không cần túi riêng.
+
+**Và không cần thông báo.** Vì lát thông báo chưa có trên `main` (cảnh báo ở
+mục 9.1), Đợt 1 thiết kế **không phụ thuộc push**: kèo tuần là **một thẻ trên
+màn chính của sổ hai người**, thấy khi mở app. Đây không phải phương án tạm:
+nó còn đúng với hạn mức nói ở mục 8, và nó làm Đợt 1 đo được **mà không chờ**
+một lát của lane khác.
 
 - Nghi thức gấp giấy (bật «đôi» trên một `pair`, hai chiều, có hạn).
 - Kèo tự tới + gậy đổi lượt + ba nút.
@@ -834,7 +865,60 @@ Bản vision gốc không có số nào để biết Relationship Twin là thậ
 
 ---
 
-## 16. Đây chưa phải giấy phép viết code
+## 16. Mode này không được đụng vào hội bạn
+
+Yêu cầu của Lead (phiên 12/09): thêm mode **không ảnh hưởng** các tính năng
+đã có của hội bạn. Đây không phải một lời hứa, nên mục này liệt kê **chỗ có
+thể rò**, và **cổng nào chứng minh là không rò**.
+
+Thiết kế vốn là **cộng thêm**: không tính năng nào của hội bạn bị sửa, bị bỏ
+hay bị đổi nghĩa. Nhưng bốn tầng dưới đây là **dùng chung**, và rò là rò ở đó.
+
+### 16.1 Bảy chỗ rò, và luật chặn từng chỗ
+
+| # | Chỗ dùng chung | Rò kiểu gì | Luật chặn |
+|---|---|---|---|
+| 1 | `contexts.kind` | thêm giá trị thứ ba làm **đường nhắn riêng** mất tên người đối diện ở bốn chỗ | **cấm** thêm giá trị; «đôi» là hàng phụ (mục 9.2 §1) |
+| 2 | `outings` | thêm cột trạng thái đổi Timeline, Hành trình, ngân sách, check-in **của nhóm** | **bảng kèo riêng**, chỉ sinh `outings` khi chốt (mục 9.2 §5) |
+| 3 | `person_interests`, `saved_places` | thêm cờ «đã chia» rồi **lọc** theo cờ đó làm lệch bảng gu cộng theo nhóm của ADR-0019 §2.1 | truy vấn cộng-gu **của nhóm không được thêm điều kiện nào**; cờ mới chỉ đọc ở đường sổ |
+| 4 | `notifications.kind` (khi lát đó có) | client gặp `kind` lạ thì vẽ trống | thêm `kind` **kèm** nhánh mặc định ở client; Đợt 1 **không dùng** thông báo |
+| 5 | **token màu** `packages/shared/tokens.json` | đổi **giá trị** một token đang dùng làm đổi **mọi** màn hội bạn (đúng chuyện PR #603 đã làm) | chỉ **thêm** token mới; **không sửa giá trị** token đang có |
+| 6 | **thành phần dùng chung**: `ui.tsx` (`Grain`, `RudiScreen`), `ui/art/VeLop.tsx`, `ui/stickers/Sticker.tsx` | vật liệu «giấy gấp» sửa ngay trong các file này thì hội bạn đổi mặt theo | giấy gấp là **lớp mới** chỉ mount trong sổ hai người; `mauLop` và `Sticker` **không đổi vai màu** |
+| 7 | **chuỗi ghim của Maestro** và **cổng XML Khám phá** (`kiem-lap-loi.mjs` đọc **chỉ** `text=`) | phần tử mới mang `text` làm cổng đỏ; đổi câu chữ cũ làm flow đỏ | node mới **không có `text`** (nhãn a11y là `content-desc`); không sửa chuỗi đã ghim |
+
+### 16.2 Cái gì chứng minh, chứ không phải cái gì hứa
+
+| Chứng minh | Cổng |
+|---|---|
+| Không màn hội bạn nào đổi hình | **pixel diff trước/sau** các màn nhóm ở sáng và tối, đúng cách PR #603 đã làm (sáng ra **0 pixel khác**) |
+| Không luật màu nào lệch | `test_contrast_floor`, `test_shared_tokens` (đòi **mỗi** khoá `color.*` có biến CSS ở cả hai scheme), `rudi-khong-hex`, `rudi-mau-chat` |
+| Không hình vẽ nào lệch | `art-duong`, `art-ky-hoa`, `rudi-chat-sticker`, `test_sticker_vocabulary_matches_client` |
+| Không đường bấm nào của nhóm chết | bảng Maestro mặc định + `.maestro-bs-r3/65`, `.maestro-bs-r16/91`; cổng XML Khám phá 4 cấu hình |
+| Không tầng nào bị nhiễm | `pytest services/api/tests tests` ở **gốc repo** (gồm `test_import_boundary`, migration-khớp-models, DESIGN gates) |
+| Không luật tiền nào bị chạm | mode này **không ghi cột tiền nào**; «chi tiêu chung» là phép đọc trên `confirmed_allocations` |
+
+### 16.3 Ba thứ hội bạn **được lợi** từ mode này
+
+Không phải mode sống ký sinh. Ba miếng dùng chung được làm ở đây và hội bạn
+dùng lại được nguyên vẹn:
+
+1. **Encoding độ mới** (`outing_stops` → `places.category` / bán kính / khoảng
+   giá). Hội bạn cũng bị rut: «lại quán nướng đó». Cùng một truy vấn.
+2. **Hạn mức một lần lạ** áp được cho nhóm, cùng cơ chế, khác nhịp.
+3. **Ký ức có mốc** («bảy tháng chưa quay lại») là sự thật từ log, đúng với
+   nhóm như với đôi.
+
+### 16.4 Điều duy nhất không chứng minh được bằng test
+
+Rằng người trong hội bạn **không thấy app đổi tính**. Mode mới thêm một nhân
+vật biết nói; nếu Nếp học nói ở sổ hai người rồi bắt đầu nói trong nhóm, đó là
+một thay đổi mà không cổng nào bắt. **Luật: Nếp ở hội bạn giữ đúng vai cũ, im
+lặng.** Việc này chỉ người soát bắt được, nên nó phải nằm trong checklist của
+`impeccable-finish-reviewer` ở mọi lát của mode.
+
+---
+
+## 17. Đây chưa phải giấy phép viết code
 
 Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
 
