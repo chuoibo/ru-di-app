@@ -13,7 +13,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Heading, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Heading, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 
 const MUC: readonly { tieuDe: string; cau: readonly string[] }[] = [
@@ -78,13 +78,13 @@ export function VeRuDiScreen() {
       {MUC.map((muc) => (
         <View key={muc.tieuDe}>
           <SectionHeader title={muc.tieuDe} />
-          <Card style={styles.khoi}>
+          <View style={styles.khoi}>
             {muc.cau.map((cau) => (
               <Text key={cau} style={[typography.body, { color: colors.inkSoft }]}>
                 {cau}
               </Text>
             ))}
-          </Card>
+          </View>
         </View>
       ))}
       <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -96,5 +96,5 @@ export function VeRuDiScreen() {
 
 const styles = StyleSheet.create({
   dau: { flexDirection: "row" },
-  khoi: { gap: 10 },
+  khoi: { gap: 10, paddingVertical: 6 },
 });

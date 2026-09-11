@@ -22,7 +22,7 @@ import { docHoSoToi, suaHoSoToi, type HoSoToi } from "../../../phien";
 import { NHAN_GIAO_DIEN } from "../../giao-dien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Chip, Divider, Heading, Inline, ListRow, RudiButton, RudiScreen, SectionHeader, Segmented, TopBar } from "../../ui";
+import { Chip, Inline, ListRow, NhomHang, RudiButton, RudiScreen, SectionHeader, Segmented, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
 import { useGiaoDien } from "../../ui/GiaoDienProvider";
 
@@ -116,48 +116,52 @@ export function CaiDatScreen() {
   return (
     <RudiScreen testID="cai-dat-screen">
       <TopBar title="Cài đặt" />
+      {/* Rows on paper, one hairline under each: the same surface system as
+          Cá nhân and the ledger next door. Eight floating white cards here read
+          as a second UI kit (re-audit 10/09, R5), and a card around `Segmented`
+          was a card inside a card. */}
       <SectionHeader title="Hồ sơ" />
-      <Card style={styles.khoi}>
-        <Inline gap={12}>
-          <Avatar
-            name={hoSo?.display_name ?? "Bạn"}
-            onError={() => setAnhHong(true)}
-            size={64}
-            source={anhHong ? null : nguonMat}
+      <NhomHang>
+        <View style={styles.khoi}>
+          <Inline gap={12}>
+            <Avatar
+              name={hoSo?.display_name ?? "Bạn"}
+              onError={() => setAnhHong(true)}
+              size={64}
+              source={anhHong ? null : nguonMat}
+            />
+            <View style={styles.hangChu}>
+              <Text style={[typography.label, { color: colors.ink }]}>{hoSo?.display_name ?? "Bạn"}</Text>
+              <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                Ảnh này hiện ở hội, ở tường và trong danh sách bạn bè.
+              </Text>
+            </View>
+          </Inline>
+          <RudiButton
+            label="Đổi ảnh đại diện"
+            loading={dangDoiAnh}
+            onPress={() => void doiAnhDaiDien()}
+            variant="outline"
           />
-          <View style={styles.hangChu}>
-            <Text style={[typography.label, { color: colors.ink }]}>{hoSo?.display_name ?? "Bạn"}</Text>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>
-              Ảnh này hiện ở hội, ở tường và trong danh sách bạn bè.
-            </Text>
-          </View>
-        </Inline>
-        <RudiButton
-          label="Đổi ảnh đại diện"
-          loading={dangDoiAnh}
-          onPress={() => void doiAnhDaiDien()}
-          variant="outline"
-        />
-      </Card>
-      <Card>
+        </View>
         <ListRow
           icon="person-outline"
           onPress={() => router.push("/personalization" as never)}
           subtitle="Món ăn, kiểu đi chơi và mức chi bạn thích"
           title="Sở thích"
         />
-      </Card>
+      </NhomHang>
       <SectionHeader title="Đăng nhập & phiên" />
-      <Card>
+      <NhomHang>
         <ListRow
           icon="phone-portrait-outline"
           onPress={() => router.push("/settings/phien" as never)}
           subtitle="Xem nơi tài khoản đang đăng nhập, đăng xuất từ xa"
           title="Phiên đăng nhập"
         />
-      </Card>
+      </NhomHang>
       <SectionHeader title="Quyền riêng tư" />
-      <Card style={styles.khoi}>
+      <NhomHang>
         <View style={styles.hang}>
           <View style={styles.hangChu}>
             <Text style={[typography.label, { color: colors.ink }]}>Tìm theo số điện thoại</Text>
@@ -176,31 +180,31 @@ export function CaiDatScreen() {
             value={timDuoc}
           />
         </View>
-        <Divider />
-        <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
-        <View accessibilityRole="radiogroup" style={styles.chips}>
-          {CHINH_SACH.map((muc) => (
-            <Chip
-              key={muc.id}
-              label={muc.nhan}
-              onPress={() => void doiChinhSach(muc.id)}
-              selected={(hoSo?.wall_comment_policy ?? "readers") === muc.id}
-            />
-          ))}
+        <View style={styles.khoi}>
+          <Text style={[typography.label, { color: colors.ink }]}>Ai được bình luận tường tôi</Text>
+          <View accessibilityRole="radiogroup" style={styles.chips}>
+            {CHINH_SACH.map((muc) => (
+              <Chip
+                key={muc.id}
+                label={muc.nhan}
+                onPress={() => void doiChinhSach(muc.id)}
+                selected={(hoSo?.wall_comment_policy ?? "readers") === muc.id}
+              />
+            ))}
+          </View>
+          <Text style={[typography.caption, { color: colors.inkFaint }]}>
+            {(CHINH_SACH.find((muc) => muc.id === (hoSo?.wall_comment_policy ?? "readers")) ?? CHINH_SACH[0]).giaiThich}
+          </Text>
         </View>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          {(CHINH_SACH.find((muc) => muc.id === (hoSo?.wall_comment_policy ?? "readers")) ?? CHINH_SACH[0]).giaiThich}
-        </Text>
-        <Divider />
         <ListRow
           icon="hand-left-outline"
           onPress={() => router.push("/settings/da-chan" as never)}
           subtitle="Xem và gỡ chặn những người bạn đã chặn"
           title="Người đã chặn"
         />
-      </Card>
+      </NhomHang>
       <SectionHeader title="Giao diện" />
-      <Card>
+      <View style={styles.khoi}>
         <Segmented
           items={NHAN_GIAO_DIEN.map((muc) => muc.nhan)}
           onSelect={(chi_so) => datCheDo(NHAN_GIAO_DIEN[chi_so].ma)}
@@ -209,40 +213,35 @@ export function CaiDatScreen() {
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
           Lựa chọn này ở trên máy này, không gửi lên máy chủ.
         </Text>
-      </Card>
+      </View>
       <SectionHeader title="Về Rủ Đi" />
-      <Card>
+      <NhomHang>
         <ListRow
           icon="document-text-outline"
           onPress={() => router.push("/settings/ve-rudi" as never)}
           subtitle="Điều khoản, dữ liệu Rủ Đi giữ, và điều gì xảy ra khi bạn xoá tài khoản"
           title="Điều khoản và dữ liệu"
         />
-      </Card>
+      </NhomHang>
       <SectionHeader title="Tài khoản" />
-      <Card>
+      <NhomHang>
         <ListRow
           icon="trash-outline"
           onPress={() => router.push("/settings/xoa-tai-khoan" as never)}
           subtitle="Xoá vĩnh viễn hồ sơ và nội dung của bạn"
           title="Xoá tài khoản"
         />
-      </Card>
-      {loi ? (
-        <Card>
-          <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text>
-        </Card>
-      ) : null}
-      <Heading
-        subtitle="Đăng nhập, đăng xuất và tên hiển thị vẫn nằm ở mục Tài khoản trên màn Cá nhân."
-        title=""
-      />
+      </NhomHang>
+      {loi ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>
+        Đăng nhập, đăng xuất và tên hiển thị vẫn nằm ở mục Tài khoản trên màn Cá nhân.
+      </Text>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  khoi: { gap: 12 },
+  khoi: { gap: 12, paddingVertical: 6 },
   hang: { flexDirection: "row", alignItems: "center", gap: 12 },
   hangChu: { flex: 1, gap: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

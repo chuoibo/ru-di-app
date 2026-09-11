@@ -14,7 +14,7 @@ import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../
 import { cauPhien, docPhien, thuHoiPhien, type PhienWire } from "../../cai-dat/phien-cai-dat";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -78,10 +78,10 @@ export function PhienScreen() {
         Mỗi lần đăng nhập là một phiên. Đăng xuất một phiên ở đây thì máy đó phải đăng nhập lại.
       </Text>
       {trang.pha === "dang-doc" ? (
-        <Card>
+        <View style={styles.khoi}>
           <SkeletonRow />
           <SkeletonRow />
-        </Card>
+        </View>
       ) : null}
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách phiên" />
@@ -93,9 +93,10 @@ export function PhienScreen() {
           title="Chưa có phiên nào"
         />
       ) : null}
-      {trang.pha === "xong"
-        ? trang.phien.map((row) => (
-            <Card key={row.id} style={styles.hang}>
+      {trang.pha === "xong" ? (
+        <NhomHang>
+          {trang.phien.map((row) => (
+            <View key={row.id} style={styles.hang}>
               <View style={styles.hangChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{cauPhien(row)}</Text>
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -115,14 +116,16 @@ export function PhienScreen() {
                   variant="outline"
                 />
               )}
-            </Card>
-          ))
-        : null}
+            </View>
+          ))}
+        </NhomHang>
+      ) : null}
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  hang: { flexDirection: "row", alignItems: "center", gap: 12 },
+  khoi: { gap: 12 },
+  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   hangChu: { flex: 1, gap: 2 },
 });

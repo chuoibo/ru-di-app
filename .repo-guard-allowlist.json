@@ -2078,6 +2078,294 @@
         "controlled-artifact"
       ],
       "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-duoi-fs1.0-sang.png",
+      "sha256": "6c72f11bcd2e3fcdc56667942ee56f7123fa131ed2a7073d0a95733b3c6ecbcf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-duoi-fs1.0-toi.png",
+      "sha256": "1f35e9d010b030fb432b7443743f4d72d60e9e4a874edfee4d46d2f5fe26b888",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-duoi-fs2.0-sang.png",
+      "sha256": "3b9b6e6280888b74e85d8ffed0df3277fe7bc081d2dda6a2a02c1fdeeb86c552",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-duoi-fs2.0-toi.png",
+      "sha256": "be1a0b8c331c7e66813c38a050f0ea917c0b9abc494980fe36e5fad075ddd03d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-tren-fs1.0-sang.png",
+      "sha256": "d5533016feb41959831dae8dd6d391501f8c625f919d7758314e3bbc0f906648",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-tren-fs1.0-toi.png",
+      "sha256": "7215a1464085e5dc7379f11887f6bea17a45e6866e5b97ffc4a3d94f83401edb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-tren-fs2.0-sang.png",
+      "sha256": "d9f3d3e5e9277ea57643d8000d5a5934c6ffb2842420df4399a224575c50bf76",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-tren-fs2.0-toi.png",
+      "sha256": "8de80ac9b2de790fc9099f0f856d9388d53bee86fac5388e3d8776d64ca4d4c4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-fs1.0-sang.png",
+      "sha256": "975fa70cca74cdbf662a53f9ab1aba498420db77c87ce42bc01a30c54985b4a9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-fs1.0-toi.png",
+      "sha256": "df820318f8dd1b57783e6504a198d737c558a95b9075dc19044032ad33dcaabd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-fs2.0-sang.png",
+      "sha256": "11f0199a1db3b08896247ef6dc18ec93db5f5cb01a4d488552178df6956a2ec6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-fs2.0-toi.png",
+      "sha256": "ba783c84dd968b0b1f37bbca3131c50dbd6a86db293d0482a86bd6f488d08cb9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-mo-fs1.0-sang.png",
+      "sha256": "21ea1b2eca0da5f2de6f12abac6b0fdab363b79023ea99be0b85852c53ce2fa9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-mo-fs1.0-toi.png",
+      "sha256": "bdda6db099d7aa78b9fca10ecea05a8b472f5d58cef5967a11a91cdd54782b2b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-mo-fs2.0-sang.png",
+      "sha256": "6db39c76022896d68421dd9469f7cc8fbabc667c306303851bcec992e83781dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-91-chat-ai-mo-fs2.0-toi.png",
+      "sha256": "304e2792ffdad936c1821b54edd279e6f504fdcdbf78fe286f0fccc3ffcd15d5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt về hàng + kẻ tóc (không Card) và tờ AI chat gọn (quyết định trước, lý do sau một cửa mở), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-da-chan-fs1.0-sang.png",
+      "sha256": "e7c4342eeccc93ceb4dcdfea191354688c8ba00ce521c52f2656c6bb326499c4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-da-chan-fs1.0-toi.png",
+      "sha256": "130c8026a15bf3605974b7d82fdda22d8c9046cd13ce69ceb9bba25d71909960",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-da-chan-fs2.0-sang.png",
+      "sha256": "042b9eecd2e817292d8af8e035595f12fa86f98a14f88433633d53f9a246467f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-da-chan-fs2.0-toi.png",
+      "sha256": "903c4d22bb903db4e5b88483516f281736c06db4490ba15e91358d39bddc5366",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-phien-fs1.0-sang.png",
+      "sha256": "2483f08c52b69a1d83e5cf123701893de1543276f9362d3aac9782bcf87b0d09",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-phien-fs1.0-toi.png",
+      "sha256": "340c24c01320124eb81e99c35dbd21b902634c6108de00a71d06c505758c5353",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-phien-fs2.0-sang.png",
+      "sha256": "1bb9aa31403a662bea727f2294c65bc61d066d6cda1f34c53a63e990ea4f5ea6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-phien-fs2.0-toi.png",
+      "sha256": "2ccb4de43c3574e58be1ca7757e87b2fdb09611ab229b02d0485c0fced43fa74",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-1-fs1.0-sang.png",
+      "sha256": "4e218110a2b5b55c74772767fd17fb5b160ef313810da50fefd79d5d05bce96a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-1-fs1.0-toi.png",
+      "sha256": "b8d3fb5c58bb26fdfa451c67022ab3bc12e41a8a82331eb5d896a35fc66a99df",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-1-fs2.0-sang.png",
+      "sha256": "8260789761bfb85f0ce3e8242b6a9025b6b4bbdaad1362502a6d9e931bf8197e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-1-fs2.0-toi.png",
+      "sha256": "c876da4d24511e2ae1c34434d4f24713622dc6bdcea146fe1e8cf21fb2c6c1f3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-2-fs1.0-sang.png",
+      "sha256": "9d6de152a6069a40329a9c8416ce07bd5aea5057eb50e9a88aff13072e471771",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-2-fs1.0-toi.png",
+      "sha256": "0584970d9e8c29e37365528bc139482870bab8136b0ed48e89fa6c61694273a8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-2-fs2.0-sang.png",
+      "sha256": "533edabf672dd72011d1bde473dcb7c3b199c121a165d3a39443372bfe73e51a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-2-fs2.0-toi.png",
+      "sha256": "bc406ac14efdbb674741615bb6f5206533e0fcdc0d1a9b26dd16657997d7953f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-sang.png",
+      "sha256": "cb84b8b4f018975e6ba4f83d275f5b3eaa047fed1e078aca9fbf3248e761c784",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-toi.png",
+      "sha256": "6e344d0f8f12119e85dc88e31690d9648be6e62483a43d2fe7a0e64f60ac1f1c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-sang.png",
+      "sha256": "207d2718678679898b4e1f48ce09f39e8e49e6e04a70a72e47881d5e87a0206c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-toi.png",
+      "sha256": "1c8e0ed6d97f36259ed1c03e81b88a27135595bf4dbfa77facd0ea0c347328b5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
     }
   ]
 }

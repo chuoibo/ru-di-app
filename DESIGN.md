@@ -745,13 +745,21 @@ một mức: bảng tương phản vẫn áp cho bề mặt có vân.
 - **Bản in** (`cardShadow`: iOS `#5A3014` 0/8, đục 0.1, mờ 18; Android
   `elevation: 3`): chỉ `KhungAnh` và `Card` v1 còn sót; `Card` v1 ship **cả**
   viền `line` lẫn bóng vì elevation 3 gần như không thấy trên giấy và ở
-  scheme tối không tách được gì. Không màn nào trong đợt này còn gọi `Card`.
+  scheme tối không tách được gì. *Lịch sử tới 10/09:* tài liệu ghi «không màn
+  nào còn gọi `Card`» trong khi họ màn Cài đặt gọi 14 lần (8 ở
+  `CaiDatScreen`) — tái audit Codex 10/09 R5 thấy hai hệ bề mặt cạnh nhau.
+  **Hiện hành (11/09):** họ Cài đặt là hàng trên giấy (`NhomHang`); `Card`
+  còn đúng hai người gọi có tên là nợ: `story/DangStoryScreen`,
+  `tuong/BaiChiTietScreen`. Cổng:
+  `node --test tests/rudi-khong-card-trong-cai-dat.test.mjs`.
 - **FAB** (`elevation: 6`, 0/6, đục 0.22, mờ 10, màu `accent`): thứ duy nhất
   nổi trên thanh tab; vòng 4px màu `ground` tách nó khỏi thanh.
 - **Scrim sheet** (`lopPhu.toi(0.42)`): lớp phủ ấm gần đen, không xám.
 - **Tờ giấy AI** (`ToGiay` trong `TheAi.tsx`, khung `aiSheet` trong Group):
   nền `card`, viền 1px `line`, bo `base`, **không bóng**; một tờ giấy đặt lên
-  trang, ký ở chân.
+  trang, ký ở chân. Nhịp của tờ (11/09, tái audit R5 «khối AI dài và nặng»):
+  tiêu đề cỡ `title` — cỡ một tin nhắn, không phải một màn — quyết định
+  đứng trước, lý do sau **một cửa mở**, trạng thái nháp nói một lần bằng badge.
 
 ### Named Rules
 **Luật Không Dập Nổi.** Không giả độ sâu bằng bóng lệch cứng (hard offset
@@ -1521,11 +1529,36 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   `HangChang phac`, **ký ở chân** bằng icon 15 + `caption` tông (`sparkles`
   «Rủ Đi AI gợi ý» tím; `receipt-outline` với tông `split` khi là tờ tiền).
   Câu hỏi là tiêu đề của tờ, không có nhãn trên đầu.
+- **Nhịp của tờ AI trong luồng chat** (11/09, tái audit Codex 10/09 R5 và §2
+  «Tin nhắn»: khối AI dài, nặng, lặp trạng thái nháp): tiêu đề ở cỡ
+  `title` (trước là `h2`) — trong một luồng, tờ nói ở cỡ một tin nhắn; áp cả
+  khung `aiSheet` fixture (Group) và tiêu đề lịch trình live của `TheAi`
+  (`the.tieuDe`) và câu hỏi của thẻ bình chọn (`the.question`). Thứ tự: tiêu đề → **một** dòng gist («3 ngày 2 đêm · đồ ăn
+  local · săn mây») → quyết định ngay (`RudiButton soft ai` «Xem lịch trình»
+  + `IconButton` «Mở bình chọn») → lý do sau **một cửa mở** («Vì sao phác
+  vậy»: `Pressable` 48, `label inkSoft` + chevron, `accessibilityState
+  expanded` — cùng hình «Cách tính» của Thành tích) → chân ký `caption ai`
+  «Rủ Đi AI» + badge «AI nháp». Thân **không** nhắc «nhóm sửa được trước khi
+  chốt»: badge đã nói nháp một lần.
 
 ### Cards / Containers
-- **Hàng + kẻ tóc là container mặc định** trên giấy. `Card` v1 (bo 20, đệm
-  16, viền `line` + `cardShadow`) còn trong kit nhưng **không màn nào trong
-  đợt này gọi**.
+- **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
+  tài liệu ghi `Card` v1 (bo 20, đệm 16, viền `line` + `cardShadow`) «không
+  màn nào gọi» — sai: họ Cài đặt (`CaiDat`, `Phien`, `DaChan`, `VeRuDi`,
+  `XoaTaiKhoan`) xếp 14 thẻ trắng nổi cạnh Cá nhân là hàng phẳng (tái audit
+  Codex 10/09 §2 «Cài đặt», R5). **Hiện hành (11/09):** không file nào trong
+  `screens/cai-dat/` import `Card`: nhóm mục là `NhomHang`, `Segmented` đặt
+  thẳng trên giấy, lỗi là `body warn` trần, chân trang là `caption`
+  (ảnh `native-r16/anh/r16-90-cai-dat-*`). `Card` còn trong kit với **hai
+  người gọi là nợ có tên**: `story/DangStoryScreen` (khung ảnh) và
+  `tuong/BaiChiTietScreen`; test in danh sách này để nợ không tàng hình.
+- **`NhomHang`** (`ui.tsx`): nhóm hàng trên giấy — mỗi con nằm trong một ô
+  `paddingVertical` 6 có kẻ tóc `line` dưới (`StyleSheet.hairlineWidth`);
+  không nền, không bo, không bóng, không đệm ngang. Trích ra sau khi
+  `Profile`, `DiemDenScreen` và `HangDiaDiem` đã vẽ tay cùng một hình ba
+  lần và Cài đặt xếp `Card` bên cạnh; luật trích: **ba bản chép tay trở lên
+  thì thành primitive**. Đứng cạnh `ListRow`/`Divider`: `ListRow` là một
+  hàng, `NhomHang` là cái kẻ giữa các hàng, `Divider` là kẻ đơn ngoài nhóm.
 - **`CoverBand`**: nền `cover` + `Grain vaiBia` 0.3, bo góc dưới 28, đệm trên
   `md` (+`insets.top` khi `underStatusBar`), đệm dưới `lg`, tràn lề theo
   `bleed`; `compact` rút vải khi bàn phím mở; chứa logo compact, `hero`
@@ -1702,7 +1735,8 @@ mỗi sự thật có **một** chỗ trên màn.
   (live: «Mở địa điểm» khi máy chủ chỉ có id), không «Đã gắn địa điểm · bấm
   để mở».
 - Trạng thái nháp nói **một lần** ở đầu màn (badge «Nháp», `AiNote`), không
-  «Có thể thay đổi» dưới từng hàng.
+  «Có thể thay đổi» dưới từng hàng. Tờ AI trong chat (11/09): badge «AI nháp»
+  ở chân là nơi duy nhất; thân tờ không còn «Nhóm sửa được trước khi chốt».
 - Hàng check-in là **một con dấu**: đã tới thì chỉ `Stamp`, chưa tới thì
   một `note` «Chưa tới»; không caption «Đã check-in» đứng cạnh dấu «ĐÃ TỚI»
   (`sua-sang-1.0/bs-20-check-in`).
@@ -1874,8 +1908,17 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   `Stat` và `FloatingGlass` 0 màn gọi; `ProgressBar` một chỗ (kết quả bình
   chọn Group.tsx:362) chỉ được để lại vì có chữ đi kèm, không phải mẫu.
 - `WordmarkEmbossed.tsx` (dập nổi bằng bóng lệch): đã xoá ở `5cc57d2`.
-- `Card` v1 và chip tĩnh: còn trong kit, không màn nào trong đợt này dùng
-  cho trạng thái; không lấy làm container mặc định.
+- *Lịch sử tới 10/09:* «`Card` v1 và chip tĩnh: còn trong kit, không màn nào
+  dùng» — nửa đầu sai, họ Cài đặt dùng 14 lần. **Hiện hành (11/09):** Cài đặt
+  là `NhomHang`; `Card` còn ở `story/DangStoryScreen` và
+  `tuong/BaiChiTietScreen` là nợ có tên, không phải container của hệ. **Chưa
+  chứng minh:** một người đọc đặt Cài đặt cạnh Cá nhân có nhận ra cùng một
+  bề mặt không (chỉ có ảnh `r16-90-cai-dat-*`, chưa có thử nghiệm nhìn
+  cạnh nhau); tờ AI live (`TheAi`) ở 2.0 chưa có ảnh — chỉ khung `aiSheet`
+  fixture được chụp (`r16-91-chat-ai-*`); hai màn còn `Card` chưa đo lại;
+  hàng phiên/người đã chặn **live** chưa có ảnh (fixture không máy chủ, fetch
+  treo nên hai màn dừng ở skeleton — `r16-92-phien-*`, `r16-92-da-chan-*`); đường lỗi
+  lưu Cài đặt (`loi`, dòng `warn` dưới «Xoá tài khoản») chưa ép ra để render.
 - Ảnh fixture trong album, tường và Khám phá là ảnh Commons đã nhập theo
   mapping duyệt (`tools`, commit `5d853f4`) với dòng xuất xứ của **fixture**
   («Team Đà Lạt · Đà Lạt · …»); dòng đó là mẫu định dạng, không phải xuất xứ
@@ -1951,6 +1994,7 @@ python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sin
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
 cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/claude/2026-09-11/motion-v2/
+cd apps/mobile && node --test tests/rudi-khong-card-trong-cai-dat.test.mjs   # không file nào trong screens/cai-dat import Card; NhomHang có trong kit; in các màn còn dùng Card (nợ có tên)
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly-do.test.mjs tests/khong-mo-coi.test.mjs   # chonLyDo bỏ tag mô tả đã nói, guTheoTag trước guTheoLoai; khongMoCoi nối hai chữ cuối bằng NBSP
