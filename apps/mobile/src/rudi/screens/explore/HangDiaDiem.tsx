@@ -13,6 +13,18 @@ import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
 import { guTheoLoai } from "../../kham-pha/dia-diem";
 
+/*
+ * 2026-09-11 (re-audit 10/09, R3): one mark per place. A place prints EITHER
+ * its one reason (`lyDo`, the tag the group matched on, or the model's own
+ * sentence) OR the seal (`badge`) -- never both. The lead used to carry the
+ * section title's promise («đúng gu»), the seal («HỢP GU»), a reason that
+ * repeated it («Hợp gu nhờ …») and a subtitle that repeated the tags: four
+ * readings of one promise. The section title keeps the promise; each place
+ * adds one fact. And the empty frame is a paper slot -- `card` on `line`
+ * with the category drawn in ink and its one coral detail -- not a tinted
+ * disc with an all-coral icon, which is every app's default.
+ */
+
 /**
  * One place, two sizes, one vocabulary -- for the fixture catalogue and the
  * server's alike.
@@ -52,10 +64,16 @@ export interface DiaDiemHienThi {
    * picture is allowed to be shown under (ADR-0017 §2.5; review 08/09 vòng 2).
    */
   anh: AnhCoGhiCong | null;
-  /** «Rất hợp gu» from a computed match; null otherwise. */
+  /** «Rất hợp gu» from a computed match; null otherwise. Printed only when there is no `lyDo`. */
   badge: string | null;
-  /** One grounded reason for the lead, from the match payload; absent → no line. */
+  /**
+   * One grounded reason: a single tag the group really matched on (fixture,
+   * via `chonLyDo`) or the model's own sentence (live). Present → this is the
+   * place's one mark and the seal is not printed.
+   */
   lyDo?: string;
+  /** The drawn object a real tag chose (`guTheoTag`); absent → the category's object. */
+  gu?: string;
 }
 
 interface CommonProps {
@@ -66,14 +84,45 @@ interface CommonProps {
   testID?: string;
 }
 
-/** The empty frame's artwork: the category drawn with one pen, never a stock photo. */
-export function PlaceGlyph({ glyph, loai, size = 40 }: { glyph: IconName; loai?: string; size?: number }) {
-  const { colors } = useRudiTheme();
+/**
+ * The empty frame's artwork: a paper slot (`card`, hairline `line`, the small
+ * radius the photo frames use) with the category drawn in ink and its own one
+ * coral detail -- never a stock photo, never a tinted disc. `gu` lets a real
+ * tag pick the object (a local dish, the outdoors); without it the category's.
+ * The footprint is the same 1.7 × size the disc had, so no layout moves.
+ */
+export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; loai?: string; gu?: string; size?: number }) {
+  const { colors, radius } = useRudiTheme();
+  const canh = Math.round(size * 1.7);
+  const id = gu ?? (loai === undefined ? null : guTheoLoai(loai));
   return (
-    <View style={[styles.glyphDisc, { width: size * 1.7, height: size * 1.7, borderRadius: size * 0.85, backgroundColor: colors.accentSoft }]}>
-      {loai === undefined ? <Ionicons color={colors.accent} name={glyph} size={size} /> : <GuGlyph id={guTheoLoai(loai)} size={size * 1.15} tone="accent" />}
+    <View style={[styles.glyphTo, { width: canh, height: canh, borderRadius: radius.small, backgroundColor: colors.card, borderColor: colors.line }]}>
+      {id === null ? <Ionicons color={colors.ink} name={glyph} size={size} /> : <GuGlyph id={id} size={Math.round(size * 1.15)} tone="ink" />}
     </View>
   );
+}
+
+/**
+ * The one reason a place prints: a small spark and the text, in the AI tone.
+ * A fixture reason is one tag; a live reason is the model's sentence, so the
+ * line budget follows the surface (`dong`) and grows with large text -- an
+ * ellipsis here would hide the one fact the row exists to show (finish
+ * review 11/09). The spark is decoration and stays out of the a11y tree.
+ */
+function LyDo({ text, dong = 2 }: { text: string; dong?: number }) {
+  const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
+  return (
+    <Inline gap={5}>
+      <Ionicons color={colors.ai} importantForAccessibility="no" name="sparkles" size={13} />
+      <Text numberOfLines={chuLon(fontScale) ? dong + 1 : dong} style={[typography.label, styles.flex1, { color: colors.ai }]}>{text}</Text>
+    </Inline>
+  );
+}
+
+/** The seal a place shows when it has no reason line: one mark, never two. */
+function dauCon(dd: DiaDiemHienThi): string | null {
+  return dd.lyDo ? null : dd.badge;
 }
 
 export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
@@ -85,7 +134,7 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   const chu = (
     <>
       <Text style={[typography.h2, { color: colors.ink }]}>{dd.name}</Text>
-      {dd.lyDo ? <Text style={[typography.label, { color: colors.ai }]}>{dd.lyDo}</Text> : null}
+      {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
       {dd.sub ? <Text style={[typography.body, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
       {dd.facts.length > 0 ? (
         <Inline gap={12} wrap>
@@ -113,9 +162,9 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
     return (
       <View style={[styles.leadGon, { borderBottomColor: colors.line }]} testID={testID}>
         <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadGonPress, pressed && styles.pressed]}>
-          <PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={34} />
+          <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={34} />
           <View style={[styles.leadText, styles.flex1, styles.leadGonChu]}>
-            {dd.badge ? <Stamp label={dd.badge} style={styles.leadGonDau} tone="ai" /> : null}
+            {dauCon(dd) ? <Stamp label={dauCon(dd) as string} style={styles.leadGonDau} tone="ai" /> : null}
             {chu}
           </View>
         </Pressable>
@@ -128,9 +177,9 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
         <MediaSlot
           alt={dd.name}
-          fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={44} />}
+          fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={44} />}
           nguon={{ loai: "danh-muc", anh: dd.anh }}
-          overlay={dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
+          overlay={dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
           ratio={tiLe}
         />
         <View style={styles.leadText}>{chu}</View>
@@ -164,27 +213,26 @@ export function PlaceRow({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
   return (
     <View style={[styles.row, { borderBottomColor: colors.line }]} testID={testID}>
       <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.rowPress, pressed && styles.pressed]}>
-        <View style={[styles.thumb, { borderRadius: radius.small, backgroundColor: colors.accentSoft }]}>
-          {ve.source !== null ? (
+        {ve.source !== null ? (
+          <View style={[styles.thumb, { borderRadius: radius.small }]}>
             <Image accessibilityLabel={dd.name} contentFit="cover" onError={() => setHong(true)} source={ve.source} style={StyleSheet.absoluteFill} />
-          ) : dd.loai !== undefined ? (
-            <GuGlyph id={guTheoLoai(dd.loai)} size={32} tone="accent" />
-          ) : (
-            <Ionicons color={colors.accent} name={dd.glyph} size={24} />
-          )}
-        </View>
+          </View>
+        ) : (
+          <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={33} />
+        )}
         <View style={styles.rowText}>
           {/* The seal sits beside the name, so a matched row is as tall as any other. */}
           <View style={styles.rowTen}>
             <Text numberOfLines={2} style={[typography.title, styles.flex1, { color: colors.ink }]}>{dd.name}</Text>
-            {dd.badge && !chuLonHon ? <Stamp label={dd.badge} tone="ai" /> : null}
+            {dauCon(dd) && !chuLonHon ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
           </View>
+          {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
           {dd.sub ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
           {/* One text node per line: a row of several short texts keeps its
               first measurement when the row wraps and strands one word alone. */}
           {dauFacts ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
           {cuoiFact ? <Text numberOfLines={1} style={[typography.caption, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
-          {dd.badge && chuLonHon ? <Stamp label={dd.badge} style={styles.rowBadgeDuoi} tone="ai" /> : null}
+          {dauCon(dd) && chuLonHon ? <Stamp label={dauCon(dd) as string} style={styles.rowBadgeDuoi} tone="ai" /> : null}
           {/* The thumbnail is a licensed photograph, so its credit is a line
               of this row (ADR-0017 §2.5) -- two lines, since a long author
               name has to wrap rather than end in an ellipsis. */}
@@ -259,6 +307,7 @@ export function PlaceCompare({
         const chu = (
           <>
             <Text numberOfLines={2} style={[typography.title, { color: colors.ink }]}>{dd.name}</Text>
+            {dd.lyDo ? <LyDo text={dd.lyDo} /> : null}
             {dd.sub ? <Text numberOfLines={2} style={[typography.note, { color: colors.inkSoft }]}>{dd.sub}</Text> : null}
             {dauFacts ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{dauFacts}</Text> : null}
             {cuoiFact ? <Text numberOfLines={1} style={[typography.note, { color: colors.inkFaint }]}>{cuoiFact}</Text> : null}
@@ -271,8 +320,8 @@ export function PlaceCompare({
           return (
             <View key={dd.id} style={styles.ungVien}>
               <View style={styles.ungVienDau}>
-                <PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={24} />
-                {dd.badge ? <Stamp label={dd.badge} tone="ai" /> : null}
+                <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={24} />
+                {dauCon(dd) ? <Stamp label={dauCon(dd) as string} tone="ai" /> : null}
                 <View style={styles.flex1} />
                 <IconButton
                   accessibilityLabel={luu ? `Bỏ lưu ${dd.name}` : `Lưu ${dd.name}`}
@@ -293,10 +342,10 @@ export function PlaceCompare({
             <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={() => onOpen(dd.id)} style={({ pressed }) => [styles.ungVienPress, pressed && styles.pressed]}>
               <MediaSlot
                 alt={dd.name}
-                fallback={<PlaceGlyph glyph={dd.glyph} loai={dd.loai} size={34} />}
+                fallback={<PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={34} />}
                 overlay={
                   <>
-                    {dd.badge ? <View style={styles.badgeOnMedia}><Stamp label={dd.badge} nen tilt={-2} tone="ai" /></View> : null}
+                    {dauCon(dd) ? <View style={styles.badgeOnMedia}><Stamp label={dauCon(dd) as string} nen tilt={-2} tone="ai" /></View> : null}
                     {/* The heart lives on the picture's corner, as on the lead; no orphan row under the facts. */}
                     <View style={styles.timOnMedia}>
                       <IconButton
@@ -337,7 +386,7 @@ const styles = StyleSheet.create({
   timOnMedia: { position: "absolute", right: 6, bottom: 6 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },
   flex1: { flex: 1, minWidth: 0 },
-  glyphDisc: { alignItems: "center", justifyContent: "center" },
+  glyphTo: { alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, flexShrink: 0 },
   lead: { gap: 4 },
   leadPress: { gap: 12 },
   leadText: { gap: 6, paddingRight: 56 },
@@ -346,6 +395,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.86 },
   row: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   rowPress: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
-  thumb: { width: 56, height: 56, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  thumb: { width: 56, height: 56, overflow: "hidden", flexShrink: 0 },
   rowText: { flex: 1, gap: 2, minWidth: 0 },
 });

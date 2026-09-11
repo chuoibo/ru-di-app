@@ -10,7 +10,8 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Chưa đọc được danh sách nơi đến"
     timeout: 30000
-- assertVisible: "Không nối được máy chủ. Kiểm tra mạng rồi thử lại."
+# Hai chữ cuối nối bằng NBSP (khongMoCoi) nên regex dùng «.» thay khoảng trắng cuối.
+- assertVisible: "Không nối được máy chủ. Kiểm tra mạng rồi thử.lại."
 - assertNotVisible: "http.*"
 - assertNotVisible: ".*đang chạy.*"
 - assertVisible: "Thử lại"

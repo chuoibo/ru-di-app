@@ -40,6 +40,7 @@ import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
 import { GuGlyph } from "../ui/art/Gu";
 import { guTheoLoai } from "../kham-pha/dia-diem";
+import { chonLyDo, guTheoTag } from "../kham-pha/ly-do";
 import { EmptyState } from "../ui/EmptyState";
 import { PlaceCompare, PlaceGlyph, PlaceLead, PlaceRow, taiSoSanh, type DiaDiemHienThi } from "./explore/HangDiaDiem";
 
@@ -65,9 +66,12 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
     loai: LOAI_MAU[place.category],
     anh: place.anh,
     badge: !song && place.match >= 90 ? "Hợp gu" : null,
-    // The sample's reason is the two tags it was matched on (the same two
-    // `AiMatchScreen` shows), and only while the sample badge is shown.
-    lyDo: !song && place.match >= 90 && place.tags.length > 0 ? `Hợp gu nhờ ${place.tags.slice(0, 2).join(" và ")}` : undefined,
+    // The sample's one reason: ONE matched tag, and never a tag the subtitle
+    // already says (re-audit 10/09 R3: «Hợp gu nhờ Chill và View đẹp» over
+    // «view đồi cực chill» was the same promise three times). The row prints
+    // the reason instead of the seal when it has one.
+    lyDo: !song && place.match >= 90 ? chonLyDo(place.tags, place.subtitle) : undefined,
+    gu: guTheoTag(place.tags) ?? undefined,
   };
 }
 
@@ -401,7 +405,7 @@ export function PlaceDetailScreen() {
         )}
         <View style={styles.detailContent}>
           <DemoBadge />
-          {place.anh ? null : <PlaceGlyph glyph={GLYPH[place.category]} loai={LOAI_MAU[place.category]} size={36} />}
+          {place.anh ? null : <PlaceGlyph glyph={GLYPH[place.category]} gu={guTheoTag(place.tags) ?? undefined} loai={LOAI_MAU[place.category]} size={36} />}
           <Heading title={place.name} subtitle={place.subtitle} />
           {/* The three facts that decide, on the paper, each one text node. */}
           <Inline gap={14} wrap>
@@ -423,7 +427,8 @@ export function PlaceDetailScreen() {
           </Inline>
           <View style={styles.khoi}>
             <SectionHeader title={`Vì sao hợp ${tenNhomHienTai(session)}?`} />
-            <AiNote>View thoáng, món nướng dễ chia sẻ và đủ chỗ cho nhóm 8 người.</AiNote>
+            {/* One reason about THIS group, not the chips read back as adjectives (re-audit 10/09 R3). */}
+            <AiNote>Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.</AiNote>
           </View>
           <RudiButton
             icon="add-circle-outline"

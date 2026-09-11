@@ -90,6 +90,9 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     sub: dongPhu(place),
     facts: chiTietNgan(place).map((m) => ({ icon: m.icon, text: m.chu })),
     glyph: bieuTuongLoai(place.category),
+    // Category only: the live catalogue carries no per-place tags, so nothing
+    // honest can tell two eateries' slots apart here (the fixture's `gu` comes
+    // from its tags). Three bowls in a row are the truth of this data.
     loai: place.category,
     // The picture comes with its credit or not at all (ADR-0017 §2.5), in one
     // value whose address cannot be taken out on its own, so no adapter can

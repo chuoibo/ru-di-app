@@ -240,6 +240,10 @@
     // Lớp kích cỡ (UI v2): compile để test đo đúng biên 600/840 và chiều cao
     // ngắn; trước đó là số 700 gõ tay ở bốn chỗ, đọc nguồn không đo được biên.
     "src/rudi/adaptive.ts",
+    // Một lý do cho một địa điểm (tái audit 10/09 R3): chọn tag chưa nói, hình gu theo tag.
+    "src/rudi/kham-pha/ly-do.ts",
+    // Chữ: nối hai chữ cuối bằng NBSP để câu không rớt một chữ mồ côi (EmptyState body).
+    "src/rudi/ui/chu.ts",
     "src/rudi/google.ts",
     // Đường SVG của bộ kit (UI v2): compile vì react-native-svg parse `d` trong
     // Java lúc mount; một token sai là app chết ở khung hình đầu, tsc và web mù.
