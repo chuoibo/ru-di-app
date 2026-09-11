@@ -292,6 +292,8 @@ export function moTaKyHoa(loai: string | undefined, tags: readonly string[], tuy
   const san = sanKhauTheoLoai(loai);
   const gon = tuyChon.gon ?? false;
   const dc = daoCuTheoTag(tags, san, gon).map((d) => TEN_DAO_CU_THEO_SAN[san]?.[d] ?? TEN_DAO_CU[d]);
-  const than = TEN_SAN_KHAU[san];
+  // The compact hill drops its pines; the stage name must follow the crop
+  // just as prop descriptions do, rather than naming a tree that is absent.
+  const than = san === "doi" && gon ? "đồi nhìn từ lan can" : TEN_SAN_KHAU[san];
   return `Ký hoạ ${than}${dc.length ? `, ${dc.join(", ")}` : ""}`;
 }
