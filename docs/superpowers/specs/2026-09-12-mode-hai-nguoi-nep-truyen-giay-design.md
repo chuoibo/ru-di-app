@@ -1,7 +1,7 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12
-Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 19).
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 21).
 Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
 Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
 
@@ -884,6 +884,8 @@ Bản vision gốc không có số nào để biết Relationship Twin là thậ
 | **Loại sổ** | hội bạn · đôi · người nhà. Suy từ `contexts.kind` cộng trạng thái đôi |
 | **Bản tính của sổ** | một bảng khai sáu điều khác nhau giữa các loại sổ; mọi màn và mọi máy đọc nó (mục 17.3) |
 | **Cửa vào** | ba chỗ tìm thấy loại sổ: «Tạo mới» · hàng `Loại sổ` trong ⚙ · một thẻ thông báo một lần (mục 18.3) |
+| **Trang / Mảnh** | hai biến thể tạo hình của Nếp: `gap: "trang"` là bản vẽ cũ ở hội bạn, `gap: "manh"` là bản gấp làm tư ở sổ đôi (mục 19.5) |
+| **Giữ kín** | biểu cảm mới duy nhất: mày hạ, miệng một nét khép. Nếp biết mà không nói (mục 19.4) |
 | **Nửa chung** | phần chỉ mở khi người kia đồng ý: kèo, gậy, mảnh giấy. Sổ về người kia **không** thuộc nửa chung (mục 18.5) |
 | **Chủ của chặng** | ai quyết chặng đó. Hội bạn chọn chủ bằng phiếu, sổ đôi luân phiên hai vai (mục 17.2) |
 
@@ -909,6 +911,7 @@ hay bị đổi nghĩa. Nhưng bốn tầng dưới đây là **dùng chung**, v
 | 5 | **token màu** `packages/shared/tokens.json` | đổi **giá trị** một token đang dùng làm đổi **mọi** màn hội bạn (đúng chuyện PR #603 đã làm) | chỉ **thêm** token mới; **không sửa giá trị** token đang có |
 | 6 | **thành phần dùng chung**: `ui.tsx` (`Grain`, `RudiScreen`), `ui/art/VeLop.tsx`, `ui/stickers/Sticker.tsx` | vật liệu «giấy gấp» sửa ngay trong các file này thì hội bạn đổi mặt theo | giấy gấp là **lớp mới** chỉ mount trong sổ hai người; `mauLop` và `Sticker` **không đổi vai màu** |
 | 7 | **chuỗi ghim của Maestro** và **cổng XML Khám phá** (`kiem-lap-loi.mjs` đọc **chỉ** `text=`) | phần tử mới mang `text` làm cổng đỏ; đổi câu chữ cũ làm flow đỏ | node mới **không có `text`** (nhãn a11y là `content-desc`); không sửa chuỗi đã ghim |
+| 8 | **tầng art `nep.ts`** | đổi bản vẽ Nếp là đổi **mọi cảnh và mọi sticker** của hội bạn | biến thể mới sau một trường `gap` mặc định `"trang"`; một ca đòi bản `"trang"` **trùng từng toạ độ** với bản hiện tại (mục 19.5) |
 
 ### 16.2 Cái gì chứng minh, chứ không phải cái gì hứa
 
@@ -1225,7 +1228,245 @@ người kia đồng ý** là hai số biết được trước khi xây máy g�
 
 ---
 
-## 19. Đây chưa phải giấy phép viết code
+## 19. Nếp đổi hình theo loại sổ
+
+Lead yêu cầu (phiên 12/09): Nếp phải **đổi UI design và tạo hình** giữa mode
+hội bạn và mode đôi, và phải có **câu chuyện song song**.
+
+Nguyên tắc chặn trước: **cùng một nhân vật, không phải hai nhân vật.** Bản vẽ
+hiện tại (`src/rudi/art/nep.ts`, theo concept sheet 08/09) đã có một giải phẫu
+chốt: tờ giấy hơi rộng, **một nếp gấp chéo dưới thân như hai ve áo**, **một góc
+coral gấp xuống trên phải**, mắt mực dưới **một** bên mày (góc gấp che chỗ bên
+mày kia), miệng cười nghiêng, chân thon, tay mitten **đang làm gì đó**. Concept
+note đã **loại bỏ có chủ ý**: mắt to, má hồng, con dấu máy bay giấy, hai gạch
+trên thân.
+
+Đổi hình mà phá những thứ trên là thay nhân vật. Nên đổi **đúng bốn thứ**.
+
+### 19.1 Câu chuyện song song
+
+```text
+Ở HỘI BẠN                          Ở SỔ HAI NGƯỜI
+
+Nếp là một TRANG                   Nếp là một MẢNH GIẤY
+nhiều người viết vào               hai người truyền tay
+nó HỨNG chữ                        nó MANG chữ đi
+nó giữ CHỖ cho bạn                 nó giữ ĐIỀU cho hai người
+gấp một nếp chéo                   gấp làm tư, hai nếp giao nhau
+góc coral gấp xuống, LỘ ra         góc coral gấp VÀO TRONG, hé một tam giác
+tay đang làm một việc              tay đang ĐƯA, hoặc đang GIỮ
+đứng cỡ cảnh                       nhỏ bằng con tem
+nói khi được gọi                   nói đúng nhịp, và IM giữa các nhịp
+```
+
+Hai dòng giữa là nghĩa của cả mode: **cái gì quan trọng thì gấp vào trong.** Ở
+hội bạn góc coral lộ ra vì nó là lời mời. Ở sổ hai người nó gấp vào vì nó là
+điều được giữ.
+
+### 19.2 Bốn thứ đổi, và không gì khác
+
+| # | Đổi | Ở hội bạn | Ở sổ đôi | Vì sao |
+|---|---|---|---|---|
+| 1 | **Số nếp trên thân** | một nếp chéo (hai ve áo) | **hai nếp giao nhau** (gấp làm tư) | hai nếp này **trùng hai vết gấp của tờ giấy màn hình** ở mục 1.7: nhân vật và cái sổ mang cùng một vết gấp |
+| 2 | **Góc coral** | gấp xuống trên phải, lộ một tam giác | **gấp vào trong**, chỉ hé ở giao điểm hai nếp | vẫn **đúng một** lớp coral (luật của `gu.ts`); và nó có **lý do** chứ không phải biến thể |
+| 3 | **Tỉ lệ thân** | tờ hơi rộng | **vuông hơn, ngắn hơn** | «gấp làm tư» phải đọc ra được ở dáng ngoài |
+| 4 | **Họ tư thế** | việc của nhóm: kéo ghế, giữ chỗ, cầm bản đồ | việc của **truyền tay** (19.3) | luật cũ: mỗi tư thế là **một việc khác nhau**, không phải cùng thân cầm vật khác |
+
+**Không đổi, để còn là Nếp:** mắt mực hai chấm theo `nhin` · một bên mày ·
+miệng cười nghiêng · tay mitten · chân thon · sàn `CHAN_NEP` · và **cấm** mắt
+to, má hồng.
+
+### 19.3 Sáu tư thế mới, mỗi cái là một cơ chế
+
+Theo đúng luật «một tư thế là một việc để LÀM», và mỗi cái ứng đúng một cơ chế
+trong doc này:
+
+| Tư thế | Việc | Cơ chế |
+|---|---|---|
+| `dua-giay` | đưa một mảnh giấy sang | mảnh giấy tới (5.1) |
+| `up-xuong` | úp mảnh giấy xuống, tay còn đè | chưa tới lúc mở (5.2) |
+| `mo-ra` | mở một mảnh đã gấp | hẹn mở tới (5.2) |
+| `gap-lai` | đang gấp, mắt xuống | túi riêng (5.5) |
+| `trao-gay` | đưa một cây bút sang phía người kia | tới lượt ai rủ (4.2) |
+| `lat-the` | lật một thẻ lên, nhìn vào nó | ôn một thẻ (6.5) |
+
+Mỗi tư thế khai đủ bốn trường như `TU_THE` đang có: `nghieng` · `nhin` ·
+`bieuCam` · `dang`. Hai cái dùng `dang: "ngoi"` (`gap-lai`, `lat-the`) vì Nếp ở
+sổ đôi thường **ngồi trên mép giấy** chứ không đứng giữa cảnh.
+
+### 19.4 Một biểu cảm mới, đúng một
+
+`BIEU_CAM` đang có sáu: `binh-than` `hao-hung` `hoi` `quyet` `met` `nhuong`.
+Sổ đôi cần thêm **đúng một**:
+
+> **`giu-kin`** — mày hạ, miệng thành một nét thẳng khép.
+
+Vì điều cảm động nhất của Nếp ở sổ hai người là nó **biết mà không nói**: túi
+riêng, mảnh giấy chưa tới lúc, món quà đang chuẩn bị. Biểu cảm này làm được
+bằng **mày và miệng**, đúng luật hiện tại (mắt vẫn là hai chấm theo `nhin`),
+nên nó không mở cửa cho mắt to hay má hồng.
+
+Không thêm biểu cảm nào khác. Nếu một tình huống cần «Nếp thấy thương», câu trả
+lời là **không vẽ Nếp ở đó** (19.6).
+
+### 19.5 Cách cài mà không đụng hội bạn
+
+Dùng đúng idiom `nep.ts` đã dùng cho chân: *«`dung` là bản vẽ cũ, không đổi,
+nên mọi tư thế và cảnh hiện có giữ đúng hình nó đang có.»*
+
+```text
+TuyChonNep thêm một trường:
+
+   gap?: "trang" | "manh"        mặc định "trang"
+
+   "trang"  = bản vẽ HIỆN TẠI, không đổi một toạ độ
+   "manh"   = biến thể gấp làm tư của mục 19.2
+```
+
+**Mặc định là `"trang"`**, nên **không một cảnh, sticker hay màn nào của hội bạn
+phải sửa**. Ba cỡ đọc hoá ra là hai cỡ nhân hai biến thể, dùng lại `chiTiet`
+đang có:
+
+| | `chiTiet: true` (96) | `chiTiet: false` (48) |
+|---|---|---|
+| `"trang"` | bản cảnh của hội bạn | bản sticker/gọn |
+| `"manh"` | Nếp trong thẻ của sổ đôi | **Nếp bằng con tem**, cạnh một dòng chữ |
+
+**Cổng chứng minh không rò** (nối vào mục 16.2): `art-duong` và các ca hình học
+chạy **cho cả hai biến thể**; thêm một ca đòi `gap` mặc định là `"trang"` và
+đòi mọi lớp của bản `"trang"` **trùng từng toạ độ** với bản hiện tại; luật
+**đúng một lớp coral** kiểm trên cả hai; `rudi-chat-sticker` không đổi.
+
+### 19.6 Nếp vẫn là lớp tháo được, và luật «không đứng cạnh» phải rộng ra
+
+`nep.ts` đang ghi: *Nếp là lớp tháo được; mọi cảnh trọn nghĩa khi không có nó;
+và nó **không bao giờ đứng cạnh tiền, lỗi hay xung đột**.*
+
+Luật đó phải rộng thêm một mục cho sổ đôi:
+
+> **Nếp không xuất hiện khi hai người đang lệch nhau.**
+
+«Đổi» **không** phải lệch nhau: đó là một cú hoán, Nếp ở đó được. Nhưng khi
+**một người Ừ và người kia Đổi**, Nếp **bước ra**: thẻ vẫn làm việc của nó,
+nhân vật không đứng nhìn. Cùng lý do với luật cũ về tiền và lỗi.
+
+Và vì Nếp là lớp tháo được, **cỡ chữ lớn có câu trả lời sạch**:
+
+> Ở `chuLon(fontScale)`, **bỏ Nếp** khỏi thẻ, **không thu nhỏ nó**.
+
+Chữ được chỗ, và ta không sinh ra một cỡ đọc thứ ba phải nuôi.
+
+### 19.7 Bản tối
+
+Theo luật đã ship (PR #603): mọi **hình vẽ** là **giấy đêm** `paper` /
+`paperShade`, nền là vân vải. Với Nếp `"manh"`: thân là `paper`, **hai nếp gấp**
+là `paperShade`, mực là `muc`, và **góc coral hé ra là thứ ấm duy nhất trên cả
+màn tối**. Đúng câu chuyện: một mảnh giấy sáng trên bìa vải, có một góc còn ấm.
+
+---
+
+## 20. Những chỗ còn thiếu — đề xuất
+
+Lead yêu cầu đề xuất **hết** những chỗ còn thiếu. Tám mục dưới đây là những chỗ
+doc đã nói *cơ chế* mà chưa nói *hình dạng*, xếp theo thứ tự cần quyết.
+
+### 20.1 Màn chính của sổ đôi
+
+**Không phải màn mới.** Vẫn là màn chat của hai người, thêm **ba thứ ở đầu**,
+đúng thứ tự ưu tiên, và **không bao giờ quá ba**:
+
+```text
+┌──────────────────────────────────┐
+│  ←  (tên sổ)                ⚙    │
+├──────────────────────────────────┤
+│  THẺ KÈO          tuần một lần   │
+│  ba chặng · một dòng lý do       │
+│  [ Ừ ]  [ Đổi ]  [ Tuần này nghỉ]│
+├──────────────────────────────────┤
+│  THẺ ÔN           ngày một thẻ   │
+│  một dòng · [ Đúng ] [ Sửa ]     │
+├──────────────────────────────────┤
+│  MẢNH GIẤY        khi có         │
+│  «có một mảnh giấy, mở tối nay»  │
+├──────────────────────────────────┤
+│  ─── tin nhắn như cũ ───         │
+└──────────────────────────────────┘
+```
+
+Vắng mặt có chủ ý: không feed, không nhiều thẻ gợi ý, không điểm, không badge
+mode (18.1), không streak (mục 8).
+
+### 20.2 Trạng thái trống
+
+Bốn trạng thái, mỗi cái một tư thế Nếp và **một** câu:
+
+| Khi nào | Nếp | Ý |
+|---|---|---|
+| Vừa gấp giấy, chưa có gì | `dua-giay`, `hoi` | mời khai khung tuần và routine |
+| Đã gửi nửa giấy, đang chờ | `up-xuong`, `giu-kin` | và **lối vào sổ riêng dùng được ngay** (18.5) |
+| Tuần này bấm nghỉ | `gap-lai`, `nhuong` | không có thẻ nào, và **Nếp im** |
+| Sổ chưa có buổi đi nào | **không vẽ Nếp** | chưa có gì để nói thì không cần nhân vật |
+
+### 20.3 Bộ từ vựng hai giọng
+
+Bản tính của sổ (17.3) khai «bộ từ vựng». Đề xuất luật cụ thể:
+
+| | Hội bạn | Sổ đôi |
+|---|---|---|
+| Gọi tập thể | «cả hội» | «hai bạn» |
+| Câu mở | «Đi đâu cả hội?» | «Tối nay tụi mình làm gì?» |
+| Chủ ngữ khi nhắc | nhóm | **luôn là cặp**, không bao giờ một người |
+| Cấm tuyệt đối | — | mọi câu về **tâm trạng** một người (mục 7, Luật 1) |
+
+Một dòng kiểm được: câu của Nếp ở sổ đôi **không được chứa tên riêng của một
+trong hai người làm chủ ngữ của một động từ cảm xúc**. Đây là thứ quét được.
+
+### 20.4 Nghi thức gấp giấy cần chuyển động, và phải tôn trọng Reduce Motion
+
+Gấp giấy mà chỉ là một cú bấm thì nó là cái checkbox, không phải nghi thức. Đề
+xuất: **một nếp gấp chạy qua tờ giấy** khi cả hai đã bấm.
+
+Và nó phải đi qua đường đã có của R1/R2: `useMotion` đọc bit Reduce Motion sống,
+`stackAnimation` về `none`. **Khi Reduce Motion bật, nếp gấp thành một cú chuyển
+mờ** — không phải mất nghi thức, mà là nghi thức không chuyển động. Đo bằng
+chuỗi `do-motion.sh` v3 đã có.
+
+### 20.5 Sticker của sổ đôi cần ADR, không tự thêm được
+
+`test_sticker_vocabulary_matches_client.py` **ghim bộ sticker với máy chủ**. Nên
+sticker cho sổ đôi (đưa giấy, trao gậy, giữ kín) **không phải việc frontend**:
+phải mở vocabulary phía máy chủ trước, tức là Codex cộng một ADR. **Đề xuất:
+Đợt 1 và 2 không có sticker mới**; sáu tư thế ở 19.3 chỉ dùng **trong thẻ**,
+không vào khay sticker.
+
+### 20.6 A11y
+
+Nếp **không mang chữ** (đúng như `KyHoa` đã làm), nhãn đi bằng `content-desc`,
+nên **cổng XML Khám phá không đổi** (mục 16.1 hàng 7). Mỗi thẻ mới ở 20.1 cần
+một nhãn nói **việc**, không nói hình: «thẻ kèo thứ Bảy, ba chặng» chứ không
+«hình Nếp đưa giấy». Ba nút của thẻ kèo là ba đích bấm 48.
+
+### 20.7 Hai chỗ doc vẫn chưa có hình dạng
+
+Ghi ra để không ai tưởng là đã xong:
+
+1. **Sổ về người kia** — bảy mục đã định nghĩa, **màn hình chưa**. Câu hỏi mở:
+   bảy mục là bảy thẻ cuộn dọc, hay một danh sách gập được?
+2. **Bản đồ của hai người** — dựng trên chế độ xem Hành trình (ADR-0026) nhưng
+   **chưa biết mốc nào được vẽ**: mọi buổi đi, hay chỉ buổi có mảnh giấy?
+
+### 20.8 Thứ tự đề nghị cho phần hình
+
+```text
+Cùng lát đầu (18.5)   biến thể "manh" + `giu-kin` + ba tư thế: dua-giay,
+                      up-xuong, gap-lai  (đủ cho cửa vào và trạng thái chờ)
+Lát thứ hai           trao-gay, lat-the, mo-ra  (đi cùng kèo và thẻ ôn)
+Chưa làm              sticker mới (20.5) · bản đồ hai người (20.7)
+```
+
+---
+
+## 21. Đây chưa phải giấy phép viết code
 
 Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
 
