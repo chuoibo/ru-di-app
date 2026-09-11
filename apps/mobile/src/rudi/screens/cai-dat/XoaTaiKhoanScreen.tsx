@@ -20,7 +20,7 @@ import {
 } from "../../cai-dat/xoa-tai-khoan";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, Field, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Field, RudiButton, RudiScreen, TopBar } from "../../ui";
 
 export function XoaTaiKhoanScreen() {
   const router = useRouter();
@@ -55,14 +55,14 @@ export function XoaTaiKhoanScreen() {
       <TopBar title="Xoá tài khoản" />
       {buoc === 1 ? (
         <>
-          <Card style={styles.khoi}>
+          <View style={styles.khoi}>
             <Text style={[typography.title, { color: colors.ink }]}>Xoá tài khoản là vĩnh viễn.</Text>
             {DIEU_SE_XAY_RA.map((cau) => (
               <View key={cau} style={styles.dong}>
                 <Text style={[typography.body, { color: colors.inkSoft }]}>{cau}</Text>
               </View>
             ))}
-          </Card>
+          </View>
           <Text style={[typography.caption, { color: colors.inkFaint }]}>
             Đăng nhập lại bằng cùng số điện thoại sẽ tạo một tài khoản mới, trắng: không nhóm cũ, không tin cũ.
           </Text>
@@ -71,7 +71,7 @@ export function XoaTaiKhoanScreen() {
         </>
       ) : (
         <>
-          <Card style={styles.khoi}>
+          <View style={styles.khoi}>
             <Text style={[typography.body, { color: colors.ink }]}>
               Gõ {TU_XAC_NHAN} vào ô dưới để xác nhận.
             </Text>
@@ -82,12 +82,8 @@ export function XoaTaiKhoanScreen() {
               placeholder={TU_XAC_NHAN}
               value={daGo}
             />
-          </Card>
-          {loi ? (
-            <Card>
-              <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text>
-            </Card>
-          ) : null}
+          </View>
+          {loi ? <Text style={[typography.body, { color: colors.warn }]}>{loi}</Text> : null}
           <RudiButton
             disabled={!xacNhanHopLe(daGo) || dangXoa}
             label="Xoá vĩnh viễn"

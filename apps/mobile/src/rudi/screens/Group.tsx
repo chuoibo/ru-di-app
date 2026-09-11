@@ -78,6 +78,10 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
   const session = useRudiSession();
   const [draft, setDraft] = useState("");
   const [attachmentOpen, setAttachmentOpen] = useState(false);
+  // The AI sheet leads with the decision and keeps its reasoning behind one
+  // opening (re-audit 10/09, R5: the sheet was a heading, three lines, two
+  // buttons and two footers, and it broke the thread's rhythm).
+  const [moViSao, setMoViSao] = useState(false);
 
   const sendMessage = () => {
     const message = draft.trim();
@@ -188,14 +192,15 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
         <ChatBubble person={PEOPLE[2]} time="09:44">Đi chứ! Tớ vote săn mây với BBQ nha 🌤️</ChatBubble>
         <ChatBubble person={PEOPLE[0]} time="09:46" own>Để Rủ Đi gom gu rồi lên lịch trình thử nhé.</ChatBubble>
         {/* The AI's proposal is a sheet of paper in the thread: the heading
-            speaks first, the content is ordinary ink, the actions are «xem» and
-            «bình chọn», and the author signs at the foot (a label over the
-            heading is a kicker, which the craft floor bans). No invented figures. */}
+            speaks first at the size of a message, not a screen; one line says
+            what the plan is; the next decision («Xem lịch trình») comes at once;
+            the why sits behind one opening; and the author signs at the foot (a
+            label over the heading is a kicker, which the craft floor bans). The
+            draft state is said once, by the «AI nháp» badge -- not again in the
+            body (Luật Nói Một Lần). No invented figures. */}
         <View style={[styles.aiSheet, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
-          <Text style={[typography.h2, { color: colors.ink }]}>Rủ Đi đã phác một plan</Text>
-          <Text style={[typography.body, { color: colors.ink }]}>
-            3 ngày 2 đêm, ưu tiên đồ ăn local, săn mây và các điểm gần nhau để nhóm đỡ mệt. Nhóm sửa được trước khi chốt.
-          </Text>
+          <Text style={[typography.title, { color: colors.ink }]}>Rủ Đi đã phác một plan</Text>
+          <Text style={[typography.body, { color: colors.ink }]}>3 ngày 2 đêm · đồ ăn local · săn mây</Text>
           <Inline gap={9}>
             <RudiButton
               full={false}
@@ -212,9 +217,24 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
               tone="ai"
             />
           </Inline>
+          {/* One opening for the reasoning, the «Cách tính» shape from Thành tích. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: moViSao }}
+            onPress={() => setMoViSao((v) => !v)}
+            style={styles.cuaMo}
+          >
+            <Text style={[typography.label, styles.flex, { color: colors.inkSoft }]}>Vì sao phác vậy</Text>
+            <Ionicons color={colors.inkFaint} name={moViSao ? "chevron-up" : "chevron-down"} size={18} />
+          </Pressable>
+          {moViSao ? (
+            <Text style={[typography.body, { color: colors.inkSoft }]}>
+              Ưu tiên đồ ăn local và săn mây theo gu nhóm; các điểm xếp gần nhau để đỡ mệt.
+            </Text>
+          ) : null}
           <View style={styles.aiSheetHeader}>
             <Ionicons color={colors.ai} name="sparkles" size={15} />
-            <Text style={[typography.caption, styles.flex, { color: colors.ai }]}>Rủ Đi AI phác lịch trình</Text>
+            <Text style={[typography.caption, styles.flex, { color: colors.ai }]}>Rủ Đi AI</Text>
             <DemoBadge label="AI nháp" />
           </View>
         </View>
@@ -426,6 +446,7 @@ const styles = StyleSheet.create({
   messageTime: { paddingHorizontal: 7 },
   aiSheet: { gap: 10, padding: 14, borderWidth: 1, alignSelf: "stretch" },
   aiSheetHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
+  cuaMo: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6 },
   composerShell: { gap: 8 },
   attachmentTray: { justifyContent: "center" },
   composer: { flexDirection: "row", alignItems: "center", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },

@@ -870,7 +870,7 @@ export function Segmented({
               active && { backgroundColor: toneSoftColor(colors, tone), borderRadius: radius.small },
             ]}
           >
-            <Text style={[typography.caption, { color: active ? toneColor(colors, tone) : colors.inkFaint }]}>
+            <Text style={[typography.caption, styles.segmentLabel, { color: active ? toneColor(colors, tone) : colors.inkFaint }]}>
               {item}
             </Text>
           </Pressable>
@@ -955,6 +955,25 @@ export function ResponsiveRow({
 export function Divider() {
   const { colors } = useRudiTheme();
   return <View style={[styles.divider, { backgroundColor: colors.line }]} />;
+}
+
+/**
+ * Rows on paper. Each child sits on a hairline `line`; there is no card, no
+ * shadow, no radius -- «Hàng + kẻ tóc là container mặc định» (DESIGN.md), the
+ * shape `Profile`, `DiemDenScreen` and `HangDiaDiem` already draw by hand.
+ * Extracted (11/09, re-audit R5) when the Settings family was still stacking
+ * eight `Card`s next to those rows, two surface systems on neighbouring screens.
+ */
+export function NhomHang({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const { colors } = useRudiTheme();
+  const muc = Children.toArray(children).filter(Boolean);
+  return (
+    <View style={style}>
+      {muc.map((con, i) => (
+        <View key={i} style={[styles.nhomHangMuc, { borderBottomColor: colors.line }]}>{con}</View>
+      ))}
+    </View>
+  );
 }
 
 export function Inline({
@@ -1059,7 +1078,9 @@ const styles = StyleSheet.create({
   progressTrack: { height: 8, borderRadius: 999, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 999 },
   segmented: { flexDirection: "row", padding: 4, borderWidth: 1 },
-  segment: { flex: 1, minHeight: 48, paddingHorizontal: 6, alignItems: "center", justifyContent: "center" },
+  // Vertical padding so a label that wraps at large text («Theo hệ thống» at 2.0) keeps air above and below instead of filling the segment edge to edge (finish review 11/09).
+  segment: { flex: 1, minHeight: 48, paddingHorizontal: 6, paddingVertical: 8, alignItems: "center", justifyContent: "center" },
+  segmentLabel: { textAlign: "center" },
   listRow: { minHeight: 58, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 7 },
   listIcon: { width: 40, height: 40, borderRadius: 13, alignItems: "center", justifyContent: "center" },
   listText: { flex: 1, gap: 2 },
@@ -1067,6 +1088,7 @@ const styles = StyleSheet.create({
   responsiveRow: { flexDirection: "row", alignItems: "stretch" },
   responsiveColumn: { flexDirection: "column" },
   divider: { width: "100%", height: StyleSheet.hairlineWidth },
+  nhomHangMuc: { paddingVertical: 6, borderBottomWidth: StyleSheet.hairlineWidth },
   inline: { flexDirection: "row", alignItems: "center" },
   wrap: { flexWrap: "wrap" },
   surfaceLabel: { textTransform: "uppercase", letterSpacing: 0.7 },

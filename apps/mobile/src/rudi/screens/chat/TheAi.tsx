@@ -90,7 +90,8 @@ export function TheAiView({
     case "itinerary":
       return (
         <ToGiay nhan="Rủ Đi AI phác lịch trình">
-          <Text style={[typography.h2, { color: colors.ink }]}>{the.the.tieuDe}</Text>
+          {/* A message-sized heading: `h2` is the screen's voice, not a card's in a thread (re-audit 10/09, R5). */}
+          <Text style={[typography.title, { color: colors.ink }]}>{the.the.tieuDe}</Text>
           <View style={styles.duong}>
             {the.the.chang.map((c, i) => (
               <HangChang
@@ -189,7 +190,8 @@ function ThePoll({
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
-      <Text style={[typography.h2, { color: colors.ink }]}>{the.question}</Text>
+      {/* The poll question is the sheet's title at message size, like the itinerary heading (R5). */}
+      <Text style={[typography.title, { color: colors.ink }]}>{the.question}</Text>
       {the.options.map((o) => {
         const cuaToi = ketQua?.my_option_id === o.id;
         const so = dem.get(o.id) ?? 0;

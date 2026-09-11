@@ -14,7 +14,7 @@ import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../../
 import { boChan, docDaChan, type NguoiBiChan } from "../../cai-dat/quyen-rieng-tu";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Card, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -77,9 +77,9 @@ export function DaChanScreen() {
         Người bạn chặn không đọc được bài và story của bạn, và bạn cũng không đọc được của họ. Nhóm chung vẫn giữ nguyên.
       </Text>
       {trang.pha === "dang-doc" ? (
-        <Card>
+        <View style={styles.khoi}>
           <SkeletonRow />
-        </Card>
+        </View>
       ) : null}
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} title="Chưa đọc được danh sách" />
@@ -91,9 +91,10 @@ export function DaChanScreen() {
           title="Bạn chưa chặn ai"
         />
       ) : null}
-      {trang.pha === "xong"
-        ? trang.nguoi.map((nguoi) => (
-            <Card key={nguoi.person_id} style={styles.hang}>
+      {trang.pha === "xong" ? (
+        <NhomHang>
+          {trang.nguoi.map((nguoi) => (
+            <View key={nguoi.person_id} style={styles.hang}>
               <Avatar name={nguoi.display_name} size={40} />
               <View style={styles.hangChu}>
                 <Text style={[typography.label, { color: colors.ink }]}>{nguoi.display_name}</Text>
@@ -111,14 +112,16 @@ export function DaChanScreen() {
                 onPress={() => void go(nguoi)}
                 variant="outline"
               />
-            </Card>
-          ))
-        : null}
+            </View>
+          ))}
+        </NhomHang>
+      ) : null}
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  hang: { flexDirection: "row", alignItems: "center", gap: 12 },
+  khoi: { gap: 12 },
+  hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 },
   hangChu: { flex: 1, gap: 2 },
 });
