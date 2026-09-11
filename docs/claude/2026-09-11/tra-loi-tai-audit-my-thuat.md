@@ -25,16 +25,24 @@ và bảy `Stack.Screen`; `useMotion` truyền `Always/Never` theo bit sống th
 lần đổi màn, `so-khung.py` đếm số khung mỗi lần đổi. Cổng tự kiểm trên **chính video của Codex** trước: `visual-reduce-
 confirm.mp4` cho max 8 khung (còn trượt — đúng như họ thấy). Sau sửa, cùng một phiên app, đổi scale khi app foreground:
 
-| lượt | flow | scale | khung mỗi lần đổi màn | đọc |
+| lượt | flow | scale | khung mỗi lần đổi màn (thô · gộp) | đọc |
 |---|---|---|---|---|
-| a | chi tiết «Tiệm Nướng Xóm Lèo» + Back | 1 | [4, 1, 9] | trượt (đối chứng dương) |
-| b | cùng flow, scale về 0 **giữa phiên** | 0 | [1, 1] | cắt thẳng |
-| c | cùng flow, scale về 1 | 1 | [7, 1, 9] | trượt trở lại |
-| d / e | sheet «Tạo mới» (transparentModal + Sheet) + Back | 1 / 0 | [7, 5] / [1, 1] | trượt / cắt |
-| f / g | `rudi://check-ins/new` (`presentation: modal`) + Back | 1 / 0 | [6, 3, 7] / [1, 1] | trượt / cắt |
+| a | chi tiết «Tiệm Nướng Xóm Lèo» + Back | 1 | [4, 2, 9] · [7, 9] | trượt (đối chứng dương) |
+| b | cùng flow, scale về 0 **giữa phiên**, cùng pid | 0 | [2, 1] · [2, 1] | cắt thẳng |
+| c | cùng flow, scale về 1 | 1 | [8, 8] | trượt trở lại |
+| d / e | sheet «Tạo mới» (transparentModal + Sheet) + Back | 1 / 0 | [6, 5] / [1, 1] | trượt / cắt |
+| f / g | `rudi://check-ins/new` (`presentation: modal`) + Back | 1 / 0 | [5, 2, 7] / [1, 1] | trượt / cắt |
 
-Khung trước/giữa/sau ở `motion-v2/r1/*.png`; trạng thái cuối khi cắt là màn trọn (sheet đủ bốn hành động, check-in đủ
-tiêu đề + nút) — chỉ mất chuyển động. **Chưa đo:** iOS, máy thật, 120 Hz, TalkBack.
+Cây đo = commit `1cfe0ee4`; pid 26102 không đổi qua cả bảy lượt (`r1/*.scale.txt`). Run 2 khung ở lượt b là một khung
+**nền giấy + tab bar** (màn cũ đã gỡ, màn mới chưa vẽ) rồi chi tiết trọn — không phải trượt dở; cắt thẳng để lộ ~33 ms
+nền, ghi là quan sát mở (crossfade là lựa chọn Android cho phép, chưa làm vì lượt này không thêm animation). Khung trước/giữa/sau ở
+`motion-v2/r1/*.png`; trạng thái cuối khi cắt là màn trọn (sheet đủ bốn hành động, check-in đủ tiêu đề + nút) — chỉ mất
+chuyển động. **Chưa đo:** bản release, iOS (đã nối nhưng không có clip), máy thật, 120 Hz, TalkBack.
+
+Reviewer Impeccable context mới (11/09) phán `fix` với bảy điểm — cả bảy đúng và đã sửa: trap INT/TERM phải `exit`
+(không thì Ctrl-C xong vẫn đo tiếp ở scale sai dưới nhãn cũ); kit R1 thiếu pid/scale đọc lại và cây đo chưa commit;
+`so-khung.py` chưa gộp run bị khung trùng cắt vụn; canary chưa thử nhánh pid đổi / khung 0; `ExploreLive` còn
+`ReduceMotion.System`; README thiếu release/iOS/TalkBack ở «chưa chứng minh»; runner có thể `put ""` khi đọc gốc hỏng.
 
 ### R2 (P1 cho cổng) — sửa phương pháp, đo lại; canary đỏ phải đỏ
 

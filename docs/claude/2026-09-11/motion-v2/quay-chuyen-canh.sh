@@ -6,9 +6,12 @@
 # The app must already be on «Khám phá» (fixture) with Metro serving this tree.
 # If a scale is given, the three Android animation scales are set to it for the
 # recording and restored to their previous values by a trap. The clip is pulled,
-# split at 30 fps, and so-khung.py prints the run lengths; the caller reads
-# `max`: scale 1 must show a slide (max >= 3, positive control), Reduce Motion
-# after the R1 fix must show a cut (max <= 2 for every event).
+# split at 30 fps, and so-khung.py prints raw runs and `gop` (runs bridged over
+# one duplicated frame). The caller reads `max_gop`: scale 1 must show a slide
+# (max_gop >= 4, positive control); Reduce Motion after the R1 fix must show a
+# cut (max_gop <= 3 and raw max <= 2 for every event). A scale-0 result is only
+# readable beside a same-session scale-1 control. The app pid is recorded before
+# and after; a changed pid makes the clip invalid.
 set -u -o pipefail
 export ANDROID_ADB_SERVER_PORT="${ANDROID_ADB_SERVER_PORT:-5038}" ANDROID_SERIAL="${ANDROID_SERIAL:-emulator-5554}"
 export PATH="$HOME/Android/Sdk/platform-tools:$HOME/.maestro/bin:$PATH"
@@ -17,7 +20,8 @@ DAY="$(cd "$(dirname "$0")" && pwd)"
 ten="$(basename "$FLOW" .yaml)"; mkdir -p "$OUT/$ten-khung"
 KHOA=(window_animation_scale transition_animation_scale animator_duration_scale)
 declare -A GOC; for k in "${KHOA[@]}"; do GOC[$k]="$(adb shell settings get global "$k" | tr -d '\r')"; done
-khoi_phuc() { for k in "${KHOA[@]}"; do adb shell settings put global "$k" "${GOC[$k]}" >/dev/null 2>&1 || true; done; }
+for k in "${KHOA[@]}"; do [[ "${GOC[$k]}" =~ ^[0-9.]+$ ]] || { echo "không đọc được $k ban đầu («${GOC[$k]}»)" >&2; exit 2; }; done
+khoi_phuc() { for k in "${KHOA[@]}"; do [[ "${GOC[$k]}" =~ ^[0-9.]+$ ]] && adb shell settings put global "$k" "${GOC[$k]}" >/dev/null 2>&1 || true; done; }
 trap 'khoi_phuc; exit 130' INT TERM
 trap khoi_phuc EXIT
 if [ -n "$SCALE" ]; then for k in "${KHOA[@]}"; do adb shell settings put global "$k" "$SCALE" >/dev/null; done; sleep 1; fi

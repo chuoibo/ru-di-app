@@ -1712,56 +1712,8 @@
       "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
     },
     {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-giua-289.png",
-      "sha256": "5e4d4035f9deb2d2c243212c67067200e08bd6c914ef389c1af19cbce01d1df7",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-sau-294.png",
-      "sha256": "752c2fe7b3e21db8cf9954c493b7a8c9c36f382dd2f269fb76fcf3af60d332fa",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-truoc-284.png",
-      "sha256": "de233202a8006a4294a9d8e9e2bad4681f995954046f7d2685faa955efbf4278",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
       "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-sau-215.png",
-      "sha256": "ddf19482163bc8ca22cf57b1f8022dd5dda8a1098cc873e5ce6c298ee90a6076",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-truoc-213.png",
-      "sha256": "b8fba8d2ba3f149033bfe730cd037e359694caeda2e9ff2b85eae3d79c54ffea",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-sau-210.png",
-      "sha256": "24097dc3d07d1ad43355b1858e448f2b25f3a5d24ff8e51ed9a2a570dc644297",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-truoc-208.png",
-      "sha256": "6ae823a19ef3b205a48720cd0dc49a59d5c8d442dfcf78e77b3eb8beaf5a6cdb",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
       "rules": [
         "controlled-artifact"
       ],
@@ -1769,7 +1721,7 @@
     },
     {
       "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-sau-166.png",
-      "sha256": "020eea609391d5b15c0bfad26716ae829db5d79ce2f05f181b030b70b9c973e5",
+      "sha256": "365e346d3d043f010f138978eab17960298fad1cce0895dda11bcac8d5e87798",
       "rules": [
         "controlled-artifact"
       ],
@@ -1777,7 +1729,7 @@
     },
     {
       "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-truoc-164.png",
-      "sha256": "1b3a51d8ba8a6e0f1f702ab375a773a9667bb891e0839a0b67140307235cd12f",
+      "sha256": "86a75178b9a9cdde4b371995c6195f8e59d6a9565c815afd380f6875ee147fd5",
       "rules": [
         "controlled-artifact"
       ],
@@ -1846,6 +1798,70 @@
         "controlled-artifact"
       ],
       "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-giua-283.png",
+      "sha256": "07decf12a6f2d248a7e32cc0e384edb03e59a15252a2abd73e4b9d6f0c4e874f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-sau-288.png",
+      "sha256": "67dea7c8973d311fe70954ceb18bc6b465c10fb66ab8ce0669488a82c66a3dc8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-truoc-278.png",
+      "sha256": "67926dd797eddf82e1a108bb8488fd8c5cf4de0cadeef264b515dc77044a44a0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-truoc-212.png",
+      "sha256": "c5a691559080bdd261eda6b8b34c2aa27d98abbc00ab6f4a6386bb93723d529e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-sau-206.png",
+      "sha256": "2d600c61869a80c52f16cce3d11b94f900afeb17f5b4bd8fc0c48e3d6c2c9ce7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-truoc-204.png",
+      "sha256": "3b5811eaa173a8c3b19fe67b5cd614c2c4963eb33f6ce8ca8d4889ef8b1e8555",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-213.png",
+      "sha256": "cf30a10b6027fd195dbbd0ff21fea159137478bbf5f4c81a8dca70ea821379d9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-214.png",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
     }
   ]
 }

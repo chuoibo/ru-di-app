@@ -1,0 +1,5 @@
+window_animation_scale=0
+transition_animation_scale=0
+animator_duration_scale=0
+pid_truoc=26102
+pid_sau=26102
