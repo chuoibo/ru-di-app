@@ -1,7 +1,7 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12
-Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 21).
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 24).
 Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
 Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
 
@@ -128,7 +128,15 @@ Tiếp nối cái đã ship, không mở hệ hình ảnh thứ hai:
 
 Khớp đẹp nhất của mode này: ở hội, Nếp là *một nếp gấp trong cuốn sổ*; ở hai người, **cả màn hình là một mảnh giấy gấp, và Nếp chính là đường gấp đó**. Đường gấp thành chữ ký thị giác — cùng token, cùng mực, cùng nét ký hoạ, **không** thêm hệ màu, **không** thêm bộ icon.
 
-Chi tiết hình học để lượt sau đo: tờ giấy hai người **hẹp hơn** tờ của hội (mảnh giấy gấp vuông), có **hai vết gấp** chia ba phần dọc — và ba phần đó trùng đúng ba chặng của một buổi đi (mục 4.5), nên bố cục mang nghĩa chứ không trang trí.
+Hình học: tờ giấy hai người có **hai vết gấp NGANG** chia **ba hàng** — **gấp
+làm ba như một tờ thư cho vào bao** — và ba hàng đó là đúng ba chặng của một
+buổi đi (mục 4.5), nên bố cục mang nghĩa chứ không trang trí. Số đo và cổng đo
+ở **mục 23**.
+
+**Sửa so với bản nháp đầu của doc này:** bản đầu viết «ba phần **dọc**». Cộng
+bề rộng ở 360dp thì sai: lòng thẻ còn 296dp, chia dọc ra ba cột 92dp, không đủ
+cho một dòng việc bằng tiếng Việt. Gấp làm ba theo chiều **ngang** vừa đúng vật
+thật, vừa đúng số.
 
 ### 1.8 Một câu
 
@@ -775,7 +783,9 @@ Ba đợt. Mỗi đợt **tự nó có nghĩa** nếu đợt sau không bao gi�
 
 **Đã chỉnh sau mục 18.5:** lát **đầu tiên** của Đợt 1 là **cửa vào cộng sổ
 một người dùng được**, vì nó bỏ được điểm ma sát chờ người kia và đo được sớm
-hơn. Cơ chế quyết định dưới đây là lát **thứ hai**.
+hơn. Cơ chế quyết định dưới đây là lát **thứ hai**. Bảng kê ở mục 21 gọi hai
+lát này là **1a** (chín bề mặt, chạy được với một người) và **1b** (thẻ kèo và
+Cài đặt sổ đôi).
 
 ### Đợt 1 — cửa vào, rồi quyết định
 
@@ -1267,7 +1277,7 @@ hội bạn góc coral lộ ra vì nó là lời mời. Ở sổ hai người n�
 
 | # | Đổi | Ở hội bạn | Ở sổ đôi | Vì sao |
 |---|---|---|---|---|
-| 1 | **Số nếp trên thân** | một nếp chéo (hai ve áo) | **hai nếp giao nhau** (gấp làm tư) | hai nếp này **trùng hai vết gấp của tờ giấy màn hình** ở mục 1.7: nhân vật và cái sổ mang cùng một vết gấp |
+| 1 | **Số nếp trên thân** | một nếp chéo (hai ve áo) | **hai nếp giao nhau** (gấp làm tư) | **cùng ngôn ngữ gấp, khác mục đích**: tờ giấy màn hình gấp làm **ba, ngang**, để **gửi đi**; Nếp gấp làm **tư** để **nằm trong túi**. Bản nháp đầu nói hai vết gấp «trùng nhau» — sai, và cái đúng hay hơn: **gấp thế nào là do để làm gì** |
 | 2 | **Góc coral** | gấp xuống trên phải, lộ một tam giác | **gấp vào trong**, chỉ hé ở giao điểm hai nếp | vẫn **đúng một** lớp coral (luật của `gu.ts`); và nó có **lý do** chứ không phải biến thể |
 | 3 | **Tỉ lệ thân** | tờ hơi rộng | **vuông hơn, ngắn hơn** | «gấp làm tư» phải đọc ra được ở dáng ngoài |
 | 4 | **Họ tư thế** | việc của nhóm: kéo ghế, giữ chỗ, cầm bản đồ | việc của **truyền tay** (19.3) | luật cũ: mỗi tư thế là **một việc khác nhau**, không phải cùng thân cầm vật khác |
@@ -1450,10 +1460,12 @@ một nhãn nói **việc**, không nói hình: «thẻ kèo thứ Bảy, ba ch�
 
 Ghi ra để không ai tưởng là đã xong:
 
-1. **Sổ về người kia** — bảy mục đã định nghĩa, **màn hình chưa**. Câu hỏi mở:
-   bảy mục là bảy thẻ cuộn dọc, hay một danh sách gập được?
+1. ~~Sổ về người kia~~ — **đã có** ở mục 21 (hàng 7–9) và mục 22. Câu hỏi hình
+   duy nhất còn lại: bảy mục là bảy thẻ cuộn dọc, hay một danh sách gập được?
+   Đề xuất: **danh sách gập được**, vì bảy thẻ cuộn dọc ở chữ lớn là bảy màn.
 2. **Bản đồ của hai người** — dựng trên chế độ xem Hành trình (ADR-0026) nhưng
-   **chưa biết mốc nào được vẽ**: mọi buổi đi, hay chỉ buổi có mảnh giấy?
+   **chưa biết mốc nào được vẽ**: mọi buổi đi, hay chỉ buổi có mảnh giấy? Đây là
+   chỗ duy nhất trong doc **chưa có hình dạng nào**.
 
 ### 20.8 Thứ tự đề nghị cho phần hình
 
@@ -1464,9 +1476,188 @@ Lát thứ hai           trao-gay, lat-the, mo-ra  (đi cùng kèo và thẻ ôn
 Chưa làm              sticker mới (20.5) · bản đồ hai người (20.7)
 ```
 
+Bảng kê đủ mười chín bề mặt ở **mục 21**, giải phẫu ba thẻ bằng số ở **mục 22**,
+và hợp đồng số của vật liệu ở **mục 23**.
+
 ---
 
-## 21. Đây chưa phải giấy phép viết code
+## 21. Bảng kê màn hình
+
+Doc tới mục 20 nói **cơ chế** rất kỹ và nói **hình dạng** rất mỏng. Mục này
+đếm hết bề mặt mà mode cần, và cột cuối là phần thường bị bỏ: **khoảnh khắc đẹp
+của màn đó là gì**. Không có cột đó thì mọi màn ra đúng mà không ra hay.
+
+Thang dùng chung, lấy từ `packages/shared/tokens.json` (không phát minh số mới):
+`space` 6 / 10 / 16 / 24 / 36 / 48 · `radius` small 10, control 14, base 20 ·
+`type` label 14, body 17, title 20, h1 28 · đích bấm **48** · ngưỡng chữ lớn
+`chuLon` **1.28** · máy nền **360dp**.
+
+| # | Bề mặt | Mới hay có rồi | Đợt | Khoảnh khắc đẹp |
+|---|---|---|---|---|
+| 1 | Bảng chọn **«Tạo mới»** | có rồi (`create.tsx`), **thêm hàng** | 1a | người mới tạo nhóm đầu tiên **nhìn thấy** «sổ hai người» mà không ai dạy |
+| 2 | ⚙ **Cài đặt sổ**, hàng `Loại sổ` | có rồi (`CaiDatNhom.tsx`), **thêm hàng** | 1a | một hàng bình thản, không mời gọi, không hàm ý |
+| 3 | Bảng **ba lựa chọn loại sổ** | **mới** | 1a | ba lựa chọn **ngang hàng**, không cái nào to hơn cái nào |
+| 4 | **Nghi thức gấp giấy** (phía gửi) | **mới** | 1a | nửa mảnh giấy rời khỏi tay |
+| 5 | **Nghi thức gấp giấy** (phía nhận) | **mới** | 1a | nếp gấp chạy qua tờ giấy và **khép lại** |
+| 6 | **Đang chờ người kia** | **mới** | 1a | câu «sổ về người ấy dùng được rồi» ngay dưới, nên chờ không phải là ngồi không |
+| 7 | **Sổ về người kia**: bảy mục | **mới** | 1a | bảy mục trống là **bảy câu hỏi**, không phải bảy ô nhập |
+| 8 | Một mục của sổ: danh sách trang | **mới** | 1a | trang do Nếp đề nghị nằm **nhạt hơn**, chờ được ghim |
+| 9 | **Soạn một trang** | **mới** | 1a | một dòng, không tiêu đề, không thẻ |
+| 10 | **Màn chính sổ đôi** (chat + tối đa ba thẻ) | chat **có rồi**, khối đầu **mới** | 1b | ba thẻ rồi hết. Không feed |
+| 11 | **Thẻ kèo**, bốn trạng thái | **mới** | 1b | ba hàng, hai vết gấp ngang: **tờ thư gấp làm ba** |
+| 12 | **Cài đặt sổ đôi**: hai vai, khung tuần, núm độ mới | **mới** | 1b | núm ba khấc, chữ thật: «chỗ cũ / cùng kiểu chỗ mới / kiểu chưa thử» |
+| 13 | **Thẻ ôn** | **mới** | 2 | một câu về người mình yêu, hai nút. Hết |
+| 14 | **Câu hỏi tuần** cho Người chấm | **mới** | 2 | một câu, ba cú bấm, rồi biến mất |
+| 15 | **Ba dòng dặn** trước buổi đi | **mới** | 2 | ba dòng đọc mười giây, làm được ngay |
+| 16 | **Soạn mảnh giấy** + chọn hẹn mở | **mới** | 3 | chọn «một năm sau» và biết mình vừa gửi quà cho hai người của năm sau |
+| 17 | **Mảnh giấy chưa tới lúc** | **mới** | 3 | một góc coral gấp lại: **thấy mà chưa đọc được** |
+| 18 | **Túi riêng** | **mới** | 3 | vào được mà không để lại dấu gì trên màn chung |
+| 19 | **Trang tặng / đổi sổ** ngày kỷ niệm | **mới** | 3 | một năm âm thầm để ý, trao lại thành **một tờ** |
+
+Mười chín bề mặt, trong đó **ba** là thêm một hàng vào màn đã có. Chín bề mặt
+thuộc lát 1a — và lát 1a **chạy được với một người** (mục 18.5).
+
+## 22. Giải phẫu ba thẻ, bằng số
+
+Tính ở **360dp**, vì đó là máy nền và là chỗ mọi thứ vỡ trước.
+
+```text
+360  bề rộng máy
+-32  lề hai bên          space.md 16 mỗi bên
+=328 bề rộng thẻ
+-32  lòng thẻ            space.md 16 mỗi bên
+=296 bề rộng nội dung
+```
+
+### 22.1 Thẻ kèo
+
+```text
+┌─ paper, viền line hairline, radius.base 20 ────┐  ◤ góc coral
+│                                        space.md │
+│  18:30   (một quán)          label 14 + body 17 │
+│  ┄┄┄┄┄┄┄┄┄┄┄ vết gấp ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│  20:00   Đi bộ, rồi chè                         │
+│  ┄┄┄┄┄┄┄┄┄┄┄ vết gấp ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ │
+│  21:00   (chặng ba)                             │
+│                                        space.md │
+│  Vì: ba tuần liền cùng một khu    label 14 faint│
+│                                        space.sm │
+│  ┌──── Ừ ────┐  ┌─── Đổi ───┐      48 cao, 143 │
+│       Tuần này nghỉ            label 14, bấm được│
+└─────────────────────────────────────────────────┘
+```
+
+Số, và một quyết định rơi ra từ số:
+
+| Thành phần | Số |
+|---|---|
+| Bo thẻ | `radius.base` **20** — nó là **tờ giấy**, không phải control |
+| Viền | `line` hairline. **Bắt buộc ở bản tối**: `paper` trên nền thực đo được chỉ **1.06:1**, nên thiếu viền là thẻ tan vào nền (đã ghi ở mục 9) |
+| Giờ | `type.label` 14, có `tnum`, cột rộng cố định |
+| Việc | `type.body` 17, chiếm phần còn lại |
+| Vết gấp | hairline `paperShade`, chạy hết **296**, `space.sm` 10 trên và dưới |
+| Lý do | `type.label` 14, màu `inkFaint`, tối đa **hai dòng** |
+| Nút | cao **48**, `radius.control` 14, hai nút **143** mỗi cái, cách **10** |
+
+**Quyết định rơi ra từ số:** ba nút ngang **không vừa**. `(296 − 20) / 3 = 92`
+mỗi nút, mà «Tuần này nghỉ» ở label 14 cần khoảng **100** cộng lòng nút. Nên:
+**hai nút chính nằm ngang, «Tuần này nghỉ» là một dòng chữ bấm được bên dưới**
+(vẫn cao 48). Đây đúng bài học TopBar 360dp: **cộng bề rộng trước khi vẽ**.
+
+**Ở `chuLon` (≥ 1.28):** hai nút **xếp dọc**, mỗi nút hết 296; **bỏ Nếp** khỏi
+thẻ (mục 19.6); vết gấp **giữ nguyên** vì nó là nghĩa, không phải trang trí.
+
+### 22.2 Thẻ ôn
+
+```text
+┌─ paper, radius.small 10, viền line hairline ────┐
+│  [Nếp 48]   Em ấy không ăn được tôm.            │
+│             Còn đúng không?          body 17    │
+│             ┌─ Đúng ─┐  ┌─ Sửa ─┐    48 cao    │
+└─────────────────────────────────────────────────┘
+```
+
+`radius.small` **10**, không phải 20: nó là **một tờ rời trong sổ**, không phải
+tờ thư gấp. **Không có vết gấp** — chỉ tờ thư gấp mới có. Nếp ở đây là
+`gap: "manh"`, `chiTiet: false`, tư thế `lat-the`, cỡ **48**; ở `chuLon` thì
+**bỏ**, chữ lấy chỗ.
+
+### 22.3 Hàng mảnh giấy
+
+Một hàng, `radius.small` 10, một dòng `type.body` 17. Khi **chưa tới lúc mở**:
+một **tam giác coral ở góc trên phải** — thấy mà chưa đọc được. Đó là toàn bộ
+affordance, không cần chữ «đã khoá».
+
+### 22.4 Một coral mỗi màn, và ở sổ đôi nó thuộc về tờ giấy
+
+Luật `gu.ts` là **đúng một lớp coral mỗi hình**. Ở màn chính sổ đôi, siết thêm
+một bậc: **đúng một coral trên toàn màn**, và nó thuộc **thẻ đang là việc cần
+làm bây giờ**, theo đúng thứ tự ưu tiên ở mục 20.1:
+
+```text
+kèo  >  ôn  >  mảnh giấy
+```
+
+Hệ quả khớp đẹp với mục 19.2: **Nếp gấp góc coral của nó vào trong chính vì tờ
+giấy nó đang nằm trên đã mang coral rồi.** Hai luật ra từ hai chỗ khác nhau mà
+gặp nhau — và nó cho thứ bậc thị giác miễn phí.
+
+**Cổng:** đếm lớp coral trên ảnh chụp mỗi màn, đòi **đúng một**.
+
+## 23. Vật liệu «mảnh giấy gấp»: những số phải đo được
+
+Mục 1.7 tả vật liệu bằng văn. Theo chuẩn của chính repo này thì **chưa đủ**:
+PR #603 ship bản tối bằng số đo (stddev nền **0.79–2.11 → 8.05–8.59**, L\*
+`ground` 9.2 · `card` 14.8 · `paper` 22.7 · `paperShade` 10.9). Mục này là hợp
+đồng số cho vật liệu mới, **viết trước khi vẽ**, để lát sau có cái mà đối chiếu.
+
+### 23.1 Không thêm token màu nào
+
+Dùng lại `paper` · `paperShade` · `line` · `accent` **đã ship**. Lý do: mục 16.1
+hàng 5 cấm đổi giá trị token đang dùng, và **thêm** một token màu thì phải sinh
+lại `guest.css`, DESIGN.md, `design.json` — một đường rò không cần thiết cho
+một vết gấp.
+
+### 23.2 Vết gấp: bản sáng và bản tối **không** giống nhau, và đây là lý do
+
+Một vết gấp thật đọc được vì **hai tông**: một nét tối ở đáy nếp, và một dải
+sáng hơn ở mặt được nâng lên.
+
+- **Bản sáng** `paper` là `#ffffff` — **không có gì sáng hơn nó**. Nên vết gấp
+  sáng chỉ có **một nét hairline `paperShade`**, và nó đọc ra là nếp gấp nhờ
+  **ngữ cảnh**: ba hàng đều nhau cộng góc coral gấp ở trên phải.
+- **Bản tối** `paper` là `#2e335c`, còn chỗ ở phía sáng. Nên vết gấp tối được
+  **hairline `paperShade` cộng 1dp `line`** ở phía trên: `line` L\* 25.9 **sáng
+  hơn** `paper` L\* 22.7, nên nó thành đúng cái mặt được nâng lên.
+
+Đây là lần đầu doc này nói một luật hình **khác nhau giữa hai scheme**, nên nó
+phải nằm trong DESIGN.md chứ không nằm trong đầu người làm.
+
+### 23.3 Số phải đạt
+
+| Đo gì | Ngưỡng | Đo bằng |
+|---|---|---|
+| Tương phản `paperShade` trên `paper` | **≥ 1.25:1**, cả hai scheme | `tuongPhan` của `rudi-mau-chat.test.mjs` |
+| Vết gấp đọc được trên ảnh thật | stddev dải 3px **cắt qua** vết gấp **≥ 3×** stddev dải phẳng cùng thẻ | `do-chat-lieu.py` thêm chế độ `--vet-gap` |
+| Thân thẻ nổi trên nền tối | **≥ 1.9:1** so với **nền ĐO ĐƯỢC** (`#1c1f36`), không phải so với token `ground` | `do-chat-lieu.py` |
+| Bản sáng không đổi gì khác | **0 pixel khác** ngoài vùng thẻ mới | cùng cách PR #603 đã làm |
+| Coral mỗi màn | **đúng một** lớp | đếm trên ảnh chụp |
+| Chữ trên `paper` | `ink` **≥ 7:1**, `inkFaint` **≥ 4.5:1** | `test_contrast_floor` |
+
+Hàng thứ ba là cái bẫy doc đã ghi sẵn ở mục 9 và đáng nhắc lại: **vân vải 0.30
+nâng nền tối thực lên `#1c1f36`, nên bảng tương phản tính trên token cao hơn
+thực khoảng 8%.** Đo trên token là tự cho điểm.
+
+### 23.4 «Hơi cũ mềm» — cắt, vì không đo được
+
+Bản đầu viết vật liệu là «nhỏ hơn, có vết gấp, **hơi cũ mềm**». Hai ý đầu đo
+được. Ý thứ ba thì **không**, và một tính chất không đo được sẽ thành một vân
+nền thêm vào lúc nào không biết. **Cắt.** Nếu sau này thật cần, nó là một vân
+mới có tệp riêng, có số stddev riêng, và đi qua đúng cổng như `vaiBia` đã đi.
+
+---
+
+## 24. Đây chưa phải giấy phép viết code
 
 Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
 
