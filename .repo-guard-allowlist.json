@@ -1864,6 +1864,134 @@
       "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
     },
     {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "8bbb4730eae345fd59d10cbc5a4805786a2e9b9a178cf73dc4fb780085d83a9d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3 (tái audit 10/09): Khám phá fixture sau «một lý do, một cấp nhấn», 1.0/2.0 × sáng/tối, kèm XML + kết quả cổng kiem-lap-loi"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "6bea9e7c8f90799862569785c6d4da49d2911a4255a58766306d5c522404a25f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3 (tái audit 10/09): Khám phá fixture sau «một lý do, một cấp nhấn», 1.0/2.0 × sáng/tối, kèm XML + kết quả cổng kiem-lap-loi"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "374dee1afb315259b6c12e43ca75ab3a075af86bec505157575f48bb1ba92e45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3 (tái audit 10/09): Khám phá fixture sau «một lý do, một cấp nhấn», 1.0/2.0 × sáng/tối, kèm XML + kết quả cổng kiem-lap-loi"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "4292e29a9f6bea7be8515053d248eb24ce631197396fe641e1c536b2815cb340",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3 (tái audit 10/09): Khám phá fixture sau «một lý do, một cấp nhấn», 1.0/2.0 × sáng/tối, kèm XML + kết quả cổng kiem-lap-loi"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-81-chi-tiet-fs1.0-sang.png",
+      "sha256": "642d8fb59eb5ffae1e1bee8c25d3762649e81b98da485e94481534bfe88ae0e3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: chi tiết địa điểm fixture không ảnh sau sửa (đầu bài gọn, lý do về nhóm), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-81-chi-tiet-fs1.0-toi.png",
+      "sha256": "6aff2688dd34e670c4601b1a296bbad2a41c3acc840bdd38bcb9c8a54aa87d19",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: chi tiết địa điểm fixture không ảnh sau sửa (đầu bài gọn, lý do về nhóm), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-81-chi-tiet-fs2.0-sang.png",
+      "sha256": "f13b6884675a7326f130854e65c35dfe2646efd6612adf5397a684aa06f0be92",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: chi tiết địa điểm fixture không ảnh sau sửa (đầu bài gọn, lý do về nhóm), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-81-chi-tiet-fs2.0-toi.png",
+      "sha256": "071f911df77abfa03cc871432cffd3887d3e70891f3a5b25315b4018b39a02e1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: chi tiết địa điểm fixture không ảnh sau sửa (đầu bài gọn, lý do về nhóm), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-sang.png",
+      "sha256": "1451d72803fbb69960520c4084c1af248b01dae97393a4ecfd0b48112478a9c6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-toi.png",
+      "sha256": "4a7841abd1dce76a7e9338a9e28f0342bf33ba49a4d315ed22cf434251e729a4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-sang.png",
+      "sha256": "408873bb50a4ae2a9d5964a35aad9197644efab497379cb1c9d7ac32ab4be0dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-toi.png",
+      "sha256": "d8d25b3aadb73fb55f9e162752eb5f76c34ead52c6482d63fcf138a9cb681f4e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-82-lab-fs1.0-sang.png",
+      "sha256": "93ca52727c305a4281d4d9b82040e609f1db0c186f4b3270e9ef40cfa6a445bb",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-82-lab-fs1.0-toi.png",
+      "sha256": "2f5990d7bf6a48182c87a9a00d50ff3628ffc246b2fba1be175764039a62b92a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-82-lab-fs2.0-sang.png",
+      "sha256": "7ca42b326b9a15ce0d068e1eb6db35da73429c0a802298281271921efbacf8df",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r14-82-lab-fs2.0-toi.png",
+      "sha256": "b03329a0c19b5cb6baa28e467d88000062f648af1f21ba916f53d420615b7a5c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
+    },
+    {
       "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-sang.png",
       "sha256": "fcac795c9bf58e9ab96487c8cf6e59944e6bc5f01696ddfbd687f18e3aeba672",
       "rules": [

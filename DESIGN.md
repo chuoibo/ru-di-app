@@ -919,7 +919,9 @@ cao tối thiểu 26, `alignSelf: flex-start`, `accessibilityLabel` = nhãn, kh�
 role, không press. `outline` mặc định (chữ màu tông); `ink` tô đầy với chữ
 `<tone>Ink`, hiếm: một trạng thái quan trọng nhất mỗi màn. Con dấu **luôn
 mang một chữ**, màu chỉ là tông của chữ đó: «ĐÃ TRẢ», «NGƯỜI THU BILL» (teal,
-quyết toán), «HỢP GU» (tím, trên ảnh dẫn nghiêng -2 và trong hàng địa điểm),
+quyết toán), «HỢP GU» (tím, trên ảnh dẫn nghiêng -2 và trong hàng địa điểm —
+từ 11/09 chỉ in khi địa điểm **không có dòng lý do**: hàng live không có
+`reason` từ máy chủ, bìa chi tiết; `dauCon()` trong `HangDiaDiem.tsx`),
 «CÒN 3 NGÀY» / «HÔM NAY» / «ĐANG ĐI · CÒN 2 NGÀY» / «ĐÃ QUA» (nhịp kèo, tính
 từ `starts_on`/`ends_on` máy chủ qua `keo/nhip-keo.ts`, không từ chuỗi
 fixture; nghiêng -2 ở Cá nhân), «ĐÃ TỚI» (teal, nghiêng -2, điểm danh). Ship
@@ -1056,8 +1058,9 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   vẽ **một cây bút** (nét chính 2.4 trên lưới 48, nét mảnh 1.7), **tối đa
   một chi tiết coral** mỗi hình (giọt cà phê, bóng đèn sáng, thẻ menu, điểm
   đứng); id lạ vẽ **thẻ gấp**, không rỗng, không ném. `GuGlyph` 40 trên ô Sở
-  thích, 22 trong chip Khám phá, 32 trong thumbnail hàng, ×1.15 trong đĩa
-  `PlaceGlyph`; `tone="accent"` đổi mực sang coral cho ô/chip đã chọn.
+  thích, 22 trong chip Khám phá, `round(1.15 × size)` `tone="ink"` trong ô
+  giấy `PlaceGlyph` (kể cả thumbnail hàng, 11/09); `tone="accent"` đổi mực
+  sang coral cho ô/chip đã chọn.
 - **Tư thế là bốn trục, không phải hai cánh tay** (09/09). Tới trước hôm ấy
   `hinhNep` chỉ đổi TAY: thân, mặt và chân giống hệt nhau ở cả chín pose, nên
   năm cảnh là một dáng người đổi đạo cụ và không sticker nào có hướng di
@@ -1210,39 +1213,62 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
 **một** trường `anh: AnhCoGhiCong | null`, nên ảnh và ghi công đi cùng nhau
 ở tầng kiểu và cả ba khung tự in `cauGhiCong(anh.nguon)`. Nhịp kết quả sau `taiSoSanh`: **một ảnh dẫn** (chỉ khi có ảnh) →
 **một cặp so sánh** (khi còn ≥ 2) → **các hàng** (`sua2-sang-1.0/bs-04-kham-pha*`).
-- **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20, `Stamp` tím nghiêng
-  -2 ở góc trên trái khi có `badge`; dưới ảnh tên `h2`, **một dòng lý do**
-  `label` màu `ai` ngay dưới tên («Hợp gu nhờ Chill và View đẹp») chỉ khi
-  match là thật và máy chủ gửi `reason`, không bao giờ là tagline hoá trang
-  làm lý do; rồi mô tả `body inkSoft`, ba sự thật với icon 16 (`label
-  inkSoft`); nút lưu `IconButton` phải. Ảnh là `MediaSlot` nhận
+- **`PlaceLead`**: ảnh 16:10 compact / 21:9 rộng, bo 20. *Lịch sử tới 10/09:*
+  `Stamp` «HỢP GU» trên ảnh **và** một dòng «Hợp gu nhờ Chill và View đẹp»
+  dưới tên, chỉ khi máy chủ gửi `reason`; tái audit Codex 10/09 (R3) đọc ra
+  cùng một lời hứa bốn lần (tiêu đề mục → con dấu → «Hợp gu nhờ…» → mô tả
+  lặp lại tag). **Hiện hành (11/09):** **một dấu cho một địa điểm** —
+  `lyDo` có thì in **dòng lý do** (`LyDo`: sparkles 13 ẩn khỏi cây trợ năng +
+  `label` màu `ai`, tối đa 2 dòng, 3 khi chữ lớn — một tag fixture chỉ cần một,
+  câu của mô hình live cần chỗ, dấu «…» ở đây là giấu đúng sự thật hàng tồn tại
+  để nói) ngay dưới tên `h2` và **không in con dấu**; không có `lyDo`
+  thì con dấu tím nghiêng -2 trên ảnh như cũ (`dauCon`). Lý do là **một tag**
+  nhóm thật sự match (fixture: `chonLyDo(tags, sub)` chọn tag đầu mà mô tả
+  chưa nói — «View đẹp», «Nhóm đông», «Nhẹ nhàng» trên
+  `native-r14/anh/r14-80-kham-pha-*`, màn dán «Dữ liệu demo») hoặc **câu của
+  mô hình** (live, `reason`); không bao giờ là tagline hoá trang làm lý do và
+  không bắt đầu bằng «Hợp gu». Rồi mô tả `body inkSoft` (không nhắc lại từ
+  của lý do), ba sự thật với icon 16 (`label inkSoft`); nút lưu `IconButton`
+  phải. Ảnh là `MediaSlot` nhận
   `attribution={anh.nguon}` nên ghi công in ngay dưới khung; `anh === null`
   thì không khung 16:10 mà là đầu bài gọn (`PlaceGlyph` 34 + tên + sự thật).
 - **`PlaceCompare`**: hai ứng viên **trên một trục**, không thẻ quanh ô nào:
   hàng `gap` 16, đệm dưới 12, kẻ tóc `line` dưới; mỗi ô `flex 1` gồm
   `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
   (như ảnh dẫn, không hàng mồ côi dưới sự thật) và `Stamp` tím `nen` khi có
-  badge; tên `title` hai dòng, mô tả `note inkSoft` hai dòng, các sự thật
+  badge và không có `lyDo`; tên `title` hai dòng, **dòng lý do `LyDo`** khi
+  có, mô tả `note inkSoft` hai dòng, các sự thật
   đầu nối « · » trên một dòng `note inkFaint`, **sự thật cuối (giá kèm đơn
   vị) đứng riêng một dòng** để ô nửa màn không bẻ «80K/người»; ghi công
   `note inkFaint` khi ảnh có giấy phép. Thuần: cùng hàm chia cho fixture và
   live.
-- **`PlaceRow`**: thumbnail 56 bo 10 (`accentSoft` khi trống, bên trong
-  `GuGlyph` 32 coral khi có `loai`, Ionicons 24 khi không), **con dấu đứng
+- **`PlaceRow`**: thumbnail 56 bo 10 khi có ảnh; trống thì **`PlaceGlyph`
+  33** (ô giấy 56, cùng cỡ ảnh) thay cho ô `accentSoft` cũ; **con dấu đứng
   cạnh tên** trên cùng hàng (`rowTen`, tên rút về một dòng khi có dấu) để
-  hàng có match cao bằng hàng thường; mô tả `caption inkSoft` một dòng, sự
+  hàng có match cao bằng hàng thường — chỉ khi hàng không có `lyDo`; có thì
+  **dòng lý do `LyDo`** dưới tên thay con dấu; mô tả `caption inkSoft` một dòng, sự
   thật `caption inkFaint` một dòng, ghi công `caption inkFaint` tối đa hai
   dòng (`cauGhiCong`); nút tim phải; đệm dọc 10, gap 8, kẻ tóc dưới. Hàng
   nằm trên giấy, **không thẻ**; ở tablet hai cột. Ảnh hỏng (`onError`): ô
   56 vẽ lại hình gu và hàng in «Chưa tải được ảnh» `caption warn` dưới sự
   thật, ghi công vẫn in (ảnh `sua-review-2/native-kham-pha-anh-hong-*`).
-- **`PlaceGlyph`**: đĩa `accentSoft` đường kính 1.7 × size, bên trong hình
-  gu của danh mục (`guTheoLoai`: `quan-an-local → an-uong`, `cafe`, `vui-choi
-  → game`, `di-choi-dem → nightlife`, còn lại → thẻ gấp) tô coral; Ionicons
-  chỉ còn là fallback khi caller không truyền `loai`. Khung trống **không
-  bao giờ** là ảnh stock. Đĩa **giữ** `accentSoft` cả trên nền tối (quyết
-  định bằng ảnh, 08/09 vòng 2): đứng trên `card` nó đọc là tint ấm cùng họ
-  accent; `ground` trên `card` tối gần như không thấy đĩa. Không thêm token.
+- **`PlaceGlyph`**: *Lịch sử tới 10/09:* đĩa `accentSoft` tròn, hình gu tô
+  coral toàn phần; tái audit 10/09 (R3) đọc «ba quán ăn là ba cái bát giống
+  nhau» và đĩa tint + icon một màu là mặc định của mọi app. **Hiện hành
+  (11/09):** **ô giấy** vuông cạnh `round(1.7 × size)` (cùng dấu chân đĩa cũ
+  nên bố cục không dời), nền `card`, viền kẻ tóc `line`, bo `radius.small`
+  (cùng bo với khung ảnh); bên trong `GuGlyph` `round(1.15 × size)` **tô
+  `ink`** với **một** chi tiết coral của riêng hình (`tone="ink"`). Hình chọn
+  theo **tag thật trước, danh mục sau**: `gu` (từ `guTheoTag(tags)`: «Món
+  local» → `mon-local`, «Ngoài trời» → `outdoor`, karaoke, game, mua sắm, cà
+  phê, đi đêm) rồi mới `guTheoLoai(loai)` (`quan-an-local → an-uong`, `cafe`,
+  `vui-choi → game`, `di-choi-dem → nightlife`, còn lại → thẻ gấp); Ionicons
+  màu `ink` chỉ khi không có cả hai. Cùng một ô cho ảnh dẫn gọn (34), fallback
+  `MediaSlot` (44), cặp so sánh (24/34), thumb hàng (33), chi tiết fixture
+  (36) và **đầu bài gọn của chi tiết live** (36 + con dấu trên một hàng
+  `dauGon`, không khung 16:10 rỗng khi không có bìa;
+  `r14-81-chi-tiet-*`). Khung trống **không bao giờ** là ảnh stock. Không
+  thêm token.
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
@@ -1580,7 +1606,10 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   `chua-co-anh`, Khám phá «Chưa thấy nơi phù hợp» → `tim-khong-ra`
   (`sua2-sang-1.0/bs-04-tim-khong-ra`: cảnh, `h2`, một câu, một nút). Hai
   cảnh còn lại (`chua-co-hoi`, `chua-co-ban`) đã vẽ, chưa có màn gọi. Câu
-  thân rút về một câu vì cảnh đã nói vế đầu.
+  thân rút về một câu vì cảnh đã nói vế đầu. Từ 11/09 câu thân đi qua
+  `khongMoCoi` (`ui/chu.ts`): hai chữ cuối nối bằng NBSP nên không dòng nào
+  kết bằng một chữ lẻ («…rồi thử / lại.» — tái audit 10/09 ảnh 20; câu dưới
+  bốn chữ giữ nguyên); `r13-77-loi-canh-moi-*`.
 - **`Skeleton`**: xương màu `line`, bo 10, băng sáng `card` 0.55 chạy 1400ms;
   tắt hẳn dưới Reduce Motion. `SkeletonLines` dòng cuối 62%.
 - **`ErrorState`**: cùng khung với `EmptyState kind="failure"`.
@@ -1686,6 +1715,25 @@ mỗi sự thật có **một** chỗ trên màn.
   «Bill mẫu · N dòng · tổng …. Bạn đang thử bằng dữ liệu mẫu.» thay vì giải
   thích canonical/OCR; ô tìm Khám phá tự nói bằng placeholder («Tìm quán,
   món… hoặc hỏi Rủ Đi AI»), không đoạn hướng dẫn dưới ô.
+
+**Luật Một Dấu Cho Một Địa Điểm** (11/09, tái audit Codex 10/09 R3 —
+`docs/codex/2026-09-10/reaudit-evidence/`): một địa điểm mang **lý do hoặc
+con dấu, không cả hai**; **tiêu đề mục** («Gần bạn, đúng gu») là nơi **duy
+nhất** nói lời hứa, nên lý do không mở bằng «Hợp gu…» và con dấu «HỢP GU»
+không đứng cạnh một dòng lý do; **mô tả không nhắc lại từ của lý do** — lý do
+phải thêm một sự thật mà dòng dưới nó chưa nói.
+- Cơ chế trong mã: `dauCon(dd)` (`HangDiaDiem.tsx`) trả `null` khi có `lyDo`
+  ở cả bốn khung; fixture chọn lý do bằng `chonLyDo(tags, sub)`
+  (`kham-pha/ly-do.ts`: bỏ dấu, thường hoá, loại tag mà mô tả đã chứa; hết
+  tag chưa nói thì lấy tag đầu) và `fixtures.ts` viết mô tả bằng một sự thật
+  các tag không có; live in `reason` của mô hình nguyên câu. `AiNote` ở chi
+  tiết nói về **nhóm này** («Nhóm 8 người ngồi được một bàn…»), không đọc lại
+  chip thành tính từ.
+- Cổng: `node --test tests/kham-pha-ly-do.test.mjs` (luật chọn) và
+  `node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>`
+  trên dump uiautomator của Khám phá fixture: đỏ khi còn node «hợp gu», khi
+  tiêu đề mục không đúng một node, khi dẫn không có dòng lý do là một tag,
+  hoặc mô tả lặp từ của lý do (`r14-80-kham-pha-*.kiem.txt`).
 
 ### Trợ năng (sàn)
 Đích bấm 48dp (nút 52/60, `compact` 48, chip 48, tab 48, back 48, link bìa
@@ -1885,6 +1933,15 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
   không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
   phải một cuộc thay icon toàn hệ.
+- *Lịch sử tới 10/09:* `PlaceGlyph` là đĩa `accentSoft` giữ cả ở dark theo
+  quyết định 08/09 vòng 2; `PlaceLead` in con dấu «HỢP GU» **và** «Hợp gu
+  nhờ …». **Hiện hành (11/09, nhánh `ui6-kham-pha-mot-ly-do`):** ô giấy và
+  một dấu cho một địa điểm (mục «Hàng địa điểm», Luật Một Dấu). Ghi lại để
+  người sau không khôi phục đĩa. **Chưa chứng minh:** người đọc không được
+  báo trước có nhận ô giấy là «danh mục» hay đọc là nút; lý do live (câu của
+  mô hình) ở 2.0 — `LyDo` cho 2 dòng (3 khi chữ lớn), câu dài hơn nữa vẫn
+  «…»; ảnh `r14-80-*-fs2.0-*` chỉ có tag một–hai chữ của fixture, chưa có ảnh
+  live; iOS và tablet không có ảnh ở lát này.
 
 ## Cổng phải xanh trước khi đổi hệ này
 
@@ -1896,6 +1953,8 @@ cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG pa
 cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/claude/2026-09-11/motion-v2/
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
+cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly-do.test.mjs tests/khong-mo-coi.test.mjs   # chonLyDo bỏ tag mô tả đã nói, guTheoTag trước guTheoLoai; khongMoCoi nối hai chữ cuối bằng NBSP
+node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>   # dump uiautomator Khám phá fixture: 0 node «hợp gu», tiêu đề mục đúng một node, dẫn có một lý do là tag, mô tả không lặp từ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs   # ảnh catalogue chỉ tới Image trong ba khung in ghi công; không ai đọc trần anh.source, không ai gọi AnhChang
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
 ```

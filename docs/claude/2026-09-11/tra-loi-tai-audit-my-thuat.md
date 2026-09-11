@@ -72,6 +72,52 @@ khoanh được cùng một thao tác. Không so % với bảng v1 (khác cửa 
 mất gần hết khung chuyển cảnh — đổi tab 20 lần còn 45 khung). p99 là nhãn bucket; không khung nào ≥150 ms ở cả tám hàng.
 Đây là **baseline một lượt trên máy ảo**, không phải ngưỡng release.
 
+## PR 2 — R3: Khám phá nói lời hứa một lần; dấu loại nơi bằng giấy; câu lỗi không mồ côi
+
+Codex đúng, và luật đã có sẵn trong DESIGN.md («Luật Nói Một Lần», `:1608`; «Don't lặp một sự thật hai chỗ», `:1747`)
+— code vi phạm chính luật của mình. Trước: «Gần bạn, đúng gu» → con dấu «HỢP GU» → «Hợp gu nhờ Chill và View đẹp»
+(= `"Hợp gu nhờ " + tags.slice(0,2)`) → mô tả «Nướng thơm lừng, view đồi cực chill». Bốn lần một lời hứa; ba thẻ đầu
+cùng một cái bát trong đĩa hồng; ở 2.0 khối dẫn chiếm trọn màn.
+
+**Cơ chế (không phải sửa chữ):**
+- **Một dấu cho một địa điểm** (`HangDiaDiem.tsx`): có `lyDo` thì in dòng lý do (✦ + một dòng `label` tím), **không** in
+  con dấu; không có lý do thì con dấu như cũ (live rows với «AI MATCH 95%» giữ nguyên, `kham-pha.test` không đổi).
+  Áp cho lead (cả nhánh có ảnh), cặp so sánh và hàng. Tiêu đề mục «Gần bạn, đúng gu» là nơi **duy nhất** nói «gu».
+- **Lý do = một tag chưa nói** (`kham-pha/ly-do.ts` thuần, test 3 ca): `chonLyDo(tags, sub)` lấy tag đầu mà không từ
+  nào (bỏ dấu) xuất hiện trong mô tả — với dữ liệu cũ của Codex nó ra «Nhóm đông» vì «Chill»/«View đẹp» đều nằm trong
+  mô tả. Fixture viết lại 12 mô tả để nói điều tag chưa nói (xom-leo: «Nướng than ngoài hiên, thơm cả con dốc»); live
+  giữ nguyên câu `reason` của mô hình.
+- **Dấu loại nơi có chủ ý**: `PlaceGlyph` từ đĩa `accentSoft` + icon toàn coral → **ô giấy** (`card`, hairline `line`,
+  bo `radius.small`) với hình gu vẽ bằng **mực** và đúng một chi tiết coral của chính hình — cùng ngôn ngữ tờ giấy của
+  Album, không ảnh stock, không «icon trong vòng tròn». `guTheoTag(tags)` cho tag có thật chọn hình trước danh mục
+  («Món local» → món địa phương): Bánh căn Lệ hết là cái bát thứ ba; hai quán còn lại vẫn bát — **thật thà**, không
+  bịa khác biệt. Hàng (`PlaceRow`) dùng cùng ô giấy thay ô vuông hồng.
+- Chi tiết live không ảnh (`PlaceDetailLive.tsx`): bỏ khung 16:10 `card` rỗng với icon giữa (đúng «một icon bát nhỏ và
+  khoảng trống») — đầu bài gọn: ô giấy + con dấu + tên, cùng luật F01 08/09 mà fixture đã theo. Chi tiết fixture:
+  AiNote «View thoáng, món nướng dễ chia sẻ…» → «Nhóm 8 người ngồi được một bàn, món nướng chia nhau dễ.» — một lý do
+  về **nhóm**, không đọc lại chip.
+- **Câu lỗi mồ côi** (ảnh 20): `EmptyState` body đi qua `khongMoCoi()` (`ui/chu.ts`, test): hai chữ cuối nối bằng NBSP nên
+  «thử lại.» xuống dòng cùng nhau. Hai flow `77-loi-*` (r12, r13) đổi khoảng trắng cuối thành `.` trong regex.
+
+**Đo (`docs/claude/2026-09-11/native-r14/`):** cổng `kiem-lap-loi.mjs` trên XML uiautomator — 0 node `/hợp gu/i`, đúng 1
+node «Gần bạn, đúng gu», sau tên dẫn là một lý do ≤ 4 chữ, mô tả không chứa từ của lý do. **Đối chứng:** chạy trên chính
+`05-explore.xml` của Codex → ĐỎ ba lý do (4 node «hợp gu»; lý do dài; mô tả lặp «chill, view»). Sau sửa: 1.0/2.0 × sáng/tối
+đều XANH (`anh/r14-80-*.{png,xml,kiem.txt}`), lý do «View đẹp», mô tả «Nướng than ngoài hiên, thơm cả con dốc».
+
+Ảnh chi tiết không ảnh (`anh/r14-81-*`), màn lỗi (`anh/r13-77-*`, XML có U+00A0 giữa «thử» và «lại.»), bàn thử ui-lab
+(`anh/r14-82-*`). **Quyết định 08/09 bị lật có ghi lý do:** «đĩa giữ `accentSoft` cả trên nền tối» — đĩa hồng + icon
+toàn coral là mặc định của mọi app; ô giấy giữ đúng bảng giấy/mực/một coral của hệ (DESIGN.md ghi lịch sử «không khôi phục»).
+
+Reviewer Impeccable context mới phán `fix` với năm điểm, cả năm đúng và đã sửa: câu `reason` live bị cắt ở
+`numberOfLines 1` → 2 dòng (3 khi chữ lớn); `chonLyDo` so chuỗi con nên «Săn mây» bị «sáng» nuốt → so cả từ (test thêm);
+DESIGN.md lệch → documenter + sửa tay; live không có `gu` → live `Place` không có tag, ghi rõ thay vì bịa; hai fixture còn
+tag lặp mô tả → sửa. Verdict pass: **ship** (trong phạm vi năm fix và bề mặt đã chụp lại).
+
+**Chưa chứng minh:** người chưa đọc brief đọc ô giấy; câu `reason` live dài ở 2.0 (không có stack live); TalkBack — hàng có
+`accessibilityLabel` «Mở …» nên lý do/giá không được đọc (nợ có sẵn, có tên); iOS/tablet. Về «khối dẫn ở 2.0»: bớt con dấu
+và một dòng lý do (~90 px) nhưng mô tả mới dài hơn một dòng; mắt tìm tên → lý do → giá không đọc lại lời hứa — **đúng
+điều kiện của Codex**, không tuyên «ngắn hẳn».
+
 ## Cố ý không làm trong lượt này
 
 - Đo release qua HTTPS (Codex chọn HTTPS): việc dựng stack sau TLS là một lượt riêng; tầng 1 v2 đủ để đóng R2 về

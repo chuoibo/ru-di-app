@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-na
 
 import { typography, useRudiTheme, type RudiTone } from "../theme";
 import { RudiButton } from "../ui";
+import { khongMoCoi } from "./chu";
 
 /**
  * Five different silences, never one «nothing here».
@@ -64,7 +65,7 @@ export function EmptyState({
       </Text>
       {body ? (
         <Text style={[typography.body, { color: colors.inkSoft, textAlign: full ? "center" : "left", maxWidth: 420 }]}>
-          {body}
+          {khongMoCoi(body)}
         </Text>
       ) : null}
       {action || secondary ? (

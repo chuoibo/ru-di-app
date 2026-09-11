@@ -246,13 +246,24 @@ function ThanChiTiet({
   const viec = cauHoatDong(place.activities);
   return (
     <>
-      <MediaSlot
-        alt={place.name}
-        fallback={<PlaceGlyph glyph={bieuTuongLoai(place.category)} size={56} />}
-        nguon={bia === null ? null : { loai: "danh-muc", anh: bia }}
-        overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null}
-        ratio={16 / 10}
-      />
+      {/* A place without an honest picture gets no 16:10 frame of nothing (review
+          08/09 F01; re-audit 10/09: «một icon bát nhỏ và khoảng trống»): the
+          category's paper slot and the seal stand on one row, and the name
+          follows at once. With a picture, the frame and the seal on it as before. */}
+      {bia === null ? (
+        <View style={styles.dauGon}>
+          <PlaceGlyph glyph={bieuTuongLoai(place.category)} loai={place.category} size={36} />
+          {hop !== null && hop.real ? <Stamp label={hop.text} tone="ai" /> : null}
+        </View>
+      ) : (
+        <MediaSlot
+          alt={place.name}
+          fallback={<PlaceGlyph glyph={bieuTuongLoai(place.category)} loai={place.category} size={56} />}
+          nguon={{ loai: "danh-muc", anh: bia }}
+          overlay={hop !== null && hop.real ? <View style={styles.badgeOnMedia}><Stamp label={hop.text} nen tilt={-2} tone="ai" /></View> : null}
+          ratio={16 / 10}
+        />
+      )}
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
       {/* The sentence the pictures are shown on: found by geosearch around the
@@ -442,6 +453,7 @@ const styles = StyleSheet.create({
   khung: { gap: 16 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   dau: { gap: 8 },
+  dauGon: { flexDirection: "row", alignItems: "center", gap: 12 },
   duongDi: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
   bam: { opacity: 0.7 },
