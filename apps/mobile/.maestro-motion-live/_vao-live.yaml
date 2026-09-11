@@ -1,7 +1,12 @@
-# Vào app trên build RELEASE nối stack live: đăng nhập OTP nếu đang ở màn chào,
-# còn đã đăng nhập thì đi thẳng. Mã debug chỉ hợp lệ khi API chạy với log sender
+# Vào app trên build RELEASE nối stack live: đăng nhập OTP nếu chưa, còn đã
+# đăng nhập thì đi thẳng. Mã debug chỉ hợp lệ khi API chạy với log sender
 # (`scripts/e2e_slice.sh --keep` đặt MOBILE_OTP_DEBUG_CODE=000000). Số điện
 # thoại đi qua -e, không nằm trong file.
+#
+# Hai điểm vào chưa đăng nhập đều được xử lý (tái audit 10/09, B3): màn chào
+# «Rủ Đi thôi!» (bấm rồi nhập OTP) và màn «Chào bạn» (đã qua bìa — nhập OTP
+# ngay). Bản trước chỉ rẽ ở «Rủ Đi thôi!» nên vào thẳng «Chào bạn» là bỏ OTP
+# rồi chờ «Khám phá» tới timeout.
 appId: com.lakiet.rudi
 ---
 - stopApp
@@ -18,19 +23,12 @@ appId: com.lakiet.rudi
       - extendedWaitUntil:
           visible: "Chào bạn"
           timeout: 30000
-      - tapOn: "Ô số điện thoại"
-      - inputText: "${OTP_PHONE}"
-      - tapOn: "Gửi mã"
-      - extendedWaitUntil:
-          visible: "Nhập mã 6 số"
-          timeout: 60000
-      - tapOn: "Ô nhập mã"
-      - inputText: "${OTP_CODE}"
-      - runFlow:
-          file: _bo-qua-so-thich.yaml
-      - extendedWaitUntil:
-          visible: "Chưa có nhóm nào|Khám phá"
-          timeout: 60000
+      - runFlow: _nhap-otp.yaml
+- runFlow:
+    when:
+      visible: "Chào bạn"
+    commands:
+      - runFlow: _nhap-otp.yaml
 - extendedWaitUntil:
     visible: "Khám phá"
     timeout: 30000

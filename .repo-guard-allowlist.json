@@ -1576,6 +1576,294 @@
       "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
     },
     {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/05-explore.png",
+      "sha256": "91308409c20a3429a191f6743af7b5bdd75737eed9a1317ff09dee7a346f1e86",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/43-explore-light2.png",
+      "sha256": "312abdeb33ec059e1605270f08318121f425017a8a4590fe80edcd657cb86a75",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/52-explore-dark2.png",
+      "sha256": "9fdb6cffb4daf87aea39fcaa75e333f3c8aa530aabeb266320186aa4c8e72215",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/08-messages.png",
+      "sha256": "3176420e72122730f46d007e80dc1bbea439053fe180da157e4f34da7e1759c0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/19-settings.png",
+      "sha256": "d552011632dbccca6629a37c0ef327a8a2dbb07a950a2403ecc40c9477ac683f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/23-scenes-bottom.png",
+      "sha256": "8eadaff38585fbdf49613d82cc79fbed754d0c18e18e6dd41b04eab047344bc8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/30-tray-light.png",
+      "sha256": "8a9dfc6073a2656b7011ef3edaf9b9d727c3430a781d6e65176cac126ff51347",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/31-bubble-ket-xe.png",
+      "sha256": "ea3ab10d63c7170f25bfdef605c5a38b0d27f1aed518380072d13ddd1c2c268c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/20-error.png",
+      "sha256": "a149ef3f4679971651632b9bde671ef8ccadddfe6971c7df89c3b25fa88763fc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/09-profile.png",
+      "sha256": "56e7938ea8f25e6f4894264bae2cda5b1242052ebf23db9be21c4aead33afcae",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-03.png",
+      "sha256": "9154a3064bd42a5b06e4657e969ea42b37dd3b05bb3755143229c4f8b617e549",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-06.png",
+      "sha256": "e703b4823ca956dfa1880aafd45f3fcc6c5bc8fb163b111dabee0a222bfdeed2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-09.png",
+      "sha256": "449605d6126a9d5c190c907a1c976fe9a78f288da94abec437c8e08da320cfbf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-native-my-thuat.md",
+      "sha256": "d95b9c41141c1d37467d952f39828dd04ff75660cbdfaf6baed42dc118d492bd",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/assessment-b-ky-thuat.md",
+      "sha256": "6e95baaee58b5b1a13d2d2bcb91222e51bfb4cf38d1145680cac5eb34b1fbfd8",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/environment.json",
+      "sha256": "57fbd353715db87d002bd71b1424a949126ce0b2759ba845ebb1e51dade678cc",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/manifest.json",
+      "sha256": "dc3082b98ae6cc3a2e7edca8df32f9a0538a97f3223605257cb9ea1bb2944573",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-sau-215.png",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-sau-166.png",
+      "sha256": "365e346d3d043f010f138978eab17960298fad1cce0895dda11bcac8d5e87798",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-truoc-164.png",
+      "sha256": "86a75178b9a9cdde4b371995c6195f8e59d6a9565c815afd380f6875ee147fd5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m1-doi-tab-truoc.png",
+      "sha256": "c885b1733ac22dfc1e026a2eb43eb6323fa4c791b9361b7997817765bf668990",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m2-cuon-kham-pha-truoc.png",
+      "sha256": "e520525d35963c8155d4a5eaec8a07d7f4609e0ea04ebd0fcbac6366e4d2421f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m3-sheet-tao-truoc.png",
+      "sha256": "5dce1fe7435fd5a804a2d9374f315060892b5fd059aa1975d9edea639727bcb1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m4-back-chi-tiet-truoc.png",
+      "sha256": "cfed89b59f354ab40f3aced7f8440f0f3b89d1e22418a60bb030c03aa20071c2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m1-doi-tab-truoc.png",
+      "sha256": "cb8799d8354a661c1e3d27e167b2d6eab2b33229173bb7094e1f328a418d422b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m2-cuon-kham-pha-truoc.png",
+      "sha256": "25769c164d79f35a1ee0030170b79e25b752db3bbfaf6196b6474284dca994f1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m3-sheet-tao-truoc.png",
+      "sha256": "924f7846d96f42de74736f9144bd3e352b5c651e750423e265af498208ed720f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m4-back-chi-tiet-truoc.png",
+      "sha256": "e91800b986e9be7daae4848447df1b679909e882aab4c381006c5c6a45f4dbd3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-giua-283.png",
+      "sha256": "07decf12a6f2d248a7e32cc0e384edb03e59a15252a2abd73e4b9d6f0c4e874f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-sau-288.png",
+      "sha256": "67dea7c8973d311fe70954ceb18bc6b465c10fb66ab8ce0669488a82c66a3dc8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-truoc-278.png",
+      "sha256": "67926dd797eddf82e1a108bb8488fd8c5cf4de0cadeef264b515dc77044a44a0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-truoc-212.png",
+      "sha256": "c5a691559080bdd261eda6b8b34c2aa27d98abbc00ab6f4a6386bb93723d529e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-sau-206.png",
+      "sha256": "2d600c61869a80c52f16cce3d11b94f900afeb17f5b4bd8fc0c48e3d6c2c9ce7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/e-tao-moi-scale0-truoc-204.png",
+      "sha256": "3b5811eaa173a8c3b19fe67b5cd614c2c4963eb33f6ce8ca8d4889ef8b1e8555",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-213.png",
+      "sha256": "cf30a10b6027fd195dbbd0ff21fea159137478bbf5f4c81a8dca70ea821379d9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-214.png",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+    },
+    {
       "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs1.0-sang.png",
       "sha256": "8bbb4730eae345fd59d10cbc5a4805786a2e9b9a178cf73dc4fb780085d83a9d",
       "rules": [

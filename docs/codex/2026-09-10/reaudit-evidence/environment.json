@@ -1,0 +1,20 @@
+{
+  "commit": "0c1a41698148268412eb55a4303d34537b54bfa9",
+  "remote_verification": "local tracking origin/main only, no fetch",
+  "device": "emulator-5554",
+  "os": "Android 15",
+  "pixels": [
+    1080,
+    2400
+  ],
+  "dpi": 420,
+  "package": "com.lakiet.rudi",
+  "build": "DEBUGGABLE 1.0.0",
+  "fixture": true,
+  "expo_no_dotenv": true,
+  "tree_fingerprint": "codex-reaudit-0c1a4169",
+  "metro_port": 8099,
+  "api_error_port": 18999,
+  "source_diff": "empty",
+  "cleanup": "cleanup.json; Metro no longer listening on 8099; no APK install or product manifest mutation performed"
+}

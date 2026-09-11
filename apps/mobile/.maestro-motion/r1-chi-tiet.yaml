@@ -1,0 +1,21 @@
+# R1 (tái audit 10/09): một lần vào chi tiết địa điểm rồi Back, không cuộn,
+# không gõ — clip screenrecord quanh flow này chỉ được chứa hai lần đổi màn,
+# để so-khung.py đếm được số khung mỗi lần đổi (trượt ≥ 3 khung, cắt ≤ 2).
+appId: com.lakiet.rudi
+---
+- assertVisible: "Khám phá"
+- assertVisible: "Tiệm Nướng Xóm Lèo"
+- waitForAnimationToEnd:
+    timeout: 1500
+- tapOn: "Tiệm Nướng Xóm Lèo"
+- extendedWaitUntil:
+    visible: "Vì sao hợp.*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Gần bạn, đúng gu"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500

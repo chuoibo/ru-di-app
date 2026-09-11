@@ -23,6 +23,12 @@ export interface MotionKit {
   timing(step: MotionStep, easing?: EasingName): WithTimingConfig;
   spring: { press: WithSpringConfig; settle: WithSpringConfig };
   haptic: { select(): void; impact(): void; success(): void };
+  /**
+   * The same answer for Reanimated's layout animations (`FadeIn.reduceMotion(...)`):
+   * `Always` when reduced, `Never` otherwise -- never `System`, which Reanimated
+   * reads once at startup and so misses a setting changed mid-session.
+   */
+  reanimated: ReduceMotion;
 }
 
 export function useMotion(): MotionKit {
@@ -36,6 +42,11 @@ export function useMotion(): MotionKit {
   }, []);
   return useMemo(() => {
     const ms = (step: MotionStep) => durationFor(step, reduced);
+    // Reanimated's `ReduceMotion.System` is read once when the app starts, so a
+    // spring kept springing after the setting changed mid-session (re-audit
+    // 10/09, R1: the «Tạo mới» sheet still took 7 frames with every scale at 0).
+    // The live bit above decides; Reanimated is only told the answer.
+    const giam = reduced ? ReduceMotion.Always : ReduceMotion.Never;
     const bezier = (name: EasingName) => {
       const [x1, y1, x2, y2] = EASING[name];
       return Easing.bezier(x1, y1, x2, y2);
@@ -43,16 +54,17 @@ export function useMotion(): MotionKit {
     return {
       reduced,
       ms,
+      reanimated: giam,
       timing: (step, easing = "standard") => ({
         duration: ms(step),
         easing: bezier(easing),
-        reduceMotion: ReduceMotion.System,
+        reduceMotion: giam,
       }),
       spring: {
         // Press: quick, slightly overdamped, so a tap never wobbles.
-        press: { damping: 18, stiffness: 260, mass: 0.6, reduceMotion: ReduceMotion.System },
+        press: { damping: 18, stiffness: 260, mass: 0.6, reduceMotion: giam },
         // Settle: a sheet or a card coming to rest.
-        settle: { damping: 20, stiffness: 180, mass: 0.8, reduceMotion: ReduceMotion.System },
+        settle: { damping: 20, stiffness: 180, mass: 0.8, reduceMotion: giam },
       },
       haptic: {
         select: () => void Haptics.selectionAsync(),

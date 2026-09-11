@@ -1618,6 +1618,30 @@ không animate trước khi domain state hợp lệ**: `moneyCountUpMs` trả 0 
 chưa hợp lệ; con dấu live chỉ rơi sau khi máy chủ xác nhận. `useMotion` đọc
 cài đặt ban đầu và nghe `reduceMotionChanged` trong phiên.
 
+**Luật Reduce Motion Tới Tận Navigator** (11/09, `1cfe0ee4`). Dưới Reduce
+Motion chuyển cảnh là **cắt thẳng** (Android «Remove animations» cho phép
+crossfade hoặc cắt; hệ này chọn cắt, không crossfade). Cơ chế: mọi
+`animation:` của `Stack`/`Stack.Screen` trong `app/_layout.tsx` đi qua
+`stackAnimation(wanted, motion.reduced)` (`src/rudi/motion.ts`, thuần, pin ở
+`tests/motion.test.mjs`) — trả `"none"` khi giảm, giữ `slide_from_right` /
+`slide_from_bottom` / `fade` khi không; **một literal `animation: "…"` trên
+Stack là vi phạm**. Mọi config Reanimated (`timing`, `spring.press`,
+`spring.settle`, và `reanimated` cho layout animation kiểu
+`FadeIn.reduceMotion(motion.reanimated)`) lấy `ReduceMotion.Always`/`Never`
+từ bit `reduced` sống của `useMotion`, **không bao giờ `ReduceMotion.System`**.
+Vì sao: react-native-screens trên Android chuyển Fragment bằng
+`android.view.animation`, ba `*_animation_scale` = 0 không chạm tới và thư
+viện không có mã đọc Reduce Motion, nên app phải tự xin cắt; cờ `System` của
+Reanimated chỉ đọc một lần lúc khởi động nên đổi setting giữa phiên bị bỏ qua
+(tái audit 10/09 R1: chi tiết quán vẫn trượt, sheet «Tạo mới» còn 7 khung ở
+scale 0). Chứng minh bằng **số khung, không bằng `rc=0`**: quay `screenrecord`
+quanh một flow, tách 30 fps, đếm chuỗi khung đổi liên tiếp, có đối chứng hai
+chiều **trong cùng một phiên app** (scale 1 trượt 7–9 khung → scale 0 cắt 1
+khung → scale 1 trượt lại) cho push stack, sheet `transparentModal` và
+`presentation: modal` — `docs/claude/2026-09-11/motion-v2/README.md`; phương
+pháp đo v2 (warm-up ngoài cửa sổ, kiểm pid, fail-closed, trap trả scale, p99 là
+nhãn bucket) ở `docs/claude/2026-09-10/motion/README.md`.
+
 **Luật Một Cú Đóng Mỗi Sự Kiện.** `dong` chỉ truyền cho **hàng người đó vừa
 bấm** (`vuaTra`, `vuaToi`, `vuaNhan` là state của màn, không phải của dữ
 liệu); màn mount với trạng thái đã đúng thì con dấu chỉ *có ở đó*. Remount
@@ -1766,6 +1790,11 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** animate `opacity` trên một pressable tròn nằm trên nền có vân;
   animate scale, mặt tròn là View con. Đừng thêm nhánh `pressed` mờ mới:
   kit đã bỏ hết, chúng chạy trên JS thread và mù với Reduce Motion.
+- **Don't** gõ literal `animation: "slide_from_right"` (hay `fade`,
+  `slide_from_bottom`) lên `Stack`/`Stack.Screen`, và đừng truyền
+  `ReduceMotion.System` cho Reanimated: scale hệ thống không tắt được
+  Fragment animation, cờ `System` không thấy setting đổi giữa phiên. Đi qua
+  `stackAnimation(...)` và `motion.reanimated`; chứng minh bằng đếm khung.
 - **Don't** truyền `dong` lúc mount hay cho cả danh sách; đừng thay cú đóng
   dấu bằng một zoom ease-out, confetti hay toast.
 - **Don't** vẽ tay cầm sheet không kéo được; tay cầm là lời hứa kéo-để-đóng.
@@ -1848,6 +1877,14 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   đọc, cùng sàn `CHAN_NEP`; audit 09/09 §2 xác nhận «không còn khay pha hai
   phong cách». Ghi hai dòng cũ lại để người sau không khôi phục quyết định cũ
   (audit F46).
+- *Lịch sử tới 10/09:* `_layout.tsx` khai `animation: "slide_from_right"`
+  cố định và `useMotion` truyền `ReduceMotion.System`; tái audit 10/09 (R1) quay
+  được chi tiết quán vẫn trượt với cả ba scale = 0. **Hiện hành (11/09,
+  `1cfe0ee4`):** stack và Reanimated theo bit `reduced` sống (luật ở mục
+  «Chuyển động»). Điều **chưa** chứng minh và không phong thánh: bản release và
+  iOS chưa có clip (`animationDuration` riêng của native-stack iOS chưa đụng);
+  chuyển tab `fade → none` chỉ đo gián tiếp qua `m1-doi-tab`; mọi số là dev
+  client trên máy ảo, không phải cảm giác chạm trên điện thoại thật.
 - Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
   không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
   phải một cuộc thay icon toàn hệ.
@@ -1868,6 +1905,7 @@ python3 -m pytest services/api/tests/web -q                   # token guest.css 
 python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sinh lại 4 gương, không gõ tay
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
+cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/claude/2026-09-11/motion-v2/
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly-do.test.mjs tests/khong-mo-coi.test.mjs   # chonLyDo bỏ tag mô tả đã nói, guTheoTag trước guTheoLoai; khongMoCoi nối hai chữ cuối bằng NBSP

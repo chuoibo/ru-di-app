@@ -42,6 +42,25 @@ export const EASING: Readonly<Record<EasingName, Bezier>> = Object.freeze({
   accelerate: spec.easing.accelerate as unknown as Bezier,
 });
 
+/**
+ * Navigator transitions the shell uses. `"none"` is the instant cut the OS
+ * «Remove animations» setting asks for.
+ */
+export type StackAnimation = "slide_from_right" | "slide_from_bottom" | "fade" | "none";
+
+/**
+ * The stack animation to actually run, honouring Reduce Motion.
+ *
+ * The three OS animation scales at 0 do NOT stop a react-native-screens push
+ * on Android: the stack animates its Fragments with `android.view.animation`,
+ * which no scale touches, so a screen kept sliding in with every scale read
+ * back as 0 (Codex re-audit 10/09, R1). The app has to ask for the cut itself,
+ * and it asks here, from the same `reduceMotion` bit every other duration uses.
+ */
+export function stackAnimation(wanted: Exclude<StackAnimation, "none">, reduceMotion: boolean): StackAnimation {
+  return reduceMotion ? "none" : wanted;
+}
+
 /** The duration to actually run, honouring Reduce Motion. */
 export function durationFor(step: MotionStep, reduceMotion: boolean): number {
   if (reduceMotion && step !== "instant") return 0;
