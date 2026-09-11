@@ -1,0 +1,18 @@
+# R1: mở sheet «Tạo mới» (route transparentModal fade + Sheet của kit) rồi Back.
+appId: com.lakiet.rudi
+---
+- assertVisible: "Khám phá"
+- waitForAnimationToEnd:
+    timeout: 1500
+- tapOn: "Tạo mới"
+- extendedWaitUntil:
+    visible: "Mình làm gì tiếp?"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Gần bạn, đúng gu"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500

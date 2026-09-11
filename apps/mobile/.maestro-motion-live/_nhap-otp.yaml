@@ -1,0 +1,20 @@
+# Nhập số và mã OTP từ màn «Chào bạn» tới khi vào được Khám phá.
+# Gọi từ _vao-live.yaml ở CẢ hai điểm vào: sau khi bấm «Rủ Đi thôi!» ở màn
+# chào, hoặc khi app mở thẳng vào «Chào bạn» (đã qua bìa, chưa đăng nhập) —
+# nhánh thứ hai là cái lượt release 10/09 rơi vào và flow cũ bỏ qua (tái audit
+# 10/09, B3). Mã debug chỉ hợp lệ khi API chạy với MOBILE_OTP_DEBUG_CODE.
+appId: com.lakiet.rudi
+---
+- tapOn: "Ô số điện thoại"
+- inputText: "${OTP_PHONE}"
+- tapOn: "Gửi mã"
+- extendedWaitUntil:
+    visible: "Nhập mã 6 số"
+    timeout: 60000
+- tapOn: "Ô nhập mã"
+- inputText: "${OTP_CODE}"
+- runFlow:
+    file: _bo-qua-so-thich.yaml
+- extendedWaitUntil:
+    visible: "Chưa có nhóm nào|Khám phá"
+    timeout: 60000

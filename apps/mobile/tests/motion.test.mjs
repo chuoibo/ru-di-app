@@ -16,6 +16,7 @@ import {
   celebrateOnce,
   durationFor,
   moneyCountUpMs,
+  stackAnimation,
 } from "../dist-test/rudi/motion.js";
 
 test("bốn bậc tăng dần và nằm trong trần đã chốt", () => {
@@ -54,5 +55,16 @@ test("easing là cubic-bezier hợp lệ: bốn số, x trong [0,1]", () => {
     assert.equal(curve.length, 4, name);
     const [x1, , x2] = curve;
     assert.ok(x1 >= 0 && x1 <= 1 && x2 >= 0 && x2 <= 1, `${name}: x ngoài [0,1]`);
+  }
+});
+
+// Tái audit 10/09 (Codex, R1): ba scale animation của Android về 0 vẫn không tắt
+// được push của react-native-screens (Fragment Animation không đi qua scale),
+// nên chính app phải xin cắt cảnh. Bit Reduce Motion đưa mọi chuyển cảnh stack
+// về «none»; không giảm thì giữ nguyên chuyển cảnh đã khai.
+test("Reduce Motion đưa mọi chuyển cảnh stack về none; không giảm thì giữ nguyên", () => {
+  for (const wanted of ["slide_from_right", "slide_from_bottom", "fade"]) {
+    assert.equal(stackAnimation(wanted, true), "none", `${wanted} phải cắt cảnh khi giảm chuyển động`);
+    assert.equal(stackAnimation(wanted, false), wanted);
   }
 });

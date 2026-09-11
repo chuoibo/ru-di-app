@@ -1,0 +1,18 @@
+# R1: một route `presentation: modal` (slide_from_bottom) mở bằng deep link rồi Back.
+appId: com.lakiet.rudi
+---
+- assertVisible: "Khám phá"
+- waitForAnimationToEnd:
+    timeout: 1500
+- openLink: rudi://check-ins/new
+- extendedWaitUntil:
+    visible: "Check-in.*|Điểm danh.*|Đang ở đâu.*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Gần bạn, đúng gu"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2500
