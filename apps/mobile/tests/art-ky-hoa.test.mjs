@@ -79,6 +79,8 @@ test("đạo cụ: tối đa hai, so cả từ bỏ dấu, không lặp; loại 
   assert.ok(!moTaKyHoa("quan-an-local", ["Chill"], { gon: true }).includes("cây treo"));
   assert.ok(moTaKyHoa("cafe", ["Nhẹ nhàng"]).includes("rèm"));
   assert.ok(!moTaKyHoa("quan-an-local", ["Chill"]).includes("rèm"));
+  assert.equal(moTaKyHoa("vui-choi", ["Săn mây"]), "Ký hoạ đồi thông nhìn từ lan can, mây");
+  assert.equal(moTaKyHoa("vui-choi", ["Săn mây"], { gon: true }), "Ký hoạ đồi nhìn từ lan can, mây");
   assert.equal(sanKhauTheoLoai("gi-do"), "to-giay");
   assert.equal(sanKhauTheoLoai(undefined), "to-giay");
   assert.deepEqual([...SAN_KHAU_IDS].sort(), ["cua-kinh", "doi", "hien-quan", "pho-dem", "to-giay"]);

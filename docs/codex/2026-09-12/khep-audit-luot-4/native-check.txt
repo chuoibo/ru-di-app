@@ -1,0 +1,17 @@
+Native spot-check — 12/09/2026
+
+Thiết bị: Android emulator-5554, Android 15 API 35, 1080×2400.
+Bundle: nhánh audit lượt 4, fingerprint hiển thị `codex-fix-r4-f9f3b2d1`.
+Đường vào: dev client qua Metro loopback 127.0.0.1:8101; dữ liệu demo Team Đà Lạt.
+Cấu hình: font scale 2.0; animation scales 1/1/1; theme sáng.
+
+Thao tác: mở fixture → bỏ qua Sở thích → tab Tin nhắn.
+Kết quả UIAutomator trên `GroupChatScreen`:
+
+- tiêu đề chuyến: `Đà Lạt cuối tuần`
+- khoảng ngày: `17 - 19/10/2026`
+- không còn chuỗi `Chuyến đi sắp tới`, `8 người` hoặc dấu `…` trong hàng ghim
+- các nút `Xem lịch trình` và `Bình chọn` vẫn là hai node bấm được
+
+Ảnh pixel và XML đầy đủ được giữ ngoài Git trong thư mục tạm của phiên review;
+tệp này chỉ ghi kết quả có thể kiểm tra lại, không tuyên bố release/iOS/máy thật.

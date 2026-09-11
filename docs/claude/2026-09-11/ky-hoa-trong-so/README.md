@@ -7,7 +7,7 @@ sinh bằng Pillow). Lead chọn hướng **ký hoạ trong sổ**: như bạn v
 ## Cơ chế (`apps/mobile/src/rudi/art/ky-hoa.ts`, `ui/art/KyHoa.tsx`)
 
 - **Sân khấu theo loại nơi**: `quan-an-local` hiên quán (mái vạt lượn, bàn dài, bát, bếp than khói) · `cafe` góc cửa
-  kính (khung chữ thập, rèm, đồi có rừng xa, bàn tròn cốc bốc hơi, ghế) · `vui-choi` đồi thông nhìn từ lan can (ba
+  kính (khung chữ thập, rèm, đồi có rừng xa, bàn tròn cốc bốc hơi, ghế) · `vui-choi` đồi nhìn từ lan can (ba
   dãy đồi chạy hết mép, mặt trời sát đồi) · `di-choi-dem` quầy đêm dưới dây đèn (mái vạt lượn trên cột, bát trên quầy,
   trăng) · loại lạ: tờ ghi gấp trên sàn.
 - **Đạo cụ theo tag có thật**, tối đa hai, so cả từ bỏ dấu (dùng lại `gapChu` của `ly-do.ts`): View đẹp → đồi phía
@@ -64,5 +64,8 @@ Sáng/tối: tờ dùng `paper`/`paperShade` của PR C nên ở tối là tờ 
 
 ## Chưa chứng minh
 Người ngoài đọc ký hoạ ra «quán nướng ngoài hiên» hay chỉ ra «có bàn có đèn» — reviewer AI đọc mù không thay được;
-team thử với người chưa đọc brief (bảng không nhãn: `anh/r17-97-ky-hoa-lab-*`). Live: chưa có stack, chỉ chứng minh
+team thử với người chưa đọc brief. `anh/r17-97-ky-hoa-lab-*` **có caption đáp án**,
+không dùng làm bảng không nhãn. Bộ chỉ có mã hình để phát cho người đọc nằm ở
+`docs/codex/2026-09-12/khep-audit-luot-4/bo-doc-hinh/nguoi-doc/`; hướng dẫn và
+đáp án điều phối nằm ngoài thư mục ấy. Live: chưa có stack, chỉ chứng minh
 bằng test rằng `tags: []` cho sân khấu trần. Máy thật, iOS, TalkBack (câu a11y có nhưng chưa nghe).
