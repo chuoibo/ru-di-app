@@ -2470,6 +2470,166 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-sang.png",
+      "sha256": "7ea1836ca37b71e36bf33aa39985e8a3ca34f2d5bb5bb96d29e2e5f402d092a6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-toi.png",
+      "sha256": "cd3468b04245539c7664797eca3da56e7f4b2fd39713816ea00f8482d8904a6b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-sang.png",
+      "sha256": "24618a64b713d33afd58d76f5ca97308efc6a6adbf38eeffb5b56757d566c2cf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-toi.png",
+      "sha256": "b1f4e88479c4a00cb216cb8750afa1b24bcdbe3ba1ecd7ef2e6cb386dae75d43",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-sang.png",
+      "sha256": "25113318cc6031c6f43de6d5391af95f6bd04a4f72cef66e966b10ac68aed208",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-toi.png",
+      "sha256": "14865ea81c9fd21c72837aaf08c04d08805122ca318d3fc374edab7719dd08fe",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "c5e22f85a515a5137914f46ff5c0b603f1e8a0658a6185698f8331f3247327dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "c9d301643bda70ec7176d68fcc4193e08c75085cc847709818640f701536cc91",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "82c2bd9a1bed0757e4a69d27a1001249ab5fba3671764e2e6c5f99c9069cde3a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "c432fa7383ce7ec5fe9ccadebe5b49113635072552278e2248fe5456db30de49",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-71-khay-tam-o-fs1.0-sang.png",
+      "sha256": "b851fe15849b1243bbbfde63ef937cf523f517b3c44ad402fa183be033cf4e2c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-71-khay-tam-o-fs1.0-toi.png",
+      "sha256": "cfb26940c598d834beb00fb732d07fcdfabf8ec3c9b9fce67a5abc1993393fac",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-77-loi-canh-moi-fs1.0-sang.png",
+      "sha256": "9131cb9ad1ffffd82e6cc51d4bd1f51f921b51af5beb63a914d20bc3bc32b122",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-77-loi-canh-moi-fs1.0-toi.png",
+      "sha256": "a853d4e151dda0b2c85a49f965b249bf60384ddd6b0647d7138f0873e48588df",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-77-loi-canh-moi-fs2.0-sang.png",
+      "sha256": "63650437d49528e50731652c6a2debb4d3b1aa9cd21a46e522506b523abfb04e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-77-loi-canh-moi-fs2.0-toi.png",
+      "sha256": "046d0d363b7c22d13fc279b6b1f7ec2a36988a9bd10c95760b8eb203d874dcb1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "12648a6d706634a6f31a766f5cd351c9e3967c1a9bd17d1e412f170a60ff3641",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "446a944570ec77ed1ff3d8c524e93aed5df331a5b7ec64a60871e7642c9ef85d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "03a86061ae2c9efdd9b733b87bf1d47998ad109048790951fa1d1c14029e0ece",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "92d9695c19b78a01ab2c1fb9baee673dc1b77fc2ede87b75793a436a840c71ed",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     }
   ]
 }

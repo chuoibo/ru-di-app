@@ -6,17 +6,20 @@ import { useRudiTheme, type RudiPalette } from "../../theme";
 
 /**
  * The palette roles of `art/net.ts`, resolved from the theme: paper is the
- * card, the shaded fold is the hairline tone, ink is ink, the corner is the
- * accent. On dark ground the paper darkens and the ink lightens, so a figure
- * keeps its silhouette on both (report 07/09 §8.1: paper as a surface logic,
+ * `paper` token (the card tone by day; by night a sheet lighter than the
+ * cloth ground, L* 22.7 over 9.2), the shaded fold is `paperShade` (always
+ * darker than the face — `line` was lighter than `card` in the dark scheme,
+ * which turned the fold inside out and the figure into a line diagram; review
+ * 11/09 A3), ink is ink, the corner is the accent. A figure keeps its
+ * silhouette on both grounds (report 07/09 §8.1: paper as a surface logic,
  * not a yellow sheet under a black filter).
  */
 export function mauLop(colors: RudiPalette, mau: MauVe): string {
   switch (mau) {
     case "giay":
-      return colors.card;
+      return colors.paper;
     case "bong":
-      return colors.line;
+      return colors.paperShade;
     case "gap":
       return colors.accent;
     case "mo":

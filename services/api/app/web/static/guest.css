@@ -36,6 +36,8 @@
   --ai-ink: #ffffff;
   --ai-soft: #f1ebf7;
   --warn: #c2410c;
+  --paper-shade: #e6dfd3;
+  --paper: #ffffff;
   --cover-line-strong: #8d92bd;
   --cover-line: #3a3f63;
   --cover-ink-soft: #c9c6d6;
@@ -74,6 +76,8 @@
     --ai-ink: #150a30;
     --ai-soft: #30273f;
     --warn: #e8734b;
+    --paper-shade: #181b36;
+    --paper: #2e335c;
     --cover-line-strong: #9095c0;
     --cover-line: #2e3255;
     --cover-ink-soft: #c4c2cf;

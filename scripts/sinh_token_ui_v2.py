@@ -20,6 +20,8 @@ ORDER = [
     "ground",
     "card",
     "line",
+    "paper",
+    "paperShade",
     "lineStrong",
     "ink",
     "inkSoft",
@@ -81,6 +83,13 @@ NONTEXT = [
     ("line", "ground", "Cạnh thẻ trên nền trang", False),
     ("line", "card", "Đường kẻ trong thẻ", False),
     ("coverLine", "cover", "Đường kẻ trên bìa", False),
+    (
+        "paper",
+        "ground",
+        "Tờ giấy vẽ (Nếp, cảnh, sticker, ô giấy) trên nền trang",
+        False,
+    ),
+    ("paperShade", "paper", "Bóng gấp trên tờ giấy vẽ", False),
 ]
 
 

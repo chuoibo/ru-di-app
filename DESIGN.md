@@ -1,10 +1,12 @@
 ---
 name: Rủ Đi
-description: Cuốn sổ chuyến đi của cả hội, bìa vải indigo và trang giấy sáng, ba cuộn washi mang nghĩa, trạng thái là con dấu
+description: Cuốn sổ chuyến đi của cả hội, bìa vải indigo và trang giấy sáng (đêm là sổ đóng trên bàn), ba cuộn washi mang nghĩa, trạng thái là con dấu
 colors:
   ground: "#f7f3ec"
   card: "#ffffff"
   line: "#e6dfd3"
+  paper: "#ffffff"
+  paper-shade: "#e6dfd3"
   line-strong: "#777580"
   ink: "#1f2230"
   ink-soft: "#4e5563"
@@ -28,6 +30,8 @@ colors:
   ground-dark: "#151830"
   card-dark: "#1f2340"
   line-dark: "#363b5e"
+  paper-dark: "#2e335c"
+  paper-shade-dark: "#181b36"
   line-strong-dark: "#7d82a9"
   ink-dark: "#f4f1ea"
   ink-soft-dark: "#c4c2cf"
@@ -302,7 +306,8 @@ phẩm đúng».
 
 Một cuốn sổ chuyến đi cả hội cùng viết trong một buổi tối. *Bìa* vải indigo
 là bề mặt thuyết phục (Welcome, `CoverBand` đầu Login/OTP); *trang giấy*
-trắng ngà có vân là bề mặt làm việc, và trên giấy **hàng nằm thẳng trên trang,
+trắng ngà có vân là bề mặt làm việc (đêm sổ đóng lại: nền mang vân vải, hình vẽ
+là tờ giấy đêm `paper`), và trên giấy **hàng nằm thẳng trên trang,
 ngăn bằng kẻ tóc**, không có thẻ lồng thẻ. Ba tông bão hoà mang nghĩa (cam =
 lời rủ, teal = tiền, tím = AI) chỉ dán lên **vùng đang quan trọng**, và trên
 màn tiền tông teal chỉ đậu trên **con số**, không tô cả khối. Trạng thái đúng
@@ -329,7 +334,8 @@ tiền có một câu nói rõ số này là gì và không phải gì («Chưa 
 **Key Characteristics:**
 - Hai bề mặt vật chất đo được bằng pixel: vải bìa (stddev ≈ 8 mức trên
   `#1d2140`), giấy (≈ 2 mức trên `#f7f3ec`), mực trong con dấu (≈ 8.6 mức
-  trên coral).
+  trên coral); ở scheme tối `ground` mang vân vải (≈ 8 mức trên #151830),
+  giấy chỉ còn là tờ `paper` của hình vẽ (11/09).
 - Ba tông mang nghĩa, một tông dẫn mỗi màn; `brand.coral` chỉ ở mảng lớn
   (washi, con dấu CTA, FAB, chặng đang ở); teal/tím trên giấy chỉ ở chữ, số,
   viền, con dấu, nút.
@@ -381,8 +387,12 @@ gradient thương hiệu cũ làm giá trị của `accent` runtime.
   tone="warn"`), số 0 thì về `ink`.
 
 ### Neutral
-- **Giấy** (`ground` #f7f3ec / #151830): nền trang, luôn có `Grain giayTrang`
-  phủ 0.45 (tối 0.30).
+- **Giấy** (`ground` #f7f3ec / #151830): nền trang; sáng có `Grain giayTrang` 0.45, **tối có `Grain vaiBia` 0.30**
+  (sổ đóng trên bàn, 11/09).
+- **Giấy đêm** (`paper` #ffffff / #2e335c, `paperShade` #e6dfd3 / #181b36): tờ giấy
+  của **lớp hình** — Nếp, cảnh, sticker, ô giấy loại nơi — và bóng gấp của nó;
+  sáng trùng `card`/`line`, tối sáng hơn nền 13.5 bậc L* với bóng thấp hơn mặt
+  11.8 bậc. Không dùng cho thẻ hay chữ.
 - **Thẻ** (`card` #ffffff / #1f2340): thẻ, ô nhập, nút outline, thanh tab.
 - **Mực** (`ink` #1f2230 / #f4f1ea) · **mực phụ** (`inkSoft`) · **mực nhạt**
   (`inkFaint`): ba bậc chữ trên giấy, tất cả qua AA ở cả hai nền.
@@ -424,8 +434,8 @@ control là thêm một dòng trong `interactive_boundaries()` của
 **Luật Vai Màu Của Nét Vẽ.** Lớp vẽ không biết màu. Mỗi lớp (`LopVe`) gọi
 tên một **vai** trong bảy vai `MauVe` (`giay` giấy · `bong` mặt gấp trong
 bóng · `muc` mực · `gap` góc gấp coral · `mo` màu rửa nhạt · `split` · `ai`),
-và `VeLop.mauLop` mới đổi vai ra token của scheme: `giay → card`, `bong →
-line`, `muc → ink`, `gap → accent`, `mo → accentSoft`, `split → split`, `ai →
+và `VeLop.mauLop` mới đổi vai ra token của scheme: `giay → paper`, `bong → paperShade` (11/09; trước là `card`/`line` — xem
+«Bản tối là sổ đóng trên bàn» ở Do/Don't), `muc → ink`, `gap → accent`, `mo → accentSoft`, `split → split`, `ai →
 ai`. Nhờ vậy một hình vẽ giữ bóng dáng trên cả giấy sáng lẫn vải tối (bảng
 art hai nửa: giấy tối đi, mực sáng lên, coral y nguyên) và `rudi-khong-hex`
 vẫn giữ `theme.ts` là file duy nhất viết hex. `doiMau` chỉ đổi **một** vai
@@ -524,6 +534,8 @@ ngưỡng khác nhau thì cần hai token, nên `line` tách làm hai:
 | `line` #e6dfd3 trên `ground` #f7f3ec | Cạnh thẻ trên nền trang | **1.20:1** | trang trí |
 | `line` #e6dfd3 trên `card` #ffffff | Đường kẻ trong thẻ | **1.32:1** | trang trí |
 | `coverLine` #3a3f63 trên `cover` #1d2140 | Đường kẻ trên bìa | **1.54:1** | trang trí |
+| `paper` #ffffff trên `ground` #f7f3ec | Tờ giấy vẽ (Nếp, cảnh, sticker, ô giấy) trên nền trang | **1.11:1** | trang trí |
+| `paperShade` #e6dfd3 trên `paper` #ffffff | Bóng gấp trên tờ giấy vẽ | **1.32:1** | trang trí |
 
 ### Chế độ tối
 
@@ -535,6 +547,8 @@ ngưỡng khác nhau thì cần hai token, nên `line` tách làm hai:
 | `line` #363b5e trên `ground` #151830 | Cạnh thẻ trên nền trang | **1.61:1** | trang trí |
 | `line` #363b5e trên `card` #1f2340 | Đường kẻ trong thẻ | **1.42:1** | trang trí |
 | `coverLine` #2e3255 trên `cover` #0f1126 | Đường kẻ trên bìa | **1.51:1** | trang trí |
+| `paper` #2e335c trên `ground` #151830 | Tờ giấy vẽ (Nếp, cảnh, sticker, ô giấy) trên nền trang | **1.45:1** | trang trí |
+| `paperShade` #181b36 trên `paper` #2e335c | Bóng gấp trên tờ giấy vẽ | **1.40:1** | trang trí |
 
 Số của `line` và `coverLine` ghi ra ở đây **chính vì chúng không đạt 3:1**. Người sau đọc bảng này phải thấy ngay chúng đứng ở đâu, thay vì thấy một token không có số rồi dùng nó cho một cái nút. `coverLineStrong` là viền của control đặt trên bìa sổ (Welcome, Login), đo trên cả hai scheme.
 
@@ -674,7 +688,8 @@ medium/expanded (đối chiếu `tablet-light-explore.png`: dải 21:9 trên c�
 960). Không có chiều cao ảnh cố định cho ảnh dẫn; `height = 190` chỉ là mặc
 định của `Photo` khi không truyền `ratio`.
 
-**Bề mặt** (`RudiScreen surface`): `page` = nền `ground` + `Grain giayTrang`,
+**Bề mặt** (`RudiScreen surface`): `page` = nền `ground` + `Grain giayTrang` 0.45
+(sáng) hoặc `Grain vaiBia` 0.30 (tối, sổ đóng — `ui.tsx`),
 `SafeAreaView` cạnh top/left/right, lề ngang `md` (`lg` ở tablet),
 `bottomInset` 32 (112 dưới thanh tab), status bar tối trên giấy sáng.
 `cover` = nền `cover`, **không** cạnh top: `CoverBand underStatusBar` tự cộng
@@ -735,11 +750,21 @@ này là màu phẳng:
 | Chất liệu | Ô | Opacity | Đo (stddev) |
 |---|---|---|---|
 | Vải bìa | `vai-bia.png` | 0.30 | ≈ 8 mức trên `cover`, đều từ y 200 đến 2300 |
-| Giấy | `giay-trang.png` | 0.45 sáng / 0.30 tối | ≈ 2 mức trên `ground` («ở ngưỡng, không hạ thêm») |
+| Giấy | `giay-trang.png` | 0.45 (chỉ nền sáng) | ≈ 2 mức trên `ground` sáng; **ở nền tối 0.30 đo 0.8–2.1 = phẳng, đã bỏ (11/09)** |
+| Vải trên nền tối | `vai-bia.png` | 0.30 | ≈ 8.1–8.6 mức trên `ground` tối (Khám phá, khay, màn lỗi — `docs/claude/2026-09-11/toi-giay-tren-vai/`) |
 | Mực dấu | `muc-in.png` | 0.26 | ≈ 8.6 mức trên coral; ô giấy ở đây đo 2.1 nên có ô riêng |
 
-Ô trắng đen trung bình trung tính nên màu token bên dưới đo vẫn đúng trong
-một mức: bảng tương phản vẫn áp cho bề mặt có vân.
+Ô trắng đen trung bình trung tính nên trên nền **cỡ trung** màu token bên dưới đo
+vẫn đúng trong một mức, và bảng tương phản áp cho bề mặt có vân. **Ngoại lệ đo
+được (11/09, finish review PR bản tối):** trên nền tối nhất của app, ô vải (xám
+127.5, alpha 45/255) ở 0.30 **nâng** `ground` tối #151830 lên **#1c1f36** đo trên ảnh
+(+7 mức xám, L* 9.2 → 12) ở cả ba màn đã chụp. Số bảng tối tính trên token vì thế cao
+hơn thực ~8%: trên nền thực `ink` 14.34, `inkSoft` 9.21, `inkFaint` **5.87** (p99 của
+nền có vân: 4.97 — vẫn qua sàn 4.5), `accent` 5.54, `ai` 8.35, `split` 8.73, `warn`
+5.38, `lineStrong` **4.34** (viền control vẫn qua 3:1); `card` trên nền thực **1.06:1**
+(token 1.14) — thẻ tối **phải** giữ viền `line`, fill không còn là một bậc sáng;
+`paper` 1.34 (token 1.45). Không hạ opacity vải hay đổi `paper` để «bù» số: quan hệ
+mặt/nền +13.5 L* và bóng gấp −11.8 L* là cái làm tờ giấy có thân.
 
 ### Shadow Vocabulary
 - **Bản in** (`cardShadow`: iOS `#5A3014` 0/8, đục 0.1, mờ 18; Android
@@ -1799,7 +1824,17 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   tab/tem/demo có cỡ nhỏ hơn, và chụp lại ở font 1.3 trước khi nói «không
   cắt».
 - **Do** trải chất liệu bằng `Grain` (lưới ô) ở đúng opacity đo được: vải
-  0.30, giấy 0.45/0.30, mực 0.26; dưới ngưỡng là màu phẳng.
+  0.30 (bìa **và nền tối**), giấy 0.45 (chỉ nền sáng), mực 0.26; dưới ngưỡng là màu phẳng.
+- **Bản tối là sổ đóng trên bàn** (11/09, review Codex A3 «bản tối giữ màu thương hiệu nhưng chưa giữ cảm giác giấy»):
+  ngày là trang giấy mở (`ground` có vân `giayTrang` 0.45); **đêm là cuốn sổ đóng lại trên bàn** — nền tối trải vân
+  **vải bìa** (`Grain vaiBia` 0.30, đo trên nền tối stddev ≈ 8.1–8.6 mức, trước đó vân giấy 0.30 chỉ ≈ 0.8–2.1),
+  và mọi **hình vẽ** — Nếp, cảnh, sticker, ô giấy loại nơi — là **tờ giấy đêm** đặt trên vải: `paper` #2e335c (L* 22.7,
+  cao hơn nền `#151830` khoảng 13,5 bậc — cùng quan hệ mặt/nền như giấy sáng trên trang) với bóng gấp `paperShade` #181b36
+  (thấp hơn mặt 11.8 bậc, như `line` dưới `card` ở scheme sáng). Lý do đổi: tới 11/09 vai `giay` là `card` #1f2340
+  (1.14:1 trên nền, thân giấy hoà vào nền) và `bong` là `line` #363b5e **sáng hơn** mặt giấy nên nếp gấp lộn trong ra
+  ngoài — hình thành sơ đồ nét. **Thẻ, hàng, chữ giữ token cũ** (`card`, `line`, `ink`): bảng tương phản chữ không
+  đổi; `paper`/`paperShade` sáng trùng `card`/`line` nên scheme sáng không đổi một pixel. Đo bằng
+  `docs/claude/2026-09-11/toi-giay-tren-vai/do-chat-lieu.py` trên cặp native cùng màn.
 - **Do** để `CoverBand underStatusBar` khi màn có bề mặt `cover`, `StatusBar`
   sáng trên bìa, tối trên giấy sáng.
 - **Do** làm con dấu rộng bằng chữ, một vành, không mũi tên; `lon` trên bìa,
@@ -1956,6 +1991,9 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - **Chế độ tối sau loạt sửa cuối** chỉ có bảng art (`art.png` nửa dưới) và
   `toi-1.3/` chụp **trước** loạt sửa; cảnh trong `EmptyState`, cặp so sánh
   và ô gu ở dark chưa có ảnh.
+  **11/09:** ba màn tối (Khám phá, khay sticker, màn lỗi có cảnh) đã có cặp native trước/sau ở
+  `docs/claude/2026-09-11/toi-giay-tren-vai/`; câu hỏi «bản tối mất chất giấy» đóng bằng vải nền + giấy đêm, không
+  phải bằng token. Còn chưa chụp: các cảnh còn lại của `EmptyState` ở tối, cặp so sánh, Album.
 - Album theo ngày chỉ ở `AlbumLive.tsx` và chỉ đọc từ mã; album fixture
   `Memories.tsx` vẫn lưới đều ba cột (ảnh `bs-18-album`), là hai nhịp của
   hai cây, không phải hai kiểu album của hệ.

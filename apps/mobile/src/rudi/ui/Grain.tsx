@@ -7,10 +7,17 @@ import { luoiChatLieu } from "./luoi-chat-lieu";
 export interface GrainProps {
   material: keyof typeof chatLieu;
   /**
-   * Cloth 0.3 on the cover, paper 0.45 on pages, ink 0.26 inside a stamp. Measured
-   * on the emulator at 1x: 0.11 / 0.07 read as flat colour. The tiles are
-   * black-and-white noise with a neutral mean, so the token colour underneath
-   * still measures the same to within a level.
+   * Cloth 0.3 on the cover and on the dark page ground, paper 0.45 on light
+   * pages, ink 0.26 inside a stamp. Measured on the emulator at 1x: 0.11 / 0.07
+   * read as flat colour. The tiles are black-and-white noise with a neutral
+   * mean, so on a mid-tone ground the token colour underneath still measures
+   * the same to within a level -- but NOT on the darkest ground: the cloth tile
+   * (grey 127.5, alpha 45/255) at 0.30 lifts `ground` dark (token RGB 21,24,48) to a
+   * measured RGB 28,31,54 (+7 grey levels, L* 9.2 -> 12; finish review 11/09).
+   * (Written without `#` on purpose: `rudi-khong-hex` reads comments too.) Contrast on
+   * the dark page is therefore ~8% lower than the token table says (`inkFaint`
+   * 6.33 -> 5.87, still over 4.5), and `card` on the real ground is 1.06:1, so
+   * a dark container keeps its `line` edge -- the fill alone is no longer a step.
    */
   opacity?: number;
   style?: StyleProp<ViewStyle>;
