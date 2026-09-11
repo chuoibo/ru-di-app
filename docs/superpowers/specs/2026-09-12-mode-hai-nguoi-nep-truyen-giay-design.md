@@ -1,7 +1,7 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12
-Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 17).
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 18).
 Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
 Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
 
@@ -204,7 +204,10 @@ Cái bị ẩn là **thời điểm và cách gói**, không bao giờ là **vi�
 
 ### 3.1 Vào là một nghi thức, không phải cái nút
 
-Không có switch `Hội bạn | Hai người` ở tầng app. Có **một mảnh giấy phải hai người cùng gấp**: một người gấp nửa đầu và gửi, người kia gấp nửa sau.
+Không có switch `Hội bạn | Hai người` ở tầng app, vì **không có mode nào để
+switch** — có nhiều sổ, mỗi sổ một loại (mục 17). Cái duy nhất cần một nghi
+thức là **đổi loại của một sổ**: **một mảnh giấy phải hai người cùng gấp**,
+một người gấp nửa đầu và gửi, người kia gấp nửa sau.
 
 Ba thứ được giải bằng một cử chỉ:
 
@@ -614,7 +617,10 @@ Ba luật kèm theo:
 
 1. **«Tuần này nghỉ» luôn có mặt** trên thẻ kèo, và bấm vào thì tuần đó Nếp im hoàn toàn.
 2. **Không streak, không badge, không «bạn chưa …».** Một app về quan hệ mà dùng cơ chế chuỗi ngày là đang lấy cảm giác tội lỗi làm động lực; trong mode này nó độc.
-3. Push tuân đúng ADR-0024: `people.notify_prefs` tắt được **từng loại**, và payload push **không bao giờ mang nội dung** — thông báo mảnh giấy nói «có một mảnh giấy», không nói trong đó viết gì.
+3. **Bảng trên là hạn mức *theo sổ*.** Một người có năm sổ thì Nếp nói năm
+   lần, nên còn cần **một trần toàn cục theo người** — xem mục 17.6. Thiếu tầng
+   đó thì mục này là lời hứa chỉ đúng với người có đúng một sổ.
+4. Push tuân đúng ADR-0024: `people.notify_prefs` tắt được **từng loại**, và payload push **không bao giờ mang nội dung** — thông báo mảnh giấy nói «có một mảnh giấy», không nói trong đó viết gì.
 
 ---
 
@@ -784,6 +790,10 @@ một lát của lane khác.
 - Chia lượt ba chặng.
 - Hạn mức: một kèo một tuần, một lần lạ một tháng.
 - Vật liệu: mảnh giấy gấp, hai vết gấp, ba phần dọc.
+- **Module bản tính của sổ** (mục 17.3) cộng **cổng quét đếm chỗ rẽ nhánh theo
+  loại sổ**, ngay từ lát đầu. Làm sau là «sync» đã trôi: rẽ nhánh rải ra rồi thì
+  gom lại đắt hơn nhiều lần.
+- **Câu hỏi định tuyến của Nếp** (mục 17.4) và **trần nói toàn cục** (mục 17.6).
 
 **Đo được ngay:** tỉ lệ Ừ không kèm Đổi; số buổi ngoài năm loại gần nhất; số tuần bấm «nghỉ».
 
@@ -834,7 +844,12 @@ Bản vision gốc không có số nào để biết Relationship Twin là thậ
 
 ## 14. Câu hỏi còn mở, cần Lead chốt
 
-1. **Một người có được nhiều sổ hai người cùng lúc không?** Đề xuất: **một**, vì cơ chế gậy và hạn mức đều giả định một. Nhưng luật này cứng và có thể sai với vài trường hợp thật.
+1. **Một người có được nhiều sổ *đôi* cùng lúc không?** Lead đã chốt (phiên
+   12/09) rằng **dùng nhiều loại sổ cùng lúc là tự do** và đổi qua lại không
+   phải vấn đề — mục 17 làm điều đó thành cấu trúc. Câu còn lại hẹp hơn: **hai
+   sổ đôi** cùng lúc. Đề xuất: **một**, vì gậy đổi lượt và hạn mức đều giả
+   định một; và vì hai sổ đôi cùng lúc là một tính năng không ai nên xin app
+   làm hộ.
 2. **Mở giấy rồi gấp lại được không?** Đề xuất: **được**, nhưng là một nghi thức mới với một mốc ngày mới, và **không** phục hồi những mảnh giấy đã vĩnh viễn không mở.
 3. **Một người xoá tài khoản (ADR-0023) thì các trang sổ của người kia viết về mình xử lý sao?** Đây là câu hỏi riêng tư thật và tôi không tự quyết. Ba đường: giữ nguyên (là quan sát của người còn lại) · xoá phần Nếp ghi giùm, giữ phần người ấy tự viết · xoá hết.
 4. **Người kia chưa cài app thì mode chạy tới đâu bằng `guest_links`?** Cơ hội rất rẻ để giải rào «cả hai phải cài»: gửi kèo bằng link khách, bấm vào xem và phản ứng, không cần cài. Nhưng link khách hiện **tồn tại một lần** và máy chủ chỉ giữ digest, nên cần Codex nói cái gì khả thi.
@@ -862,6 +877,9 @@ Bản vision gốc không có số nào để biết Relationship Twin là thậ
 | **Gậy** | quyền rủ của tuần này, luân phiên |
 | **Người lo, Người chấm** | hai vai trong một buổi đi |
 | **Lần lạ** | hạn mức một loại chưa từng thử, mỗi tháng |
+| **Loại sổ** | hội bạn · đôi · người nhà. Suy từ `contexts.kind` cộng trạng thái đôi |
+| **Bản tính của sổ** | một bảng khai sáu điều khác nhau giữa các loại sổ; mọi màn và mọi máy đọc nó (mục 17.3) |
+| **Chủ của chặng** | ai quyết chặng đó. Hội bạn chọn chủ bằng phiếu, sổ đôi luân phiên hai vai (mục 17.2) |
 
 ---
 
@@ -918,7 +936,188 @@ lặng.** Việc này chỉ người soát bắt được, nên nó phải nằm
 
 ---
 
-## 17. Đây chưa phải giấy phép viết code
+## 17. Một máy, nhiều loại sổ
+
+Lead yêu cầu (phiên 12/09): **sync kiến trúc và logic**; Nếp phải **hiểu đối
+tượng của mình**, **hỏi han** rồi đưa người dùng vào **đúng loại sổ**; và nếu
+muốn dùng cả hai thì **đổi qua lại thoải mái, không vấn đề gì**.
+
+Ba yêu cầu đó được giải bằng **một** quyết định kiến trúc.
+
+### 17.1 Không có «mode» để switch
+
+> **Không có hai mode. Có nhiều sổ, mỗi sổ một loại.**
+
+Một người cùng lúc ở trong: ba hội bạn, một sổ đôi, một sổ người nhà. «Đổi
+mode» chính là **mở một sổ khác** — và việc đó **vốn đã tự do**, vì nó chỉ là
+điều hướng, không phải đổi trạng thái.
+
+Đây là lý do yêu cầu «dùng cả hai không vấn đề gì» **không tốn gì để làm**:
+
+| Cái người ta sợ khi có hai mode | Ở đây |
+|---|---|
+| một cờ «đang ở mode nào» trên người dùng | **không có** |
+| trạng thái phải migrate khi switch | **không có** |
+| mất dữ liệu / mất ngữ cảnh khi đổi | **không** — log thuộc về **sổ**, không thuộc về mode |
+| hai màn chính phải nuôi song song | **một** màn chính: **danh sách sổ** |
+| hai bộ code | **một máy**, khác **bản tính** (17.3) |
+
+Và nó khớp đúng nền đang có: `context_id` đã xuyên mười tám bảng, `contexts.kind`
+đã là chỗ khai loại sổ. **Không thêm trục nào.**
+
+### 17.2 Bảy bộ phận dùng chung, một bản code
+
+| Bộ phận | Ở hội bạn | Ở sổ đôi | Hai bản code? |
+|---|---|---|---|
+| **Sổ và thành viên** | `contexts` + `memberships` | như thế | **một** |
+| **Encoding buổi đi** | `outings` → `outing_stops` → `places` (loại, bán kính, khoảng giá) | như thế | **một** |
+| **Máy độ mới** | «N buổi gần nhất thuộc loại nào» | như thế, khác N | **một** |
+| **Máy hạn mức** | quota theo nhịp | như thế, khác nhịp | **một** |
+| **Máy chia lượt** | quyết bằng **phiếu** | **luân phiên hai vai** + một chặng chung | **một** (xem dưới) |
+| **Sự thật theo mốc** | «bảy tháng chưa quay lại» | như thế | **một** |
+| **Nếp** | một nhân vật, **năm luật** ở mục 7 | như thế, khác **từ vựng** | **một** |
+
+Hàng «máy chia lượt» là chỗ sync đẹp nhất, và nó cần một phép trừu tượng hoá
+đúng. Đừng nghĩ «hội thì vote, đôi thì chia ba chặng». Nghĩ:
+
+> **Mỗi chặng của một buổi đi có một *chủ*. Khác nhau chỉ ở *luật chọn chủ*.**
+
+```text
+Hội bạn      chủ = cả nhóm,        chọn bằng phiếu
+Sổ đôi       chủ = luân phiên,     chặng 1 người này, chặng 3 người kia,
+                                   chặng 2 chủ là «cả hai» (vùng giao)
+Người nhà    chủ = người mời,      (sau này, cùng máy)
+```
+
+Một khái niệm «chủ của chặng» phục vụ cả ba. Bình chọn của hội bạn **không bị
+sửa** — nó chỉ được đọc lại thành một luật chọn chủ trong số nhiều luật.
+
+### 17.3 Khác biệt sống ở **một** bảng, không rải khắp code
+
+Đây là phần «sync logic» cụ thể. Mỗi loại sổ có một **bản tính** khai đúng sáu
+điều, và **mọi** màn hình cùng **mọi** máy ở 17.2 đọc bản tính đó:
+
+```text
+BẢN TÍNH CỦA SỔ  (theo contexts.kind + trạng thái đôi)
+
+  cách quyết định      phiếu | kèo tự tới + gậy
+  có vai không         không | hai vai
+  nhịp hạn mức         số của từng quota
+  Nếp nói được gì      danh sách việc Nếp được phép làm ở sổ này
+  bộ từ vựng           câu chữ, tên nút, lời Nếp
+  tiền hiện kiểu gì    chia bill | chi tiêu chung
+```
+
+**Luật kiến trúc:** ngoài module bản tính, **không file nào được rẽ nhánh theo
+loại sổ.** Không `if (loaiSo === "doi")` rải trong màn hình, không `if kind ==
+"pair"` mới trong service.
+
+**Cổng chứng minh:** một test quét nguồn đếm chỗ rẽ nhánh theo loại sổ và đòi
+con số bằng không ngoài module bản tính — đúng idiom đã có trong repo
+(`test_import_boundary.py` chặn domain import lên trên,
+`test_background_tasks_boundary.py` đòi `BackgroundTasks` chỉ xuất hiện ở một
+file). Cổng này là thứ giữ cho «sync» không trôi sau ba lát.
+
+Bảng khác biệt, để bản tính có gì thì đọc ở đây:
+
+| | Hội bạn | Sổ đôi |
+|---|---|---|
+| Quyết định | phiếu | kèo tự tới, ba nút |
+| Vai | không | Người lo / Người chấm |
+| Tiền | chia bill, ai nợ ai | chi tiêu chung tháng này |
+| Nếp | **im lặng**, giữ vai cũ | bốn việc ở mục 6.4 |
+| Sổ về người kia | không có | có |
+| Mảnh giấy, túi riêng | không có | có |
+| Câu mở đầu | «Đi đâu cả hội?» | «Tối nay tụi mình làm gì?» |
+
+### 17.4 Nếp hỏi han để vào đúng sổ
+
+Luật đứng trên tất cả, và nó là cách giữ Luật 3 ở mục 7:
+
+> **Nếp hỏi về cái *sổ*, không bao giờ hỏi về *con người*.**
+
+Nên câu hỏi không phải «hai bạn đang yêu nhau à?» mà là «**sổ này là sổ gì?**».
+Khác biệt này nhỏ trong câu chữ và rất lớn trong cảm giác.
+
+Ba câu, đúng lúc **tạo** sổ, không phải lúc onboard người dùng:
+
+1. **Mấy người** — **không hỏi**, suy từ thành viên.
+2. **Nếu sổ có đúng hai người**, Nếp hỏi, và hỏi **cả hai**:
+
+   ```text
+   Sổ này là:
+
+   [ Hai người bạn ]     [ Một đôi ]     [ Người nhà ]
+   ```
+
+   Với lựa chọn «một đôi», chính câu trả lời của **cả hai** là **nghi thức gấp
+   giấy** ở mục 3.1. Consent không phải một bước thêm; nó **là** câu hỏi định
+   tuyến.
+3. **Một câu hiệu chỉnh**, chỉ cho sổ đôi: routine hiện tại («tụi mình hay ăn
+   tối rồi cafe»), và câu trả lời đặt hạn mức ban đầu ở mục 4.4.
+
+Hai điều **cấm** ở bước này:
+
+- **Không suy ra loại sổ từ hành vi.** Không bao giờ «hai người này nhắn nhau
+  nhiều nên chắc là đôi» (mục 3.3).
+- **Không hỏi lại.** Một sổ hai người trả lời «hai người bạn» thì Nếp **không**
+  hỏi lần hai. Đổi loại là việc người dùng chủ động vào Cài đặt của sổ.
+
+Với sổ nhiều người, Nếp **không hỏi gì cả**: loại sổ suy ra được, và một câu
+hỏi ở đó là một câu hỏi vô ích.
+
+### 17.5 Đổi loại sổ không mất gì
+
+| Đổi | Nghi thức | Dữ liệu |
+|---|---|---|
+| hai người bạn → **đôi** | gấp giấy, hai chiều | log **giữ nguyên**, chỉ đổi bản tính |
+| **đôi** → hai người bạn | mở giấy (mục 3.2) | log **giữ nguyên** |
+
+Cái gì **thuộc về sổ** (buổi đi, chặng, ký ức, chi tiêu, tin nhắn) thì **giữ**.
+Cái gì **chỉ có ở sổ đôi** (sổ về người kia, mảnh giấy, túi riêng) thì **ngủ** —
+**không xoá** — và **tỉnh lại** nếu hai người gấp giấy lần nữa.
+
+Đây là lý do yêu cầu «switch thoải mái» rẻ: **log là của sổ, không của mode.**
+Không có bước migrate nào, nên không có bước nào để làm sai.
+
+### 17.6 Cái mà tự do switch làm lộ ra: Nếp sẽ ồn
+
+Hạn mức ở mục 8 viết **theo sổ**. Một người có năm sổ thì Nếp nói **năm lần**.
+Tự do switch biến thành ồn, và ồn là tiêu chí giết thứ hai ở mục 13.
+
+**Sửa: hạn mức phải có thêm một tầng toàn cục theo *người*.**
+
+```text
+Theo sổ     nhịp ở mục 8
+Theo người  một trần cho tất cả sổ cộng lại, mỗi tuần
+            sổ đôi được ưu tiên trong trần đó
+```
+
+Không có tầng này thì mục 8 là một lời hứa chỉ đúng với người có một sổ.
+
+### 17.7 Gu là của người, cách biểu hiện là của sổ
+
+Phần cuối của việc sync, và là ý đúng nhất trong bản vision của team
+(«preference phải contextual theo relationship»):
+
+```text
+Của NGƯỜI, toàn cục, riêng tư      person_interests, saved_places
+Của SỔ, dùng chung trong sổ        outings, outing_stops, chấm, check-in
+```
+
+Cùng một người: ở hội bạn là nướng, bia, ồn; ở sổ đôi là yên, ngồi lâu, nói
+chuyện được. **Máy gợi ý phải đọc gu *qua lăng kính của sổ*** — không đọc gu
+toàn cục rồi áp cho mọi sổ. Đó là lỗi làm một app gợi ý cafe cho cả hội đi
+nướng.
+
+Và điều này **không cần bảng mới**: `outings` đã khoá theo `context_id`, nên
+lịch sử đã sẵn tách theo sổ. Việc phải làm là **không** trộn hai nguồn: gu toàn
+cục chỉ dùng khi một sổ **chưa có lịch sử**, và nhường chỗ ngay khi sổ có buổi
+đi đầu tiên.
+
+---
+
+## 18. Đây chưa phải giấy phép viết code
 
 Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
 
