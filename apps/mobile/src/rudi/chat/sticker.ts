@@ -17,7 +17,7 @@
  */
 import stickers from "../../../../../packages/shared/stickers.json";
 import { CHAN_NEP, hinhGhe, hinhNep } from "../art/nep";
-import { cong as congVe, daGiac as daGiacVe, netGay, quat as quatVe, tron as tronVe, vien as vienVe, type LopVe } from "../art/net";
+import { bau as bauVe, cong as congVe, daGiac as daGiacVe, netGay, quat as quatVe, tron as tronVe, vien as vienVe, type LopVe } from "../art/net";
 
 export const STICKER_IDS = [
   "di-thoi",
@@ -276,34 +276,49 @@ function okChot(chiTiet: boolean): LopVe[] {
  * full -- the back of a bus stands right at the front wheel.
  *
  * The first version was the bike and the tired face alone, and it read as «đi
- * xe» (audit 09/09, F45b): nothing in the picture said WHY it was not moving.
- * What says it now is silhouette, not detail: one tall mass touching the front
- * wheel, a window band and a bumper line so it is a vehicle and not a wall,
- * and the rider's chin on a hand (`ngoi-xe`). Two coral tail lights were tried
- * and rejected: two dots over a line is a face.
+ * xe» (audit 09/09, F45b). The second put a tall box in front, and at tray size
+ * that box read as a phone or a kiosk (re-audit 10/09): nothing said VEHICLE.
+ * What says it now is the thing every child draws first -- a body lifted on
+ * two wheels -- plus the rear-window band and ONE tail-light bar. Two coral
+ * dots were tried and rejected (two dots over a line is a face); one bar is
+ * the back of a vehicle and nothing else. The rider sits a touch smaller and
+ * further left so the bus is wider than before and tops the rider's head: the
+ * thing in the way is bigger than you. A blind read of the first wheeled
+ * version still said «van / food cart» (finish review 11/09): the body was a
+ * portrait box with one window. Now it is wider than tall with two panes.
  */
 function ketXe(chiTiet: boolean): LopVe[] {
-  const { nguoi, P } = dat("ngoi-xe", 0.76, -4, chiTiet);
+  // The rider sits at 0.66 so the bus can be wider than it is tall; the bike's
+  // fixed offsets scale with the rider (`k`) so the frame keeps its proportions.
+  const tiLe = 0.66, k = tiLe / 0.76;
+  const { nguoi, P } = dat("ngoi-xe", tiLe, -9, chiTiet);
   const [hx, hy] = P(86, 54);
   const [mx, my] = P(46, 78);
-  const w = chiTiet ? 2.6 : 3.2;
-  const rBanh = 8.5, ySan = CHAN_NEP - rBanh;
-  // The bus: its near edge is the front wheel's far edge plus two units.
-  const bx = hx - 4 + rBanh + 2, bTop = 32;
+  const w = chiTiet ? 2.4 : 3;
+  const rBanh = 8.5 * k, ySan = CHAN_NEP - rBanh;
+  // The bus: its near edge is the front wheel's far edge plus two units; body
+  // wider than tall, two rear-window panes (one pane reads as a screen), its
+  // own wheels on the same ground line under a body that stops above them, and
+  // ONE coral tail-light bar.
+  const bx = hx - 4 + rBanh + 2, bTop = 42, bBot = 80, rB = 5.5, cyB = CHAN_NEP - rB;
+  const giua = (bx + 95) / 2;
   const xeTruoc: LopVe[] = [
-    { d: khungBo(bx, bTop, 95 - bx, CHAN_NEP - bTop, 3), mau: "giay" },
-    { d: khungBo(bx + 4, bTop + 6, 95 - bx - 8, 20, 2), mau: "bong" },
-    { d: khungBo(bx, bTop, 95 - bx, CHAN_NEP - bTop, 3), mau: "muc", net: w },
-    { d: netGay([[bx + 3, 80], [92, 80]]), mau: "muc", net: w },
+    { d: tronVe(bx + 8, cyB, rB), mau: "muc" },
+    { d: tronVe(95 - 8, cyB, rB), mau: "muc" },
+    { d: khungBo(bx, bTop, 95 - bx, bBot - bTop, 3), mau: "giay" },
+    { d: khungBo(bx + 3, bTop + 5, giua - 1 - (bx + 3), 15, 2), mau: "bong" },
+    { d: khungBo(giua + 1, bTop + 5, 95 - 3 - (giua + 1), 15, 2), mau: "bong" },
+    { d: khungBo(bx, bTop, 95 - bx, bBot - bTop, 3), mau: "muc", net: w },
+    { d: khungBo(bx + 3, bBot - 9, 95 - bx - 6, 3.5, 1.5), mau: "gap" },
   ];
   const xe: LopVe[] = [
-    { d: netGay([[mx - 10, my + 2], [mx + 12, my + 2]]), mau: "muc", net: w * 1.8 },
-    { d: netGay([[mx + 10, my + 3], [hx - 2, hy + 4]]), mau: "muc", net: w },
-    { d: netGay([[hx - 8, hy + 1], [hx + 5, hy - 2]]), mau: "muc", net: w },
-    { d: netGay([[mx - 8, my + 4], [mx - 14, ySan - 2]]), mau: "muc", net: w },
-    { d: netGay([[hx - 2, hy + 6], [hx - 4, ySan - 2]]), mau: "muc", net: w },
-    { d: tronVe(mx - 16, ySan, rBanh), mau: "gap" },
-    { d: tronVe(mx - 16, ySan, rBanh), mau: "muc", net: w },
+    { d: netGay([[mx - 10 * k, my + 2 * k], [mx + 12 * k, my + 2 * k]]), mau: "muc", net: w * 1.8 },
+    { d: netGay([[mx + 10 * k, my + 3 * k], [hx - 2 * k, hy + 4 * k]]), mau: "muc", net: w },
+    { d: netGay([[hx - 8 * k, hy + 1 * k], [hx + 5 * k, hy - 2 * k]]), mau: "muc", net: w },
+    { d: netGay([[mx - 8 * k, my + 4 * k], [mx - 14 * k, ySan - 2]]), mau: "muc", net: w },
+    { d: netGay([[hx - 2 * k, hy + 6 * k], [hx - 4, ySan - 2]]), mau: "muc", net: w },
+    { d: tronVe(mx - 16 * k, ySan, rBanh), mau: "gap" },
+    { d: tronVe(mx - 16 * k, ySan, rBanh), mau: "muc", net: w },
     { d: tronVe(hx - 4, ySan, rBanh), mau: "gap" },
     { d: tronVe(hx - 4, ySan, rBanh), mau: "muc", net: w },
   ];
@@ -321,10 +336,12 @@ function ketXe(chiTiet: boolean): LopVe[] {
  * confirming that money moved (ADR-0021 boundary, DESIGN.md «ngoại lệ
  * sticker»). What carries the meaning is the gesture of handing over one's
  * share. Two stacked notes with a coral corner read as a ticket or a card
- * (audit 09/09, F45c); a fan of three, wider than tall, is the one silhouette
- * that reads as cash without drawing any money symbol on it. A torn half of a
- * bill was tried and rejected: handing over the bill reads as asking for
- * money, the opposite sentence.
+ * (audit 09/09, F45c); a fan of three read as cash at 120 but still as
+ * «vé/giấy» at tray size (re-audit 10/09). The top note now carries the two
+ * marks every banknote has and no ticket does -- an oval (the portrait) and an
+ * inner frame (the double border) -- and nothing that names a currency. A torn
+ * half of a bill was tried and rejected: handing over the bill reads as asking
+ * for money, the opposite sentence.
  */
 function traTienNe(chiTiet: boolean): LopVe[] {
   const { nguoi, P } = dat("dua-hai-tay", 0.82, -8, chiTiet);
@@ -345,6 +362,16 @@ function traTienNe(chiTiet: boolean): LopVe[] {
     const pts = to(deg);
     tien.push({ d: daGiacVe(pts), mau: "giay" }, { d: daGiacVe(pts), mau: "muc", net: w });
     if (deg === -14) {
+      // The banknote marks, on the note that is seen whole: the inner frame
+      // only at the detailed size (a hairline inside a 64dp note is noise), the
+      // oval at both, filled paper-shade so it reads as a shape, not a hole.
+      if (chiTiet) {
+        const trong = [[goc[0] + 2.5, goc[1] - 3.8], [goc[0] + 24.5, goc[1] - 3.8], [goc[0] + 24.5, goc[1] + 3.8], [goc[0] + 2.5, goc[1] + 3.8]]
+          .map(([x, y]) => xoay(x, y, deg)) as [number, number][];
+        tien.push({ d: daGiacVe(trong), mau: "muc", net: w * 0.5 });
+      }
+      const [cx, cy] = xoay(goc[0] + 13.5, goc[1], deg);
+      tien.push({ d: bauVe(cx, cy, 3.8, 2.7), mau: "bong" }, { d: bauVe(cx, cy, 3.8, 2.7), mau: "muc", net: w * 0.6 });
       // The top note keeps the folded coral corner: the same fold Nếp wears.
       const c: [number, number][] = [pts[1], [pts[1][0] - 7, pts[1][1] + 1], [pts[1][0] - 1, pts[1][1] + 6]];
       tien.push({ d: daGiacVe(c), mau: "gap" }, { d: daGiacVe(c), mau: "muc", net: w });

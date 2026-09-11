@@ -1134,7 +1134,10 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   `receipt.test.mjs` đọc mọi «…%» một build sinh ra (ADR-0009).
 - **Ba motif** (`motif.ts`): **vòng hở** (`vongHo`, một nét coral, khe hở
   hơn 60°, mặc định mở trên phải) là cái bàn còn trống một bên, **chỉ trang
-  trí**; **đường chuyền** (`duongChuyen`, đường S của kit với chấm coral ở
+  trí** — và từ 11/09 chỉ ở nơi cái bàn **thật sự** còn trống một bên
+  (`chua-co-hoi`, `chua-co-ban`, `tim-khong-ra`); ở cảnh lỗi `chua-doc-duoc` và
+  cảnh lọc `bo-loc-che-het` nó đọc như spinner nên bị **cấm bằng test**
+  (`art-duong.test.mjs`, cung tròn coral = 0); **đường chuyền** (`duongChuyen`, đường S của kit với chấm coral ở
   điểm đặt bút) nối những thứ thuộc về nhau; **góc gấp** (`gocGap`, tờ giấy
   gấp góc trên phải cùng góc với Nếp, tỉ lệ 0.28). Ghế `hinhGhe` là đạo cụ
   chung của cảnh.
@@ -1297,9 +1300,23 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   bước đi vẫy cờ · nâng tô hỏi · đẩy ly mời · ấn dấu chốt · giữ ghế nhìn đồng
   hồ · ngồi trên xe không nhúc nhích · hai tay đưa tiền · nhảy lên. Ngân sách
   đạo cụ mặc định là **một**: ba đồ vật đọc chậm hơn một khối. `tra-tien-ne`
-  **không** có dấu tick, đồng xu hay ký hiệu tiền tệ, và là hai tờ chồng nhau
-  chứ không phải tờ gấp góc (bản gấp góc đọc ra phong bì, đúng register concept
-  note loại). `cho-ti` giữ nguyên bố cục đã duyệt và chỉ được **cân lại nét**
+  **không** có dấu tick, đồng xu, ký hiệu tiền tệ, QR hay dấu ngân hàng (ranh
+  giới ADR-0021) — cái nói «tiền» phải là silhouette. *Lịch sử tới 09/09:* hai
+  tờ chồng nhau, không gấp góc (bản gấp góc đọc ra phong bì); *10/09:* ba tờ
+  xoè, tờ trên mang **góc gấp coral** — cùng nếp gấp Nếp đeo. **Hiện hành
+  (11/09):** vẫn ba tờ xoè quanh trục sát tay xa, tờ trên (tờ thấy trọn) mang
+  thêm **ô bầu dục tô `bong`** ở cả hai cỡ và **khung đôi** nét mảnh chỉ ở bản
+  120 — hai dấu mọi tờ bạc có mà vé không có; nét mảnh ở 64 là nhiễu nên bản rút
+  gọn bỏ khung. `ket-xe` **hiện hành (11/09):** Nếp `ngoi-xe` chống cằm ở
+  0.66/x0 −9 (khung xe máy co theo `k = 0.66/0.76`), trước mặt là **đuôi xe
+  buýt** — thân giấy **rộng hơn cao** (≈42×38) trên **hai bánh mực** cùng sàn
+  `CHAN_NEP`, **hai ô kính** `bong` (một ô đọc ra màn hình), và **một** vạch đèn
+  hậu coral. Khối cao không bánh (10/09) đọc ra điện thoại/kiosk ở khay 64; bản
+  có bánh nhưng thân dọc một ô kính (11/09 sáng) đọc mù ra «xe tải/xe đẩy». Vạch coral là **ngoại lệ có ghi lý do** của
+  ngân sách coral: một vạch nói «đuôi xe» và không gì khác; hai chấm bị loại vì
+  hai chấm trên một vạch **thành khuôn mặt**. Cổng cơ chế: ≥ 4 hình tròn tô ở
+  cả hai cỡ (`ket-xe`), ô bầu dục vai `line` và không teal (`tra-tien-ne`).
+  `cho-ti` giữ nguyên bố cục đã duyệt và chỉ được **cân lại nét**
   qua `dam`, vì nó nhường nửa khung cho ghế nên đứng ở 0.726 và ra nhạt hơn bảy
   hình bên cạnh; phóng to thì ghế rơi khỏi khung.
 - **Luật Một Lần Gửi Giữ Một Cái Chìa** (review delta 08/09, F32). Mỗi lần
@@ -1426,6 +1443,27 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   pose không trùng và cảnh lỗi không có cung tròn coral; refactor bảng so byte
   10/10 cảnh với mốc trước khi đổi pose nào. Việc còn của team: kiểm chứng
   **không nhãn** với người chưa đọc brief bằng `khong-nhan-sang/toi.png`.
+  **Vòng 2 (11/09**, tái audit Codex 10/09: F45 mới đóng một phần, R4;
+  `docs/claude/2026-09-11/nghia-hinh-v2/`): «Kẹt xe» — khối 10/09 đọc ra kiosk,
+  nay **xe buýt có bánh** (hai bánh mực trên sàn) + một vạch đèn hậu coral,
+  người nhỏ hơn để xe cao hơn đầu. «Trả tiền nè» — tờ trên mang **ô bầu dục +
+  khung đôi**, không ký hiệu tiền. `chua-co-tin-nhan` — ý «vẽ trước người để
+  mặt che đầu đuôi» của 10/09 **bị thay**: đuôi chạy dưới tờ giấy nên bị che
+  trọn, bong bóng đọc như bảng có chấm; nay thân bong bóng đặt **cao hơn
+  miệng** và đuôi là **tam giác riêng mọc từ cạnh đáy** (gốc x 64–78, có cạnh
+  bong bóng ở hai bên), mũi (53,58) **dừng ở mép tờ giấy** đúng độ cao miệng theo
+  quy ước tranh — bản đuôi cắt từ góc dưới-trái đọc mù ra «bảng có góc vạt»;
+  bong bóng **trống**, không chấm coral — chấm làm nó thành bảng.
+  `bo-loc-che-het` — **bỏ `vongHo`** (quyết định của Codex cho mục mở vòng 1):
+  «che» phải có **cái bị che** — một **tờ có bốn dòng chữ** vẽ trước, **tấm che**
+  `bong` lệch xuống-phải để lộ dải trên-trái của tờ (đầu các dòng chữ), lưới chỉ
+  2×2, **một ô hở** viền coral bốn nét thẳng cho lộ một mẩu dòng chữ; panel tô
+  `bong` + lưới 4×4 không có gì bên dưới đọc mù ra «bảng tính/lịch», lưới mực dày
+  đọc như giấy kẻ ô. Cổng mới: `art-duong.test.mjs` cấm cung
+  tròn coral ở **cả** `chua-doc-duoc` và `bo-loc-che-het`, mọi đỉnh bong bóng
+  ≥ x 52 và đỉnh trái nhất ở y 56–62; `rudi-chat-sticker.test.mjs` đòi `ket-xe`
+  ≥ 4 hình tròn tô và `tra-tien-ne` có ô bầu dục vai `line`, không teal. Cổng
+  pin **cơ chế** («có bánh», «có bầu dục»), không pin nghĩa.
 - **Trích dẫn trả lời** đứng TRÊN bong bóng, trong khối của hàng: viền
   `line`, vạch trái 3dp màu `accent` của theme, tên `caption inkSoft`, một
   dòng xem trước `caption ink`. Thanh «Đang trả lời …» cùng hình dạng, nằm
@@ -1928,6 +1966,13 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   iOS chưa có clip (`animationDuration` riêng của native-stack iOS chưa đụng);
   chuyển tab `fade → none` chỉ đo gián tiếp qua `m1-doi-tab`; mọi số là dev
   client trên máy ảo, không phải cảm giác chạm trên điện thoại thật.
+- *Nghĩa hình vòng 2 (11/09):* bốn hình sửa lại (`ket-xe`, `tra-tien-ne`,
+  `chua-co-tin-nhan`, `bo-loc-che-het`) mới có bảng có nhãn/không nhãn do người
+  đã đọc brief nhìn; **người chưa đọc brief** chưa đọc `khong-nhan-v2-*.png`,
+  khay 64 **trên máy** chưa chụp (chỉ bảng web), iOS chưa có. Vạch đèn hậu coral
+  của `ket-xe` là **ngoại lệ có ghi lý do** (một vạch nói «đuôi xe»), không phải
+  ngân sách mới cho sticker: hình sau vẫn tối đa một chi tiết coral ngoài nếp
+  gấp.
 - Icon Ionicons vẫn là ngôn ngữ của control (tab, sự thật, nút tròn, chip
   không `leading`); lớp vẽ chỉ thay icon ở **nội dung phân loại**, không
   phải một cuộc thay icon toàn hệ.
