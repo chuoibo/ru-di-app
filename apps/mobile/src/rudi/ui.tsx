@@ -111,7 +111,11 @@ export function RudiScreen({
           so leaving a cover screen never leaves pale icons on cream. */}
       <StatusBar style={surface === "cover" || dark ? "light" : "dark"} />
       <View pointerEvents="none" style={[styles.paper, { backgroundColor: colors.ground }]}>
-        <Grain material="giayTrang" opacity={dark ? 0.3 : 0.45} />
+        {/* Day: a page of paper with its grain. Night: the notebook is closed on the
+            table — the ground is the cover cloth (its weave measures ≈ 8 grey levels at
+            0.30; the paper tile measured ≈ 2 on the dark ground, i.e. flat), and every
+            drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
+        {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
       </View>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (

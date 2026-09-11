@@ -20,7 +20,7 @@ import { guTheoLoai } from "../../kham-pha/dia-diem";
  * section title's promise («đúng gu»), the seal («HỢP GU»), a reason that
  * repeated it («Hợp gu nhờ …») and a subtitle that repeated the tags: four
  * readings of one promise. The section title keeps the promise; each place
- * adds one fact. And the empty frame is a paper slot -- `card` on `line`
+ * adds one fact. And the empty frame is a paper slot -- `paper` on `line` (the card tone by day, a night sheet lighter than the cloth ground by dark — PR C 11/09)
  * with the category drawn in ink and its one coral detail -- not a tinted
  * disc with an all-coral icon, which is every app's default.
  */
@@ -96,7 +96,7 @@ export function PlaceGlyph({ glyph, loai, gu, size = 40 }: { glyph: IconName; lo
   const canh = Math.round(size * 1.7);
   const id = gu ?? (loai === undefined ? null : guTheoLoai(loai));
   return (
-    <View style={[styles.glyphTo, { width: canh, height: canh, borderRadius: radius.small, backgroundColor: colors.card, borderColor: colors.line }]}>
+    <View style={[styles.glyphTo, { width: canh, height: canh, borderRadius: radius.small, backgroundColor: colors.paper, borderColor: colors.line }]}>
       {id === null ? <Ionicons color={colors.ink} name={glyph} size={size} /> : <GuGlyph id={id} size={Math.round(size * 1.15)} tone="ink" />}
     </View>
   );

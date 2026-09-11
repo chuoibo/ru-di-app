@@ -7,6 +7,8 @@
       "ground": "#f7f3ec",
       "card": "#ffffff",
       "line": "#e6dfd3",
+      "paper": "#ffffff",
+      "paperShade": "#e6dfd3",
       "lineStrong": "#777580",
       "ink": "#1f2230",
       "inkSoft": "#4e5563",
@@ -32,6 +34,8 @@
       "ground": "#151830",
       "card": "#1f2340",
       "line": "#363b5e",
+      "paper": "#2e335c",
+      "paperShade": "#181b36",
       "lineStrong": "#7d82a9",
       "ink": "#f4f1ea",
       "inkSoft": "#c4c2cf",
@@ -706,13 +710,12 @@
     "vaiBia": {
       "opacity": 0.3,
       "stddev": 8,
-      "on": "cover"
+      "on": "cover, ground tối (11/09; nâng #151830 lên #1c1f36 đo trên ảnh)"
     },
     "giayTrang": {
-      "opacityLight": 0.45,
-      "opacityDark": 0.3,
+      "opacity": 0.45,
       "stddev": 2,
-      "on": "ground"
+      "on": "ground sáng (tối trải vaiBia từ 11/09; giấy 0.30 trên tối đo 0.8–2.1 = phẳng)"
     },
     "mucIn": {
       "opacity": 0.26,
@@ -896,6 +899,11 @@
         "name": "Luật Nói Một Lần",
         "body": "Mỗi trạng thái và mỗi sự thật có một chỗ trên màn: tên địa điểm ở HangChang phu, nháp ở đầu màn, check-in là một con dấu, luật tính sau «Cách tính», ngày album ở tiêu đề.",
         "section": "components"
+      },
+      {
+        "name": "Bản tối là sổ đóng trên bàn",
+        "body": "Ngày là trang giấy mở (ground sáng + Grain giayTrang 0.45); đêm là sổ đóng trên bàn: ground tối trải Grain vaiBia 0.30 (đo stddev ≈ 8.1–8.6 mức), mọi hình vẽ (Nếp, cảnh, sticker, ô giấy loại nơi) là tờ giấy đêm paper #2e335c với bóng gấp paperShade #181b36 (sáng trùng card/line, scheme sáng không đổi pixel). Thẻ, hàng, chữ giữ card/line/ink. Caveat đo được: ô vải nâng ground tối #151830 lên #1c1f36 (+7 mức) nên tỉ số tối tính trên token cao hơn thực ~8% (inkFaint 5.87, lineStrong 4.34); card trên nền thực 1.06:1 nên hộp tối phải giữ viền line. Bằng chứng docs/claude/2026-09-11/toi-giay-tren-vai/.",
+        "section": "elevation"
       }
     ],
     "notCanonized": [
@@ -1100,9 +1108,17 @@
       },
       "sticker": {
         "files": "src/rudi/chat/sticker.ts (HINH, HINH_RUT_GON, tuLopVe, choTi) + src/rudi/ui/stickers/Sticker.tsx",
-        "roles": { "giay": "card", "muc": "ink", "gap": "accent", "bong": "line", "split": "split" },
+        "roles": {
+          "giay": "card",
+          "muc": "ink",
+          "gap": "accent",
+          "bong": "line",
+          "split": "split"
+        },
         "readings": "96-box; chiTiet true ở bubble 120, false dưới 72dp (khay 64); bản nhỏ là hình vẽ riêng",
-        "nepLanguage": ["cho-ti"],
+        "nepLanguage": [
+          "cho-ti"
+        ],
         "pending": "bảy hình còn lại giữ nguyên chờ câu trả lời «nhận ra chờ tí khi chưa đọc nhãn?»",
         "test": "tests/rudi-chat-sticker.test.mjs (cả hai cỡ, lớp nét mở, lớp tô kín)"
       },

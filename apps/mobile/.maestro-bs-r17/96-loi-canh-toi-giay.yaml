@@ -1,0 +1,18 @@
+# PR C (11/09, A3): sao chép flow .maestro-bs-r13/77-loi-canh-moi.yaml để chụp trước/sau bản tối «sổ đóng trên bàn»; nội dung flow giữ nguyên.
+# F45d (audit native 09/09): cảnh lỗi `chua-doc-duoc` không còn vòng coral
+# dưới tờ rách (đọc như spinner đứng yên) — coral nằm ở vết rách, mảnh rách
+# trượt sang. Màn lỗi thật của «Đi đâu?» không có máy chủ là nơi cảnh ấy lên
+# (cùng đường ảnh 22 của Codex); các assert F43 giữ nguyên vì cùng màn.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://destinations
+- extendedWaitUntil:
+    visible: "Chưa đọc được danh sách nơi đến"
+    timeout: 30000
+# Hai chữ cuối nối bằng NBSP (khongMoCoi) nên regex dùng «.» thay khoảng trắng cuối.
+- assertVisible: "Không nối được máy chủ. Kiểm tra mạng rồi thử.lại."
+- assertNotVisible: "http.*"
+- assertNotVisible: ".*đang chạy.*"
+- assertVisible: "Thử lại"
+- takeScreenshot: r13-77-loi-canh-moi

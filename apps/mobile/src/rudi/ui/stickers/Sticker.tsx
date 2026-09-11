@@ -29,9 +29,9 @@ export function Sticker({ id, size = 120, tilt = 0 }: StickerProps) {
     accent: colors.accent,
     ink: colors.ink,
     split: colors.split,
-    card: colors.card,
+    card: colors.paper,
     coral: brand.coral,
-    line: colors.line,
+    line: colors.paperShade,
   };
   const trenCoral = hinh.lop.some((l) => l.mau === "coral");
   return (
