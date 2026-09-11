@@ -149,9 +149,43 @@ vocabulary test, npm test 795/795. Trên máy: khay 64 và cảnh ui-lab (`nghia
 sticker và hai cảnh không đổi làm đối chứng) — vẫn cần con người; iOS; khay 2.0 (flow bàn thử 71 đỏ ở bước cuộn ở 2.0, có
 từ r13).
 
-## Cố ý không làm trong lượt này
+## PR 4 — R5: nhịp tờ AI trong chat; Cài đặt về hệ giấy–mực
 
-- Đo release qua HTTPS (Codex chọn HTTPS): việc dựng stack sau TLS là một lượt riêng; tầng 1 v2 đủ để đóng R2 về
-  **phương pháp**, không tuyên «§5 đạt».
-- Ảnh demo Album nhất quán + ghi công (nợ §4 cũ), Sở thích phân nhóm, glyph gamepad Puppy Farm, «bản tối mất chất
-  giấy» (ghi câu hỏi mở), iOS/máy thật/TalkBack/chat live, animation mới.
+Codex đúng ở cả hai, và câu «Không màn nào trong đợt này còn gọi `Card`» của DESIGN.md hoá ra **sai**: họ Cài đặt gọi
+`Card` 14 lần (8 ở `CaiDatScreen`, kể cả thẻ bọc `Segmented` — thẻ lồng thẻ, điều chính DESIGN.md cấm).
+
+- **Kit `NhomHang`** (`ui.tsx`): hàng trên giấy, mỗi con một kẻ tóc, không thẻ/bóng/bo — hình Profile, DiemDenScreen,
+  HangDiaDiem đã chép tay ≥ 3 lần nên extract là hợp lệ. **Cả năm màn họ Cài đặt** bỏ 14 `Card`; `Segmented` nằm thẳng
+  trên giấy; lỗi là chữ trần; nhãn flow 44 giữ nguyên văn. Hai màn ngoài bề mặt audit còn `Card` (`story/DangStoryScreen`,
+  `tuong/BaiChiTietScreen`) — **nợ có tên**, test in ra mỗi lần chạy, không sửa lượt này.
+- **Tờ AI fixture** (`Group.tsx`): tiêu đề `title` (không `h2` trong luồng chat) → một dòng cốt «3 ngày 2 đêm · đồ ăn local ·
+  săn mây» → «Xem lịch trình» + «Mở bình chọn» (nhãn pinned giữ) → **một cửa mở** «Vì sao phác vậy» (mẫu «Cách tính»:
+  `Pressable` 48, `label inkSoft` + chevron, `accessibilityState.expanded`) → «Rủ Đi AI» + badge «AI nháp». Bỏ câu «Nhóm sửa
+  được trước khi chốt.» (badge nói trạng thái nháp một lần — Luật Nói Một Lần). Thẻ live `TheAi`: tiêu đề lịch trình và
+  câu hỏi bình chọn `h2` → `title` cùng nhịp.
+- **Cổng**: `tests/rudi-khong-card-trong-cai-dat.test.mjs` (không `Card` dưới `screens/cai-dat/`, `NhomHang` có và được dùng,
+  in nợ còn lại); board `.maestro-bs-r16/` 90 (Cài đặt hai nửa) + 91 (tờ AI đóng/mở, assert **không** còn «Nhóm sửa được
+  trước khi chốt») — 8/8 xanh ở 1.0/2.0 × sáng/tối (`docs/claude/2026-09-11/native-r16/`). `npm test` 800/800; `imp detect`
+  `[]` trên tám file.
+
+**Chưa chứng minh:** phép «đặt cạnh nhận ra cùng sản phẩm» bằng người thật; thẻ AI live ở 2.0 (không có stack live); TalkBack
+đọc cửa mở; hai màn còn `Card`.
+
+## Tổng kết lượt 11/09 — đối chiếu bảng phán quyết của Codex
+
+| Mục của Codex | Lượt này | Còn để team |
+|---|---|---|
+| R1 (P1) Reduce Motion chưa tới stack | **Đóng trên Android dev client**, có đối chứng hai chiều trong cùng phiên (#597) | iOS, release, máy thật |
+| R2 (P1) script đo xanh khi không đo được | **Đóng về phương pháp**: fail-closed + canary ba nhánh đỏ + trap; bảng v2 dev client (#597) | Đo release qua HTTPS local |
+| R3 (P2) Khám phá lặp lời | **Đóng** trên fixture 1.0/2.0 × sáng/tối bằng cổng XML có đối chứng đỏ (#598) | Người chưa đọc brief đọc ô giấy; câu `reason` live ở 2.0 |
+| F45 còn mở | **Ba hình đọc mù đạt** (v3) sau một vòng trượt (#599) | Người ngoài đọc bảng không nhãn `khong-nhan-v2-*` |
+| R4 bộ lọc | **Đóng**: bỏ `vongHo`, tấm che trên tờ có chữ (#599) | — |
+| R5 (P3) chat AI · Cài đặt | **Đóng** trên fixture (#600); hai màn ngoài phạm vi còn `Card` ghi nợ | Thẻ AI live 2.0; hàng Phiên/Đã chặn live; đường lỗi lưu Cài đặt |
+
+Phương pháp đã đổi so với lượt 10/09 và nên giữ: **reviewer context mới đọc mù bảng không nhãn trước khi đọc packet** — chính
+vòng đọc mù ấy đánh trượt hai hình mà tôi (đã biết brief) thấy «đã ổn». Mọi cổng mới đều được cho **đỏ trên bằng chứng lỗi
+của Codex** trước khi tin (video reduce-confirm, XML 05-explore).
+
+**Không làm lượt này, có tên:** ảnh demo Album nhất quán + ghi công (nợ §4 cũ); Sở thích phân nhóm; glyph gamepad Puppy Farm;
+«bản tối mất chất giấy» (quan sát của Codex, chưa có điều kiện đóng — cần một lượt nhìn cảnh ở cỡ thật trên nền tối);
+iOS/máy thật/TalkBack/chat live; animation mới (§5 bước 3 vẫn là đề xuất).
