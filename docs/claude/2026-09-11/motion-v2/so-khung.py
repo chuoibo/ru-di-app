@@ -22,44 +22,73 @@ A scale-0 result is only readable beside a same-session scale-1 control.
 Frames come out of a video encoder and are trusted only for WHERE a screen is,
 never for sharpness or colour.
 """
-import argparse, json, sys
+
+import argparse
+import json
+import sys
 from pathlib import Path
 from PIL import Image, ImageChops, ImageStat
+
 
 def nap(p: Path) -> Image.Image:
     # Downscale hard: the question is «did the screen move», not «is this pixel right».
     return Image.open(p).convert("L").resize((54, 120), Image.BILINEAR)
 
+
 def khac(a: Image.Image, b: Image.Image) -> float:
     return ImageStat.Stat(ImageChops.difference(a, b)).mean[0] / 255.0
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("frames")
-    ap.add_argument("--nguong", type=float, default=0.02, help="mean |diff| (0..1) vs previous frame above which the screen is moving")
+    ap.add_argument(
+        "--nguong",
+        type=float,
+        default=0.02,
+        help="mean |diff| (0..1) vs previous frame above which the screen is moving",
+    )
     ap.add_argument("--json")
     a = ap.parse_args()
     files = sorted(Path(a.frames).glob("*.png"))
     if len(files) < 3:
-        print(f"chỉ có {len(files)} khung", file=sys.stderr); return 2
+        print(f"chỉ có {len(files)} khung", file=sys.stderr)
+        return 2
     imgs = [nap(f) for f in files]
     dong = [khac(imgs[i - 1], imgs[i]) >= a.nguong for i in range(1, len(imgs))]
     chuoi = "." + "".join("x" if d else "." for d in dong)
     runs, n = [], 0
     for c in chuoi + ".":
-        if c == "x": n += 1
-        elif n: runs.append(n); n = 0
+        if c == "x":
+            n += 1
+        elif n:
+            runs.append(n)
+            n = 0
     # Merge runs separated by exactly one '.', counting that frame as part of the event.
     gop, n = [], 0
     for c in chuoi.replace("x.x", "xxx").replace("x.x", "xxx") + ".":
-        if c == "x": n += 1
-        elif n: gop.append(n); n = 0
-    ket = {"khung": len(chuoi), "runs": runs, "max": max(runs) if runs else 0, "gop": gop, "max_gop": max(gop) if gop else 0,
-           "events": len(gop), "nguong": a.nguong, "chuoi": chuoi}
-    print(f"khung={ket['khung']} runs={runs} max={ket['max']} gop={gop} max_gop={ket['max_gop']} events={ket['events']} chuoi={chuoi}")
+        if c == "x":
+            n += 1
+        elif n:
+            gop.append(n)
+            n = 0
+    ket = {
+        "khung": len(chuoi),
+        "runs": runs,
+        "max": max(runs) if runs else 0,
+        "gop": gop,
+        "max_gop": max(gop) if gop else 0,
+        "events": len(gop),
+        "nguong": a.nguong,
+        "chuoi": chuoi,
+    }
+    print(
+        f"khung={ket['khung']} runs={runs} max={ket['max']} gop={gop} max_gop={ket['max_gop']} events={ket['events']} chuoi={chuoi}"
+    )
     if a.json:
         Path(a.json).write_text(json.dumps(ket, ensure_ascii=False, indent=1))
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
