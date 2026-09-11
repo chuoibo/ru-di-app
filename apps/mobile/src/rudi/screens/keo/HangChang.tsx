@@ -30,6 +30,8 @@ export interface HangChangProps {
   cuoi?: boolean;
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** Shared selection with the journey map: the node takes the accent. */
+  chon?: boolean;
   /** Right-hand slot: a stamp, a button, a menu. */
   phai?: ReactNode;
   /**
@@ -72,7 +74,7 @@ function AnhChang({ ve, alt, loai, onHong }: { ve: KhungDaVe; alt: string; loai?
   );
 }
 
-export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, phai, anh = null, children }: HangChangProps) {
+export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi = false, phac = false, cuoi = false, onPress, accessibilityLabel, chon = false, phai, anh = null, children }: HangChangProps) {
   const { colors } = useRudiTheme();
   // The picture's failure is the stop's state, not the thumbnail's: the frame
   // shows the drawn object, and the stop says why in words (a state is always
@@ -111,6 +113,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
             styles.node,
             { borderColor: phac ? colors.inkFaint : colors.ink, backgroundColor: daToi ? colors.split : colors.ground },
             daToi && { borderColor: colors.split },
+            chon && { borderColor: colors.accent, backgroundColor: colors.accent },
           ]}
         />
         {cuoi ? null : (
@@ -123,7 +126,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
         )}
       </View>
       {onPress ? (
-        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.body, pressed && styles.pressed]}>
+        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" accessibilityState={{ selected: chon }} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, pressed && styles.pressed]}>
           {body}
         </Pressable>
       ) : (

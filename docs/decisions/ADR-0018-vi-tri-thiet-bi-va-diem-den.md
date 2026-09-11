@@ -33,9 +33,9 @@ Toạ độ đi vào **một** lời gọi `GET /destinations/near?lat=&lng=` ho
 
 Từ chối quyền là một đường đi bình thường: app vẫn dùng được, thanh điểm đến nói «Chưa bật vị trí», người dùng chọn tay. Không màn nào chặn ở đó.
 
-### 2.3 Vẫn chưa có bản đồ
+### 2.3 Không bản đồ cho chỉ đường hay theo dõi người
 
-Không SDK bản đồ trong đợt này (ADR-0016 §2.4 để «map SDK» ra ngoài). «Chỉ đường» vẫn là `geo:` bàn giao cho ứng dụng bản đồ của máy. Điều này giữ app khỏi một phụ thuộc trả tiền và giữ đợt này ở kích thước đo được.
+Không SDK bản đồ cho «chỉ đường» và không GPS trên map. «Chỉ đường» ở chi tiết địa điểm vẫn là `geo:` bàn giao cho ứng dụng bản đồ của máy. **Chiếu lịch trình lên địa lý** (chế độ Hành trình) là quyết định riêng — xem [ADR-0026](ADR-0026-hanh-trinh-tren-ban-do.md).
 
 ### 2.4 Đo được trên máy ảo, nếu không thì không phải bằng chứng
 

@@ -274,6 +274,16 @@
     // cách chia sắp tới/đã qua trên tab Lên plan. Compile vì luật nó mang là
     // số học theo ngày lịch: một ngày không đọc được KHÔNG thành con số bịa.
     "src/rudi/keo/nhip-keo.ts",
+    // Hành trình (ADR-0026): chiếu lịch trình lên địa lý. Compile vì luật
+    // phủ định — chặng không toạ độ không thành marker, hiệu suất không bịa,
+    // OSRM fail thì geodesic — chỉ đo được khi chạy hàm.
+    "src/rudi/hanh-trinh/mo-hinh.ts",
+    "src/rudi/hanh-trinh/khoang.ts",
+    "src/rudi/hanh-trinh/chieu.ts",
+    "src/rudi/hanh-trinh/tom-tat.ts",
+    "src/rudi/hanh-trinh/duong.ts",
+    "src/rudi/hanh-trinh/toi-uu.ts",
+    "src/rudi/hanh-trinh/toa-do-mau.ts",
     // Chia hóa đơn trong vỏ RuDi (M5): compile để test chứng minh khoản chi được
     // đề xuất bằng items của bill rồi chốt với expected_allocations của máy chủ,
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.

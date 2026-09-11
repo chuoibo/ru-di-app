@@ -1,0 +1,17 @@
+# Journey map is a second view of the fixture timeline, not a new route.
+# Native map tiles only after an APK that includes MapLibre; the switch and
+# Fit Journey button are asserted here because they are JS, not the native module.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://trips/team-da-lat/timeline
+- extendedWaitUntil:
+    visible: "Lịch trình"
+    timeout: 60000
+- tapOn: "Hành trình"
+- extendedWaitUntil:
+    visible: "Khớp hành trình"
+    timeout: 30000
+- assertVisible: "Khớp hành trình"
+- tapOn: "Lịch trình"
+- assertVisible: "Ăn trưa - Bánh căn Lệ"
