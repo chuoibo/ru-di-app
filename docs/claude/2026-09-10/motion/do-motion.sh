@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Frame-time gate, v3 (audit 09/09 §5; re-audit 10/09 R2/B1–B3; review 11/09 B11/B12).
+# Frame-time gate, v4 (review 12/09 C1: strict buckets and verified scale windows).
 #
 #   docs/claude/2026-09-10/motion/do-motion.sh <out-dir> [thuong|reduce]
 #
@@ -57,7 +57,9 @@ bang_so() { [[ "$1" =~ $SO && "$2" =~ $SO ]] && awk -v a="$1" -v b="$2" 'BEGIN{e
 
 # --- 1. originals: read and validate BEFORE any mutation (B12) ---------------------
 declare -A GOC
-for k in "${KHOA[@]}"; do GOC[$k]="$(doc_scale "$k")"; done
+for k in "${KHOA[@]}"; do
+  GOC[$k]="$(doc_scale "$k")" || { echo "lệnh đọc $k ban đầu thất bại — không đo" >&2; exit 3; }
+done
 { for k in "${KHOA[@]}"; do echo "$k=${GOC[$k]}"; done; } > "$OUT/scale-goc.txt"
 for k in "${KHOA[@]}"; do
   [[ "${GOC[$k]}" =~ $SO ]] || { echo "không đọc được $k ban đầu («${GOC[$k]}») — dừng trước mọi thay đổi, không đo" >&2; exit 3; }
@@ -74,7 +76,7 @@ khoi_phuc() {
       muon="${GOC[$k]}"; khop=1
       # `thuong` never wrote, so it only verifies; `reduce` writes the original back.
       if [ "$MODE" = reduce ]; then adb shell settings put global "$k" "$muon" >/dev/null 2>&1 || khop=0; fi
-      doc="$(doc_scale "$k")"
+      doc="$(doc_scale "$k")" || khop=0
       bang_so "$doc" "$muon" || khop=0
       [ "$khop" = 1 ] || { loi=1; echo "KHÔNG TRẢ ĐƯỢC $k: muốn $muon, đọc «$doc»" >&2; }
       echo "$k $muon $doc $khop"
@@ -97,16 +99,32 @@ trap 'ket_thuc $?' EXIT
 if [ "$MODE" = reduce ]; then
   for k in "${KHOA[@]}"; do
     adb shell settings put global "$k" 0 >/dev/null 2>&1 || { echo "không ghi được $k = 0 — không đo" >&2; exit 4; }
-    doc="$(doc_scale "$k")"
+    doc="$(doc_scale "$k")" || { echo "lệnh đọc lại $k thất bại — không đo" >&2; exit 4; }
     bang_so "$doc" 0 || { echo "đã ghi $k = 0 nhưng đọc lại «$doc» — không đo" >&2; exit 4; }
   done
 else
   for k in "${KHOA[@]}"; do
-    doc="$(doc_scale "$k")"
+    doc="$(doc_scale "$k")" || { echo "lệnh đọc lại $k thất bại — không đo" >&2; exit 4; }
     bang_so "$doc" "${GOC[$k]}" || { echo "$k đổi giữa lúc đọc («${GOC[$k]}») và lúc đo («$doc») — không đo" >&2; exit 4; }
   done
 fi
-{ for k in "${KHOA[@]}"; do echo "$k=$(doc_scale "$k")"; done; } > "$OUT/scale-luc-do.txt"
+# Read command status AND values. Save the observed configuration at the
+# boundaries, so a shared emulator changing mode cannot produce a green row
+# under a stale label. This cannot detect a change and reversal inside a flow.
+kiem_scale() { # <trace path>; true only when every scale still matches this mode
+  local k doc muon loi=0
+  for k in "${KHOA[@]}"; do
+    muon="${GOC[$k]}"; [ "$MODE" = reduce ] && muon=0
+    if ! doc="$(doc_scale "$k")"; then
+      echo "$k: lệnh đọc thất bại" >&2; loi=1
+    elif ! bang_so "$doc" "$muon"; then
+      echo "$k: muốn $muon, đọc «$doc»" >&2; loi=1
+    fi
+    echo "$k=$doc"
+  done > "$1"
+  return "$loi"
+}
+kiem_scale "$OUT/scale-luc-do.txt" || exit 4
 
 # --- 3. warm-up, once, outside every window -----------------------------------------
 that_bai=0
@@ -130,8 +148,19 @@ doc_dump() {
     /^Number Slow UI thread:/ && sui == "" { sui = $5 }
     /^Number Slow issue draw commands:/ && sdr == "" { sdr = $6 }
     /^Number Missed Vsync:/ && vsync == "" { vsync = $4 }
-    /^HISTOGRAM:/ && !co { co = 1; n = split($0, a, " "); for (i = 2; i <= n; i++) { split(a[i], kv, "="); ms = kv[1]; sub(/ms$/, "", ms); tong += kv[2]; if (ms + 0 >= 150) cham += kv[2] } }
-    END { print pid, khung, janky, p50, p90, p95, p99, sui, sdr, vsync, (co ? tong + 0 : ""), (co ? cham + 0 : ""), co }' "$1"
+    /^HISTOGRAM:/ {
+      if (co) bad = 1
+      co++; n = split($0, a, " "); if (n < 2) bad = 1
+      last = -1
+      for (i = 2; i <= n; i++) {
+        if (a[i] !~ /^[0-9]+ms=[0-9]+$/) { bad = 1; continue }
+        split(a[i], kv, "="); ms = kv[1]; sub(/ms$/, "", ms)
+        if (ms + 0 <= last) bad = 1
+        last = ms + 0
+        tong += kv[2]; if (ms + 0 >= 150) cham += kv[2]
+      }
+    }
+    END { print pid, khung, janky, p50, p90, p95, p99, sui, sdr, vsync, (co ? tong + 0 : ""), (co ? cham + 0 : ""), (co == 1 && !bad ? 1 : 0) }' "$1"
 }
 la_so() { [[ "$1" =~ ^[0-9]+$ ]]; }
 
@@ -146,7 +175,8 @@ hang_hong() { echo "| $1 | KHÔNG HỢP LỆ ($2) | | | | | | | | | | rc=${3:--}
 for f in "$FLOWS"/m*.yaml; do
   ten="$(basename "$f" .yaml)"
   if [ "$warm_rc" != 0 ]; then hang_hong "$ten" "warm-up đỏ"; continue; fi
-  pid0="$(adb shell pidof "$APP" 2>/dev/null | tr -d '\r')"
+  kiem_scale "$OUT/$ten.scale-truoc.txt" || { hang_hong "$ten" "scale trước cửa sổ không khớp hoặc đọc lỗi"; continue; }
+  pid0="$(adb shell pidof "$APP" 2>/dev/null | tr -d '\r')" || { hang_hong "$ten" "lệnh đọc pid trước thất bại"; continue; }
   la_so "$pid0" || { hang_hong "$ten" "pid trước «$pid0» không phải số"; continue; }
   adb exec-out screencap -p > "$OUT/$ten-truoc.png" 2>/dev/null || true
   if ! adb shell dumpsys gfxinfo "$APP" reset > /dev/null 2>&1; then
@@ -159,11 +189,14 @@ for f in "$FLOWS"/m*.yaml; do
   g="$OUT/$ten.gfxinfo.txt"
   adb shell dumpsys gfxinfo "$APP" > "$g" 2>&1
   dump_rc=$?
-  pid1="$(adb shell pidof "$APP" 2>/dev/null | tr -d '\r')"
+  pid1="$(adb shell pidof "$APP" 2>/dev/null | tr -d '\r')"; pid_rc=$?
+  kiem_scale "$OUT/$ten.scale-sau.txt"; scale_rc=$?
   IFS='|' read -r pid_dump khung janky p50 p90 p95 p99 sui sdr vsync tong cham co_hist < <(doc_dump "$g")
   ly_do=()
   [ "$rc" = 0 ] || ly_do+=("maestro rc=$rc")
   [ "$dump_rc" = 0 ] || ly_do+=("dump rc=$dump_rc")
+  [ "$pid_rc" = 0 ] || ly_do+=("lệnh đọc pid sau thất bại")
+  [ "$scale_rc" = 0 ] || ly_do+=("scale sau cửa sổ không khớp hoặc đọc lỗi")
   [ "$pid1" = "$pid0" ] || ly_do+=("pid $pid0→${pid1:-rỗng}")
   [ "$pid_dump" = "$pid0" ] || ly_do+=("dump của pid «${pid_dump:-?}» ≠ $pid0")
   la_so "$khung" && [ "$khung" -gt 0 ] || ly_do+=("frames «${khung:-?}»")
@@ -172,7 +205,7 @@ for f in "$FLOWS"/m*.yaml; do
   if [ "$co_hist" = 1 ]; then
     [ "$tong" = "$khung" ] || ly_do+=("histogram $tong ≠ frames $khung")
   else
-    ly_do+=("thiếu HISTOGRAM")
+    ly_do+=("HISTOGRAM thiếu hoặc bucket sai dạng/thứ tự")
   fi
   if [ "${#ly_do[@]}" = 0 ]; then
     echo "| $ten | $khung | $janky | $p50 | $p90 | $p95 | $p99 | $cham | $sui | $sdr | $vsync | rc=$rc | $pid0 |" >> "$bang"

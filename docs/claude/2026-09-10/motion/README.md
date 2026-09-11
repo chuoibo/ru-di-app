@@ -1,4 +1,36 @@
-# Cổng motion hữu hạn — v3 sau review 11/09 (B11/B12), v2 sau tái audit 10/09 (R2/B1–B3)
+# Cổng motion hữu hạn — v4 sau review lượt 4
+
+## Hiện tại: v4 (12/09)
+
+Giữ các sửa B11/B12 của v3, bổ sung ba ràng buộc từ review lượt 4:
+
+- Mỗi bucket phải đúng dạng `<số nguyên>ms=<số đếm nguyên không âm>`, nhãn tăng
+  dần và không trùng; chỉ một dòng histogram. Token sai không được AWK ép về 0
+  rồi công bố thành “không có khung chậm”. Tổng vẫn phải bằng frames.
+- Mọi lần đọc scale phải **rc 0 và số hợp lệ**: gốc hỏng → exit3 trước mọi ghi;
+  đọc lại chế độ hỏng → exit4; đọc xác nhận phục hồi hỏng → exit5. Có stdout
+  trông như số nhưng lệnh trả lỗi cũng không được tin. PID đọc lỗi cũng vô hiệu.
+- Kiểm scale ngay trước và sau mỗi cửa sổ, lưu `m*.scale-truoc/sau.txt`.
+  Scale thay đổi trong warm-up hoặc còn lệch sau gesture làm hàng invalid;
+  không chạy gesture kế tiếp dưới nhãn cũ. `thuong` vẫn đo cấu hình gốc, không
+  ép scale1; phải đọc cấu hình được ghi khi so với Reduce Motion.
+
+`do-motion-canary.sh` hiện có **31 nhánh**. Có đối chứng histogram chứa đúng
+ba khung ≥150ms để kiểm parser không chỉ biết trả0. Khi chạy canary mới trên
+v3, **14/31 nhánh sai**; chạy trên v4 tất cả đúng. Test
+`tests/test_motion_measurement_gate.py` chạy canary trong CI bằng fake ADB và
+fake Maestro, không cần máy ảo. `MOTION_RUNNER` chỉ dùng để đưa script cũ vào
+canary đối chứng, không thay runner khi đo máy thật.
+
+Giới hạn: đọc trước/sau không bắt được tác nhân đổi scale **rồi trả lại** bên
+trong cùng một flow; vẫn cần độc quyền máy ảo trong lúc đo. Không hứa kiểm
+chứng toàn bộ trạng thái Android bằng hai mẫu đọc. Các số v1/v2/v3 bên dưới là
+lịch sử, không phải benchmark của v4 hoặc bằng chứng release mới.
+
+Hồ sơ sửa, ảnh native và lượt chạy thực v4 nằm tại
+`docs/codex/2026-09-12/khep-audit-luot-4/README.md`.
+
+## Lịch sử v3 sau review 11/09 (B11/B12)
 
 Audit 09/09 §5 hỏi một cổng đo. v1 (10/09) có số nhưng phương pháp sai ở ba chỗ (tái audit 10/09). v2 (11/09) sửa
 phương pháp và đo lại, nhưng review 11/09 của Codex chạy canary tổng hợp trên chính runner và chỉ ra **lời hứa
