@@ -1,7 +1,7 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12
-Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 18).
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 19).
 Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
 Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
 
@@ -773,7 +773,11 @@ Ghi ra để lượt sau không ai lặng lẽ thêm vào.
 
 Ba đợt. Mỗi đợt **tự nó có nghĩa** nếu đợt sau không bao giờ tới.
 
-### Đợt 1 — quyết định
+**Đã chỉnh sau mục 18.5:** lát **đầu tiên** của Đợt 1 là **cửa vào cộng sổ
+một người dùng được**, vì nó bỏ được điểm ma sát chờ người kia và đo được sớm
+hơn. Cơ chế quyết định dưới đây là lát **thứ hai**.
+
+### Đợt 1 — cửa vào, rồi quyết định
 
 Cần đúng ba khái niệm mới ở mục 9.2: **trạng thái «đôi»** (1), **kèo tuần**
 (5), **nhãn Ừ/Đổi** (6). Không cần sổ, không cần mảnh giấy, không cần túi riêng.
@@ -879,6 +883,8 @@ Bản vision gốc không có số nào để biết Relationship Twin là thậ
 | **Lần lạ** | hạn mức một loại chưa từng thử, mỗi tháng |
 | **Loại sổ** | hội bạn · đôi · người nhà. Suy từ `contexts.kind` cộng trạng thái đôi |
 | **Bản tính của sổ** | một bảng khai sáu điều khác nhau giữa các loại sổ; mọi màn và mọi máy đọc nó (mục 17.3) |
+| **Cửa vào** | ba chỗ tìm thấy loại sổ: «Tạo mới» · hàng `Loại sổ` trong ⚙ · một thẻ thông báo một lần (mục 18.3) |
+| **Nửa chung** | phần chỉ mở khi người kia đồng ý: kèo, gậy, mảnh giấy. Sổ về người kia **không** thuộc nửa chung (mục 18.5) |
 | **Chủ của chặng** | ai quyết chặng đó. Hội bạn chọn chủ bằng phiếu, sổ đôi luân phiên hai vai (mục 17.2) |
 
 ---
@@ -1117,7 +1123,109 @@ cục chỉ dùng khi một sổ **chưa có lịch sử**, và nhường chỗ 
 
 ---
 
-## 18. Đây chưa phải giấy phép viết code
+## 18. Tìm thấy, biết mình ở đâu, và nâng sổ lên
+
+Câu hỏi của Lead (phiên 12/09): làm sao **rõ ràng** khi switch · người mới làm
+sao **biết mình đang dùng loại nào** · người đang dùng hội bạn mà **có người
+yêu** thì đường nào qua · và **có dễ dùng không**.
+
+Bốn câu này lộ ra một lỗ trong mục 17: kiến trúc «không có mode» **rõ ràng**
+nhưng **khó tìm thấy**. Mục 17 làm việc switch thành không tốn gì, rồi bỏ quên
+việc **làm sao người ta biết là có cái để switch**. Mục này bù chỗ đó.
+
+### 18.1 Không dán nhãn mode lên màn hình
+
+**Cấm** một badge kiểu `MODE: HỘI BẠN` trên đầu màn. Nó tạo ra một câu hỏi mà
+trước đó người dùng không có: «vậy tôi đang thiếu mode gì?». Một app có badge
+mode là một app bắt người ta quản lý trạng thái của chính nó.
+
+Trong kiến trúc ở mục 17, loại sổ **không phải trạng thái người dùng đang ở**,
+nó là **nhãn của cái họ đang mở** — như mở một nhóm so với mở một tin nhắn
+riêng: không ai đọc nhãn, họ **thấy**.
+
+### 18.2 Ba dấu hiệu luôn bật, không cần dạy
+
+| Dấu hiệu | Hội bạn | Sổ đôi |
+|---|---|---|
+| Tên ở header | tên nhóm | tên sổ hai người |
+| **Vật liệu** | trang giấy mở | **mảnh giấy gấp**, thấy vết gấp (mục 1.7) |
+| Câu Nếp mở đầu | «Đi đâu cả hội?» | «Tối nay tụi mình làm gì?» |
+
+Đây là lý do vật liệu ở mục 1.7 **không phải trang trí**: nó **là** cái chỉ báo
+loại sổ. Và cho ai muốn chắc bằng chữ: ⚙ của mọi sổ **luôn có một hàng ghi rõ
+loại sổ**. Sự rõ ràng nằm ở Cài đặt, không nằm trên đầu màn.
+
+### 18.3 Ba cửa vào, một cửa chính
+
+**Cửa chính: nút «Tạo mới».** Người ta vào đây khi **muốn** một cái gì mới, nên
+đây là chỗ dạy khái niệm mà không phải dạy: bảng chọn liệt kê **loại sổ**, kèm
+một dòng nói mỗi loại làm được gì. Người mới tạo nhóm đầu tiên **đã nhìn thấy**
+dòng «sổ hai người» ngay hôm đó, không popup, không tutorial, và họ sẽ quay lại
+đúng chỗ này.
+
+**Cửa hai: chính chỗ nhắn riêng.** Người đã có cuộc nhắn riêng với người ấy sẽ
+**không** đi «Tạo mới» — họ đã có cuộc chat rồi. Nên ⚙ của **mọi** sổ hai người
+có một hàng **luôn hiện**: `Loại sổ — Hai người bạn ›`, bấm vào ra ba lựa chọn
+**ngang hàng** (`Hai người bạn` · `Một đôi` · `Người nhà`).
+
+Ba lựa chọn ngang hàng, và một trong đó **là hiện trạng**. Nhờ vậy hàng này
+hỏi được ở mọi sổ hai người **mà không hàm ý gì về ai** — đây là cách duy nhất
+tìm được để mở cửa mà vẫn giữ luật cấm suy ra quan hệ ở mục 3.3. App **không
+bao giờ** đoán «hai người này nhắn nhau nhiều nên chắc là đôi».
+
+**Cửa ba: một thẻ thông báo, đúng một lần**, cho người đã tạo hết sổ của họ từ
+trước khi có mode. Bỏ qua được, **không nhắc lại**, và nằm trong trần nói ở
+mục 17.6.
+
+### 18.4 Số cú bấm
+
+| Việc | Số bấm |
+|---|---|
+| Người mới lập sổ đôi | Tạo mới → Sổ hai người → chọn người → một câu = **bốn** |
+| Đã có nhắn riêng, nâng lên | ⚙ → Loại sổ → Một đôi = **ba** |
+| Người kia đồng ý | mở thông báo → Đồng ý = **hai** |
+| Dùng hằng tuần | Ừ / Đổi / nghỉ = **một** |
+| Dùng hằng ngày | Đúng / Sửa = **một** |
+
+### 18.5 Điểm ma sát duy nhất, và nó đổi thứ tự làm
+
+Gấp giấy cần **người kia cũng bấm**. Nếu họ chưa mở app thì người khởi xướng
+bị treo, và cảm giác «tôi vừa gửi một lời đề nghị về quan hệ rồi ngồi chờ» là
+cảm giác tệ nhất mà luồng này có thể tạo ra.
+
+**Luật: nửa của mình phải dùng được ngay một mình.**
+
+> **Sổ về người kia là sổ *riêng* của mình — nó không cần người kia.** Ghi được
+> ngay, ôn thẻ được ngay, trong lúc chờ.
+
+Người kia đồng ý thì **mở thêm nửa chung**: kèo tự tới, gậy đổi lượt, mảnh
+giấy. Nên tính năng **có giá trị với một người**, và người thứ hai là phần mở
+rộng chứ không phải điều kiện khởi động.
+
+**Hệ quả cho mục 12:** Đợt 1 và Đợt 2 **đảo một phần**. Hai quyển sổ (Đợt 2)
+có phần **chạy được với một người**, nên lát đầu tiên nên gồm:
+
+```text
+Lát đầu    cửa vào (18.3) · nghi thức gấp giấy · SỔ VỀ NGƯỜI KIA một người
+           dùng được · module bản tính (17.3) và cổng của nó
+Lát sau    kèo tự tới · gậy đổi lượt · núm độ mới · hạn mức
+```
+
+Cách này còn đo được sớm hơn: **bao nhiêu người bấm vào cửa** và **bao nhiêu
+người kia đồng ý** là hai số biết được trước khi xây máy gợi ý.
+
+### 18.6 Bốn thứ không được làm ở đường vào
+
+| Không | Vì sao |
+|---|---|
+| Badge mode trên màn | tạo ra câu hỏi người dùng không có (18.1) |
+| Nhắc lần hai | một lời đề nghị về quan hệ bị nhắc lại là một áp lực (mục 3.1) |
+| Suy ra quan hệ để mời | kịch bản tệ nhất app này có thể tạo (mục 3.3) |
+| Onboarding hỏi «bạn muốn mode nào» | người mới chưa có quan hệ nào trong app thì hỏi là hỏi vô ích |
+
+---
+
+## 19. Đây chưa phải giấy phép viết code
 
 Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
 
