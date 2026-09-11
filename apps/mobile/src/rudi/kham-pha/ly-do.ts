@@ -15,7 +15,7 @@
  */
 
 /** Lower-case, no diacritics, so «View đẹp» finds «view đồi». */
-function gapChu(text: string): string {
+export function gapChu(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")

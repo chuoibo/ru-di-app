@@ -2630,6 +2630,134 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "3cf6563371f8d9f7df546d32e5503058706fcac72fab14a03dd755d2b120992f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "9b6aeb205b962c27f829505b6dccf1a8ccd3ec74bc98fe0e3c69e050c05c24f5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "f63f9b1e50743ae7130e9bd5b794bba110eba76fb56ba669b595092a381304ad",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "a14c240819b42ac462a11b4edb4ad4f288836330c63b849e122aa49df071f645",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-sang.png",
+      "sha256": "58f8a6eadaaf0c893ee1c80c4e188eee3216df989b607baabf72cb6a3c127f97",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-toi.png",
+      "sha256": "99a445c12bfea8320c20cf099c74c48c6a70eb06bef133252d96a3a4a7b57486",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-sang.png",
+      "sha256": "ab47c1481ec8532345ab86c043441feb911eaf8e1382cb9abd069036d2c93a81",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-toi.png",
+      "sha256": "da9814a4a56209addf1b519965f487d64ca8586ddb9b17da11223e298e125a64",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-sang.png",
+      "sha256": "eecfa333248765dec1ed18a5853a42e7e600fef65d3798a57ea32a683476acaa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-toi.png",
+      "sha256": "0e5dd11bcb730f06ae03d331d9d7337fef7b245c8b3f451858dafa31ee70b80a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-sang.png",
+      "sha256": "ff7c2a85ad6ea1872285a7721f468784984ee5ae1cb5196957a6fa56a77943d2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-toi.png",
+      "sha256": "ff8cdc9b3ed6f1161a28bb977c38eb710a9927137b8deb7c9c8e3f4d3b81fbc5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-sang.png",
+      "sha256": "d557f6992c71bf288f186857784c5d6a02ac93adc57d1a6a9f7d8decfecb9986",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-toi.png",
+      "sha256": "27eb83b82bc804c9df966bb1e9150ae4f2c474ef8aa74aa44a8a9957c360335b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-sang.png",
+      "sha256": "ea412d42469f06a3441488a752df0bec3ab960daf2e480b602062032e4ebc06c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-toi.png",
+      "sha256": "fb7db3de1a6958892532f608fa1467f7b43cc6f962823c1b3cdf79f40862b071",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     }
   ]
 }

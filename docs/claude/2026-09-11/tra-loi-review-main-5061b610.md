@@ -95,3 +95,51 @@ ghi là giới hạn, không sửa trong PR này.
 
 Chưa chứng minh: cảm giác vật liệu trên màn OLED thật; các màn tối khác chỉ đổi vân nền, chưa chụp hết; khay ở 2.0
 không có ảnh (flow ui-lab đỏ ở chữ lớn trước và sau, không liên quan).
+
+## PR D — A1: Khám phá có nơi chốn — «Ký hoạ trong sổ»
+
+Codex A1 gọi đúng nút thắt: sau R3 Khám phá sạch nhưng là **danh mục có style** — ô giấy + glyph bát không nói gì về
+ánh sáng, món, chỗ ngồi. Họ đề đường ảnh thật có ghi công; repo không có nguồn ảnh địa điểm hợp pháp và tôi không bịa.
+Hướng chọn cùng lead: **nơi chưa có ảnh nhận một nét ký hoạ**, như bạn vẽ vội vào sổ chuyến đi cạnh tên quán.
+
+Cơ chế (`art/ky-hoa.ts` thuần, `ui/art/KyHoa.tsx`): sân khấu theo loại nơi (hiên quán · góc cửa kính · đồi thông
+nhìn từ lan can · quầy đêm dưới dây đèn · tờ ghi cho loại lạ) + tối đa hai đạo cụ theo tag có thật (so cả từ bỏ dấu,
+chỉ đạo cụ sân khấu ấy vẽ) + **đúng một điểm coral là nguồn sáng**; ba cỡ nét theo độ sâu; mảng tô đi đúng đường
+cong của nét viền; **một hình, hai khung cắt** (3:1 chữ 1.0, 4:1 chữ lớn). Thật thà: vẽ *một loại nơi*, không tên,
+không bảng hiệu; câu a11y mở bằng «Ký hoạ»; live chỉ có loại → hai quán ăn cùng một hiên. Lắp ở lead Khám phá và đầu
+bài chi tiết không ảnh; hàng/so sánh giữ ô giấy.
+
+Cách vẽ: ứng viên render bằng primitives thật; **agent context mới chưa đọc brief** đọc mù bản v2 và đánh trượt (bát
+treo dưới mép bàn, vạch mái = thước, cửa kính = laptop có biểu đồ, thông = mũi tên, mây = Venn, móc dây = refresh,
+«bộ icon không phải ký hoạ») → v3 sửa từng thứ. Đọc mù lần hai trên **dải cắt từ ảnh native**: hiên quán và góc cửa kính đọc đúng loại nơi
+(«quán ăn bình dân có mái che, ngồi ghế đẩu», «quán cà phê có cửa sổ lớn»), đồi và chợ đêm đúng, tờ ghi loại lạ đọc
+là icon tài liệu (chấp nhận, đó là fallback); còn sai: nồi vuông = «hộp bưu kiện», thông đứng trên thanh ngang cửa,
+đồi bên hiên «không gọi tên được», dải tô giữa đồi = ruy-băng, bóng đèn rỗng = khoen, bản 4:1 cafe mất khói/cây/ghế →
+**v4** sửa từng thứ (nồi tròn có nắp, đồi có thân tô, bỏ thanh ngang và hạ rừng lên đồi, bỏ dải tô, bóng đèn giọt tô,
+trăng lưỡi liềm, quầy hai có lồng đèn, bản gọn giữ khói/ghế/hai quầy). Reader cũng nói «không phải ký hoạ tay mà là
+line-art phẳng» — đó là ngôn ngữ chung của Nếp, không đổi riêng ở đây.
+
+Số: cổng XML r14 xanh 4/4 (không thêm chữ); khối dẫn cao thêm +83dp ở 1.0, +61dp ở 2.0 (mục tiêu ≤ +80 ở 2.0);
+chi tiết không ảnh mở bằng cùng tờ. Finish reviewer (context mới) **đọc mù dải cắt từ ảnh native trước packet**: hiên quán = «quán ăn ngoài trời dưới mái
+hiên, nồi tròn có nắp bốc khói, ngồi ghế đẩu», đồi = «điểm ngắm cảnh có lan can», chợ đêm đúng. `fix` năm điểm — cây
+treo không gọi tên được, lồng đèn = trứng, câu a11y kể đạo cụ bản gọn không vẽ và gọi «rèm» ở hiên quán, tờ ghi gọn
+mất dòng, thiếu test buộc câu a11y khớp lớp — sửa cả năm (chậu treo có thân và lá, lồng đèn nắp–thân–tua, bảng đạo cụ
+theo sân khấu và theo khung đọc, bản gọn là **tập con** của bản đủ, test «bỏ một tag làm câu đổi ⇔ làm hình đổi»),
+chụp lại, reviewer chấm **resolved cả năm**, `ship` trong phạm vi này.
+
+Chưa chứng minh: người ngoài đọc ra «quán nướng ngoài hiên» hay chỉ «có bàn có đèn» — cần người thật (bảng không
+nhãn `ky-hoa-trong-so/anh/r17-97-*`); live chưa có stack; máy thật; TalkBack (câu a11y có, chưa nghe).
+
+## Tổng kết lượt 3 (11/09) — đối chiếu bảng bàn giao của Codex
+
+| Mục Codex | PR | Kết quả | Còn để team |
+|---|---|---|---|
+| 1. Sửa R2 theo B11/B12, canary đỏ trên reset/dump/scale hỏng | #601 | `do-motion.sh` v3: chín điều kiện hợp lệ, exit 3/4/5, canary 16 nhánh (đỏ 11/16 trên v2), lượt thật 8/8 hàng | Đo release qua HTTPS local |
+| 2. Giữ các sửa UI đã đạt | — | Không mở lại R1/R3/R5/F45/R4 | — |
+| 3. Thử nghĩa không nhãn với người ngoài | — | Chưa làm (cần người thật); reviewer AI đọc mù chỉ là lớp lọc trước | F45, hai cảnh A2, **ký hoạ mới** (bảng không nhãn `ky-hoa-trong-so/anh/r17-97-*`) |
+| 4a. Stunning: Khám phá có cảm giác nơi chốn | PR D | Ký hoạ trong sổ ở lead và chi tiết không ảnh; cổng XML R3 giữ; khối dẫn +83/+61dp | Live có stack; người ngoài đọc «quán nướng hiên» hay chỉ «có bàn có đèn» |
+| 4b. Stunning: tương quan chất giấy ở tối | #603 | Sổ đóng trên bàn: vải nền (stddev 0.8–2.1 → 8.1–8.6), giấy đêm cho hình; thẻ/chữ giữ token; nền thực `#1c1f36` ghi vào DESIGN | Màn OLED thật; các màn tối khác chỉ đổi vân nền, chưa chụp hết |
+| A4 nút bình chọn | #602 | «Bình chọn» có chữ, viền trung tính; flow 06/65 vẫn bấm | Người ngoài phân biệt với «xem thống kê» |
+
+Ba bẫy mới ghi vào memory: ô vân «trung tính» nâng nền tối nhất +7 mức; `rudi-khong-hex` đọc cả comment và ruff format
+phải chạy SAU lần sửa cuối; chuỗi `cd apps/mobile && …` đứt khi cwd đã ở đó → build/test trên `dist-test` cũ.

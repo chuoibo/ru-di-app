@@ -39,6 +39,7 @@ import { Wordmark } from "../ui/Wordmark";
 import { Canh } from "../ui/art/Canh";
 import { MediaSlot } from "../ui/MediaSlot";
 import { GuGlyph } from "../ui/art/Gu";
+import { KyHoa } from "../ui/art/KyHoa";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { chonLyDo, guTheoTag } from "../kham-pha/ly-do";
 import { EmptyState } from "../ui/EmptyState";
@@ -72,6 +73,7 @@ function hienThiMau(place: DemoPlace, song: boolean): DiaDiemHienThi {
     // the reason instead of the seal when it has one.
     lyDo: !song && place.match >= 90 ? chonLyDo(place.tags, place.subtitle) : undefined,
     gu: guTheoTag(place.tags) ?? undefined,
+    tags: place.tags,
   };
 }
 
@@ -405,7 +407,9 @@ export function PlaceDetailScreen() {
         )}
         <View style={styles.detailContent}>
           <DemoBadge />
-          {place.anh ? null : <PlaceGlyph glyph={GLYPH[place.category]} gu={guTheoTag(place.tags) ?? undefined} loai={LOAI_MAU[place.category]} size={36} />}
+          {/* No photo: the same sketch the Explore lead showed opens here as the
+              head of the page — the kind of place, drawn; never a stand-in photo. */}
+          {place.anh ? null : <KyHoa loai={LOAI_MAU[place.category]} tags={place.tags} />}
           <Heading title={place.name} subtitle={place.subtitle} />
           {/* The three facts that decide, on the paper, each one text node. */}
           <Inline gap={14} wrap>
