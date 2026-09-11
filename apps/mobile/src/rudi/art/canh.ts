@@ -137,18 +137,31 @@ const NEN: Record<CanhId, () => LopVe[]> = {
       { d: netGay(rachManh), mau: "gap", net: 3 },
     ];
   },
-  // No message yet: an empty speech bubble whose tail lands ON THE MOUTH of the
-  // figure calling out (`goi-loi` at x0 -4, y0 16, scale 0.78: the mouth is at
-  // scene (30..41, 57..61), the tail tip at (41, 55)). Drawn before the figure,
-  // so the face covers the tip and the bubble is seen to come out of it. It
-  // used to sit beside a writing body -- the same body `chua-co-keo` writes
-  // with -- and read as a second plan sheet (audit 09/09, F45a).
+  // No message yet: an empty speech bubble whose tail points at the mouth of
+  // the figure calling out (`goi-loi` at x0 -4, y0 16, scale 0.78: the mouth
+  // sits at scene (31..41, 57..62), the sheet's right edge at x ≈ 51.5). The
+  // first version ran the tail UNDER the sheet to the mouth, so the sheet hid
+  // all of it and the bubble read as a sign with a dot (re-audit 10/09); the
+  // comics convention is the one that works -- the tail stops at the speaker's
+  // outline, its tip (53, 58) a step outside the sheet at mouth height, and
+  // every vertex of the bubble stays right of x 52 so nothing of it is covered.
+  // The bubble is empty: the word is not there yet, and a coral dot inside made
+  // it a board. It used to sit beside a writing body -- the same body
+  // `chua-co-keo` writes with -- and read as a second plan sheet (audit 09/09).
   "chua-co-tin-nhan": () => {
-    const than: readonly Diem[] = [[51, 45], [57, 11], [125, 15], [123, 57], [61, 59], [41, 55]];
+    // The body sits ABOVE the mouth line and the tail grows from its bottom
+    // edge, base well in from the corner (x 66..76), tip (53, 58) at mouth
+    // height a step outside the sheet. A tail cut out of the bubble's own
+    // corner read as a chamfered corner (finish review 11/09).
+    const than: readonly Diem[] = [[61, 10], [128, 13], [126, 47], [62, 49]];
+    const duoi: readonly Diem[] = [[66, 48.8], [53, 58], [76, 48.4]];
     return [
       { d: daGiac(than), mau: "giay" },
       { d: daGiac(than), mau: "muc", net: 2.2 },
-      { d: tron(91, 35, 3.4), mau: "gap" },
+      // Tail after the body: its paper covers the body outline along the base,
+      // and only its two outer edges are inked -- no line across the base.
+      { d: daGiac([[64.5, 47.6], [53, 58], [77.5, 47]]), mau: "giay" },
+      { d: netGay(duoi), mau: "muc", net: 2.2 },
     ];
   },
   // No invitation: an open envelope with nothing inside it yet.
@@ -177,22 +190,36 @@ const NEN: Record<CanhId, () => LopVe[]> = {
     { d: khungBo(110, 42, 9, 13, 3), mau: "gap" },
     { d: khungBo(110, 42, 9, 13, 3), mau: "muc", net: 1.8 },
   ],
-  // The filter hides everything: a mesh drawn across, with one gap left.
+  // The filter hides everything: a cover over a sheet, one cell still open.
+  // The first version was an OPEN grid (six shade-coloured rules on paper) plus
+  // a coral open ring on the one cell -- and the ring is the loading spinner
+  // of every app, so the scene read as «đang tải/đang tìm» (re-audit 10/09,
+  // R4). Now the cover is the shade (`bong`) and it covers SOMETHING: a sheet
+  // with text rules whose top-left strip stays visible; the one open cell is
+  // paper with a coral FRAME -- four straight sides, no arc anywhere (the test
+  // forbids a coral arc here as it does in the failure scene) -- and a fragment
+  // of a rule shows through it. The open cell sits at the near edge, level with
+  // the figure's eyes, and is the same place the hand braces: box (78, 44) of
+  // `ghe-nhin` at x0 -1, scale 0.76 → scene (58.3, 66.3) (finish review 09/09).
   "bo-loc-che-het": () => {
-    const khung: readonly Diem[] = [[52, 24], [126, 24], [126, 88], [52, 88]];
+    // Something is UNDER the cover: a sheet with four text rules, its top-left
+    // strip left uncovered so the rule ends show, then the shade panel over it
+    // with a light 2×2 mesh, and the one open cell letting a fragment of the
+    // middle rule through. A shade panel with a 4×4 mesh and nothing behind
+    // it read as a calendar / spreadsheet (finish review 11/09).
+    const to: readonly Diem[] = [[46, 18], [120, 18], [120, 86], [46, 86]];
+    const tam: readonly Diem[] = [[58, 28], [132, 28], [132, 96], [58, 96]];
     return [
-      { d: daGiac(khung), mau: "giay" },
-      { d: daGiac(khung), mau: "muc", net: 2.2 },
-      ...[38, 54, 70].map((y) => ({ d: netGay([[54, y], [124, y]] as const), mau: "bong" as const, net: 3 })),
-      ...[70, 88, 106].map((x) => ({ d: netGay([[x, 26], [x, 86]] as const), mau: "bong" as const, net: 3 })),
-      // The one square left open: the reason to lift a filter rather than give up.
-      // The open square sits at the NEAR edge, level with the figure's eyes,
-      // and it is the SAME place the hand braces: box (72, 26) of a figure at
-      // x0 -1, scale 0.76 → scene (53.7, 43.3). Out at x 97 it was across the
-      // panel from the head and the pose read as standing beside a screen
-      // (finish review 09/09).
-      { d: khungBo(50, 58, 18, 18, 2), mau: "giay" },
-      ...vongHo(59, 67, 12, { moTai: Math.PI * 0.7, net: 2.6 }),
+      { d: daGiac(to), mau: "giay" },
+      { d: daGiac(to), mau: "muc", net: 2.2 },
+      ...[32, 46, 60, 74].map((y) => ({ d: netGay([[52, y], [114, y]] as const), mau: "bong" as const, net: 3 })),
+      { d: daGiac(tam), mau: "bong" },
+      { d: netGay([[58, 62], [132, 62]]), mau: "giay", net: 1.6 },
+      { d: netGay([[95, 28], [95, 96]]), mau: "giay", net: 1.6 },
+      { d: daGiac(tam), mau: "muc", net: 2.2 },
+      { d: khungBo(58, 56, 18, 16, 1), mau: "giay" },
+      { d: netGay([[60, 60], [74, 60]]), mau: "bong", net: 3 },
+      { d: netGay([[58, 56], [76, 56], [76, 72], [58, 72], [58, 56]]), mau: "gap", net: 2.4 },
     ];
   },
 };

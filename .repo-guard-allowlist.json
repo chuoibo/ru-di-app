@@ -1990,6 +1990,94 @@
         "controlled-artifact"
       ],
       "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-sang.png",
+      "sha256": "fcac795c9bf58e9ab96487c8cf6e59944e6bc5f01696ddfbd687f18e3aeba672",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-toi.png",
+      "sha256": "7029d5569a062bc73a705f57dea71377844e7b7d0951859528257e705ade58a9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-sang.png",
+      "sha256": "ccce4791d7fcef5de5b2bdacebff133f76166e785751d68d3fc77ed4c6514e9b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-toi.png",
+      "sha256": "15832be94d43d04f9f872ede6fd76185c9e78d7fb6de3e72b2d15b3cfd91e18c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/tam-sticker-v2-sang.png",
+      "sha256": "8aca1f4ee1f55527f4c67e28874cfb6d9713e24431dae9156bf6645fe651aad0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-sang.png",
+      "sha256": "75c7d27b8a36ce562aa0276d88ab9146bcbea5c1ebf1546c686154f4b0134610",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-toi.png",
+      "sha256": "2fb2c8ac041bf0c1801dc0645b50596d99fa8a9f0f08527aa9814c243ca272d6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-sang.png",
+      "sha256": "834d741824efbd5419223e54defa19ed8ffc5b1be8d50d038dbe7f9ae58a376b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-toi.png",
+      "sha256": "893a3cd42363e4c29360d61e1d1f805049b7fc65808770b04e35995c5d9373df",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-sang.png",
+      "sha256": "c93cc927c0f827c13c3f046d6e25f852e428181b0bfa0173ce2baa86cfcba43d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-toi.png",
+      "sha256": "bd1c9fa7638ee3549c3a383c05f9e96ada417ea1f6b9d1ecf5cf9a22be47ab4f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     }
   ]
 }

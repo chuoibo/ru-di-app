@@ -118,6 +118,37 @@ tag lặp mô tả → sửa. Verdict pass: **ship** (trong phạm vi năm fix v
 và một dòng lý do (~90 px) nhưng mô tả mới dài hơn một dòng; mắt tìm tên → lý do → giá không đọc lại lời hứa — **đúng
 điều kiện của Codex**, không tuyên «ngắn hẳn».
 
+## PR 3 — F45 còn mở · R4: nghĩa hình vòng 2, đọc mù trước khi tin
+
+Codex đúng ở cả bốn: bus đọc ra kiosk vì là khối 27×59 **không bánh**; ba tờ xoè không có dấu tờ bạc nào; đuôi bong bóng
+là **đỉnh của cùng đa giác** nằm dưới tờ giấy Nếp (x 16…52) nên bị che trọn; lưới thoáng + `vongHo` coral = spinner.
+
+**Cách làm:** ứng viên bằng chính primitives, render cạnh bản cũ ở 64/120 sáng/tối, nhìn rồi chọn, ghi vào nguồn — rồi
+**reviewer Impeccable context mới đọc mù bảng không nhãn trước khi đọc packet**. Vòng mù đầu (v2) đánh trượt hai hình: đuôi
+cắt từ góc dưới-trái đọc ra «bảng có góc vạt», lưới tô đọc ra «bảng tính/lịch có ô được chọn»; xe nửa đạt («xe tải/xe đẩy»).
+Sửa hình học theo ba gợi ý rồi đọc mù lại (v3): xe → «kẹt sau đuôi xe buýt/van nhỏ, hai ô kính, đèn hậu»; bong bóng →
+«bong bóng thoại trống, đuôi trỏ về miệng — đang nói, chưa nói gì»; bộ lọc → «tấm che trên tờ giấy có chữ, một ô nhìn qua»;
+tiền → «tờ bạc/tiền mặt» (đạt từ v2). Phán quyết **ship** trong phạm vi bốn fix.
+
+**Hình học chốt (`docs/claude/2026-09-11/nghia-hinh-v2/README.md`):**
+- «Kẹt xe»: Nếp 0.66/x0 −9 (khung xe máy co theo `k`), đuôi xe buýt **rộng hơn cao** (≈42×38), **hai ô kính** `bong`, hai bánh
+  mực trên `CHAN_NEP`, **một** vạch đèn hậu coral — ngoại lệ ngân sách coral có ghi lý do (một vạch nói «đuôi xe»; hai chấm
+  từng bị loại vì thành mặt).
+- «Trả tiền nè»: tờ trên có **ô bầu dục** `bong` (chân dung) + **khung đôi** (chỉ ở 120) — hai dấu mọi tờ bạc có mà vé không
+  có; không xu/tick/ký hiệu tiền/QR/ngân hàng (ADR-0021 giữ).
+- `chua-co-tin-nhan`: thân bong bóng đặt cao hơn miệng, đuôi là **tam giác riêng mọc từ cạnh đáy**, mũi (53,58) ở độ cao miệng
+  ngoài mép tờ giấy; bong bóng **trống**, bỏ chấm coral (chấm làm nó thành bảng).
+- `bo-loc-che-het`: **bỏ `vongHo`** (quyết định của Codex); «che» có **cái bị che** — tờ bốn dòng chữ, tấm che `bong` lệch để lộ
+  đầu dòng, lưới 2×2, một ô hở viền coral bốn nét thẳng lộ mẩu dòng chữ.
+
+**Cổng cơ chế (không phải nghĩa):** cấm cung coral ở cả `chua-doc-duoc` và `bo-loc-che-het`; mọi đỉnh bong bóng ≥ x 52 và
+đỉnh trái nhất ở độ cao miệng; `ket-xe` ≥ 4 hình tròn tô; `tra-tien-ne` có ô bầu dục `line`, không teal. 21/21 art+sticker,
+vocabulary test, npm test 795/795. Trên máy: khay 64 và cảnh ui-lab (`nghia-hinh-v2/native/`).
+
+**Chưa chứng minh:** người chưa đọc brief đọc bảng không nhãn (`khong-nhan-v2-{sang,toi}.png` — 4 sticker + 4 cảnh, hai
+sticker và hai cảnh không đổi làm đối chứng) — vẫn cần con người; iOS; khay 2.0 (flow bàn thử 71 đỏ ở bước cuộn ở 2.0, có
+từ r13).
+
 ## Cố ý không làm trong lượt này
 
 - Đo release qua HTTPS (Codex chọn HTTPS): việc dựng stack sau TLS là một lượt riêng; tầng 1 v2 đủ để đóng R2 về
