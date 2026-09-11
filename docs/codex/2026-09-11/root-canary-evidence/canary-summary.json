@@ -1,0 +1,172 @@
+[
+  {
+    "case": "normal",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/normal"
+  },
+  {
+    "case": "maestro-failed",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 1,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/maestro-failed"
+  },
+  {
+    "case": "pid-change",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/pid-change"
+  },
+  {
+    "case": "pid-missing",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/pid-missing"
+  },
+  {
+    "case": "pid-malformed",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/pid-malformed"
+  },
+  {
+    "case": "frames-zero",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/frames-zero"
+  },
+  {
+    "case": "dump-empty",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/dump-empty"
+  },
+  {
+    "case": "dump-malformed",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/dump-malformed"
+  },
+  {
+    "case": "reset-failed",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/reset-failed"
+  },
+  {
+    "case": "put-failed",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/put-failed"
+  },
+  {
+    "case": "restore-failed",
+    "exit": 0,
+    "scale_after": {
+      "window_animation_scale": "0",
+      "transition_animation_scale": "0",
+      "animator_duration_scale": "0"
+    },
+    "restored": false,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/restore-failed"
+  },
+  {
+    "case": "original-empty",
+    "exit": 1,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "0"
+    },
+    "restored": false,
+    "maestro_calls": 5,
+    "valid_rows": 4,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/original-empty"
+  },
+  {
+    "case": "interrupt",
+    "exit": 130,
+    "scale_after": {
+      "window_animation_scale": "0.5",
+      "transition_animation_scale": "1.5",
+      "animator_duration_scale": "2"
+    },
+    "restored": true,
+    "maestro_calls": 2,
+    "valid_rows": 0,
+    "temp_dir": "/tmp/rudi-sep11-b-canary-hhoupdjo/interrupt",
+    "maestro_calls_at_interrupt_expected": 2
+  }
+]

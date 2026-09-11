@@ -1,53 +1,132 @@
 #!/usr/bin/env bash
-# Self-test of do-motion.sh's exit code, with a fake `adb` and a fake `maestro`
-# on PATH and no device touched (re-audit 10/09, B1: the v1 runner exited 0 with
-# every Maestro flow red and every frame count «?»).
+# Self-test of do-motion.sh's exit codes with a fake `adb` and a fake `maestro`
+# on PATH; no device is touched (re-audit 10/09 B1; review 11/09 B11/B12).
 #
 #   docs/claude/2026-09-10/motion/do-motion-canary.sh
 #
-# Case ĐỎ: maestro exits 42 → do-motion.sh MUST exit non-zero.
-# Case XANH: maestro exits 0 and the dump is a real gfxinfo capture from the repo
-#            → do-motion.sh MUST exit 0 and print a numeric row.
-# A canary that cannot make the runner red proves the gate does not bite.
+# Every red branch must make the runner exit with the documented non-zero code
+# AT THE END of the run, and the two green controls (a real gfxinfo capture from
+# the repo, originals 0.5 / 1.5 / 2) must exit 0 with four numeric rows and the
+# originals written back. The fake adb keeps the scales in a state file so the
+# canary can also count `settings put` calls and read what was left behind.
+# A canary that cannot make the runner red proves the gate does not bite; a
+# canary that only tests red cannot see a gate that blocks the happy path — so
+# a real run on the emulator is still required before the table is trusted.
 set -u -o pipefail
 DAY="$(cd "$(dirname "$0")" && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/bin"
-DUMP="$DAY/dev-client/thuong/m1-doi-tab.gfxinfo.txt"
+DUMP="$DAY/dev-client-v2/thuong/m1-doi-tab.gfxinfo.txt"
 [ -f "$DUMP" ] || { echo "thiếu dump mẫu $DUMP" >&2; exit 2; }
+# The fake pidof answers with the pid in the dump's own header, so the green
+# control proves the pid-in-dump check passes on real data.
+PID_DUMP="$(grep -m1 -oE 'for pid [0-9]+' "$DUMP" | grep -oE '[0-9]+')"
+[ -n "$PID_DUMP" ] || { echo "dump mẫu không có header pid" >&2; exit 2; }
 
 cat > "$T/bin/adb" <<'ADB'
 #!/usr/bin/env bash
-# Fake adb: settings get → 1; pidof → a constant (or a new value every call when
-# CANARY_PID_DOI=1); gfxinfo → the sample dump (or one with 0 frames when
-# CANARY_KHUNG_0=1); everything else → nothing.
-case "$*" in
-  *"settings get"*) echo 1 ;;
-  *"pidof"*) if [ "${CANARY_PID_DOI:-0}" = 1 ]; then echo $((4242 + RANDOM)); else echo 4242; fi ;;
-  *"dumpsys gfxinfo"*" reset"*) : ;;
-  *"dumpsys gfxinfo"*) if [ "${CANARY_KHUNG_0:-0}" = 1 ]; then sed 's/^Total frames rendered: .*/Total frames rendered: 0/' "$CANARY_DUMP"; else cat "$CANARY_DUMP"; fi ;;
-  *) : ;;
+# Fake adb. State (scales, counters) lives in $CANARY_STATE as key=value lines,
+# last line wins; every call is appended to $CANARY_CALLS.
+st="$CANARY_STATE"; echo "adb $*" >> "$CANARY_CALLS"
+get() { grep "^$1=" "$st" | tail -1 | cut -d= -f2-; }
+put() { printf '%s=%s\n' "$1" "$2" >> "$st"; }
+case "${1:-} ${2:-} ${3:-} ${4:-}" in
+  "shell settings get global")
+    if [ "$CANARY_MODE" = goc-rong ] && [ "$5" = animator_duration_scale ] && ! grep -q '^da_put=' "$st"; then echo; exit 0; fi
+    get "$5"; exit 0 ;;
+  "shell settings put global")
+    put da_put 1
+    [ "$CANARY_MODE" = put-hong ] && [ "$6" = 0 ] && { echo "permission denied"; exit 1; }
+    [ "$CANARY_MODE" = tra-hong ] && [ "$6" != 0 ] && { echo "permission denied"; exit 1; }
+    put "$5" "$6"; exit 0 ;;
 esac
+case "${1:-} ${2:-}" in
+  "shell pidof")
+    n=$(( $(get pid_calls) + 1 )); put pid_calls "$n"
+    case "$CANARY_MODE" in
+      pid-rong) echo ;; pid-sai) echo pid-not-known ;; pid-doi) echo $((CANARY_PID + n)) ;; *) echo "$CANARY_PID" ;;
+    esac; exit 0 ;;
+  "shell dumpsys")
+    if [ "${5:-}" = reset ]; then [ "$CANARY_MODE" = reset-hong ] && exit 1; exit 0; fi
+    case "$CANARY_MODE" in
+      khung-0)       sed 's/^Total frames rendered: .*/Total frames rendered: 0/' "$CANARY_DUMP" ;;
+      dump-rong)     : ;;
+      dump-thieu)    echo "Total frames rendered: 12" ;;
+      dump-pid-khac) sed "s/for pid $CANARY_PID /for pid $((CANARY_PID + 1)) /" "$CANARY_DUMP" ;;
+      hist-lech)     sed 's/^HISTOGRAM: 5ms=0/HISTOGRAM: 5ms=1/' "$CANARY_DUMP" ;;
+      *)             cat "$CANARY_DUMP" ;;
+    esac; exit 0 ;;
+esac
+exit 0
 ADB
 cat > "$T/bin/maestro" <<'MAE'
 #!/usr/bin/env bash
-exit "${CANARY_MAESTRO_RC:-0}"
+echo "maestro $*" >> "$CANARY_CALLS"
+n="$(grep -c '^maestro ' "$CANARY_CALLS")"
+# `ngat`: interrupt the runner (grandparent: fake maestro ← timeout ← do-motion.sh) during the second flow.
+if [ "$CANARY_MODE" = ngat ] && [ "$n" = 2 ]; then kill -INT "$(ps -o ppid= -p "$PPID" | tr -d ' ')"; sleep 0.3; fi
+[ "$CANARY_MODE" = maestro-42 ] && exit 42
+exit 0
 MAE
 chmod +x "$T/bin/adb" "$T/bin/maestro"
-export CANARY_DUMP="$DUMP"
-export ANDROID_HOME="$T/no-sdk"   # keep the real platform-tools off PATH's front
+export CANARY_DUMP="$DUMP" CANARY_PID="$PID_DUMP" ANDROID_HOME="$T/no-sdk"
 
-chay() { # <label> <maestro rc> ; prints runner rc
-  local nhan="$1" rc="$2" ra="$T/ra-$1"
-  PATH="$T/bin:$PATH" CANARY_MAESTRO_RC="$rc" bash "$DAY/do-motion.sh" "$ra" thuong > "$T/$nhan.out" 2>&1
-  echo $?
+GOC_W=0.5; GOC_T=1.5; GOC_A=2
+chay() { # <mode> <thuong|reduce> → sets rc, hop_le, maestro, puts, scale
+  local mode="$1" che="$2"
+  export CANARY_MODE="$mode" CANARY_STATE="$T/$mode.state" CANARY_CALLS="$T/$mode.calls"
+  printf 'window_animation_scale=%s\ntransition_animation_scale=%s\nanimator_duration_scale=%s\npid_calls=0\n' "$GOC_W" "$GOC_T" "$GOC_A" > "$CANARY_STATE"
+  : > "$CANARY_CALLS"
+  PATH="$T/bin:/usr/bin:/bin" bash "$DAY/do-motion.sh" "$T/ra-$mode" "$che" > "$T/$mode.out" 2>&1
+  rc=$?
+  hop_le="$(grep -E '^\| m' "$T/$mode.out" | grep -vc 'KHÔNG HỢP LỆ' || true)"
+  hoi="$(grep -E '^\| m' "$T/$mode.out" | grep -v 'KHÔNG HỢP LỆ' | grep -c '?' || true)"
+  maestro="$(grep -c '^maestro ' "$CANARY_CALLS" || true)"
+  puts="$(grep -c '^adb shell settings put ' "$CANARY_CALLS" || true)"
+  local w t a
+  w="$(grep '^window_animation_scale=' "$CANARY_STATE" | tail -1 | cut -d= -f2)"
+  t="$(grep '^transition_animation_scale=' "$CANARY_STATE" | tail -1 | cut -d= -f2)"
+  a="$(grep '^animator_duration_scale=' "$CANARY_STATE" | tail -1 | cut -d= -f2)"
+  if [ "$w/$t/$a" = "$GOC_W/$GOC_T/$GOC_A" ]; then scale=goc; elif [ "$w/$t/$a" = "0/0/0" ]; then scale=0; else scale="$w/$t/$a"; fi
 }
-do_rc="$(chay do 42)"; xanh_rc="$(chay xanh 0)"
-pid_rc="$(CANARY_PID_DOI=1 chay pid 0)"; khung_rc="$(CANARY_KHUNG_0=1 chay khung 0)"
-doc() { [ "$1" != 0 ] && echo '→ đúng, cổng chặn' || echo '→ SAI: cổng cho qua'; }
-echo "canary ĐỎ  (maestro exit 42):        do-motion.sh exit $do_rc  $(doc "$do_rc")"
-echo "canary ĐỎ  (pid đổi giữa chuỗi):      do-motion.sh exit $pid_rc  $(doc "$pid_rc")"
-echo "canary ĐỎ  (Total frames rendered 0): do-motion.sh exit $khung_rc  $(doc "$khung_rc")"
-echo "canary XANH (maestro exit 0, dump thật): do-motion.sh exit $xanh_rc  $( [ "$xanh_rc" = 0 ] && echo '→ đúng' || echo '→ SAI: cổng chặn nhầm')"
-grep -E '^\| m' "$T/xanh.out" | head -2
-[ "$do_rc" != 0 ] && [ "$pid_rc" != 0 ] && [ "$khung_rc" != 0 ] && [ "$xanh_rc" = 0 ]
+
+# mode · run mode · expected: rc · valid rows · maestro calls · put calls · scales left (goc|0|*)
+BANG='
+xanh          reduce 0   4 5 * goc
+xanh-thuong   thuong 0   4 5 0 goc
+maestro-42    reduce 1   0 1 * goc
+pid-doi       reduce 1   0 5 * goc
+pid-rong      reduce 1   0 1 * goc
+pid-sai       reduce 1   0 1 * goc
+khung-0       reduce 1   0 5 * goc
+dump-rong     reduce 1   0 5 * goc
+dump-thieu    reduce 1   0 5 * goc
+dump-pid-khac reduce 1   0 5 * goc
+hist-lech     reduce 1   0 5 * goc
+reset-hong    reduce 1   0 1 * goc
+goc-rong      reduce 3   0 0 0 goc
+put-hong      reduce 4   0 0 * goc
+tra-hong      reduce 5   4 5 * 0
+ngat          reduce 130 0 2 * goc
+'
+loi=0; LY_DO=''
+printf '%-14s %-7s | %-9s %-7s %-10s %-6s %-9s | %s\n' nhánh chếđộ 'exit' 'hợp lệ' maestro put 'scale sau' 'kết'
+while read -r mode che e_rc e_hl e_ma e_put e_sc; do
+  [ -n "$mode" ] || continue
+  chay "$mode" "$che"
+  ket=đúng
+  [ "$rc" = "$e_rc" ] || ket="SAI exit"
+  [ "$hop_le" = "$e_hl" ] || ket="SAI hợp lệ"
+  [ "$maestro" = "$e_ma" ] || ket="SAI maestro"
+  [ "$e_put" = '*' ] || [ "$puts" = "$e_put" ] || ket="SAI put"
+  [ "$scale" = "$e_sc" ] || ket="SAI scale"
+  [ "$hoi" = 0 ] || ket="SAI: hàng hợp lệ có «?»"
+  [ "$ket" = đúng ] || loi=1
+  printf '%-14s %-7s | %-3s→%-5s %-1s→%-5s %-1s→%-8s %-6s %-9s | %s\n' "$mode" "$che" "$e_rc" "$rc" "$e_hl" "$hop_le" "$e_ma" "$maestro" "$puts" "$scale" "$ket"
+  # what the runner SAID about the failure — the reason must be legible in the table, not only in the exit code
+  ly_do="$(grep -m1 -oE 'KHÔNG HỢP LỆ \([^)]*\)' "$T/$mode.out" || grep -m1 -E 'không|KHÔNG' "$T/$mode.out" || true)"
+  [ "$e_rc" = 0 ] || LY_DO+="$(printf '%-14s %s\n' "$mode" "${ly_do:-(không in lý do — kết thúc bằng mã $rc)}")"$'\n'
+done <<< "$BANG"
+echo; echo "lý do runner in ra ở từng nhánh đỏ:"; printf '%s' "$LY_DO"
+echo; echo "hàng xanh mẫu:"; grep -E '^\| m1' "$T/xanh.out"
+[ "$loi" = 0 ] && echo "CANARY XANH: 16 nhánh đúng kỳ vọng" || { echo "CANARY ĐỎ: có nhánh sai kỳ vọng" >&2; exit 1; }
