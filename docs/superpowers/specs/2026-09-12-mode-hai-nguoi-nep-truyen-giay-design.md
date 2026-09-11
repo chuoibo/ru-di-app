@@ -1,0 +1,844 @@
+# Spec: Mode hai người — «Nếp truyền giấy»
+
+Ngày: 2026-09-12
+Trạng thái: **BẢN THIẾT KẾ CHỜ SOÁT** — chưa phải quyết định đã chốt, chưa phải giấy phép viết code (xem mục 16).
+Nguồn: tầm nhìn của Lead (phiên 2026-09-12) về «couple mode» cho đôi lâu năm, cộng bản vision của team về Relationship Twin; bốn vòng thu hẹp trong cùng phiên.
+Phạm vi sở hữu: phần màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route là của Codex và **phải mở ADR trước** (mục 9.3).
+
+---
+
+## 0. Tóm tắt điều hành
+
+Rủ Đi thêm **một loại quan hệ**, không thêm một app thứ hai: hai người có thể nâng cuộc nhắn riêng của mình thành **sổ của hai người**, và nhân vật Nếp đổi việc trong đó.
+
+Bốn phát hiện định hình toàn bộ thiết kế:
+
+**① Đôi lâu năm không thiếu thông tin. Họ thiếu người chịu trách nhiệm.**
+«Hôm nay ăn gì?» không phải câu hỏi tìm quán. Nó là **cú đẩy trách nhiệm**: ai quyết thì người đó chịu nếu chỗ đó dở. TikTok, Google Maps và ChatGPT đều đã giải xong bài thông tin. Không ai giải bài trách nhiệm. Suy ra: với đôi lâu năm, sản phẩm **không phải cái máy gợi ý, mà là một quyết định đã xảy ra rồi** — app chọn, nên không ai trong hai người phải là tác giả của lựa chọn đó.
+
+**② Cái nam thiếu không phải gu, mà là bộ nhớ và sự chủ động.**
+Người kia đã nói ra hết rồi: nói trong chat, lưu một cái quán, buột miệng ba tuần trước. Anh ấy **có nghe**, chỉ là không giữ lại. Nên việc đầu tiên của Nếp không phải đoán gu, mà là **không cho những câu đó bay mất**.
+
+**③ Nói ra thì thành đòi hỏi.**
+Người kia không giấu gu. Vấn đề là «em muốn đi chỗ yên tĩnh» nghe như đang phê bình mấy chỗ đã chọn trước đó. Nên Nếp phải là **người thứ ba mà người ta nói được**, để không phải nói thẳng với nhau. Đây là lý do bản «Nếp hỏi công khai» cho ra **nhiều** thông tin hơn bản «Nếp thu thập ngầm», chứ không ít hơn.
+
+**④ Trung bình hai cái gu ra đúng buổi tối tệ nhất.**
+Trộn hai vector sở thích rơi vào thung lũng giữa hai đỉnh: chỗ nào cũng tàm tạm, chẳng ai thích thật. Cách đúng là **chia lượt trong cùng một buổi**, không phải lấy trung bình (mục 4.5).
+
+**Mức độ chắc chắn.** Cả bốn phát hiện là **luận đề chưa có bằng chứng hành vi**, và ADR-0006 vẫn đang gác Giai đoạn 0. Phát hiện ① là giả định số một: nếu người ta thật ra muốn tự chọn, toàn bộ cơ chế «kèo tự tới» sai. Mục 13 tồn tại để đo nó với một tiêu chí giết viết trước.
+
+---
+
+## 1. Câu chuyện
+
+Mục này là phần dài nhất **có chủ ý**. Mọi cơ chế ở mục 4, 5, 6 đều suy ra được từ đây; nếu một cơ chế không suy ra được từ câu chuyện thì nó là feature vay của app khác và phải bị cắt.
+
+### 1.1 Rủ Đi là một hành động, không phải một danh mục
+
+Tên app không nói về du lịch, không nói về ăn uống, không nói về hẹn hò. Nó là **một câu người Việt nói với nhau mỗi tuần**:
+
+> «Đi đâu không?»
+
+Ba chữ đó có một tính chất lạ: **nói ra là đã mất gì đó rồi.** Người rủ tự đặt mình vào chỗ có thể bị từ chối, và tự nhận trách nhiệm cho cái chỗ sắp tới. Nên càng thân lâu, càng ít ai rủ. Không phải vì hết muốn đi, mà vì hết muốn là người rủ.
+
+Việc của app, nói cho gọn nhất: **nhận lấy phần mất mát của câu rủ.**
+
+### 1.2 Nếp hiện tại: một nếp gấp trong cuốn sổ của cả hội
+
+Trong hệ hình ảnh v2 (ADR-0020) và ba đợt bản sắc sau đó, app không phải cái màn hình mà là **một cuốn sổ chuyến đi của cả hội**: ngày là **trang giấy mở**, đêm là **sổ đóng lại trên bàn, tờ giấy nằm trên bìa vải**. Nơi nào chưa có ảnh thì có **một nét ký hoạ vẽ vội** cạnh tên, như người ta vẽ vào sổ.
+
+Nếp là nhân vật của cuốn sổ đó: **một nếp gấp của giấy**. Nó không có mặt, không có mắt, không nói chuyện thành tiếng. Nó là chỗ tờ giấy gập lại — nên nó vốn đã mang hai tính chất mà không cần giải thích: **nó giữ được cái gì đó bên trong**, và **nó mở ra được**.
+
+Ở hội bạn, Nếp là **một trang**. Nhiều người viết vào, ai cũng đọc được, và việc của Nếp là hứng chữ.
+
+### 1.3 Sổ của hai người thì mỏng
+
+Đây là chỗ chuyển của câu chuyện, và nó phải là **một sự kiện có thật trong app**, không phải một lời giới thiệu.
+
+Khi hai người quyết định có một cuốn sổ riêng, sổ ấy mỏng đi: không còn sáu người viết vào, chỉ còn hai. Nên **Nếp tự gấp mình lại nhỏ bằng lòng bàn tay**, để nằm được trong túi áo. Và nó đổi việc:
+
+> Ở hội, Nếp là **trang giấy**.
+> Ở hai người, Nếp là **mảnh giấy gấp được truyền tay**.
+
+Hình này không phải ẩn dụ đi vay. Nó là vật mà người Việt nào cũng có trong ký ức: **mảnh giấy gấp vuông truyền dưới bàn, trong lớp học.** Nó nhỏ, nó riêng, nó không phải tin nhắn — tin nhắn thì gửi xong là xong, còn mảnh giấy thì **có người mang đi**, và **có lúc mở**.
+
+### 1.4 Ba tính chất của tờ giấy gấp là ba tầng sản phẩm
+
+Cả mode chỉ có **một vật**: giấy gấp. Ba tính chất của nó sinh ra đúng ba tầng tính năng, và không tầng thứ tư nào được phép mọc ra.
+
+| Tính chất | Nghĩa trong quan hệ | Tầng sản phẩm |
+|---|---|---|
+| **Nếp gấp lại thì không ai đọc được** | có thứ chưa tới lúc; có món quà đang chuẩn bị | **riêng tư**: túi riêng, trang sổ riêng |
+| **Nếp mở ra đúng lúc** | đúng thời điểm quan trọng hơn nội dung | **thân mật**: mảnh giấy, hẹn mở, thư gửi năm sau |
+| **Nếp giữ được chữ viết tay** | thứ viết hôm nay là quà cho hai người của năm sau | **hiểu nhau**: hai quyển sổ, ôn thẻ, giấy cũ quay lại |
+
+Và vì Nếp là cái **đi lại giữa hai người**, nó có một vị trí kiến trúc rất rõ:
+
+```text
+      Sổ về em                  Nếp                   Sổ về anh
+      (một người giữ)      truyền tay, giữ giùm      (người kia giữ)
+            │                     │                        │
+            └──── đọc bên này, hỏi bên kia, mang trang qua ─┘
+```
+
+Nếp giữ đúng **ba** thứ, và việc giới hạn ở ba là một quyết định thiết kế:
+
+1. **mảnh giấy** hai người gửi nhau,
+2. **cái kèo tuần này**,
+3. **một cái túi mà chỉ một người mở được**.
+
+### 1.5 Vì sao mode này phải khác hội bạn, chứ không phải hội bạn thu nhỏ
+
+Bốn khác biệt cấu trúc, mỗi cái giết một feature của hội bạn nếu bê nguyên sang:
+
+| | Hội bạn | Hai người |
+|---|---|---|
+| Số ý kiến mỗi buổi | sáu | hai |
+| Cách ra quyết định | **bình chọn** hợp lý | bình chọn giữa hai người là **một cuộc thương lượng**, không phải bầu cử |
+| Ai tham gia | ai cũng phần nào | **một người lo gần hết** — và sau nhiều năm điều này đã đóng cứng |
+| Chỗ dở thì sao | câu chuyện cười | «anh chọn chỗ dở» |
+| Tiền | chia bill, ai nợ ai | sổ nợ giữa hai người là **phản cảm**; đúng hình là **chi tiêu chung** |
+| Dữ liệu sinh ra | nhiều, nhanh | **ít** — khoảng bốn buổi một tháng |
+
+Hàng cuối là cái bẫy lớn nhất của bản vision gốc: mode được gọi là moat lại chính là mode **đói dữ liệu nhất**. Lời giải không phải mô hình giỏi hơn, mà là **đừng suy ra, hãy hỏi và hãy ghi** (mục 4.1, mục 6).
+
+Hàng «chỗ dở thì sao» là lý do mọi cơ chế trong mode này phải **sai rẻ**: một cú bấm đổi, không kèm lời xin lỗi.
+
+### 1.6 Vì sao đôi lâu năm, không phải couple nói chung
+
+Bản vision gốc viết cho couple năm nhất. Dấu hiệu nằm ở con số: **một buổi khoảng tám trăm nghìn**. Đôi năm thứ năm không chi như thế mỗi cuối tuần; họ đi **nhiều hơn, rẻ hơn, gần hơn**, và phần lớn buổi là «ăn gì đó rồi về». Mọi mặc định của mode phải theo đối tượng thật: **ngân sách thấp hơn, bán kính nhỏ hơn, tần suất cao hơn, và kỳ vọng mới lạ thì cao hơn** (vì họ đi hết chỗ quen rồi).
+
+Ba việc họ không tự làm được, lấy nguyên văn theo Lead:
+
+1. **không tìm được quán mới**,
+2. **không có sự đổi mới**,
+3. **không tự lên routine**.
+
+Cả ba đều là việc app làm thay, và mục 4.3–4.6 là câu trả lời cho từng cái. Đặc biệt (3): **routine chính là sản phẩm**, không phải một tính năng phụ.
+
+### 1.7 Vật liệu và hình
+
+Tiếp nối cái đã ship, không mở hệ hình ảnh thứ hai:
+
+| | Vật liệu | Đã có |
+|---|---|---|
+| Ngày, hội bạn | trang giấy mở, vân giấy | đã ship |
+| Đêm, hội bạn | sổ đóng trên bàn: vân vải làm nền, hình vẽ là giấy đêm | đã ship (PR #603) |
+| **Hai người** | **mảnh giấy gấp trong túi áo**: nhỏ hơn, có vết gấp, hơi cũ mềm | **mới** |
+
+Khớp đẹp nhất của mode này: ở hội, Nếp là *một nếp gấp trong cuốn sổ*; ở hai người, **cả màn hình là một mảnh giấy gấp, và Nếp chính là đường gấp đó**. Đường gấp thành chữ ký thị giác — cùng token, cùng mực, cùng nét ký hoạ, **không** thêm hệ màu, **không** thêm bộ icon.
+
+Chi tiết hình học để lượt sau đo: tờ giấy hai người **hẹp hơn** tờ của hội (mảnh giấy gấp vuông), có **hai vết gấp** chia ba phần dọc — và ba phần đó trùng đúng ba chặng của một buổi đi (mục 4.5), nên bố cục mang nghĩa chứ không trang trí.
+
+### 1.8 Một câu
+
+> **Không ai rủ ai nữa. Để Nếp truyền giấy.**
+
+---
+
+## 2. Hai vai
+
+Không phải hai tính cách, không phải hai theme. Là **hai việc khác nhau trong cùng một buổi đi, mỗi người một việc, không ai làm cả hai.**
+
+Tên trong sản phẩm: **Người lo** và **Người chấm**. Hai chữ này là tiếng Việt đời thường («anh lo hết», «em chấm chỗ này»), nên không cần ai học.
+
+### 2.1 Người lo
+
+Năm việc. Bốn trong năm là **việc hiểu người kia** — đây là lý do một trợ lý có chỗ đứng ở vai này.
+
+| Việc | Thất bại thường gặp | Nếp gánh phần nào | Cơ chế |
+|---|---|---|---|
+| **Quyết** chỗ | né quyết, đẩy lại «em muốn gì?» | phác sẵn cả buổi, chỉ sửa một thứ | 4.1, 4.2 |
+| **Lo hậu cần**: đặt chỗ, mở cửa không, đi bằng gì | quên, tới thì đóng | nhắc trước một ngày | 4.1 |
+| **Nhớ**: người kia từng nói muốn thử chỗ nào | **thất bại nặng nhất** | giữ hộ, không cho bay mất | 6.3, 6.4 |
+| **Để ý**: hôm nay muốn ồn hay yên | đoán sai | hỏi giùm từ đầu tuần | 6.4 |
+| **Chủ động**: rủ mà không bị đòi | im ba tuần | trao lượt rủ kèm kèo làm sẵn | 4.2 |
+
+### 2.2 Người chấm
+
+Phải nói rõ **vai này được gì**, không thì mode một chiều, người ở vai này không mở app, và cơ chế chết vì thiếu một nửa.
+
+| Việc | Được gì |
+|---|---|
+| **Nói ra** — nhưng nói với Nếp, không phải đòi người kia | muốn cái gì mà không biến thành yêu cầu |
+| **Chấm** — chọn đúng một chi tiết: món tráng miệng, nhạc, chỗ đi sau | góp phần mà không phải lên kế hoạch |
+| **Phán** sau buổi: thích / thôi khỏi | lần sau tốt lên thật |
+| **Ghim** một trang vào sổ người kia | nhắc mà không thành nhắc dai |
+| **Gửi giấy** | phần thân mật |
+
+Câu tóm lại phần thưởng của vai này: **được muốn thành tiếng mà không thành đòi hỏi, và được ngạc nhiên bởi một người bỗng nhớ hết mọi thứ.**
+
+### 2.3 Gán vai và đổi vai
+
+- Lúc gấp giấy, **mặc định** gán **Người lo** cho người khởi xướng nghi thức, vì người khởi xướng thường là người lâu nay vẫn lo.
+- Vai **đổi được** trong Cài đặt của sổ, và **gậy đổi lượt hàng tuần** (4.2) vẫn luân phiên bất kể ai giữ vai.
+- Vai **không** lưu theo giới tính. Lý do kỹ thuật, không phải lý do khác: cơ chế cốt lõi là **chuyển cái gậy sang người lâu nay không cầm**, nên chủ thể phải là *người đang giữ vai*, không phải một cột giới tính. Một cột giới tính còn làm mọi truy vấn sai với những đôi mà người lo là người còn lại.
+
+### 2.4 Hai giọng của Nếp
+
+Luật, không phải hướng dẫn viết câu:
+
+> **Với Người lo, Nếp nói bằng gợi ý.**
+> **Với Người chấm, Nếp nói bằng câu hỏi.**
+
+Hệ quả bắt buộc:
+
+- Nếp **không** kể cho Người chấm biết Người lo đang chuẩn bị gì (chết phần bất ngờ).
+- Nếp **không** đưa Người lo nguyên văn lời Người chấm (Người lo thành thụ động, Người chấm thành bị soi). Chỉ đưa **một gợi ý đã gói lại**: «đang muốn yên tĩnh», không phải bản ghi.
+
+### 2.5 Không biên nhận
+
+Cơ chế nhỏ nhất trong doc này và là cơ chế quan trọng nhất về mặt cảm xúc.
+
+Khi Người chấm trả lời câu hỏi tuần của Nếp, người ấy **biết** câu trả lời sẽ tới tay người kia. Nhưng:
+
+> **Người chấm không thấy biên nhận.** Không biết người kia đã xem chưa, có chọn theo không, lúc nào.
+
+Nên khi thứ Bảy người kia xuất hiện với một chỗ yên tĩnh và đúng cái món đã nhắc, **nó vẫn giống như người ấy tự nhớ**. Có nói với Nếp, nhưng không phải người sắp xếp. Đôi nào cũng ngầm muốn giữ đúng khoảng mờ đó, và đây là chỗ khoảng mờ ấy sống.
+
+Cái bị ẩn là **thời điểm và cách gói**, không bao giờ là **việc Nếp có hỏi**. Bản ngầm hoàn toàn thì được thêm vài tuần rồi vỡ đúng một lần và vỡ hẳn: người ấy nhận ra app là thứ đã đi báo cho người kia, và mất cả hai người cùng lúc.
+
+---
+
+## 3. Vào mode và ra khỏi mode
+
+### 3.1 Vào là một nghi thức, không phải cái nút
+
+Không có switch `Hội bạn | Hai người` ở tầng app. Có **một mảnh giấy phải hai người cùng gấp**: một người gấp nửa đầu và gửi, người kia gấp nửa sau.
+
+Ba thứ được giải bằng một cử chỉ:
+
+1. **Consent hai chiều, tường minh.** Không ai bị kéo vào. Đây là điều kiện bắt buộc, xem mục 10.
+2. **Khoảnh khắc cảm xúc lúc onboard** — thay cho một trang giới thiệu tính năng.
+3. **Một mốc ngày có thật** để sau này Nếp nhắc «hai bạn gấp mảnh giấy đầu tiên ngày …».
+
+Lời mời gấp giấy **hết hạn** (đề xuất: bảy ngày) và **không nhắc lại**. Một lời mời loại này bị nhắc lần thứ hai là một áp lực.
+
+### 3.2 Ra là mở giấy ra
+
+Một cử chỉ đối xứng và có thật: **mở mảnh giấy ra**. Không phải dialog «xoá quan hệ?».
+
+Luật sau khi mở giấy, cần Lead chốt ở mục 14:
+
+- Sổ hai người **đóng lại**, không xoá. Quan hệ trở về cuộc nhắn riêng bình thường (`pair` như hiện nay).
+- **Sổ về người kia** của mỗi người là của người ấy: giữ nguyên, riêng như cũ.
+- **Mảnh giấy đã mở** thuộc cả hai, giữ nguyên. **Mảnh giấy chưa tới lúc mở** thì không bao giờ mở nữa.
+- **Túi riêng** giữ nguyên chủ.
+- Một người mở giấy là đủ. Không cần hai người đồng ý mới ra được — điều kiện «phải cả hai đồng ý mới ra» là một cái bẫy.
+
+### 3.3 Ranh giới với cuộc nhắn riêng đang có
+
+Rất quan trọng, vì hạ tầng đã có sẵn và dễ hiểu lầm.
+
+`contexts.kind` hiện có đúng hai giá trị `('group', 'pair')` theo ADR-0021 §2.5, trong đó **`pair` là cuộc nhắn riêng giữa hai người bất kỳ**, kèm `pair_key` là khoá hai người có thứ tự, unique.
+
+> **«Đôi» không phải là `pair`.** Mọi đôi là một `pair`, nhưng hầu hết `pair` không phải đôi.
+
+Nên «đôi» là **một trạng thái được bật thêm trên một `pair` bằng nghi thức gấp giấy**, và:
+
+- **Tuyệt đối không suy ra từ hành vi.** Không có chuyện «hai người này nhắn nhau nhiều nên chắc là đôi». Đây là kịch bản tệ nhất mà app này có thể tạo ra.
+- Một người **chỉ có một sổ hai người tại một thời điểm** (đề xuất; xem mục 14).
+
+---
+
+## 4. Tầng quyết định
+
+### 4.1 Kèo tự tới
+
+**Vấn đề nó giải:** phát hiện ① — không ai muốn là người quyết.
+
+**Cài một lần:** đôi khai **một khung** («tối thứ Bảy») và **routine hiện tại** của họ («tụi mình hay ăn tối rồi cafe»). Hai thứ này do người dùng khai, **không** suy ra, **không** cần lịch, **không** cần thời tiết, **không** cần vị trí thiết bị (ADR-0018 vẫn cấm quyền vị trí).
+
+**Mỗi tuần, một mốc trước khung ấy** (đề xuất: 48 giờ trước): hai máy thấy **cùng một thẻ**. Một buổi tối. Đã chọn. Kèm lý do. **Không phải feed, không phải mười thẻ — một.**
+
+```text
+Thứ Bảy này
+
+18:30  (một quán trong danh mục)
+20:00  Đi bộ, rồi chè
+
+Vì: ba tuần liền hai bạn ăn ở cùng một khu.
+Chỗ này cách mười phút, chưa từng đi.
+
+[ Ừ ]      [ Đổi ]      [ Tuần này nghỉ ]
+```
+
+**Ba luật làm nên toàn bộ giá trị:**
+
+1. **«Đổi» rẻ một cú bấm và không kèm lời xin lỗi.** App đổi một lần rồi gửi lại; hết hai lần thì nhường lại cho người chọn tay. **App được phép sai, miễn sai rẻ.**
+2. **«Tuần này nghỉ» phải có.** Đôi lâu năm có tuần về nhà, có tuần mệt. Thiếu nút này thì Nếp thành đứa nhắc dai và bị tắt thông báo trong ba tuần.
+3. **Không ai trong hai người là tác giả của lựa chọn.** Đây là điều khiến «Đổi» không còn là chối người kia.
+
+**Và đây là chỗ hay nhất về kỹ thuật:** mỗi *Ừ / Đổi* là **một nhãn dữ liệu của cặp**, mỗi tuần một cái, rẻ, và **thuộc về cặp chứ không thuộc về cá nhân nào**. Nó đi vòng qua đúng cái bẫy riêng tư ở mục 10.1 — hành vi chung là dữ liệu chung **theo cấu tạo**, không phải do nới luật riêng tư ra.
+
+**Cold start:** bốn tuần đầu chạy bằng routine **do họ tự khai**, không phải suy ra. Sáu tuần là có sáu ví dụ có nhãn.
+
+### 4.2 Gậy đổi lượt
+
+**Vấn đề nó giải:** phát hiện ② và vế «không ai chủ động» của mục 2.1.
+
+Mỗi tuần Nếp **trao quyền rủ cho một người**, luân phiên.
+
+| | Người giữ gậy tuần này | Người kia |
+|---|---|---|
+| Thấy gì | kèo **đã phác xong**, riêng mình, **trước** người kia | một lời rủ, **từ người yêu mình** |
+| Làm gì | **sửa đúng một thứ** rồi gửi | nhận, và **chấm một chi tiết** |
+| Được gì | công trạng của việc rủ, tốn công gần bằng không | sau nhiều năm, **được rủ một lần** |
+
+Đây là cơ chế tôi đánh giá cao nhất trong cả doc: nó chuyển **cái công** sang app, nhưng để lại **cái công trạng** cho người giữ gậy. Và app biến mất đúng lúc cần biến mất — người nhận thấy một lời rủ của người mình yêu, không thấy một thông báo của phần mềm.
+
+Luật: nếu người giữ gậy **không gửi** trước khung, Nếp gửi thẳng dưới tên Nếp (không để buổi tối chết vì một người quên), và **tuần sau gậy vẫn sang người kia** (không phạt, không nhắc lại chuyện đã quên).
+
+### 4.3 Núm độ mới
+
+**Vấn đề nó giải:** «không tìm được quán mới», «không có sự đổi mới».
+
+Với đôi lâu năm, trục đáng quan tâm **không phải** *romantic / chill / active*. Nó là **y như cũ ↔ chưa từng thử**. Một núm, ba khấc:
+
+| Khấc | Nghĩa | Nói được lý do |
+|---|---|---|
+| **Chỗ cũ** | lấy từ log của chính họ | «lần cuối bảy tháng trước» |
+| **Cùng kiểu, chỗ mới** | giữ hình dạng buổi tối, đổi quán. **Khấc mặc định** | «cùng kiểu chỗ hai bạn hay đi, quán này chưa» |
+| **Kiểu chưa thử** | một loại **không** có trong N buổi gần nhất | «hai bạn chưa từng đi loại này» |
+
+Tính được từ dữ liệu **đã có trên `main`**: `outing_stops.place_id` → `places.category`, `places.destination_id`, `places.price_min_vnd`/`price_max_vnd`. Không cần bảng mới cho phần này.
+
+Đây là bản **thấy được** của «novelty score» trong bản vision: người dùng xoay núm, mô hình không đoán giùm. Và nó buộc app trung thực: khấc «chưa thử» chỉ đề nghị được những loại mà danh mục thật sự biết (ADR-0017 cấm điền số hợp lý vào cột rỗng).
+
+### 4.4 Hạn mức, không phải điểm số
+
+**Vấn đề nó giải:** «không tự lên routine» — và nó là câu trả lời của tôi cho «routine phải mới lạ hơn».
+
+```text
+Mỗi tuần    một kèo tự tới          routine do app dựng, họ chỉ ừ
+Mỗi tháng   MỘT LẦN LẠ              bắt buộc: một loại chưa từng thử
+Mỗi quý     một chuyến xa hơn       ra khỏi bán kính quen thuộc
+```
+
+Hạn mức hơn điểm số ở ba điểm, và đây là một lựa chọn thiết kế có chủ ý:
+
+1. **Thấy được** — họ biết tháng này còn nợ một lần lạ. Một câu Nếp nói được, và nó làm người ta đi.
+2. **Công bằng** — không phải một mô hình phán «hai bạn đang nhàm».
+3. **Bảo đảm** — đổi mới xảy ra theo nhịp đã hứa, **không phụ thuộc mô hình đoán đúng**. Với một mode chỉ có bốn điểm dữ liệu mỗi tháng, đây là khác biệt giữa có đổi mới và không.
+
+### 4.5 Chia lượt ba chặng, không lấy trung bình
+
+**Vấn đề nó giải:** phát hiện ④, và yêu cầu của Lead về «chung hoà sở thích hai người để buổi đi vui hơn».
+
+Trung bình hai cái gu ra thung lũng. Cách đúng:
+
+```text
+Chặng 1     gu của Người chấm        người ấy thích thật
+Chặng 2     vùng giao của hai người  cả hai đều được
+Chặng 3     gu của Người lo          người ấy thích thật
+```
+
+Mỗi người **được đúng một thứ mình thật sự thích mỗi buổi**, thay vì hai thứ cả hai đều chỉ chịu được. Nếp theo dõi **lượt nào bị bỏ** (buổi bị cắt ngắn, chặng bị đổi) và **trả lại lượt đó buổi sau**, nên công bằng theo thời gian mà không ai phải đếm.
+
+Và **hạn mức một lần lạ mỗi tháng không thuộc ai cả.** Đây là chỗ ý hay nhất của bản vision («A cộng B là một entity khác») có cơ chế thật: **cặp có cái gu thứ ba, không của người này, không của người kia.** Chỗ chưa ai từng thử là chỗ duy nhất hai người **cùng là người mới**.
+
+Ba chặng này trùng ba phần của mảnh giấy gấp (mục 1.7): bố cục mang nghĩa.
+
+### 4.6 Nghi thức có tên
+
+Cho họ **tự đặt tên một nghi thức và chia hai việc**:
+
+```text
+Sáng chủ nhật     một người chọn quán, người kia chọn nhạc
+Tối thứ Bảy       một người chọn món, người kia chọn chỗ đi sau
+```
+
+Nếp **bảo vệ** nghi thức: không bao giờ đề nghị đè lên nó. Và chỉ **đổi bên trong** nó: cùng hình dạng, chỗ mới.
+
+Đây là lời giải cho câu hỏi khó nhất của bản vision — *lúc nào cần quen, lúc nào cần mới* — trả bằng **một cái điều khiển người dùng thấy**, không bằng một điểm số ẩn. Và nó là chỗ hai vai ở mục 2 trở thành **của họ** chứ không phải của app: tên nghi thức và hai việc do họ viết.
+
+---
+
+## 5. Tầng thân mật
+
+### 5.1 Mảnh giấy
+
+Đây là hiện thực của **F38 «Locket Style Widget»** đang nằm ở `product/feature_list.md` với ghi chú «Optional later» — mode hai người là ngữ cảnh làm nó có nghĩa.
+
+Gửi cho **đúng một người**. Trong giấy để được: một tấm hình · một dòng chữ · một chỗ muốn đi · một mảnh ký ức.
+
+Khác story (ADR-0022 §2.3) ở ba điểm, nên **không** dùng lại `stories`:
+
+| | Story | Mảnh giấy |
+|---|---|---|
+| Người đọc | bạn bè | **đúng một người** |
+| Hạn | sống 24 giờ rồi hết | **không hết hạn**; chỉ có mốc **bắt đầu mở được** |
+| Ý nghĩa | khoe một lúc | **giữ cho về sau** |
+
+### 5.2 Hẹn mở
+
+| Hẹn mở | Dùng làm gì |
+|---|---|
+| **Bây giờ** | như Locket thường: hiện ngay trên màn người kia |
+| **Tối nay** | «có cái này cho em, tối mở»: cả buổi chiều có cái để chờ |
+| **Lần tới hai người đi cùng nhau** | mở đúng lúc đang ngồi cạnh nhau |
+| **Một năm sau** | thư gửi năm sau (mục 5.3) |
+
+**Ràng buộc kỹ thuật quyết định cách làm:** máy chủ **không có việc nền định kỳ**. ADR-0024 §2.3 cho đúng một cửa `AfterResponse` với **đúng hai job** được phép, có test AST gốc gác. Nên:
+
+> **Nếp không có đồng hồ chạy nền.** Mọi «mở đúng lúc» là **một điều kiện lúc đọc**: mảnh giấy có mốc `mo_tu`, và nó **không đọc được** trước mốc đó. Hàng thông báo sinh **ở lần đọc đầu tiên sau mốc**, idempotent nhờ một cột đã-báo.
+
+Hàng «lần tới hai người đi cùng nhau» **không** được làm bằng vị trí: ADR-0018 cấm quyền vị trí, ADR-0026 §2.2 nói rõ bản đồ chiếu toạ độ **địa điểm**, không toạ độ người, và check-in là **cái nút** (F46), không phải cảm biến. Nên điều kiện là: **có check-in ở một chặng của một buổi đi chung**. Đúng thứ đang có, không thêm quyền nào.
+
+### 5.3 Thư gửi năm sau
+
+Hàng cuối của bảng trên là cái móc mạnh nhất và rẻ nhất:
+
+> **Mỗi mảnh giấy gửi hôm nay là một món quà cho hai người của năm sau.**
+
+Nó biến bề mặt Locket và bề mặt ký ức thành **cùng một vật ở hai độ tuổi khác nhau**, không phải hai tính năng phải nuôi riêng.
+
+### 5.4 Hâm nóng: Nếp mở lại một mảnh giấy cũ
+
+Không gợi ý gì cả. Nếp **lôi ra một mảnh giấy hai người từng gửi nhau**, chọn thời điểm:
+
+- tới **ngày kỷ niệm của chính mảnh giấy đó**, hoặc
+- khi **kèo tuần này quay lại đúng chỗ đã viết nó** (so `place_id`, không so vị trí).
+
+Đây là vũ khí cảm xúc mạnh nhất của mode, và nó gần như không tốn gì: một truy vấn ngày trên đồ của chính họ. Nó cũng là **lý do để gửi giấy ngay từ đầu** — nếu không có vòng quay lại này thì mảnh giấy chỉ là tin nhắn có hiệu ứng.
+
+### 5.5 Túi riêng
+
+Một ngăn **chỉ một người mở được**. Để dành sinh nhật, kỷ niệm, quà.
+
+**Không có ngăn này thì không có bất ngờ nào tồn tại được** — không thể bất ngờ một người đang đọc cùng cái lịch trình. Và nó khớp đúng nhân vật: **Nếp gấp lại thì không ai đọc được.**
+
+Đây là **khái niệm dữ liệu mới duy nhất** mà tầng thân mật cần (mục 9.2).
+
+---
+
+## 6. Tầng hiểu nhau: hai quyển sổ
+
+Đây là phần Lead thêm vào ở vòng cuối, và nó chữa điểm yếu còn lại của ba vòng trước: tới đó Nếp chỉ là trợ lý của **một** người. Có sổ thì **cả hai đều thành người giữ**, và cả hai đều có nhịp mở app hàng ngày.
+
+### 6.1 Hai quyển, không phải một
+
+> **Hai người, hai quyển sổ. Sổ của người này viết về người kia.**
+> **Không ai đọc sổ của người kia.**
+
+Phải là hai quyển riêng và **riêng tư mặc định**, vì trong một quyển chung thì **không ai viết thật**. Một quyển chung sẽ thành một bản tuyên ngôn cho nhau đọc, không phải một cuốn sổ tay.
+
+Tên trong sản phẩm: **«Sổ về em»** / **«Sổ về anh»** — nói đúng nó là gì, không cần giải thích.
+
+### 6.2 Bảy mục đặt sẵn
+
+Không phải một ô ghi chú trống. Ô trống không ai điền; **mục đặt sẵn là thứ làm người ta nhận ra mình chưa biết cái gì.**
+
+```text
+GU           ăn gì · uống gì · KHÔNG ăn được gì · cỡ áo · màu hay mặc
+ĐỪNG         sợ gì · không thích gì · chỗ nào đừng quay lại
+NGÀY         sinh nhật · kỷ niệm · ngày giỗ trong nhà
+NGƯỜI        tên mẹ · tên em gái · tên con mèo · tên đứa bạn thân
+LÚC MỆT      mệt thì muốn gì: yên / được ăn / được ngủ / được để yên
+MUỐN         thứ đã nhắc mà chưa làm
+CHUYỆN CŨ    một mảnh ký ức
+```
+
+Ba mục là chỗ đôi lâu năm hay vỡ nhất, và chưa app nào nghĩ tới:
+
+- **«không ăn được gì»** — quên là tai hoạ, nhớ là thương. Và nó **lọc thẳng vào gợi ý** (mục 6.7): quán chỉ có một loại món mà người kia không ăn được thì **bị bỏ im lặng**, không hỏi lại.
+- **«NGƯỜI»** — «tên em gái của người ta là gì ấy nhỉ». Nhớ được tên mẹ người ta là món lãi cao nhất trong cả cuốn sổ, và là thứ không một mô hình gu nào sinh ra được.
+- **«LÚC MỆT»** — mục sâu nhất. Đôi lâu năm cãi nhau đúng chỗ này: một người mệt thì muốn được để yên, người kia xông vào dỗ, và cả hai làm ngược cái người kia cần. **Viết một lần, hết một cái cãi lặp lại nhiều năm.**
+
+### 6.3 Ba người viết vào sổ
+
+| Ai viết | Cách | Giải bài gì |
+|---|---|---|
+| **Mình tự ghi** | gõ một dòng, lúc nào cũng được | — |
+| **Nếp ghi giùm** | Nếp thấy gì thì **đề nghị một trang**, bấm **Ghim** hoặc **Bỏ** | «giúp Người lo ít quên hơn»: không phải viết gì cả |
+| **Người kia ghim vào** | «muốn anh nhớ cái này» → thành **một trang trong sổ của người kia** | nói mà không thành nhắc dai |
+
+Hàng thứ hai là toàn bộ câu trả lời cho phát hiện ②: người kia nhắc một món trong chat, Nếp gợi ra một trang, chỉ cần bấm một cái. **Không ai phải viết nhật ký để có nhật ký.**
+
+Hàng thứ ba có **hạn hai trang một tuần**. Đúng vì có hạn nên nó còn dễ thương; bỏ hạn thì nó thành danh sách việc phải làm.
+
+**Luật cho hàng thứ hai, bắt buộc, xem mục 7:** Nếp chỉ đề nghị được những gì **người kia đã có thể biết**.
+
+### 6.4 Bốn chỗ Nếp dùng sổ, không hơn
+
+**① Câu hỏi mỗi tuần giờ có mục tiêu.** Nếp nhìn sổ, thấy mục nào trống nhất thì hỏi đúng mục đó.
+
+```text
+Sổ chưa có mục LÚC MỆT:
+
+Hôm nào mệt, em muốn được để yên
+hay muốn có người bên cạnh?
+
+[ Được để yên ]   [ Có người bên cạnh ]   [ Tuỳ hôm ]
+```
+
+Câu hỏi thôi ngẫu nhiên. Nó thành **một chương trình học về người kia**, và mỗi câu trả lời lấp một ô có tên.
+
+**Một câu mỗi tuần, không hơn** — mười câu là bảng khảo sát, và bảng khảo sát thì người ta bỏ giữa.
+
+**② Ôn một thẻ mỗi ngày** — mục 6.5.
+
+**③ Ba dòng dặn trước buổi đi**, lấy từ sổ nên nó đúng chứ không đoán:
+
+```text
+THỨ BẢY NÀY
+
+Em ấy đang muốn: yên tĩnh
+Tránh: chỗ đông, ồn
+Nhớ: em ấy nhắc bánh canh hai lần rồi
+```
+
+Ba dòng, đọc mười giây, làm được ngay. Đây là khoảnh khắc trợ lý thật sự của mode.
+
+**④ Nhắc ngày, trước năm ngày.** Mục **NGÀY** nhắc **sớm** kèm một việc làm được. Nhắc đúng hôm đó thì đã hết kịp chuẩn bị, và đó là lỗi của mọi app nhắc sinh nhật.
+
+```text
+Còn năm ngày là sinh nhật mẹ em ấy.
+Sổ ghi bà thích hoa lay-ơn.
+```
+
+**Ngoài bốn chỗ đó, sổ im lặng.** Không badge, không «bạn chưa ghi gì hôm nay», không chuỗi ngày liên tiếp.
+
+### 6.5 Ôn một thẻ
+
+Món tôi thích nhất trong tầng này. Một lúc rảnh, Nếp lật một trang của sổ **mình đang giữ**:
+
+```text
+Em ấy không ăn được tôm.
+Còn đúng không?
+
+[ Đúng ]              [ Sửa ]
+```
+
+Ba việc cùng lúc:
+
+1. **Giữ sổ không cũ.** Gu người ta đổi; một cuốn sổ không ai soát lại sẽ thành sai sau một năm và làm gợi ý sai theo.
+2. **Thật sự khiến người ta nhớ.** Nhớ được là do **lôi ra lại**, không do ghi vào. Đây là lý do cơ chế này là ôn thẻ chứ không phải một trang danh sách.
+3. **Một khoảnh khắc ấm mỗi ngày mà Nếp không phải nói câu nào tình cảm.** Nội dung là người mình yêu; Nếp chỉ đưa thẻ ra.
+
+Và đây là **nhịp mở app hàng ngày mà mode đang thiếu**, có cho **cả hai người**, không phải chỉ cho vai Người lo.
+
+Nhịp: **một thẻ một ngày**, bỏ qua được, không đếm chuỗi.
+
+### 6.6 Trang tặng, và cuối năm thì đổi sổ
+
+Mỗi trang gắn nhãn được: **riêng** (mặc định) hoặc **cho người kia đọc**.
+
+Tới kỷ niệm, Nếp đề nghị: **gấp hết những trang «cho người kia đọc» thành một tờ và đưa qua.**
+
+Một năm âm thầm để ý người ta, trao lại thành một vật. Và nó **cùng họ với thư gửi năm sau** (mục 5.3): cả mode chỉ có một vật, khác nhau ở chỗ **bao giờ mở**.
+
+Lý do phải gắn nhãn theo từng trang, không phải mở cả quyển: **biết sẽ bị đọc thì người ta viết khác.** Sổ phải riêng để còn thật; món quà là **bản đã chọn lọc**, do người giữ sổ chọn.
+
+### 6.7 Sổ lái gợi ý, và đây là ràng buộc cứng
+
+Đây là chỗ hai quyển sổ thôi là một app ghi chú và trở thành bộ phận của máy gợi ý.
+
+| Mục sổ | Vai trò trong gợi ý |
+|---|---|
+| **không ăn được** | **ràng buộc cứng**: loại thẳng, không cần hỏi, không giải thích dài |
+| **ĐỪNG** (sợ, chỗ đừng quay lại) | **ràng buộc cứng** |
+| **MUỐN** | **ưu tiên**: lấy trước khi đi tìm chỗ mới |
+| **GU** | chấm điểm mềm |
+| **LÚC MỆT** | chọn hình dạng buổi khi câu hỏi tuần nói đang mệt |
+| **NGÀY** | mốc để nhắc, và cớ để nâng hạng buổi đi |
+| **NGƯỜI** | **không lái gợi ý**. Chỉ để nhắc và để Nếp gọi đúng tên |
+| **CHUYỆN CŨ** | **không lái gợi ý**. Là nguồn cho giấy cũ quay lại (mục 5.4) |
+
+Và đây là câu trả lời thật cho lo lắng «dữ liệu quán còn thiếu»: **ràng buộc đến từ chính hai người, không từ danh mục.** Một danh mục nghèo vẫn gợi ý được đàng hoàng nếu nó biết hai điều họ không ăn được và ba chỗ đừng quay lại. Lead nói phần dữ liệu quán lo sau ở tầng data; mục này là lý do việc đó không chặn mode.
+
+---
+
+## 7. Năm luật cứng của Nếp
+
+Năm luật này là phần **không thương lượng** của thiết kế. Bỏ bất kỳ luật nào thì Nếp thôi là nhân vật và thành một cái máy nhắc.
+
+### Luật 1 — Nếp xen vào bằng sự thật, không bao giờ bằng cảm xúc
+
+Nếp **được phép** xen vào không cần ai hỏi, nhưng chỉ trên một con số lấy từ log của chính hai người:
+
+```text
+ĐƯỢC                            CẤM
+«Ba tuần rồi.»                  «Hai bạn có ổn không?»
+«Bảy tháng chưa quay lại.»      «Dạo này em ấy ít vui.»
+«Hôm nay, ba năm trước.»        «Có vẻ hai bạn đang xa nhau.»
+«Bốn buổi gần nhất cùng kiểu.»  «Anh nên quan tâm em ấy hơn.»
+```
+
+Đây chính là đường ngăn giữa **một nhân vật đáng yêu** và **một app đi hỏi thăm hôn nhân của người ta**. Và vì là sự thật từ log nên nó **không bao giờ sai**: Nếp không cần thông minh, Nếp cần **nhớ dai**.
+
+Hệ quả: Nếp **không** suy diễn trạng thái tình cảm, **không** chấm điểm quan hệ, **không** có thanh «sức khoẻ mối quan hệ». Cái đó vừa không đo được, vừa là câu mà **nếu một người đọc thấy một lần thì mode này chết**.
+
+### Luật 2 — Hai giọng
+
+Với Người lo: **gợi ý**. Với Người chấm: **câu hỏi**. Không bao giờ đưa nguyên văn (mục 2.4).
+
+### Luật 3 — Nếp chỉ mang sang những gì người kia đã có thể biết
+
+Nếp được ghi vào sổ, hoặc gói thành gợi ý, **đúng bốn nguồn**:
+
+1. người ấy **nói trong chat chung** của hai người,
+2. người ấy **lưu một chỗ rồi đẩy vào sổ chung**,
+3. người ấy **chọn trong một buổi đi chung** (chấm, check-in, đổi chặng),
+4. người ấy **trả lời Nếp**, khi đã biết câu trả lời tới tay người kia.
+
+**Nếp không bao giờ mang sang một thứ người ấy giữ riêng** — `saved_places` chưa chia, `person_interests` (ADR-0019 §2.1 đã nói rõ những hàng ấy là của riêng người đó và `GET /people/{id}` không bao giờ mang chúng), túi riêng, trang sổ nhãn «riêng».
+
+Một luật, **kiểm được bằng test**, và nó là lý do hai quyển sổ là *sổ tay của người đang yêu* chứ không phải *hồ sơ*.
+
+### Luật 4 — Không biên nhận
+
+Người chấm không thấy người kia đã xem chưa, có làm theo không, lúc nào (mục 2.5).
+
+### Luật 5 — Nếp có hạn mức nói
+
+Mục 8. Một nhân vật xen vào mỗi tuần một lần là bạn; cùng nhân vật đó xen vào mỗi ngày là cái app bị tắt thông báo.
+
+---
+
+## 8. Hạn mức nói
+
+Đây là thứ duy nhất tôi cho là **sẽ giết mode này** nếu làm sai: **Nếp nói nhiều.**
+
+| Việc | Nhịp tối đa | Tắt được |
+|---|---|---|
+| Kèo tự tới | **một lần một tuần** | tắt cả mode kèo |
+| Câu hỏi cho Người chấm | **một câu một tuần** | có |
+| Ôn một thẻ | **một thẻ một ngày**, im lặng trong app, **không** push | có |
+| Nếp nhắc (sự thật) | **tối đa hai lần một tháng** | có |
+| Nhắc ngày trong sổ | theo mốc, **trước năm ngày**, một lần | có |
+| Mảnh giấy tới | theo sự kiện thật, **không hạn** | có |
+| Giấy cũ quay lại | **tối đa một lần một tháng** | có |
+
+Ba luật kèm theo:
+
+1. **«Tuần này nghỉ» luôn có mặt** trên thẻ kèo, và bấm vào thì tuần đó Nếp im hoàn toàn.
+2. **Không streak, không badge, không «bạn chưa …».** Một app về quan hệ mà dùng cơ chế chuỗi ngày là đang lấy cảm giác tội lỗi làm động lực; trong mode này nó độc.
+3. Push tuân đúng ADR-0024: `people.notify_prefs` tắt được **từng loại**, và payload push **không bao giờ mang nội dung** — thông báo mảnh giấy nói «có một mảnh giấy», không nói trong đó viết gì.
+
+---
+
+## 9. Dữ liệu
+
+### 9.1 Đã có trên `main` — dùng lại, không dựng lại
+
+| Cần cho | Đã có |
+|---|---|
+| Quan hệ hai người | `contexts.kind = 'pair'` + `pair_key` unique (ADR-0021 §2.5), `memberships` |
+| Buổi đi và chặng | `outings` (ngày, headcount, ngân sách tham chiếu), `outing_stops` (`position`, `minute_of_day`, `label`, `place_id`), `outing_stop_checkins` (F46, **không** chứa vị trí) |
+| Encoding độ mới | `places.category`, `places.destination_id`, `places.price_min_vnd`/`price_max_vnd`, `destinations` |
+| Ký ức, bản đồ của hai người | `memories` (có toạ độ **của địa điểm**), `memory_reactions`, `memory_comments`; chế độ xem Hành trình của ADR-0026 |
+| Ảnh trong mảnh giấy | `uploaded_images.purpose = 'personal'` + `/people/{id}/photos/{id}` (ADR-0022 §2.1) |
+| Thông báo và push | `notifications`, `notification_devices`, `people.notify_prefs` (ADR-0024) |
+| Gu cá nhân (riêng) | `person_interests`, `saved_places` |
+| Chi tiêu chung | `confirmed_allocations` trong context đó — `spend_vnd` là **phần** của người, nên «chi tiêu chung tháng này» là **một phép đọc**, không cần luật domain mới |
+| Người kia chưa cài app | `guest_links` (tồn tại một lần, máy chủ chỉ giữ digest) |
+
+### 9.2 Khái niệm mới cần thêm — đề xuất để Codex quyết hình
+
+Liệt kê theo **khái niệm**, không phải theo DDL, vì hình bảng là quyền của Codex.
+
+1. **Trạng thái «đôi» trên một `pair`.** Ai gấp giấy, ngày gấp, ai giữ vai nào, khung tuần đã khai, routine đã khai, khấc núm độ mới. Một bảng một hàng cho mỗi `pair` đã bật, hoặc cột trên `contexts` — Codex chọn. **Ràng buộc bắt buộc:** bật được chỉ khi `kind = 'pair'`, và cần **hai** hàng chấp thuận (nghi thức gấp giấy), không phải một.
+2. **Mảnh giấy.** Tác giả · context · nội dung (chữ, hoặc `PersonPhotoUrl` của chính tác giả, hoặc `place_id`, hoặc trỏ tới một ký ức) · **mốc mở được** · **điều kiện mở** (bây giờ / tối nay / lần tới đi cùng / một năm sau) · lúc đã mở · lúc đã báo. Không hết hạn. **Đọc được khi và chỉ khi** đã qua mốc, và người đọc là một trong hai người.
+3. **Túi riêng.** Đơn giản nhất: một nhãn trên mảnh giấy nói ai đọc được — **người kia** hay **chỉ mình**. Không nên thành bảng thứ hai.
+4. **Trang sổ.** Chủ sổ · viết về ai · context · **mục** (một trong bảy, tập đóng) · nội dung · **nhãn chia** (riêng / cho người kia đọc) · ai tạo (mình / Nếp đề nghị / người kia ghim) · lần ôn cuối. **Một bảng phục vụ cả hai quyển** nhờ cặp «chủ sổ, viết về ai». Ôn thẻ chỉ cần cột lần-ôn-cuối, **không** cần bảng riêng.
+5. **Kèo tuần.** Một kèo là một buổi đi **được đề nghị**. `outings` hiện **không có cột trạng thái**, nên cần một trong hai: thêm trạng thái (`đề nghị` / `đã chốt` / `đã bỏ`), hoặc một bảng kèo riêng sinh ra `outings` khi được chốt. **Tôi nghiêng về cách thứ hai**: giữ `outings` đúng nghĩa «kế hoạch đã có thật», và kèo chưa ai ừ thì chưa phải kế hoạch.
+6. **Nhãn Ừ / Đổi.** Kèo · người · phán quyết · lúc nào. Đây là **dữ liệu học của cặp** và là số đo chính ở mục 13.
+7. **Thêm loại thông báo.** `notifications.kind` là **tập đóng** (ADR-0024 §2.1) nên các loại mới phải khai vào đó: **kèo tuần**, **mảnh giấy tới**, **nhắc ngày trong sổ**. Kèm `notify_prefs` cho từng loại.
+   **Ôn thẻ không phải thông báo**: nó là một thẻ nằm trên màn sổ, im lặng, không sinh hàng, không bao giờ push (mục 8).
+
+**Không cần bảng cho:** hạn mức (suy từ log), gậy đổi lượt (suy từ tuần và một cột ai-giữ), chia lượt ba chặng (suy từ chặng và chủ của từng chặng), độ mới (suy từ `outing_stops` và `places`).
+
+### 9.3 Phải mở ADR trước khi viết code
+
+| ADR | Việc |
+|---|---|
+| **ADR mới** | «Đôi là một trạng thái bật thêm trên `pair` bằng nghi thức hai chiều; hai quyển sổ riêng tư mặc định; mảnh giấy có mốc mở và không có việc nền» |
+| **ADR-0021** | mở rộng nghĩa của `kind`/`pair`: `pair` **không** tự là đôi |
+| **ADR-0019** | thêm khoản: (a) trong nhóm hai người, luật «chỉ hiện tổng» **không còn bảo vệ được ai** (mục 10.1); (b) Nếp nói **giọng cặp**, không giọng cá nhân; (c) sổ là **quan sát của một người**, không phải bản sao hàng gu của người kia |
+| **ADR-0024** | thêm các `kind` thông báo mới; khẳng định push không mang nội dung mảnh giấy |
+| **ADR-0022** | khẳng định mảnh giấy **không phải** story (người đọc, hạn, ý nghĩa đều khác) |
+| **ADR-0018 / ADR-0026** | **không đổi**: không xin quyền vị trí, không geofence. «Lần tới đi cùng nhau» dùng check-in F46 |
+| `product/feature_list.md` | **F38** ra khỏi «Optional later»; các cơ chế mới lấy số từ F48 trở lên |
+
+### 9.4 Tuyệt đối không đụng
+
+- Ba luật về tiền (số nguyên đồng · tổng phân bổ đúng bằng khoản chi · số dư tính lại được từ sổ). Mode này **không chạm cột tiền nào**; «chi tiêu chung» là phép đọc.
+- `phase0/` và `docs/protocol/v1/` đóng băng.
+- `db/`, `api/`, `domain/` là của Codex. Claude chỉ làm `apps/mobile/` và `app/web/`.
+- Không đưa vào Git: ảnh bill, số tài khoản, **tên người thật**, transcript thô, export, `.env` thật. Mọi ví dụ trong doc này dùng **tên vai**, không dùng tên người.
+
+---
+
+## 10. Riêng tư và consent
+
+Mục này không phải phần phụ lục. Trong một sản phẩm về hai người, **consent là cơ chế lõi**; làm sai thì mất cả hai người cùng lúc, và mất một chiều không quay lại được.
+
+### 10.1 Luật «chỉ hiện tổng» sụp ở nhóm hai người
+
+ADR-0019 §2.1 bảo vệ gu cá nhân bằng cách **chỉ cho hiện tổng cộng trên nhiều người**. Trong nhóm sáu người, luật đó hoạt động.
+
+**Trong nhóm hai người thì tổng trừ đi phần mình ra đúng người kia.** Luật thoái hoá hoàn toàn — nó không còn che gì cả.
+
+Nên mode này **không được** đi đường «hiện tổng của cặp» cho các hàng gu cá nhân. Đường đúng là ba cái:
+
+1. **Dữ liệu của cặp** (Ừ/Đổi, buổi đi, chặng, check-in) là dữ liệu chung **theo cấu tạo** — dùng thoải mái.
+2. **Gu cá nhân** giữ riêng, chỉ vào sổ chung khi **người đó chủ động đẩy vào**.
+3. **Sổ về người kia** là **quan sát của người giữ sổ**, và chỉ nhận được bốn nguồn ở Luật 3.
+
+### 10.2 Vạch đúng: hành vi chung so với gu cá nhân
+
+```text
+LUÔN CHUNG        là hành động của hai người
+                  Ừ / Đổi · buổi đi · các chặng · check-in · lịch sử kèo
+
+LUÔN RIÊNG        là gu của một người
+                  saved_places · person_interests
+                  chỉ vào sổ chung khi người đó chủ động đẩy vào
+
+TÚI RIÊNG         người kia không thấy được
+                  chuẩn bị sinh nhật, kỷ niệm, quà
+```
+
+Vạch này không phải do tôi đặt thêm: `outings`, `outing_stops`, `vote_ballots` trong một context **vốn đã** là chung; `saved_places`, `person_interests` **vốn đã** per-person và đã được gác. Mode chỉ cần **không phá** vạch có sẵn, cộng **một** khái niệm mới là túi riêng.
+
+### 10.3 Sổ về người kia: vì sao nó hợp lý, và điều kiện để nó hợp lý
+
+Một quyển sổ chứa dữ liệu **về** người kia mà người kia **không đọc được**. Nghe như một hồ sơ. Ba điều kiện làm nó thành một cuốn sổ tay:
+
+1. **Nội dung là quan sát của một người**, không phải bản sao dữ liệu hệ thống. Luật 3 gác điều này và **kiểm được bằng test**.
+2. **Người kia biết cuốn sổ tồn tại** — nói rõ ngay trong nghi thức gấp giấy, không ẩn trong điều khoản. Cả hai đều có một quyển; sự đối xứng chính là lời giải thích.
+3. **Người kia cũng đang giữ một quyển về mình.** Không có bên nào chỉ bị ghi.
+
+### 10.4 Đường chia tay
+
+Đã có ở mục 3.2. Nhắc lại vì đây là chỗ dễ bỏ quên nhất khi làm: **một người mở giấy là đủ**, mảnh giấy chưa tới lúc thì **không bao giờ mở nữa**, sổ ai người ấy giữ, túi riêng giữ nguyên chủ.
+
+### 10.5 Không có suy diễn cảm xúc, ở bất kỳ đâu
+
+Luật 1. Nhắc lại ở mục riêng tư vì đây cũng là một luật riêng tư, không chỉ luật giọng: một suy diễn về trạng thái tình cảm của một người, lưu lại thành hàng và đưa cho người kia đọc, là thứ nặng nhất mode này có thể làm sai.
+
+---
+
+## 11. Cố ý KHÔNG làm
+
+Ghi ra để lượt sau không ai lặng lẽ thêm vào.
+
+| Không làm | Vì sao |
+|---|---|
+| **Điểm tương thích / «92% match»** | số bịa trong giọng của sự thật, đúng cái ADR-0017 cấm ở cột danh mục. Và với đôi năm thứ năm thì nó hơi xúc phạm |
+| **AI «giúp hiểu người kia hơn» giọng cá nhân** | phản ứng sẽ là «tôi hiểu người ta hơn mày», và **họ đúng**. Phân vai đúng: **app biết cái log, họ biết nhau** |
+| **Thời tiết, lịch rảnh, vị trí sống** | ba tích hợp, ba consent; và ADR-0018 cấm quyền vị trí |
+| **Reveal hẹn giờ có lời hứa về quán** | danh mục không có giờ mở cửa; hẹn giờ kèm lời hứa «chỗ này đang mở» là app nói dối. Giấu **hình dạng** buổi tối thì được |
+| **Geofence «tới chỗ thì mở giấy»** | không quyền vị trí. Dùng check-in F46 |
+| **Thanh sức khoẻ quan hệ, chuỗi ngày, badge, bảng xếp hạng** | lấy cảm giác tội lỗi làm động lực |
+| **Video kỷ niệm tự sinh, bưu thiếp AI, scrapbook** | ADR-0025 đã có đường reel; mode này chưa cần, và nó không giải bài nào ở mục 0 |
+| **Chia bill mặc định trong mode đôi** | sổ nợ giữa hai người là phản cảm. Hình đúng là **chi tiêu chung tháng này**, và nó là một phép đọc |
+| **Hệ hình ảnh thứ hai** | mảnh giấy gấp là **cùng** hệ với trang giấy và sổ đóng |
+| **Suy ra «hai người này là đôi»** | kịch bản tệ nhất app này có thể tạo ra |
+
+---
+
+## 12. Thứ tự làm
+
+Ba đợt. Mỗi đợt **tự nó có nghĩa** nếu đợt sau không bao giờ tới.
+
+### Đợt 1 — quyết định
+
+Cần đúng bốn khái niệm mới ở mục 9.2: **trạng thái «đôi»** (1), **kèo tuần** (5), **nhãn Ừ/Đổi** (6), **một loại thông báo** (7). Không cần sổ, không cần mảnh giấy, không cần túi riêng.
+
+- Nghi thức gấp giấy (bật «đôi» trên một `pair`, hai chiều, có hạn).
+- Kèo tự tới + gậy đổi lượt + ba nút.
+- Núm độ mới ba khấc, tính từ `outing_stops` và `places`.
+- Chia lượt ba chặng.
+- Hạn mức: một kèo một tuần, một lần lạ một tháng.
+- Vật liệu: mảnh giấy gấp, hai vết gấp, ba phần dọc.
+
+**Đo được ngay:** tỉ lệ Ừ không kèm Đổi; số buổi ngoài năm loại gần nhất; số tuần bấm «nghỉ».
+
+### Đợt 2 — hiểu nhau
+
+- Hai quyển sổ, bảy mục, ba người viết.
+- Câu hỏi tuần nhắm vào mục trống nhất.
+- Ôn một thẻ.
+- Ba dòng dặn trước buổi đi; nhắc ngày trước năm ngày.
+- Sổ lái gợi ý: hai ràng buộc cứng (không ăn được, ĐỪNG).
+- Khoản bổ sung cho ADR-0019 về giọng cặp và về sổ-là-quan-sát.
+
+### Đợt 3 — thân mật và ký ức
+
+- Mảnh giấy + bốn hẹn mở + túi riêng.
+- Thư gửi năm sau.
+- Giấy cũ quay lại.
+- Trang tặng, đổi sổ ngày kỷ niệm.
+- Bản đồ của hai người, dựng lại trên chế độ xem Hành trình (ADR-0026), **chỉ** toạ độ địa điểm.
+
+### Cửa vào của mỗi đợt
+
+Mỗi lát màn hình đi qua **Impeccable pipeline** như mọi việc frontend trong repo này: craft-floor trước khi sửa, detector, reviewer **context mới** có **đọc mù bảng không nhãn trước packet**, rồi documenter. Cổng thường lệ: `npm test`, `tsc --noEmit`, `pytest services/api/tests tests`, repo guard, và bảng Maestro trên một máy ảo.
+
+---
+
+## 13. Đo, và tiêu chí giết viết trước
+
+Bản vision gốc không có số nào để biết Relationship Twin là thật hay là sơ đồ. Đây là số đó.
+
+| Số | Nghĩa | Kỳ vọng nếu thiết kế đúng |
+|---|---|---|
+| **Ừ không kèm Đổi** | app chọn đúng mà không cần sửa | **tăng theo tuần** |
+| Buổi ngoài năm loại gần nhất | đổi mới có thật | đạt **hạn mức một lần mỗi tháng** |
+| Lặp lại của kèo tuần | routine đã thành thói quen | tuần thứ tám vẫn còn mở thẻ |
+| Câu hỏi tuần được trả lời | vai Người chấm có sống | quá nửa |
+| Ô sổ được lấp | chương trình học có chạy | bảy mục đều có ít nhất một trang trong tám tuần |
+| Thẻ ôn được bấm | nhịp hàng ngày có thật | **đo cả hai người riêng** |
+| Tuần bấm «nghỉ» | app có bị coi là nhắc dai không | **không tăng** theo thời gian |
+
+**Tiêu chí giết.** Sau **tám** lần kèo tự tới, nếu tỉ lệ «Ừ không kèm Đổi» **dưới khoảng một nửa và không tăng**, thì cái twin không thật: cắt về đúng cơ chế quyết định (bản thân nó vẫn có giá trị vì nó giải bài trách nhiệm), **đừng nuôi tiếp mô hình gu**.
+
+**Tiêu chí giết thứ hai.** Nếu số tuần bấm «nghỉ» tăng đều, Nếp đang nói nhiều: siết hạn mức ở mục 8 trước khi thêm bất kỳ tính năng nào.
+
+**Cảnh báo về số.** Cả bảng trên chỉ đo được trên người thật. ADR-0006 vẫn gác Giai đoạn 0, và một bộ test xanh **không** đọc thành «thiết kế này đúng».
+
+---
+
+## 14. Câu hỏi còn mở, cần Lead chốt
+
+1. **Một người có được nhiều sổ hai người cùng lúc không?** Đề xuất: **một**, vì cơ chế gậy và hạn mức đều giả định một. Nhưng luật này cứng và có thể sai với vài trường hợp thật.
+2. **Mở giấy rồi gấp lại được không?** Đề xuất: **được**, nhưng là một nghi thức mới với một mốc ngày mới, và **không** phục hồi những mảnh giấy đã vĩnh viễn không mở.
+3. **Một người xoá tài khoản (ADR-0023) thì các trang sổ của người kia viết về mình xử lý sao?** Đây là câu hỏi riêng tư thật và tôi không tự quyết. Ba đường: giữ nguyên (là quan sát của người còn lại) · xoá phần Nếp ghi giùm, giữ phần người ấy tự viết · xoá hết.
+4. **Người kia chưa cài app thì mode chạy tới đâu bằng `guest_links`?** Cơ hội rất rẻ để giải rào «cả hai phải cài»: gửi kèo bằng link khách, bấm vào xem và phản ứng, không cần cài. Nhưng link khách hiện **tồn tại một lần** và máy chủ chỉ giữ digest, nên cần Codex nói cái gì khả thi.
+5. **Khung tuần cố định hay nhiều khung?** Đề xuất: **một khung**, thêm khung là thêm nhịp nói.
+6. **«Chi tiêu chung tháng này» có vào Đợt 1 không?** Nó là một phép đọc nên rẻ, nhưng nó mở một bề mặt tiền trong mode đôi và có thể làm lệch câu chuyện.
+7. **Tên hai vai.** «Người lo» / «Người chấm» là đề xuất. Đây là câu chữ sẽ đi khắp app nên Lead nên chốt sớm.
+
+---
+
+## 15. Từ vựng
+
+| Từ | Nghĩa trong sản phẩm |
+|---|---|
+| **Sổ hai người** | trạng thái «đôi» bật trên một cuộc nhắn riêng |
+| **Gấp giấy** | nghi thức vào mode, hai chiều |
+| **Mở giấy** | đường ra khỏi mode |
+| **Nếp** | nhân vật: nếp gấp của giấy. Ở hai người là mảnh giấy được truyền tay |
+| **Mảnh giấy** | một thứ gửi cho đúng một người, có mốc mở |
+| **Hẹn mở** | bây giờ / tối nay / lần tới đi cùng / một năm sau |
+| **Túi riêng** | ngăn chỉ một người mở được |
+| **Sổ về em, Sổ về anh** | hai quyển sổ riêng, mỗi người giữ một quyển viết về người kia |
+| **Trang** | một mục trong sổ, có nhãn riêng hoặc cho người kia đọc |
+| **Ôn thẻ** | mỗi ngày một trang được lật lại để xác nhận còn đúng |
+| **Kèo tự tới** | buổi đi đã được chọn sẵn, gửi theo nhịp tuần |
+| **Gậy** | quyền rủ của tuần này, luân phiên |
+| **Người lo, Người chấm** | hai vai trong một buổi đi |
+| **Lần lạ** | hạn mức một loại chưa từng thử, mỗi tháng |
+
+---
+
+## 16. Đây chưa phải giấy phép viết code
+
+Doc này là **thiết kế**, và cố ý dừng trước hai cửa:
+
+1. **Cửa của Lead.** Bảy câu hỏi ở mục 14 chưa có câu trả lời, và ba trong số đó (một sổ hay nhiều · xoá tài khoản · tên hai vai) đổi cả hình dữ liệu lẫn câu chữ.
+2. **Cửa của Codex.** Mọi bảng và route ở mục 9.2 là của Codex, và mục 9.3 liệt kê **sáu** ADR phải mở hoặc sửa phạm vi. Viết màn hình trước khi có ADR là tự đặt mình vào chỗ phải bỏ.
+
+Bước đúng tiếp theo, sau khi Lead soát doc này: chuyển sang kế hoạch triển khai cho **Đợt 1** và **chỉ** Đợt 1, kèm một bản ADR nháp cho Codex đọc.
