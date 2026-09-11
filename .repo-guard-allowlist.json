@@ -2366,6 +2366,62 @@
         "controlled-artifact"
       ],
       "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/01-explore.png",
+      "sha256": "5c7a26b41cc7e544caaca1f79d77aa304910ed20496695ffe70b953c5693a976",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/02-chat.png",
+      "sha256": "ed9cbbc49bf156d8f930cc7f998a4b3188e922a17285469d3ce1946d56da0f05",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/12-explore-dark.png",
+      "sha256": "590defefd366f91f94f6b344a9d85412ab13dbc1cc5d2384a1c5495d81209692",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/13-chat-dark.png",
+      "sha256": "0210031637516576a843b992d008940aa82a550df5971df324b0a82d60b8979e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/11-stickers-dark.png",
+      "sha256": "cc6b3465fce5073a8b144cd554b0391693e6b6bb6961228abb0c8ebe407f8b14",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/10-empty-dark.png",
+      "sha256": "793ffbe44e3126feeb4ee29fb13a67782a15e48163784aab2e3255702f376a66",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/20-explore-light2.png",
+      "sha256": "0bd068c05e3f359066217198c94cf76330d2c7681ea5c96f121052ae6fa96996",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
     }
   ]
 }

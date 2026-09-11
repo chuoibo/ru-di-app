@@ -1,9 +1,91 @@
-# Cổng motion hữu hạn — v2 sau tái audit 10/09 (R2/B1–B3)
+# Cổng motion hữu hạn — v3 sau review 11/09 (B11/B12), v2 sau tái audit 10/09 (R2/B1–B3)
 
-Audit 09/09 §5 hỏi một cổng đo. Bản v1 (10/09) có số nhưng tái audit 10/09 của Codex chỉ ra **phương pháp sai ở
-ba chỗ và một câu diễn giải sai**; v2 sửa cả bốn rồi đo lại. Không thêm animation (bước 3 của audit vẫn là đề xuất).
+Audit 09/09 §5 hỏi một cổng đo. v1 (10/09) có số nhưng phương pháp sai ở ba chỗ (tái audit 10/09). v2 (11/09) sửa
+phương pháp và đo lại, nhưng review 11/09 của Codex chạy canary tổng hợp trên chính runner và chỉ ra **lời hứa
+fail-closed còn hai lỗ** (B11 · B12). v3 đóng hai lỗ ấy, nói rõ chín điều kiện của một hàng hợp lệ, và chứng minh bằng
+canary 16 nhánh — canary ấy **đỏ 11 nhánh trên v2** trước khi được tin. Không thêm animation.
 
-## Cái v1 làm sai (Codex đúng)
+## Cái v2 làm sai (Codex đúng, 11/09)
+
+| | v2 | v3 |
+|---|---|---|
+| Reset/dump (B11) | `gfxinfo reset` và dump chạy với `>/dev/null 2>&1`, **không đọc rc**: reset hỏng thì khung warm-up/chuỗi trước nằm trong cửa sổ của chuỗi sau mà hàng vẫn hợp lệ | rc của reset kiểm trước khi chạy Maestro: reset hỏng → **không chạy chuỗi**, hàng «KHÔNG HỢP LỆ (reset gfxinfo thất bại)»; rc của dump là một điều kiện hợp lệ |
+| Metric thiếu (B11) | hợp lệ chỉ cần `rc=0`, pid không rỗng và bằng nhau, `khung>0`; percentile rỗng vẫn in hàng hợp lệ với `?`; vắng `HISTOGRAM:` thì `khung>150ms` in **0** («không đo được» thành «không có khung chậm») | parser trả **mọi** trường hoặc rỗng; hàng hợp lệ đòi đủ janky %, p50/p90/p95/p99, ba bộ đếm, `HISTOGRAM` có mặt và **cộng đúng bằng frames** (tính chất đúng trên cả 16 dump đã lưu); hàng hợp lệ không bao giờ có `?` |
+| pid (B11) | chỉ kiểm không rỗng và bằng nhau → chuỗi `pid-not-known` ổn định qua | pid trước phải là số; pid sau **và pid trong header dump** (`** Graphics info for pid N [...] **`) phải bằng nó |
+| Gốc scale (B12) | gốc không đọc được → `that_bai=1` nhưng **vẫn** `put 0`, warm-up và bốn chuỗi; cuối lượt exit 1 và scale ấy còn 0 | gốc nào không phải số → **exit 3 trước mọi `put` và Maestro** |
+| Ghi 0 (B12) | không đọc rc, không đọc lại; `put` bị từ chối vẫn đo dưới nhãn `reduce` | mỗi `put 0` phải rc 0 **và** đọc lại bằng 0; sai → trả gốc, **exit 4**, không Maestro; `thuong` không ghi và kiểm scale không đổi giữa lúc đọc và lúc đo |
+| Trả gốc (B12) | `put … \|\| true`, không đối chiếu, trap không đổi exit → restore hỏng vẫn exit 0 | trap ghi lại, đọc lại, so bằng gốc; lệch → «KHÔNG TRẢ ĐƯỢC k: muốn X, đọc Y», **exit 5** (INT: 130 chỉ khi trả xong); `scale-sau.txt` có cột `muon/doc/khop` |
+
+## Chín điều kiện của một hàng hợp lệ, và mã thoát
+
+Một hàng chỉ có số khi **tất cả** đúng: (1) Maestro rc 0 · (2) dump rc 0 · (3) pid trước là số · (4) pid sau bằng nó ·
+(5) pid trong header dump bằng nó · (6) `Total frames rendered` > 0 · (7) janky %, p50/p90/p95/p99, slow UI, slow draw,
+missed vsync đều có và là số · (8) có dòng `HISTOGRAM:` · (9) tổng các bucket của histogram = frames. Điều kiện nào
+hỏng được in ngay trong ô «KHÔNG HỢP LỆ (…)». Mã thoát: **0** mọi hàng hợp lệ · **1** có hàng không hợp lệ (bảng vẫn in) ·
+**2** tham số sai · **3** gốc scale không đọc được (chưa đụng máy) · **4** không đặt/đọc lại được chế độ đo (đã trả gốc) ·
+**5** không trả được gốc (ghi đè mọi mã khác) · **130** ngắt tay và đã trả gốc.
+
+## Canary — 16 nhánh, đỏ phải đỏ ở bước cuối, xanh phải xanh
+
+`do-motion-canary.sh` dựng `adb`/`maestro` giả trên PATH (không chạm máy); adb giả giữ ba scale trong file trạng thái
+nên canary đếm được lệnh `put` và đọc được cái để lại; pidof giả trả **pid trong header dump mẫu** nên đối chứng xanh
+chứng minh điều kiện (5) qua được trên dữ liệu thật. Gốc giả là `0.5 / 1.5 / 2` (không phải 1) để thấy trả gốc thật.
+
+| nhánh | exit | hàng hợp lệ | maestro | ghi chú |
+|---|---|---|---|---|
+| xanh (dump v2 thật) · xanh-thuong | 0 | 4 | 5 | thuong: 0 lệnh `put`; không `?` trong hàng hợp lệ |
+| maestro 42 · pid rỗng · pid `pid-not-known` · reset hỏng | 1 | 0 | 1 | chỉ warm-up chạy; chuỗi không được chạy dưới nhãn hợp lệ |
+| pid đổi · frames 0 · dump rỗng · dump chỉ một dòng · dump của pid khác · histogram ≠ frames | 1 | 0 | 5 | |
+| gốc animator rỗng | 3 | 0 | 0 | **0 lệnh put**, scale không đổi |
+| put 0 bị từ chối | 4 | 0 | 0 | trả về gốc |
+| trả gốc bị từ chối | 5 | 4 | 5 | bảng in; scale còn 0 và được nói ra |
+| INT giữa chuỗi 2 | 130 | 0 | 2 | trả gốc |
+
+Cùng canary chạy trên **v2** (bản sao trong cây gương): 11/16 nhánh SAI — reset hỏng exit 0 với 4 hàng, dump một dòng
+in `?`, `pid-not-known` qua, gốc rỗng exit 1 nhưng để `0.5/1.5/0`, put hỏng exit 0, restore hỏng exit 0 — đúng bảng
+Codex. Canary Python độc lập của Codex (`docs/codex/2026-09-11/technical-evidence/independent-canary.py`, chạy bản sao
+trong scratchpad) trên v3: `original-empty` → 3, `put-failed` → 4, `restore-failed` → 5, `reset-failed`/`dump-malformed`/
+`pid-malformed` → 1; ca `normal` của họ **đỏ vì pid giả 4242 ≠ pid 4143 trong header dump mẫu** — đó là điều kiện (5)
+cắn; muốn ca ấy xanh, pidof giả phải trả pid của header (canary của tôi làm vậy).
+
+Canary không chạm đường hạnh phúc trên máy, nên **mỗi lần đổi runner phải có một lượt thật** — mục dưới.
+
+## Kết quả v3 — dev client, lượt thật sau khi thêm năm điều kiện
+
+Cùng máy, cùng bốn chuỗi, cùng bundle fixture (dấu vân `claude-r1-5061b610-170628`), CPU host rảnh; mỗi chuỗi một
+lượt. Cả hai chế độ **exit 0**, 8/8 hàng hợp lệ theo chín điều kiện, `scale-sau.txt` `khop=1` cả ba khoá. Số liệu:
+`dev-client-v3/{thuong,reduce}/` (bảng, scale gốc/lúc đo/sau, dump đã bỏ dòng `Uptime`).
+
+Lượt thường (scale 1/1/1, pid 8258 không đổi qua bốn chuỗi):
+
+| chuỗi | khung | janky | p50 | p90 | p95 | p99 | khung>150ms | slow UI | slow draw | missed vsync |
+|---|---|---|---|---|---|---|---|---|---|---|
+| m1-doi-tab | 268 | 13.43% | 26 | 31 | 32 | 89 | 0 | 21 | 26 | 1 |
+| m2-cuon-kham-pha | 924 | 3.14% | 16 | 27 | 30 | 32 | **3** | 3 | 27 | 2 |
+| m3-sheet-tao | 406 | 9.11% | 20 | 31 | 32 | 36 | 0 | 3 | 30 | 0 |
+| m4-back-chi-tiet | 274 | 10.22% | 28 | 32 | 32 | 65 | 0 | 6 | 26 | 0 |
+
+Lượt Reduce Motion (scale 0/0/0 ghi và đọc lại trước khi đo; pid 9823 không đổi; trả về 1/1/1 và đọc lại đúng):
+
+| chuỗi | khung | janky | p50 | p90 | p95 | p99 | khung>150ms | slow UI | slow draw | missed vsync |
+|---|---|---|---|---|---|---|---|---|---|---|
+| m1-doi-tab | 45 | 80.00% | 28 | 46 | 81 | 97 | 0 | 22 | 25 | 2 |
+| m2-cuon-kham-pha | 708 | 2.26% | 16 | 27 | 28 | 32 | **2** | 1 | 16 | 0 |
+| m3-sheet-tao | 62 | 24.19% | 14 | 16 | 16 | 16 | 0 | 0 | 13 | 0 |
+| m4-back-chi-tiet | 59 | 38.98% | 23 | 32 | 32 | 42 | 0 | 7 | 16 | 0 |
+
+Đọc số:
+- Số khung lặp lại được giữa v2 và v3 (thường 271/907/406/273 → 268/924/406/274; reduce 45/704/63/60 → 45/708/62/59):
+  cửa sổ đo khoanh đúng thao tác ở hai lượt độc lập.
+- **Khác v2:** cuộn Khám phá có 3 khung (thường) và 2 khung (reduce) rơi vào bucket ≥150 ms ở lượt này, v2 là 0. Một
+  lượt mỗi chuỗi không phân biệt được nhiễu máy ảo và hồi quy; ghi số thật, không làm tròn về 0. Muốn kết luận cần
+  ≥ 3 lượt cùng điều kiện — chưa làm.
+- pid khác nhau giữa hai chế độ vì warm-up (`_vao-app-sach`) `pm clear` và mở lại app; trong một chế độ pid không đổi.
+- % janky không so được giữa thường và Reduce Motion (mẫu số khác); đọc số tuyệt đối.
+
+## Lịch sử v2 (11/09 sáng) — phương pháp đúng, lời hứa fail-closed chưa đủ
+
+### Cái v1 làm sai (Codex đúng)
 
 | | v1 | v2 |
 |---|---|---|

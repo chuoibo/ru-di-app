@@ -1,0 +1,8 @@
+{
+  "19-settings-save-error-dark2": "Tên ý định probe; không phải lỗi lưu đã quan sát. Hồ sơ live null, Switch disabled, không tạo request lưu.",
+  "24-sessions-state.xml": "INVALID: uiautomator could not reach idle, helper read prior dump; not matching PNG. Excluded. Helper now rejects failed fresh dump.",
+  "24-sessions-state.png": "Valid native image of skeleton on sessions screen; not ErrorState and not populated sessions.",
+  "motion/b-reduced.mp4": "Diagnostic first series has Refreshing dev banner at frames45-46; use motion-confirm series for final gate.",
+  "assessment-a": "Independent art assessment completed on team evidence; followup on new root images failed from agent usage limit. Root visually reviews new native images directly.",
+  "motion-confirm": "Final accepted R1 series. Same PID29173; scale1→0→1; reduced six one-frame changes; no development banner detected in reviewed transitions."
+}
