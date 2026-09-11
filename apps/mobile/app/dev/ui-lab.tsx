@@ -17,6 +17,8 @@ import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
+import { KyHoa } from "../../src/rudi/ui/art/KyHoa";
+import { moTaKyHoa } from "../../src/rudi/art/ky-hoa";
 import { EmptyState } from "../../src/rudi/ui/EmptyState";
 import { ReorderList } from "../../src/rudi/ui/ReorderList";
 import { PhotoViewer } from "../../src/rudi/ui/PhotoViewer";
@@ -25,6 +27,15 @@ import { PhotoViewer } from "../../src/rudi/ui/PhotoViewer";
  * A source that cannot resolve, so the `onError` branch of every image can be
  * seen on the device. Loopback on a closed port: nothing leaves the machine.
  */
+// One row per stage, tags as the fixture writes them (with diacritics), plus the unknown category.
+const KY_HOA_MAU: readonly { loai: string; tags: readonly string[] }[] = [
+  { loai: "quan-an-local", tags: ["View đẹp", "Chill", "Nhóm đông"] },
+  { loai: "cafe", tags: ["Nhẹ nhàng", "Cà phê", "Ngoài trời"] },
+  { loai: "vui-choi", tags: ["Săn mây", "Ngoài trời"] },
+  { loai: "di-choi-dem", tags: ["Món local", "Đi đêm", "Nhộn nhịp"] },
+  { loai: "khac", tags: [] },
+];
+
 const ANH_HONG = { uri: "http://127.0.0.1:1/khong-co-anh.jpg" };
 
 type CaAnh = "khong" | "co" | "hong" | "lech";
@@ -216,6 +227,18 @@ export default function UiLab() {
           <Canh id={id} testID={`lab-canh-${id}-co`} width={150} />
           <Canh id={id} nep={false} testID={`lab-canh-${id}-khong`} width={150} />
         </View>
+      </View>
+    ))}
+
+    <SectionHeader title="Ký hoạ · sân khấu theo loại, đạo cụ theo tag, hai khung đọc" />
+    <Text style={{ ...typography.note, color: colors.inkFaint }}>
+      {"Tờ ký hoạ của nơi chưa có ảnh: trái 3:1 (chữ 1.0), phải 4:1 (chữ lớn). Cùng một hình, khác khung cắt."}
+    </Text>
+    {KY_HOA_MAU.map(({ loai, tags }) => (
+      <View key={loai} style={{ gap: 4 }}>
+        <Text style={{ ...typography.caption, color: colors.inkSoft }}>{`${moTaKyHoa(loai, tags)} · gọn: ${moTaKyHoa(loai, tags, { gon: true })}`}</Text>
+        <KyHoa gon={false} loai={loai} tags={tags} testID={`lab-ky-hoa-${loai}-day`} />
+        <KyHoa gon loai={loai} tags={tags} testID={`lab-ky-hoa-${loai}-gon`} />
       </View>
     ))}
 

@@ -94,6 +94,8 @@ export function hienThiDiaDiem(place: Place): DiaDiemHienThi {
     // honest can tell two eateries' slots apart here (the fixture's `gu` comes
     // from its tags). Three bowls in a row are the truth of this data.
     loai: place.category,
+    // …and so the lead's sketch draws the stage only: no tag, no prop.
+    tags: [],
     // The picture comes with its credit or not at all (ADR-0017 §2.5), in one
     // value whose address cannot be taken out on its own, so no adapter can
     // hand the frame the picture alone. «Quanh đây» travels with the credit:

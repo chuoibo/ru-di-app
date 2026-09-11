@@ -11,6 +11,7 @@ import { khoaNguon, veKhung, type AnhCoGhiCong } from "../../ui/ghi-cong";
 import { Stamp } from "../../ui/Stamp";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
 import { GuGlyph } from "../../ui/art/Gu";
+import { KyHoa } from "../../ui/art/KyHoa";
 import { guTheoLoai } from "../../kham-pha/dia-diem";
 
 /*
@@ -74,6 +75,8 @@ export interface DiaDiemHienThi {
   lyDo?: string;
   /** The drawn object a real tag chose (`guTheoTag`); absent → the category's object. */
   gu?: string;
+  /** Tags the place really carries; the lead's sketch picks at most two props from them. Live rows pass none. */
+  tags?: readonly string[];
 }
 
 interface CommonProps {
@@ -157,18 +160,21 @@ export function PlaceLead({ dd, daLuu, onOpen, onSave, testID }: CommonProps) {
     />
   );
   if (dd.anh === null) {
-    // No honest picture: an editorial header of object, name and facts, not a
-    // 16:10 frame with an icon in the middle (review 08/09 F01, report §9.4).
+    // No honest picture: the place gets a sketch («ký hoạ trong sổ», review
+    // 11/09 A1) — a sheet of paper the width of the column drawing the KIND of
+    // place from its category and up to two of its tags, never the place
+    // itself — and the text block under it, the way a photo lead is built.
+    // Not a 16:10 frame of nothing (review 08/09 F01), not a glyph in a disc.
     return (
-      <View style={[styles.leadGon, { borderBottomColor: colors.line }]} testID={testID}>
-        <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadGonPress, pressed && styles.pressed]}>
-          <PlaceGlyph glyph={dd.glyph} gu={dd.gu} loai={dd.loai} size={34} />
-          <View style={[styles.leadText, styles.flex1, styles.leadGonChu]}>
+      <View style={[styles.lead, styles.leadGon, { borderBottomColor: colors.line }]} testID={testID}>
+        <Pressable accessibilityLabel={`Mở ${dd.name}`} accessibilityRole="button" onPress={onOpen} style={({ pressed }) => [styles.leadPress, pressed && styles.pressed]}>
+          <KyHoa loai={dd.loai} tags={dd.tags} />
+          <View style={styles.leadText}>
             {dauCon(dd) ? <Stamp label={dauCon(dd) as string} style={styles.leadGonDau} tone="ai" /> : null}
             {chu}
           </View>
         </Pressable>
-        {tim}
+        <View style={styles.leadSave}>{tim}</View>
       </View>
     );
   }
@@ -379,9 +385,8 @@ const styles = StyleSheet.create({
   ungVien: { flex: 1, minWidth: 0 },
   ungVienPress: { gap: 6 },
   ungVienDau: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
-  leadGon: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  leadGonPress: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 12, minWidth: 0 },
-  leadGonChu: { paddingRight: 0 },
+  // The no-photo lead: the sketch sheet and the text stack like the photo lead; only the hairline under it is its own.
+  leadGon: { paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   leadGonDau: { alignSelf: "flex-start" },
   timOnMedia: { position: "absolute", right: 6, bottom: 6 },
   rowTen: { flexDirection: "row", alignItems: "center", gap: 8 },

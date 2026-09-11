@@ -1054,10 +1054,12 @@ không phải gì.
 
 ### Lớp vẽ (`art/`): Nếp, hình gu, motif, cảnh rỗng
 Đợt 08/09 thêm một lớp minh hoạ **vector thuần**, tách hình học khỏi màu và
-khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopVe`
+khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mảng `LopVe`
 (`d`, vai màu `mau`, `net` > 0 là nét, không có là tô); `src/rudi/ui/art/`
-(`VeLop`, `Nep`, `GuGlyph`, `VongHo`/`DuongChuyen`/`GocGap`, `Canh`) vẽ mảng
+(`VeLop`, `Nep`, `GuGlyph`, `VongHo`/`DuongChuyen`/`GocGap`, `Canh`, `KyHoa`) vẽ mảng
 đó bằng `react-native-svg`, nét tròn đầu tròn góc, tô phẳng, không bóng.
+`KyHoa` (11/09) là tờ ký hoạ của nơi chưa có ảnh: sân khấu theo loại + ≤ 2
+đạo cụ theo tag, một điểm coral, hai khung cắt — xem «Luật Ký Hoạ Trong Sổ».
 - **Ngữ pháp đường**: mọi `d` chỉ gồm lệnh tuyệt đối `M`/`L`/`C`/`Z`, số thập
   phân trơn (không mũ, không `-0`), dựng từ số lúc chạy qua `net.ts`
   (`daGiac`, `netGay`, `cong`, `qCong`, `tron`, `bau`, `cungTron`, `quat`,
@@ -1066,8 +1068,9 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh}.ts` chỉ trả mảng `LopV
   `PathParser` ném lúc mount và app chết khung hình đầu (tsc, web export mù),
   và repo guard đọc chín chữ số cách nhau như số tài khoản.
   `tests/art-duong.test.mjs` parse từng hình đúng cách Java parse.
-- **Ba lưới**: Nếp trong ô **96** (`KHUNG_NEP`), hình gu trong ô **48**
-  (`KHUNG_GU`), cảnh trong khung ngang **144×112** (`KHUNG_CANH`). Ô đặt qua
+- **Bốn lưới**: Nếp trong ô **96** (`KHUNG_NEP`), hình gu trong ô **48**
+  (`KHUNG_GU`), cảnh trong khung ngang **144×112** (`KHUNG_CANH`), ký hoạ
+  trong khung ngang **288×96** (`KHUNG_KY_HOA`, cắt `slice` về 3:1/4:1). Ô đặt qua
   `bienDoi(x0, y0, tiLe)`; chưa có lưới 24 nào dùng ngoài bản 22/32 của
   `GuGlyph` co từ 48.
 - **Nếp** (`hinhNep`, chín tư thế `moi` · `keo-ghe` · `giu-cho` · `gop-y` ·
@@ -1267,7 +1270,9 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   của lý do), ba sự thật với icon 16 (`label inkSoft`); nút lưu `IconButton`
   phải. Ảnh là `MediaSlot` nhận
   `attribution={anh.nguon}` nên ghi công in ngay dưới khung; `anh === null`
-  thì không khung 16:10 mà là đầu bài gọn (`PlaceGlyph` 34 + tên + sự thật).
+  thì không khung 16:10 mà là **tờ ký hoạ** (`KyHoa`, 3:1 · 4:1 ở chữ lớn) rồi
+  tên + sự thật, cùng bố cục cột như lead có ảnh (tới 11/09 là ô giấy 34 + tên;
+  xem «Luật Ký Hoạ Trong Sổ»).
 - **`PlaceCompare`**: hai ứng viên **trên một trục**, không thẻ quanh ô nào:
   hàng `gap` 16, đệm dưới 12, kẻ tóc `line` dưới; mỗi ô `flex 1` gồm
   `MediaSlot` **4:3** với trái tim `IconButton` ở góc dưới phải **trên ảnh**
@@ -1299,12 +1304,11 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   local» → `mon-local`, «Ngoài trời» → `outdoor`, karaoke, game, mua sắm, cà
   phê, đi đêm) rồi mới `guTheoLoai(loai)` (`quan-an-local → an-uong`, `cafe`,
   `vui-choi → game`, `di-choi-dem → nightlife`, còn lại → thẻ gấp); Ionicons
-  màu `ink` chỉ khi không có cả hai. Cùng một ô cho ảnh dẫn gọn (34), fallback
-  `MediaSlot` (44), cặp so sánh (24/34), thumb hàng (33), chi tiết fixture
-  (36) và **đầu bài gọn của chi tiết live** (36 + con dấu trên một hàng
-  `dauGon`, không khung 16:10 rỗng khi không có bìa;
-  `r14-81-chi-tiet-*`). Khung trống **không bao giờ** là ảnh stock. Không
-  thêm token.
+  màu `ink` chỉ khi không có cả hai. Cùng một ô cho fallback `MediaSlot` (44),
+  cặp so sánh (24/34), thumb hàng (33). **Lead không ảnh và đầu bài chi tiết
+  không bìa (fixture + live `dauGon`) từ 11/09 dùng tờ ký hoạ `KyHoa` thay ô
+  34/36** — vẫn không khung 16:10 rỗng (`ky-hoa-trong-so/`). Khung trống
+  **không bao giờ** là ảnh stock. Không thêm token.
 
 ### Chat: sticker, trích dẫn, tin đã xoá, theme bong bóng (M15 L1–L2)
 - **Sticker** là hình vector từ từ vựng đóng (`chat/sticker.ts`, 8 hình, cùng
@@ -1825,6 +1829,24 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   cắt».
 - **Do** trải chất liệu bằng `Grain` (lưới ô) ở đúng opacity đo được: vải
   0.30 (bìa **và nền tối**), giấy 0.45 (chỉ nền sáng), mực 0.26; dưới ngưỡng là màu phẳng.
+- **Luật Ký Hoạ Trong Sổ** (11/09, review Codex A1 «Khám phá vẫn là danh mục có style»): nơi **chưa có ảnh** ở vị trí
+  dẫn của Khám phá và ở đầu bài chi tiết không bìa nhận **một tờ ký hoạ** (`KyHoa`, `art/ky-hoa.ts`) — tờ `paper` rộng
+  hết cột, 3:1 ở chữ 1.0 và 4:1 ở chữ lớn, **một hình, hai khung cắt** (`preserveAspectRatio slice`, bản `gon` ít lớp
+  hơn). Hình gồm **sân khấu theo loại nơi** (`quan-an-local` hiên quán bàn dài · `cafe` góc cửa kính · `vui-choi` đồi
+  thông nhìn từ lan can · `di-choi-dem` quầy đêm dưới dây đèn · loại lạ: tờ ghi gấp trên sàn), **tối đa hai đạo cụ theo
+  tag có thật** («View đẹp» đồi phía sau · «Nhóm đông»/«Lẩu» bốn bát · «Chill»/«Nhẹ nhàng» rèm, cây treo · «Món local»
+  nồi · «Ngoài trời»/«Săn mây» mây · «Đi đêm»/«Nhộn nhịp» thêm đèn · «BBQ» khói · «Hoa»/«Chụp ảnh» hoa · «Cà phê»/«Trà»
+  cốc) và **đúng một điểm coral = nguồn sáng** (bóng đèn dưới mái, đèn thả, mặt trời sát đồi, bóng đèn giữa dây). Ba cỡ
+  nét theo độ sâu (gần 3.0 · vừa 2.4 · xa 1.7), bóng là mảng `bong`, mọi mảng tô đi theo đúng đường cong của nét
+  viền. **Thật thà:** ký hoạ vẽ *một loại nơi*, không vẽ nơi cụ thể — không tên, không bảng hiệu, không giả ảnh; câu
+  a11y mở bằng «Ký hoạ …» và **chỉ kể đạo cụ mà khung đọc ấy thật sự vẽ** (bản gọn bớt đạo cụ thì câu cũng bớt; test
+  «bỏ một tag làm câu đổi ⇔ làm hình đổi»); **bản gọn là tập con của bản đủ** — hai đạo cụ chọn cho bản đủ, bản gọn
+  chỉ bỏ, không bù bằng tag sau; live chỉ có loại (không tag) nên hai quán ăn nhận cùng một hiên — đó là sự
+  thật của dữ liệu.
+  Hàng và cặp so sánh **giữ ô giấy loại nơi**: một khoảnh khắc hình mỗi màn. Không thay ảnh thật có ghi công khi có.
+  Đọc mù (agent context mới, chưa biết brief) trên bản v2 đã đánh trượt: bát treo dưới mép bàn, vạch mái = thước, cửa
+  kính = laptop có biểu đồ, thông = mũi tên, mây = Venn, móc dây = icon refresh — v3 sửa từng thứ; những gì người ngoài
+  đọc được vẫn là câu hỏi cho team (`docs/claude/2026-09-11/ky-hoa-trong-so/`).
 - **Bản tối là sổ đóng trên bàn** (11/09, review Codex A3 «bản tối giữ màu thương hiệu nhưng chưa giữ cảm giác giấy»):
   ngày là trang giấy mở (`ground` có vân `giayTrang` 0.45); **đêm là cuốn sổ đóng lại trên bàn** — nền tối trải vân
   **vải bìa** (`Grain vaiBia` 0.30, đo trên nền tối stddev ≈ 8.1–8.6 mức, trước đó vân giấy 0.30 chỉ ≈ 0.8–2.1),
@@ -1877,7 +1899,8 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   trước khi đọc nhãn; hình mới thêm vào `tests/rudi-chat-sticker.test.mjs`
   chạy cả hai cỡ.
 - **Do** vẽ phân loại bằng `GuGlyph` (chip `leading`, ô gu, khung trống
-  `PlaceGlyph`), mực đổi coral khi chọn; id lạ là thẻ gấp.
+  `PlaceGlyph` ở hàng, cặp so sánh, fallback ảnh hỏng), mực đổi coral khi chọn;
+  id lạ là thẻ gấp. Lead không ảnh và đầu bài không bìa là `KyHoa`, không ô gu.
 - **Do** dùng `note` (13/400) cho dòng phụ là một câu và giữ `caption` (600)
   cho nhãn ngắn.
 - **Do** xếp kết quả Khám phá dẫn → cặp so sánh (4:3, tim trên ảnh, giá
@@ -2028,8 +2051,9 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - *Lịch sử tới 10/09:* `PlaceGlyph` là đĩa `accentSoft` giữ cả ở dark theo
   quyết định 08/09 vòng 2; `PlaceLead` in con dấu «HỢP GU» **và** «Hợp gu
   nhờ …». **Hiện hành (11/09, nhánh `ui6-kham-pha-mot-ly-do`):** ô giấy và
-  một dấu cho một địa điểm (mục «Hàng địa điểm», Luật Một Dấu). Ghi lại để
-  người sau không khôi phục đĩa. **Chưa chứng minh:** người đọc không được
+  một dấu cho một địa điểm (mục «Hàng địa điểm», Luật Một Dấu); cùng ngày
+  (nhánh `ui7-ky-hoa-trong-so`) lead không ảnh và đầu bài không bìa rời ô giấy
+  sang tờ ký hoạ `KyHoa`. Ghi lại để người sau không khôi phục đĩa. **Chưa chứng minh:** người đọc không được
   báo trước có nhận ô giấy là «danh mục» hay đọc là nút; lý do live (câu của
   mô hình) ở 2.0 — `LyDo` cho 2 dòng (3 khi chữ lớn), câu dài hơn nữa vẫn
   «…»; ảnh `r14-80-*-fs2.0-*` chỉ có tag một–hai chữ của fixture, chưa có ảnh
@@ -2045,6 +2069,7 @@ cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG pa
 cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/claude/2026-09-11/motion-v2/
 cd apps/mobile && node --test tests/rudi-khong-card-trong-cai-dat.test.mjs   # không file nào trong screens/cai-dat import Card; NhomHang có trong kit; in các màn còn dùng Card (nợ có tên)
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
+cd apps/mobile && node --test tests/art-ky-hoa.test.mjs       # ký hoạ: lớp hợp lệ trong 288×96 ở cả hai khung đọc, đúng một lớp coral, bản gọn ⊂ bản đủ, ≤ 2 đạo cụ, câu a11y đổi ⇔ hình đổi
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly-do.test.mjs tests/khong-mo-coi.test.mjs   # chonLyDo bỏ tag mô tả đã nói, guTheoTag trước guTheoLoai; khongMoCoi nối hai chữ cuối bằng NBSP
 node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>   # dump uiautomator Khám phá fixture: 0 node «hợp gu», tiêu đề mục đúng một node, dẫn có một lý do là tag, mô tả không lặp từ

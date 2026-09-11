@@ -59,6 +59,7 @@ import { anhDanhMuc } from "../../ui/ghi-cong";
 import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceGlyph } from "./HangDiaDiem";
+import { KyHoa } from "../../ui/art/KyHoa";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; place: PlaceDetail } | { pha: "hong"; loi: string };
 
@@ -252,8 +253,10 @@ function ThanChiTiet({
           follows at once. With a picture, the frame and the seal on it as before. */}
       {bia === null ? (
         <View style={styles.dauGon}>
-          <PlaceGlyph glyph={bieuTuongLoai(place.category)} loai={place.category} size={36} />
-          {hop !== null && hop.real ? <Stamp label={hop.text} tone="ai" /> : null}
+          {/* The sketch of the kind of place (category only: live carries no
+              tags), then the seal on its own row (review 11/09 A1). */}
+          <KyHoa loai={place.category} tags={[]} />
+          {hop !== null && hop.real ? <Stamp label={hop.text} style={styles.dauGonDau} tone="ai" /> : null}
         </View>
       ) : (
         <MediaSlot
@@ -453,7 +456,8 @@ const styles = StyleSheet.create({
   khung: { gap: 16 },
   badgeOnMedia: { position: "absolute", left: 12, top: 12 },
   dau: { gap: 8 },
-  dauGon: { flexDirection: "row", alignItems: "center", gap: 12 },
+  dauGon: { gap: 12 },
+  dauGonDau: { alignSelf: "flex-start" },
   duongDi: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   diaChi: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48 },
   bam: { opacity: 0.7 },

@@ -1,0 +1,20 @@
+# PR D (11/09, A1): bảng «Ký hoạ» trên ui-lab — bốn sân khấu + loại lạ, mỗi cái hai khung cắt (3:1 và 4:1).
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Ký hoạ · sân khấu theo loại, đạo cụ theo tag, hai khung đọc"
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: r17-97-ky-hoa-lab-tren
+- scrollUntilVisible:
+    element:
+      id: "lab-ky-hoa-di-choi-dem-gon"
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: r17-97-ky-hoa-lab-duoi
