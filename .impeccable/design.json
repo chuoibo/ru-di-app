@@ -896,6 +896,11 @@
         "name": "Luật Nói Một Lần",
         "body": "Mỗi trạng thái và mỗi sự thật có một chỗ trên màn: tên địa điểm ở HangChang phu, nháp ở đầu màn, check-in là một con dấu, luật tính sau «Cách tính», ngày album ở tiêu đề.",
         "section": "components"
+      },
+      {
+        "name": "Hành động phụ trong tờ mang chữ",
+        "body": "Trong một tờ (aiSheet, ToGiay), mọi hành động có tên bằng chữ: nút bình chọn là RudiButton outline ai «Bình chọn» viền lineStrong (tông chỉ ở chữ), a11y «Mở bình chọn», không còn IconButton stats-chart-outline; ở chữ lớn (chuLon ≥ 1.28) cặp nút xếp dọc hết cột. Icon-only chỉ cho hành động đã có quy ước toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi). 11/09, review Codex A4, finish review ship.",
+        "section": "components"
       }
     ],
     "notCanonized": [

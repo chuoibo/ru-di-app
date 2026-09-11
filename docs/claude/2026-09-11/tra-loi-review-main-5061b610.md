@@ -52,3 +52,16 @@ v2 (thường 268/924/406/274, reduce 45/708/62/59). Điểm mới không giấu
 Đo release qua HTTPS local (chuỗi v3 chạy được ngay khi có stack, `FLOWS_DIR=.maestro-motion-live`); iOS/máy thật;
 nhiều lượt để có khoảng tin cậy. R2 đóng ở **phương pháp và lời hứa fail-closed** trong phạm vi canary 16 nhánh + một
 lượt thật trên dev client, không tuyên «§5 đạt toàn app».
+
+## PR B — A4: nút bình chọn mang chữ
+
+Codex A đúng: icon cột biểu đồ không nhãn là một cái đoán; nhãn a11y đúng không giúp mắt. Sửa ở `Group.tsx` (tờ AI
+fixture; thẻ live không có nút): `RudiButton outline ai` «Bình chọn» cạnh `soft ai` «Xem lịch trình», a11y «Mở bình
+chọn» giữ nên hai flow đang bấm nó (06, 65) chạy lại rc 0; ở chữ lớn hai nút xếp dọc hết cột.
+
+Finish reviewer (context mới) trả `fix` một điểm tôi không thấy: ở 2.0 xếp dọc, **viền tím** của nút phụ (5.8:1) sắc
+hơn **nền tô nhạt** của nút chính (1.17:1) nên mắt rơi vào «Bình chọn» trước — hai CTA ngang hàng, trái luật một quyết
+định. Sửa: viền `lineStrong`, tông chỉ ở chữ; reviewer đo lại, chấm **resolved**, `ship` trong phạm vi này. DESIGN.md
+có luật «Hành động phụ trong tờ mang chữ» và ngoại lệ viền ở mục Buttons. Bằng chứng:
+`docs/claude/2026-09-11/binh-chon-co-chu/`. Chưa chứng minh: người ngoài phân biệt «Bình chọn» với «xem thống kê»
+(Codex yêu cầu người thật — để team); TalkBack.

@@ -2422,6 +2422,54 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-sang.png",
+      "sha256": "35a3357dcbf0f31159a70e72fbe50010881c0d8267adf5ba7056fa9f0aca9f72",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-toi.png",
+      "sha256": "d7f7fcceff39f0bcf83cd507bae905c861c94e85f614167658f88d064503bd3b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-sang.png",
+      "sha256": "72d7205fc63003ece2825230c95266128db607271395c5932505e6e81a1083a0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-toi.png",
+      "sha256": "7202994c85435fcddb5a05ef9c786a363c5b1721e12d03d56860b65210d154ce",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs1.0-sang.png",
+      "sha256": "f5c837f69c50d647eb678672b535c790d1bbb128214f867a8128dad94e1236ed",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
+    },
+    {
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs2.0-toi.png",
+      "sha256": "ce418d530f2aac57d5cac391a6eaa8e28fc736b4e9461dd9d0060dca1e397b79",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     }
   ]
 }

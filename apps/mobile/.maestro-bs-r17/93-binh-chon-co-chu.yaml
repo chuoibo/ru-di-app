@@ -1,0 +1,21 @@
+# A4 (review 11/09): hành động phụ trong tờ AI có chữ «Bình chọn» (không còn icon
+# cột biểu đồ một mình); a11y «Mở bình chọn» vẫn là cái flow 06/65 bấm.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- tapOn: "Tin nhắn"
+- scrollUntilVisible:
+    element:
+      text: "Xem lịch trình"
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
+- assertVisible: "Rủ Đi đã phác một plan"
+- assertVisible: "Bình chọn"
+- assertVisible: "AI nháp"
+- takeScreenshot: r17-93-chat-ai-binh-chon
+- tapOn: "Mở bình chọn"
+- extendedWaitUntil:
+    visible: "BBQ tối thứ Bảy ở đâu?"
+    timeout: 15000
+- takeScreenshot: r17-93-man-binh-chon
