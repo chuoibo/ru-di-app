@@ -159,7 +159,7 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
     { icon: "wallet-outline", text: gia },
   ];
   return [
-    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", anh: anhLab(demoAssets.cafe, 0), badge: "Hợp gu", lyDo: "Hợp gu nhờ hai gu tổng hợp" },
+    { id: "lab-a", name: ten("Bánh căn Lệ", "Tiệm Bánh Căn Cô Lệ Đường Nguyễn Văn Trỗi"), sub: "Một dòng mô tả tổng hợp, không phải quán thật", facts: facts("4.6 (188)", "900 m", "40K - 80K/người"), glyph: "location-outline", loai: "quan-an-local", anh: anhLab(demoAssets.cafe, 0), badge: "Hợp gu", lyDo: "Hai gu tổng hợp" },
     { id: "lab-b", name: ten("Lẩu gà lá é", "Lẩu Gà Lá É Gốc Đường Ba Tháng Hai Phường Một"), sub: "Đủ chỗ nhóm tám, tổng hợp", facts: facts("4.7 (214)", "1,6 km", "180K - 260K/người"), glyph: "location-outline", loai: "quan-an-local", anh: anhLab(demoAssets.road, 1), badge: null },
     { id: "lab-c", name: ten("Still Cafe", "Still Cafe Đà Lạt Chi Nhánh Đường Trần Hưng Đạo"), sub: "Cà phê view đồi, tổng hợp", facts: facts("4.7 (512)", "1,8 km", "120K - 200K/người"), glyph: "location-outline", loai: "cafe", anh: anhLab(demoAssets.cafe, 2), badge: "Hợp gu" },
     { id: "lab-d", name: ten("Tiệm trà Sương", "Tiệm Trà Sương Sớm Trên Đồi Thông Phường Mười"), sub: "Trà thảo mộc, tổng hợp", facts: facts("4.5 (143)", "2,1 km", "80K - 140K/người"), glyph: "location-outline", loai: "cafe", anh: anhLab(demoAssets.road, 3), badge: null },
