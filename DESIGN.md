@@ -910,7 +910,10 @@ tạo), `KhungAnh` 3, `HangChang anh` 2 (Outing, Group), `DongTien` 2, `StampBut
   dòng, icon 20; `solid` = nền `<tone>` phẳng và nhãn `<tone>Ink` theo
   scheme (album «Thêm khoảnh khắc» accent, lịch trình «Dùng plan này» ai);
   `outline` = nền `card` viền `lineStrong` chữ màu tông với `accent`, viền màu
-  tông với `split`/`ai` («Đánh dấu đã trả» teal, «Chỉnh lịch trình» tím);
+  tông với `split`/`ai` («Đánh dấu đã trả» teal, «Chỉnh lịch trình» tím) —
+  ngoại lệ duy nhất: `outline ai` đứng cạnh `soft ai` trong tờ AI của chat
+  giữ viền `lineStrong`, tông chỉ ở chữ (xem «Nhịp của tờ AI trong luồng
+  chat»);
   `soft` = nền `<tone>Soft`; `ghost` trong suốt. Nhấn **co 0.98 bằng lò xo
   trên UI thread** (`PressScale`), không còn mờ 0.82; `disabled` 0.45. Hai nút chân đứng cạnh nhau trong `footer`, outline trái,
   solid phải.
@@ -1560,11 +1563,19 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   khung `aiSheet` fixture (Group) và tiêu đề lịch trình live của `TheAi`
   (`the.tieuDe`) và câu hỏi của thẻ bình chọn (`the.question`). Thứ tự: tiêu đề → **một** dòng gist («3 ngày 2 đêm · đồ ăn
   local · săn mây») → quyết định ngay (`RudiButton soft ai` «Xem lịch trình»
-  + `IconButton` «Mở bình chọn») → lý do sau **một cửa mở** («Vì sao phác
-  vậy»: `Pressable` 48, `label inkSoft` + chevron, `accessibilityState
-  expanded` — cùng hình «Cách tính» của Thành tích) → chân ký `caption ai`
-  «Rủ Đi AI» + badge «AI nháp». Thân **không** nhắc «nhóm sửa được trước khi
-  chốt»: badge đã nói nháp một lần.
+  kéo hàng + `RudiButton outline ai` «Bình chọn» vừa chữ, **viền
+  `lineStrong`, tông chỉ ở chữ** — viền tím sắc hơn nền tô nhạt nên khi xếp
+  dọc nó thắng mắt (finish review 11/09); a11y «Mở bình chọn»; ở chữ lớn hai
+  nút xếp dọc, mỗi nút hết cột) → lý do sau **một cửa
+  mở** («Vì sao phác vậy»: `Pressable` 48, `label inkSoft` + chevron,
+  `accessibilityState expanded` — cùng hình «Cách tính» của Thành tích) →
+  chân ký `caption ai` «Rủ Đi AI» + badge «AI nháp». Thân **không** nhắc
+  «nhóm sửa được trước khi chốt»: badge đã nói nháp một lần.
+- **Hành động phụ trong tờ mang chữ** (11/09, review Codex A4): nút bình
+  chọn từng là `IconButton stats-chart-outline` không nhãn và được đọc thành
+  «xem thống kê»; nhãn a11y đúng không cứu được mắt đang nhìn icon. Trong một
+  tờ, mọi hành động có tên bằng chữ; icon-only chỉ cho hành động đã có quy ước
+  toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi).
 
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*

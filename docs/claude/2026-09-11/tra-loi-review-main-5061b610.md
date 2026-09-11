@@ -52,3 +52,46 @@ v2 (thường 268/924/406/274, reduce 45/708/62/59). Điểm mới không giấu
 Đo release qua HTTPS local (chuỗi v3 chạy được ngay khi có stack, `FLOWS_DIR=.maestro-motion-live`); iOS/máy thật;
 nhiều lượt để có khoảng tin cậy. R2 đóng ở **phương pháp và lời hứa fail-closed** trong phạm vi canary 16 nhánh + một
 lượt thật trên dev client, không tuyên «§5 đạt toàn app».
+
+## PR B — A4: nút bình chọn mang chữ
+
+Codex A đúng: icon cột biểu đồ không nhãn là một cái đoán; nhãn a11y đúng không giúp mắt. Sửa ở `Group.tsx` (tờ AI
+fixture; thẻ live không có nút): `RudiButton outline ai` «Bình chọn» cạnh `soft ai` «Xem lịch trình», a11y «Mở bình
+chọn» giữ nên hai flow đang bấm nó (06, 65) chạy lại rc 0; ở chữ lớn hai nút xếp dọc hết cột.
+
+Finish reviewer (context mới) trả `fix` một điểm tôi không thấy: ở 2.0 xếp dọc, **viền tím** của nút phụ (5.8:1) sắc
+hơn **nền tô nhạt** của nút chính (1.17:1) nên mắt rơi vào «Bình chọn» trước — hai CTA ngang hàng, trái luật một quyết
+định. Sửa: viền `lineStrong`, tông chỉ ở chữ; reviewer đo lại, chấm **resolved**, `ship` trong phạm vi này. DESIGN.md
+có luật «Hành động phụ trong tờ mang chữ» và ngoại lệ viền ở mục Buttons. Bằng chứng:
+`docs/claude/2026-09-11/binh-chon-co-chu/`. Chưa chứng minh: người ngoài phân biệt «Bình chọn» với «xem thống kê»
+(Codex yêu cầu người thật — để team); TalkBack.
+
+## PR C — A3: bản tối là «sổ đóng trên bàn»
+
+Codex A và Codex chính cùng nói một điều: bản tối giữ màu, mất chất liệu. Đo trên token và ảnh của họ thấy ba
+nguyên nhân, không nguyên nhân nào là «thiếu noise»: (1) vân giấy đêm 0.30 đo 0.8–2.1 mức — dưới ngưỡng nhìn, nghĩa
+là nền tối **chưa từng** có chất liệu; (2) thân giấy của mọi hình vẽ là `card #1f2340` trên nền `#151830`, 1.14:1;
+(3) bóng gấp là `line #363b5e` **sáng hơn** mặt giấy — nếp gấp lộn trong ra ngoài, nên Nếp thành sơ đồ nét.
+
+Câu chuyện chọn cùng bạn: ngày là trang giấy mở; **đêm là cuốn sổ đóng lại trên bàn** — nền là vải bìa (vân đã đo ≈ 8
+mức, đang dùng trên Welcome), mọi hình vẽ là **tờ giấy đêm** đặt lên vải (`paper #2e335c`, cao hơn nền 13.5 bậc L* —
+cùng quan hệ mặt/nền như giấy sáng; bóng gấp `paperShade #181b36`, thấp hơn mặt 11.8 bậc — như `line` dưới `card` ban
+ngày). Thẻ và chữ **không đổi token**; `paper`/`paperShade` sáng trùng `card`/`line` nên sáng không đổi một pixel
+(đo: 0 pixel khác dưới status bar ở Khám phá và màn lỗi, 1.0 và 2.0).
+
+Số đo cặp trước/sau cùng màn (`docs/claude/2026-09-11/toi-giay-tren-vai/`): stddev nền tối 0.79–2.11 → **8.05–8.59**
+(Khám phá 1.0/2.0, khay, màn lỗi); tông giấy đêm trong ô glyph Khám phá 1.1% → **88.6%**, trong cảnh tờ rách 3.0% →
+**29.7%**. Codex A gợi «có thể chọn và ghi rõ bản tối là bìa vải thay vì giấy, nhưng phải nhìn thấy vật liệu ấy ở cỡ
+máy thật» — đúng hướng này; chưa nhìn trên máy thật.
+
+Finish reviewer (context mới) **đọc mù ba cặp A/B trước packet**: gọi bản «vật liệu, tờ giấy có thân» ở cả ba
+cặp, đối chiếu sau đều là bản *sau*. Phán quyết `fix` với hai việc tài liệu, không có việc mã, rồi `ship` sau khi
+sửa: (1) vân vải 0.30 **nâng nền tối thực** từ `#151830` lên `#1c1f36` (+7 mức xám, đo cả ba màn) — câu «ô vân trung
+tính không đổi màu token» của DESIGN.md sai trên nền tối nhất; bảng tương phản tính trên token cao hơn thực ~8%
+(`inkFaint` 5.87, `lineStrong` 4.34 vẫn qua sàn; `card` trên nền thực **1.06:1** → thẻ tối phải giữ viền `line`).
+Ghi vào `Grain.tsx`, DESIGN.md «Elevation & Depth» và README; **không** hạ opacity vải hay đổi `paper` để «bù». (2)
+Ô khay sticker (`KhaySticker` nền `ground` phẳng trong tấm `card`) là chỗ duy nhất giấy đêm nằm trên màu không vân —
+ghi là giới hạn, không sửa trong PR này.
+
+Chưa chứng minh: cảm giác vật liệu trên màn OLED thật; các màn tối khác chỉ đổi vân nền, chưa chụp hết; khay ở 2.0
+không có ảnh (flow ui-lab đỏ ở chữ lớn trước và sau, không liên quan).

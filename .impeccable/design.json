@@ -904,6 +904,11 @@
         "name": "Bản tối là sổ đóng trên bàn",
         "body": "Ngày là trang giấy mở (ground sáng + Grain giayTrang 0.45); đêm là sổ đóng trên bàn: ground tối trải Grain vaiBia 0.30 (đo stddev ≈ 8.1–8.6 mức), mọi hình vẽ (Nếp, cảnh, sticker, ô giấy loại nơi) là tờ giấy đêm paper #2e335c với bóng gấp paperShade #181b36 (sáng trùng card/line, scheme sáng không đổi pixel). Thẻ, hàng, chữ giữ card/line/ink. Caveat đo được: ô vải nâng ground tối #151830 lên #1c1f36 (+7 mức) nên tỉ số tối tính trên token cao hơn thực ~8% (inkFaint 5.87, lineStrong 4.34); card trên nền thực 1.06:1 nên hộp tối phải giữ viền line. Bằng chứng docs/claude/2026-09-11/toi-giay-tren-vai/.",
         "section": "elevation"
+      },
+      {
+        "name": "Hành động phụ trong tờ mang chữ",
+        "body": "Trong một tờ (aiSheet, ToGiay), mọi hành động có tên bằng chữ: nút bình chọn là RudiButton outline ai «Bình chọn» viền lineStrong (tông chỉ ở chữ), a11y «Mở bình chọn», không còn IconButton stats-chart-outline; ở chữ lớn (chuLon ≥ 1.28) cặp nút xếp dọc hết cột. Icon-only chỉ cho hành động đã có quy ước toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi). 11/09, review Codex A4, finish review ship.",
+        "section": "components"
       }
     ],
     "notCanonized": [
