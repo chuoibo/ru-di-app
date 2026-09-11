@@ -176,10 +176,12 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
             </View>
             <View style={styles.tripPinText}>
               <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>{DEMO_GROUP.tripName}</Text>
-              {/* Keep the decision-bearing dates readable at large text. The
-                  group size is already in the header above; do not spend the
-                  pinned row on repeated prose or truncate the date range. */}
-              <Text style={[typography.caption, { color: colors.inkSoft }]}>17 - 19/10/2026</Text>
+              {/* Keep the dates readable at large text -- and keep the words
+                  that say what the row IS. Measured on the emulator at font
+                  scale 1.3 (12/09): only the trailing «· 8 người» was clipped,
+                  and that count is already in the header above. Dropping the
+                  frame as well left a pinned row that reads as a bare date. */}
+              <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>Chuyến đi sắp tới · 17 - 19/10/2026</Text>
             </View>
             <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
           </Pressable>
