@@ -53,7 +53,8 @@
       ["expo-dev-client", { "launchMode": "most-recent" }],
       "@react-native-google-signin/google-signin",
       "./plugins/tat-nut-noi-dev-menu",
-      "expo-font"
+      "expo-font",
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true

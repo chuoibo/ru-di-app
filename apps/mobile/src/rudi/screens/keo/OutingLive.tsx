@@ -17,8 +17,8 @@
  * shrinks a sum to fit a row.
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -32,6 +32,7 @@ import {
   type ChangDung,
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
+import { tabBarHeight } from "../../adaptive";
 import { docDanhMuc } from "../../kham-pha/dia-diem";
 import {
   cauDaToi,
@@ -56,6 +57,11 @@ import { ReorderList } from "../../ui/ReorderList";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 import { HangChang } from "./HangChang";
+import { chieuTuChang, ganMappedTheoId } from "../../hanh-trinh/chieu";
+import { useCheDoLichTrinh } from "../../hanh-trinh/che-do";
+import { ManHinhHanhTrinh } from "../../hanh-trinh/ManHinhHanhTrinh";
+import { ThanhCheDo } from "../../hanh-trinh/ThanhCheDo";
+import { toiUuGanNhat } from "../../hanh-trinh/toi-uu";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -94,6 +100,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const outingId = thamSoChuoi(params.id);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [thongBao, setThongBao] = useState<string | null>(null);
@@ -110,6 +117,8 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const writing = useRef(false);
   const retry = useRef<{ key: string; attempt: Attempt } | null>(null);
   const contextId = phien.context_id;
+  const che = useCheDoLichTrinh();
+  const hanhTrinh = che.cheDo === "hanh-trinh";
 
   const nap = useCallback(async () => {
     if (contextId === null || !outingId) return;
@@ -145,6 +154,17 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     () => (trang.pha === "xong" ? nhomCheckInTheoChang(trang.daToi) : {}),
     [trang],
   );
+
+  useEffect(() => {
+    if (hanhTrinh) void napDanhMuc();
+  }, [hanhTrinh, napDanhMuc]);
+
+  const cho = useMemo(
+    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address })),
+    [danhMuc],
+  );
+  const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
+  const hanh = useMemo(() => chieuTuChang(stopsHien, cho), [stopsHien, cho]);
 
   if (contextId === null) return <Redirect href="/(tabs)/plan" />;
 
@@ -271,21 +291,47 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       </>
     ) : null;
 
+  const toiUu = async () => {
+    if (trang.pha !== "xong" || draft !== null) return;
+    const mapped = hanh.activities.filter((a) => a.lat !== null && a.lng !== null);
+    if (mapped.length < 2) return;
+    const ids = toiUuGanNhat(mapped.map((a) => ({ id: a.id, lat: a.lat as number, lng: a.lng as number })));
+    // `at` belongs to the slot, not to the stop: reordering by geography must
+    // not make the evening run backwards. See ganMappedTheoId.
+    await ghiLichTrinh(trang.keo, ganMappedTheoId(trang.keo.stops, ids, "at").map(changGuiTu));
+  };
+
   return (
-    <RudiScreen overlay={overlay} scrollEnabled={!dragging} testID="outing-screen">
-      <TopBar
-        right={
-          trang.pha === "xong" ? (
-            <IconButton
-              accessibilityLabel="Thành viên nhóm"
-              icon="people-outline"
-              onPress={() => router.push(`/groups/${trang.keo.context_id}/members` as never)}
-              quiet
-            />
-          ) : undefined
-        }
-        title="Kèo"
-      />
+    <RudiScreen
+      contentStyle={hanhTrinh ? styles.mapInner : undefined}
+      header={
+        <View style={styles.dauMan}>
+          <TopBar
+            right={
+              trang.pha === "xong" ? (
+                <IconButton
+                  accessibilityLabel="Thành viên nhóm"
+                  icon="people-outline"
+                  onPress={() => router.push(`/groups/${trang.keo.context_id}/members` as never)}
+                  quiet
+                />
+              ) : undefined
+            }
+            title="Kèo"
+          />
+          {trang.pha === "xong" ? (
+            <Text style={[typography.caption, { color: colors.inkSoft }]} numberOfLines={1}>
+              {trang.keo.title}
+            </Text>
+          ) : null}
+          {trang.pha === "xong" ? <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} /> : null}
+        </View>
+      }
+      overlay={overlay}
+      padded={!hanhTrinh}
+      scroll={!hanhTrinh && !dragging}
+      testID="outing-screen"
+    >
       {trang.pha === "dang-doc" ? (
         <SkeletonGroup style={styles.khung}>
           <SkeletonLines lastWidth="40%" lineHeight={22} lines={2} />
@@ -296,7 +342,28 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => router.back() }} title="Chưa mở được kèo" />
       ) : null}
-      {trang.pha === "xong" ? (
+      {trang.pha === "xong" && hanhTrinh ? (
+        <ManHinhHanhTrinh
+          dangToiUu={dangGhi}
+          fitDem={che.fitDem}
+          hanh={hanh}
+          onChonDoan={che.chonDoan}
+          onChonMoc={che.chonHoatDong}
+          onKhop={che.khopHanhTrinh}
+          onNen={() => {
+            che.chonHoatDong(null);
+            che.chonDoan(null);
+          }}
+          onToiUu={draft ? undefined : () => void toiUu()}
+          onUserMove={che.userMove}
+          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
+          chanDuoi={tabBarHeight(fontScale)}
+          selectedActivityId={che.selectedActivityId}
+          selectedSegmentId={che.selectedSegmentId}
+          toiDem={che.toiDem}
+        />
+      ) : null}
+      {trang.pha === "xong" && !hanhTrinh ? (
         <>
           <View style={styles.dau}>
             <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
@@ -338,11 +405,19 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                   return (
                     <HangChang
                       accessibilityLabel={`Chặng ${stop.label}`}
+                      chon={che.selectedActivityId === stop.id}
                       cuoi={i === soChang - 1}
                       daToi={toiRoi}
                       ghiChu={cauDaToi(daToi, phien.person_id)}
                       gio={stop.at}
-                      onPress={() => moHang(stop)}
+                      onPress={() => {
+                        if (che.selectedActivityId === stop.id) {
+                          moHang(stop);
+                          return;
+                        }
+                        che.chonHoatDong(stop.id);
+                        if (stop.place_id === null) moHang(stop);
+                      }}
                       phac={draft !== null}
                       phai={
                         toiRoi ? (
@@ -390,6 +465,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 const styles = StyleSheet.create({
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },
   flex: { flex: 1 },
+  // The map is the page here: it runs to the bottom edge and the journey
+  // panel keeps its own clearance over the tab bar.
+  mapInner: { flex: 1, paddingBottom: 0 },
+  dauMan: { gap: 8, paddingBottom: 8 },
   khung: { gap: 14 },
   dau: { gap: 8 },
   tien: { flexDirection: "row", flexWrap: "wrap", gap: 24, marginTop: 4 },

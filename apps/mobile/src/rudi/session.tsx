@@ -145,6 +145,7 @@ type RudiSessionApi = RudiSession & {
   addPlaceToTrip: (placeId: string) => boolean;
   removeItinerarySlot: (day: number, index: number) => void;
   moveItinerarySlot: (day: number, index: number, direction: -1 | 1) => void;
+  datHangNgay: (day: number, items: ItineraryDay["items"]) => void;
   setItineraryEditing: (value: boolean) => void;
   setTripName: (value: string) => void;
   setDestination: (value: string) => void;
@@ -354,6 +355,13 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
         const swap = items[index];
         items[index] = items[next];
         items[next] = swap;
+        return { ...current, itinerary };
+      }),
+    datHangNgay: (day, items) =>
+      setState((current) => {
+        const itinerary = cloneItinerary(current.itinerary);
+        if (!itinerary[day]) return current;
+        itinerary[day] = { ...itinerary[day], items: items.map((slot) => ({ ...slot })) };
         return { ...current, itinerary };
       }),
     setItineraryEditing: (itineraryEditing) => setState((current) => ({ ...current, itineraryEditing })),

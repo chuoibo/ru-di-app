@@ -196,6 +196,33 @@ export const bangMauFixture = {
   than: "#1F2230",
 };
 
+/** Marker / polyline colours for the journey map. Tokens only — never a literal in the map files. */
+export function mauMocHanhTrinh(colors: RudiPalette) {
+  return {
+    moc: colors.accent,
+    mocInk: colors.accentInk,
+    mocChon: colors.split,
+    duong: colors.accent,
+    // Softened accent, not grey line: an unselected leg is still OUR route.
+    // Grey made the journey read as one more road on the basemap.
+    duongMo: phuMau(colors.accent, 0.62),
+    /** Paper casing under the line, the way an ink route sits on the page. */
+    vienDuong: colors.card,
+    the: colors.card,
+    muc: colors.ink,
+    vien: colors.card,
+    xong: colors.split,
+    hienTai: colors.accent,
+    sapToi: colors.ai,
+  };
+}
+
+/** Sequential milestone fill: accent → split → ai, then repeat. */
+export function mauSoMoc(colors: RudiPalette, so: number): string {
+  const ds = [colors.accent, colors.split, colors.ai] as const;
+  return ds[(Math.max(1, so) - 1) % ds.length];
+}
+
 /** `#rrggbb` + alpha -> `rgba()`; the only place a colour is composed at runtime. */
 export function phuMau(hex: string, alpha: number): string {
   const n = parseInt(hex.slice(1, 7), 16);

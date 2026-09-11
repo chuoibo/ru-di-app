@@ -1,0 +1,42 @@
+# Journey is a second view of the fixture timeline, not a new route.
+#
+# What this flow can prove on a dev client that links MapLibre: the switch, the
+# stop rail (the only element that names every stop -- a MapLibre marker puts
+# nothing in the accessibility tree), the stop card, the day with no mapped
+# stop, and the trip back to the timeline. Tiles and pins are pixels; they are
+# checked by eye against the screenshots this flow takes.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://trips/team-da-lat/timeline
+- extendedWaitUntil:
+    visible: "Lịch trình"
+    timeout: 60000
+- tapOn: "Hành trình"
+- extendedWaitUntil:
+    visible: "Khớp hành trình"
+    timeout: 30000
+# The day's totals. The distance and the duration move with the routing source
+# (road geometry when OSRM answers, straight line when it does not), so the
+# assertion is on the part that is ours.
+- assertVisible: "3 điểm trên bản đồ.*"
+- assertVisible: "3 hoạt động khác chưa gắn địa điểm"
+- takeScreenshot: 08a-hanh-trinh-ngay-1
+# The rail names every stop; the pins cannot (two stops 70 m apart draw one on
+# top of the other, and markers carry no accessibility node).
+- tapOn: "Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ"
+- assertVisible: "Điểm đầu tiên trên bản đồ của ngày"
+- assertVisible: "Xem chi tiết"
+- takeScreenshot: 08b-chon-chang
+# A day with no coordinates says so and offers the way back, instead of
+# leaving an empty map as a dead end.
+- tapOn: "Ngày 3"
+- extendedWaitUntil:
+    visible: "Ngày này chưa có điểm nào trên bản đồ"
+    timeout: 20000
+- assertNotVisible: "Khớp hành trình"
+- takeScreenshot: 08c-ngay-khong-toa-do
+- tapOn: "Về Lịch trình"
+- assertVisible: "Trả phòng và về lại Sài Gòn"
+- tapOn: "Ngày 1"
+- assertVisible: "Ăn trưa - Bánh căn Lệ"

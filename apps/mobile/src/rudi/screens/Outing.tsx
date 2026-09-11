@@ -7,9 +7,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Switch, Text, useWindowDimensions, View } from "react-native";
 
+import { tabBarHeight } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
 import { homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
@@ -35,6 +36,12 @@ import { RosterPicker } from "../ui/RosterPicker";
 import { Sheet } from "../ui/Sheet";
 import { Stamp } from "../ui/Stamp";
 import { HangChang } from "./keo/HangChang";
+import { chieuTuNgay, ganMappedVaoCho, idSlot } from "../hanh-trinh/chieu";
+import { useCheDoLichTrinh } from "../hanh-trinh/che-do";
+import { ManHinhHanhTrinh } from "../hanh-trinh/ManHinhHanhTrinh";
+import { ThanhCheDo } from "../hanh-trinh/ThanhCheDo";
+import { toiUuGanNhat } from "../hanh-trinh/toi-uu";
+import { choTuId } from "../hanh-trinh/toa-do-mau";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -129,16 +136,80 @@ export function TripTimelineScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const session = useRudiSession();
+  const { fontScale } = useWindowDimensions();
   const [day, setDay] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const che = useCheDoLichTrinh();
+  const hanhTrinh = che.cheDo === "hanh-trinh";
   const days = session.itinerary;
   const current = days[day] ?? days[0];
   const nhan = nhanNhip(nhipKeo(isoTu(session.startDate), isoTu(session.endDate), homNay()));
   const diCung = PEOPLE.filter((person) => session.selectedMemberIds.includes(person.id));
+  const cho = useMemo(() => choTuId(PLACES), []);
+  const hanh = useMemo(
+    () => chieuTuNgay({ day: current.day, items: current.items }, cho),
+    [current, cho],
+  );
+
+  const doiNgay = (index: number) => {
+    setDay(index);
+    const next = days[index];
+    if (!next) return;
+    const ids = next.items.map((slot, i) => idSlot(slot, i));
+    if (che.selectedActivityId && !ids.includes(che.selectedActivityId)) che.chonHoatDong(null);
+  };
+
+  const toiUu = () => {
+    const mapped = hanh.activities.filter((a) => a.lat !== null && a.lng !== null);
+    if (mapped.length < 2) return;
+    const ids = toiUuGanNhat(mapped.map((a) => ({ id: a.id, lat: a.lat as number, lng: a.lng as number })));
+    session.datHangNgay(day, ganMappedVaoCho(current.items, ids));
+  };
+
+  const header = (
+    <View style={styles.dauMan}>
+      <TopBar
+        back={false}
+        title={DEMO_GROUP.name}
+        subtitle={nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
+        right={
+          <IconButton
+            accessibilityLabel="Tùy chọn"
+            icon="ellipsis-horizontal"
+            onPress={() => setMenuOpen(true)}
+            quiet
+          />
+        }
+      />
+      <Inline gap={8} wrap>
+        {days.map((item, index) => (
+          <Chip key={item.day} label={"Ngày " + (index + 1)} onPress={() => doiNgay(index)} selected={day === index} />
+        ))}
+      </Inline>
+      <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} />
+      {hanhTrinh ? null : (
+        <View style={styles.sectionTitleRow}>
+          <View style={styles.flex}>
+            <Text style={[typography.h2, { color: colors.ink }]}>{current.day}</Text>
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>{current.items.length} hoạt động</Text>
+          </View>
+          <IconButton
+            accessibilityLabel="Mở lịch trình AI"
+            icon="sparkles"
+            onPress={() => router.push(session.tripPath("/itinerary") as never)}
+            selected
+            tone="ai"
+          />
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <RudiScreen
       bottomInset="tab"
+      contentStyle={hanhTrinh ? styles.mapInner : undefined}
+      header={header}
       overlay={
         <Sheet accessibilityLabel="Tùy chọn chuyến đi" onClose={() => setMenuOpen(false)} open={menuOpen}>
           <View style={styles.khay}>
@@ -170,88 +241,88 @@ export function TripTimelineScreen() {
           </View>
         </Sheet>
       }
+      padded={!hanhTrinh}
+      scroll={!hanhTrinh}
       testID="trip-timeline-screen"
     >
-      <TopBar
-        back={false}
-        title={DEMO_GROUP.name}
-        subtitle={nhanKhoangNgay(isoTu(session.startDate), isoTu(session.endDate))}
-        right={
-          <IconButton
-            accessibilityLabel="Tùy chọn"
-            icon="ellipsis-horizontal"
-            onPress={() => setMenuOpen(true)}
-            quiet
-          />
-        }
-      />
-      {/* The trip as an invitation: its picture, its name, when. */}
-      <Photo
-        height={200}
-        radius={20}
-        source={demoAssets.road}
-        overlay={
-          <>
-            <LinearGradient
-              colors={[lopPhu.toi(0.02), lopPhu.toi(0.82)]}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.tripHeroBadge}><DemoBadge /></View>
-            <View style={styles.tripHeroCopy}>
-              <Text style={styles.tripTitle}>{session.tripName}</Text>
-              <Text style={styles.tripMeta}>{session.destination} · 3 ngày 2 đêm · {diCung.length} người</Text>
-            </View>
-          </>
-        }
-      />
-      <View style={styles.tomTat}>
-        <View style={styles.oTomTat}>
-          <Money vnd={DEMO_GROUP.budgetPerPersonVnd} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến một người</Text>
-        </View>
-        <View style={styles.oTomTat}>
-          <AvatarStack max={4} people={diCung.map((p) => ({ name: p.name }))} />
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{diCung.length} tham gia</Text>
-        </View>
-        {nhan ? <Stamp label={nhan} tilt={-2} /> : null}
-      </View>
-      <Inline gap={8} wrap>
-        {days.map((item, index) => (
-          <Chip key={item.day} label={"Ngày " + (index + 1)} onPress={() => setDay(index)} selected={day === index} />
-        ))}
-      </Inline>
-      <View style={styles.sectionTitleRow}>
-        <View style={styles.flex}>
-          <Text style={[typography.h2, { color: colors.ink }]}>{current.day}</Text>
-          <Text style={[typography.caption, { color: colors.inkSoft }]}>{current.items.length} hoạt động</Text>
-        </View>
-        <IconButton
-          accessibilityLabel="Mở lịch trình AI"
-          icon="sparkles"
-          onPress={() => router.push(session.tripPath("/itinerary") as never)}
-          selected
-          tone="ai"
+      {hanhTrinh ? (
+        <ManHinhHanhTrinh
+          fitDem={che.fitDem}
+          hanh={hanh}
+          onChonDoan={che.chonDoan}
+          onChonMoc={che.chonHoatDong}
+          onKhop={che.khopHanhTrinh}
+          onNen={() => {
+            che.chonHoatDong(null);
+            che.chonDoan(null);
+          }}
+          onToiUu={toiUu}
+          onUserMove={che.userMove}
+          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
+          chanDuoi={tabBarHeight(fontScale)}
+          selectedActivityId={che.selectedActivityId}
+          selectedSegmentId={che.selectedSegmentId}
+          toiDem={che.toiDem}
         />
-      </View>
-      <View>
-        {current.items.map((slot, index) => {
-          // A stop with a picture reads as a destination; the others stay lines.
-          const noi = slot.placeId ? PLACES.find((p) => p.id === slot.placeId) : undefined;
-          return (
-            <HangChang
-              cuoi={index === current.items.length - 1}
-              gio={slot.time}
-              key={slot.time + slot.title + index}
-              onPress={slot.placeId ? () => router.push(("/places/" + slot.placeId) as never) : undefined}
-              anh={noi?.anh ? { anh: noi.anh, alt: noi.name, loai: LOAI_MAU[noi.category] } : null}
-              phu={noi ? noi.name : slot.placeId ? "Địa điểm · bấm để mở" : "Cả nhóm"}
-              phuTone={slot.placeId ? "accent" : "inkFaint"}
-              tieuDe={slot.title}
-            />
-          );
-        })}
-      </View>
-      <ListRow icon="location" onPress={() => router.push("/check-ins/new")} subtitle="Check-in để giữ lại khoảnh khắc cùng nhóm." title="Đến nơi rồi?" />
+      ) : (
+        <>
+          <Photo
+            height={200}
+            radius={20}
+            source={demoAssets.road}
+            overlay={
+              <>
+                <LinearGradient
+                  colors={[lopPhu.toi(0.02), lopPhu.toi(0.82)]}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.tripHeroBadge}><DemoBadge /></View>
+                <View style={styles.tripHeroCopy}>
+                  <Text style={styles.tripTitle}>{session.tripName}</Text>
+                  <Text style={styles.tripMeta}>{session.destination} · 3 ngày 2 đêm · {diCung.length} người</Text>
+                </View>
+              </>
+            }
+          />
+          <View style={styles.tomTat}>
+            <View style={styles.oTomTat}>
+              <Money vnd={DEMO_GROUP.budgetPerPersonVnd} />
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>dự kiến một người</Text>
+            </View>
+            <View style={styles.oTomTat}>
+              <AvatarStack max={4} people={diCung.map((p) => ({ name: p.name }))} />
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>{diCung.length} tham gia</Text>
+            </View>
+            {nhan ? <Stamp label={nhan} tilt={-2} /> : null}
+          </View>
+          <View>
+            {current.items.map((slot, index) => {
+              const noi = slot.placeId ? PLACES.find((p) => p.id === slot.placeId) : undefined;
+              const id = idSlot(slot, index);
+              return (
+                <HangChang
+                  chon={che.selectedActivityId === id}
+                  cuoi={index === current.items.length - 1}
+                  gio={slot.time}
+                  key={slot.time + slot.title + index}
+                  onPress={() => {
+                    if (che.selectedActivityId === id && slot.placeId) {
+                      router.push(("/places/" + slot.placeId) as never);
+                      return;
+                    }
+                    che.chonHoatDong(id);
+                  }}
+                  anh={noi?.anh ? { anh: noi.anh, alt: noi.name, loai: LOAI_MAU[noi.category] } : null}
+                  phu={noi ? noi.name : slot.placeId ? "Địa điểm · bấm để mở" : "Cả nhóm"}
+                  phuTone={slot.placeId ? "accent" : "inkFaint"}
+                  tieuDe={slot.title}
+                />
+              );
+            })}
+          </View>
+          <ListRow icon="location" onPress={() => router.push("/check-ins/new")} subtitle="Check-in để giữ lại khoảnh khắc cùng nhóm." title="Đến nơi rồi?" />
+        </>
+      )}
     </RudiScreen>
   );
 }
@@ -366,6 +437,10 @@ export function CheckInScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  // The map is the page here: it runs to the bottom edge and the journey
+  // panel keeps its own clearance over the tab bar.
+  mapInner: { flex: 1, paddingBottom: 0 },
+  dauMan: { gap: 10, paddingBottom: 8 },
   form: { maxWidth: 640 },
   khoi: { gap: 10 },
   khay: { gap: 6 },
