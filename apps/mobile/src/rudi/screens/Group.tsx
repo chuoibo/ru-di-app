@@ -8,9 +8,10 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { chuLon } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, VOTE_PLACE_IDS } from "../fixtures";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { GuGlyph } from "../ui/art/Gu";
@@ -73,6 +74,8 @@ function ChatBubble({
 }
 
 export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: boolean } = {}) {
+  const { fontScale } = useWindowDimensions();
+  const chuLonHon = chuLon(fontScale);
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
@@ -201,22 +204,34 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
         <View style={[styles.aiSheet, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base }]}>
           <Text style={[typography.title, { color: colors.ink }]}>Rủ Đi đã phác một plan</Text>
           <Text style={[typography.body, { color: colors.ink }]}>3 ngày 2 đêm · đồ ăn local · săn mây</Text>
-          <Inline gap={9}>
+          {/* Both decisions are named in words: a bar-chart glyph alone was read as
+              «statistics» by a reviewer who had not been told what it opens
+              (review 11/09, A4). The visible label is the verb the product uses
+              («Bình chọn»); the accessible name keeps the fuller «Mở bình chọn»
+              the flows tap. Primary takes the row, secondary is content-sized;
+              at large text the pair stacks so neither label wraps. The secondary
+              keeps a neutral edge (`lineStrong`) and carries the tone only in its
+              label: a violet stroke was the crisper shape of the two and won the
+              eye over the soft fill once they stacked (finish review 11/09). */}
+          <View style={chuLonHon ? styles.hanhDongDoc : styles.hanhDongNgang}>
             <RudiButton
-              full={false}
+              full={chuLonHon}
               label="Xem lịch trình"
               onPress={() => router.push(session.tripPath("/itinerary") as never)}
-              style={styles.flex}
+              style={chuLonHon ? undefined : styles.flex}
               tone="ai"
               variant="soft"
             />
-            <IconButton
+            <RudiButton
               accessibilityLabel="Mở bình chọn"
-              icon="stats-chart-outline"
+              full={chuLonHon}
+              label="Bình chọn"
               onPress={() => router.push("/votes/diem-den")}
+              style={{ borderColor: colors.lineStrong }}
               tone="ai"
+              variant="outline"
             />
-          </Inline>
+          </View>
           {/* One opening for the reasoning, the «Cách tính» shape from Thành tích. */}
           <Pressable
             accessibilityRole="button"
@@ -446,6 +461,8 @@ const styles = StyleSheet.create({
   messageTime: { paddingHorizontal: 7 },
   aiSheet: { gap: 10, padding: 14, borderWidth: 1, alignSelf: "stretch" },
   aiSheetHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
+  hanhDongNgang: { flexDirection: "row", alignItems: "center", gap: 9 },
+  hanhDongDoc: { gap: 9 },
   cuaMo: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6 },
   composerShell: { gap: 8 },
   attachmentTray: { justifyContent: "center" },
