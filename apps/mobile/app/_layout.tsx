@@ -8,8 +8,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { diemVaoTuUrl, manDau } from "../src/rudi/duong-vao";
 import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
+import { stackAnimation } from "../src/rudi/motion";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
 import { useRudiTheme } from "../src/rudi/theme";
+import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
 
 // Module level, before the first frame: `index.ts` never runs under
@@ -139,7 +141,13 @@ function RootInner() {
   // from Roboto to Bricolage a beat after launch is the cheapest tell that a
   // page was assembled rather than built.
   const [fontsLoaded, fontsError] = useRudiFonts();
+  // Reduce Motion reaches the navigator from here and nowhere else. Android's
+  // animation scales at 0 leave a react-native-screens push sliding (Codex
+  // re-audit 10/09, R1), so the stack is told to cut, and `useMotion` re-renders
+  // this component when the setting changes mid-session.
+  const motion = useMotion();
   if (!fontsLoaded && !fontsError) return null;
+  const chuyen = (wanted: "slide_from_right" | "slide_from_bottom" | "fade") => stackAnimation(wanted, motion.reduced);
 
   // Design contract: warm editorial surfaces, one semantic leading tone per
   // screen, native 44pt targets, real text, restrained motion, and no visual
@@ -152,35 +160,35 @@ function RootInner() {
         <LegacyFragmentAdapter />
         <Stack
           screenOptions={{
-            animation: "slide_from_right",
+            animation: chuyen("slide_from_right"),
             contentStyle: { backgroundColor: colors.ground },
             headerShown: false,
           }}
         >
-          <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+          <Stack.Screen name="(tabs)" options={{ animation: chuyen("fade") }} />
           <Stack.Screen
             name="create"
             // The route only fades and paints nothing: the screen underneath stays
             // visible under the scrim, and the kit Sheet inside springs the panel.
-            options={{ animation: "fade", contentStyle: { backgroundColor: "transparent" }, presentation: "transparentModal" }}
+            options={{ animation: chuyen("fade"), contentStyle: { backgroundColor: "transparent" }, presentation: "transparentModal" }}
           />
           <Stack.Screen
             name="check-ins/new"
-            options={{ animation: "slide_from_bottom", presentation: "modal" }}
+            options={{ animation: chuyen("slide_from_bottom"), presentation: "modal" }}
           />
           <Stack.Screen
             name="moments/new"
-            options={{ animation: "slide_from_bottom", presentation: "modal" }}
+            options={{ animation: chuyen("slide_from_bottom"), presentation: "modal" }}
           />
           <Stack.Screen
             name="stories/new"
-            options={{ animation: "slide_from_bottom", presentation: "modal" }}
+            options={{ animation: chuyen("slide_from_bottom"), presentation: "modal" }}
           />
           {/* The viewer is its own root so the hardware Back closes it and
               `check_screens_reachable` finds it; full screen over the cover. */}
           <Stack.Screen
             name="stories/[personId]"
-            options={{ animation: "fade", presentation: "fullScreenModal" }}
+            options={{ animation: chuyen("fade"), presentation: "fullScreenModal" }}
           />
         </Stack>
       </RudiSessionProvider>

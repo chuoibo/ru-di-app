@@ -1,0 +1,82 @@
+[
+  {
+    "mode": "motion-normal",
+    "sequence": "m1-tabs",
+    "frames": "267",
+    "jank": "29 (10.86%)",
+    "p50": "25ms",
+    "p90": "29ms",
+    "p95": "31ms",
+    "p99": "32ms"
+  },
+  {
+    "mode": "motion-normal",
+    "sequence": "m2-scroll",
+    "frames": "848",
+    "jank": "23 (2.71%)",
+    "p50": "16ms",
+    "p90": "22ms",
+    "p95": "25ms",
+    "p99": "30ms"
+  },
+  {
+    "mode": "motion-normal",
+    "sequence": "m3-sheet",
+    "frames": "317",
+    "jank": "16 (5.05%)",
+    "p50": "16ms",
+    "p90": "28ms",
+    "p95": "29ms",
+    "p99": "31ms"
+  },
+  {
+    "mode": "motion-normal",
+    "sequence": "m4-detail",
+    "frames": "280",
+    "jank": "15 (5.36%)",
+    "p50": "26ms",
+    "p90": "31ms",
+    "p95": "32ms",
+    "p99": "32ms"
+  },
+  {
+    "mode": "motion-reduce",
+    "sequence": "m1-tabs",
+    "frames": "40",
+    "jank": "33 (82.50%)",
+    "p50": "28ms",
+    "p90": "32ms",
+    "p95": "32ms",
+    "p99": "32ms"
+  },
+  {
+    "mode": "motion-reduce",
+    "sequence": "m2-scroll",
+    "frames": "721",
+    "jank": "27 (3.74%)",
+    "p50": "16ms",
+    "p90": "23ms",
+    "p95": "24ms",
+    "p99": "26ms"
+  },
+  {
+    "mode": "motion-reduce",
+    "sequence": "m3-sheet",
+    "frames": "264",
+    "jank": "19 (7.20%)",
+    "p50": "16ms",
+    "p90": "28ms",
+    "p95": "29ms",
+    "p99": "32ms"
+  },
+  {
+    "mode": "motion-reduce",
+    "sequence": "m4-detail",
+    "frames": "280",
+    "jank": "17 (6.07%)",
+    "p50": "28ms",
+    "p90": "32ms",
+    "p95": "32ms",
+    "p99": "34ms"
+  }
+]

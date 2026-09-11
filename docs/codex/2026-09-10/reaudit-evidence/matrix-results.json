@@ -1,0 +1,74 @@
+[
+  {
+    "name": "26-queue-light",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [692,765]→[886,891] rộng 194px  chữ [731,803]→[846,853]\n  ok   «Bỏ» [912,765]→[1038,891] rộng 126px  chữ [952,803]→[997,853]\n  ok   «Bỏ» [912,1376]→[1038,1502] rộng 126px  chữ [952,1414]→[997,1464]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "34-queue-dark",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [692,765]→[886,891] rộng 194px  chữ [731,803]→[846,853]\n  ok   «Bỏ» [912,765]→[1038,891] rộng 126px  chữ [952,803]→[997,853]\n  ok   «Bỏ» [912,1376]→[1038,1502] rộng 126px  chữ [952,1414]→[997,1464]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "39-queue-dark13",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [638,1236]→[872,1362] rộng 234px  chữ [677,1269]→[832,1329]\n  ok   «Bỏ» [898,1236]→[1038,1362] rộng 140px  chữ [937,1269]→[998,1329]\n  ok   «Bỏ» [898,1865]→[1038,1991] rộng 140px  chữ [937,1898]→[998,1958]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "41-queue-light13",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [638,516]→[872,642] rộng 234px  chữ [677,549]→[832,609]\n  ok   «Bỏ» [898,516]→[1038,642] rộng 140px  chữ [937,549]→[998,609]\n  ok   «Bỏ» [898,1145]→[1038,1271] rộng 140px  chữ [937,1178]→[998,1238]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "45-queue-light2",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [557,872]→[850,998] rộng 293px  chữ [596,893]→[810,977]\n  ok   «Bỏ» [876,872]→[1038,998] rộng 162px  chữ [915,893]→[998,977]\n  ok   «Bỏ» [876,1624]→[1038,1750] rộng 162px  chữ [915,1645]→[998,1729]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "49-queue-dark2",
+    "kind": "bounds",
+    "rc": 0,
+    "output": "màn 1080×2400px · 3 nút · 3 node chữ\n  ok   «Thử lại» [557,1035]→[850,1161] rộng 293px  chữ [596,1056]→[810,1140]\n  ok   «Bỏ» [876,1035]→[1038,1161] rộng 162px  chữ [915,1056]→[998,1140]\n  ok   «Bỏ» [876,1787]→[1038,1913] rộng 162px  chữ [915,1808]→[998,1892]\nXANH: mọi nút và nhãn nằm trọn trong màn\n"
+  },
+  {
+    "name": "26-queue-light",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 1 · một dòng ≈ 63px · trần 85px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 63px rộng 838px [161,1950]→[999,2013]\n  ok   «Tìm thành phố hoặc tỉnh» cao 63px rộng 838px [161,2118]→[999,2181]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  },
+  {
+    "name": "34-queue-dark",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 1 · một dòng ≈ 63px · trần 85px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 63px rộng 838px [161,1950]→[999,2013]\n  ok   «Tìm thành phố hoặc tỉnh» cao 63px rộng 838px [161,2118]→[999,2181]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  },
+  {
+    "name": "40-field-dark13",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 1.3 · một dòng ≈ 63px · trần 85px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 70px rộng 838px [161,605]→[999,675]\n  ok   «Tìm thành phố hoặc tỉnh» cao 70px rộng 838px [161,773]→[999,843]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  },
+  {
+    "name": "42-field-light13",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 1.3 · một dòng ≈ 63px · trần 85px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 70px rộng 838px [161,605]→[999,675]\n  ok   «Tìm thành phố hoặc tỉnh» cao 70px rộng 838px [161,773]→[999,843]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  },
+  {
+    "name": "46-field-light2",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 2 · một dòng ≈ 89px · trần 120px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 95px rộng 838px [161,257]→[999,352]\n  ok   «Tìm thành phố hoặc tỉnh» cao 95px rộng 838px [161,425]→[999,520]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  },
+  {
+    "name": "47-field-dark2",
+    "kind": "placeholder",
+    "rc": 0,
+    "output": "cỡ chữ 2 · một dòng ≈ 89px · trần 120px · 2 placeholder\n  ok   «Tìm quán, món… hoặc hỏi Rủ Đi AI» cao 95px rộng 838px [161,257]→[999,352]\n  ok   «Tìm thành phố hoặc tỉnh» cao 95px rộng 838px [161,425]→[999,520]\nXANH: mọi placeholder một dòng, không URL trên màn\n"
+  }
+]

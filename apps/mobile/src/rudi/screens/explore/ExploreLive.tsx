@@ -25,7 +25,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
@@ -195,7 +195,7 @@ export function ExploreLiveScreen({ phien }: { phien: Phien }) {
   // A filter change crossfades the results; a keystroke does not (it would
   // flicker on every letter). Reduce Motion cuts straight to the new list.
   const khoaKetQua = `${loai ?? ""}|${timKiem.kind === "co-ket-qua" ? timKiem.query : ""}`;
-  const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(ReduceMotion.System);
+  const hienRa = FadeIn.duration(motion.ms("standard")).reduceMotion(motion.reanimated);
   // The lead is a photograph at reading size. A catalogue that has no picture
   // for its first place (a fresh server, no licensed photos yet) would open
   // on a screenful of empty frame, so without a photo nothing is promoted

@@ -2,7 +2,10 @@
 # Dùng «Đi đâu?» thay chi tiết địa điểm vì tên địa điểm live không cố định.
 appId: com.lakiet.rudi
 ---
-- runFlow: _vao-live.yaml
+# Đo v2 (tái audit 10/09, R2): flow này CHỈ là thao tác. Vào app, warm-up và
+# đăng nhập nằm ngoài cửa sổ gfxinfo, do do-motion.sh làm một lần trước; ở đây
+# chỉ khẳng định màn xuất phát rồi thao tác, và kết thúc về đúng màn ấy.
+- assertVisible: "Khám phá"
 - repeat:
     times: 5
     commands:
