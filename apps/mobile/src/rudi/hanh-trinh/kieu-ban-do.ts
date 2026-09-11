@@ -2,7 +2,19 @@
 
 import type { ToaDo } from "./mo-hinh";
 
-export const KIEU_BAN_DO = "https://tiles.openfreemap.org/styles/positron";
+/**
+ * Basemap style per theme. OpenFreeMap, OSM data.
+ *
+ * A white Positron sheet under RuDi's navy dark theme read as two products
+ * glued together; `fiord` is the blue-grey sibling that sits in the same
+ * family as the dark palette's paper.
+ */
+export function kieuBanDo(toi: boolean): string {
+  return toi ? "https://tiles.openfreemap.org/styles/fiord" : "https://tiles.openfreemap.org/styles/positron";
+}
+
+/** Light default, kept for callers that have no theme in hand. */
+export const KIEU_BAN_DO = kieuBanDo(false);
 
 export type MocBanDo = {
   id: string;
@@ -29,7 +41,11 @@ export type BanDoProps = {
   mauDuong: string;
   mauDuongMo: string;
   mauVien: string;
+  /** Casing under the route line: the journey reads as a drawn path, not a road. */
+  mauVienDuong: string;
   mauNen: string;
+  /** Basemap style URL; the host picks it from the theme. */
+  kieu: string;
   fitDem: number;
   toi: { lat: number; lng: number; dem: number } | null;
   onUserMove: () => void;
@@ -38,7 +54,7 @@ export type BanDoProps = {
   onNen: () => void;
 };
 
-export const DEM_KHOP = { top: 56, left: 40, right: 40, bottom: 200 };
+export const DEM_KHOP = { top: 56, left: 40, right: 40, bottom: 260 };
 
 export function hopGioi(mocs: readonly { lat: number; lng: number }[]): [number, number, number, number] | null {
   if (mocs.length === 0) return null;

@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 import { GeoJSONSource, Map, Marker, NavigationControl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, KIEU_BAN_DO, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
+import { DEM_KHOP, hopGioi, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
 
 const CSS_HREF = "https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.css";
 
@@ -27,7 +27,7 @@ function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon
   el.setAttribute("aria-label", `Mốc ${moc.so}`);
   el.setAttribute("role", "button");
   const mau = moc.chon ? mauChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauChon);
-  const co = moc.chon ? 36 : 28;
+  const co = moc.chon ? 44 : 28;
   el.style.cssText = [
     `width:${co}px`,
     `height:${co}px`,
@@ -51,7 +51,6 @@ function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon
     gio.textContent = moc.gio;
     gio.style.cssText = "font:600 9px/1 system-ui;margin-top:2px";
     el.style.height = "44px";
-    el.style.width = "44px";
     el.appendChild(gio);
   }
   return el;
@@ -66,7 +65,9 @@ export function BanDo({
   mauDuong,
   mauDuongMo,
   mauVien,
+  mauVienDuong,
   mauNen,
+  kieu,
   fitDem,
   toi,
   onUserMove,
@@ -74,8 +75,8 @@ export function BanDo({
   onChonDoan,
   onNen,
 }: BanDoProps) {
-  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauDuong, mauDuongMo });
-  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauDuong, mauDuongMo };
+  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo });
+  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo };
   const mapRef = useRef<Map | null>(null);
   const markers = useRef<Marker[]>([]);
   const loaded = useRef(false);
@@ -88,7 +89,7 @@ export function BanDo({
     damBaoCss();
     const map = new Map({
       container: el,
-      style: KIEU_BAN_DO,
+      style: kieu,
       center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
       zoom: 12,
       attributionControl: { compact: true },
@@ -99,6 +100,18 @@ export function BanDo({
       const mau = cbs.current;
       if (!map.getSource("hanh-trinh-duong")) {
         map.addSource("hanh-trinh-duong", { type: "geojson", data: tapHop([]) });
+        // Casing first, then the line: an ink route on paper, not a road.
+        map.addLayer({
+          id: "hanh-trinh-duong-vien",
+          type: "line",
+          source: "hanh-trinh-duong",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": mau.mauVienDuong,
+            "line-width": ["case", ["==", ["get", "chon"], 1], 11, 8],
+            "line-opacity": 0.9,
+          },
+        });
         map.addLayer({
           id: "hanh-trinh-duong",
           type: "line",
@@ -106,8 +119,7 @@ export function BanDo({
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
             "line-color": ["case", ["==", ["get", "chon"], 1], mau.mauDuong, mau.mauDuongMo],
-            "line-width": ["case", ["==", ["get", "chon"], 1], 5, 3],
-            "line-opacity": ["case", ["==", ["get", "chon"], 1], 1, 0.45],
+            "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
           },
         });
         map.addLayer({
@@ -156,7 +168,9 @@ export function BanDo({
       loaded.current = false;
       setSan(false);
     };
-  }, [host]);
+    // `kieu` is in the deps: a theme change swaps the basemap, and the map is
+    // rebuilt with its sources rather than restyled underneath them.
+  }, [host, kieu]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -179,7 +193,8 @@ export function BanDo({
         ev.stopPropagation();
         cbs.current.onChonMoc(moc.id);
       });
-      return new Marker({ element: el, anchor: "bottom" }).setLngLat([moc.lng, moc.lat]).addTo(map);
+      // A round chip marks its point at its centre; native does the same.
+      return new Marker({ element: el, anchor: "center" }).setLngLat([moc.lng, moc.lat]).addTo(map);
     });
   }, [mocs, san]);
 
@@ -205,7 +220,8 @@ export function BanDo({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !toi) return;
-    map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration: 500 });
+    // Same reason as native: the panel owns the bottom of the map.
+    map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration: 500, padding: DEM_KHOP });
   }, [toi, san]);
 
   return (

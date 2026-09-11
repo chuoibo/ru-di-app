@@ -18,7 +18,7 @@
  */
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -32,6 +32,7 @@ import {
   type ChangDung,
   type CheckIn,
 } from "../../../screens/len-plan/buoi-di";
+import { tabBarHeight } from "../../adaptive";
 import { docDanhMuc } from "../../kham-pha/dia-diem";
 import {
   cauDaToi,
@@ -99,6 +100,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const { colors } = useRudiTheme();
+  const { fontScale } = useWindowDimensions();
   const outingId = thamSoChuoi(params.id);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [thongBao, setThongBao] = useState<string | null>(null);
@@ -294,7 +296,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     const mapped = hanh.activities.filter((a) => a.lat !== null && a.lng !== null);
     if (mapped.length < 2) return;
     const ids = toiUuGanNhat(mapped.map((a) => ({ id: a.id, lat: a.lat as number, lng: a.lng as number })));
-    await ghiLichTrinh(trang.keo, ganMappedTheoId(trang.keo.stops, ids).map(changGuiTu));
+    // `at` belongs to the slot, not to the stop: reordering by geography must
+    // not make the evening run backwards. See ganMappedTheoId.
+    await ghiLichTrinh(trang.keo, ganMappedTheoId(trang.keo.stops, ids, "at").map(changGuiTu));
   };
 
   return (
@@ -352,6 +356,8 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
           }}
           onToiUu={draft ? undefined : () => void toiUu()}
           onUserMove={che.userMove}
+          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
+          chanDuoi={tabBarHeight(fontScale)}
           selectedActivityId={che.selectedActivityId}
           selectedSegmentId={che.selectedSegmentId}
           toiDem={che.toiDem}
@@ -459,7 +465,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 const styles = StyleSheet.create({
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },
   flex: { flex: 1 },
-  mapInner: { flex: 1 },
+  // The map is the page here: it runs to the bottom edge and the journey
+  // panel keeps its own clearance over the tab bar.
+  mapInner: { flex: 1, paddingBottom: 0 },
   dauMan: { gap: 8, paddingBottom: 8 },
   khung: { gap: 14 },
   dau: { gap: 8 },

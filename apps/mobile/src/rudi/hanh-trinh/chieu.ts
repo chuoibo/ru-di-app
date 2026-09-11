@@ -95,6 +95,15 @@ export function chieuTuChang(stops: readonly ChangChieu[], places: readonly ChoC
   return danhSoVaNoi(activities);
 }
 
+/**
+ * Permute the mapped slots, but every slot keeps the clock it already had.
+ *
+ * Reordering stops by geography must not reorder the day: moving a whole row
+ * carries its `time` with it, and a day then reads 12:30 -> 20:00 -> 18:00.
+ * The hours are the plan the group agreed on; only *what happens at* an hour
+ * moves. Measured on the emulator 2026-09-12: without this, one tap on
+ * «Toi uu lo trinh» printed a night market at 20:00 before a BBQ at 18:00.
+ */
 export function ganMappedVaoCho<T extends SlotChieu>(items: readonly T[], mappedIds: readonly string[]): T[] {
   const viTri: number[] = [];
   const theoId = new Map<string, T>();
@@ -110,13 +119,23 @@ export function ganMappedVaoCho<T extends SlotChieu>(items: readonly T[], mapped
     const goc = theoId.get(id);
     const cho = viTri[k];
     if (goc === undefined || cho === undefined) return;
-    ra[cho] = { ...goc };
+    ra[cho] = { ...goc, time: items[cho].time };
   });
   return ra;
 }
 
-/** Permute items whose `id` is in `mappedIds`; every other row stays put. */
-export function ganMappedTheoId<T extends { id: string }>(items: readonly T[], mappedIds: readonly string[]): T[] {
+/**
+ * Permute items whose `id` is in `mappedIds`; every other row stays put.
+ *
+ * `giuGio` names the field that belongs to the SLOT rather than to the stop --
+ * `at` on a live outing. It is restored from the destination, so the clock of
+ * the day survives a reorder; see `ganMappedVaoCho`.
+ */
+export function ganMappedTheoId<T extends { id: string }>(
+  items: readonly T[],
+  mappedIds: readonly string[],
+  giuGio?: keyof T & string,
+): T[] {
   const viTri: number[] = [];
   const theoId = new Map<string, T>();
   items.forEach((item, i) => {
@@ -130,7 +149,7 @@ export function ganMappedTheoId<T extends { id: string }>(items: readonly T[], m
     const goc = theoId.get(id);
     const cho = viTri[k];
     if (goc === undefined || cho === undefined) return;
-    ra[cho] = { ...goc };
+    ra[cho] = giuGio === undefined ? { ...goc } : { ...goc, [giuGio]: items[cho][giuGio] };
   });
   return ra;
 }

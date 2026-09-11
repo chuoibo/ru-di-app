@@ -38,7 +38,7 @@ function BanDoThieu({ mauNen, mocs, onNen }: BanDoProps) {
   const { colors } = useRudiTheme();
   return (
     <Pressable
-      accessibilityLabel="Bản đồ hành trình — cần bản native có MapLibre"
+      accessibilityLabel="Bản đồ hành trình: cần bản native có MapLibre"
       onPress={onNen}
       style={[styles.fill, { backgroundColor: mauNen }]}
     >

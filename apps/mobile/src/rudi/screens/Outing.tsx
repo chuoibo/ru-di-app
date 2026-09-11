@@ -8,8 +8,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, useWindowDimensions, View } from "react-native";
 
+import { tabBarHeight } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
 import { homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
@@ -135,6 +136,7 @@ export function TripTimelineScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
   const session = useRudiSession();
+  const { fontScale } = useWindowDimensions();
   const [day, setDay] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const che = useCheDoLichTrinh();
@@ -256,6 +258,8 @@ export function TripTimelineScreen() {
           }}
           onToiUu={toiUu}
           onUserMove={che.userMove}
+          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
+          chanDuoi={tabBarHeight(fontScale)}
           selectedActivityId={che.selectedActivityId}
           selectedSegmentId={che.selectedSegmentId}
           toiDem={che.toiDem}
@@ -433,7 +437,9 @@ export function CheckInScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  mapInner: { flex: 1 },
+  // The map is the page here: it runs to the bottom edge and the journey
+  // panel keeps its own clearance over the tab bar.
+  mapInner: { flex: 1, paddingBottom: 0 },
   dauMan: { gap: 10, paddingBottom: 8 },
   form: { maxWidth: 640 },
   khoi: { gap: 10 },

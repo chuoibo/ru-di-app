@@ -203,7 +203,11 @@ export function mauMocHanhTrinh(colors: RudiPalette) {
     mocInk: colors.accentInk,
     mocChon: colors.split,
     duong: colors.accent,
-    duongMo: colors.lineStrong,
+    // Softened accent, not grey line: an unselected leg is still OUR route.
+    // Grey made the journey read as one more road on the basemap.
+    duongMo: phuMau(colors.accent, 0.62),
+    /** Paper casing under the line, the way an ink route sits on the page. */
+    vienDuong: colors.card,
     the: colors.card,
     muc: colors.ink,
     vien: colors.card,

@@ -80,7 +80,9 @@ if (!existsSync(INDEX)) {
           ),
         { timeout: 15000, label: "marker Bánh căn Lệ" },
       );
-      await page.clickLabel("Ăn trưa - Bánh căn Lệ");
+      // The rail is the accessible control now: pins are MapLibre markers and
+      // carry no name. Its label is «Mốc N, giờ, tên chặng».
+      await page.clickLabel("Mốc 1, 12:30, Ăn trưa - Bánh căn Lệ");
       await page.waitFor(
         () => document.body?.innerText?.includes("Xem chi tiết") || document.body?.innerText?.includes("Ăn trưa - Bánh căn Lệ"),
         { timeout: 10000, label: "sheet chặng" },

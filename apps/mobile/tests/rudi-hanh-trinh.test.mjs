@@ -174,6 +174,29 @@ test("ganMappedVaoCho chỉ hoán vị các slot có toạ độ, giữ chỗ c�
     ra.map((s) => s.title),
     ["Khởi hành", "Quán", "Nghỉ", "Cafe", "Bảo tàng"],
   );
+  // Giờ thuộc về CHỖ, không thuộc về chặng: xếp lại đường đi không được làm
+  // ngày chạy ngược. Đo trên máy ảo 12/09: một cú bấm «Tối ưu lộ trình» in ra
+  // chợ đêm 20:00 đứng TRƯỚC tiệc nướng 18:00.
+  assert.deepEqual(
+    ra.map((s) => s.time),
+    ["07:00", "12:30", "14:00", "18:00", "20:00"],
+  );
+  assert.deepEqual(
+    ra.map((s) => `${s.time} ${s.title}`),
+    ["07:00 Khởi hành", "12:30 Quán", "14:00 Nghỉ", "18:00 Cafe", "20:00 Bảo tàng"],
+  );
+});
+
+test("giờ trong ngày luôn tăng sau khi xếp lại, dù thứ tự chặng đổi thế nào", () => {
+  const items = [
+    { time: "09:00", title: "A", placeId: "a" },
+    { time: "13:00", title: "B", placeId: "b" },
+    { time: "19:00", title: "C", placeId: "c" },
+  ];
+  for (const thuTu of [["c", "b", "a"], ["b", "c", "a"], ["a", "c", "b"]]) {
+    const gio = ganMappedVaoCho(items, thuTu).map((s) => s.time);
+    assert.deepEqual(gio, ["09:00", "13:00", "19:00"], `thứ tự ${thuTu.join(",")}`);
+  }
 });
 
 test("OSRM thành công lấy polyline geojson; lỗi thì geodesic hai điểm", async () => {
@@ -272,6 +295,25 @@ test("ganMappedTheoId hoán vị theo id, giữ chỗ các hàng không plot", (
   assert.deepEqual(
     ra.map((s) => s.id),
     ["u", "b", "a"],
+  );
+});
+
+test("ganMappedTheoId giữ giờ của chỗ khi được nêu tên trường giờ", () => {
+  const stops = [
+    { id: "u", at: "08:00", label: "Khởi hành" },
+    { id: "a", at: "12:00", label: "Cafe" },
+    { id: "b", at: "19:00", label: "Quán" },
+  ];
+  const ra = ganMappedTheoId(stops, ["b", "a"], "at");
+  assert.deepEqual(
+    ra.map((s) => `${s.at} ${s.label}`),
+    ["08:00 Khởi hành", "12:00 Quán", "19:00 Cafe"],
+  );
+  // Không nêu tên trường giờ thì hành vi cũ giữ nguyên: cả hàng đi theo.
+  const cu = ganMappedTheoId(stops, ["b", "a"]);
+  assert.deepEqual(
+    cu.map((s) => `${s.at} ${s.label}`),
+    ["08:00 Khởi hành", "19:00 Quán", "12:00 Cafe"],
   );
 });
 
