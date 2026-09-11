@@ -20,7 +20,7 @@ import { BIEU_CAM, KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../d
 import { STICKER_IDS, hinhSticker } from "../dist-test/rudi/chat/sticker.js";
 import { duongChuyen, gocGap, vongHo } from "../dist-test/rudi/art/motif.js";
 import { GU_IDS, KHUNG_GU, hinhGu, laGuId } from "../dist-test/rudi/art/gu.js";
-import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, POSE_CANH, hinhCanh, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
+import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, POSE_CANH, hinhCanh, hopNgang, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
 
 const ARITY = { M: 2, L: 2, C: 6, Z: 0 };
 const SO = /^-?\d+(\.\d+)?$/;
@@ -181,11 +181,29 @@ test("mười cảnh: mỗi cảnh có Nếp đứng bằng một pose riêng, c
 // Audit native 09/09, F45d. The open ring under the torn sheet read as a
 // loading spinner standing still; the coral in the failure scene has to sit ON
 // the tear -- a jagged line -- and there must be no coral arc anywhere in it.
-test("cảnh lỗi: coral nằm trên vết rách, không có cung tròn coral nào", () => {
-  const lop = hinhCanh("chua-doc-duoc");
-  const cung = lop.filter((l) => l.mau === "gap" && l.net !== undefined && /C/.test(l.d) && !/L/.test(l.d));
-  assert.deepEqual(cung, [], "cảnh lỗi còn một cung tròn coral (vòng hở đọc như spinner)");
-  assert.ok(lop.some((l) => l.mau === "gap" && l.net !== undefined && /L/.test(l.d)), "coral phải là nét gấp khúc của vết rách");
+// Tái audit 10/09, R4 mở rộng cùng luật sang `bo-loc-che-het`: vòng hở coral trên
+// lưới lọc cũng đọc như spinner. Ở hai cảnh này coral chỉ được là nét thẳng (vết
+// rách; khung ô hở), không có cung tròn coral nào.
+for (const id of ["chua-doc-duoc", "bo-loc-che-het"]) {
+  test(`${id}: coral là nét thẳng, không có cung tròn coral nào`, () => {
+    const lop = hinhCanh(id);
+    const cung = lop.filter((l) => l.mau === "gap" && l.net !== undefined && /C/.test(l.d) && !/L/.test(l.d));
+    assert.deepEqual(cung, [], `${id} còn một cung tròn coral (vòng hở đọc như spinner)`);
+    assert.ok(lop.some((l) => l.mau === "gap" && l.net !== undefined && /L/.test(l.d)), `${id}: coral phải là nét thẳng`);
+  });
+}
+
+// Tái audit 10/09 (F45a còn mở): đuôi bong bóng phải NHÌN THẤY — tờ giấy Nếp
+// (`goi-loi` x0 -4, tiLe 0.78) chiếm x 16…52, nên không đỉnh nào của bong bóng
+// được nằm trái x 52. Bản trước để đuôi chạy dưới tờ giấy tới miệng và bị che trọn.
+test("chua-co-tin-nhan: cả bong bóng, kể cả đuôi, nằm bên phải tờ giấy Nếp", () => {
+  const { x0 } = hopNgang(hinhCanh("chua-co-tin-nhan", { nep: false }));
+  assert.ok(x0 >= 52, `bong bóng lấn dưới tờ giấy: x nhỏ nhất ${x0}`);
+  // và đuôi thật sự trỏ về phía Nếp: đỉnh trái nhất ở độ cao miệng (56.6–61.6)
+  const lop = hinhCanh("chua-co-tin-nhan", { nep: false });
+  const diem = lop.flatMap((l) => [...l.d.matchAll(/([0-9.]+) ([0-9.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]));
+  const traiNhat = diem.reduce((a, b) => (b[0] < a[0] ? b : a));
+  assert.ok(traiNhat[1] >= 56 && traiNhat[1] <= 62, `mũi đuôi ở y ${traiNhat[1]}, không ở độ cao miệng`);
 });
 
 

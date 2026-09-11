@@ -110,3 +110,18 @@ test("nhãn không có gạch dài và id là slug ASCII không có dãy số d�
     assert.ok(!nhanSticker(id).includes("—"), id);
   }
 });
+
+// Tái audit 10/09 (F45 còn mở): hai hình phải mang dấu hiệu đọc được ở khay 64.
+// Đây là pin cơ chế — «có bánh», «có ô bầu dục» — không phải chứng minh người xem
+// hiểu nghĩa; việc ấy là bảng không nhãn với người chưa đọc brief.
+const tronKin = (lop) => lop.filter((l) => l.net === undefined && (l.d.match(/ C /g) ?? []).length === 4 && /Z$/.test(l.d));
+test("ket-xe: vật chặn là phương tiện — ít nhất bốn hình tròn tô (hai bánh xe của Nếp, hai bánh của xe phía trước)", () => {
+  for (const chiTiet of [true, false]) assert.ok(tronKin(hinhSticker("ket-xe", { chiTiet }).lop).length >= 4, `chiTiet=${chiTiet}`);
+});
+test("tra-tien-ne: tờ trên có ô bầu dục tô màu giấy — dấu tờ bạc, không ký hiệu tiền", () => {
+  for (const chiTiet of [true, false]) {
+    const lop = hinhSticker("tra-tien-ne", { chiTiet }).lop;
+    assert.ok(tronKin(lop).some((l) => l.mau === "line"), `chiTiet=${chiTiet}: thiếu ô bầu dục`);
+    assert.ok(!lop.some((l) => l.mau === "split"), "sticker tiền không dùng màu teal của sổ");
+  }
+});
