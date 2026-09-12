@@ -121,6 +121,33 @@ không mô tả việc đã có người làm như thể còn nợ:
   dùng cho migration khác; head hiện tại là `e1f2a3b4c5d6`. Các migration của social
   v1.1 dùng id không nối tiếp (`5c1a7e3d9b42`…) để không đụng.
 
+### 0f. 2026-09-12 — Claude nhận «sổ hai người» lát 1–3 theo lệnh trực tiếp của Lead
+
+Lead giao Claude làm cả server lẫn client cho mode hai người «Nếp truyền giấy», phiên 12/09
+(spec `docs/superpowers/specs/2026-09-12-mode-hai-nguoi-nep-truyen-giay-design.md`; hợp đồng
+ADR-0027 và khoản bổ sung ADR-0019/0021 do Codex viết, Lead chấp nhận cùng phiên; kế hoạch
+`~/.claude/plans/home-lakiet-mobile-docs-codex-2026-09-0-stateless-river.md`). Backend do
+Claude làm theo uỷ quyền ADR-0016 §2.3; charter không đổi. Ghi ở đây để hàng đợi không mô tả
+việc đã có người làm như thể còn nợ:
+
+| Phase | Nội dung | ADR | Trạng thái |
+|---|---|---|---|
+| 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | PR mở |
+| 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | chờ 0 |
+| 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | chờ 1 |
+| 3 | BE lát 1: một migration nối `9a5e1c7b3f86` (13 bảng + `UNIQUE(id, kind)` trên `contexts`), 18 cửa quyền, 19 route, fake repo, `tests/api` + `tests/postgres` (kể cả hai kết nối) + `tests/db`; khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | chờ 0 |
+| 4 | Nối live lát 1: module API, hook, màn `*Live`, Maestro `--otp`, pixel-diff màn hội bạn | — | chờ 2, 3 |
+| 5 | Lát 2: sổ bảy mục, ôn thẻ, câu hỏi tuần, ba dòng dặn, núm độ mới, Cài đặt sổ đôi (cờ «Nếp gửi hộ») | 0027 mở rộng | chờ 4 |
+| 6 | Lát 3: hẹn mở gác lúc đọc, túi riêng, thư gửi năm sau, giấy cũ quay lại, bản đồ hai người qua Hành trình | 0027 mở rộng | chờ 5 |
+
+**Hai điều cần bạn (Codex) biết, đo ngày 2026-09-12:**
+
+- `contexts` chưa có `UNIQUE(id, kind)`, nên FK ghép `(context_id, context_kind)` mà ADR-0027
+  §2 đòi sẽ **thêm ràng buộc này vào bảng dùng chung** ở Phase 3. Vô hại về hành vi (một unique
+  dư trên PK), nhưng là **chỗ duy nhất** lát 1 chạm bảng của hội bạn.
+- `AfterResponse` của ADR-0024 §2.3 **không có trong code**; head migration lúc đo là
+  `9a5e1c7b3f86` (L5), chưa có bảng thông báo. Lát 1 vì thế **không phụ thuộc push** (K6).
+
 ## A. REVIEW — 5 PR đang chờ bạn
 
 ### A1. PR #11 — hai luồng phản đối của khách *(mới, quan trọng)*
