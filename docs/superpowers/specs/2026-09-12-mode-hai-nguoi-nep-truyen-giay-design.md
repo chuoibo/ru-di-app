@@ -1,7 +1,10 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12 · **Bản 2**, viết lại tại chỗ, thay toàn bộ bản 1.
-Trạng thái: **CHỜ SOÁT LƯỢT CUỐI** trước khi chuyển sang kế hoạch triển khai.
+Trạng thái: **ĐÃ QUA HAI LƯỢT PHẢN BIỆN CODEX.** Codex nhận hướng này làm nền
+cho **kế hoạch nháp lát 1** (PR #609, `6e3cd013`); ba điều khoản còn hở ở lượt
+hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). Chờ Codex xác nhận khép
+và Lead chốt bảy câu ở mục 20.
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
 Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
 (PR #607, REQUEST_CHANGES; sáu mâu thuẫn C1–C6, tám điểm tranh luận D1–D8).
@@ -195,7 +198,27 @@ Khép **C1**. Đây là hợp đồng: mọi màn ở mục 15, mọi bảng ở
 | `da_di` | cả hai | `da_giu` khi có ít nhất một dòng được thêm |
 | `nghi_tuan` · `het_han` · `rut` · `bo` · `huy` | tuỳ | trạng thái cuối của tuần đó |
 
-### 3.2 Bảy luật không được nhập nhằng
+### 3.2 Gửi là đồng ý của người gửi, và ai gửi bản sửa
+
+Khép **C1(a)(b)**.
+
+> **Bấm gửi một phiên bản = người gửi đã đồng ý phiên bản đó.**
+> Nên `chot` cần **đồng ý của người kia** trên **cùng phiên bản** ấy, không cần
+> người gửi bấm thêm một lần nữa.
+
+Người gửi đổi ý thì **`rut`**, và chỉ rút được **khi chưa có phản hồi** — sau đó
+thì đường đi là đề nghị một phiên bản mới, không phải rút.
+
+**Ai gửi bản sửa:** người **đề nghị sửa** là người **gửi `v+1`**, và vai đảo lại
+cho phiên bản ấy — người gửi `v` giờ là người phải đồng ý `v+1`. Nên luật trên
+đúng cho mọi phiên bản, không phải chỉ phiên bản đầu.
+
+```text
+v    A gửi  →  A đã đồng ý v.   Cần B đồng ý v      →  chot
+v+1  B sửa và gửi  →  B đã đồng ý v+1. Cần A đồng ý v+1  →  chot
+```
+
+### 3.3 Bảy luật không được nhập nhằng
 
 1. **Đã phác ≠ đã gửi.** `nhap` chỉ chủ lượt thấy; máy của người kia **không
    nhận dữ liệu** của một bản nháp.
@@ -204,14 +227,28 @@ Khép **C1**. Đây là hợp đồng: mọi màn ở mục 15, mọi bảng ở
 3. **Chấp thuận gắn với phiên bản.** `dong_y` trên `v` **không** chuyển sang
    `v+1`. Sửa là tạo phiên bản mới và **hiện cái gì đã đổi**.
 4. **Đã nhận dữ liệu ≠ đã xem ≠ đã đồng ý.** Ba mốc khác nhau; chỉ **mốc xem của
-   người nhận** được hiện cho người gửi (mục 7.4).
+   người nhận** được hiện cho người gửi (mục 7.5).
 5. **`chot` sinh đúng một `outing`.** Gửi lại do mất mạng **không** nhân đôi;
    khoá theo `(kèo, phiên bản)`.
 6. **Máy chủ là nguồn sự thật.** Màn hình và chuyển động chạy **sau** kết quả máy
    chủ, không chạy lạc quan rồi sửa.
-7. **Đóng sổ không làm sống lại gì** (mục 7.5).
+7. **Đóng sổ không làm sống lại gì** (mục 7.6).
 
-### 3.3 Tác giả luôn có thật
+**Đường hết hạn, nghỉ, rút — đủ cho mọi trạng thái** (khép C1(d)):
+
+| Từ | `rut` | `nghi_tuan` | `het_han` |
+|---|---|---|---|
+| `nhap` | — (chưa gửi thì là `bo`) | được, và **không** phác lại tuần đó | qua khung |
+| `da_gui` | **được** (chưa có phản hồi) | được, tờ chuyển `huy` | qua khung |
+| `da_xem` | **không** — đường đi là đề nghị phiên bản mới | được, tờ chuyển `huy` | qua khung |
+| `de_nghi_sua` | không | được, tờ chuyển `huy` | qua khung |
+| `dong_y` một phía | không | được, tờ chuyển `huy` | **qua khung là `het_han`, KHÔNG phải `chot`** |
+| `chot` | không | không — đã là kế hoạch; huỷ buổi là `huy` | không |
+
+«Nghỉ tuần» **luôn bấm được cho tới khi `chot`**, và nó tắt đề nghị của Nếp tuần
+đó chứ không tắt việc hai người tự nhắn hay tự gửi giấy (mục 6.3).
+
+### 3.4 Tác giả luôn có thật
 
 | Ai gửi | Tờ giấy đứng tên |
 |---|---|
@@ -247,8 +284,14 @@ Bản 1 gán mặc định Người lo cho **người khởi xướng**, tức l
 lo. Codex chỉ đúng: như thế là **đóng cứng đúng cái bất đối xứng mà feature định
 gỡ**. Sửa:
 
-> **Người khởi xướng lập sổ giữ vai Người lo, nhưng cái gậy của tuần đầu tiên
-> thuộc về người kia.**
+> **Lời rủ lập sổ là lượt số 0, không tính vào vòng gậy.**
+> **Người khởi xướng giữ vai Người lo. Gậy của tuần kế tiếp — lượt số 1 — thuộc
+> về người kia.**
+
+Khép **C1(c)**: bản 2 vừa nói lời rủ đầu tiên là của người khởi xướng (mục 14.1),
+vừa nói gậy tuần đầu thuộc người ít mở lời — hai câu chọi nhau. Tách ra bằng lượt
+số 0 thì cả hai cùng đúng: người khởi xướng mở lời **một lần** để lập sổ, rồi
+**nhường lượt đầu tiên của vòng** cho người kia.
 
 Mỗi tuần gậy đổi chủ. Chủ lượt thấy bản nháp **riêng**, trước; sửa nếu muốn;
 bấm gửi. Người nhận thấy **một lời rủ từ người mình yêu**, vì đó là sự thật.
@@ -328,9 +371,9 @@ thuẫn. Sửa: một **lời mời** mỗi tháng, có **nghỉ / hẹn tuần 
    «Hai bạn có ổn không?» cấm. Không thanh sức khoẻ quan hệ, không chấm điểm.
 2. **Hai giọng.** Với Người lo: **gợi ý**. Với Người chấm: **câu hỏi**. Không
    đưa nguyên văn lời người kia, không kể cho người kia biết đang chuẩn bị gì.
-3. **Chỉ mang sang những gì người kia đã có thể biết** — bốn nguồn ở mục 7.2, và
+3. **Chỉ mang sang những gì người kia đã có thể biết** — bốn nguồn ở mục 7.3, và
    chỉ sau consent.
-4. **Không biên nhận cho câu hỏi riêng** (mục 7.4).
+4. **Không biên nhận cho câu hỏi riêng** (mục 7.5).
 5. **Có hạn mức nói** (mục 6.3).
 
 ### 6.2 Nếp không đứng cạnh cái gì
@@ -380,9 +423,28 @@ TÚI RIÊNG  người kia không thấy được: chuẩn bị quà
 ```
 
 Vùng **CHUNG** là chung **theo cấu tạo** — nó là hành động của cả hai — nên nó
-đi vòng qua cái bẫy ở mục 7.6 mà không phải nới luật riêng tư nào.
+đi vòng qua cái bẫy ở mục 7.7 mà không phải nới luật riêng tư nào.
 
-### 7.2 Nguồn → ai thấy → dùng cho gợi ý nào
+### 7.2 Thang consent bốn bậc — mỗi bậc là một việc riêng
+
+Khép **C2**. Bản 2 gộp «nhận lời đi chơi» với «lập sổ» và ngầm cho Nếp đọc chat.
+Codex đúng: đó là ba việc khác nhau, và bậc dưới **không** hàm ý bậc trên.
+
+| Bậc | Là gì | Ai bấm | Cho phép điều gì |
+|---|---|---|---|
+| **1. Nhận lời đi chơi** | đồng ý **đúng buổi đó** | người nhận | **chỉ** buổi đó. Không tạo sổ, không bật gì |
+| **2. Lập sổ hai người** | một chỗ chung **có lịch sử** | **cả hai** | lưu tờ giấy, buổi đi, ký ức của hai người |
+| **3. Bật «Một đôi»** | hai vai · sổ về người ấy · túi riêng · nhịp tuần | **cả hai** | những thứ chỉ có ở sổ đôi |
+| **4. Cho Nếp đọc chat chung** | Nếp được đọc chat để đề nghị trang và phác tờ | **cả hai**, **mặc định TẮT** | nguồn «chat chung» ở bảng 7.3 |
+
+**Bậc 1 không kéo theo bậc 2.** Một người có thể đi chơi cùng mà **không** lập
+sổ; khi đó buổi đi ghi như mọi buổi đi bình thường và không có tờ giấy nào được
+giữ lại. Mục 14.1 nói lời rủ đầu tiên **mời** lập sổ — nó không **là** việc lập sổ.
+
+**Bậc 4 gỡ được bất cứ lúc nào**, và gỡ thì Nếp thôi đề nghị trang mới; trang đã
+ghim là của chủ sổ, giữ nguyên.
+
+### 7.3 Nguồn → ai thấy → dùng cho gợi ý nào
 
 | Nguồn | Ai thấy | Dùng cho gợi ý | Thu hồi khi |
 |---|---|---|---|
@@ -393,15 +455,23 @@ Vùng **CHUNG** là chung **theo cấu tạo** — nó là hành động của c
 | **Ghi tay của chính mình** trong sổ về người kia | **chỉ chủ sổ** | **chỉ cho gợi ý của chủ sổ** | chủ sổ xoá |
 | `person_interests` / `saved_places` **chưa chia** | **chỉ chủ** | **chỉ seed view của CHÍNH chủ** | — |
 
-**Sửa mâu thuẫn C2, luật một dòng:**
+**Hai luật, không phải một.** Luật một dòng của bản 2 chưa đủ: Codex chỉ ra một
+đường rò thật — một bản `nhap` dựng từ nguồn **riêng** vẫn có thể bị **«Nếp gửi
+hộ»** đẩy sang người kia (mục 3.4), và lúc đó dữ liệu riêng đi ra ngoài mà **chủ
+của nó không hề duyệt**.
 
-> **Gu toàn cục của một người chỉ được dùng để mồi cho gợi ý MÀ CHÍNH NGƯỜI ĐÓ
-> nhìn thấy, không bao giờ mồi cho gợi ý chung của hai người.**
+> **Luật A — mồi.** Gu toàn cục của một người chỉ mồi cho gợi ý **mà chính người
+> đó nhìn thấy**, không bao giờ mồi cho gợi ý chung.
+>
+> **Luật B — đường ra.** Một bản nháp có dùng nguồn **riêng** thì **chỉ rời khỏi
+> máy chủ sang người kia bằng một cú bấm gửi của chính chủ**. **«Nếp gửi hộ» chỉ
+> được dựng từ nguồn CHUNG còn quyền sử dụng** (bảng 7.3, cột «ai thấy» là «cả
+> hai»); không đủ nguồn chung thì **Nếp không gửi hộ**, tuần đó không có tờ.
 
 Bản 1 cho cold start dùng gu toàn cục mà không nói của ai — đó là lỗ. Sổ chung
 chưa có lịch sử thì gợi ý **thật thà là còn nghèo**, và Nếp nói thế.
 
-### 7.3 Trước consent: sổ riêng chỉ là **ghi tay**
+### 7.4 Trước consent: sổ riêng chỉ là **ghi tay**
 
 Bản 1 vừa đòi «người kia biết và sổ đối xứng» vừa cho dùng sổ trước khi người
 kia đồng ý. Sửa:
@@ -416,7 +486,7 @@ kia đồng ý. Sửa:
 Nên trong lúc chờ, phần dùng được là **sổ tay của chính mình về một người** — nó
 không cần quyền nào của người kia, và đó là lý do nó hợp lệ.
 
-### 7.4 Ba mốc khác nhau, đừng gộp
+### 7.5 Ba mốc khác nhau, đừng gộp
 
 | Mốc | Hiện cho ai |
 |---|---|
@@ -429,17 +499,30 @@ Hàng cuối là chỗ giữ được khoảng mờ: người ta nói với Nế
 kia xuất hiện với đúng chỗ yên tĩnh, **nó vẫn giống như người ấy tự nhớ**. Cái
 bị ẩn là **thời điểm và cách gói**, không bao giờ là **việc Nếp có hỏi**.
 
-### 7.5 Vòng đời: đóng sổ, và nối lại
+### 7.6 Vòng đời: đóng sổ, và nối lại
 
 | Vật | Khi đóng sổ | Khi nối lại |
 |---|---|---|
 | Tờ giấy **đã mở** | giữ, cả hai còn đọc được | giữ |
 | Tờ giấy **chưa tới lúc mở** | **không bao giờ mở nữa**, với bất kỳ ai | **không hồi sinh** |
-| Tờ giấy **đã tới lúc, chưa ai đọc** | mở được cho hai người **tới hết chu kỳ**, rồi đóng | không hồi sinh |
+| Tờ giấy **đã tới lúc, chưa ai đọc** | **khoá luôn** — xem dưới | không hồi sinh |
+| **Bản nháp** `nhap` | **huỷ** | không hồi sinh |
+| Tờ **đang chờ trả lời** (`da_gui`, `da_xem`, `de_nghi_sua`, `dong_y` một phía) | **huỷ**, không chốt được nữa | không hồi sinh |
 | **Sổ về người kia** | của chủ sổ, giữ nguyên, vẫn riêng | giữ |
 | **Túi riêng** | giữ nguyên chủ | giữ |
 | Buổi đi, chặng, ký ức | thuộc về sổ, **giữ** | giữ |
 | Nhịp, hạn mức, gậy | dừng | **bắt đầu lại từ đầu** |
+
+**Khép C3 — một luật, không có cửa sổ thời gian:** bản 2 viết tờ đã tới lúc mà
+chưa ai đọc thì «mở được tới hết chu kỳ». Vô nghĩa, vì **đóng sổ chính là hết
+chu kỳ**. Luật đúng và đơn giản hơn:
+
+> **Đóng sổ là đóng. Cái gì chưa được mở thì thôi.**
+
+Không phân biệt «chưa tới lúc» với «đã tới lúc mà chưa ai đọc» — cả hai đều khoá.
+Nháp và mọi lời đề nghị đang chờ đều **huỷ**. Màn xem trước hậu quả phải **đếm và
+nói rõ** có bao nhiêu tờ sắp bị khoá và bao nhiêu lời đề nghị sắp huỷ, **trước**
+khi bấm xác nhận.
 
 **Nối lại là một chu kỳ MỚI có định danh riêng**, cần **consent mới**. Nó không
 khôi phục quyền đọc cũ và không khôi phục lịch gửi cũ. Một người đủ quyền đóng
@@ -449,7 +532,7 @@ sổ; trước khi xác nhận phải **xem trước hậu quả** theo đúng b
 được lấy chữ **mở giấy** — vốn nghĩa là đọc một lá thư — đặt tên cho việc phá
 hiệu lực thư. Hành động gọi là **«Đóng sổ»**.
 
-### 7.6 Vì sao luật «chỉ hiện tổng» của ADR-0019 không dùng được ở đây
+### 7.7 Vì sao luật «chỉ hiện tổng» của ADR-0019 không dùng được ở đây
 
 ADR-0019 §2.1 bảo vệ gu cá nhân bằng cách chỉ cho hiện **tổng trên nhiều người**.
 Trong nhóm hai người, **tổng trừ phần mình ra đúng người kia** — luật thoái hoá
@@ -512,6 +595,21 @@ là tai hoạ, nhớ là thương) · **«NGƯỜI»** (nhớ được tên mẹ
 nhất trong cả cuốn sổ) · **«LÚC MỆT»** (đôi cãi nhau đúng chỗ này: một người mệt
 thì muốn được để yên, người kia xông vào dỗ — viết một lần, hết một cái cãi lặp
 lại nhiều năm).
+
+**Ai nhập, ai thấy, dùng cho gợi ý nào** (Codex hỏi ở R1):
+
+| | Ai nhập | Ai thấy | Dùng cho gợi ý nào |
+|---|---|---|---|
+| «không ăn được» của **chính mình** | mình | **cả hai** | **ràng buộc cứng** cho mọi tờ giấy của sổ này |
+| «đừng» của **chính mình** | mình | **cả hai** | **ràng buộc cứng** cho mọi tờ giấy của sổ này |
+
+Hai ô này **cố ý là vùng CHUNG**, không phải trang sổ riêng: một điều mình **tự
+khai để người kia biết mà tránh** thì giấu đi là vô nghĩa. Người kia thấy được
+nội dung, **không** sửa được — chỉ chủ sửa và gỡ. Gỡ thì ràng buộc mất ngay ở tờ
+tiếp theo, không hồi tố tờ đã chốt.
+
+Đây là ngoại lệ **duy nhất** so với bảng 7.3, và nó hợp lệ vì **chủ tự khai vào
+vùng chung**, không phải Nếp mang sang.
 
 **Pilot chỉ mang HAI mục: «không ăn được» và «ĐỪNG»** — vào **trong luồng lời
 rủ**, không phải thành một màn sổ bảy mục. Lý do ở mục 19.2: không có hai mục
@@ -978,8 +1076,14 @@ chat, sticker và ảnh người dùng gửi. Sửa:
 > **Một điểm nhấn hành động dẫn**, tính **trong phần art do mình vẽ** ở vùng
 > thiết kế mới. **Không đếm nội dung người dùng.**
 
-**Cách kiểm:** đếm **lớp coral do hàm art của mình phát ra** trong vùng đó — đếm
-ở **nguồn**, như `art-duong` vẫn đếm lớp — chứ không đếm pixel trên ảnh chụp.
+**Hai cổng khác nhau, vì một cái không thay được cái kia** (Codex đúng ở R4):
+
+| Hỏi gì | Đo bằng |
+|---|---|
+| Có đúng một **lớp coral** trong art mình vẽ không? | **đếm ở nguồn**, như `art-duong` vẫn đếm lớp. Không đếm pixel |
+| Trên **cả khung**, có **một hành động dẫn rõ** không? | **đọc mù ở cỡ thật**: người chưa đọc doc nhìn khung đầy đủ (có bong bóng chat, sticker, ảnh người dùng) và trả lời **«việc cần làm bây giờ là gì?»** — một câu trả lời, không phải hai |
+
+Phép đếm ở nguồn **không** chứng minh vế thứ hai, và không được dùng thay.
 
 ### 16.5 Đo vật liệu: nói rõ phép đo đo cái gì
 
@@ -1149,7 +1253,7 @@ rõ mẫu số ở mỗi bước. **Không dùng nội dung ghi chú riêng ho�
 | Tiêu chí | Ngưỡng |
 |---|---|
 | Vòng khép | sau **tám** tuần, nếu **chưa từng** có một vòng đi hết «gửi → phản hồi → chốt → giữ một điều» thì vòng sai, không phải mô hình sai |
-| Nếp ồn | số tuần bấm «nghỉ» **tăng đều** → siết hạn mức **trước** khi thêm bất kỳ tính năng nào |
+| Nghỉ tăng | số tuần bấm «nghỉ» **tăng đều** là **tín hiệu phải đi hỏi lý do**, không tự đọc thành «Nếp ồn». Lý do là tuỳ chọn khi bấm nghỉ; chỉ khi lý do **thật sự** là «nhiều quá» mới siết hạn mức |
 | Ai mở lời | nếu **chỉ một người** gửi trong tám tuần thì cơ chế gậy **không** chia lại được sự chủ động |
 
 **Nói rõ giới hạn:** tám đề nghị **không** chứng minh mô hình hiểu gu, và bản 2
@@ -1164,7 +1268,7 @@ theo tỉ lệ Ừ — sai hai lần: nó kết luận về mô hình từ một
 1. **Một người có được nhiều sổ *đôi* cùng lúc không?** Đề xuất **một** — vì gậy
    và hạn mức đều giả định một. Đây là **cắt phạm vi V1**, không phải phán xét ai.
 2. **Hành động đóng sổ đặt tên gì trên nút?** Đề xuất «Đóng sổ», kèm màn xem
-   trước hậu quả theo bảng 7.5.
+   trước hậu quả theo bảng 7.6.
 3. **Đường khách** (người kia chưa cài app) có vào V1 không? `guest_links` **không
    dùng lại được** (11.2 §2) nên đây là capability mới, cần Codex định giá.
 4. **Chi tiêu chung** vào lát nào? Nó rẻ (một phép đọc) nhưng mở một bề mặt tiền
@@ -1201,24 +1305,24 @@ theo tỉ lệ Ừ — sai hai lần: nó kết luận về mô hình từ một
 
 | ID | Khép ở đâu |
 |---|---|
-| **C1** máy trạng thái | **mục 3** trọn vẹn: tám trạng thái, bảy luật, tác giả luôn có thật, phiên bản, không tự chốt từ im lặng, `chot` sinh đúng một `outing` |
-| **C2** quyền đọc mâu thuẫn | **mục 7.2–7.3**: bảng nguồn → ai thấy → dùng cho gợi ý nào → thu hồi khi nào; gu toàn cục **chỉ mồi cho gợi ý chính chủ thấy**; trước consent sổ riêng **chỉ là ghi tay** |
-| **C3** đóng rồi mở lại | **mục 7.5**: một bảng vòng đời; tờ chưa tới lúc **không hồi sinh**; nối lại là **chu kỳ mới có định danh riêng**, consent mới |
+| **C1** máy trạng thái | **mục 3** trọn vẹn. Lượt 2 bổ sung: **3.2** gửi = đồng ý của người gửi và người đề nghị sửa là người gửi `v+1`; **3.3** bảng đủ đường `rut`/`nghi_tuan`/`het_han` cho mọi trạng thái; **4.2** lời rủ lập sổ là **lượt số 0**, gậy lượt 1 thuộc người kia |
+| **C2** quyền đọc mâu thuẫn | Lượt 2 bổ sung **7.2 thang consent bốn bậc** (nhận lời đi chơi · lập sổ · bật «Một đôi» · cho Nếp đọc chat, mặc định TẮT), và **Luật B** ở 7.3: nháp dùng nguồn riêng **chỉ ra ngoài bằng cú bấm của chính chủ**; «Nếp gửi hộ» chỉ dựng từ nguồn chung. Cùng **mục 7.3–7.4**: bảng nguồn → ai thấy → dùng cho gợi ý nào → thu hồi khi nào; gu toàn cục **chỉ mồi cho gợi ý chính chủ thấy**; trước consent sổ riêng **chỉ là ghi tay** |
+| **C3** đóng rồi mở lại | **mục 7.6**. Lượt 2 bỏ cửa sổ «tới hết chu kỳ» (vô nghĩa vì đóng sổ **chính là** hết chu kỳ) và thay bằng một luật: **đóng sổ là đóng, cái gì chưa mở thì thôi**; nháp và mọi lời đề nghị đang chờ đều **huỷ**; màn xem trước **đếm và nói rõ** sắp khoá bao nhiêu tờ |
 | **C4** số và dấu trạng thái | **mục 16**: `inkSoft`, mép `lineStrong`, bỏ 1.9, vết gấp một luật; **16.4** accent có phạm vi; **15.3** tờ chưa tới lúc **mang chữ** (SC 1.4.1) |
 | **C5** sự thật ghi nhận | **mục 8**: «chưa có trong sổ này», ba trạng thái biết/không hợp/**chưa biết**, bỏ hẳn hẹn mở bằng check-in |
-| **C6** roadmap và đo | **mục 19**: ba lát một nguồn; đo theo **chuỗi sự kiện**; tiêu chí giết nói rõ cái tám tuần **không** chứng minh được |
+| **C6** roadmap và đo | **mục 19**. Lượt 2 sửa nốt dòng còn suy «nghỉ tăng → Nếp ồn»: nghỉ tăng là **tín hiệu đi hỏi lý do**, và chỉ siết hạn mức khi lý do **thật sự** là «nhiều quá» |
 
 ### 22.2 D1–D8: giữ hay sửa
 
 | ID | Kết |
 |---|---|
-| **D1** | **SỬA.** Hai lời hứa cũ không thể cùng đúng. Tác giả luôn có thật (3.3); bỏ luật «sửa một thứ mới được gửi» |
+| **D1** | **SỬA.** Hai lời hứa cũ không thể cùng đúng. Tác giả luôn có thật (3.4); bỏ luật «sửa một thứ mới được gửi» |
 | **D2** | **SỬA, có thêm.** Lát 1 là vòng trọn vẹn. **Nhưng** hai ô ràng buộc phải đi cùng (19.2) |
 | **D3** | **SỬA.** Một tờ đang mở (15.1); thứ tự theo tình huống, không cứng |
 | **D4** | **SỬA.** Mặc định một chỗ chính (5.2); số chặng **tách khỏi** số nếp |
 | **D5** | **SỬA.** Tính trước, đặt ngưỡng sau (16). Tự tìm thêm lỗi thứ ba |
-| **D6** | **GIỮ một phần.** Không biên nhận **chỉ** cho câu hỏi riêng; ba mốc tách bạch (7.4) |
-| **D7** | **SỬA.** Trước consent sổ chỉ là ghi tay; cold start chỉ mồi cho chính chủ (7.2–7.3) |
+| **D6** | **GIỮ một phần.** Không biên nhận **chỉ** cho câu hỏi riêng; ba mốc tách bạch (7.5) |
+| **D7** | **SỬA.** Trước consent sổ chỉ là ghi tay; cold start chỉ mồi cho chính chủ (7.3–7.4) |
 | **D8** | **SỬA.** Tờ lời rủ **là** mảnh giấy (10.1), nên vòng gửi–mở–giữ có ngay lát 1 |
 
 ### 22.3 Bốn chỗ tác giả phản biện lại
@@ -1247,7 +1351,18 @@ Nhưng «không đếm nội dung người dùng» chỉ thành cổng khi nói 
 nghị đếm **lớp coral do hàm art của mình phát ra**, như `art-duong` đang đếm lớp,
 **không** đếm pixel trên ảnh chụp (16.4). *Xin Codex xác nhận cách đếm này đủ.*
 
-### 22.4 Hai điểm xin Codex xác nhận
+### 22.4 Lượt hai của phản biện (Codex, PR #609 · `6e3cd013`)
+
+| Codex nói | Xử lý |
+|---|---|
+| **R1** đồng ý hai ô ràng buộc; cần rõ ai nhập, ai thấy, dùng cho gợi ý nào | **9.2** thêm bảng ba cột. Hai ô cố ý là **vùng CHUNG**: điều mình tự khai để người kia tránh thì giấu đi là vô nghĩa. Người kia **thấy, không sửa**; gỡ thì mất ràng buộc từ tờ sau, **không hồi tố** tờ đã chốt |
+| **R2** rút yêu cầu frame native trước kế hoạch; chọn §15.1 mặc định | Nhận. **15.1** là mặc định; so frame là cổng **bên trong lát 1** |
+| **R3** đồng ý bỏ hẹn mở lúc đi cùng | Đã bỏ ở **10.2** |
+| **R4** đếm nguồn đủ cho **số lớp coral**, chưa chứng minh **một hành động dẫn trên toàn frame** | Đúng. **16.4** tách thành **hai cổng**: đếm ở nguồn cho lớp coral; **đọc mù ở cỡ thật trên khung đầy đủ** cho câu «việc cần làm bây giờ là gì?». Phép đếm **không** thay được vế hai |
+| **Xác nhận 1 bị bác**: nháp dùng dữ liệu riêng vẫn có thể bị «Nếp gửi hộ» đẩy sang người kia | Đúng, và đây là đường rò thật tôi không thấy. **7.3 Luật B** đóng nó |
+| **Xác nhận 2 đúng**: cổng đếm nhánh là tầng trình bày; server vẫn kiểm quyền và consent | Giữ nguyên **13.3** |
+
+### 22.5 Hai điểm xin Codex xác nhận (lượt một, đã khép)
 
 1. **C2 khép bằng một luật:** gu toàn cục của một người **chỉ mồi cho gợi ý mà
    chính người đó nhìn thấy**, không bao giờ mồi cho gợi ý chung. Đây là cách rẻ
@@ -1256,13 +1371,13 @@ nghị đếm **lớp coral do hàm art của mình phát ra**, như `art-duong`
    quyền vẫn là kiểm tra phía máy chủ ở biên đọc/ghi. Xin xác nhận cách phát biểu
    này đúng ý C của Codex.
 
-### 22.5 Những điểm «sửa gọn» đã sửa
+### 22.6 Những điểm «sửa gọn» đã sửa
 
 «ba phần dọc» → gấp ngang (1.6) · «hơi cũ mềm» → **cắt** (1.6) · trích nhầm 1.06
 → sửa (16.2) · `guest_links` → **không dùng lại được** (11.2) · tab «Tạo mới»
 liệt kê hành động → cần route map (11.2, 20.7) · cổng rẽ nhánh ≠ phân quyền
 (13.3) · «người nhà» → **hoãn khỏi cửa vào** (14.2) · luật «không `text`» → chỉ
-áp cho art trang trí (12.1) · «mở giấy» đổi tên thành **«Đóng sổ»** (7.5) ·
+áp cho art trang trí (12.1) · «mở giấy» đổi tên thành **«Đóng sổ»** (7.6) ·
 «Nếp im lặng» so với «nói khi được gọi» → hợp nhất ở 6.2–6.3 · bảng bề mặt thêm
 **đóng sổ, rút, hết hạn, lỗi** (15.2) · «chỉ một đôi» → nói là **cắt phạm vi V1**
 (20.1) · bỏ tên sổ buộc theo giới (9.1).
@@ -1274,8 +1389,10 @@ liệt kê hành động → cần route map (11.2, 20.7) · cổng rẽ nhánh 
 Ba cửa, theo thứ tự:
 
 1. **Lead chốt bảy câu ở mục 20** — ba câu đầu đổi cả hình dữ liệu lẫn phạm vi.
-2. **Codex xác nhận C1–C6 đã khép** và trả lời bốn điểm R ở 22.3 cùng hai điểm
-   xác nhận ở 22.4.
+2. **Codex xác nhận ba điều khoản vừa hợp nhất đã khép**: C1 (gửi = đồng ý ·
+   người sửa là người gửi `v+1` · lượt số 0 · bảng đường thoát đủ) · C2 (thang
+   consent bốn bậc · Luật B cho «Nếp gửi hộ») · C3 (đóng sổ là đóng). R1–R4 và
+   hai điểm xác nhận lượt một **đã khép** ở 22.4.
 3. **ADR cho phần máy chủ** (11.4): tối thiểu **ADR mới** cộng khoản bổ sung cho
    **ADR-0019** phải được chấp nhận trước khi có bảng nào được tạo.
 
