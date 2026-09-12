@@ -654,3 +654,37 @@ test("giu-kin: miệng là một nét thẳng khép, ngắn hơn và phẳng hơ
   assert.ok(Math.abs(b[0] - a[0]) < Math.abs(qb[0] - qa[0]), "giu-kin ngắn hơn quyet");
   assert.notEqual(qa[1], qb[1], "quyet nghiêng, để hai mặt không thành một");
 });
+
+test("coral: ba tư thế truyền giấy có đúng MỘT lớp gap, và đổi biến thể không thêm hay bớt coral ở pose nào", () => {
+  // The finish review of 12/09 counted two coral marks on `dua-giay`: the
+  // sliver on the body and a coral corner on the small sheet in the hand. The
+  // shape gates (`laNepGap`, `laDaiGap`) look for the fold's SHAPE and would
+  // never notice a second mark of a different shape, so this counts LAYERS.
+  //
+  // Two invariants, not a hand-written list of exceptions. Some poses on main
+  // already carry a second coral as a prop (`ghi-lai` pencil nib, `gop-y` map
+  // pin); a list naming them was the first draft here and it was wrong on the
+  // second pose it met. The page's counts are pinned by the sha256 baseline
+  // above; what this test adds is that the pocket variant has the SAME count
+  // as the page for every pose, and that the three new poses have exactly one.
+  const MOI = ["dua-giay", "up-xuong", "gap-lai"];
+  const dem = (pose, gap, chiTiet) => hinhNep(pose, { chiTiet, gap }).filter((l) => l.mau === "gap").length;
+  for (const pose of MOI) for (const gap of GAP_NEP) for (const chiTiet of [true, false]) {
+    assert.equal(dem(pose, gap, chiTiet), 1, `${pose}/${gap}/${chiTiet}: đúng một lớp coral`);
+  }
+  for (const pose of POSE_NEP) for (const chiTiet of [true, false]) {
+    assert.equal(dem(pose, "manh", chiTiet), dem(pose, "trang", chiTiet), `${pose}/${chiTiet}: mảnh và trang phải cùng số lớp coral`);
+  }
+});
+
+test("mảnh vuông hơn trang: tỉ lệ rộng/cao của tờ thân lớn hơn", () => {
+  // Spec §17.2 #3. Measured on the first `giay` layer, which is the sheet.
+  const hop = (gap) => {
+    const than = hinhNep("moi", { nghieng: 0, gap }).find((l) => l.mau === "giay");
+    const pts = phanTich(than.d).filter((x) => x.c !== "Z").map((x) => [x.args[0], x.args[1]]);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    return (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
+  };
+  const trang = hop("trang"), manh = hop("manh");
+  assert.ok(manh > trang + 0.05, `mảnh ${manh.toFixed(3)} phải vuông hơn trang ${trang.toFixed(3)} rõ ràng`);
+});

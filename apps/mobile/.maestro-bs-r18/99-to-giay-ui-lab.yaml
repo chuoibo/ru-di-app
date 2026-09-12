@@ -14,11 +14,11 @@ appId: com.lakiet.rudi
 - takeScreenshot: r18-99-to-giay-tren
 - scrollUntilVisible:
     element:
-      id: "lab-to-giay-khoa"
+      id: "lab-to-giay-chot"
     direction: DOWN
     timeout: 60000
     centerElement: false
-- takeScreenshot: r18-99-to-giay-khoa
+- takeScreenshot: r18-99-to-giay-chot
 - scrollUntilVisible:
     element:
       text: "Nếp · trang và mảnh, ba việc của sổ hai người, hai cỡ đọc"

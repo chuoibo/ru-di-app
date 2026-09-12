@@ -236,13 +236,16 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   // `laDaiGap` in tests/art-duong.test.mjs identifies this sliver by shape and
   // keeps ink out of it, the way `laNepGap` does for the page's corner.
   const thanManh = (): LopVe[] => {
-    const Am = S(28, 22), Cm = S(68, 66), Dm = S(62, 74), Em = S(32, 76), Fm = S(26, 50);
+    // Squarer by being WIDER, not shorter: the legs are anchored at y 76, so a
+    // shorter sheet would float above them. Width 48 over height 54 (0.89)
+    // against the page's 44 over 54 (0.81) -- `art-duong` measures it.
+    const Am = S(24, 22), Cm = S(72, 66), Dm = S(64, 74), Em = S(30, 76), Fm = S(22, 50);
     const M = S(57.6, 31.4);
     const vien = [Am, H, G, Cm, Dm, Em, Fm];
     return [
       { d: daGiac(vien), mau: "giay" },
       { d: netGay([S(48, 23), S(48, 75)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
-      { d: netGay([S(28.5, 62), S(67.5, 62)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
+      { d: netGay([S(24.5, 62), S(71.5, 62)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
       { d: daGiac([H, G, M]), mau: "gap" },
       { d: daGiac(vien), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
       ...(chiTiet ? [{ d: daGiac([H, G, M]), mau: "muc" as const, net: net(1.6) }] : []),
@@ -595,11 +598,12 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     case "dua-giay": {
       // Handing a small folded sheet to the right: the far hand carries it
       // out past the body, the near arm rests. The sheet is drawn after the
-      // hand so it sits in the palm, and its own corner is a plain fold, not
-      // the identity mark (`laNepGap` rejects a 1:1 corner; `laDaiGap` a fat one).
+      // hand so it sits in the palm. Its corner is a plain fold in `bong`, NOT
+      // coral: the figure has exactly one coral mark, the sliver on its own
+      // body, and a blind read of the first cut counted two (finish review 12/09).
       const to: LopVe[] = [
         { d: daGiac([P(79, 39), P(88, 39), P(91, 42), P(91, 55), P(79, 55)]), mau: "giay" },
-        { d: daGiac([P(88, 39), P(88, 42), P(91, 42)]), mau: "gap" },
+        { d: daGiac([P(88, 39), P(88, 42), P(91, 42)]), mau: "bong" },
         { d: daGiac([P(79, 39), P(88, 39), P(91, 42), P(91, 55), P(79, 55)]), mau: "muc", net: net(1.6) },
       ];
       tuThe = [...tay(R, P(85, 47)), ...to, ...tay(L, P(14, 66))];
@@ -607,12 +611,18 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     }
     case "up-xuong": {
       // A sheet lying face down on the floor to the right, one hand flat on
-      // it. The hand is drawn after the sheet: it is ON the paper.
+      // it. The sheet is a sheet -- tall enough to have a face, with a plain
+      // folded corner in `bong` -- and the arm bends at the elbow so the hand
+      // comes DOWN onto it and its mitten sits on the paper, not on its edge.
+      // The first cut drew a 5-unit slab and a straight arm, and a blind read
+      // saw «kéo vật bằng que» (finish review 12/09).
       const to: LopVe[] = [
-        { d: daGiac([P(72, 85), P(94, 85), P(94, 90), P(72, 90)]), mau: "giay" },
-        { d: daGiac([P(72, 85), P(94, 85), P(94, 90), P(72, 90)]), mau: "muc", net: net(1.6) },
+        { d: daGiac([P(70, 82), P(90, 82), P(94, 86), P(94, 92), P(70, 92)]), mau: "giay" },
+        { d: daGiac([P(90, 82), P(90, 86), P(94, 86)]), mau: "bong" },
+        { d: daGiac([P(70, 82), P(90, 82), P(94, 86), P(94, 92), P(70, 92)]), mau: "muc", net: net(1.6) },
       ];
-      tuThe = [...to, ...tay(R, P(84, 86)), ...tay(L, P(12, 64))];
+      const khuyu = P(78, 68);
+      tuThe = [...to, { d: vien(R, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(82, 84)), ...tay(L, P(12, 64))];
       break;
     }
     case "gap-lai": {

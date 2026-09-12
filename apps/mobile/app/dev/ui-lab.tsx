@@ -39,12 +39,18 @@ const KY_HOA_MAU: readonly { loai: string; tags: readonly string[] }[] = [
   { loai: "khac", tags: [] },
 ];
 
-// The two-person notebook's sheet in four states; `dan` marks the one that is the thing to do now.
+// The two-person notebook's sheet in three states. Exactly ONE is `dan`: the
+// coral corner is the one leading mark on a surface (spec §16.4), and a blind
+// read of a board with two marks could not say which sheet was the thing to
+// do. The reason line sits BELOW the sheet, outside it, so the three rows stay
+// equal and the two creases fall at a third and two thirds -- with the reason
+// inside, the third row grew and the creases read as table dividers. No
+// «khoa» state here: the locked sheet's material is lát 3 and has not been
+// designed; a lab must not show a state that does not exist yet.
 const TO_GIAY_MAU: readonly { id: string; dan: boolean; hang: readonly [string, string, string]; lyDo: string }[] = [
   { id: "nhap", dan: true, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Tuần này bạn mở lời"], lyDo: "Vì: ba tuần liền hai bạn ăn ở cùng một khu." },
-  { id: "da-gui", dan: true, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Đã gửi, chờ trả lời"], lyDo: "Người kia chưa xem." },
+  { id: "da-gui", dan: false, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Đã gửi, chờ trả lời"], lyDo: "Người kia chưa xem." },
   { id: "chot", dan: false, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Đã chốt, thứ Bảy"], lyDo: "Cả hai đã ừ cùng một phiên bản." },
-  { id: "khoa", dan: false, hang: ["Một tờ chưa tới lúc", "Mở tối nay, 20:00", "Người kia gửi"], lyDo: "Thấy mà chưa đọc được." },
 ];
 // Three acts of the two-person notebook, page beside pocket sheet, at both readings.
 const NEP_MANH_MAU = ["dua-giay", "up-xuong", "gap-lai"] as const;
@@ -260,14 +266,16 @@ export default function UiLab() {
       {"Tờ của sổ hai người: ba hàng, hai vết gấp ngang, mép lineStrong. Góc coral chỉ ở tờ đang là việc cần làm."}
     </Text>
     {TO_GIAY_MAU.map(({ id, dan, hang, lyDo }) => (
-      <ToGiay dan={dan} key={id} testID={`lab-to-giay-${id}`}>
-        <Text style={{ ...typography.body, color: colors.ink }}>{hang[0]}</Text>
-        <VetGap />
-        <Text style={{ ...typography.body, color: colors.ink }}>{hang[1]}</Text>
-        <VetGap />
-        <Text style={{ ...typography.body, color: colors.ink }}>{hang[2]}</Text>
-        <Text style={{ ...typography.label, color: colors.inkSoft, marginTop: 10 }}>{lyDo}</Text>
-      </ToGiay>
+      <View key={id} style={{ gap: 6 }}>
+        <ToGiay dan={dan} testID={`lab-to-giay-${id}`}>
+          <Text style={{ ...typography.body, color: colors.ink }}>{hang[0]}</Text>
+          <VetGap />
+          <Text style={{ ...typography.body, color: colors.ink }}>{hang[1]}</Text>
+          <VetGap />
+          <Text style={{ ...typography.body, color: colors.ink }}>{hang[2]}</Text>
+        </ToGiay>
+        <Text style={{ ...typography.label, color: colors.inkSoft, paddingHorizontal: 4 }}>{lyDo}</Text>
+      </View>
     ))}
     <ThuGapBa height={96} testID="lab-thu-gap-ba" width={144} />
 
