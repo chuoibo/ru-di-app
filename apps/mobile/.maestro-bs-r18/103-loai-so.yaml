@@ -1,0 +1,35 @@
+# Phase 2: đổi loại sổ là một ĐỀ NGHỊ; «Một đôi» chỉ bật khi người kia đồng ý; header đổi theo.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://groups/cap-demo/to-giay
+# The paper surface opens on last week's memory (spec §15.1: the freshest memory
+# is the sheet on the table when nothing is in play); «Rủ đi chơi» is the footer.
+- extendedWaitUntil:
+    visible: "Rủ đi chơi"
+    timeout: 30000
+- assertVisible: "Ký ức"
+- assertVisible: "Hai người bạn · Người ấy"
+- tapOn: "Cài đặt sổ"
+- extendedWaitUntil:
+    visible: "Loại sổ"
+    timeout: 15000
+- tapOn: "Loại sổ"
+- extendedWaitUntil:
+    visible: "Sổ này là sổ gì?"
+    timeout: 15000
+- tapOn:
+    id: "loai-so-doi"
+- extendedWaitUntil:
+    visible: "Đã đề nghị «Một đôi». Chờ người ấy đồng ý trên máy của người ấy."
+    timeout: 15000
+- takeScreenshot: r18-103-de-nghi
+- tapOn: "(Bản trải nghiệm) Người kia đồng ý"
+- extendedWaitUntil:
+    visible: "Đang là một đôi. Nếp nói chuyện với hai bạn như với một đôi."
+    timeout: 15000
+- tapOn: "Xong"
+- extendedWaitUntil:
+    visible: "Một đôi · Người ấy"
+    timeout: 15000
+- takeScreenshot: r18-103-mot-doi

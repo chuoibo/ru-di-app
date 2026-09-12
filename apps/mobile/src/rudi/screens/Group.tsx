@@ -13,6 +13,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chuLon } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, VOTE_PLACE_IDS } from "../fixtures";
+import { banTinhCua, loaiSoCua } from "../so/ban-tinh";
+import { CAP_DEMO } from "../to-giay/fixtures-doi";
+import { useSoDoi } from "../to-giay/SoDoi";
+import { HangToGiay } from "./hai-nguoi/HangToGiay";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { GuGlyph } from "../ui/art/Gu";
 import { noiLuu } from "../luu-tru";
@@ -73,8 +77,15 @@ function ChatBubble({
   );
 }
 
-export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: boolean } = {}) {
+export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embeddedInTabs?: boolean; contextId?: string } = {}) {
   const { fontScale } = useWindowDimensions();
+  // The fixture pair notebook shares this chat body and swaps only the pinned
+  // line under the title: the outing pin belongs to the group, the paper line
+  // to the two-person notebook (spec «Nếp truyền giấy» §12: the group screen
+  // does not change; this is the one branch, keyed by the fixture pair's id).
+  const laCapDemo = contextId === CAP_DEMO.id;
+  const so = useSoDoi();
+  const tuVung = banTinhCua(loaiSoCua({ kind: laCapDemo ? "pair" : "group" }, { bat: so.batDoi })).tuVung;
   const chuLonHon = chuLon(fontScale);
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
@@ -122,7 +133,7 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
           cursorColor={colors.accent}
           onChangeText={setDraft}
           onSubmitEditing={sendMessage}
-          placeholder="Nhắn Team Đà Lạt..."
+          placeholder={laCapDemo ? `Nhắn ${so.tenNguoiKia}...` : "Nhắn Team Đà Lạt..."}
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
           style={[typography.body, styles.oNhap, { color: colors.ink }]}
@@ -150,6 +161,12 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
       // The name of the room and the outing it is about stay put; the thread
       // scrolls under them, so opening the tab never hides which group this is.
       header={
+        laCapDemo ? (
+          <>
+            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title={so.tenNguoiKia} />
+            <HangToGiay cauMo={tuVung.cauMo} onPress={() => router.push(`/groups/${contextId}/to-giay` as never)} tieuDe={tuVung.tenKhongGian} toMo={so.toMo} toiId={so.toiId} />
+          </>
+        ) : (
         <>
           <TopBar
             back={!embeddedInTabs}
@@ -186,10 +203,15 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
             <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
           </Pressable>
         </>
+        )
       }
       keepEnd
       testID="group-chat-screen"
     >
+      {laCapDemo ? (
+        <ThanCapDemo tenNguoiKia={so.tenNguoiKia} tinCuaToi={session.chatMessages} />
+      ) : (
+      <>
       <View style={styles.dayDivider}>
         <View style={[styles.line, { backgroundColor: colors.line }]} />
         <Text style={[typography.caption, { color: colors.inkFaint }]}>Hôm nay</Text>
@@ -271,6 +293,8 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
           </ChatBubble>
         ))}
       </View>
+      </>
+      )}
     </RudiScreen>
   );
 }
@@ -445,6 +469,35 @@ export function VotingScreen() {
         onPress={() => session.confirmVote()}
       />
     </RudiScreen>
+  );
+}
+
+/**
+ * The fixture pair's thread: two people, a quiet line each, and whatever I
+ * type. No AI plan card, no roster of a group that is not here. Role names
+ * only («Người ấy», «Bạn»); the pair notebook's own line lives in the header.
+ */
+function ThanCapDemo({ tenNguoiKia, tinCuaToi }: { tenNguoiKia: string; tinCuaToi: readonly string[] }) {
+  const { colors } = useRudiTheme();
+  const nguoiKia = { ...PEOPLE[1], id: "nguoi-ay", name: tenNguoiKia, initials: "N" };
+  const toi = { ...PEOPLE[0], id: "toi", name: "Bạn", initials: "B" };
+  return (
+    <>
+      <View style={styles.dayDivider}>
+        <View style={[styles.line, { backgroundColor: colors.line }]} />
+        <Text style={[typography.caption, { color: colors.inkFaint }]}>Hôm nay</Text>
+        <View style={[styles.line, { backgroundColor: colors.line }]} />
+      </View>
+      <View style={styles.messages}>
+        <ChatBubble person={nguoiKia} time="18:02">Tuần này tối thứ Bảy rảnh không?</ChatBubble>
+        <ChatBubble own person={toi} time="18:05">Rảnh. Để Nếp phác một tờ rồi mình sửa.</ChatBubble>
+        {tinCuaToi.map((message, index) => (
+          <ChatBubble cuoiChuoi={index === tinCuaToi.length - 1} key={`${message}-${index}`} own person={toi} time="Bây giờ">
+            {message}
+          </ChatBubble>
+        ))}
+      </View>
+    </>
   );
 }
 

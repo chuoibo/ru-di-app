@@ -133,12 +133,20 @@ việc đã có người làm như thể còn nợ:
 | Phase | Nội dung | ADR | Trạng thái |
 |---|---|---|---|
 | 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | **đã merge #611** (2026-09-12) |
-| 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | PR mở (`claude/p0-w-hn-1-nen-to-giay`); bốn vòng đọc mù, vòng cuối «fix rồi ship»; bằng chứng `docs/claude/2026-09-12/nen-to-giay/` |
-| 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | chờ 1 |
+| 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | **đã merge #612** (2026-09-12), bốn vòng đọc mù; bằng chứng `docs/claude/2026-09-12/nen-to-giay/` |
+| 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | PR mở (`claude/p0-w-hn-2-to-giay-fixture`); bằng chứng `docs/claude/2026-09-12/to-giay-fixture/` |
 | 3 | BE lát 1: một migration nối `9a5e1c7b3f86` (13 bảng + `UNIQUE(id, kind)` trên `contexts`), 18 cửa quyền, 19 route, fake repo, `tests/api` + `tests/postgres` (kể cả hai kết nối) + `tests/db`; khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | chờ 0 |
 | 4 | Nối live lát 1: module API, hook, màn `*Live`, Maestro `--otp`, pixel-diff màn hội bạn | — | chờ 2, 3 |
 | 5 | Lát 2: sổ bảy mục, ôn thẻ, câu hỏi tuần, ba dòng dặn, núm độ mới, Cài đặt sổ đôi (cờ «Nếp gửi hộ») | 0027 mở rộng | chờ 4 |
 | 6 | Lát 3: hẹn mở gác lúc đọc, túi riêng, thư gửi năm sau, giấy cũ quay lại, bản đồ hai người qua Hành trình | 0027 mở rộng | chờ 5 |
+
+**Hai điều Phase 2 để lại cho hợp đồng máy chủ (đo ngày 2026-09-12, đọc mù trên màn thật):**
+
+- `POST …/notebook/close/preview` cần **ba** số, không phải hai: `so_nhap_bo` (bản phác chỉ chủ thấy, sẽ **bỏ**),
+  `so_to_huy` (tờ đang chờ trả lời, sẽ **huỷ**), `so_to_khoa` (buổi đã chốt, sẽ **khoá**). Gộp nháp vào «đang chờ» thì màn xem
+  trước nói sai số phận của nó, và người đọc bắt được ngay ở màn kế («Đã bỏ»).
+- `GET /papers/{pid}` cần một cờ do **máy chủ** tính cho nút «Đã đi rồi» (tên đề xuất `co_the_ghi_da_di`): client không đọc đồng
+  hồ (spec §3.3 luật 6) và `content.ngay` là chuỗi cho người đọc, không so được. Hiện nút hiện ngay khi `chot`, kể cả trước ngày hẹn.
 
 **Hai điều cần bạn (Codex) biết, đo ngày 2026-09-12:**
 

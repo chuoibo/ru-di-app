@@ -9,8 +9,12 @@ appId: com.lakiet.rudi
     centerElement: true
     timeout: 30000
 - tapOn: "Still Cafe Đà Lạt"
+# The place's own line under its name. It was «Cà phê view đồi, không gian yên»
+# until commit 4481762f («một dấu cho một địa điểm») rewrote the fixture's
+# subtitles; this flow kept asserting the old one and has been red ever since,
+# unnoticed because the default table is run by hand, not by CI (12/09).
 - extendedWaitUntil:
-    visible: "Cà phê view đồi, không gian yên"
+    visible: "Ghế gỗ, cửa kính, nhạc nhỏ"
     timeout: 30000
 - scrollUntilVisible:
     element:

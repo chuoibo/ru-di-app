@@ -1,0 +1,38 @@
+# Phase 2: rút lại khi chưa ai xem; nghỉ tuần khi còn nháp; cả hai là trạng thái cuối và không có nút nào nữa.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://groups/cap-demo/to-giay
+# The paper surface opens on last week's memory (spec §15.1: the freshest memory
+# is the sheet on the table when nothing is in play); «Rủ đi chơi» is the footer.
+- extendedWaitUntil:
+    visible: "Rủ đi chơi"
+    timeout: 30000
+- assertVisible: "Ký ức"
+- tapOn:
+    text: "Rủ đi chơi"
+    index: 0
+- extendedWaitUntil:
+    visible: "Gửi cho người ấy"
+    timeout: 15000
+- tapOn: "Gửi cho người ấy"
+- extendedWaitUntil:
+    visible: "Rút lại"
+    timeout: 15000
+- tapOn: "Rút lại"
+- extendedWaitUntil:
+    visible: "Đã rút · Thứ Bảy 20/09"
+    timeout: 15000
+- assertVisible: "Rủ đi chơi"
+- takeScreenshot: r18-104-da-rut
+- tapOn:
+    text: "Rủ đi chơi"
+    index: 0
+- extendedWaitUntil:
+    visible: "Tuần này nghỉ"
+    timeout: 15000
+- tapOn: "Tuần này nghỉ"
+- extendedWaitUntil:
+    visible: "Tuần nghỉ · Thứ Bảy 20/09"
+    timeout: 15000
+- takeScreenshot: r18-104-tuan-nghi

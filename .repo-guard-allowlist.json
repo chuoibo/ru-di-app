@@ -2886,6 +2886,550 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-chot-fs1.0-sang.png",
+      "sha256": "454e3e96bea78421c0cfbaf0d0fdf674f1a60f66a70c3e95d5b0dedbafdcf27a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-chot-fs1.0-toi.png",
+      "sha256": "abc45f771485eb84e9758873d5d66e5e69f7173b2bd3f2b0db20c5f6b16981ea",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-chot-fs2.0-sang.png",
+      "sha256": "efcf5f0b1872437aa793787c5b2a37c26dde2312f02d974da70df12e1d0a12f3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-chot-fs2.0-toi.png",
+      "sha256": "2f6a04e6e2e1329c2655d95d9a73940d918a879ea3c65077fe82246872866684",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-giu-fs1.0-sang.png",
+      "sha256": "32aceaf6c8920f15580262300e7e4fd10f86acd6f06dfd8ca2764da3b89336d2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-giu-fs1.0-toi.png",
+      "sha256": "56a774de86c6c8277664df36e295ba3275c2d51c9b3b2ec94a5b749a8907e36e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-giu-fs2.0-sang.png",
+      "sha256": "58a8b77777a7233f17db9fb74df9e1c1fe94ddfda5bf444f1d460c223b3a580b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-giu-fs2.0-toi.png",
+      "sha256": "4c19cb171f0a319f7c30cb3b48aaf7a781b25109131e23cef766c23e896a2d57",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-gui-fs1.0-sang.png",
+      "sha256": "677192d9b38fde94d1b10d8e49dd249cfc96201eccded2cb6a33e55e604f94e6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-gui-fs1.0-toi.png",
+      "sha256": "9fe246fa1f084d18eafe8ad8c99e525b6049772645649e96e314eb6044456c45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-gui-fs2.0-sang.png",
+      "sha256": "913a64b3ec778b5dcb7def483c726d5aee8d0bb6aeecf772b64c9f1e1249475c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-da-gui-fs2.0-toi.png",
+      "sha256": "17c25a4718337d9a97be0668f5ddea97ae7858f6bf664a3d02f53c5a3db65712",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-nhap-fs1.0-sang.png",
+      "sha256": "77a96a5603b99e4b0f25197b2fe6bb925b3ef076c9a098c96e312b77a6f1415d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-nhap-fs1.0-toi.png",
+      "sha256": "55751f0c2d56a0730876c2d4be0ccba66260290eed48c20a02a50dc0ebba9db8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-nhap-fs2.0-sang.png",
+      "sha256": "5d96f548e8d2593d6281ae536416cfb075219155607c6c7c5e2d03043c2c4e54",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-nhap-fs2.0-toi.png",
+      "sha256": "abda6618b7e6ae8da7ef6f348aceecbf2666b53ed11f48d198af5e6e5f4e0856",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-trong-fs1.0-sang.png",
+      "sha256": "37f8f5c9372ca66997b578b920d4fdf49e19502e310bcba6baea4285a4a758de",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-trong-fs1.0-toi.png",
+      "sha256": "bb9c1a412c5ef85c59f5a05cd7a51c9101dc86b8fc449bf183137f96752509bc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-trong-fs2.0-sang.png",
+      "sha256": "4a0c3bec686b7fd9874362a0ffc88ee99c22de5ceb8eccf2c4db0fb4da20b097",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-100-trong-fs2.0-toi.png",
+      "sha256": "91e8cffa945c19ef6d5769a77cc1d98930ea1af307baae0ee174ae279bd31c92",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-chot-v2-fs1.0-sang.png",
+      "sha256": "c846a3e5160f15e09ec4625116655b9eaa6c9f070d0774b07551f5c6b800e363",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-chot-v2-fs1.0-toi.png",
+      "sha256": "8ebff92be9f701109e0db7022f9c25fa0a05348da018970ed6ce8cf3f5337912",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-chot-v2-fs2.0-sang.png",
+      "sha256": "e16c18dc65479ee721efb9ce3b8b55f5d19bef74f269e511ff1caa1f22e1a76e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-chot-v2-fs2.0-toi.png",
+      "sha256": "48460286331d486f0c19053bc4e0c4f9c6e1afa573a735f141fde63ddc4d56e9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-khac-gi-fs1.0-sang.png",
+      "sha256": "dd68d0147f39d0e40346725143e32eed6a0587b9661475113b2be6762ce7112f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-khac-gi-fs1.0-toi.png",
+      "sha256": "44f0beddb85e8bd4262b4bfe798fb6d0b108634e38c911f8ac03c4aa17aafda9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-khac-gi-fs2.0-sang.png",
+      "sha256": "70240e1476de046dfd5f55161dec5d22d198328b7f1a0baeba539dc32b93f922",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-101-khac-gi-fs2.0-toi.png",
+      "sha256": "2053c5a85185a32003b2e7c6a374cf0fda0269d6e960af745ba5d2352dfbbfc6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-da-dong-fs1.0-sang.png",
+      "sha256": "bd008c744a20951bb8580612d86eacd7994f30dd3f9f80b55b67130f81d383e7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-da-dong-fs1.0-toi.png",
+      "sha256": "d2964a4a9899ba4190dad4709d57b5e56b07d22280f21c115b275de44cff8fea",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-da-dong-fs2.0-sang.png",
+      "sha256": "20ea706c7d740daaacc4af712021ac05b6dbdb515a3f75af5c8c6b9902fe6ea5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-da-dong-fs2.0-toi.png",
+      "sha256": "9a864541cc14d8bf52e6cb70a718a0fc56f2481e680c2fe0aa1a722184098dc7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-xem-truoc-fs1.0-sang.png",
+      "sha256": "630b4f3790a13309eb719d81d99b0a124667c3818b004c8b5030a72efa4b59fa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-xem-truoc-fs1.0-toi.png",
+      "sha256": "21305ef119f2b571325a3c84df78e21a684371f3bf0e42fd73381d745a373d99",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-xem-truoc-fs2.0-sang.png",
+      "sha256": "ace6e936c1b6251700d1dffa9f060ece635f5bfecd25e23d43a4341b9c14a969",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-102-xem-truoc-fs2.0-toi.png",
+      "sha256": "9c6199ff796f6be27d4256a0a5b9fcd1d97992c5c7635245d76316c8fa8fa403",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-de-nghi-fs1.0-sang.png",
+      "sha256": "5bc3dabedd28c0962ab2f6af24bfa7900c67c5003b8294b11cfb43f6332943fd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-de-nghi-fs1.0-toi.png",
+      "sha256": "cc908be220202eb402b2734a9ffbdba227d8924de1e113afc60d0c36474f527a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-de-nghi-fs2.0-sang.png",
+      "sha256": "394e73990abf090cd9db18b8b4a467e6d36758ec85fc041250a1b894f90fa84e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-de-nghi-fs2.0-toi.png",
+      "sha256": "aae13a7894ec1237a266cd280c243081fdee9d87f4a04b836d77434aab3baf52",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-mot-doi-fs1.0-sang.png",
+      "sha256": "c4387a9caf7c53d6d6618faba0f8fa25d485eb1478e91971aedfd3b4514d4f64",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-mot-doi-fs1.0-toi.png",
+      "sha256": "1c7acf471fd4571d4ea335867a5390c2f4d45dd2e1fc913c61a7330ae91d77e9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-mot-doi-fs2.0-sang.png",
+      "sha256": "aef18e86075c366760c577ffef1db5a99823682ec4b9a483e9c8584620b84f82",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-103-mot-doi-fs2.0-toi.png",
+      "sha256": "7a8c7458ab5f1523334adce8ce6cd7888a68dc06e6c9fe297ef5f78b11530497",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-da-rut-fs1.0-sang.png",
+      "sha256": "d333badf1151b231e3cf6c1d17b703c70ec35c155567acf2b23647aebabf08fe",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-da-rut-fs1.0-toi.png",
+      "sha256": "d773d832890818dd7011e779ed1977495faf972149f32b44f7fe866e0d4ed7a1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-da-rut-fs2.0-sang.png",
+      "sha256": "625b8c2a53d349a65e206a643844d13f4d34e71c9f9e50234ba3808c2fb775d2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-da-rut-fs2.0-toi.png",
+      "sha256": "c0c931200029056f20201b3ad3bc6fbf26d9c7c3473dcabdd7e3e49e12f5599e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-tuan-nghi-fs1.0-sang.png",
+      "sha256": "44cc040780c2f25fa9d96cd30167687f38104cb560a6923b4c122bfc3849565a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-tuan-nghi-fs1.0-toi.png",
+      "sha256": "9e8d45854ae5c8a68547c31870d396547c635ad18f35065da29d7cc2267c32d1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-tuan-nghi-fs2.0-sang.png",
+      "sha256": "4d88229e43a1f33bb42eae8a24d79d9e97ce5f04a57e51d78d8c1f128480bdda",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-104-tuan-nghi-fs2.0-toi.png",
+      "sha256": "b9f1cfcf63fa632dadc8c5114e6419c406eec7e091aaae32785fc46867f0be02",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-chat-fs1.0-sang.png",
+      "sha256": "32746c2c428686878579805da9f2a2291aa0e758161f27b76b68eced3ae71f65",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-chat-fs1.0-toi.png",
+      "sha256": "3441791eaf8406292c3070b0bd373374f0230f36f51400b1a6170e14e26fbcd7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-chat-fs2.0-sang.png",
+      "sha256": "8ec878197407e0ee134fdd3871bc7cb47c88a2f71dcca98f8443d5971c30f443",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-chat-fs2.0-toi.png",
+      "sha256": "7b70bfa2478caf9aec26dadd0d8873517e98254b5d5caa08e6bf624fb0d9748b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-giay-fs1.0-sang.png",
+      "sha256": "2e26e21dd73ebc67d8c0f6f64fdb32a71903df49492d2fe4f1fef67abec0813a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-giay-fs1.0-toi.png",
+      "sha256": "b025bdb3ae0310e88f27d607f6dec1a180ecfa07bd0e15580d6a9bff3bc4fe54",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-giay-fs2.0-sang.png",
+      "sha256": "b53b536a22ed303974e4b73a319bcd36b65f8471825b0c4c77324e3dffb9d39f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-105-giay-fs2.0-toi.png",
+      "sha256": "cdbfcb1d9c9f084d1ddd2746bed5f99457ed8097558645d4f671ce148c7e4bbd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-nhap-fs1.0-sang.png",
+      "sha256": "2072babf9f1e6ed9e41d9a7d9fce7a5cfddc145af3691efb217f4ee33db13aed",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-nhap-fs1.0-toi.png",
+      "sha256": "1b28a16b86348fd9f704e348c5f5fd1e9f564151ae34d74d3a40299a793a9d47",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-nhap-fs2.0-sang.png",
+      "sha256": "ee87a33088e5f60e042b48c86e1f0889147fc8df56a5e629450df065daae03fd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-nhap-fs2.0-toi.png",
+      "sha256": "4f1ac15e7fce45f1ce52354707c3f1ae7d0ecdd3249cb084fe89d4f0289e4d48",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-tao-moi-fs1.0-sang.png",
+      "sha256": "4f1b30bb30b3135e2d98ede7a50d2c3d3c157736cc91a785555c034c35ada653",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-tao-moi-fs1.0-toi.png",
+      "sha256": "6f4e47a32697b3ab5cdb093203faa125fcb39c7217c595eb4131194d57e5ed7b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-tao-moi-fs2.0-sang.png",
+      "sha256": "249fac1b0012af0e9b8bd9eab21d9d6c9b63c5986b061225425eef4e17db40c2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-12/to-giay-fixture/anh/r18-106-tao-moi-fs2.0-toi.png",
+      "sha256": "5e82e681ef9c64e28bcd25300d95cc54ca208d7f78cbf7a141a88d0522d847ca",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
     }
   ]
 }

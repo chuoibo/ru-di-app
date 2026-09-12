@@ -171,6 +171,17 @@ export function CaiDatNhomSheet({
           />
         </View>
       ) : null}
+      {laPair ? (
+        <ListRow
+          icon="document-text-outline"
+          onPress={() => {
+            onClose();
+            router.push(`/groups/${nhom.id}/to-giay` as never);
+          }}
+          subtitle="Loại sổ, hai ô ràng buộc, đóng sổ."
+          title="Tờ giấy của hai mình"
+        />
+      ) : null}
       {!laPair ? (
         <ListRow
           icon="people-outline"

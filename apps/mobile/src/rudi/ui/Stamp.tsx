@@ -8,7 +8,8 @@ import { useMotion } from "./useMotion";
 export interface StampProps {
   /** Short, factual: «ĐÃ TỚI», «ĐÃ TRẢ», «ĐANG MỞ», «AI GỢI Ý». */
   label: string;
-  tone?: RudiTone;
+  /** `ink` for a state that is a fact (a plan, a memory, a closed week): mực, not the ask's coral. */
+  tone?: RudiTone | "ink";
   /** `ink` for a filled seal (rare: the one state that matters most on the screen). */
   variant?: "outline" | "ink";
   /** A slight rotation makes a seal read as pressed, not printed; 0 for tables. */
@@ -48,9 +49,9 @@ export interface StampProps {
 export function Stamp({ label, tone = "accent", variant = "outline", tilt = 0, dong = false, nen = false, style, testID }: StampProps) {
   const { colors } = useRudiTheme();
   const motion = useMotion();
-  const ink = colors[tone];
+  const ink = tone === "ink" ? colors.ink : colors[tone];
   const filled = variant === "ink";
-  const onInk = tone === "accent" ? colors.accentInk : tone === "split" ? colors.splitInk : colors.aiInk;
+  const onInk = tone === "ink" ? colors.paper : tone === "accent" ? colors.accentInk : tone === "split" ? colors.splitInk : colors.aiInk;
   // `roi` is the drop (0 -> 1 maps scale 1.35 -> 1), `muc` the ink
   // (0.25 -> 1), `lun` the sink after contact (1 -> 0.97 -> 1), each its own
   // value so no phase is read through another's curve.

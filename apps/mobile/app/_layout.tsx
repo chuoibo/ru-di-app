@@ -10,6 +10,7 @@ import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
 import { stackAnimation } from "../src/rudi/motion";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
+import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
@@ -156,6 +157,10 @@ function RootInner() {
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <RudiSessionProvider>
+      {/* The two-person notebook of the experience build: in memory, wire-shaped,
+          swapped for the ADR-0027 routes in Phase 4. Inside the session so it can
+          later read the bearer; outside the Stack so every route sees one notebook. */}
+      <SoDoiProvider>
         <StatusBar style={dark ? "light" : "dark"} />
         <LegacyFragmentAdapter />
         <Stack
@@ -191,6 +196,7 @@ function RootInner() {
             options={{ animation: chuyen("fade"), presentation: "fullScreenModal" }}
           />
         </Stack>
+      </SoDoiProvider>
       </RudiSessionProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>
