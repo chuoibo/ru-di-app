@@ -18,6 +18,9 @@ import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHead
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
 import { KyHoa } from "../../src/rudi/ui/art/KyHoa";
+import { Nep } from "../../src/rudi/ui/art/Nep";
+import { ThuGapBa } from "../../src/rudi/ui/art/Motif";
+import { ToGiay, VetGap } from "../../src/rudi/ui/ToGiay";
 import { moTaKyHoa } from "../../src/rudi/art/ky-hoa";
 import { EmptyState } from "../../src/rudi/ui/EmptyState";
 import { ReorderList } from "../../src/rudi/ui/ReorderList";
@@ -35,6 +38,16 @@ const KY_HOA_MAU: readonly { loai: string; tags: readonly string[] }[] = [
   { loai: "di-choi-dem", tags: ["Món local", "Đi đêm", "Nhộn nhịp"] },
   { loai: "khac", tags: [] },
 ];
+
+// The two-person notebook's sheet in four states; `dan` marks the one that is the thing to do now.
+const TO_GIAY_MAU: readonly { id: string; dan: boolean; hang: readonly [string, string, string]; lyDo: string }[] = [
+  { id: "nhap", dan: true, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Tuần này bạn mở lời"], lyDo: "Vì: ba tuần liền hai bạn ăn ở cùng một khu." },
+  { id: "da-gui", dan: true, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Đã gửi, chờ trả lời"], lyDo: "Người kia chưa xem." },
+  { id: "chot", dan: false, hang: ["18:30  Ăn tối, một quán chưa đi", "20:00  Đi bộ, rồi chè", "Đã chốt, thứ Bảy"], lyDo: "Cả hai đã ừ cùng một phiên bản." },
+  { id: "khoa", dan: false, hang: ["Một tờ chưa tới lúc", "Mở tối nay, 20:00", "Người kia gửi"], lyDo: "Thấy mà chưa đọc được." },
+];
+// Three acts of the two-person notebook, page beside pocket sheet, at both readings.
+const NEP_MANH_MAU = ["dua-giay", "up-xuong", "gap-lai"] as const;
 
 const ANH_HONG = { uri: "http://127.0.0.1:1/khong-co-anh.jpg" };
 
@@ -239,6 +252,34 @@ export default function UiLab() {
         <Text style={{ ...typography.caption, color: colors.inkSoft }}>{`${moTaKyHoa(loai, tags)} · gọn: ${moTaKyHoa(loai, tags, { gon: true })}`}</Text>
         <KyHoa gon={false} loai={loai} tags={tags} testID={`lab-ky-hoa-${loai}-day`} />
         <KyHoa gon loai={loai} tags={tags} testID={`lab-ky-hoa-${loai}-gon`} />
+      </View>
+    ))}
+
+    <SectionHeader title="Tờ giấy · thư gấp ba, mép lineStrong, vết gấp paperShade" />
+    <Text style={{ ...typography.note, color: colors.inkFaint }}>
+      {"Tờ của sổ hai người: ba hàng, hai vết gấp ngang, mép lineStrong. Góc coral chỉ ở tờ đang là việc cần làm."}
+    </Text>
+    {TO_GIAY_MAU.map(({ id, dan, hang, lyDo }) => (
+      <ToGiay dan={dan} key={id} testID={`lab-to-giay-${id}`}>
+        <Text style={{ ...typography.body, color: colors.ink }}>{hang[0]}</Text>
+        <VetGap />
+        <Text style={{ ...typography.body, color: colors.ink }}>{hang[1]}</Text>
+        <VetGap />
+        <Text style={{ ...typography.body, color: colors.ink }}>{hang[2]}</Text>
+        <Text style={{ ...typography.label, color: colors.inkSoft, marginTop: 10 }}>{lyDo}</Text>
+      </ToGiay>
+    ))}
+    <ThuGapBa height={96} testID="lab-thu-gap-ba" width={144} />
+
+    <SectionHeader title="Nếp · trang và mảnh, ba việc của sổ hai người, hai cỡ đọc" />
+    <Text style={{ ...typography.note, color: colors.inkFaint }}>
+      {"Trái: trang của hội bạn. Giữa và phải: mảnh gấp làm tư, góc coral gấp vào trong, 96 và 48."}
+    </Text>
+    {NEP_MANH_MAU.map((pose) => (
+      <View key={pose} style={{ alignItems: "flex-end", flexDirection: "row", gap: 16 }}>
+        <Nep pose={pose} testID={`lab-nep-trang-${pose}-96`} />
+        <Nep gap="manh" pose={pose} testID={`lab-nep-manh-${pose}-96`} />
+        <Nep gap="manh" pose={pose} size={48} testID={`lab-nep-manh-${pose}-48`} />
       </View>
     ))}
 

@@ -1,0 +1,34 @@
+# Phase 1 «Nếp truyền giấy»: bảng «Tờ giấy» và «Nếp trang/mảnh» trên ui-lab — tờ thư gấp ba bốn trạng thái, ba tư thế × hai cỡ.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Tờ giấy · thư gấp ba, mép lineStrong, vết gấp paperShade"
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: r18-99-to-giay-tren
+- scrollUntilVisible:
+    element:
+      id: "lab-to-giay-khoa"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+- takeScreenshot: r18-99-to-giay-khoa
+- scrollUntilVisible:
+    element:
+      text: "Nếp · trang và mảnh, ba việc của sổ hai người, hai cỡ đọc"
+    direction: DOWN
+    timeout: 60000
+- takeScreenshot: r18-99-nep-manh-tren
+- scrollUntilVisible:
+    element:
+      id: "lab-nep-manh-gap-lai-48"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+- takeScreenshot: r18-99-nep-manh-duoi
