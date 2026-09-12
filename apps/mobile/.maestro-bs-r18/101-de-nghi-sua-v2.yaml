@@ -27,7 +27,10 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Phiên bản 2 đổi gì so với trước:"
     timeout: 15000
-- assertVisible: "· Giờ chỗ chính: 18:30 → 19:00"
+# The fixture's counter-proposal moves 18:30 EARLIER, and its reason says so:
+# the direction and the reason have to agree (blind read 12/09, round 2).
+- assertVisible: "· Giờ chỗ chính: 18:30 → 18:00"
+- assertVisible: "Vì sao sửa: Sớm hơn một chút."
 - assertVisible: "Người ấy vừa gửi. Bạn ừ, hay đề nghị sửa?"
 - assertVisible: "Ừ"
 - assertVisible: "Đề nghị sửa"
