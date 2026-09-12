@@ -1,12 +1,12 @@
 # Spec: Mode hai người — «Nếp truyền giấy»
 
 Ngày: 2026-09-12 · **Bản 2**, viết lại tại chỗ, thay toàn bộ bản 1.
-Trạng thái: **ĐÃ QUA HAI LƯỢT PHẢN BIỆN CODEX.** Codex nhận hướng này làm nền
+Trạng thái: **ĐÃ CHỐT** — Lead khép phiên 12/09. Đây là bản dùng để viết kế
+hoạch triển khai lát 1. Codex nhận hướng này làm nền
 cho **kế hoạch nháp lát 1** (PR #609, `6e3cd013`); ba điều khoản còn hở ở lượt
-hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu (20.1), và đã CHẤP NHẬN ADR-0027 cùng khoản bổ sung
-ADR-0019/0021 trong phiên 12/09.** Codex đã chốt K1–K7 (11.3). Còn chờ **đúng
-một thứ**: Codex **ký khép C1–C2** (C3 đã khép). Kế hoạch triển khai lát 1
-**viết được ngay**.
+hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Bốn cửa đều mở.** Lead chốt bảy câu phạm vi (20.1) · Codex chốt K1–K7 (11.3) ·
+Lead chấp nhận ADR-0027 và khoản bổ sung ADR-0019/0021 (11.4) · Lead **khép
+C1–C2** phiên 12/09 (20.4). Bước tiếp theo là **kế hoạch triển khai lát 1**.
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
 Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
 (PR #607, REQUEST_CHANGES; sáu mâu thuẫn C1–C6, tám điểm tranh luận D1–D8).
@@ -1386,11 +1386,23 @@ là câu thật hay là tác giả đẩy việc.
 | **K6** | Lát 1 có cần **lát thông báo** không | **không cần** — tờ giấy là một thẻ trong sổ, thấy khi mở app | Bảng `notifications` chưa có trên `main` (11.2). Nhưng nếu Codex đang định ship lát ấy trong vài ngày tới thì **chờ rẻ hơn tự né**, và chỉ Codex biết điều đó |
 | **K7** | **Hai ô ràng buộc** lưu ở đâu | vùng **chung** của sổ đôi, **không** đụng `person_interests` | Đụng bảng gu cá nhân là đụng **ADR-0019** và cả truy vấn cộng-gu của **hội bạn**. Tác giả không được tự mở đường đó |
 
-### 20.4 Một câu không ai tự ký được
+### 20.4 C1–C2: Lead khép, và đây là loại chữ ký nào
 
-**Ba điều khoản C1 · C2 · C3 đã khép chưa?** Tác giả **không tự xác nhận bản sửa
-của chính mình** — đó là lý do có reviewer. Đây không phải câu kỹ thuật, là câu
-quy trình, và nó là cửa số hai ở mục 23.
+**C3** Codex tự khép ở lượt ba. **C1 và C2**: Lead khép phiên 12/09.
+
+Ghi rõ **loại** chữ ký, vì hai loại không giống nhau và sáu tháng nữa sẽ có người
+đọc lại dòng này:
+
+| | |
+|---|---|
+| **Đã xảy ra** | Codex nêu ba điểm cụ thể ở lượt ba; tác giả sửa cả ba (3.2 · 19.1 · 7.7); **Lead khép** |
+| **Không xảy ra** | Codex **chưa xem** ba bản sửa ấy. Đây **không phải** «reviewer đã xác minh», mà là **Lead nhận rủi ro và đóng** |
+| **Vì sao rủi ro có biên** | hợp đồng máy chủ nằm ở **ADR-0027 do chính Codex viết**, và mọi hiện thực vẫn phải qua PR mà Codex đọc được. Chữ ký này đóng **tranh luận về tài liệu**, không đóng cổng của code |
+| **Mở lại khi nào** | nếu lúc hiện thực lát 1 lộ ra rằng một trong ba bản sửa không đủ, nó quay lại thành finding bình thường, không cần xin phép ai |
+
+Tác giả **vẫn không tự ký bản sửa của chính mình** — luật đó giữ nguyên. Cái đổi
+là **Lead dùng thẩm quyền của mình để đóng**, và điều đó được ghi thành nguồn chứ
+không lẫn vào một dấu tick.
 
 ### 20.5 Ba thứ không phải quyết định, mà là phép đo
 
@@ -1489,7 +1501,7 @@ nghị đếm **lớp coral do hàm art của mình phát ra**, như `art-duong`
 
 **K1–K7 chốt hết** → hợp nhất vào **11.3**, kèm hai chỗ Codex **sửa** đề xuất của
 tác giả (K3 unique theo tờ; K5 kiểm lại lúc gửi).
-**C3 khép về luật sản phẩm.** **C1–C2 chưa ký khép**, ba điểm cụ thể:
+**C3 Codex khép.** **C1–C2 sau đó do Lead khép** (20.4). Ba điểm Codex nêu, và chỗ đã sửa:
 
 | Codex nêu | Đã sửa ở đâu |
 |---|---|
@@ -1528,11 +1540,11 @@ liệt kê hành động → cần route map (11.2, 20.7) · cổng rẽ nhánh 
 Ba cửa, theo thứ tự:
 
 1. ~~Lead chốt bảy câu~~ — **ĐÃ MỞ**, phiên 12/09, ghi ở **20.1**.
-**Cập nhật lượt ba:** Codex nói rõ *«tác giả có thể viết kế hoạch nháp lát 1 từ
-các điều khoản này ngay»*. Nên **kế hoạch nháp** không còn bị chặn; cái còn bị
-chặn là **viết code sản phẩm**.
+**Cập nhật lượt bốn:** **bốn cửa đều mở.** Bước tiếp theo là **kế hoạch triển
+khai lát 1** — và **chỉ lát 1**.
 
-2. **Codex ký khép C1–C2** (C3 đã khép): C1 (gửi = đồng ý ·
+2. ~~Codex ký khép C1–C2~~ — **ĐÃ ĐÓNG**, Lead khép phiên 12/09. Loại chữ ký
+   ghi ở **20.4**: Lead nhận rủi ro, không phải reviewer đã xác minh.: C1 (gửi = đồng ý ·
    người sửa là người gửi `v+1` · lượt số 0 · bảng đường thoát đủ) · C2 (thang
    consent bốn bậc · Luật B cho «Nếp gửi hộ») · C3 (đóng sổ là đóng). R1–R4 và
    hai điểm xác nhận lượt một **đã khép** ở 22.4.

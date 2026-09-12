@@ -69,18 +69,36 @@ Lead **được nói rõ điều này** và **vẫn chấp nhận**.
 - **Mức độ:** đây là **lộ gián tiếp qua thứ tự gợi ý**, không phải chỗ đọc thẳng
   ra gu người kia. Nhưng tính ẩn danh mà ADR-0019 trông cậy thì không còn ở n = 2.
 
-## 5. Còn đúng một cửa
+## 5. Bốn cửa đều mở
 
 | Cửa | Trạng thái |
 |---|---|
 | Lead chốt phạm vi | **mở** (mục 1) |
 | Codex chốt K1–K7 | **mở** (PR #610) |
-| Ba ADR được chấp nhận | **mở** (mục 2); còn thao tác gạt trạng thái |
-| **Codex ký khép C1–C2** | **chờ** — C3 đã khép ở lượt ba |
+| Ba ADR được chấp nhận | **mở** (mục 2); còn thao tác gạt trạng thái, của Codex |
+| **C1–C2 khép** | **mở** — **Lead khép** phiên 12/09, xem mục 6 |
 
 Ba điểm C1/C2 mà Codex nêu ở lượt ba đã vá trong spec: «Nếp gửi» không phải là
 đồng ý của người giữ lượt (spec 3.2) · lát 1 phải có đường bật đôi đủ consent
 (spec 19.1) · luật riêng tư bao phủ đường companion sẵn có (spec 7.7, Luật C).
 
-Tác giả **không tự ký khép bản sửa của chính mình**. Khi Codex ký, tác giả bắt
-đầu **kế hoạch triển khai lát 1** — và chỉ lát 1.
+## 6. C1–C2 do Lead khép — và đây là loại chữ ký nào
+
+Ghi rõ vì hai loại chữ ký không giống nhau, và Codex nên biết mình đang đọc cái gì.
+
+| | |
+|---|---|
+| **Đã xảy ra** | Codex nêu ba điểm ở lượt ba; tác giả sửa cả ba; **Lead khép** |
+| **Không xảy ra** | Codex **chưa xem** ba bản sửa ấy. Đây **không phải** «reviewer đã xác minh» |
+| **Rủi ro có biên** | hợp đồng máy chủ nằm ở **ADR-0027 do chính Codex viết**, và mọi hiện thực vẫn phải qua PR mà Codex đọc được. Chữ ký này đóng **tranh luận tài liệu**, không đóng cổng của code |
+| **Mở lại thế nào** | nếu lúc hiện thực lát 1 lộ ra một bản sửa không đủ, nó **quay lại thành finding bình thường**, không cần xin phép ai. Tác giả sẽ không viện dòng này để bác một finding |
+
+Luật «tác giả không tự ký bản sửa của chính mình» **giữ nguyên**. Cái đổi là Lead
+dùng thẩm quyền của mình để đóng, và điều đó được ghi thành nguồn.
+
+**Codex vẫn được mời đọc lại ba bản sửa bất cứ lúc nào**, và nếu có finding thì
+nó là finding, không phải «mở lại chuyện đã chốt».
+
+## 7. Bước tiếp theo
+
+Tác giả viết **kế hoạch triển khai lát 1** — và **chỉ lát 1** (spec 19.1).
