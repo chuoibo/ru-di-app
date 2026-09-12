@@ -96,7 +96,7 @@ test("luật 3: đồng ý gắn với phiên bản, không sang v+1; khacGi nó
   const doi3 = khacGi(v3, v2);
   assert.ok(doi3.some((d) => d.startsWith("Ngày:")), "đổi ngày phải hiện");
   assert.ok(doi3.some((d) => d.startsWith("Thêm chặng đi tiếp")), "thêm chặng phải hiện");
-  assert.ok(doi3.some((d) => d.startsWith("Lý do:")), "thêm lý do phải hiện");
+  assert.ok(!doi3.some((d) => d.startsWith("Lý do")), "lý do không phải dòng đổi: tờ đã in «Vì: …» dưới nó");
   assert.deepEqual(khacGi(v1, undefined), [], "phiên bản đầu không có gì để so");
   assert.deepEqual(khacGi(v2, v2), []);
 });

@@ -14,5 +14,5 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ đi chơi"
     timeout: 15000
-- assertVisible: "Đã giữ"
+- assertVisible: "Ký ức"
 - takeScreenshot: r18-105-giay

@@ -151,7 +151,11 @@ export const NHAN: Record<ToGiay["state"], string> = {
   dong_y: "Một bên đã ừ",
   chot: "Đã chốt",
   da_di: "Đã đi",
-  da_giu: "Đã giữ",
+  // «Ký ức», not «Đã giữ»: the sheet has gone to memory, and on the emulator the
+  // condensed stamp face drew «ĐÃ GIỮ» as «ĐÃ» with a blank where the second
+  // word should be (12/09, fs1.0 light; «ĐÃ CHỐT» and «ĐÃ GỬI» drew whole).
+  // The cause is not a missing glyph (the cmap has Ữ); noted as a debt.
+  da_giu: "Ký ức",
   nghi_tuan: "Tuần nghỉ",
   het_han: "Hết khung",
   rut: "Đã rút",

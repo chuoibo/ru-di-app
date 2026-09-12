@@ -140,9 +140,10 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
           <View style={[styles.dev, { borderColor: colors.line }]} testID="giay-ban-trai-nghiem">
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Bản trải nghiệm: máy này đóng cả vai người ấy.</Text>
-            {toMo.state === "da_gui" ? <RudiButton label="(Bản trải nghiệm) Người kia xem" onPress={() => so.nguoiKia?.xem(toMo.id)} variant="outline" /> : null}
-            <RudiButton label="(Bản trải nghiệm) Người kia đồng ý" onPress={() => so.nguoiKia?.dongY(toMo.id)} variant="outline" />
+            {toMo.state === "da_gui" ? <RudiButton compact label="(Bản trải nghiệm) Người kia xem" onPress={() => so.nguoiKia?.xem(toMo.id)} variant="ghost" /> : null}
+            <RudiButton compact label="(Bản trải nghiệm) Người kia đồng ý" onPress={() => so.nguoiKia?.dongY(toMo.id)} variant="ghost" />
             <RudiButton
+              compact
               label="(Bản trải nghiệm) Người kia đề nghị sửa giờ"
               onPress={() => {
                 const pb = phienBan(toMo);
@@ -150,7 +151,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
                 const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: c.gio === "19:00" ? "18:00" : "19:00" } : c));
                 so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, "Sớm hơn một chút.");
               }}
-              variant="outline"
+              variant="ghost"
             />
           </View>
         ) : null}
@@ -217,5 +218,5 @@ function dongTom(t: ToGiay): string {
 const styles = StyleSheet.create({
   than: { paddingTop: 8 },
   footer: { paddingHorizontal: 16 },
-  dev: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, padding: 12, gap: 8 },
+  dev: { borderWidth: StyleSheet.hairlineWidth, borderStyle: "dashed", borderRadius: 10, padding: 8, gap: 0 },
 });

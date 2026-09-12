@@ -8,7 +8,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ đi chơi"
     timeout: 30000
-- assertVisible: "Đã giữ"
+- assertVisible: "Ký ức"
 - takeScreenshot: r18-100-trong
 - tapOn:
     text: "Rủ đi chơi"
@@ -49,7 +49,7 @@ appId: com.lakiet.rudi
 - inputText: "Hàng chè đầu hẻm, lần sau lại."
 - tapOn: "Giữ lại"
 - extendedWaitUntil:
-    visible: "Đã giữ"
+    visible: "Ký ức"
     timeout: 15000
 - assertVisible: "Giữ lại: Hàng chè đầu hẻm, lần sau lại."
 - takeScreenshot: r18-100-da-giu

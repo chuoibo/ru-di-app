@@ -168,8 +168,8 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
 }
 
 /**
- * What changed between two versions, as lines a person can read (§3.3 rule
- * 3: «hiện cái gì đã đổi»). Empty when nothing did.
+ * What changed in the CONTENT between two versions, as lines a person can
+ * read (§3.3 rule 3: «hiện cái gì đã đổi»). Empty when nothing did.
  */
 export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] {
   if (!vTruoc) return [];
@@ -186,7 +186,8 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
       if (a.viec !== b.viec) ra.push(`Việc ${ten.toLowerCase()}: ${a.viec} → ${b.viec}`);
     }
   }
-  if ((v.ly_do ?? "") !== (vTruoc.ly_do ?? "")) ra.push(v.ly_do ? `Lý do: ${v.ly_do}` : "Bỏ dòng lý do");
+  // The reason is not a diff line: the sheet already prints the current
+  // version's «Vì: …» under itself, and repeating it here read as two reasons.
   return ra;
 }
 
