@@ -55,7 +55,8 @@ appId: com.lakiet.rudi
 - tapOn:
     id: "giu-mot-dieu-o"
 - inputText: "Hàng chè đầu hẻm, lần sau lại."
-- tapOn: "Giữ lại"
+# The keyboard's Done key keeps the line; the button under the field sits beneath the keyboard.
+- pressKey: Enter
 - extendedWaitUntil:
     visible: "Ký ức"
     timeout: 15000

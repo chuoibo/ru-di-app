@@ -15,10 +15,6 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Gửi cho người ấy"
     timeout: 15000
-- tapOn:
-    id: "khong-gian-giay"
-    point: "90%,8%"
-    optional: true
 - tapOn: "Cài đặt sổ"
 - extendedWaitUntil:
     visible: "Đóng sổ"
