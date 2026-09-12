@@ -18,7 +18,7 @@ services:
       - ${MOBILE_ROUTING_DATA_DIR:?Chạy prepare_journey_routing.py trước}:/custom_files
     expose: ["8002"]
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request,json; r=json.load(urllib.request.urlopen('http://127.0.0.1:8002/status',timeout=3)); assert r.get('has_tiles') is True"]
+      test: ["CMD", "python3", "-c", "import urllib.request,json; r=json.load(urllib.request.urlopen('http://127.0.0.1:8002/status',timeout=3)); assert r.get('tileset_last_modified',0)>0 and 'route' in r.get('available_actions',[])"]
       interval: 15s
       timeout: 5s
       start_period: 20m
