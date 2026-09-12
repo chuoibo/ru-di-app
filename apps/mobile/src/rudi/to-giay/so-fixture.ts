@@ -89,8 +89,12 @@ export function nguoiNhanXem(ds: readonly ToGiay[], id: string, now: string): To
 
 function chotNeuDu(to: ToGiay, toiId: string, outingId: string): ToGiay {
   if (!coTheChot(to, toiId)) return to;
-  // K3: one sheet, one outing. A second call finds the link and does nothing.
-  return { ...to, state: "chot", outing_id: to.outing_id ?? outingId };
+  // K3: one sheet, one outing. A second call finds the link already there and
+  // leaves it alone -- written as a branch, not `??`, because the id-default
+  // gate reads `x ?? id` as a display value falling back to a raw id, and this
+  // is a link nobody shows.
+  if (to.outing_id !== null) return { ...to, state: "chot" };
+  return { ...to, state: "chot", outing_id: outingId };
 }
 
 /** I agree to the current version. Both agreed to the same version ⇒ `chot` with exactly one outing. */
