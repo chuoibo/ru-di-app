@@ -3,8 +3,8 @@
 Ngày: 2026-09-12 · **Bản 2**, viết lại tại chỗ, thay toàn bộ bản 1.
 Trạng thái: **ĐÃ QUA HAI LƯỢT PHẢN BIỆN CODEX.** Codex nhận hướng này làm nền
 cho **kế hoạch nháp lát 1** (PR #609, `6e3cd013`); ba điều khoản còn hở ở lượt
-hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). Chờ Codex xác nhận khép
-và Lead chốt bảy câu ở mục 20.
+hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu ở 20.1.**
+Còn chờ: Codex xác nhận ba khoản đã khép (20.4) và trả lời **K1–K7** (20.3).
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
 Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
 (PR #607, REQUEST_CHANGES; sáu mâu thuẫn C1–C6, tám điểm tranh luận D1–D8).
@@ -1263,22 +1263,63 @@ theo tỉ lệ Ừ — sai hai lần: nó kết luận về mô hình từ một
 
 ---
 
-## 20. Câu hỏi còn mở, cần Lead chốt
+## 20. Quyết định đã chốt, và câu còn lại
 
-1. **Một người có được nhiều sổ *đôi* cùng lúc không?** Đề xuất **một** — vì gậy
-   và hạn mức đều giả định một. Đây là **cắt phạm vi V1**, không phải phán xét ai.
-2. **Hành động đóng sổ đặt tên gì trên nút?** Đề xuất «Đóng sổ», kèm màn xem
-   trước hậu quả theo bảng 7.6.
-3. **Đường khách** (người kia chưa cài app) có vào V1 không? `guest_links` **không
-   dùng lại được** (11.2 §2) nên đây là capability mới, cần Codex định giá.
-4. **Chi tiêu chung** vào lát nào? Nó rẻ (một phép đọc) nhưng mở một bề mặt tiền
-   trong sổ đôi.
-5. **Tên hai vai** «Người lo / Người chấm» — câu chữ này đi khắp app.
-6. **Bản đồ hai người** vẽ mốc nào: mọi buổi đi, hay chỉ buổi có tờ giấy? Chỗ duy
-   nhất trong doc chưa có hình dạng.
-7. **Route map của tab «Tạo mới»**: thêm mục nào, giữ mục nào (11.2 §3).
+### 20.1 Lead đã chốt (phiên 12/09)
 
----
+| # | Câu | Chốt | Kéo theo |
+|---|---|---|---|
+| 1 | Mấy sổ đôi cùng lúc | **Đúng một** | DB thêm một ràng buộc unique; gậy và trần nói giữ nguyên giả định một sổ. **Cắt phạm vi V1**, mở lại được sau |
+| 2 | Tên nút kết thúc | **«Đóng sổ»** | kèm màn xem trước **đếm rõ** sắp khoá bao nhiêu tờ, huỷ bao nhiêu lời đề nghị (7.6) |
+| 3 | Đường khách vào V1 | **Không** | lát 1 giả định **cả hai đều cài app**. `guest_links` không dùng lại được (11.2); nếu mở lại thì là capability mới + ADR riêng |
+| 4 | Chi tiêu chung vào lát nào | **Lát 3** | không mở bề mặt tiền ở ấn tượng đầu |
+| 5 | Tên hai vai | **Người lo / Người chấm** | «Người mở lời» bị loại vì **chọi cơ chế gậy**: gậy luân phiên nên tuần nào cũng có người mở lời, bất kể ai giữ vai |
+| 6 | Bản đồ vẽ mốc nào | **Chỉ buổi có tờ giấy** | bản đồ của những lần **đáng nhớ**, không phải log mọi lần đi ăn |
+| 7 | Tab «Tạo mới» | **Thêm đúng một mục «Rủ một người đi chơi»** | cửa chính vẫn là đường trong cuộc nhắn riêng; mục này là cửa cho người **chưa** có cuộc nhắn riêng |
+
+### 20.2 Tác giả tự quyết — không hỏi ai
+
+Thuộc `apps/mobile/` và `app/web/`, tức phần tác giả sở hữu theo charter: câu
+chữ · bố cục · giải phẫu thẻ và mọi số ở mục 15 · hợp đồng màu và vật liệu ở mục
+16 · tạo hình Nếp, tên tư thế, biểu cảm ở mục 17 · thứ tự bề mặt trong một lát ·
+cách đo hình (đọc mù, pixel diff, cổng đếm lớp).
+
+**Đã quyết trong bản này, không mở lại trừ khi có bằng chứng mới:** mép giấy là
+`lineStrong` · dòng lý do là `inkSoft` · vết gấp một nét `paperShade` giống nhau
+hai scheme · bỏ ngưỡng 1.9 · «một tờ đang mở» thay ba thẻ · một chỗ chính thay
+ba chặng · biến thể Nếp sau trường `gap` mặc định `"trang"`.
+
+### 20.3 Câu cho Codex — và vì sao tác giả không tự chốt được
+
+Bảy câu. Cột cuối là phần quan trọng: **lý do không tự chốt**, để Codex biết đây
+là câu thật hay là tác giả đẩy việc.
+
+| # | Câu | Đề xuất của tác giả | Vì sao không tự chốt được |
+|---|---|---|---|
+| **K1** | Hình bảng của **tờ giấy và phiên bản** | một bảng tờ giấy + một bảng phiên bản (nội dung theo phiên bản); phản hồi trỏ vào **phiên bản**, không trỏ vào tờ | `db/` là của Codex. Và chọn sai hình thì luật «chấp thuận gắn phiên bản» (3.2) **không cưỡng chế được ở tầng DB**, chỉ còn trông vào code nhớ làm đúng |
+| **K2** | **Trạng thái «đôi»** cắm ở đâu | một bảng riêng, một hàng mỗi `pair`, CHECK `kind = 'pair'`, cần **hai** hàng chấp thuận | Tác giả **cấm được** việc thêm giá trị vào `contexts.kind` vì đã tra bốn chỗ vỡ, nhưng «cột hay bảng» là quyết định **migration**, thuộc Codex |
+| **K3** | **`chot` sinh `outing`** ở đâu, khoá bằng gì | cùng transaction với `chot`; idempotency theo `(tờ giấy, phiên bản)` | `outings` **dùng chung với hội bạn**. Một đường ghi mới vào bảng của hội bạn không phải việc tác giả tự mở, và luật «không việc nền» cộng `install_commit_before_response` là luật máy chủ |
+| **K4** | **Thang consent bốn bậc** cưỡng chế ở đâu | mỗi bậc là một hàng consent có mốc; mọi route đọc/ghi của sổ đôi khai vào roster quyền như mọi hành động khác | Chính Codex nói ở Xác nhận 2: phân quyền là **server-side**. Repo đã có roster mà **một hành động mới phải khai vào**; tác giả không sở hữu chỗ đó |
+| **K5** | **Luật B** («Nếp gửi hộ» chỉ dùng nguồn chung) cưỡng chế thế nào | nháp mang **nhãn nguồn**; đường tự-gửi **từ chối** nháp có nhãn riêng | Tác giả viết được luật, nhưng chỗ cưỡng chế nằm ở tầng service. **Nếu nó chỉ là một `if` trong client thì luật vô nghĩa** |
+| **K6** | Lát 1 có cần **lát thông báo** không | **không cần** — tờ giấy là một thẻ trong sổ, thấy khi mở app | Bảng `notifications` chưa có trên `main` (11.2). Nhưng nếu Codex đang định ship lát ấy trong vài ngày tới thì **chờ rẻ hơn tự né**, và chỉ Codex biết điều đó |
+| **K7** | **Hai ô ràng buộc** lưu ở đâu | vùng **chung** của sổ đôi, **không** đụng `person_interests` | Đụng bảng gu cá nhân là đụng **ADR-0019** và cả truy vấn cộng-gu của **hội bạn**. Tác giả không được tự mở đường đó |
+
+### 20.4 Một câu không ai tự ký được
+
+**Ba điều khoản C1 · C2 · C3 đã khép chưa?** Tác giả **không tự xác nhận bản sửa
+của chính mình** — đó là lý do có reviewer. Đây không phải câu kỹ thuật, là câu
+quy trình, và nó là cửa số hai ở mục 23.
+
+### 20.5 Ba thứ không phải quyết định, mà là phép đo
+
+Không ai trong hai bên chốt được bằng lập luận; chúng chỉ trả lời được **bên
+trong lát 1**, trên bản dựng thật:
+
+1. **«Một tờ đang mở» có thật sự nhẹ hơn «ba thẻ» không** — Codex đã rút yêu cầu
+   frame trước kế hoạch (22.4); so frame là cổng **bên trong** lát 1.
+2. **Trên cả khung có một hành động dẫn rõ không** — đọc mù ở cỡ thật (16.4),
+   không phép đếm nào thay được.
+3. **Vòng có khép không** — tám tuần, theo chuỗi sự kiện ở 19.3.
 
 ## 21. Từ vựng
 
@@ -1388,13 +1429,14 @@ liệt kê hành động → cần route map (11.2, 20.7) · cổng rẽ nhánh 
 
 Ba cửa, theo thứ tự:
 
-1. **Lead chốt bảy câu ở mục 20** — ba câu đầu đổi cả hình dữ liệu lẫn phạm vi.
+1. ~~Lead chốt bảy câu~~ — **ĐÃ MỞ**, phiên 12/09, ghi ở **20.1**.
 2. **Codex xác nhận ba điều khoản vừa hợp nhất đã khép**: C1 (gửi = đồng ý ·
    người sửa là người gửi `v+1` · lượt số 0 · bảng đường thoát đủ) · C2 (thang
    consent bốn bậc · Luật B cho «Nếp gửi hộ») · C3 (đóng sổ là đóng). R1–R4 và
    hai điểm xác nhận lượt một **đã khép** ở 22.4.
-3. **ADR cho phần máy chủ** (11.4): tối thiểu **ADR mới** cộng khoản bổ sung cho
-   **ADR-0019** phải được chấp nhận trước khi có bảng nào được tạo.
+3. **Codex trả lời bảy câu K1–K7 ở 20.3**, và **ADR cho phần máy chủ** (11.4):
+   tối thiểu **ADR mới** cộng khoản bổ sung cho **ADR-0019** phải được chấp nhận
+   trước khi có bảng nào được tạo.
 
 Khi ba cửa mở: viết **kế hoạch triển khai cho đúng lát 1**, không viết cho cả ba
 lát. Phần màn hình đi qua Impeccable pipeline như mọi việc frontend trong repo
