@@ -32,8 +32,9 @@ import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
  * `outline` -- `soft` lost to `outline` in a blind read, the reverse of what
  * spec §15.3 assumed -- side by side at 143dp on a 360dp phone and stacked
  * under large text. «Tuần này nghỉ», «Đã đi rồi», «Huỷ buổi này», «Bỏ bản
- * phác này» are `ghost` lines: they must stay reachable, and none of them is
- * the thing to do now.
+ * phác này», «Rút lại» are `ghost` lines: they must stay reachable, and none
+ * of them is the thing to do now. A sender who is waiting has no primary at
+ * all; the sentence under the sheet is the answer.
  *
  * Nothing here is optimistic: every handler is the screen's, and the screen
  * calls it after the notebook has moved (§3.3 rule 6).
@@ -95,7 +96,10 @@ export function ToLoiRu({
     giu: onGiu,
     huy: onHuy,
   };
-  const PHU = new Set(["nghi_tuan", "bo", "huy", "da_di"]);
+  // Withdrawing is an escape, not the sender's job while they wait: as the
+  // only primary it came out as a solid coral «Rút lại», the loudest thing on
+  // a frame whose honest answer is «chờ». Ghost, with the other escapes.
+  const PHU = new Set(["nghi_tuan", "bo", "huy", "da_di", "rut"]);
   const chinh = nut.filter((n) => !PHU.has(n) && bam[n]);
   const phu = nut.filter((n) => PHU.has(n) && bam[n]);
 
