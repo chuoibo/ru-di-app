@@ -6,11 +6,14 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Thử tương tác native"
     timeout: 30000
+# Anchor on the first sheet, not the board title: at font scale 2.0 the title peeks over the
+# bottom edge of the previous board's frame, so scrollUntilVisible on it does not scroll.
 - scrollUntilVisible:
     element:
-      text: "Tờ giấy · thư gấp ba, mép lineStrong, vết gấp paperShade"
+      id: "lab-to-giay-nhap"
     direction: DOWN
     timeout: 60000
+    centerElement: false
 - takeScreenshot: r18-99-to-giay-tren
 - scrollUntilVisible:
     element:

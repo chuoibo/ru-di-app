@@ -151,7 +151,7 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   "dua-giay": { nghieng: 6, nhin: [1.4, 0.4], bieuCam: "nhuong", dang: "dung" },
   // One hand pressing a sheet face down on the floor beside the feet: not
   // yet, and no comment about it.
-  "up-xuong": { nghieng: 5, nhin: [1.2, 1.6], bieuCam: "giu-kin", dang: "dung" },
+  "up-xuong": { nghieng: 5, nhin: [1.6, 3.0], bieuCam: "giu-kin", dang: "dung" },
   // Sitting, folding a small sheet in both hands in front of the chest, eyes
   // down on the fold.
   "gap-lai": { nghieng: 0, nhin: [0.6, 1.4], bieuCam: "giu-kin", dang: "dung" },
@@ -207,7 +207,11 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   const net = (w: number) => w * tiLe * dam;
   const p: PoseNep = laPoseNep(pose) ? pose : "moi";
   const nghieng = tuyChon.nghieng ?? TU_THE[p].nghieng;
-  const [nhinX, nhinY] = (tuyChon.nhin ?? TU_THE[p].nhin).map((v) => Math.max(-1.6, Math.min(1.6, v)));
+  // Gaze is clamped so a pupil cannot leave the face. ±1.6 was the ceiling
+  // until `up-xuong`: a shift that small never read as «looking down at the
+  // sheet» (blind reads, rounds 3 and 4), and no existing pose or scene passes
+  // more than 1.6, so widening the clamp moves nothing that is already drawn.
+  const [nhinX, nhinY] = (tuyChon.nhin ?? TU_THE[p].nhin).map((v) => Math.max(-3, Math.min(3, v)));
   const bieuCam = tuyChon.bieuCam ?? TU_THE[p].bieuCam;
   const dang = tuyChon.dang ?? TU_THE[p].dang;
   // The lean: a shear of everything above the ground line, so the feet keep
@@ -250,10 +254,11 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     // the bottom one and the figure read tall. `art-duong` measures how much
     // of its box the sheet fills and that the box is not narrower than 0.94.
     const Am = S(19, 22), Cm = S(72, 74), Dm = S(70, 76), Em = S(20, 76);
-    // The sliver's inner vertex: 3 units off the cut at the 96dp reading, 6 at
-    // the 48dp one, where 3 units is about one dp and a blind read called the
-    // coral «gần như mất» (round 3). `laDaiGap` accepts both.
-    const M = chiTiet ? S(57.6, 31.4) : S(55.4, 33.4);
+    // The sliver's inner vertex: 4.8 units off the cut at the 96dp reading, 6
+    // at the 48dp one. Three units was about one dp at 48 and a blind read
+    // called the coral «gần như mất» (round 3); at 96 it still read as «vệt hở
+    // phải nhìn kỹ» (round 4). `laDaiGap` accepts both.
+    const M = chiTiet ? S(56.2, 32.5) : S(55.4, 33.4);
     const vien = [Am, H, G, Cm, Dm, Em];
     return [
       { d: daGiac(vien), mau: "giay" },

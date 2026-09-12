@@ -644,7 +644,7 @@ test("gap manh: đúng một dải coral hé ra dọc đường cắt, và khôn
           // mất» in a blind read (round 3). Measured upright; the lean shears it.
           if (nghieng === 0) {
             const day = beDayDai(dai[0]);
-            assert.ok(day >= (chiTiet ? 2.5 : 5.5), `${ten}: dải coral dày ${day.toFixed(2)} đơn vị, cần ≥ ${chiTiet ? 2.5 : 5.5}`);
+            assert.ok(day >= (chiTiet ? 4.5 : 5.5), `${ten}: dải coral dày ${day.toFixed(2)} đơn vị, cần ≥ ${chiTiet ? 4.5 : 5.5}`);
           }
           assert.equal(lop.filter((l) => l.mau === "gap" && l.net === undefined).map((l) => tamGiac(l.d)).filter((t) => t && laNepGap(t)).length, 0, `${ten}: bản mảnh không được mang nếp gấp của bản trang`);
           const ra = khongCatNepGap(ten, lop, VAI_ART, laDaiGap);
