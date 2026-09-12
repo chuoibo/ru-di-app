@@ -237,6 +237,11 @@ components:
     textColor: "{colors.brand-coral-ink}"
     rounded: "{rounded.pill}"
     size: "56dp"
+  to-giay:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.small}"
+    padding: "{spacing.md}"
 ---
 
 # Design System: Rủ Đi
@@ -271,6 +276,21 @@ cuối), `sua-sang-1.0/` (album, dòng thời gian, check-in, khay tạo), `sua-
 sáng + tối. Finish reviewer trả `ship` cho màn fixture ở sáng 1.0 và Sở thích
 ở 1.3; **chưa phủ**: các cửa live, tối sau loạt sửa, tương phản nút vô hiệu
 của kit (nợ có tên, xem mục cuối).
+
+**Phase 1 «Nếp truyền giấy» (2026-09-12)**, nhánh
+`claude/p0-w-hn-1-nen-to-giay`, head `137c6c04`, là **nền không cần máy chủ**
+của sổ hai người: tờ thư gấp ba (`ui/ToGiay.tsx`), Nếp bản **mảnh** (`gap:
+"manh"`, biểu cảm `giu-kin`, ba tư thế truyền giấy), motif `thuGapBa`, và
+module «bản tính của sổ» (`so/ban-tinh.ts`). **Không màn người dùng nào đổi,
+không token, không route**; mọi thứ mới chỉ lên bảng `app/dev/ui-lab.tsx`.
+Bằng chứng: ba vòng đọc mù (reviewer context mới, ảnh cắt không nhãn, trước
+khi mở packet) ghi ở `docs/claude/2026-09-12/nen-to-giay/README.md`, 16 PNG
+native `r18-99-*` ở `anh/` của cùng thư mục, Maestro `.maestro-bs-r18/99` exit 0
+ở bốn cấu hình, và bốn cổng node: `art-duong` (baseline sha256 bản `trang`,
+`laDaiGap`, độ lấp đầy, bề dày dải), `so-ban-tinh-mot-cho`, `dau-gach-dai`,
+`rudi-khong-hex`. Bốn vòng đọc mù đã ghi trong README (vòng 4: «fix rồi
+ship»); mục này phân biệt rõ câu nào là **luật đo được** (một cổng giữ) và câu
+nào là **quyết định đọc mù** (một reviewer đọc đúng, chưa ai đo).
 
 **Bằng chứng của từng câu.** Số đo (dp, sp, opacity, tỉ lệ) đọc từ
 `packages/shared/tokens.json`, `src/rudi/theme.ts`, `motion.ts`,
@@ -847,9 +867,16 @@ Hình dạng đặc trưng của thế giới, mỗi cái mang một nghĩa:
 - **Washi**: dải SVG mép xé hai đầu (`duongWashiXeMep`), vạch sáng 1.5px
   `card` 0.35 chạy dọc, `fillOpacity` 0.9, nghiêng ±1/±2°.
 - **Mép bìa**: `CoverBand` bo hai góc dưới 28, tràn lề.
+- **Tờ giấy gấp ba** (`ui/ToGiay.tsx`, 12/09): giấy `paper`, **mép tóc
+  `lineStrong`** (không `line`), bo **`small` 10** như mọi tờ giấy trong app
+  (`KyHoa`, `KhungAnh`); khi là tờ dẫn (`dan`) thì **góc trên phải vuông** và
+  bị **cắt** thành góc gấp 22dp (`GOC_GAP`, cùng cỡ góc gấp bản in). Không
+  bóng. Chi tiết và lý do từng số ở mục «Tờ giấy gấp ba» trong Components.
 - **Kẻ**: mọi divider là `StyleSheet.hairlineWidth` màu `line` (dưới hàng
   địa điểm, dòng sổ, hàng bình chọn, cạnh trên thanh tab, cạnh phải rail,
   trên/dưới ghi chú AI). Không có viền trái màu dày hơn 1px.
+  Vết gấp `VetGap` của tờ giấy là hairline `paperShade` chạy mép tới mép,
+  **không phải divider** (mục «Tờ giấy gấp ba»).
 
 Mọi góc nghiêng chỉ spread khi khác 0 (`transform: undefined` làm Reanimated
 crash); mọi đường SVG có test parse theo cách Java parse (`react-native-svg`
@@ -1245,6 +1272,77 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
   không animate, không đi cùng phần trăm, khe luôn rộng. Đường chuyền khi
   mang nghĩa tiến độ phải có chữ đi kèm.
 
+- **Nếp mảnh (`gap: "manh"`, 12/09) — cùng nhân vật, tờ khác.** `GAP_NEP =
+  trang | manh`; `trang` là trang của sổ hội bạn, **trùng từng toạ độ với
+  `main`**: cổng `art-duong` băm sha256 toàn bộ lớp của 19 pose × 2 cỡ (680
+  lớp) và so với `tests/fixtures/nep-trang-baseline.json` lấy từ `main
+  2d0b9777`; đổi một toạ độ của bản trang là đỏ (lưu hash, không lưu path, vì
+  repo guard đọc chuỗi toạ độ như số tài khoản). *Luật đo được.* `manh` là
+  cùng tờ **gấp làm tư** cho sổ hai người: cùng mắt, cùng một mày, cùng
+  miệng, cùng tay; mép cắt H..G giữ nguyên chỗ nên mày và mọi thứ trên mắt
+  không dời.
+  - **Thân mở sang trái 53/56** (x 19..72 trên y 20..76), **cạnh trái thẳng,
+    chân thẳng**, sáu đỉnh; vai gần dời ra theo mép (x 25 → 20). Ba vòng đọc
+    mù dạy điều này từng bước: 40 → «hẹp hơn chứ không vuông hơn»; 48 với vát
+    góc → «lục giác, bo góc»; 48 thẳng cạnh → «hết lục giác, còn hẹp»; nên
+    rộng ở **đường bao**, không chỉ ở hộp bao. Cổng đo **độ lấp đầy hộp bao**
+    của lớp `giay` đầu (mảnh ≥ 0.87 và hơn trang ≥ 0.03) **và** tỉ lệ hộp bao
+    (mảnh ≥ 0.94 và hơn trang ≥ 0.05). *Luật đo được; ngưỡng là quyết định
+    đọc mù.*
+  - **Hai nếp `bong` chia bốn ô gần vuông**, vẽ **trước** mặt (mắt và miệng
+    nằm trên nếp như mực trên chỗ gấp): dọc x 47 (y 23..75), ngang **y 50.5**
+    giữa mắt và miệng (nếp ở gấu y 62 làm ô trên gấp đôi ô dưới, hình đọc
+    cao); nét 1.8 / 2.4 ở bản rút gọn. Đọc mù vòng 1 và 3: «vết gấp tờ giấy,
+    gấp tư, không phải sống mũi». Cổng: đúng hai nét `bong` ở cả hai cỡ.
+  - **Góc coral gấp VÀO TRONG**, chỉ hé **một dải** dọc mép cắt H..G (tam giác
+    H·G·M): M cách mép **3 đơn vị ở ≥ 72dp**, **6 ở dưới 72** (bản 48 vẽ nửa
+    dp mỗi đơn vị; dải 3 ở đó đọc mù là «gần như mất»). Viền mực của dải chỉ
+    có ở bản chi tiết. Cổng `laDaiGap` nhận dải **theo hình** (ba mức y khác
+    nhau, mảnh: tỉ lệ dày/dài 0.05..0.32) trên 22 pose × 7 biểu cảm × 2 cỡ × 4
+    độ nghiêng: đúng **một** dải, không mang nếp gấp của bản trang, **không
+    nét mực nào sơn lên dải**, bề dày ≥ 2.5 / ≥ 5.5 đơn vị đo lúc đứng thẳng.
+    *Luật đo được.*
+  - **Đổi biến thể không thêm hay bớt coral ở pose nào**: cổng đếm **lớp**
+    `gap` của `manh` bằng của `trang` ở mọi pose (không né theo hình, vì cổng
+    hình không thấy coral khác hình). *Luật đo được.*
+- **Biểu cảm `giu-kin`** (thứ bảy trong `BIEU_CAM`): miệng **một nét thẳng
+  khép**, ngắn hơn và **phẳng tuyệt đối** so với `quyet` (nghiêng); mày hạ
+  hai đơn vị, phẳng. Biết mà không nói. Cổng: bảy mày là bảy đường khác nhau;
+  miệng `giu-kin` phẳng, ngắn hơn `quyet`. *Luật đo được.*
+- **Ba tư thế truyền giấy** (`dua-giay` · `up-xuong` · `gap-lai`), mỗi cái là
+  một việc làm với **một tờ giấy**, theo luật **nghiêng về vật, nhìn vào
+  vật, tay ở giữa vật**: `dua-giay` {nghieng 6, nhìn (1.4, 0.4), `nhuong`}
+  đưa tờ nhỏ gấp sang phải, tờ vẽ **sau** bàn tay để nằm trong lòng tay;
+  `up-xuong` {5, (1.2, 1.6), `giu-kin`} tờ nằm **phẳng 4:1** trên đường sàn
+  (x 64..96, y 83..91), tay gần thẳng xuống, mitten ở **giữa** tờ, thân
+  nghiêng và nhìn xuống (hai bản trước đọc mù thành «kéo que», «kéo va li»
+  vì tờ dày, tay chạm mép, người đứng thẳng nhìn trước); `gap-lai` {0, (0.6,
+  1.4), `giu-kin`} **đứng**, tờ hai mảng gập thật trước ngực (mảng phải là
+  hình bình hành hẹp đang quay về người xem, sống gấp là nét mực). Cổng: ba
+  pose đúng **một** lớp coral ở cả hai biến thể. *Tay và tờ là quyết định
+  đọc mù; số coral là luật đo được.*
+- **Vạt của tờ nhỏ là `giay` dưới viền mực, không `bong`.** Trên nền tối
+  `paperShade` tối hơn `paper`, vạt `bong` đọc thành **lỗ khoét** thay vì góc
+  lật lên (vòng 3, motif). Áp cho tờ trong tay `dua-giay`, tờ sàn `up-xuong`
+  và motif `thuGapBa`. *Quyết định đọc mù; cổng `thuGapBa` giữ «không mảng tô
+  nào ngoài giấy».*
+- **Motif `thuGapBa`** (`ThuGapBa`, lùi 1.5 trong khung): tờ **năm đỉnh** với
+  góc cắt trên phải (`c = 0.22 × min(w, h)`), vạt `giay` dưới viền mực 0.8×,
+  **hai vết `bong` ở h/3 và 2h/3**, viền mực. **Không coral**: coral thuộc tờ
+  dẫn và do màn hình đặt qua `ToGiay dan`. Khung bo + hai kẻ đọc mù thành
+  «thẻ index kẻ dòng / icon list rỗng» (vòng 2); góc cắt mới nói «giấy» (vòng
+  3: «tờ giấy có kẻ dòng, viền mực, góc trên phải gấp lại»). Cổng: 0 lớp
+  `gap`, 5 đỉnh, đúng hai nét mực (tờ + vạt), không mảng tô ngoài `giay`, hai
+  vết đúng ở một phần ba và hai phần ba. *Luật đo được.*
+- **Luật Góc Cắt, Không Badge.** Coral ở góc một tờ giấy chỉ hợp lệ khi góc ấy
+  **bị cắt**: tam giác nền lộ qua, mép cắt nối tiếp viền, vạt là mặt sau. Tam
+  giác coral trong góc còn nguyên là badge/notification dù ai vẽ. Áp cho
+  `ToGiay dan`; góc gấp nhận diện bản trang (`laNepGap`) và bản mảnh
+  (`laDaiGap`) là hai ngữ pháp riêng của nhân vật, không đổi.
+- **Luật Một Nhân Vật, Hai Tờ.** Biến thể của Nếp đổi **tờ** (bao thân, nếp,
+  chỗ hé coral), không đổi mặt, tay, tư thế, số coral. Bản mặc định bị băm;
+  nhân vật thứ hai là việc của ADR, không của một prop.
+
 ### Hàng địa điểm (`PlaceLead`, `PlaceCompare`, `PlaceRow`, `PlaceGlyph`)
 Một từ vựng `DiaDiemHienThi` cho catalogue fixture và màn live; đợt 08/09
 thêm `loai` (id danh mục, để khung trống vẽ hình gu) và `lyDo` (một lý do có
@@ -1581,6 +1679,95 @@ plan và tờ lịch trình AI trong chat có nhịp «điểm đến / đườn
   tờ, mọi hành động có tên bằng chữ; icon-only chỉ cho hành động đã có quy ước
   toàn cầu trên chính màn ấy (tim, chuông, back, đóng, gửi).
 
+### Tờ giấy gấp ba (`ui/ToGiay.tsx`: `ToGiay`, `VetGap`, `GocGapThat`)
+Tờ của **sổ hai người** (spec «Nếp truyền giấy» §1.6, §15.3, §16): một lá
+thư gấp ba, các hàng của một lá thư ngăn bằng vết gấp. **Không phải `Card`**,
+không phải tờ AI `ToGiay` cục bộ trong `chat/TheAi.tsx` (trùng tên, xem mục
+cuối). Ở head này chỉ bảng `ui-lab` dựng nó; chưa màn người dùng nào.
+
+- **Nền `paper`, mép tóc `lineStrong`, bo `radius.small`, đệm `space.md`, không
+  bóng.** Vì sao `lineStrong` chứ không `line`: theo chú thích mã dẫn spec
+  §16.2, `line` trên nền sáng và trên nền tối đo được đều dưới sàn 3:1 của
+  cạnh phi-chữ, `lineStrong` qua sàn ở cả hai scheme (số của hệ ở mục «Sàn
+  phi-chữ 3:1»). Vì sao `radius.small` chứ không `radius.base`: bản cắt đầu
+  dùng `base` 20 và **đọc mù vòng 1 gọi ba tờ là «ba tấm thẻ»** («bo góc bốn
+  góc đều»); bốn góc 20 đều là chữ ký của thẻ, và mọi tờ giấy khác trong app
+  (`KyHoa`, `KhungAnh`) đã ở `small`. Elevation khai một lần: tờ có **mép**,
+  không có bóng rơi. *Quyết định đọc mù; detector Impeccable `[]`.*
+- **Góc gấp là góc CẮT, không phải badge** (`GocGapThat`, ô 22dp = `GOC_GAP`,
+  cùng cỡ góc gấp bản in `KhungAnh`). Hai bản cắt cùng sai một cách: tam
+  giác coral đặt **trong** góc mà viền tờ vẫn chạy tới góc vuông; hai vòng
+  đọc mù gọi nó là «badge», «nhãn dán», «dog-ear trên bao thư», nền tối là
+  «notification», và reviewer vòng 2 chẩn đúng cơ chế: «phần trắng của thẻ
+  vẫn lồi tới tận góc». Giấy gấp ở góc thì **mất** góc ấy. Nên vẽ theo thứ tự
+  cố định: (1) tam giác **xoá** bằng màu nền `nen` phủ lên góc (kể cả góc
+  của chính viền, nhờ offset âm một hairline); (2) vạt `accent` là mặt sau
+  lật lên; (3) mép cắt chéo hairline `lineStrong` **nối tiếp viền tờ**; (4)
+  hai cạnh tự do của vạt bằng mực `ink` 1dp, lùi 0.5 để không bị clip nửa
+  nét. **Góc trên phải vuông** khi mang nếp (`borderTopRightRadius: 0`): nếp
+  gấp không thể bắt đầu trên góc bo. Không `overflow: hidden` (vòng 1: góc
+  coral bị cắt cong). Vòng 3 đọc: «góc giấy gấp lại, tam giác đỏ ở đúng vị
+  trí góc bị mất, không phải badge vì không tròn và không nổi lên trên
+  viền»; nền tối: «không badge, không chấm thông báo». *Quyết định đọc mù đã
+  khép sau ba vòng; chưa cổng đo.*
+- **`nen` là cái lộ qua chỗ cắt**, mặc định `colors.ground`; tờ đặt trên bề
+  mặt khác phải gọi tên bề mặt ấy. Tờ không tự biết nó nằm trên gì.
+- **`VetGap` là vết gấp, không phải divider**: một `View` hairline
+  `paperShade`, `marginVertical: space.sm`, **`marginHorizontal: -space.md`**
+  để chạy xuyên đệm **mép tới mép** chạm viền `lineStrong`. Vết dừng ở lòng tờ
+  là «gạch phân cách hàng» (đọc mù vòng 1); reviewer vòng 2 đo pixel xác nhận
+  vết đã chạm viền hai bên, và vòng 3 đọc thành «dòng kẻ của tờ». Là `View`,
+  không SVG: bản sáng không có màu nào sáng hơn `paper` để bắt sáng (spec
+  §16.3), nên vết là **cùng một nét ở cả hai scheme**, không có trick đổ bóng.
+- **Dòng lý do đứng DƯỚI tờ, NGOÀI tờ.** Ba hàng của tờ phải đều; lý do nằm
+  trong hàng ba làm ba hàng lệch (vòng 1, sửa #4). Vòng 2 đo 24px trên / 54px
+  dưới và đọc chú thích thuộc «khối phía trên». *Quyết định đọc mù, luật bố
+  cục của màn gọi, không phải của component.*
+- **`dan` do màn hình quyết; một coral dẫn mỗi surface.** Component không bao
+  giờ tự đặt `dan`; motif `thuGapBa` không mang coral. Vòng 1 có hai tờ `dan`
+  trên một mặt (sửa #3). Vòng 3: «tờ đầu là việc bây giờ nhờ tam giác đỏ ở
+  góc, dấu duy nhất». Cùng luật với «Luật Một Tông Dẫn» của Colors.
+- **Không chữ trong container.** `ToGiay` không có nhãn của riêng nó, không
+  xuất hiện trong cây trợ năng như một label; các hàng bên trong nói.
+- **Ba tờ không `dan` xếp đều vẫn có thể đọc thành danh sách thẻ** — điều
+  còn treo cho Phase 2 (spec §20.5 phép đo 2); đòn bẩy vật chất duy nhất còn
+  lại là ngữ pháp góc gấp ở tờ dẫn. Ghi để người sau không «sửa» bằng cách
+  thêm bóng hay đổi bo.
+
+### Bản tính của sổ (`so/ban-tinh.ts`)
+Chỗ **duy nhất** trong `src/` khai các loại sổ khác nhau ở đâu (spec §13.3,
+§17). Không có «mode»; có nhiều sổ, mỗi sổ một loại, người mở sổ này hay sổ
+kia.
+
+- **Ba loại** `LOAI_SO = hoi | hai-nguoi | doi`. **Sáu trường** của
+  `BanTinhSo`: `quyetDinh` (`phieu` | `to-giay`), `coVai` (hai vai Người lo /
+  Người chấm hay không), `nhip` (`toMoiTuan`, `lanLaMoiThang`, `nhacMoiThang`;
+  0 là không bao giờ), `nepDuocLam` (danh sách `ViecNep`, rỗng là im lặng),
+  `tuVung` (`goiTapThe`, `cauMo`, `nutMoLoi`, `tenKhongGian`; tiếng Việt,
+  không gạch dài, cổng `dau-gach-dai`), `tienHien` (`chia-bill` |
+  `chi-tieu-chung`). `hoi` là bản đang ship, không đổi: Nếp giữ ghế và không
+  tự nói (`nhip` 0, `nepDuocLam` rỗng). `hai-nguoi` chỉ thêm tờ giấy và
+  `phac-to`; `doi` thêm hai vai, bốn việc còn lại và sổ riêng.
+- **`loaiSoCua(nhom, doi)`** suy loại từ hai sự thật máy chủ nói: `kind`
+  (`group` | `pair`, ADR-0021) và cờ đôi đang bật; `pair` **không tự là đôi**
+  (ADR-0027). **`banTinhCua(loai)`** trả bản tính.
+- **Là chính sách trình bày, không phải phân quyền.** Nó nói màn hình đưa ra
+  gì và gọi tên gì; một nút hiện ra chưa cấp cho ai điều gì; phân quyền là của
+  máy chủ ở mọi biên đọc/ghi (ADR-0027 §4).
+- **Cổng đo được** (`tests/so-ban-tinh-mot-cho.test.mjs`, 4 ca): ngoài
+  `rudi/so/ban-tinh.ts`, **không file nào** trong `src/` so loại sổ, dù là
+  `kind === "pair"` hay `loaiSo === "doi"` (regex neo vào **định danh**
+  `kind`/`loaiSo`, không bắt chuỗi trần: `san === "doi"` của ký hoạ là sân
+  khấu «đồi»). **Allowlist ba chỗ có sẵn** so `kind === "pair"` trước module
+  này (`phien.ts`, `rudi/nhan-rieng/nhan-rieng.ts`,
+  `rudi/screens/chat/CaiDatNhom.tsx`) được khai tường minh vì gom chúng là
+  đụng màn hội bạn; cổng kiểm **hai chiều**: file ngoài danh sách mà so → đỏ,
+  file trong danh sách mà **không còn** so → cũng đỏ, để danh sách không hoá
+  di tích. Thêm: module là **lá** (không import tương đối) để chính sách
+  không kéo màn hình vào.
+- Chuỗi `tuVung` của `hai-nguoi` và `doi` ở head này **chưa lên màn nào**;
+  là dữ liệu, không phải câu chữ đã đọc mù.
+
 ### Cards / Containers
 - **Hàng + kẻ tóc là container mặc định** trên giấy. *Lịch sử tới 10/09:*
   tài liệu ghi `Card` v1 (bo 20, đệm 16, viền `line` + `cardShadow`) «không
@@ -1911,6 +2098,13 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   màn, check-in là một con dấu, luật tính sau «Cách tính».
 - **Do** nhân `minItemWidth` với `fontScale` khi ô lưới chứa nhãn chữ.
 
+- **Do** cho tờ giấy một **mép** (`lineStrong` hairline, bo `small`) và một
+  **góc cắt** khi nó dẫn; vết gấp `paperShade` chạy mép tới mép; lý do đứng
+  dưới tờ, ngoài tờ.
+- **Do** đọc loại sổ qua `banTinhCua(loaiSoCua(nhom, doi))`; muốn thêm khác
+  biệt giữa các loại thì thêm **trường** vào `BanTinhSo`, không thêm nhánh.
+- **Do** giữ bản `trang` của Nếp trùng sha256 baseline; biến thể mới đi qua
+  `GAP_NEP` và phải qua cùng bốn cổng của `manh`.
 ### Don't:
 - **Don't** đặt chữ nhỏ hay icon lên `brand.*` bằng mực của scheme; coral với
   chữ trắng 2.92:1.
@@ -1967,6 +2161,14 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
 - **Don't** lặp một sự thật hai chỗ trên màn (ngày ba lần ở album, «Đã
   check-in» cạnh dấu «ĐÃ TỚI», «Có thể thay đổi» dưới mỗi chặng).
 - **Don't** vẽ ảnh địa điểm mà không nói được nguồn (M12, ADR-0017 §2.5): ảnh có giấy phép thì tác giả + giấy phép ngay dưới ảnh (kể cả ô nhỏ trên hàng); ảnh của nhóm chỉ người trong nhóm thấy và máy chủ lọc; không xuất xứ thì về dải typographic, không mượn ảnh khác.
+- **Don't** đặt tam giác coral vào góc còn nguyên của một tờ; đừng cho tờ
+  giấy bo 20, bóng rơi, hay `overflow: hidden` khi mang nếp.
+- **Don't** để `VetGap` dừng ở lòng tờ; đừng dùng nó làm divider bảng.
+- **Don't** đặt hai tờ `dan` trên một mặt; đừng nướng coral vào motif
+  `thuGapBa`.
+- **Don't** tô vạt của tờ nhỏ bằng `bong` (nền tối đọc thành khoét).
+- **Don't** so `kind === "pair"` hay `loaiSo === "doi"` ngoài
+  `so/ban-tinh.ts`; đừng đọc `BanTinhSo` thành quyền.
 
 ## Những gì bản ship KHÔNG phong thánh
 
@@ -2061,6 +2263,37 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   «…»; ảnh `r14-80-*-fs2.0-*` chỉ có tag một–hai chữ của fixture, chưa có ảnh
   live; iOS và tablet không có ảnh ở lát này.
 
+- **Phase 1 «Nếp truyền giấy» (12/09, head `137c6c04`)** chỉ có trên bảng
+  `app/dev/ui-lab.tsx` và Maestro `.maestro-bs-r18/99`; **không màn người
+  dùng nào** dựng `ToGiay`, `Nep gap="manh"`, `ThuGapBa` hay đọc `BAN_TINH`.
+  Bố cục «ba tờ + lý do dưới tờ» là bố cục **lab**, không phải màn. Chuỗi
+  `tuVung` của `hai-nguoi`/`doi` chưa render ở đâu.
+- **Vòng đọc mù 4** đọc đúng thân 53/56 («vuông vắn, bè hơn hẳn»), nếp ngang
+  qua mặt («nếp gấp giấy»), `gap-lai` («đang gấp giấy»), `up-xuong` («đè tờ
+  giấy dưới đất»), motif tối («góc gấp lên»), dải 6 ở 48 («thấy được, ở
+  ngưỡng»). Hai sửa toạ độ **sau** vòng 4 (`up-xuong` nhìn [1.6, 3.0] sau khi
+  nới kẹp `nhin` ±3; dải ở bản chi tiết 3 → 4.8) là **quyết định của tác giả**,
+  chưa ai đọc mù lại; phán quyết «fix rồi ship» cho phép điều đó.
+- **Đọc mù = một reviewer context mới đọc ảnh cắt mỗi vòng**, không phải
+  người dùng; ảnh là fs1.0/2.0 sáng-tối trên máy ảo (`r18-99-*`), không có iOS,
+  không tablet.
+- **Hai `ToGiay` trùng tên**: `chat/TheAi.tsx` có hàm cục bộ `ToGiay` (tờ AI
+  `card` bo 20, mục «Ghi chú AI») và `ui/ToGiay.tsx` export `ToGiay` (tờ thư
+  gấp ba). Không phải hai biến thể của một component; tờ AI vẫn bo `base` và
+  chưa được đo lại theo luật tờ giấy. Nợ đặt tên, ghi để người sau không hợp
+  nhất nhầm.
+- **`KyHoa` (PR #604) trên cùng trang lab** mang coral trên tờ không `dan`;
+  ghép chung một surface với `ToGiay dan` sẽ vỡ «một coral dẫn». Reviewer
+  vòng 3 ghi ngoài phạm vi; quyết ở Phase 2 khi lắp màn thật.
+- **Mép cắt chéo hairline của `GocGapThat` hiển thị mờ hơn viền tờ**
+  (anti-alias nửa trên coral nửa trên nền); không đổi cách đọc, không có số
+  nào được in để hợp thức nó.
+- **Con số tương phản `line`/`lineStrong` ở chú thích `ToGiay.tsx`** là trích
+  spec §16.2, không phải đầu ra của `sinh_token_ui_v2.py`; số của hệ nằm ở
+  hai mục do script sinh.
+- Đề nghị đổi nền tờ khỏi `paper` (vòng 2) **không nhận**: đổi token là việc
+  của spec/ADR, không của Phase 1.
+
 ## Cổng phải xanh trước khi đổi hệ này
 
 ```bash
@@ -2077,6 +2310,9 @@ cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly
 node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>   # dump uiautomator Khám phá fixture: 0 node «hợp gu», tiêu đề mục đúng một node, dẫn có một lý do là tag, mô tả không lặp từ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs   # ảnh catalogue chỉ tới Image trong ba khung in ghi công; không ai đọc trần anh.source, không ai gọi AnhChang
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
+cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/art-duong.test.mjs   # thêm 12/09: bản trang trùng sha256 fixtures/nep-trang-baseline.json; manh đúng một dải coral (laDaiGap), không mực lên dải, dày ≥ 2.5/5.5; lấp đầy ≥ 0.87, tỉ lệ ≥ 0.94; ba pose mới một coral; thuGapBa 0 coral, 5 đỉnh, hai vết ở 1/3, 2/3
+cd apps/mobile && node --test tests/so-ban-tinh-mot-cho.test.mjs   # ngoài so/ban-tinh.ts và ba chỗ có sẵn không file nào so loại sổ; ba chỗ ấy vẫn còn; ban-tinh.ts là lá
+cd apps/mobile && node --test tests/dau-gach-dai.test.mjs          # tuVung của BAN_TINH và mọi chuỗi app không có gạch dài
 ```
 
 Màn native thì cổng là **emulator**, không phải web export (dòng FINISH của

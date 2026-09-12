@@ -132,8 +132,8 @@ việc đã có người làm như thể còn nợ:
 
 | Phase | Nội dung | ADR | Trạng thái |
 |---|---|---|---|
-| 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | PR mở |
-| 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | chờ 0 |
+| 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | **đã merge #611** (2026-09-12) |
+| 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | PR mở (`claude/p0-w-hn-1-nen-to-giay`); bốn vòng đọc mù, vòng cuối «fix rồi ship»; bằng chứng `docs/claude/2026-09-12/nen-to-giay/` |
 | 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | chờ 1 |
 | 3 | BE lát 1: một migration nối `9a5e1c7b3f86` (13 bảng + `UNIQUE(id, kind)` trên `contexts`), 18 cửa quyền, 19 route, fake repo, `tests/api` + `tests/postgres` (kể cả hai kết nối) + `tests/db`; khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | chờ 0 |
 | 4 | Nối live lát 1: module API, hook, màn `*Live`, Maestro `--otp`, pixel-diff màn hội bạn | — | chờ 2, 3 |

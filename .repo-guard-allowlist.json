@@ -2758,6 +2758,134 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-duoi-fs1.0-sang.png",
+      "sha256": "83b5ccae8e2622ef6c36d758157003923041a4fd27ebf72d90a88ae27bc1c814",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-duoi-fs1.0-toi.png",
+      "sha256": "04b2da152c701e49aa8d6f58ab71a4bea3dc201ff28de1d5a5d28c2bfad90257",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-duoi-fs2.0-sang.png",
+      "sha256": "2db6b0a7a74a89ff8bc27211354cc870c0acaf45c7e503c71bb534776e55e55a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-duoi-fs2.0-toi.png",
+      "sha256": "152a5bee96b1893e47310962a3f5cda8662df875aa80f638d10c156dfb05663d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-tren-fs1.0-sang.png",
+      "sha256": "a5bc2d4ecf835d91bfc2ed3c598047333cdbd905223ceb2db9704db4712df766",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-tren-fs1.0-toi.png",
+      "sha256": "2f53c77c70d2056c3fd7c87477237161dac17bf934e3926f9ef183f38376aa85",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-tren-fs2.0-sang.png",
+      "sha256": "cd126bf6768f8f2c5dd27ab424d9d0eb9e0bb2f95e2e9e3560cf72e1bc5d7ea5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-tren-fs2.0-toi.png",
+      "sha256": "8ce99dc19b491577afecf4cc9717b73d02294b6869d979b7020dd73b42d752f0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-chot-fs1.0-sang.png",
+      "sha256": "6498e8038bcfef338b7af5e443eea58a5ab1a17bde95e9602406248266510963",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-chot-fs1.0-toi.png",
+      "sha256": "4391b3713b7f799d391b9173d32f3b0ab6c43f1589ea68bcfe91c08737433a4f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-chot-fs2.0-sang.png",
+      "sha256": "fc6e979053c98efe07b720866ee411e8a91680877af1a42c813a732d789bfdcf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-chot-fs2.0-toi.png",
+      "sha256": "035bd05b39d09f626751d433957fb1cbe75e7830bc21e1983cdcdc831aa12d7c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs1.0-sang.png",
+      "sha256": "adab15c98503bfc04cecc4d2cc7951dd402a4c2fc6df485c38a9ea43fffccfdd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs1.0-toi.png",
+      "sha256": "e23c404122ba20029c9a6bc5082b04329d6f978fb0338f61661693008939b8fe",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs2.0-sang.png",
+      "sha256": "c065be5e1ba8c267568e964edb6ecff88fbc1dff473973ddc3aa6063d89ade01",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
+    },
+    {
+      "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs2.0-toi.png",
+      "sha256": "7fdf98c91f66aa8b7300bd09872449e73bb4a72316236464ca394edeb3e7f328",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 1 «Nếp truyền giấy» (docs/claude/2026-09-12/nen-to-giay/README.md): ui-lab bảng Tờ giấy và Nếp trang/mảnh, bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp trên cây af060fbc sau bốn vòng đọc mù"
     }
   ]
 }
