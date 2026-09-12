@@ -1,6 +1,6 @@
 # Đề nghị bổ sung ADR-0019 và ADR-0021: nguồn riêng trong pair
 
-**Trạng thái: ĐỀ XUẤT**, 2026-09-12 · Người đề xuất: Codex.
+**Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-12 — Lead đánh dấu trong phiên 2026-09-12 («oke đồng ý chốt hết docs đi»), sau khi được nói rõ rằng khoản này **đổi một hành vi đang chạy** (companion trong mọi cuộc nhắn riêng hai người yếu đi cho tới khi cả hai bật consent) · Người đề xuất: Codex · Hiện thực: Claude theo uỷ quyền ADR-0016 §2.3, Phase 3 của kế hoạch.
 Chờ review độc lập và chấp nhận; **chưa thay hiệu lực** ADR đã được chấp nhận.
 Đi kèm [ADR-0027](../ADR-0027-so-hai-nguoi-va-to-giay-co-phien-ban.md).
 

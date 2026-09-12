@@ -1,6 +1,6 @@
 # ADR-0027 — Sổ hai người theo chu kỳ; tờ giấy bất biến theo phiên bản
 
-- **Trạng thái: ĐỀ XUẤT**, 2026-09-12. Chưa cho phép tạo bảng.
+- **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN** 2026-09-12 — Lead đánh dấu trong phiên 2026-09-12 («oke đồng ý chốt hết docs đi»), sau khi được nói rõ cái giá của khoản bổ sung ADR-0019 (spec 11.5). Codex viết; Lead chấp nhận. Backend do Claude làm theo uỷ quyền ADR-0016 §2.3; charter không đổi. Bảng được tạo ở Phase 3 của kế hoạch, sau khi Phase 0–2 vào `main`.
 - Người đề xuất: Codex, trả lời K1–K7 của spec `f0173bad` §20.3.
 - Chờ review độc lập và chấp nhận theo quy trình; không phải tự xác nhận C1–C3.
 - Phạm vi hiện thực đầu: lát 1. Hẹn mở, túi riêng, sổ bảy mục, thông báo,
