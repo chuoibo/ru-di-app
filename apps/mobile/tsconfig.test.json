@@ -262,6 +262,8 @@
     "src/rudi/so/ban-tinh.ts",
     // Tờ giấy của sổ hai người: bảy luật §3.3 + hai luật ADR-0027; tests/to-giay-luat.test.mjs
     "src/rudi/to-giay/to-giay.ts",
+    // Sổ hai người trên fixture: chuyển trạng thái thuần thay máy chủ tới Phase 4; tests/to-giay-fixture.test.mjs
+    "src/rudi/to-giay/so-fixture.ts",
     // Lưới ô chất liệu của `ui/Grain.tsx`: compile để test pin «phủ hết hộp» và «≤ 60 view».
     "src/rudi/ui/luoi-chat-lieu.ts",
     // Nhịp chuyển động (UI v2): compile để test pin bốn bậc, luật Reduce
