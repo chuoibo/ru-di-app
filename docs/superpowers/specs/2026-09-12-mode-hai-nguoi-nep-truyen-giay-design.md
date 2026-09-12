@@ -3,9 +3,9 @@
 Ngày: 2026-09-12 · **Bản 2**, viết lại tại chỗ, thay toàn bộ bản 1.
 Trạng thái: **ĐÃ QUA HAI LƯỢT PHẢN BIỆN CODEX.** Codex nhận hướng này làm nền
 cho **kế hoạch nháp lát 1** (PR #609, `6e3cd013`); ba điều khoản còn hở ở lượt
-hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu (20.1). Codex đã chốt K1–K7 (11.3) và mở ADR-0027 cùng
-khoản bổ sung ADR-0019/0021, trạng thái ĐỀ XUẤT.** Còn chờ đúng hai thứ: Codex
-**ký khép C1–C2** (C3 đã khép), và **ba ADR được chấp nhận**. Kế hoạch nháp lát 1
+hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu (20.1), và đã CHẤP NHẬN ADR-0027 cùng khoản bổ sung
+ADR-0019/0021 trong phiên 12/09.** Codex đã chốt K1–K7 (11.3). Còn chờ **đúng
+một thứ**: Codex **ký khép C1–C2** (C3 đã khép). Kế hoạch triển khai lát 1
 **viết được ngay**.
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
 Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
@@ -806,16 +806,39 @@ dựa vào nhãn nguồn dán sẵn).
 
 | ADR | Việc |
 |---|---|
-| **ADR-0027** | Codex **đã viết**, trạng thái **ĐỀ XUẤT**, chờ review độc lập và chấp nhận. Phủ K1–K7 |
-| **ADR-0021** | `pair` **không** tự là đôi. Codex **đã viết khoản bổ sung**, trạng thái **ĐỀ XUẤT** |
-| **ADR-0019** | luật «chỉ hiện tổng» **không bảo vệ được ai ở n = 2**; thay bằng ba vùng ở 7.1 **và phải bao phủ `group_taste` / companion đang chạy** (7.7). Codex đã viết khoản bổ sung, trạng thái **đề xuất** |
+| **ADR-0027** | Codex viết. **Lead CHẤP NHẬN phiên 12/09.** Phủ K1–K7. Codex gạt dòng trạng thái trên nhánh của mình |
+| **ADR-0021** | `pair` **không** tự là đôi. Khoản bổ sung nằm trong ADR-0027. **Lead CHẤP NHẬN phiên 12/09** |
+| **ADR-0019** | luật «chỉ hiện tổng» **không bảo vệ được ai ở n = 2**; thay bằng ba vùng ở 7.1 **và phải bao phủ `group_taste` / companion đang chạy** (7.7). Codex đã viết khoản bổ sung. **Lead CHẤP NHẬN phiên 12/09**, sau khi được nói rõ cái giá ở 11.6 |
 | **ADR-0024** | thêm `kind` thông báo; push **không mang nội dung** tờ giấy |
 | **ADR-0022** | tờ giấy **không phải** story (người đọc, hạn, ý nghĩa đều khác) |
 | **ADR-0018 / 0026** | **không đổi**: không quyền vị trí, bản đồ chiếu toạ độ **địa điểm** |
 | **Mới, đường khách** | capability link khách cho sổ hai người (11.2 §2) |
 | `feature_list.md` | **F38** ra khỏi «Optional later»; cơ chế mới lấy số từ F48 |
 
-### 11.5 Tuyệt đối không đụng
+### 11.5 Cái giá của khoản bổ sung ADR-0019, đã nói và đã được chấp nhận
+
+Khoản này khác mọi ADR trước của mode: các ADR kia **cho phép một thứ mới**, còn
+khoản này **đổi một hành vi đang chạy**. Ghi lại để sau này không ai đọc nhầm là
+nó lọt qua.
+
+Mục 2 khoản 1 và 3 của bản bổ sung nói: với `kind='pair'`, **không dùng**
+interests/saved_places/budget riêng của hai người để tạo hay xếp hạng gợi ý
+chung, không cho đường cộng tổng cũ đi vòng qua catalogue/companion/bản đồ/cache;
+và **xử lý chat bằng mô hình cần consent đang hiệu lực của cả hai, mặc định
+tắt**, **áp cả cửa cũ lẫn cửa mới**.
+
+**Nghĩa đen:** companion trong **mọi** cuộc nhắn riêng hai người sẽ yếu đi cho
+tới khi cả hai bật consent — **kể cả những cuộc nhắn riêng không liên quan gì tới
+mode đôi**. Đổi lại, `person_interests` thôi bị cộng ngầm ở n = 2.
+
+**Lead được nói rõ cái giá này và chấp nhận** (phiên 12/09).
+
+**Một giới hạn của bằng chứng, để không ai tưởng cả khoản đều đã được đo:** tác
+giả **đã kiểm tận nơi** đường `group_taste` cộng `person_interests` (7.7). Khoản
+bổ sung còn chặn cả **budget, bản đồ và cache** — ba đường ấy tác giả **chưa
+tra**. Không nghi ngờ, chỉ là nói rõ phần nào có bằng chứng của tác giả.
+
+### 11.6 Tuyệt đối không đụng
 
 Ba luật về tiền · `phase0/` và `docs/protocol/v1/` · `db/ api/ domain/` là của
 Codex · không đưa vào Git ảnh bill, số tài khoản, **tên người thật**, transcript,
@@ -1513,9 +1536,9 @@ chặn là **viết code sản phẩm**.
    người sửa là người gửi `v+1` · lượt số 0 · bảng đường thoát đủ) · C2 (thang
    consent bốn bậc · Luật B cho «Nếp gửi hộ») · C3 (đóng sổ là đóng). R1–R4 và
    hai điểm xác nhận lượt một **đã khép** ở 22.4.
-3. ~~Codex trả lời K1–K7~~ — **ĐÃ XONG** (11.3). Còn: **ADR-0027** và khoản bổ
-   sung **ADR-0019 / ADR-0021** đang ở trạng thái **ĐỀ XUẤT**, phải **được chấp
-   nhận** trước khi có bảng nào được tạo.
+3. ~~Codex trả lời K1–K7~~ — **ĐÃ XONG** (11.3). ~~Ba ADR được chấp nhận~~ —
+   **ĐÃ MỞ**, Lead chấp nhận phiên 12/09 (11.4, 11.5). Việc còn lại là **thao
+   tác**: Codex gạt dòng trạng thái trên nhánh của mình.
 
 Khi ba cửa mở: viết **kế hoạch triển khai cho đúng lát 1**, không viết cho cả ba
 lát. Phần màn hình đi qua Impeccable pipeline như mọi việc frontend trong repo
