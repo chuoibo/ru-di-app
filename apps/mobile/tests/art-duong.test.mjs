@@ -78,10 +78,15 @@ test("motif: vòng hở là một nét, có khoảng hở thật; đường chuy
   assert.ok(Math.hypot(dau[0] - cuoi[0], dau[1] - cuoi[1]) > 20, "hai đầu nét phải cách nhau: không phải vòng kín");
   kiemLop("đường chuyền", duongChuyen(4, 4, 88, 60), 96, 72);
   kiemLop("góc gấp", gocGap(4, 4, 60, 44), 68, 52);
-  // The letter folded in thirds: a sheet, two creases at h/3 and 2h/3, no coral.
+  // The letter folded in thirds: a sheet with a cut corner, two creases at
+  // h/3 and 2h/3, no coral. The cut corner is what says «paper»: a rounded
+  // rectangle with two lines read as a lined index card (finish review 12/09).
   const thu = thuGapBa(4, 4, 60, 44);
   kiemLop("thư gấp ba", thu, 68, 52);
   assert.equal(thu.filter((l) => l.mau === "gap").length, 0, "thư gấp ba không mang coral: coral thuộc tờ dẫn, do màn hình đặt");
+  const toThu = phanTich(thu.find((l) => l.mau === "giay").d).filter((x) => x.c !== "Z");
+  assert.equal(toThu.length, 5, "tờ thư có góc cắt: năm đỉnh, không phải khung bo bốn góc");
+  assert.equal(thu.filter((l) => l.mau === "bong" && l.net === undefined).length, 1, "một mảng gấp `bong` ở góc, không coral");
   const vet = thu.filter((l) => l.mau === "bong" && l.net !== undefined);
   assert.equal(vet.length, 2, "đúng hai vết gấp");
   const yVet = vet.map((l) => phanTich(l.d)[0].args[1]).sort((a, b) => a - b);
@@ -677,14 +682,30 @@ test("coral: ba tư thế truyền giấy có đúng MỘT lớp gap, và đổi
   }
 });
 
-test("mảnh vuông hơn trang: tỉ lệ rộng/cao của tờ thân lớn hơn", () => {
+test("mảnh vuông hơn trang: tờ thân lấp đầy hộp bao nhiều hơn, và không hẹp hơn", () => {
   // Spec §17.2 #3. Measured on the first `giay` layer, which is the sheet.
-  const hop = (gap) => {
+  // Squareness is a property of the OUTLINE, not of the bounding box: the
+  // first cut had a wider box and still read as a hexagon, because its foot
+  // and hip were bevelled (finish review 12/09, round 2). So the gate measures
+  // how much of its own box the polygon fills -- bevels cost area -- and only
+  // then that the box is not narrower than the page's.
+  const doTho = (gap) => {
     const than = hinhNep("moi", { nghieng: 0, gap }).find((l) => l.mau === "giay");
     const pts = phanTich(than.d).filter((x) => x.c !== "Z").map((x) => [x.args[0], x.args[1]]);
     const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-    return (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
+    let dt = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % pts.length];
+      dt += x1 * y2 - x2 * y1;
+    }
+    const rong = Math.max(...xs) - Math.min(...xs), cao = Math.max(...ys) - Math.min(...ys);
+    return { lapDay: Math.abs(dt) / 2 / (rong * cao), tiLe: rong / cao };
   };
-  const trang = hop("trang"), manh = hop("manh");
-  assert.ok(manh > trang + 0.05, `mảnh ${manh.toFixed(3)} phải vuông hơn trang ${trang.toFixed(3)} rõ ràng`);
+  const trang = doTho("trang"), manh = doTho("manh");
+  assert.ok(manh.lapDay > trang.lapDay + 0.03, `mảnh lấp ${manh.lapDay.toFixed(3)} hộp bao, phải hơn trang ${trang.lapDay.toFixed(3)} rõ ràng`);
+  // The ceiling is about 0.92, not 1: the cut corner H..G is the character's
+  // own fold and costs the box some 7% on both variants. Measured 0.876 with
+  // straight edges against 0.838 for the page; below 0.87 a bevel is back.
+  assert.ok(manh.lapDay >= 0.87, `mảnh lấp ${manh.lapDay.toFixed(3)}: dưới 0.87 là còn vát góc, đọc thành lục giác`);
+  assert.ok(manh.tiLe > trang.tiLe + 0.02, `mảnh ${manh.tiLe.toFixed(3)} không được hẹp hơn trang ${trang.tiLe.toFixed(3)}`);
 });

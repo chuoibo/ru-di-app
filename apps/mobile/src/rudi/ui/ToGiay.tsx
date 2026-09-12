@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import Svg, { Line, Polygon, Polyline } from "react-native-svg";
 
 import { useRudiTheme } from "../theme";
-import { NepGoc } from "./art/Motif";
 
 /**
  * The two-person notebook's sheet: a letter folded in thirds (spec «Nếp truyền
@@ -17,29 +17,45 @@ import { NepGoc } from "./art/Motif";
  * `KhungAnh`): the first cut used `radius.base` and a blind read called three
  * of these «ba tấm thẻ» -- four equal 20dp corners are a card's signature, not
  * a sheet's. No shadow: elevation is declared once, and a sheet has an edge,
- * not a drop. When it carries the folded corner, that corner is SQUARE: a
- * fold cannot start on a rounded corner, and clipping the coral against one
- * (as the first cut did) reads as a badge, not a fold.
+ * not a drop.
+ *
+ * ## The folded corner is a FOLD, not a badge
+ *
+ * `dan` marks the sheet that is the thing to do NOW; it gets the coral corner,
+ * the one leading mark on the surface (spec §16.4). Two cuts got this wrong
+ * the same way: a coral triangle laid INSIDE a corner whose edge still ran to
+ * the right angle, and two blind reads called it «badge», «nhãn dán», and on
+ * the dark ground «notification» (finish reviews 12/09). Paper folded at the
+ * corner is MISSING that corner: the sheet's edge turns along the diagonal,
+ * whatever is behind the sheet shows through the cut, and the coral is the
+ * back of the flap lying on the face. `GocGapThat` draws exactly that: an
+ * erasing triangle in the ground colour over the corner, the flap, the cut
+ * edge in `lineStrong` continuing the sheet's own edge, and the flap's two
+ * free edges in ink. The corner is square because a fold cannot start on a
+ * rounded one.
+ *
+ * `nen` is what shows through the cut. It defaults to the screen ground; a
+ * sheet laid on any other surface names it.
  *
  * ## What it is not
  *
  * Not a `Card`. A card holds anything; this holds the rows of one letter,
  * separated by `VetGap`, the crease. And it carries no text of its own -- the
- * rows do -- so it never appears in an accessibility tree as a label.
- *
- * `dan` marks the sheet that is the thing to do NOW: it gets the folded coral
- * corner (`NepGoc`), the one leading mark on the surface. The screen decides
- * which sheet that is; the component never does (spec §16.4).
+ * rows do -- so it never appears in an accessibility tree as a label. The
+ * screen decides which sheet is `dan`; the component never does.
  */
 export function ToGiay({
   children,
   dan = false,
+  nen,
   style,
   testID,
 }: {
   children: ReactNode;
-  /** This sheet is the leading action on its surface: lay the coral corner on it. */
+  /** This sheet is the leading action on its surface: fold its corner in coral. */
   dan?: boolean;
+  /** The colour behind the sheet, seen through the cut corner. Defaults to the screen ground. */
+  nen?: string;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
@@ -55,8 +71,31 @@ export function ToGiay({
       testID={testID}
     >
       {children}
-      {dan ? <NepGoc size={22} style={styles.goc} /> : null}
+      {dan ? <GocGapThat c={GOC_GAP} gap={colors.accent} muc={colors.ink} nen={nen ?? colors.ground} vien={colors.lineStrong} /> : null}
     </View>
+  );
+}
+
+/** Side of the folded corner, in dp: the size `KhungAnh` folds its print at. */
+const GOC_GAP = 22;
+
+/**
+ * The corner of the sheet, folded. Sits on the sheet's outer corner (the
+ * negative hairline offsets align it with the OUTSIDE of the border, so the
+ * erasing triangle covers the border's own corner too). Order matters: erase,
+ * flap, cut edge, flap edges.
+ */
+function GocGapThat({ c, gap, muc, nen, vien }: { c: number; gap: string; muc: string; nen: string; vien: string }) {
+  // Inset the flap's free edges by half their stroke so the whole line lands
+  // inside the viewport instead of being clipped to a half-width hairline.
+  const o = 0.5;
+  return (
+    <Svg height={c} pointerEvents="none" style={styles.goc} width={c}>
+      <Polygon fill={nen} points={`0,0 ${c},0 ${c},${c}`} />
+      <Polygon fill={gap} points={`0,0 0,${c} ${c},${c}`} />
+      <Line stroke={vien} strokeWidth={StyleSheet.hairlineWidth} x1={0} x2={c} y1={0} y2={c} />
+      <Polyline fill="none" points={`${o},0 ${o},${c - o} ${c},${c - o}`} stroke={muc} strokeWidth={1} />
+    </Svg>
   );
 }
 

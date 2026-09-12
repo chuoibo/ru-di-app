@@ -19,16 +19,21 @@ appId: com.lakiet.rudi
     timeout: 60000
     centerElement: false
 - takeScreenshot: r18-99-to-giay-chot
+# Anchor on the first row, not the board title: the title peeks over the bottom edge of the
+# previous frame, so scrollUntilVisible on it does not scroll and the two shots come out identical.
 - scrollUntilVisible:
     element:
-      text: "Nếp · trang và mảnh, ba việc của sổ hai người, hai cỡ đọc"
-    direction: DOWN
-    timeout: 60000
-- takeScreenshot: r18-99-nep-manh-tren
-- scrollUntilVisible:
-    element:
-      id: "lab-nep-manh-gap-lai-48"
+      id: "lab-nep-trang-dua-giay-96"
     direction: DOWN
     timeout: 60000
     centerElement: false
+- takeScreenshot: r18-99-nep-manh-tren
+# Centre the last row (more boards follow, so centring is safe here) so the nav bar does not
+# clip the seated pose's feet.
+- scrollUntilVisible:
+    element:
+      id: "lab-nep-trang-gap-lai-96"
+    direction: DOWN
+    timeout: 60000
+    centerElement: true
 - takeScreenshot: r18-99-nep-manh-duoi

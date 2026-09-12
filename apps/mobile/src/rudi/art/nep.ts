@@ -237,15 +237,20 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   // keeps ink out of it, the way `laNepGap` does for the page's corner.
   const thanManh = (): LopVe[] => {
     // Squarer by being WIDER, not shorter: the legs are anchored at y 76, so a
-    // shorter sheet would float above them. Width 48 over height 54 (0.89)
-    // against the page's 44 over 54 (0.81) -- `art-duong` measures it.
-    const Am = S(24, 22), Cm = S(72, 66), Dm = S(64, 74), Em = S(30, 76), Fm = S(22, 50);
+    // shorter sheet would float above them. And squarer at the OUTLINE, not
+    // just at the bounding box: the first cut kept the page's bevels at the
+    // foot and its bulge at the hip, and a blind read saw a hexagon, «hẹp hơn
+    // và tròn hơn» (finish review 12/09, round 2). So the left edge runs
+    // straight down and the foot runs straight across, with only the one-unit
+    // wobble of a hand-cut sheet; `art-duong` measures how much of the box the
+    // sheet fills, page against pocket-fold.
+    const Am = S(24, 22), Cm = S(72, 74), Dm = S(70, 76), Em = S(25, 76);
     const M = S(57.6, 31.4);
-    const vien = [Am, H, G, Cm, Dm, Em, Fm];
+    const vien = [Am, H, G, Cm, Dm, Em];
     return [
       { d: daGiac(vien), mau: "giay" },
       { d: netGay([S(48, 23), S(48, 75)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
-      { d: netGay([S(24.5, 62), S(71.5, 62)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
+      { d: netGay([S(25.2, 62), S(70.6, 62)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
       { d: daGiac([H, G, M]), mau: "gap" },
       { d: daGiac(vien), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
       ...(chiTiet ? [{ d: daGiac([H, G, M]), mau: "muc" as const, net: net(1.6) }] : []),

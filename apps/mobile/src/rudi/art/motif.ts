@@ -12,7 +12,7 @@
  * All three are paths from `net.ts`: absolute M/L/C/Z only.
  */
 import { duongCongS } from "../ui/duong-svg";
-import { type LopVe, cungTron, daGiac, khungBo, netGay, tron } from "./net";
+import { type LopVe, cungTron, daGiac, netGay, tron } from "./net";
 
 export interface TuyChonVongHo {
   /** Centre of the gap, radians, y down; default top-right. */
@@ -98,11 +98,30 @@ export function gocGap(x: number, y: number, w: number, h: number, net = 2, gocT
  * mark per surface, decided by the screen, not baked into the motif.
  */
 export function thuGapBa(x: number, y: number, w: number, h: number, net = 2): LopVe[] {
-  const r = Math.min(w, h) * 0.08;
+  // A rounded rectangle with two lines is the universal «list» glyph, and a
+  // blind read of the first cut called it a lined index card (finish review
+  // 12/09, round 2). What says «paper» is the cut corner: the same grammar
+  // `gocGap` and the `ToGiay` component use. Here the flap is `bong`, the
+  // sheet's own shade, because this motif carries no coral.
+  const c = Math.min(w, h) * 0.22;
+  const than = daGiac([
+    [x, y],
+    [x + w - c, y],
+    [x + w, y + c],
+    [x + w, y + h],
+    [x, y + h],
+  ]);
+  const gap = daGiac([
+    [x + w - c, y],
+    [x + w - c, y + c],
+    [x + w, y + c],
+  ]);
   return [
-    { d: khungBo(x, y, w, h, r), mau: "giay" },
+    { d: than, mau: "giay" },
+    { d: gap, mau: "bong" },
     { d: netGay([[x, y + h / 3], [x + w, y + h / 3]]), mau: "bong", net: net * 0.8 },
     { d: netGay([[x, y + (2 * h) / 3], [x + w, y + (2 * h) / 3]]), mau: "bong", net: net * 0.8 },
-    { d: khungBo(x, y, w, h, r), mau: "muc", net },
+    { d: than, mau: "muc", net },
+    { d: gap, mau: "muc", net: net * 0.8 },
   ];
 }
