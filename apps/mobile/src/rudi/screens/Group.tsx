@@ -13,6 +13,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { chuLon } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, VOTE_PLACE_IDS } from "../fixtures";
+import { banTinhCua, loaiSoCua } from "../so/ban-tinh";
+import { CAP_DEMO } from "../to-giay/fixtures-doi";
+import { useSoDoi } from "../to-giay/SoDoi";
+import { HangToGiay } from "./hai-nguoi/HangToGiay";
 import { guTheoLoai } from "../kham-pha/dia-diem";
 import { GuGlyph } from "../ui/art/Gu";
 import { noiLuu } from "../luu-tru";
@@ -73,8 +77,15 @@ function ChatBubble({
   );
 }
 
-export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: boolean } = {}) {
+export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embeddedInTabs?: boolean; contextId?: string } = {}) {
   const { fontScale } = useWindowDimensions();
+  // The fixture pair notebook shares this chat body and swaps only the pinned
+  // line under the title: the outing pin belongs to the group, the paper line
+  // to the two-person notebook (spec «Nếp truyền giấy» §12: the group screen
+  // does not change; this is the one branch, keyed by the fixture pair's id).
+  const laCapDemo = contextId === CAP_DEMO.id;
+  const so = useSoDoi();
+  const tuVung = banTinhCua(loaiSoCua({ kind: laCapDemo ? "pair" : "group" }, { bat: so.batDoi })).tuVung;
   const chuLonHon = chuLon(fontScale);
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
@@ -122,7 +133,7 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
           cursorColor={colors.accent}
           onChangeText={setDraft}
           onSubmitEditing={sendMessage}
-          placeholder="Nhắn Team Đà Lạt..."
+          placeholder={laCapDemo ? `Nhắn ${so.tenNguoiKia}...` : "Nhắn Team Đà Lạt..."}
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
           style={[typography.body, styles.oNhap, { color: colors.ink }]}
@@ -150,6 +161,12 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
       // The name of the room and the outing it is about stay put; the thread
       // scrolls under them, so opening the tab never hides which group this is.
       header={
+        laCapDemo ? (
+          <>
+            <TopBar back={!embeddedInTabs} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title={so.tenNguoiKia} />
+            <HangToGiay cauMo={tuVung.cauMo} onPress={() => router.push(`/groups/${contextId}/to-giay` as never)} tieuDe={tuVung.tenKhongGian} toMo={so.toMo} toiId={so.toiId} />
+          </>
+        ) : (
         <>
           <TopBar
             back={!embeddedInTabs}
@@ -186,6 +203,7 @@ export function GroupChatScreen({ embeddedInTabs = false }: { embeddedInTabs?: b
             <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />
           </Pressable>
         </>
+        )
       }
       keepEnd
       testID="group-chat-screen"

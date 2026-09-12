@@ -19,5 +19,7 @@ export default function GroupChatRoute() {
     // remount cannot reach, the replies still in flight (audit 09/09, F42).
     return <GroupChatLiveScreen key={id} contextId={id} />;
   }
-  return <GroupChatScreen />;
+  // The fixture chat is Team Đà Lạt for every id but one: the fixture pair
+  // notebook, which puts its own pinned line under the title.
+  return <GroupChatScreen contextId={typeof id === "string" ? id : undefined} />;
 }
