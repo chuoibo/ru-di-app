@@ -192,11 +192,11 @@ Khép **C1**. Đây là hợp đồng: mọi màn ở mục 15, mọi bảng ở
 | Trạng thái | Ai thấy | Đi tiếp |
 |---|---|---|
 | `nhap` — Nếp đã phác | **chỉ chủ lượt** | `da_gui` (chủ lượt bấm gửi) · `bo` · `het_han` |
-| `da_gui` phiên bản `v` | cả hai | `da_xem` · `nghi_tuan` · `rut` (người gửi rút, khi chưa có phản hồi) |
+| `da_gui` phiên bản `v` | cả hai | `da_xem` · `nghi_tuan` · `rut` (người gửi rút, khi **chưa ai xem và chưa có phản hồi** — ADR-0027) |
 | `da_xem` | cả hai, kèm mốc xem **của người nhận** | `dong_y` · `de_nghi_sua` · `het_han` |
 | `de_nghi_sua` | cả hai | `da_gui` phiên bản **v+1** |
 | `dong_y` | cả hai | `chot` khi **cả hai** đồng ý **cùng một `v`** |
-| `chot` | cả hai | `da_di` · `huy` |
+| `chot` | cả hai | `da_di` (**một người ghi nhận**, có `recorded_by` và mốc — không suy từ ngày hay vị trí) · `huy`. **Đóng băng**: sau `chot` không `de_nghi_sua`, không phiên bản mới |
 | `da_di` | cả hai | `da_giu` khi có ít nhất một dòng được thêm |
 | `nghi_tuan` · `het_han` · `rut` · `bo` · `huy` | tuỳ | trạng thái cuối của tuần đó |
 
@@ -240,7 +240,9 @@ v+1  B sửa và gửi  →  B đã đồng ý v+1. Cần A đồng ý v+1  → 
 4. **Đã nhận dữ liệu ≠ đã xem ≠ đã đồng ý.** Ba mốc khác nhau; chỉ **mốc xem của
    người nhận** được hiện cho người gửi (mục 7.5).
 5. **`chot` sinh đúng một `outing`.** Gửi lại do mất mạng **không** nhân đôi;
-   khoá theo `(kèo, phiên bản)`.
+   khoá **theo tờ giấy** — `UNIQUE(paper_id)` trên bảng nối outing. Bản 2 viết «theo
+   `(kèo, phiên bản)`»; ADR-0027 K3 sửa: khoá theo cặp vẫn sinh được **hai** outing nếu
+   hai phiên bản cùng chốt.
 6. **Máy chủ là nguồn sự thật.** Màn hình và chuyển động chạy **sau** kết quả máy
    chủ, không chạy lạc quan rồi sửa.
 7. **Đóng sổ không làm sống lại gì** (mục 7.6).
@@ -250,7 +252,7 @@ v+1  B sửa và gửi  →  B đã đồng ý v+1. Cần A đồng ý v+1  → 
 | Từ | `rut` | `nghi_tuan` | `het_han` |
 |---|---|---|---|
 | `nhap` | — (chưa gửi thì là `bo`) | được, và **không** phác lại tuần đó | qua khung |
-| `da_gui` | **được** (chưa có phản hồi) | được, tờ chuyển `huy` | qua khung |
+| `da_gui` | **được** (chưa ai xem **và** chưa có phản hồi) | được, tờ chuyển `huy` | qua khung |
 | `da_xem` | **không** — đường đi là đề nghị phiên bản mới | được, tờ chuyển `huy` | qua khung |
 | `de_nghi_sua` | không | được, tờ chuyển `huy` | qua khung |
 | `dong_y` một phía | không | được, tờ chuyển `huy` | **qua khung là `het_han`, KHÔNG phải `chot`** |
@@ -708,8 +710,10 @@ có từ lát đầu, chỉ thêm các cách gửi khác về sau.
 check-in chỉ chứng minh **một người đã bấm** (mục 8). Thà bỏ còn hơn giả một lời
 hứa cảm biến. Ba lựa chọn còn lại đều là **mốc thời gian thật**.
 
-**Không có đồng hồ chạy nền.** ADR-0024 §2.3 cho đúng một cửa `AfterResponse` với
-**hai** job, có test AST gác. Nên «mở đúng lúc» là **điều kiện lúc đọc**: tờ giấy
+**Không có đồng hồ chạy nền.** Đã kiểm trên cây (kế hoạch 12/09): máy chủ **không có
+việc nào chạy sau response** — `AfterResponse` mà ADR-0024 §2.3 mô tả **chưa từng được hiện
+thực**; việc trễ duy nhất trong repo là script chạy ngoài (`story_purge.py`), và hạn dùng là
+**luật đọc** (`expires_at > :now` trong mọi truy vấn). Nên «mở đúng lúc» là **điều kiện lúc đọc**: tờ giấy
 có mốc `mo_tu`, **không đọc được** trước mốc, và hàng thông báo sinh ở **lần đọc
 đầu tiên sau mốc**, idempotent nhờ một cột đã-báo. **Người nhận vẫn phải bấm mở**
 — không có gì tự bung.
@@ -788,9 +792,12 @@ dựa vào nhãn nguồn dán sẵn).
 2. **Tờ giấy** (thay cho «kèo» và «mảnh giấy» của bản 1, vì chúng là một vật):
    tác giả · context · **phiên bản** · trạng thái theo mục 3.1 · nội dung (chặng,
    hoặc chữ, hoặc `PersonPhotoUrl` của chính tác giả, hoặc `place_id`) · mốc
-   `mo_tu` · mốc đã gửi/đã xem/đã chốt · ai đọc được.
+   `mo_tu` · mốc đã gửi/đã chốt · ai đọc được. **Phiên bản đã gửi bất biến; sau `chot`
+   tờ đóng băng** (ADR-0027 K1, §3).
 3. **Phản hồi trên tờ giấy**: tờ · **phiên bản** · người · `dong_y | de_nghi_sua`
-   · lúc nào. Đây là **dữ liệu học của cặp** và là số đo chính ở mục 19.
+   · lúc nào. Đây là **dữ liệu học của cặp** và là số đo chính ở mục 19. **Mốc đã xem
+   tách khỏi phản hồi**, thành bảng riêng `pair_paper_views` (ADR-0027: «đã xem» không phải
+   một phản hồi đồng ý; ADR cho phép DDL cụ thể qua migration review).
 4. **Dòng thêm sau buổi đi** (phần «giữ một điều»): tờ · người · một dòng.
 5. **Trang sổ**: chủ sổ · viết về ai · context · **mục** (tập đóng) · nội dung ·
    nhãn chia · ai tạo · lần ôn cuối. **Một bảng phục vụ cả hai quyển.**
