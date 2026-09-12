@@ -287,11 +287,14 @@ export function toUuTien(ds: readonly ToGiay[], toiId: string): ToGiay | undefin
  * `so_to_huy` next to `so_to_khoa`; a preview that called a draft «khoá» was
  * read as a lie against the «Đã bỏ» that followed).
  */
-export function demHauQuaDongSo(ds: readonly ToGiay[], soDeNghiCho: number): { so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } {
+export function demHauQuaDongSo(ds: readonly ToGiay[], soDeNghiCho: number): { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } {
   return {
-    // Spec §7.6 draws the line the preview must say out loud: a sheet still
-    // being decided is CANCELLED; a plan that stands is LOCKED, read only.
-    so_to_huy: ds.filter((to) => TRANG_THAI_MO.includes(to.state)).length,
+    // Spec §7.6 draws the line the preview must say out loud: a draft nobody
+    // has received is DROPPED; a sheet waiting for an answer is CANCELLED; a
+    // plan that stands is LOCKED, read only. A draft «chỉ bạn thấy» is not
+    // waiting for anyone, so it is not counted among the waiting (blind read).
+    so_nhap_bo: ds.filter((to) => to.state === "nhap").length,
+    so_to_huy: ds.filter((to) => TRANG_THAI_MO.includes(to.state) && to.state !== "nhap").length,
     so_to_khoa: ds.filter((to) => to.state === "chot" || to.state === "da_di").length,
     so_de_nghi_huy: Math.max(0, soDeNghiCho),
   };

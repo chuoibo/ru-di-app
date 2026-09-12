@@ -54,11 +54,11 @@ appId: com.lakiet.rudi
     timeout: 15000
 - tapOn:
     id: "giu-mot-dieu-o"
-- inputText: "Hàng chè đầu hẻm, lần sau lại."
+- inputText: "Quán này ồn, lần sau ngồi sân."
 # The keyboard's Done key keeps the line; the button under the field sits beneath the keyboard.
 - pressKey: Enter
 - extendedWaitUntil:
     visible: "Ký ức"
     timeout: 15000
-- assertVisible: "Giữ lại: Hàng chè đầu hẻm, lần sau lại."
+- assertVisible: "Giữ lại: Quán này ồn, lần sau ngồi sân."
 - takeScreenshot: r18-100-da-giu

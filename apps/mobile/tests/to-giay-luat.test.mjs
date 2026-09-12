@@ -172,7 +172,7 @@ test("đóng sổ: đếm tờ đang chờ sẽ huỷ, tờ đã chốt sẽ kho
     to("het_han", [phienBan(1, TOI)]),
     to("da_giu", [phienBan(1, TOI, { their_agreed: true })]),
   ];
-  assert.deepEqual(demHauQuaDongSo(ds, 1), { so_to_huy: 2, so_to_khoa: 1, so_de_nghi_huy: 1 }, "nháp + đã gửi huỷ; chốt khoá; hết hạn và đã giữ không đếm");
-  assert.deepEqual(demHauQuaDongSo([], 0), { so_to_huy: 0, so_to_khoa: 0, so_de_nghi_huy: 0 });
-  assert.deepEqual(demHauQuaDongSo(ds, -2), { so_to_huy: 2, so_to_khoa: 1, so_de_nghi_huy: 0 }, "số âm không lọt");
+  assert.deepEqual(demHauQuaDongSo(ds, 1), { so_nhap_bo: 1, so_to_huy: 1, so_to_khoa: 1, so_de_nghi_huy: 1 }, "nháp bỏ; đã gửi huỷ; chốt khoá; hết hạn và đã giữ không đếm");
+  assert.deepEqual(demHauQuaDongSo([], 0), { so_nhap_bo: 0, so_to_huy: 0, so_to_khoa: 0, so_de_nghi_huy: 0 });
+  assert.deepEqual(demHauQuaDongSo(ds, -2), { so_nhap_bo: 1, so_to_huy: 1, so_to_khoa: 1, so_de_nghi_huy: 0 }, "số âm không lọt");
 });

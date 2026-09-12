@@ -26,7 +26,9 @@ import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
  * a sheet that still asks something; a plan, a memory, a closed week is a
  * fact and stamps in ink, so the one coral lead on the surface stays with the
  * button that asks (spec §16.4; blind read: a filled coral «KÝ ỨC» beat the
- * footer button to the eye).
+ * footer button to the eye). Always the outline seal: a filled ink block with
+ * white capitals read as a button (blind read, round 2), and a rubber stamp
+ * is a ring of ink anyway.
  *
  * Buttons come from `nutChoTo`: the first primary is `solid`, the second
  * `outline` -- `soft` lost to `outline` in a blind read, the reverse of what
@@ -82,7 +84,6 @@ export function ToLoiRu({
   const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
-  const laKeHoach = to.state === "chot" || to.state === "da_di" || to.state === "da_giu";
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -126,12 +127,11 @@ export function ToLoiRu({
               label={nhanDau(to, toiId)}
               testID={testID ? `${testID}-stamp` : undefined}
               tone={TRANG_THAI_MO.includes(to.state) ? "accent" : "ink"}
-              variant={laKeHoach ? "ink" : "outline"}
             />
           </View>
         </View>
       </ToGiayView>
-      {dauTien?.ly_do ? <Text style={[typography.label, styles.lyDo, { color: colors.inkSoft }]}>Vì: {dauTien.ly_do}</Text> : null}
+      {dauTien?.ly_do && to.state !== "da_giu" ? <Text style={[typography.label, styles.lyDo, { color: colors.inkSoft }]}>Vì: {dauTien.ly_do}</Text> : null}
       {doi.length > 0 || lyDoSua ? (
         <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID={testID ? `${testID}-khac-gi` : undefined}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Phiên bản {to.version} đổi gì so với trước:</Text>

@@ -69,7 +69,7 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   toMo: ToGiay | undefined;
   /** Rows under the open sheet: everything else, newest first. */
   toKhac: readonly ToGiay[];
-  xemTruocDongSo: () => { so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number };
+  xemTruocDongSo: () => { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number };
 
   deNghiLapSo: () => void;
   deNghiBatDoi: () => void;

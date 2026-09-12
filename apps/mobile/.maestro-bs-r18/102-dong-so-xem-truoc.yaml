@@ -23,7 +23,8 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Đóng sổ hai người?"
     timeout: 15000
-- assertVisible: "· 1 tờ đang chờ sẽ huỷ."
+- assertVisible: "· 1 bản phác chỉ bạn thấy sẽ bỏ."
+- assertVisible: "· Không có tờ nào đang chờ trả lời."
 - assertVisible: "· Không có lời đề nghị nào đang chờ."
 - takeScreenshot: r18-102-xem-truoc
 - tapOn:

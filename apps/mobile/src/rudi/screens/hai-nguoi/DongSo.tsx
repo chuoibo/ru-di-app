@@ -11,15 +11,18 @@ import { Sheet } from "../../ui/Sheet";
  * the way out as `ghost`, the idiom `CaiDatNhom` uses for leaving a group; no
  * `Alert`. Closing does not bring anything back (§3.3 rule 7).
  */
-export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number }; onDong: () => void; testID?: string }) {
+export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number }; onDong: () => void; testID?: string }) {
   const { colors, space } = useRudiTheme();
   return (
     <Sheet accessibilityLabel="Đóng sổ hai người" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" subtitle="Đóng là đóng. Tờ chưa mở thì thôi; không gì sống lại." title="Đóng sổ hai người?" />
         <View style={styles.khoi} testID="dong-so-xem-truoc">
+          {xemTruoc.so_nhap_bo > 0 ? (
+            <Text style={[typography.body, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>
+          ) : null}
           <Text style={[typography.body, { color: colors.ink }]}>
-            {xemTruoc.so_to_huy === 0 ? "· Không có tờ nào đang chờ." : `· ${xemTruoc.so_to_huy} tờ đang chờ sẽ huỷ.`}
+            {xemTruoc.so_to_huy === 0 ? "· Không có tờ nào đang chờ trả lời." : `· ${xemTruoc.so_to_huy} tờ đang chờ trả lời sẽ huỷ.`}
           </Text>
           <Text style={[typography.body, { color: colors.ink }]}>
             {xemTruoc.so_to_khoa === 0 ? "· Không có buổi đã chốt nào." : `· ${xemTruoc.so_to_khoa} buổi đã chốt sẽ khoá, chỉ còn đọc.`}

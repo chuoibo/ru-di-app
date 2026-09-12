@@ -62,7 +62,13 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
     than = (
       <EmptyState
         action={{ label: "Lập sổ mới", onPress: () => setMo("lap-so") }}
-        body="Tờ đã chốt và điều đã giữ vẫn đọc được ở dưới."
+        body={
+          so.toGiay.some((t) => t.state === "da_giu")
+            ? "Ký ức đã giữ vẫn đọc được ở dưới."
+            : so.toGiay.some((t) => t.state === "chot" || t.state === "da_di")
+              ? "Buổi đã chốt vẫn đọc được ở dưới."
+              : "Các tờ đã khép vẫn đọc được ở dưới."
+        }
         illustration={<Nep gap="manh" pose="gap-lai" />}
         kind="first-use"
         layout="inline"
@@ -179,8 +185,12 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
               onPress={() => {
                 const pb = phienBan(toMo);
                 if (!pb) return;
-                const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: c.gio === "19:00" ? "18:00" : "19:00" } : c));
-                so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, "Sớm hơn một chút.");
+                // The reason must agree with the arrow: 18:30 → 18:00 is earlier,
+                // 18:00 → 19:00 is later (blind read 12/09 caught «Sớm hơn» on a
+                // change that went later).
+                const somHon = pb.content.chang[0]?.gio !== "18:00";
+                const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: somHon ? "18:00" : "19:00" } : c));
+                so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, somHon ? "Sớm hơn một chút." : "Muộn hơn một chút.");
                 dong();
               }}
               variant="outline"
@@ -210,7 +220,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         ) : null}
         {so.toKhac.length > 0 ? (
           <View style={{ gap: space.sm }}>
-            <Heading size="h2" title="Những tuần trước" />
+            <Heading size="h2" title="Tờ đã khép" />
             <NhomHang>
               {so.toKhac.map((t) => (
                 <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${phienBan(t)?.content.ngay ?? ""}`} />
