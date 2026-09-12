@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { type ToGiay, cauTrangThai } from "../../to-giay/to-giay";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai } from "../../to-giay/to-giay";
 import { ThuGapBa } from "../../ui/art/Motif";
 
 /**
@@ -34,7 +34,11 @@ export function HangToGiay({
   testID?: string;
 }) {
   const { colors, radius } = useRudiTheme();
-  const phu = toMo ? cauTrangThai(toMo, toiId) : `Chưa có tờ nào tuần này. ${cauMo}`;
+  // The row answers «does something wait for me?», so it speaks only for a
+  // sheet still in play (a proposal, or a plan not yet gone on). A memory on
+  // the paper surface is the surface's business; here it reads as a quiet week.
+  const dangChoi = toMo && (TRANG_THAI_MO.includes(toMo.state) || toMo.state === "chot" || toMo.state === "da_di");
+  const phu = dangChoi ? cauTrangThai(toMo, toiId) : `Chưa có tờ nào tuần này. ${cauMo}`;
   return (
     <Pressable
       accessibilityLabel={`${tieuDe}. ${phu}`}

@@ -1,0 +1,55 @@
+# Phase 2 «Nếp truyền giấy»: một tuần trọn vòng trên sổ fixture — trống → Nếp phác → gửi → người kia xem → người kia ừ → chốt → đã đi → giữ một điều.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://groups/cap-demo/to-giay
+# The paper surface opens on last week's memory (spec §15.1: the freshest memory
+# is the sheet on the table when nothing is in play); «Rủ đi chơi» is the footer.
+- extendedWaitUntil:
+    visible: "Rủ đi chơi"
+    timeout: 30000
+- assertVisible: "Đã giữ"
+- takeScreenshot: r18-100-trong
+- tapOn:
+    text: "Rủ đi chơi"
+    index: 0
+- extendedWaitUntil:
+    visible: "Bản phác"
+    timeout: 15000
+- assertVisible: "Gửi cho người ấy"
+- takeScreenshot: r18-100-nhap
+- tapOn: "Gửi cho người ấy"
+- extendedWaitUntil:
+    visible: "Đã gửi"
+    timeout: 15000
+- assertVisible: "Đã gửi, chờ trả lời. Người ấy chưa xem."
+- takeScreenshot: r18-100-da-gui
+- tapOn: "(Bản trải nghiệm) Người kia xem"
+- extendedWaitUntil:
+    visible: "Đã xem"
+    timeout: 15000
+- assertVisible: "Người ấy đã xem, chưa trả lời."
+- tapOn: "(Bản trải nghiệm) Người kia đồng ý"
+- extendedWaitUntil:
+    visible: "Đã chốt"
+    timeout: 15000
+- assertVisible: "Đã đi rồi"
+- takeScreenshot: r18-100-chot
+- tapOn: "Đã đi rồi"
+- extendedWaitUntil:
+    visible: "Giữ lại một điều"
+    timeout: 15000
+- tapOn: "Giữ lại một điều"
+- extendedWaitUntil:
+    visible:
+      id: "giu-mot-dieu-o"
+    timeout: 15000
+- tapOn:
+    id: "giu-mot-dieu-o"
+- inputText: "Hàng chè đầu hẻm, lần sau lại."
+- tapOn: "Giữ lại"
+- extendedWaitUntil:
+    visible: "Đã giữ"
+    timeout: 15000
+- assertVisible: "Giữ lại: Hàng chè đầu hẻm, lần sau lại."
+- takeScreenshot: r18-100-da-giu
