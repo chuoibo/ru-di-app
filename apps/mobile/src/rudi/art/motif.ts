@@ -12,7 +12,7 @@
  * All three are paths from `net.ts`: absolute M/L/C/Z only.
  */
 import { duongCongS } from "../ui/duong-svg";
-import { type LopVe, cungTron, daGiac, netGay, tron } from "./net";
+import { type LopVe, cungTron, daGiac, khungBo, netGay, tron } from "./net";
 
 export interface TuyChonVongHo {
   /** Centre of the gap, radians, y down; default top-right. */
@@ -84,5 +84,25 @@ export function gocGap(x: number, y: number, w: number, h: number, net = 2, gocT
     { d: gap, mau: "gap" },
     { d: than, mau: "muc", net },
     { d: gap, mau: "muc", net: net * 0.8 },
+  ];
+}
+
+/**
+ * A letter folded in thirds: the sheet, and the two horizontal creases the
+ * fold leaves at a third and two thirds of its height. The two-person
+ * notebook's own sheet (spec «Nếp truyền giấy» §1.6, §15.3), where the group
+ * notebook has the open page.
+ *
+ * No coral here on purpose. The coral belongs to the sheet that is the thing
+ * to do NOW, and the `ToGiay` component lays it on as `NepGoc` -- one leading
+ * mark per surface, decided by the screen, not baked into the motif.
+ */
+export function thuGapBa(x: number, y: number, w: number, h: number, net = 2): LopVe[] {
+  const r = Math.min(w, h) * 0.08;
+  return [
+    { d: khungBo(x, y, w, h, r), mau: "giay" },
+    { d: netGay([[x, y + h / 3], [x + w, y + h / 3]]), mau: "bong", net: net * 0.8 },
+    { d: netGay([[x, y + (2 * h) / 3], [x + w, y + (2 * h) / 3]]), mau: "bong", net: net * 0.8 },
+    { d: khungBo(x, y, w, h, r), mau: "muc", net },
   ];
 }

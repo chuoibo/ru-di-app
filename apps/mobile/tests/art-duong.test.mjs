@@ -16,12 +16,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { MAU_VE, bienDoi, cungTron, daGiac, giot, khungBo, netGay, qCong, tron, vien } from "../dist-test/rudi/art/net.js";
-import { BIEU_CAM, KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../dist-test/rudi/art/nep.js";
+import { BIEU_CAM, GAP_NEP, KHUNG_NEP, POSE_NEP, hinhGhe, hinhNep, laPoseNep } from "../dist-test/rudi/art/nep.js";
 import { STICKER_IDS, hinhSticker } from "../dist-test/rudi/chat/sticker.js";
-import { duongChuyen, gocGap, vongHo } from "../dist-test/rudi/art/motif.js";
+import { duongChuyen, gocGap, thuGapBa, vongHo } from "../dist-test/rudi/art/motif.js";
 import { GU_IDS, KHUNG_GU, hinhGu, laGuId } from "../dist-test/rudi/art/gu.js";
 import { CANH_IDS, CANH_KHONG_NEP, KHUNG_CANH, POSE_CANH, hinhCanh, hopNgang, laCanhId, moTaCanh } from "../dist-test/rudi/art/canh.js";
 import { kiemLop, phanTich } from "./_kiem-lop.mjs";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 test("bộ đọc còn sống: nó từ chối Q, lệnh cụt, số mũ và -0", () => {
   assert.throws(() => phanTich("M 1 2 Q 3 4 5 6"));
@@ -46,10 +48,15 @@ test("net.ts: từng builder ra đường hợp lệ và số thập phân thư�
 test("Nếp: mọi pose trong POSE_NEP, hai cách đọc, có và không có phép đặt, đều qua ngữ pháp Java và nằm trong khung", () => {
   for (const pose of POSE_NEP) {
     for (const chiTiet of [true, false]) {
-      kiemLop(`nep ${pose} chiTiet=${chiTiet}`, hinhNep(pose, { chiTiet }), KHUNG_NEP, KHUNG_NEP);
-      const dat = hinhNep(pose, { chiTiet, x0: 10, y0: 5, tiLe: 0.8 });
-      kiemLop(`nep ${pose} đặt`, dat, 10 + KHUNG_NEP * 0.8, 5 + KHUNG_NEP * 0.8);
+      for (const gap of GAP_NEP) {
+        kiemLop(`nep ${pose} chiTiet=${chiTiet} gap=${gap}`, hinhNep(pose, { chiTiet, gap }), KHUNG_NEP, KHUNG_NEP);
+        const dat = hinhNep(pose, { chiTiet, gap, x0: 10, y0: 5, tiLe: 0.8 });
+        kiemLop(`nep ${pose} đặt gap=${gap}`, dat, 10 + KHUNG_NEP * 0.8, 5 + KHUNG_NEP * 0.8);
+      }
     }
+    // The pocket-folded sheet is a smaller drawing at 48 too, and deterministic.
+    assert.ok(hinhNep(pose, { chiTiet: false, gap: "manh" }).length < hinhNep(pose, { gap: "manh" }).length, `${pose} manh`);
+    assert.deepEqual(hinhNep(pose, { gap: "manh" }), hinhNep(pose, { gap: "manh" }));
     // The 48dp reading is a smaller drawing, not the same one: fewer layers.
     assert.ok(hinhNep(pose, { chiTiet: false }).length < hinhNep(pose).length, pose);
     // Same call, same string: nothing here rolls a die per render.
@@ -71,6 +78,14 @@ test("motif: vòng hở là một nét, có khoảng hở thật; đường chuy
   assert.ok(Math.hypot(dau[0] - cuoi[0], dau[1] - cuoi[1]) > 20, "hai đầu nét phải cách nhau: không phải vòng kín");
   kiemLop("đường chuyền", duongChuyen(4, 4, 88, 60), 96, 72);
   kiemLop("góc gấp", gocGap(4, 4, 60, 44), 68, 52);
+  // The letter folded in thirds: a sheet, two creases at h/3 and 2h/3, no coral.
+  const thu = thuGapBa(4, 4, 60, 44);
+  kiemLop("thư gấp ba", thu, 68, 52);
+  assert.equal(thu.filter((l) => l.mau === "gap").length, 0, "thư gấp ba không mang coral: coral thuộc tờ dẫn, do màn hình đặt");
+  const vet = thu.filter((l) => l.mau === "bong" && l.net !== undefined);
+  assert.equal(vet.length, 2, "đúng hai vết gấp");
+  const yVet = vet.map((l) => phanTich(l.d)[0].args[1]).sort((a, b) => a - b);
+  assert.ok(Math.abs(yVet[0] - (4 + 44 / 3)) < 0.05 && Math.abs(yVet[1] - (4 + (2 * 44) / 3)) < 0.05, "vết gấp ở một phần ba và hai phần ba");
 });
 
 test("gu: tám glyph trong lưới 48, mỗi glyph có nét mực và tối đa một mảng coral", () => {
@@ -308,12 +323,12 @@ function laNepGap(dinh) {
  * the drawing has no fold at all (a scene with the figure turned off). Throws
  * on any violation.
  */
-function khongCatNepGap(ten, lop, vai = VAI_ART) {
+function khongCatNepGap(ten, lop, vai = VAI_ART, nhanDien = laNepGap) {
   let nepGap = null;
   for (const [i, l] of lop.entries()) {
     if (l.mau !== vai.coral || l.net !== undefined) continue;
     const t = tamGiac(l.d);
-    if (t && laNepGap(t)) {
+    if (t && nhanDien(t)) {
       nepGap = { dinh: t, d: l.d, i };
       break;
     }
@@ -518,7 +533,7 @@ test("cổng nếp gấp thật sự đỏ: nét, mảng, và bản vẽ không 
   );
 });
 
-test("sáu biểu cảm là sáu cái mày khác nhau, và met ngược chiều quyet", () => {
+test("bảy biểu cảm là bảy cái mày khác nhau, và met ngược chiều quyet", () => {
   // The brow is the only ink stroke that lives entirely above the eyes, once
   // the fold's own outline (a stroke retracing a filled shape) is set aside.
   const may = (bieuCam) => {
@@ -532,7 +547,7 @@ test("sáu biểu cảm là sáu cái mày khác nhau, và met ngược chiều 
     return ung[0];
   };
 
-  // Six drawings, six paths. Two expressions sharing a brow path is the bug
+  // Seven drawings, seven paths. Two expressions sharing a brow path is the bug
   // that made `binh-than` and `nhuong` the same face until 09/09.
   const duong = BIEU_CAM.map((bc) => may(bc).d);
   assert.equal(new Set(duong).size, BIEU_CAM.length, "hai biểu cảm đang dùng chung một cái mày");
@@ -550,4 +565,92 @@ test("sáu biểu cảm là sáu cái mày khác nhau, và met ngược chiều 
   const quyet = doc("quyet");
   assert.ok(quyet > 0.2, `quyet: đầu trong phải chúc XUỐNG, dốc đo được ${quyet.toFixed(2)}`);
   assert.ok(met < -0.2, `met: đầu trong phải hếch LÊN, dốc đo được ${met.toFixed(2)}`);
+});
+
+/**
+ * Is this triangle the pocket sheet's coral SLIVER, i.e. S(50,20)·S(69,38)·S(57.6,31.4)?
+ *
+ * Same idea as `laNepGap`: identify by shape so placement and lean cannot blind
+ * the gate. The sliver has three DISTINCT y levels (the page's fold has two on
+ * one horizontal, so the two never match each other), and it is thin: the
+ * third vertex sits within a quarter of the long edge's length from that edge.
+ * `ghi-lai`'s pencil nib is fat (ratio ≈ 0.5) and fails; `dua-giay`'s small
+ * corner has two vertices on one horizontal and fails the first clause.
+ */
+function laDaiGap(dinh) {
+  const y = dinh.map((p) => p[1]);
+  const [tren, giua, duoi] = [...dinh].sort((a, b) => a[1] - b[1]);
+  if (new Set(y.map((v) => Math.round(v / LAM_TRON))).size !== 3) return false;
+  const dx = duoi[0] - tren[0], dy = duoi[1] - tren[1];
+  const L = Math.hypot(dx, dy);
+  if (L === 0) return false;
+  const d = Math.abs(dx * (tren[1] - giua[1]) - dy * (tren[0] - giua[0])) / L;
+  const r = d / L;
+  return r > 0.05 && r < 0.25;
+}
+
+test("gap trang: bản vẽ trùng từng toạ độ với baseline lấy từ main trước khi có biến thể", () => {
+  // The «không đụng hội bạn» gate of the art layer. Every scene and sticker
+  // composes `hinhNep` with the default `gap`, so the default output is pinned
+  // to a sha256 taken from `main` (tests/fixtures/nep-trang-baseline.json).
+  // Stored as a hash, not as paths: a coordinate list is nine digits with
+  // single spaces between them, which the repo guard reads as an account number.
+  const goc = JSON.parse(readFileSync(new URL("./fixtures/nep-trang-baseline.json", import.meta.url), "utf8"));
+  const bo = {};
+  let tong = 0;
+  for (const pose of goc.poses) {
+    assert.ok(laPoseNep(pose), `baseline có pose ${pose} mà nep.ts không còn`);
+    for (const chiTiet of [true, false]) {
+      const lop = hinhNep(pose, { chiTiet });
+      bo[`${pose}|${chiTiet}`] = lop.map((l) => `${l.mau}|${l.net ?? ""}|${l.d}`);
+      tong += lop.length;
+    }
+  }
+  const sha256 = createHash("sha256").update(JSON.stringify(bo)).digest("hex");
+  assert.equal(tong, goc.soLop, "số lớp của bản trang đổi so với main");
+  assert.equal(sha256, goc.sha256, "một toạ độ của bản trang đã đổi: mọi cảnh và sticker của hội bạn đổi theo");
+});
+
+test("gap manh: đúng một dải coral hé ra dọc đường cắt, và không nét mực nào sơn lên nó", () => {
+  // The same rule `khongCatNepGap` keeps for the page's corner, over a smaller
+  // sweep of leans: the shape identity here is `laDaiGap`, not `laNepGap`.
+  let banVe = 0;
+  for (const pose of POSE_NEP) {
+    for (const bieuCam of BIEU_CAM) {
+      for (const chiTiet of [true, false]) {
+        for (const nghieng of [-8, 0, 6, 13]) {
+          const ten = `manh ${pose}/${bieuCam}/${chiTiet ? "chi tiết" : "rút gọn"}/ng${nghieng}`;
+          const lop = hinhNep(pose, { chiTiet, bieuCam, nghieng, gap: "manh" });
+          const dai = lop.filter((l) => l.mau === "gap" && l.net === undefined).map((l) => tamGiac(l.d)).filter((t) => t && laDaiGap(t));
+          assert.equal(dai.length, 1, `${ten}: phải nhận ra đúng MỘT dải gấp, thấy ${dai.length}`);
+          assert.equal(lop.filter((l) => l.mau === "gap" && l.net === undefined).map((l) => tamGiac(l.d)).filter((t) => t && laNepGap(t)).length, 0, `${ten}: bản mảnh không được mang nếp gấp của bản trang`);
+          const ra = khongCatNepGap(ten, lop, VAI_ART, laDaiGap);
+          assert.ok(ra !== null && ra.daXet > 300, `${ten}: máy quét không nhìn dải gấp`);
+          banVe += 1;
+        }
+      }
+    }
+  }
+  assert.equal(banVe, POSE_NEP.length * BIEU_CAM.length * 2 * 4);
+  // And the two creases are there, as `bong` strokes, in both readings.
+  for (const chiTiet of [true, false]) {
+    const vet = hinhNep("moi", { chiTiet, gap: "manh" }).filter((l) => l.mau === "bong" && l.net !== undefined);
+    assert.equal(vet.length, 2, `manh chiTiet=${chiTiet}: đúng hai vết gấp`);
+  }
+});
+
+test("giu-kin: miệng là một nét thẳng khép, ngắn hơn và phẳng hơn quyet", () => {
+  const mieng = (bieuCam) => {
+    const lop = hinhNep("moi", { chiTiet: true, bieuCam, nghieng: 0 });
+    // The mouth is the ink stroke or fill whose every point sits between y 50 and 60.
+    return lop.filter((l) => l.mau === "muc" && phanTich(l.d).filter((x) => x.c !== "Z").every((x) => x.args.every((v, i) => i % 2 === 0 || (v > 50 && v < 60))));
+  };
+  const gk = mieng("giu-kin"), q = mieng("quyet");
+  assert.equal(gk.length, 1, "giu-kin: đúng một cái miệng");
+  const doan = (l) => phanTich(l.d).filter((x) => x.c !== "Z").map((x) => x.args);
+  const [a, b] = doan(gk[0]);
+  assert.equal(a[1], b[1], "giu-kin: miệng phẳng tuyệt đối");
+  const [qa, qb] = doan(q[0]);
+  assert.ok(Math.abs(b[0] - a[0]) < Math.abs(qb[0] - qa[0]), "giu-kin ngắn hơn quyet");
+  assert.notEqual(qa[1], qb[1], "quyet nghiêng, để hai mặt không thành một");
 });

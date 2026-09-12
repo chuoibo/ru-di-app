@@ -1,0 +1,28 @@
+{
+  "sha256": "41575b196175ce00f71bcf42ef39a792f25590bdbc51cb795d4f4e756d7b3c62",
+  "soLop": 680,
+  "soPose": 19,
+  "sinhTu": "origin/main 2d0b9777",
+  "ghiChu": "sha256 cua JSON {pose|chiTiet: [mau|net|d]} tu hinhNep(pose,{chiTiet}) — moi lop, moi toa do. Khong luu path de tranh luat long-number cua repo guard.",
+  "poses": [
+    "moi",
+    "keo-ghe",
+    "giu-cho",
+    "gop-y",
+    "cam-ban-do",
+    "giu-khung",
+    "doi",
+    "ghi-lai",
+    "vui",
+    "buoc-di",
+    "nang-to",
+    "moi-ly",
+    "dat-tay",
+    "ngoi-xe",
+    "dua-hai-tay",
+    "nhay",
+    "voi-len",
+    "ghe-nhin",
+    "goi-loi"
+  ]
+}
