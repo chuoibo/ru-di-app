@@ -1,0 +1,87 @@
+{
+  "revision": "9c0d6f98a32361d220b3f5cb0e5c8cc8d94242a8",
+  "scope": "Opaque sRGB token arithmetic; background #1c1f36 is supplied by the spec, not newly sampled. No native capture or behavioral evidence.",
+  "rows": [
+    {
+      "scheme": "light",
+      "pair": "ink/paper",
+      "foreground": "#1f2230",
+      "background": "#ffffff",
+      "ratio": 15.792415,
+      "spec_threshold": 7,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "light",
+      "pair": "inkFaint/paper",
+      "foreground": "#676e7b",
+      "background": "#ffffff",
+      "ratio": 5.130589,
+      "spec_threshold": 4.5,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "light",
+      "pair": "paperShade/paper",
+      "foreground": "#e6dfd3",
+      "background": "#ffffff",
+      "ratio": 1.324061,
+      "spec_threshold": 1.25,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "light",
+      "pair": "inkSoft/paper (repair candidate)",
+      "foreground": "#4e5563",
+      "background": "#ffffff",
+      "ratio": 7.490608,
+      "spec_threshold": 4.5,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "dark",
+      "pair": "ink/paper",
+      "foreground": "#f4f1ea",
+      "background": "#2e335c",
+      "ratio": 10.673323,
+      "spec_threshold": 7,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "dark",
+      "pair": "inkFaint/paper",
+      "foreground": "#9b9aae",
+      "background": "#2e335c",
+      "ratio": 4.372764,
+      "spec_threshold": 4.5,
+      "meets_threshold": false
+    },
+    {
+      "scheme": "dark",
+      "pair": "paperShade/paper",
+      "foreground": "#181b36",
+      "background": "#2e335c",
+      "ratio": 1.396644,
+      "spec_threshold": 1.25,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "dark",
+      "pair": "inkSoft/paper (repair candidate)",
+      "foreground": "#c4c2cf",
+      "background": "#2e335c",
+      "ratio": 6.859643,
+      "spec_threshold": 4.5,
+      "meets_threshold": true
+    },
+    {
+      "scheme": "dark",
+      "pair": "paper/spec background",
+      "foreground": "#2e335c",
+      "background": "#1c1f36",
+      "ratio": 1.34313,
+      "spec_threshold": 1.9,
+      "meets_threshold": false
+    }
+  ]
+}
