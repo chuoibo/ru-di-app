@@ -101,8 +101,10 @@ export function thuGapBa(x: number, y: number, w: number, h: number, net = 2): L
   // A rounded rectangle with two lines is the universal «list» glyph, and a
   // blind read of the first cut called it a lined index card (finish review
   // 12/09, round 2). What says «paper» is the cut corner: the same grammar
-  // `gocGap` and the `ToGiay` component use. Here the flap is `bong`, the
-  // sheet's own shade, because this motif carries no coral.
+  // `gocGap` and the `ToGiay` component use. The flap is `giay` under an ink
+  // edge, not `bong`: this motif carries no coral, and on the dark scheme
+  // `paperShade` is darker than `paper`, so a shaded flap read as a notch cut
+  // out of the sheet instead of a corner turned up (round 3).
   const c = Math.min(w, h) * 0.22;
   const than = daGiac([
     [x, y],
@@ -118,7 +120,6 @@ export function thuGapBa(x: number, y: number, w: number, h: number, net = 2): L
   ]);
   return [
     { d: than, mau: "giay" },
-    { d: gap, mau: "bong" },
     { d: netGay([[x, y + h / 3], [x + w, y + h / 3]]), mau: "bong", net: net * 0.8 },
     { d: netGay([[x, y + (2 * h) / 3], [x + w, y + (2 * h) / 3]]), mau: "bong", net: net * 0.8 },
     { d: than, mau: "muc", net },

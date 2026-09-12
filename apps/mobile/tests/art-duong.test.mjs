@@ -86,7 +86,8 @@ test("motif: vòng hở là một nét, có khoảng hở thật; đường chuy
   assert.equal(thu.filter((l) => l.mau === "gap").length, 0, "thư gấp ba không mang coral: coral thuộc tờ dẫn, do màn hình đặt");
   const toThu = phanTich(thu.find((l) => l.mau === "giay").d).filter((x) => x.c !== "Z");
   assert.equal(toThu.length, 5, "tờ thư có góc cắt: năm đỉnh, không phải khung bo bốn góc");
-  assert.equal(thu.filter((l) => l.mau === "bong" && l.net === undefined).length, 1, "một mảng gấp `bong` ở góc, không coral");
+  assert.equal(thu.filter((l) => l.mau === "muc" && l.net !== undefined).length, 2, "hai viền mực: tờ và vạt gấp (vạt là `giay` dưới viền, không tô `bong`: trên nền tối `bong` đọc thành lỗ khoét)");
+  assert.equal(thu.filter((l) => l.net === undefined && l.mau !== "giay").length, 0, "không mảng tô nào ngoài giấy: không coral, không bóng");
   const vet = thu.filter((l) => l.mau === "bong" && l.net !== undefined);
   assert.equal(vet.length, 2, "đúng hai vết gấp");
   const yVet = vet.map((l) => phanTich(l.d)[0].args[1]).sort((a, b) => a - b);
@@ -578,10 +579,20 @@ test("bảy biểu cảm là bảy cái mày khác nhau, và met ngược chiề
  * Same idea as `laNepGap`: identify by shape so placement and lean cannot blind
  * the gate. The sliver has three DISTINCT y levels (the page's fold has two on
  * one horizontal, so the two never match each other), and it is thin: the
- * third vertex sits within a quarter of the long edge's length from that edge.
- * `ghi-lai`'s pencil nib is fat (ratio ≈ 0.5) and fails; `dua-giay`'s small
- * corner has two vertices on one horizontal and fails the first clause.
+ * third vertex sits within a third of the long edge's length from that edge
+ * (the 48dp reading's sliver is 6 units thick on a 26-unit edge, and a lean of
+ * 13 shears that to 0.28). `ghi-lai`'s pencil nib is fat (ratio ≈ 0.5) and
+ * fails; `dua-giay`'s small corner has two vertices on one horizontal and
+ * fails the first clause.
  */
+/** Thickness of the sliver: the third vertex's distance from its long edge. */
+function beDayDai(dinh) {
+  const [tren, giua, duoi] = [...dinh].sort((a, b) => a[1] - b[1]);
+  const dx = duoi[0] - tren[0], dy = duoi[1] - tren[1];
+  const L = Math.hypot(dx, dy);
+  return L === 0 ? 0 : Math.abs(dx * (tren[1] - giua[1]) - dy * (tren[0] - giua[0])) / L;
+}
+
 function laDaiGap(dinh) {
   const y = dinh.map((p) => p[1]);
   const [tren, giua, duoi] = [...dinh].sort((a, b) => a[1] - b[1]);
@@ -591,7 +602,7 @@ function laDaiGap(dinh) {
   if (L === 0) return false;
   const d = Math.abs(dx * (tren[1] - giua[1]) - dy * (tren[0] - giua[0])) / L;
   const r = d / L;
-  return r > 0.05 && r < 0.25;
+  return r > 0.05 && r < 0.32;
 }
 
 test("gap trang: bản vẽ trùng từng toạ độ với baseline lấy từ main trước khi có biến thể", () => {
@@ -628,6 +639,13 @@ test("gap manh: đúng một dải coral hé ra dọc đường cắt, và khôn
           const lop = hinhNep(pose, { chiTiet, bieuCam, nghieng, gap: "manh" });
           const dai = lop.filter((l) => l.mau === "gap" && l.net === undefined).map((l) => tamGiac(l.d)).filter((t) => t && laDaiGap(t));
           assert.equal(dai.length, 1, `${ten}: phải nhận ra đúng MỘT dải gấp, thấy ${dai.length}`);
+          // Wide enough to exist at the size it is drawn for: the 48dp reading
+          // renders half a dp per unit, and a 3-unit sliver there was «gần như
+          // mất» in a blind read (round 3). Measured upright; the lean shears it.
+          if (nghieng === 0) {
+            const day = beDayDai(dai[0]);
+            assert.ok(day >= (chiTiet ? 2.5 : 5.5), `${ten}: dải coral dày ${day.toFixed(2)} đơn vị, cần ≥ ${chiTiet ? 2.5 : 5.5}`);
+          }
           assert.equal(lop.filter((l) => l.mau === "gap" && l.net === undefined).map((l) => tamGiac(l.d)).filter((t) => t && laNepGap(t)).length, 0, `${ten}: bản mảnh không được mang nếp gấp của bản trang`);
           const ra = khongCatNepGap(ten, lop, VAI_ART, laDaiGap);
           assert.ok(ra !== null && ra.daXet > 300, `${ten}: máy quét không nhìn dải gấp`);
@@ -703,9 +721,13 @@ test("mảnh vuông hơn trang: tờ thân lấp đầy hộp bao nhiều hơn, 
   };
   const trang = doTho("trang"), manh = doTho("manh");
   assert.ok(manh.lapDay > trang.lapDay + 0.03, `mảnh lấp ${manh.lapDay.toFixed(3)} hộp bao, phải hơn trang ${trang.lapDay.toFixed(3)} rõ ràng`);
-  // The ceiling is about 0.92, not 1: the cut corner H..G is the character's
-  // own fold and costs the box some 7% on both variants. Measured 0.876 with
+  // The ceiling is about 0.93, not 1: the cut corner H..G is the character's
+  // own fold and costs the box some 7% on both variants. Measured 0.89 with
   // straight edges against 0.838 for the page; below 0.87 a bevel is back.
   assert.ok(manh.lapDay >= 0.87, `mảnh lấp ${manh.lapDay.toFixed(3)}: dưới 0.87 là còn vát góc, đọc thành lục giác`);
-  assert.ok(manh.tiLe > trang.tiLe + 0.02, `mảnh ${manh.tiLe.toFixed(3)} không được hẹp hơn trang ${trang.tiLe.toFixed(3)}`);
+  // And the box itself has to be square enough for an eye to see it: 48 over
+  // 56 (0.857) still read «hẹp hơn» after the bevels went (round 3); 53 over
+  // 56 is 0.946.
+  assert.ok(manh.tiLe >= 0.94, `mảnh ${manh.tiLe.toFixed(3)}: hộp bao hẹp hơn 0.94 thì mắt vẫn đọc là hẹp`);
+  assert.ok(manh.tiLe > trang.tiLe + 0.05, `mảnh ${manh.tiLe.toFixed(3)} phải vuông hơn trang ${trang.tiLe.toFixed(3)} rõ ràng`);
 });
