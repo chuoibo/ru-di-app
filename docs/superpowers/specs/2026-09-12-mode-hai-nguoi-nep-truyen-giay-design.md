@@ -1080,12 +1080,12 @@ Bản 1 thiếu hẳn ba hàng cuối. Không bắt buộc mỗi trạng thái t
 
 | Thành phần | Số |
 |---|---|
-| Bo thẻ | `radius.base` **20** — nó là **tờ giấy**, không phải control |
+| Bo tờ | `radius.small` — bo của mọi tờ giấy trong app; **góc trên phải vuông** khi tờ mang nếp gấp coral. Bản 1 ghi `radius.base` 20: đọc mù 12/09 (Phase 1) đọc bo 20 đều bốn góc thành **thẻ**, không thành tờ |
 | **Mép** | `lineStrong`, hairline (xem 16.2: `line` hụt 3:1 trên cả hai nền) |
 | Giờ | `type.label` **14**, `tnum` |
 | Việc | `type.body` **17** |
-| Vết gấp | hairline `paperShade`, hết 296, `space.sm` **10** trên dưới |
-| Dòng lý do | `type.label` **14**, màu **`inkSoft`**, tối đa hai dòng |
+| Vết gấp | hairline `paperShade`, chạy **mép tới mép** của tờ (hết 328, không dừng ở lòng 296 — dừng ở lòng đọc thành divider của bảng), `space.sm` **10** trên dưới |
+| Dòng lý do | `type.label` **14**, màu **`inkSoft`**, tối đa hai dòng; đứng **dưới tờ, ngoài tờ** — nằm trong hàng ba làm ba hàng lệch nhau và nếp gấp mất nghĩa (đọc mù 12/09) |
 | Nút | cao **48**, `radius.control` **14** |
 
 **Một quyết định rơi ra từ số:** ba nút ngang **không vừa**. `(296 − 20)/3 = 92`

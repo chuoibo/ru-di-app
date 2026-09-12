@@ -50,6 +50,13 @@ export const POSE_NEP = [
   // speech bubble, the same body `chua-co-keo` writes with. Opening a
   // conversation is a different act from starting a plan: this one calls out.
   "goi-loi",
+  // Spec «Nếp truyền giấy» §17.3: the two-person notebook. Each is a thing
+  // done to a sheet of paper -- handing one over, pressing one face down,
+  // folding one small -- because in that notebook Nếp is the note passed
+  // between two people, not the page everybody writes on.
+  "dua-giay",
+  "up-xuong",
+  "gap-lai",
 ] as const;
 export type PoseNep = (typeof POSE_NEP)[number];
 
@@ -64,7 +71,7 @@ export type PoseNep = (typeof POSE_NEP)[number];
  * because big eyes and blushing cheeks are exactly the register the concept
  * note ruled out.
  */
-export const BIEU_CAM = ["binh-than", "hao-hung", "hoi", "quyet", "met", "nhuong"] as const;
+export const BIEU_CAM = ["binh-than", "hao-hung", "hoi", "quyet", "met", "nhuong", "giu-kin"] as const;
 export type BieuCamNep = (typeof BIEU_CAM)[number];
 
 /**
@@ -77,6 +84,21 @@ export type BieuCamNep = (typeof BIEU_CAM)[number];
  */
 export const DANG = ["dung", "buoc", "nhun", "ngoi", "chong"] as const;
 export type DangNep = (typeof DANG)[number];
+
+/**
+ * Which sheet the figure is (spec «Nếp truyền giấy» §17).
+ *
+ * `trang` is the page of the group notebook: the drawing that shipped and
+ * that every scene and sticker composes. It does not move by one coordinate;
+ * `tests/art-duong.test.mjs` pins its output against a sha256 taken from
+ * `main` before this option existed. `manh` is the same figure folded in
+ * four to fit a pocket, for the two-person notebook: a squarer sheet, two
+ * crossing creases where the lapel was, and the coral corner folded INWARD
+ * so only a sliver shows along the cut. Same eyes, same one brow, same mouth,
+ * same hands. It is Nếp, not a second character.
+ */
+export const GAP_NEP = ["trang", "manh"] as const;
+export type GapNep = (typeof GAP_NEP)[number];
 
 /**
  * What each pose does with the whole body, not only the arms (review 08/09,
@@ -124,12 +146,23 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   // Calling out: the near hand cupped beside the mouth, the far hand open toward
   // whoever it is for. The speech bubble a scene draws starts at the mouth.
   "goi-loi": { nghieng: 3, nhin: [1.4, 0.2], bieuCam: "hao-hung", dang: "dung" },
+  // Offering a small folded sheet to the right, leaning into the offer and
+  // looking at the hand that holds it.
+  "dua-giay": { nghieng: 6, nhin: [1.4, 0.4], bieuCam: "nhuong", dang: "dung" },
+  // One hand pressing a sheet face down on the floor beside the feet: not
+  // yet, and no comment about it.
+  "up-xuong": { nghieng: 5, nhin: [1.6, 3.0], bieuCam: "giu-kin", dang: "dung" },
+  // Sitting, folding a small sheet in both hands in front of the chest, eyes
+  // down on the fold.
+  "gap-lai": { nghieng: 0, nhin: [0.6, 1.4], bieuCam: "giu-kin", dang: "dung" },
 };
 
 /** The feet stand on this line of the 96-box; a scene puts its floor here. */
 export const CHAN_NEP = 91;
 
 export interface TuyChonNep {
+  /** Which sheet: the group page (`"trang"`, default, unchanged) or the pocket-folded one (`"manh"`). */
+  gap?: GapNep;
   /** Where the 96-box's origin lands in the caller's frame. */
   x0?: number;
   y0?: number;
@@ -168,13 +201,17 @@ export function laPoseNep(pose: string): pose is PoseNep {
 
 /** The layers of one pose, back to front. An unknown pose draws «moi». */
 export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
-  const { x0 = 0, y0 = 0, tiLe = 1, chiTiet = true } = tuyChon;
+  const { x0 = 0, y0 = 0, tiLe = 1, chiTiet = true, gap = "trang" } = tuyChon;
   const P = bienDoi(x0, y0, tiLe);
   const dam = tuyChon.dam ?? 1;
   const net = (w: number) => w * tiLe * dam;
   const p: PoseNep = laPoseNep(pose) ? pose : "moi";
   const nghieng = tuyChon.nghieng ?? TU_THE[p].nghieng;
-  const [nhinX, nhinY] = (tuyChon.nhin ?? TU_THE[p].nhin).map((v) => Math.max(-1.6, Math.min(1.6, v)));
+  // Gaze is clamped so a pupil cannot leave the face. ±1.6 was the ceiling
+  // until `up-xuong`: a shift that small never read as «looking down at the
+  // sheet» (blind reads, rounds 3 and 4), and no existing pose or scene passes
+  // more than 1.6, so widening the clamp moves nothing that is already drawn.
+  const [nhinX, nhinY] = (tuyChon.nhin ?? TU_THE[p].nhin).map((v) => Math.max(-3, Math.min(3, v)));
   const bieuCam = tuyChon.bieuCam ?? TU_THE[p].bieuCam;
   const dang = tuyChon.dang ?? TU_THE[p].dang;
   // The lean: a shear of everything above the ground line, so the feet keep
@@ -193,14 +230,56 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   // lower right, the face of the sheet below it overlapping in shade. It is
   // the concept's identity mark, not a cut corner (finish review 08/09).
   const V1 = S(26, 40), V2 = S(66, 74);
-  const than: LopVe[] = [
-    { d: daGiac([A, H, G, C, D, E, F]), mau: "giay" },
-    { d: daGiac([V1, F, E, D, V2]), mau: "bong" },
-    ...(chiTiet ? [{ d: netGay([V1, V2]), mau: "muc" as const, net: net(1.8) }] : []),
-    { d: daGiac([H, G, Bp]), mau: "gap" },
-    { d: daGiac([A, H, G, C, D, E, F]), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
-    { d: daGiac([H, G, Bp]), mau: "muc", net: net(chiTiet ? 1.8 : 2.4) },
-  ];
+  // The pocket-folded sheet (`gap: "manh"`). Same cut edge H..G, so the one
+  // brow keeps its reason and nothing above the eyes moves; the outline is a
+  // shade narrower so «folded in four» reads at the silhouette. Two creases
+  // cross where the lapel was -- drawn BEFORE the face, so the eyes and mouth
+  // sit on top of them the way ink sits on a fold. And the corner folds
+  // INWARD: the flap goes under, and what shows is a sliver of its coral back
+  // along the cut. What matters is folded in; a sliver says it is there.
+  // `laDaiGap` in tests/art-duong.test.mjs identifies this sliver by shape and
+  // keeps ink out of it, the way `laNepGap` does for the page's corner.
+  const thanManh = (): LopVe[] => {
+    // Squarer by being WIDER, not shorter: the legs are anchored at y 76, so a
+    // shorter sheet would float above them. Squarer at the OUTLINE, not just
+    // at the bounding box: the first cut kept the page's bevels at the foot
+    // and its bulge at the hip, and a blind read saw a hexagon (finish review
+    // 12/09, round 2), so the left edge runs straight down and the foot
+    // straight across, with only the one-unit wobble of a hand-cut sheet. And
+    // wider than the eye's threshold: 48 over 56 still read «hẹp hơn» in
+    // round 3, so the sheet grows to the LEFT (the cut edge H..G stays where
+    // the page has it) to 53 over 56. The two creases quarter the sheet: the
+    // horizontal one crosses the face between the eyes and the mouth, drawn
+    // before them, because a crease at the hem (y 62) made the top cell twice
+    // the bottom one and the figure read tall. `art-duong` measures how much
+    // of its box the sheet fills and that the box is not narrower than 0.94.
+    const Am = S(19, 22), Cm = S(72, 74), Dm = S(70, 76), Em = S(20, 76);
+    // The sliver's inner vertex: 4.8 units off the cut at the 96dp reading, 6
+    // at the 48dp one. Three units was about one dp at 48 and a blind read
+    // called the coral «gần như mất» (round 3); at 96 it still read as «vệt hở
+    // phải nhìn kỹ» (round 4). `laDaiGap` accepts both.
+    const M = chiTiet ? S(56.2, 32.5) : S(55.4, 33.4);
+    const vien = [Am, H, G, Cm, Dm, Em];
+    return [
+      { d: daGiac(vien), mau: "giay" },
+      { d: netGay([S(47, 23), S(47, 75)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
+      { d: netGay([S(20, 50.5), S(69.6, 50.5)]), mau: "bong", net: net(chiTiet ? 1.8 : 2.4) },
+      { d: daGiac([H, G, M]), mau: "gap" },
+      { d: daGiac(vien), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
+      ...(chiTiet ? [{ d: daGiac([H, G, M]), mau: "muc" as const, net: net(1.6) }] : []),
+    ];
+  };
+  const than: LopVe[] =
+    gap === "trang"
+      ? [
+          { d: daGiac([A, H, G, C, D, E, F]), mau: "giay" },
+          { d: daGiac([V1, F, E, D, V2]), mau: "bong" },
+          ...(chiTiet ? [{ d: netGay([V1, V2]), mau: "muc" as const, net: net(1.8) }] : []),
+          { d: daGiac([H, G, Bp]), mau: "gap" },
+          { d: daGiac([A, H, G, C, D, E, F]), mau: "muc", net: net(chiTiet ? 2.4 : 3) },
+          { d: daGiac([H, G, Bp]), mau: "muc", net: net(chiTiet ? 1.8 : 2.4) },
+        ]
+      : thanManh();
 
   // The eyes sit where the pose looks; the brow and the mouth carry the
   // feeling. The compact reading drops the brow and thickens what is left,
@@ -227,6 +306,10 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
           mau: "muc",
           net: net(rong ? 2.2 : 1.9),
         };
+      case "giu-kin":
+        // Keeping it: a short level line, closed. Shorter and dead level where
+        // `quyet` is longer and tilted -- knowing, not deciding.
+        return { d: netGay([S(47, 54.5), S(53, 54.5)]), mau: "muc", net: net(rong ? 2.2 : 1.9) };
       case "nhuong":
         // The offering smile: the sidelong one, a shade longer and softer.
         return { d: cong(S(45, 53), S(47.5, 56.8), S(52.5, 56.8), S(56, 52.6)), mau: "muc", net: w };
@@ -270,6 +353,10 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
         // reason the two used to be indistinguishable: this one was drawn with
         // the determined slope by mistake until 09/09. Resigned, not angry.
         return [{ d: netGay([S(33.5, 39.4), S(42.5, 35.8)]), mau: "muc", net: w }];
+      case "giu-kin":
+        // Lowered two units and dead flat: the brow of somebody who knows and
+        // is not going to say. Lower than `binh-than`, level unlike `quyet`.
+        return [{ d: netGay([S(34, 39.6), S(42.5, 39.6)]), mau: "muc", net: w }];
       case "nhuong":
         // A shallow arc bowed DOWNWARD, the mirror of `hao-hung`: warm and
         // asking rather than announcing, so the face yields to the hand doing
@@ -303,7 +390,9 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     { d: vien(a, b, wTay), mau: "muc" },
     { d: tron(b[0], b[1], rBan), mau: "muc" },
   ];
-  const L = S(25, 54), R = S(69, 50);
+  // The pocket-fold sheet is wider on the left, so its near shoulder moves
+  // out with the edge; the far shoulder sits where both edges nearly agree.
+  const L = S(gap === "manh" ? 20 : 25, 54), R = S(69, 50);
 
   // Legs from the sheared hip down. `dung` keeps both feet on the ground line;
   // the other stances are the reason a figure can now walk, sit or leave the
@@ -524,6 +613,66 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       // it starts where this mouth is (`canh.ts`, `chua-co-tin-nhan`).
       const khuyu = P(16, 70);
       tuThe = [{ d: vien(L, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(37, 58)), ...tay(R, P(92, 66))];
+      break;
+    }
+    case "dua-giay": {
+      // Handing a small folded sheet to the right: the far hand carries it
+      // out past the body, the near arm rests. The sheet is drawn after the
+      // hand so it sits in the palm. Its corner is a plain fold, NOT coral:
+      // the figure has exactly one coral mark, the sliver on its own body, and
+      // a blind read of the first cut counted two (finish review 12/09). The
+      // flap is `giay` with an ink edge, not `bong`: on the dark scheme
+      // `paperShade` is darker than `paper`, and a shaded flap read as a
+      // notch cut out of the sheet (round 3).
+      const vienTo = [P(79, 39), P(88, 39), P(91, 42), P(91, 55), P(79, 55)];
+      const vatTo = [P(88, 39), P(88, 42), P(91, 42)];
+      const to: LopVe[] = [
+        { d: daGiac(vienTo), mau: "giay" },
+        { d: daGiac(vienTo), mau: "muc", net: net(1.6) },
+        { d: daGiac(vatTo), mau: "muc", net: net(1.2) },
+      ];
+      tuThe = [...tay(R, P(85, 47)), ...to, ...tay(L, P(14, 66))];
+      break;
+    }
+    case "up-xuong": {
+      // A sheet lying face down on the floor to the right, one hand flat on
+      // it. Two cuts read as «kéo vật bằng que» and «kéo va li» (finish
+      // reviews 12/09): a slab-shaped sheet, an arm reaching sideways to its
+      // edge, a figure standing straight and looking ahead. So: the sheet
+      // lies FLAT, four times wider than tall, on the ground line; the arm
+      // comes nearly straight down with the mitten in the MIDDLE of the
+      // sheet, not at its edge; and the figure leans toward it and looks
+      // down at it (`TU_THE`). Its corner fold is `giay` with an ink edge,
+      // like the sheet in `dua-giay`.
+      const vienTo = [P(64, 83), P(92, 83), P(96, 87), P(96, 91), P(64, 91)];
+      const vatTo = [P(92, 83), P(92, 87), P(96, 87)];
+      const to: LopVe[] = [
+        { d: daGiac(vienTo), mau: "giay" },
+        { d: daGiac(vienTo), mau: "muc", net: net(1.6) },
+        { d: daGiac(vatTo), mau: "muc", net: net(1.2) },
+      ];
+      const khuyu = P(74, 70);
+      tuThe = [...to, { d: vien(R, khuyu, wTay), mau: "muc" }, ...tay(khuyu, P(80, 87)), ...tay(L, P(12, 64))];
+      break;
+    }
+    case "gap-lai": {
+      // Folding a small sheet in both hands at the chest. Standing: the
+      // shared seated legs read as «một chân đá ra sau» under a figure whose
+      // hands are busy (round 3), and they belong to `ngoi-xe`, so they are not
+      // this pose's to change. The fold itself has to be visible: a flat
+      // sheet with a faint line down its middle read as «cầm thẻ». So the
+      // sheet is two panels, the right one already turning toward the viewer
+      // (a narrower parallelogram), with the fold as an ink edge between them.
+      // Drawn over the body -- it is held in front -- and below the sliver.
+      const trai = [P(45, 58), P(53, 58), P(53, 70), P(45, 70)];
+      const phai = [P(53, 58), P(60, 61), P(60, 67), P(53, 70)];
+      const to: LopVe[] = [
+        { d: daGiac(trai), mau: "giay" },
+        { d: daGiac(phai), mau: "giay" },
+        { d: daGiac(trai), mau: "muc", net: net(1.6) },
+        { d: daGiac(phai), mau: "muc", net: net(1.6) },
+      ];
+      tuThe = [...to, ...tay(L, P(44, 66)), ...tay(R, P(61, 63))];
       break;
     }
     case "vui":

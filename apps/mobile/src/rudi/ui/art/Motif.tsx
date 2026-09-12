@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from "react-native";
 
-import { duongChuyen, gocGap, nepGoc, vongHo } from "../../art/motif";
+import { duongChuyen, gocGap, nepGoc, thuGapBa, vongHo } from "../../art/motif";
 import { VeLop } from "./VeLop";
 
 interface Chung {
@@ -27,4 +27,9 @@ export function NepGoc({ size = 18, style, testID }: Chung & { size?: number }) 
 /** A sheet with its top-right corner folded down: the kept-corner mark. */
 export function GocGap({ width, height, style, testID }: Chung & { width: number; height: number }) {
   return <VeLop height={height} khungH={height} khungW={width} lop={gocGap(1.5, 1.5, width - 3, height - 3)} style={style} testID={testID} width={width} />;
+}
+
+/** A letter folded in thirds: the two-person notebook's sheet, creases and all, no coral. */
+export function ThuGapBa({ width, height, style, testID }: Chung & { width: number; height: number }) {
+  return <VeLop height={height} khungH={height} khungW={width} lop={thuGapBa(1.5, 1.5, width - 3, height - 3)} style={style} testID={testID} width={width} />;
 }

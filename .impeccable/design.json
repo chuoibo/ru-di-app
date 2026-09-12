@@ -1,5 +1,5 @@
 {
-  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script.",
+  "_": "Bản máy đọc của DESIGN.md v2. Các khối color, brand, type, motion, radius, space, contrast lấy từ packages/shared/tokens.json qua scripts/sinh_token_ui_v2.py. shipped/shippedV2 giữ mốc lịch sử; shippedV3 là mốc đợt «chuyển mình» 2026-09-06 (verdict ship); shippedV4 là đợt 8 cùng ngày (head d2c51977 + sửa chưa commit ở Stamp.tsx/ui.tsx, verdict ship cho hai mục nó nêu); kit/surfaces ghi mã ở head đợt 8, cập nhật thêm ở shippedV5; shippedV5 là đợt «bản sắc và nhịp thị giác» 2026-09-08 (cdccb590..8c1d8600 trên 3d89f070, verdict ship cho màn fixture sáng 1.0 và Sở thích 1.3). Giữ cấu trúc hiện có để tương thích script. shippedV6 là Phase 1 «Nếp truyền giấy» 2026-09-12 (nhánh claude/p0-w-hn-1-nen-to-giay, head 137c6c04): nền không cần máy chủ của sổ hai người, chỉ trên ui-lab, ba vòng đọc mù.",
   "source": "packages/shared/tokens.json",
   "measuredFrom": "packages/shared/tokens.json là nguồn; script chỉ sinh mirror và số đo. Các tỷ lệ token không thay thế bằng chứng native của từng component.",
   "color": {
@@ -757,6 +757,7 @@
     "PlaceRow": "thumb 56 bo 10 khi có ảnh, trống → PlaceGlyph 33 (ô giấy 56); Stamp ai cạnh tên trên cùng hàng chỉ khi không có lyDo (tên một dòng khi có dấu), lyDo → dòng LyDo dưới tên, caption inkSoft, caption inkFaint, ghi công caption inkFaint ≤2 dòng (cauGhiCong(anh.nguon)); ảnh hỏng → GuGlyph + «Chưa tải được ảnh» caption warn; paddingVertical 10 gap 8 hairline line dưới; không thẻ; 2 cột ở tablet",
     "AiNote": "ghi chú lề: sparkles 17 ai, label ink, caption ai «Rủ Đi AI gợi ý» dưới câu; hairline trên/dưới, paddingVertical 12, gap 11; không nền, không viền trái",
     "ToGiay": "TheAi.tsx: card, viền 1 line, bo base; tiêu đề lịch trình cỡ title (11/09), quyết định trước, lý do sau một cửa mở, nháp nói một lần bằng badge; ký chân icon 15 + caption tông (sparkles/ai hoặc receipt-outline/split); lịch trình bên trong là HangChang phac",
+    "ToGiay (ui/ToGiay.tsx)": "tờ thư gấp ba của sổ hai người: paper, viền hairline lineStrong, bo radius.small, đệm space.md, không bóng; dan → góc trên phải vuông + GocGapThat 22 (xoá nen, vạt accent, mép cắt lineStrong, cạnh vạt ink); nen mặc định ground; không chữ riêng; KHÁC ToGiay cục bộ của TheAi.tsx (tờ AI), trùng tên, không hợp nhất",
     "Composer": "Group: hàng bo 22 card viền 1 line pad 6 gap 6, ở footer; paddingBottom max(insets.bottom,8)",
     "nhip-keo": "sap-toi «Còn N ngày»/«Ngày mai», hom-nay «Hôm nay», dang-dien-ra «Đang đi · còn N ngày»/«· ngày cuối», da-qua «Hôm qua»/«N ngày trước», khong-ro rỗng; tính từ starts_on/ends_on máy chủ, in lên Stamp",
     "TopBar": "minHeight 52, hai bên đo max để tiêu đề title cân giữa, phụ đề caption inkSoft; trái = back chevron 48 hoặc Wordmark ink cao 18 khi là đầu tab (Discovery/ExploreLive tự vẽ Wordmark 20); phải = DemoBadge compactLabel hay IconButton quiet; ô icon app gradient chỉ còn ở Welcome/Login",
@@ -771,7 +772,9 @@
     "Canh": "năm cảnh rỗng 144×112, mỗi cảnh trọn vẹn khi nep=false, đọc thành một câu (accessibilityLabel = moTaCanh); khung chặt theo hopNgang + viewBox; width 168 trong EmptyState",
     "KyHoa": "tờ ký hoạ 288×96 (KHUNG_KY_HOA) của nơi chưa có ảnh: nền paper, viền hairline line, bo radius.small, aspect 3 (4 khi chuLon), slice; lớp từ hinhKyHoa(loai, tags, {gon}) — sân khấu theo loại, ≤ 2 đạo cụ theo tag, một lớp coral; accessibilityLabel = moTaKyHoa cùng gon, role image, không chữ; chỉ ở PlaceLead không ảnh và đầu bài chi tiết không bìa",
     "PlaceCompare": "hai ứng viên trên một trục giữa ảnh dẫn và hàng (taiSoSanh); hàng gap 16 đệm dưới 12 hairline line; mỗi ô flex 1: MediaSlot 4:3 với IconButton tim góc dưới phải trên ảnh + Stamp ai nen khi có badge và không có lyDo, title 2 dòng, LyDo khi có lyDo, note inkSoft 2 dòng, sự thật đầu nối « · » note inkFaint, sự thật cuối (giá) riêng dòng, ghi công note inkFaint; không thẻ",
-    "PlaceGlyph": "ô giấy vuông cạnh round(1.7×size), nền card, viền hairline line, bo radius.small; bên trong GuGlyph round(1.15×size) tone ink (mực + một chi tiết coral của hình); hình theo gu (guTheoTag: tag thật) trước, guTheoLoai sau (quan-an-local→an-uong, cafe, vui-choi→game, di-choi-dem→nightlife, khác→thẻ gấp); Ionicons màu ink chỉ khi thiếu cả hai"
+    "PlaceGlyph": "ô giấy vuông cạnh round(1.7×size), nền card, viền hairline line, bo radius.small; bên trong GuGlyph round(1.15×size) tone ink (mực + một chi tiết coral của hình); hình theo gu (guTheoTag: tag thật) trước, guTheoLoai sau (quan-an-local→an-uong, cafe, vui-choi→game, di-choi-dem→nightlife, khác→thẻ gấp); Ionicons màu ink chỉ khi thiếu cả hai",
+    "VetGap": "vết gấp: View hairline paperShade, marginVertical sm, marginHorizontal -md chạy mép tới mép; không phải divider",
+    "ThuGapBa": "motif thư gấp ba: tờ 5 đỉnh góc cắt, vạt giay viền mực, hai vết bong ở 1/3 và 2/3, không coral"
   },
   "surfaces": {
     "Welcome": "bìa đóng: cover + vaiBia 0.3, lề 20, wordmark 118/150/72, washi accent tilt -2 cao 34, RouteLine 4 chặng glyph theo pager, pager 4 trang (EB 28/33 coverInk, body coverInkSoft), chấm 7 (đang ở 20 accent), StampButton lon «Rủ Đi thôi!» tilt -3, CoverButton link «Tìm hiểu thêm ›»; DemoBadge «Bản trải nghiệm»; mở bìa translateY -48 + mờ 0.65 shared 300 accelerate rồi push /login",
@@ -915,6 +918,26 @@
         "name": "Luật Ký Hoạ Trong Sổ",
         "body": "Nơi chưa có ảnh ở vị trí dẫn của Khám phá (PlaceLead anh null) và ở đầu bài chi tiết không bìa (Discovery fixture, PlaceDetailLive dauGon) nhận một tờ ký hoạ KyHoa (art/ky-hoa.ts): tờ paper rộng hết cột, viền hairline line, bo radius.small, 3:1 ở chữ 1.0 và 4:1 khi chuLon — cùng một hình, hai khung cắt (preserveAspectRatio slice; bản gon ít lớp hơn). Hình = sân khấu theo loại (quan-an-local hiên quán · cafe góc cửa kính · vui-choi đồi thông · di-choi-dem quầy đêm · loại lạ tờ ghi gấp) + tối đa hai đạo cụ từ tag có thật (bảng DAO_CU_CUA mỗi sân khấu đánh dấu ca-hai | chi-day) + đúng một lớp coral = nguồn sáng; ba cỡ nét theo độ sâu 3.0/2.4/1.7, bóng là mảng bong đi theo đúng đường cong của nét viền. Thật thà: vẽ một loại nơi, không tên, không bảng hiệu, không giả ảnh, không chữ. Câu a11y (moTaKyHoa, role image) mở bằng «Ký hoạ …» và chỉ kể đạo cụ mà khung đọc ấy thật sự vẽ; bản gọn là tập con của bản đủ (chỉ bỏ, không bù tag sau). Live chỉ truyền loại (tags []) nên hai quán ăn nhận cùng một hiên. Không dùng ở hàng, cặp so sánh, fallback ảnh hỏng (giữ PlaceGlyph) và không bao giờ thay ảnh thật có ghi công. 11/09, review Codex A1, đọc mù v2 trượt → v3, finish review ship; tests/art-ky-hoa.test.mjs; bằng chứng docs/claude/2026-09-11/ky-hoa-trong-so/.",
         "section": "components"
+      },
+      {
+        "name": "Luật Góc Cắt, Không Badge",
+        "section": "shapes",
+        "body": "Coral ở góc một tờ giấy chỉ hợp lệ khi góc ấy bị cắt: tam giác nền lộ qua, mép cắt nối tiếp viền, vạt là mặt sau. Tam giác coral trong góc còn nguyên là badge/notification (đọc mù 12/09 vòng 1 và 2)."
+      },
+      {
+        "name": "Luật Vết Gấp Mép Tới Mép",
+        "section": "shapes",
+        "body": "VetGap hairline paperShade chạy xuyên đệm chạm viền lineStrong; vết dừng ở lòng tờ đọc thành divider bảng."
+      },
+      {
+        "name": "Luật Một Nhân Vật, Hai Tờ",
+        "section": "components",
+        "body": "Biến thể Nếp (GAP_NEP) đổi tờ, không đổi mặt, tay, tư thế, số coral; bản trang bị băm sha256 so với main."
+      },
+      {
+        "name": "Luật Bản Tính Một Chỗ",
+        "section": "components",
+        "body": "Mọi khác biệt giữa các loại sổ là trường của BanTinhSo trong so/ban-tinh.ts; không file nào khác so kind hay loaiSo (cổng hai chiều với allowlist ba chỗ có sẵn). Là chính sách trình bày, không phải quyền."
       }
     ],
     "notCanonized": [
@@ -932,7 +955,8 @@
       "Dark sau loạt sửa cuối: chỉ bảng art; cảnh, cặp so sánh, ô gu ở dark chưa có ảnh",
       "Album theo ngày chỉ ở AlbumLive.tsx (đọc từ mã); Memories.tsx fixture vẫn lưới đều ba cột",
       "Hai cảnh chua-co-hoi/chua-co-ban và bốn tư thế Nếp ngoài moi/ghi-lai chưa màn nào gọi",
-      "Ionicons vẫn là ngôn ngữ của control; lớp vẽ chỉ thay icon ở nội dung phân loại"
+      "Ionicons vẫn là ngôn ngữ của control; lớp vẽ chỉ thay icon ở nội dung phân loại",
+      "Phase 1 Nếp truyền giấy (12/09) chỉ trên ui-lab; vòng đọc mù 4 chưa ghi; hai ToGiay trùng tên; KyHoa coral cạnh ToGiay dan trên lab"
     ],
     "keyCharacteristics": [
       "Hai bề mặt vật chất đo được bằng pixel: vải bìa, giấy, mực con dấu",
@@ -1186,6 +1210,135 @@
       "Sở thích: ô GuGlyph 40 cao 64 gap 12, minItemWidth round(150 × max(1, fontScale)) → một cột ở 1.3; câu ngân sách title + note «Không bắt buộc · K là nghìn đồng»",
       "EmptyState.illustration nhận Canh 168: Album chua-co-keo / chua-co-anh, Khám phá tim-khong-ra",
       "Câu chữ §8.5: HangChang phu = tên địa điểm hoặc «Chọn địa điểm»; nháp nói một lần đầu màn; check-in một con dấu; «Cách tính» mở luật ở Thành tích; khay tạo chi tiết chỉ nơi dễ nhầm; «Làm mới»; bill fixture «Bill mẫu»"
+    ]
+  },
+  "shippedV6": {
+    "_": "Phase 1 «Nếp truyền giấy»: ToGiay/VetGap/GocGapThat, Nếp gap manh + giu-kin + ba tư thế truyền giấy, motif thuGapBa, module so/ban-tinh.ts. Không màn người dùng, không token, không route. Vòng đọc mù 4 chưa ghi lúc viết.",
+    "date": "2026-09-12",
+    "branch": "claude/p0-w-hn-1-nen-to-giay",
+    "headCommit": "137c6c04",
+    "verdict": "fix→fix→fix; vòng 4 đang chạy",
+    "evidence": {
+      "blindReads": "docs/claude/2026-09-12/nen-to-giay/README.md (3 vòng, reviewer context mới, ảnh cắt không nhãn)",
+      "native": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-{to-giay-tren,to-giay-chot,nep-manh-tren,nep-manh-duoi}-fs{1.0,2.0}-{sang,toi}.png",
+      "maestro": ".maestro-bs-r18/99-to-giay-ui-lab.yaml exit 0 × 4 cấu hình",
+      "gates": [
+        "tests/art-duong.test.mjs",
+        "tests/so-ban-tinh-mot-cho.test.mjs",
+        "tests/dau-gach-dai.test.mjs",
+        "tests/rudi-khong-hex.test.mjs"
+      ],
+      "fromCodeOnly": [
+        "tuVung hai-nguoi/doi",
+        "thân 53/56, dải 6 ở 48, up-xuong 4:1, gap-lai đứng (sửa vòng 3, chưa đọc mù lại)"
+      ]
+    },
+    "toGiay": {
+      "file": "src/rudi/ui/ToGiay.tsx",
+      "surface": "paper",
+      "edge": "hairline lineStrong (line dưới sàn 3:1 phi-chữ ở cả hai scheme, spec §16.2)",
+      "radius": "radius.small (base 20 đọc mù thành thẻ)",
+      "padding": "space.md",
+      "shadow": "không",
+      "dan": "góc trên phải vuông + GocGapThat 22dp = GOC_GAP (cỡ góc gấp KhungAnh)",
+      "gocGapThat": {
+        "order": [
+          "tam giác xoá màu nen phủ góc (offset -hairline)",
+          "vạt accent",
+          "mép cắt hairline lineStrong nối tiếp viền",
+          "hai cạnh tự do vạt ink 1dp lùi 0.5"
+        ],
+        "why": "tam giác coral trong góc còn nguyên đọc mù thành badge/nhãn dán/notification qua hai vòng"
+      },
+      "nen": "mặc định colors.ground; tờ trên bề mặt khác gọi tên bề mặt",
+      "vetGap": "View hairline paperShade, marginVertical space.sm, marginHorizontal -space.md (mép tới mép; dừng ở lòng đọc thành divider)",
+      "rules": [
+        "dan do màn quyết, một coral dẫn mỗi surface",
+        "không chữ trong container",
+        "lý do đứng dưới tờ, ngoài tờ (bố cục lab)"
+      ],
+      "open": "ba tờ không dan xếp đều vẫn có thể đọc thành thẻ (spec §20.5 phép đo 2)"
+    },
+    "nepManh": {
+      "option": "hinhNep(pose, { gap: 'manh' }); GAP_NEP = trang | manh",
+      "trangPinned": "sha256 fixtures/nep-trang-baseline.json từ main 2d0b9777, 19 pose × 2 cỡ, 680 lớp",
+      "body": "53/56 mở sang trái (x 19..72, y 20..76), cạnh trái và chân thẳng, 6 đỉnh, vai gần x 20",
+      "creases": "bong dọc x 47 (y 23..75), ngang y 50.5; vẽ trước mặt; nét 1.8 / 2.4 rút gọn",
+      "sliver": "tam giác H·G·M dọc mép cắt; M cách mép 3 đơn vị ≥72dp, 6 dưới 72; viền mực chỉ bản chi tiết",
+      "gates": {
+        "laDaiGap": "đúng một dải theo hình trên 22 pose × 7 biểu cảm × 2 cỡ × 4 nghiêng; không nét mực lên dải; dày ≥ 2.5 / ≥ 5.5",
+        "fill": "lấp đầy hộp bao ≥ 0.87 và > trang + 0.03; tỉ lệ ≥ 0.94 và > trang + 0.05",
+        "coral": "số lớp gap của manh = trang ở mọi pose; ba pose mới đúng một"
+      }
+    },
+    "giuKin": "miệng nét thẳng khép S(47,54.5)..S(53,54.5), phẳng tuyệt đối, ngắn hơn quyet; mày hạ 2 đơn vị phẳng",
+    "poses": {
+      "dua-giay": {
+        "nghieng": 6,
+        "nhin": [
+          1.4,
+          0.4
+        ],
+        "bieuCam": "nhuong",
+        "dang": "dung",
+        "prop": "tờ nhỏ giay + viền mực, vạt giay viền mực, vẽ sau bàn tay"
+      },
+      "up-xuong": {
+        "nghieng": 5,
+        "nhin": [
+          1.2,
+          1.6
+        ],
+        "bieuCam": "giu-kin",
+        "dang": "dung",
+        "prop": "tờ nằm phẳng 4:1 trên đường sàn x 64..96 y 83..91, mitten giữa tờ"
+      },
+      "gap-lai": {
+        "nghieng": 0,
+        "nhin": [
+          0.6,
+          1.4
+        ],
+        "bieuCam": "giu-kin",
+        "dang": "dung",
+        "prop": "tờ hai mảng gập trước ngực, sống gấp là nét mực, vẽ trên thân"
+      },
+      "rule": "nghiêng về vật, nhìn vào vật, tay ở giữa vật; vạt tờ nhỏ là giay dưới viền mực, không bong"
+    },
+    "thuGapBa": {
+      "file": "src/rudi/art/motif.ts + ui/art/Motif.tsx ThuGapBa (lùi 1.5)",
+      "shape": "tờ 5 đỉnh, góc cắt c = 0.22·min(w,h), vạt giay viền mực 0.8×, hai vết bong ở h/3 và 2h/3, viền mực; 0 coral",
+      "gates": "0 lớp gap; 5 đỉnh; đúng 2 nét mực; không mảng tô ngoài giay; vết ở 1/3, 2/3"
+    },
+    "banTinh": {
+      "file": "src/rudi/so/ban-tinh.ts",
+      "kinds": [
+        "hoi",
+        "hai-nguoi",
+        "doi"
+      ],
+      "fields": [
+        "quyetDinh",
+        "coVai",
+        "nhip",
+        "nepDuocLam",
+        "tuVung",
+        "tienHien"
+      ],
+      "api": [
+        "loaiSoCua(nhom, doi)",
+        "banTinhCua(loai)"
+      ],
+      "nature": "chính sách trình bày, không phải phân quyền",
+      "gate": "so-ban-tinh-mot-cho: một chỗ so loại sổ; allowlist ba chỗ kind === 'pair' có sẵn (phien.ts, rudi/nhan-rieng/nhan-rieng.ts, rudi/screens/chat/CaiDatNhom.tsx) kiểm hai chiều; module là lá"
+    },
+    "notCanonized": [
+      "chỉ ui-lab, không màn người dùng",
+      "vòng đọc mù 4 chưa ghi",
+      "hai ToGiay trùng tên (chat/TheAi.tsx cục bộ vs ui/ToGiay.tsx)",
+      "KyHoa coral trên cùng lab surface với ToGiay dan",
+      "mép cắt chéo hairline anti-alias mờ hơn viền",
+      "số tương phản trong chú thích ToGiay.tsx là trích spec, không phải script sinh"
     ]
   }
 }

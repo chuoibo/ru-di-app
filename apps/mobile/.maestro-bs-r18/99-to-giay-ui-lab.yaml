@@ -1,0 +1,42 @@
+# Phase 1 «Nếp truyền giấy»: bảng «Tờ giấy» và «Nếp trang/mảnh» trên ui-lab — tờ thư gấp ba bốn trạng thái, ba tư thế × hai cỡ.
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app-sach.yaml
+- openLink: rudi://dev/ui-lab
+- extendedWaitUntil:
+    visible: "Thử tương tác native"
+    timeout: 30000
+# Anchor on the first sheet, not the board title: at font scale 2.0 the title peeks over the
+# bottom edge of the previous board's frame, so scrollUntilVisible on it does not scroll.
+- scrollUntilVisible:
+    element:
+      id: "lab-to-giay-nhap"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+- takeScreenshot: r18-99-to-giay-tren
+- scrollUntilVisible:
+    element:
+      id: "lab-to-giay-chot"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+- takeScreenshot: r18-99-to-giay-chot
+# Anchor on the first row, not the board title: the title peeks over the bottom edge of the
+# previous frame, so scrollUntilVisible on it does not scroll and the two shots come out identical.
+- scrollUntilVisible:
+    element:
+      id: "lab-nep-trang-dua-giay-96"
+    direction: DOWN
+    timeout: 60000
+    centerElement: false
+- takeScreenshot: r18-99-nep-manh-tren
+# Centre the last row (more boards follow, so centring is safe here) so the nav bar does not
+# clip the seated pose's feet.
+- scrollUntilVisible:
+    element:
+      id: "lab-nep-trang-gap-lai-96"
+    direction: DOWN
+    timeout: 60000
+    centerElement: true
+- takeScreenshot: r18-99-nep-manh-duoi
