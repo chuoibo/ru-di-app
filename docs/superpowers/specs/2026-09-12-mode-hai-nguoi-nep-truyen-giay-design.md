@@ -3,8 +3,10 @@
 Ngày: 2026-09-12 · **Bản 2**, viết lại tại chỗ, thay toàn bộ bản 1.
 Trạng thái: **ĐÃ QUA HAI LƯỢT PHẢN BIỆN CODEX.** Codex nhận hướng này làm nền
 cho **kế hoạch nháp lát 1** (PR #609, `6e3cd013`); ba điều khoản còn hở ở lượt
-hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu ở 20.1.**
-Còn chờ: Codex xác nhận ba khoản đã khép (20.4) và trả lời **K1–K7** (20.3).
+hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Lead đã chốt bảy câu (20.1). Codex đã chốt K1–K7 (11.3) và mở ADR-0027 cùng
+khoản bổ sung ADR-0019/0021, trạng thái ĐỀ XUẤT.** Còn chờ đúng hai thứ: Codex
+**ký khép C1–C2** (C3 đã khép), và **ba ADR được chấp nhận**. Kế hoạch nháp lát 1
+**viết được ngay**.
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
 Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
 (PR #607, REQUEST_CHANGES; sáu mâu thuẫn C1–C6, tám điểm tranh luận D1–D8).
@@ -202,9 +204,18 @@ Khép **C1**. Đây là hợp đồng: mọi màn ở mục 15, mọi bảng ở
 
 Khép **C1(a)(b)**.
 
-> **Bấm gửi một phiên bản = người gửi đã đồng ý phiên bản đó.**
-> Nên `chot` cần **đồng ý của người kia** trên **cùng phiên bản** ấy, không cần
-> người gửi bấm thêm một lần nữa.
+> **Một CON NGƯỜI bấm gửi một phiên bản = người đó đã đồng ý phiên bản ấy.**
+> Nên `chot` cần **đồng ý của người kia** trên **cùng phiên bản**, không cần
+> người gửi bấm thêm lần nữa.
+
+**Ngoại lệ, và Codex đúng khi bắt (lượt ba):** khi **Nếp gửi hộ** (mục 3.4) thì
+**không ai bấm gửi cả**, nên **không ai đã đồng ý**.
+
+> **Tờ do Nếp gửi cần `dong_y` của CẢ HAI người mới `chot`.**
+
+Không được đọc «Nếp đã gửi» thành «người giữ lượt đã đồng ý». Bảng ở 3.1 vì thế
+có hai đường vào `chot`: **một người đồng ý** khi tờ do người kia gửi, và **cả
+hai đồng ý** khi tờ do Nếp gửi.
 
 Người gửi đổi ý thì **`rut`**, và chỉ rút được **khi chưa có phản hồi** — sau đó
 thì đường đi là đề nghị một phiên bản mới, không phải rút.
@@ -423,7 +434,7 @@ TÚI RIÊNG  người kia không thấy được: chuẩn bị quà
 ```
 
 Vùng **CHUNG** là chung **theo cấu tạo** — nó là hành động của cả hai — nên nó
-đi vòng qua cái bẫy ở mục 7.7 mà không phải nới luật riêng tư nào.
+đi vòng qua cái bẫy ở mục 7.8 mà không phải nới luật riêng tư nào.
 
 ### 7.2 Thang consent bốn bậc — mỗi bậc là một việc riêng
 
@@ -532,7 +543,32 @@ sổ; trước khi xác nhận phải **xem trước hậu quả** theo đúng b
 được lấy chữ **mở giấy** — vốn nghĩa là đọc một lá thư — đặt tên cho việc phá
 hiệu lực thư. Hành động gọi là **«Đóng sổ»**.
 
-### 7.7 Vì sao luật «chỉ hiện tổng» của ADR-0019 không dùng được ở đây
+### 7.7 Đường companion sẵn có cũng nằm trong luật này
+
+Codex nêu ở lượt ba, và tác giả đã **kiểm trên cây**: đây là **tình trạng sẵn
+có**, không phải thứ mode này tạo ra.
+
+- `invoke_group_companion` chỉ đòi `is_group_member`, mà **một `pair` cũng là một
+  context có thành viên** — không có gì phân biệt nhóm với cuộc nhắn riêng.
+- `taste_profile(actor, context_id)` có `context_id` thì trả `group_taste(context_id)`,
+  và `group_taste` **cộng `person_interests` của các thành viên ACTIVE**.
+
+Nên **hôm nay, trong một cuộc nhắn riêng hai người, companion đã cộng gu riêng
+của đúng hai người** để xếp hạng gợi ý. Đó chính là chỗ luật «chỉ hiện tổng» của
+ADR-0019 thoái hoá (7.8).
+
+**Nói cho đúng mức:** đây là **lộ gián tiếp**, qua thứ tự gợi ý, **không** phải
+một chỗ đọc thẳng ra «người kia thích X». Nhưng tính chất ẩn danh mà ADR-0019
+trông cậy thì **không còn** ở n = 2.
+
+> **Luật C — bao phủ đường sẵn có.** Luật A và B (7.3) áp cho **mọi** đường sinh
+> gợi ý trong một context hai người, **kể cả `group_taste` và companion đang
+> chạy**, không chỉ cho mã mới của mode này.
+
+Việc sửa đường sẵn có thuộc `domain/` và `api/`, nên nó nằm trong **khoản bổ sung
+ADR-0019** của Codex (11.4), không phải việc tác giả tự làm.
+
+### 7.8 Vì sao luật «chỉ hiện tổng» của ADR-0019 không dùng được ở đây
 
 ADR-0019 §2.1 bảo vệ gu cá nhân bằng cách chỉ cho hiện **tổng trên nhiều người**.
 Trong nhóm hai người, **tổng trừ phần mình ra đúng người kia** — luật thoái hoá
@@ -724,7 +760,23 @@ thì không ai đọc được.
    cần **route map thật**: mục nào thêm, mục nào giữ. Không được nói «không tốn
    gì» chỉ vì cùng `context_id`.
 
-### 11.3 Khái niệm mới — Codex quyết hình
+### 11.3 Khái niệm mới — **Codex đã chốt hình** (K1–K7, PR #610 `7d38fdcd`)
+
+| | Chốt | Ghi chú |
+|---|---|---|
+| **K1** | **Tờ giấy + phiên bản bất biến**; phản hồi gắn **đúng phiên bản** | phiên bản bất biến làm luật 3.2 cưỡng chế được ở tầng DB, không còn trông vào code nhớ |
+| **K2** | **Bảng phụ trên `pair`**, lịch sử **chu kỳ riêng**; **khoá duy nhất theo NGƯỜI** | khoá theo người là cái giữ luật «một sổ đôi» (20.1 §1) chạy được; khoá theo `pair` thì không đủ |
+| **K3** | Chốt và tạo `outing` **cùng transaction**; **unique theo TỜ GIẤY** | **sửa đề xuất của tác giả.** Tác giả đề nghị khoá theo `(tờ, phiên bản)` — vẫn **sinh được hai `outing`** nếu hai phiên bản cùng chốt. Unique theo **tờ** mới đóng được |
+| **K4** | Consent theo **từng mục đích, từng người, từng chu kỳ**; máy chủ kiểm ở **mọi** đường đọc/ghi | khớp thang bốn bậc ở 7.2; «từng chu kỳ» khớp luật nối lại ở 7.6 |
+| **K5** | **Máy chủ quản nguồn và kiểm lại lúc gửi**; bao phủ cả **đường companion / cộng-gu pair sẵn có** | mạnh hơn đề xuất «nhãn nguồn» của tác giả: kiểm **lại lúc gửi**, không tin nhãn dán lúc phác |
+| **K6** | **Lát 1 không chờ thông báo hay push** | và **không có lịch ship nào được cam kết** để làm dependency |
+| **K7** | Hai ô nằm **vùng chung của sổ**, **chỉ chủ sửa/gỡ**; **không đụng `person_interests`** | đúng đề xuất ở 9.2 |
+
+Hai chỗ Codex **sửa** đề xuất của tác giả, ghi lại để không quay về bản cũ: **K3**
+(unique theo tờ, không theo cặp tờ-phiên-bản) và **K5** (kiểm lại lúc gửi, không
+dựa vào nhãn nguồn dán sẵn).
+
+#### Danh sách khái niệm
 
 1. **Trạng thái «đôi» trên một `pair`**: ai lập, ngày lập, ai giữ vai nào, khung
    tuần, routine đã khai, khấc núm. **Một bảng một hàng cho mỗi `pair` đã bật.**
@@ -754,9 +806,9 @@ thì không ai đọc được.
 
 | ADR | Việc |
 |---|---|
-| **ADR mới** | «Đôi là trạng thái bật thêm trên `pair`; tờ giấy có phiên bản và máy trạng thái; hai quyển sổ riêng tư mặc định; không có việc nền» |
-| **ADR-0021** | `pair` **không** tự là đôi |
-| **ADR-0019** | luật «chỉ hiện tổng» **không bảo vệ được ai ở n = 2**; thay bằng ba vùng ở mục 7.1 |
+| **ADR-0027** | Codex **đã viết**, trạng thái **ĐỀ XUẤT**, chờ review độc lập và chấp nhận. Phủ K1–K7 |
+| **ADR-0021** | `pair` **không** tự là đôi. Codex **đã viết khoản bổ sung**, trạng thái **ĐỀ XUẤT** |
+| **ADR-0019** | luật «chỉ hiện tổng» **không bảo vệ được ai ở n = 2**; thay bằng ba vùng ở 7.1 **và phải bao phủ `group_taste` / companion đang chạy** (7.7). Codex đã viết khoản bổ sung, trạng thái **đề xuất** |
 | **ADR-0024** | thêm `kind` thông báo; push **không mang nội dung** tờ giấy |
 | **ADR-0022** | tờ giấy **không phải** story (người đọc, hạn, ý nghĩa đều khác) |
 | **ADR-0018 / 0026** | **không đổi**: không quyền vị trí, bản đồ chiếu toạ độ **địa điểm** |
@@ -1208,6 +1260,7 @@ còn ấm.
 ```text
 LÁT 1   VÒNG TRỌN VẸN
         đường «Rủ đi chơi» · tờ lời rủ với máy trạng thái mục 3 ·
+        LẬP SỔ (bậc 2) và BẬT «MỘT ĐÔI» (bậc 3), đủ consent hai chiều ·
         gậy đổi lượt · hai ô ràng buộc (không ăn được, đừng) ·
         hàng «Tờ giấy của hai mình» + không gian giấy ·
         thêm một dòng sau buổi · đóng sổ · rút / hết hạn / nghỉ / lỗi ·
@@ -1226,6 +1279,12 @@ LÁT 3   THÂN MẬT VÀ KÝ ỨC
 
 **Lát 1 khép trọn vòng ở mục 2.** Đó là điều bản 1 không làm được và là lý do
 Codex REQUEST_CHANGES.
+
+**Codex bắt thêm ở lượt ba, đã sửa ở trên:** lát 1 **có gậy**, mà gậy là cơ chế
+của **sổ đôi** (bậc 3), nên lát 1 **phải có cả đường bật đôi với đủ consent** —
+không được giả định nó đã bật. Và **nhận lời đi chơi (bậc 1) không tự tạo sổ**
+(7.2): một người đi chơi cùng mà không lập sổ là đường hợp lệ, buổi đi ghi như
+mọi buổi bình thường và không tờ giấy nào được giữ lại.
 
 ### 19.2 Vì sao hai ô ràng buộc phải đi cùng lát 1
 
@@ -1403,7 +1462,23 @@ nghị đếm **lớp coral do hàm art của mình phát ra**, như `art-duong`
 | **Xác nhận 1 bị bác**: nháp dùng dữ liệu riêng vẫn có thể bị «Nếp gửi hộ» đẩy sang người kia | Đúng, và đây là đường rò thật tôi không thấy. **7.3 Luật B** đóng nó |
 | **Xác nhận 2 đúng**: cổng đếm nhánh là tầng trình bày; server vẫn kiểm quyền và consent | Giữ nguyên **13.3** |
 
-### 22.5 Hai điểm xin Codex xác nhận (lượt một, đã khép)
+### 22.5 Lượt ba (Codex, PR #610 · `7d38fdcd`)
+
+**K1–K7 chốt hết** → hợp nhất vào **11.3**, kèm hai chỗ Codex **sửa** đề xuất của
+tác giả (K3 unique theo tờ; K5 kiểm lại lúc gửi).
+**C3 khép về luật sản phẩm.** **C1–C2 chưa ký khép**, ba điểm cụ thể:
+
+| Codex nêu | Đã sửa ở đâu |
+|---|---|
+| «Nếp gửi» không đồng nghĩa người giữ lượt đã đồng ý; phải chờ **cả hai** nhận lời | **3.2**: luật «gửi = đồng ý» chỉ áp cho **một con người bấm gửi**. Tờ do **Nếp gửi hộ** cần `dong_y` của **cả hai** mới `chot`. Bảng 3.1 có **hai đường vào `chot`** |
+| Lát 1 có gậy thì **phải có đường bật đôi đủ consent**; nhận lời đi chơi **không tự tạo sổ** | **19.1**: lát 1 thêm **lập sổ (bậc 2)** và **bật «Một đôi» (bậc 3)**. Và 7.2 đã nói bậc 1 không kéo theo bậc 2 — nay nói rõ **đi chơi mà không lập sổ là đường hợp lệ** |
+| **Companion hiện tại vẫn đọc chat / cộng gu pair**; luật riêng tư mới phải bao phủ đường này | **7.7 mới**, và tác giả đã **kiểm trên cây**: `invoke_group_companion` chỉ đòi `is_group_member`, `pair` cũng là context có thành viên, `taste_profile` → `group_taste` cộng `person_interests`. Nên đây là **tình trạng sẵn có**. Thêm **Luật C**: luật A và B áp cho **mọi** đường sinh gợi ý trong context hai người, kể cả đường đang chạy |
+
+**Một đính chính về mức độ**, để khoản ADR-0019 không viết quá tay: đường sẵn có
+là **lộ gián tiếp qua thứ tự gợi ý**, **không** phải chỗ đọc thẳng ra gu người
+kia. Nhưng tính ẩn danh mà ADR-0019 trông cậy thì **không còn** ở n = 2.
+
+### 22.6 Hai điểm xin Codex xác nhận (lượt một, đã khép)
 
 1. **C2 khép bằng một luật:** gu toàn cục của một người **chỉ mồi cho gợi ý mà
    chính người đó nhìn thấy**, không bao giờ mồi cho gợi ý chung. Đây là cách rẻ
@@ -1412,7 +1487,7 @@ nghị đếm **lớp coral do hàm art của mình phát ra**, như `art-duong`
    quyền vẫn là kiểm tra phía máy chủ ở biên đọc/ghi. Xin xác nhận cách phát biểu
    này đúng ý C của Codex.
 
-### 22.6 Những điểm «sửa gọn» đã sửa
+### 22.7 Những điểm «sửa gọn» đã sửa
 
 «ba phần dọc» → gấp ngang (1.6) · «hơi cũ mềm» → **cắt** (1.6) · trích nhầm 1.06
 → sửa (16.2) · `guest_links` → **không dùng lại được** (11.2) · tab «Tạo mới»
@@ -1430,13 +1505,17 @@ liệt kê hành động → cần route map (11.2, 20.7) · cổng rẽ nhánh 
 Ba cửa, theo thứ tự:
 
 1. ~~Lead chốt bảy câu~~ — **ĐÃ MỞ**, phiên 12/09, ghi ở **20.1**.
-2. **Codex xác nhận ba điều khoản vừa hợp nhất đã khép**: C1 (gửi = đồng ý ·
+**Cập nhật lượt ba:** Codex nói rõ *«tác giả có thể viết kế hoạch nháp lát 1 từ
+các điều khoản này ngay»*. Nên **kế hoạch nháp** không còn bị chặn; cái còn bị
+chặn là **viết code sản phẩm**.
+
+2. **Codex ký khép C1–C2** (C3 đã khép): C1 (gửi = đồng ý ·
    người sửa là người gửi `v+1` · lượt số 0 · bảng đường thoát đủ) · C2 (thang
    consent bốn bậc · Luật B cho «Nếp gửi hộ») · C3 (đóng sổ là đóng). R1–R4 và
    hai điểm xác nhận lượt một **đã khép** ở 22.4.
-3. **Codex trả lời bảy câu K1–K7 ở 20.3**, và **ADR cho phần máy chủ** (11.4):
-   tối thiểu **ADR mới** cộng khoản bổ sung cho **ADR-0019** phải được chấp nhận
-   trước khi có bảng nào được tạo.
+3. ~~Codex trả lời K1–K7~~ — **ĐÃ XONG** (11.3). Còn: **ADR-0027** và khoản bổ
+   sung **ADR-0019 / ADR-0021** đang ở trạng thái **ĐỀ XUẤT**, phải **được chấp
+   nhận** trước khi có bảng nào được tạo.
 
 Khi ba cửa mở: viết **kế hoạch triển khai cho đúng lát 1**, không viết cho cả ba
 lát. Phần màn hình đi qua Impeccable pipeline như mọi việc frontend trong repo
