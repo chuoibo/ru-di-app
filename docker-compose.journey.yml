@@ -1,0 +1,37 @@
+# Hạ tầng routing riêng. Chuẩn bị dữ liệu bằng scripts/prepare_journey_routing.py.
+# Ghép với docker-compose.yml; không publish cổng Valhalla ra Internet.
+services:
+  valhalla:
+    image: ghcr.io/valhalla/valhalla-scripted:3.8.3@sha256:24ef7955899dececb94e26c6dfb89d64fabfae875f980432694b0261eb6c251b
+    environment:
+      server_threads: "2"
+      use_tiles_ignore_pbf: "True"
+      force_rebuild: "False"
+      build_admins: "True"
+      build_time_zones: "False"
+      build_elevation: "False"
+      build_transit: "False"
+      build_tar: "True"
+      use_default_speeds_config: "False"
+      update_existing_config: "False"
+    volumes:
+      - ${MOBILE_ROUTING_DATA_DIR:?Chạy prepare_journey_routing.py trước}:/custom_files
+    expose: ["8002"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,json; r=json.load(urllib.request.urlopen('http://127.0.0.1:8002/status',timeout=3)); assert r.get('has_tiles') is True"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20m
+      retries: 5
+    # Không lưu stdout/stderr có thể chứa request của engine vào Docker logs.
+    logging:
+      driver: "none"
+    restart: unless-stopped
+  api:
+    environment:
+      MOBILE_VALHALLA_URL: http://valhalla:8002
+      MOBILE_ROUTING_GRAPH_VERSION: ${MOBILE_ROUTING_GRAPH_VERSION:?Lấy phiên bản từ graph-manifest.json}
+    # App vẫn hoạt động nếu routing đang dựng graph; preview báo chưa sẵn sàng.
+    depends_on:
+      valhalla:
+        condition: service_started

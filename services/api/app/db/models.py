@@ -1213,6 +1213,11 @@ class Outing(Base):
     __tablename__ = "outings"
     __table_args__ = (
         CheckConstraint("ends_on >= starts_on", name="dates_in_order"),
+        CheckConstraint("timeline_revision >= 0", name="timeline_revision_nonnegative"),
+        CheckConstraint("itinerary_version IN (1, 2)", name="itinerary_version_known"),
+        CheckConstraint(
+            "jsonb_typeof(itinerary_days) = 'array'", name="itinerary_days_array"
+        ),
         CheckConstraint("headcount > 0", name="headcount_positive"),
         CheckConstraint("budget_per_person_vnd >= 0", name="budget_not_negative"),
         CheckConstraint("title <> ''", name="title_not_blank"),
@@ -1236,6 +1241,15 @@ class Outing(Base):
         UUID(as_uuid=True),
         ForeignKey("people.id", name="fk_outings_created_by"),
         nullable=False,
+    )
+    timeline_revision: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    itinerary_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="1"
+    )
+    itinerary_days: Mapped[list] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     starts_on: Mapped[date] = mapped_column(Date, nullable=False)
@@ -1262,6 +1276,14 @@ class OutingStop(Base):
         CheckConstraint("minute_of_day BETWEEN 0 AND 1439", name="minute_in_day"),
         CheckConstraint("position >= 0", name="position_not_negative"),
         CheckConstraint("label <> ''", name="label_not_blank"),
+        CheckConstraint(
+            "duration_minutes IS NULL OR duration_minutes BETWEEN 0 AND 1440",
+            name="duration_in_day",
+        ),
+        CheckConstraint(
+            "(meeting_lat IS NULL AND meeting_lng IS NULL AND meeting_label IS NULL) OR (meeting_lat IS NOT NULL AND meeting_lng IS NOT NULL AND meeting_label IS NOT NULL AND meeting_lat BETWEEN -90 AND 90 AND meeting_lng BETWEEN -180 AND 180 AND length(trim(meeting_label)) > 0 AND place_id IS NULL)",
+            name="meeting_point_valid",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -1283,6 +1305,14 @@ class OutingStop(Base):
     # refuses a key it does not know at write time.
     # Optional: a stop may be somewhere the catalogue has never heard of.
     place_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    day: Mapped[date | None] = mapped_column(Date, nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    time_locked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+    meeting_lat: Mapped[float | None] = mapped_column(Float, nullable=True)
+    meeting_lng: Mapped[float | None] = mapped_column(Float, nullable=True)
+    meeting_label: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class OutingStopCheckin(Base):
