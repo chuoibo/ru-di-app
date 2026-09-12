@@ -281,13 +281,18 @@ export function toUuTien(ds: readonly ToGiay[], toiId: string): ToGiay | undefin
 
 /**
  * What closing the notebook would do, for the preview step (spec §7.6, plan
- * `DongSo`): every sheet still alive is locked, every open proposal is
- * cancelled. Counts only; the server's `close/preview` is the source of truth
- * on the live build.
+ * `DongSo`): sheets still being decided are cancelled, plans that stand are
+ * locked, open consent proposals are cancelled. Counts only; the server's
+ * `close/preview` is the source of truth on the live build (its wire adds
+ * `so_to_huy` next to `so_to_khoa`; a preview that called a draft «khoá» was
+ * read as a lie against the «Đã bỏ» that followed).
  */
-export function demHauQuaDongSo(ds: readonly ToGiay[], soDeNghiCho: number): { so_to_khoa: number; so_de_nghi_huy: number } {
+export function demHauQuaDongSo(ds: readonly ToGiay[], soDeNghiCho: number): { so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } {
   return {
-    so_to_khoa: ds.filter((to) => !TRANG_THAI_CUOI.includes(to.state)).length,
+    // Spec §7.6 draws the line the preview must say out loud: a sheet still
+    // being decided is CANCELLED; a plan that stands is LOCKED, read only.
+    so_to_huy: ds.filter((to) => TRANG_THAI_MO.includes(to.state)).length,
+    so_to_khoa: ds.filter((to) => to.state === "chot" || to.state === "da_di").length,
     so_de_nghi_huy: Math.max(0, soDeNghiCho),
   };
 }

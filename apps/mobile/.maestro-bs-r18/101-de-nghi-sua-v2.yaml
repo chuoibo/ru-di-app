@@ -17,6 +17,10 @@ appId: com.lakiet.rudi
     timeout: 15000
 - tapOn: "Gửi cho người ấy"
 - extendedWaitUntil:
+    visible: "Bản trải nghiệm: đóng vai người ấy"
+    timeout: 15000
+- tapOn: "Bản trải nghiệm: đóng vai người ấy"
+- extendedWaitUntil:
     visible: "(Bản trải nghiệm) Người kia đề nghị sửa giờ"
     timeout: 15000
 - tapOn: "(Bản trải nghiệm) Người kia đề nghị sửa giờ"

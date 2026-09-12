@@ -69,7 +69,7 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   toMo: ToGiay | undefined;
   /** Rows under the open sheet: everything else, newest first. */
   toKhac: readonly ToGiay[];
-  xemTruocDongSo: () => { so_to_khoa: number; so_de_nghi_huy: number };
+  xemTruocDongSo: () => { so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number };
 
   deNghiLapSo: () => void;
   deNghiBatDoi: () => void;
@@ -115,7 +115,6 @@ function seed(): TrangThaiSoDoi {
 }
 
 const bayGio = () => new Date().toISOString();
-const moc = (to: ToGiay) => to.versions[to.versions.length - 1]?.sent_at ?? "";
 
 export function SoDoiProvider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<TrangThaiSoDoi>(seed);
@@ -124,7 +123,11 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo<SoDoiApi>(() => {
     const toMo = s.daDong ? undefined : toUuTien(s.toGiay, toi);
-    const toKhac = [...s.toGiay].filter((t) => t.id !== toMo?.id).sort((a, b) => (moc(b) > moc(a) ? 1 : moc(b) < moc(a) ? -1 : 0));
+    // Newest sheet first by when it was CREATED (list order), not by its last
+    // `sent_at`: a dropped draft has none and sank to the bottom, a withdrawn
+    // sheet jumped to the top, and two screens showed the same list in two
+    // orders (blind read 12/09).
+    const toKhac = [...s.toGiay].filter((t) => t.id !== toMo?.id).reverse();
     const daCoToMo = s.toGiay.some((t) => ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(t.state));
     return {
       ...s,

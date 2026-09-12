@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
-import { type ToGiay, cauTrangThai, khacGi, nutChoTo, phienBan, phienBanTruoc } from "../../to-giay/to-giay";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc } from "../../to-giay/to-giay";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -15,15 +15,25 @@ import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
  * column, the stop in `body` -- so the sheet reads as a note, not a form. The
  * reason («Vì: …») stands UNDER the sheet, outside it, in `inkSoft`: inside
  * the third row it made the rows unequal and the fold lose its meaning (blind
- * read 12/09). The state is a `Stamp` with a readable word, never a colour
- * alone (spec §12.1), and the whole sheet is one accessibility element whose
- * label is `cauTrangThai`, so a screen reader hears where things stand before
- * the rows.
+ * read 12/09). It is the OUTING's reason, the first version's; a later
+ * version's reason is the reason for the change and belongs in the «đổi gì»
+ * block, which shows only while the sheet is still being decided -- a diff
+ * on a memory read as noise (blind read 12/09, Phase 2).
  *
- * Buttons come from `nutChoTo`: two primaries side by side at 143dp on a
- * 360dp phone (`soft` «Ừ» · `outline` «Đề nghị sửa»), stacked under large
- * text; «Tuần này nghỉ» is a `ghost` line under them, 48dp tall, because it
- * must stay reachable until `chot` and never compete with the answer.
+ * The state is a `Stamp` with a readable word, never a colour alone (spec
+ * §12.1), and the word is the READER's: the same `da_gui` sheet says «Đã gửi»
+ * to its sender and «Gửi cho bạn» to its recipient. Coral on the stamp is for
+ * a sheet that still asks something; a plan, a memory, a closed week is a
+ * fact and stamps in ink, so the one coral lead on the surface stays with the
+ * button that asks (spec §16.4; blind read: a filled coral «KÝ ỨC» beat the
+ * footer button to the eye).
+ *
+ * Buttons come from `nutChoTo`: the first primary is `solid`, the second
+ * `outline` -- `soft` lost to `outline` in a blind read, the reverse of what
+ * spec §15.3 assumed -- side by side at 143dp on a 360dp phone and stacked
+ * under large text. «Tuần này nghỉ», «Đã đi rồi», «Huỷ buổi này», «Bỏ bản
+ * phác này» are `ghost` lines: they must stay reachable, and none of them is
+ * the thing to do now.
  *
  * Nothing here is optimistic: every handler is the screen's, and the screen
  * calls it after the notebook has moved (§3.3 rule 6).
@@ -64,10 +74,14 @@ export function ToLoiRu({
   const { fontScale } = useWindowDimensions();
   const doc = chuLon(fontScale);
   const pb = phienBan(to);
+  const dauTien = phienBan(to, 1);
   const cau = cauTrangThai(to, toiId);
   const nut = nutChoTo(to, toiId);
-  const doi = pb ? khacGi(pb, phienBanTruoc(to)) : [];
+  const dangQuyet = ["da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(to.state);
+  const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
+  const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
+  const laKeHoach = to.state === "chot" || to.state === "da_di" || to.state === "da_giu";
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -81,8 +95,9 @@ export function ToLoiRu({
     giu: onGiu,
     huy: onHuy,
   };
-  const chinh = nut.filter((n) => n !== "nghi_tuan" && n !== "bo" && n !== "huy" && bam[n]);
-  const phu = nut.filter((n) => (n === "nghi_tuan" || n === "bo" || n === "huy") && bam[n]);
+  const PHU = new Set(["nghi_tuan", "bo", "huy", "da_di"]);
+  const chinh = nut.filter((n) => !PHU.has(n) && bam[n]);
+  const phu = nut.filter((n) => PHU.has(n) && bam[n]);
 
   return (
     <View style={styles.khoi} testID={testID}>
@@ -103,26 +118,33 @@ export function ToLoiRu({
           <VetGap />
           <View style={styles.hangCuoi}>
             <Text style={[typography.label, { color: colors.inkSoft, flexShrink: 1 }]}>{pb?.content.ngay ?? ""}</Text>
-            <Stamp label={NHAN[to.state]} tone="accent" variant={to.state === "chot" || to.state === "da_di" || to.state === "da_giu" ? "ink" : "outline"} testID={testID ? `${testID}-stamp` : undefined} />
+            <Stamp
+              label={nhanDau(to, toiId)}
+              testID={testID ? `${testID}-stamp` : undefined}
+              tone={TRANG_THAI_MO.includes(to.state) ? "accent" : "ink"}
+              variant={laKeHoach ? "ink" : "outline"}
+            />
           </View>
         </View>
       </ToGiayView>
-      {pb?.ly_do ? (
-        <Text style={[typography.label, styles.lyDo, { color: colors.inkSoft }]}>Vì: {pb.ly_do}</Text>
-      ) : null}
-      {doi.length > 0 ? (
+      {dauTien?.ly_do ? <Text style={[typography.label, styles.lyDo, { color: colors.inkSoft }]}>Vì: {dauTien.ly_do}</Text> : null}
+      {doi.length > 0 || lyDoSua ? (
         <View style={[styles.doi, { borderLeftColor: colors.lineStrong }]} testID={testID ? `${testID}-khac-gi` : undefined}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Phiên bản {to.version} đổi gì so với trước:</Text>
           {doi.map((d) => (
             <Text key={d} style={[typography.label, { color: colors.ink }]}>· {d}</Text>
           ))}
+          {lyDoSua ? <Text style={[typography.label, { color: colors.inkSoft }]}>Vì sao sửa: {lyDoSua}</Text> : null}
         </View>
       ) : null}
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{cau}</Text>
       {to.keeps.length > 0 ? (
         <View style={styles.giu}>
           {to.keeps.map((k) => (
-            <Text key={k.id} style={[typography.note, { color: colors.inkSoft }]}>Giữ lại: {k.line}</Text>
+            <Text key={k.id} style={[typography.body, { color: colors.ink }]}>
+              <Text style={{ color: colors.inkSoft }}>Giữ lại: </Text>
+              {k.line}
+            </Text>
           ))}
         </View>
       ) : null}
@@ -130,7 +152,7 @@ export function ToLoiRu({
         <View style={[styles.nutChinh, doc && styles.nutDoc, { gap: space.sm }]}>
           {chinh.map((n, i) => (
             <View key={n} style={doc ? styles.nutFull : styles.nutNua}>
-              <RudiButton label={CHU_NUT[n]} onPress={bam[n]!} variant={i === 0 ? "soft" : "outline"} />
+              <RudiButton label={CHU_NUT[n]} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
             </View>
           ))}
         </View>
@@ -142,7 +164,28 @@ export function ToLoiRu({
   );
 }
 
-/** The readable word on the stamp. Every state has one (spec §12.1). */
+/**
+ * The readable word on the stamp, from the reader's side. Every state has one
+ * (spec §12.1); the ones that depend on who sent the current version say so.
+ */
+export function nhanDau(to: ToGiay, toiId: string): string {
+  const pb = phienBan(to);
+  const toiGui = pb?.author_type === "human" && pb.sent_by === toiId;
+  switch (to.state) {
+    case "da_gui":
+      return pb?.author_type === "nep" ? "Nếp gửi hộ" : toiGui ? "Đã gửi" : "Gửi cho bạn";
+    case "da_xem":
+      return toiGui ? "Đã xem" : "Chờ bạn";
+    case "dong_y":
+      return daDongY(to, "toi", toiId) ? "Bạn đã ừ" : "Người ấy đã ừ";
+    case "rut":
+      return toiGui ? "Bạn đã rút" : "Đã rút";
+    default:
+      return NHAN[to.state];
+  }
+}
+
+/** Role-neutral words, for rows and for the states that read the same from both sides. */
 export const NHAN: Record<ToGiay["state"], string> = {
   nhap: "Bản phác",
   da_gui: "Đã gửi",

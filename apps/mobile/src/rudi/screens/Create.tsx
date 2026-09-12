@@ -19,7 +19,7 @@ const ACTIONS: { icon: IconName; title: string; detail?: string; href: string; t
   { icon: "aperture-outline", title: "Đăng story", detail: "Một tấm 24 giờ, chỉ bạn bè thấy", href: "/stories/new", tone: "accent" },
   // The one entry the two-person notebook adds here (spec «Nếp truyền giấy»
   // §20.1, Lead): a sheet to ONE person, into the pair's notebook, not the group's.
-  { icon: "mail-outline", title: "Rủ một người đi chơi", detail: "Nếp phác sẵn, bạn gửi", href: "/hai-nguoi/chon-nguoi", tone: "accent" },
+  { icon: "document-text-outline", title: "Rủ một người đi chơi", detail: "Một tờ giấy cho hai người, mỗi tuần", href: "/hai-nguoi/chon-nguoi", tone: "accent" },
 ];
 
 /**

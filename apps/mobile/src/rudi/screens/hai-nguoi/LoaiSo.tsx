@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, Segmented } from "../../ui";
+import { Stamp } from "../../ui/Stamp";
 import { Sheet } from "../../ui/Sheet";
 
 /**
@@ -12,12 +13,15 @@ import { Sheet } from "../../ui/Sheet";
  */
 export function LoaiSo({ open, onClose, batDoi, dangCho, onChonDoi, onChonBan, nguoiKiaDongY, testID }: { open: boolean; onClose: () => void; batDoi: boolean; dangCho: boolean; onChonDoi: () => void; onChonBan: () => void; nguoiKiaDongY: (() => void) | null; testID?: string }) {
   const { colors, space } = useRudiTheme();
-  const chon = batDoi || dangCho ? 1 : 0;
+  // Highlight follows what IS, never what is proposed: a lit «Một đôi» while
+  // the other person had not agreed read as already on (blind read 12/09).
+  const chon = batDoi ? 1 : 0;
   return (
     <Sheet accessibilityLabel="Loại sổ" onClose={onClose} open={open} testID={testID ?? "loai-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
         <Heading size="h2" subtitle="Đổi được bất cứ lúc nào. Tờ giấy đã gửi không đổi theo." title="Sổ này là sổ gì?" />
         <Segmented items={["Hai người bạn", "Một đôi"]} onSelect={(i) => (i === 1 ? onChonDoi() : onChonBan())} selected={chon} testIDs={["loai-so-ban", "loai-so-doi"]} />
+        {dangCho && !batDoi ? <Stamp label="Đã đề nghị" tone="ink" /> : null}
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {batDoi
             ? "Đang là một đôi. Nếp nói chuyện với hai bạn như với một đôi."

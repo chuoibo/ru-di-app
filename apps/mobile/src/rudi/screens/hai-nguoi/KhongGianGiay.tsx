@@ -37,7 +37,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   const so = useSoDoi();
-  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat">(null);
+  const [mo, setMo] = useState<null | "de-nghi-sua" | "giu" | "lap-so" | "bat-doi" | "rang-buoc" | "dong-so" | "loai-so" | "cai-dat" | "nguoi-kia">(null);
   const daRu = useRef(false);
 
   // `?ru=1` from «Rủ một người đi chơi»: draft straight away, once, and only
@@ -118,55 +118,20 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
   return (
     <RudiScreen
       footer={
-        !so.daDong && so.lapSo && !dangCoToMo ? (
+        // No second lead while a plan stands: with «Đã đi rồi» and «Huỷ buổi
+        // này» on the sheet, a coral «Rủ đi chơi» underneath made three things
+        // to do on one frame (blind read 12/09).
+        !so.daDong && so.lapSo && !dangCoToMo && !(toMo && (toMo.state === "chot" || toMo.state === "da_di")) ? (
           <View style={styles.footer}>
             <RudiButton label="Rủ đi chơi" onPress={() => void so.ruDiChoi()} />
           </View>
         ) : undefined
       }
       footerInset={12}
-      header={
-        <TopBar
-          back
-          right={<IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />}
-          subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hai người bạn · ${so.tenNguoiKia}`}
-          title="Tờ giấy của hai mình"
-        />
-      }
-      testID="khong-gian-giay"
-    >
-      <View style={[styles.than, { gap: space.lg }]}>
-        {than}
-        {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
-          <View style={[styles.dev, { borderColor: colors.line }]} testID="giay-ban-trai-nghiem">
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Bản trải nghiệm: máy này đóng cả vai người ấy.</Text>
-            {toMo.state === "da_gui" ? <RudiButton compact label="(Bản trải nghiệm) Người kia xem" onPress={() => so.nguoiKia?.xem(toMo.id)} variant="ghost" /> : null}
-            <RudiButton compact label="(Bản trải nghiệm) Người kia đồng ý" onPress={() => so.nguoiKia?.dongY(toMo.id)} variant="ghost" />
-            <RudiButton
-              compact
-              label="(Bản trải nghiệm) Người kia đề nghị sửa giờ"
-              onPress={() => {
-                const pb = phienBan(toMo);
-                if (!pb) return;
-                const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: c.gio === "19:00" ? "18:00" : "19:00" } : c));
-                so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, "Sớm hơn một chút.");
-              }}
-              variant="ghost"
-            />
-          </View>
-        ) : null}
-        {so.toKhac.length > 0 ? (
-          <View style={{ gap: space.sm }}>
-            <Heading size="h2" title="Những tuần trước" />
-            <NhomHang>
-              {so.toKhac.map((t) => (
-                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${phienBan(t)?.content.ngay ?? ""}`} />
-              ))}
-            </NhomHang>
-          </View>
-        ) : null}
-      </View>
-
+      // Sheets ride the screen's overlay so the scrim covers the footer too
+      // (a sheet drawn among the children left «Rủ đi chơi» lit beneath it).
+      overlay={
+        <>
       <Sheet accessibilityLabel="Cài đặt sổ" onClose={dong} open={mo === "cai-dat"} testID="cai-dat-so">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
           <Heading size="h2" title="Sổ hai người" />
@@ -203,6 +168,58 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
       <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={so.deNghiBatDoi} onClose={dong} open={mo === "loai-so"} />
       <RangBuoc nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => { so.datRangBuoc(rb); dong(); }} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
       <DongSo onClose={dong} onDong={() => { so.dongSo(); dong(); }} open={mo === "dong-so"} xemTruoc={so.xemTruocDongSo()} />
+      <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
+        <View style={{ gap: space.sm, paddingBottom: 8 }}>
+          <Heading size="h2" subtitle="Bản trải nghiệm: máy này đóng cả vai người ấy. Mỗi nút là một việc người ấy làm trên máy của họ." title="Đóng vai người ấy" />
+          {toMo && toMo.state === "da_gui" ? <RudiButton label="(Bản trải nghiệm) Người kia xem" onPress={() => { so.nguoiKia?.xem(toMo.id); dong(); }} variant="outline" /> : null}
+          {toMo ? <RudiButton label="(Bản trải nghiệm) Người kia đồng ý" onPress={() => { so.nguoiKia?.dongY(toMo.id); dong(); }} variant="outline" /> : null}
+          {toMo ? (
+            <RudiButton
+              label="(Bản trải nghiệm) Người kia đề nghị sửa giờ"
+              onPress={() => {
+                const pb = phienBan(toMo);
+                if (!pb) return;
+                const chang = pb.content.chang.map((c, i) => (i === 0 ? { ...c, gio: c.gio === "19:00" ? "18:00" : "19:00" } : c));
+                so.nguoiKia?.deNghiSua(toMo.id, { ...pb.content, chang }, "Sớm hơn một chút.");
+                dong();
+              }}
+              variant="outline"
+            />
+          ) : null}
+          <RudiButton label="Thôi" onPress={dong} variant="ghost" />
+        </View>
+      </Sheet>
+        </>
+      }
+      header={
+        <TopBar
+          back
+          right={<IconButton accessibilityLabel="Cài đặt sổ" icon="settings-outline" onPress={() => setMo("cai-dat")} quiet />}
+          subtitle={so.batDoi ? `Một đôi · ${so.tenNguoiKia}` : `Hai người bạn · ${so.tenNguoiKia}`}
+          title="Tờ giấy của hai mình"
+        />
+      }
+      testID="khong-gian-giay"
+    >
+      <View style={[styles.than, { gap: space.lg }]}>
+        {than}
+        {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
+          // One quiet row, not three coral lines: the tester's table must not
+          // count among the things the person can do (blind read 12/09).
+          <ListRow icon="swap-horizontal-outline" onPress={() => setMo("nguoi-kia")} subtitle="Xem, ừ, hay đề nghị sửa thay người ấy" title="Bản trải nghiệm: đóng vai người ấy" />
+        ) : null}
+        {so.toKhac.length > 0 ? (
+          <View style={{ gap: space.sm }}>
+            <Heading size="h2" title="Những tuần trước" />
+            <NhomHang>
+              {so.toKhac.map((t) => (
+                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${phienBan(t)?.content.ngay ?? ""}`} />
+              ))}
+            </NhomHang>
+          </View>
+        ) : null}
+      </View>
+
     </RudiScreen>
   );
 }

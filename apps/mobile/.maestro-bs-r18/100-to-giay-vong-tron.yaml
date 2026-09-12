@@ -24,11 +24,19 @@ appId: com.lakiet.rudi
     timeout: 15000
 - assertVisible: "Đã gửi, chờ trả lời. Người ấy chưa xem."
 - takeScreenshot: r18-100-da-gui
+- tapOn: "Bản trải nghiệm: đóng vai người ấy"
+- extendedWaitUntil:
+    visible: "(Bản trải nghiệm) Người kia xem"
+    timeout: 15000
 - tapOn: "(Bản trải nghiệm) Người kia xem"
 - extendedWaitUntil:
     visible: "Đã xem"
     timeout: 15000
 - assertVisible: "Người ấy đã xem, chưa trả lời."
+- tapOn: "Bản trải nghiệm: đóng vai người ấy"
+- extendedWaitUntil:
+    visible: "(Bản trải nghiệm) Người kia đồng ý"
+    timeout: 15000
 - tapOn: "(Bản trải nghiệm) Người kia đồng ý"
 - extendedWaitUntil:
     visible: "Đã chốt"

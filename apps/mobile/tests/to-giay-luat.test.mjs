@@ -164,7 +164,7 @@ test("một tờ đang mở: việc cần quyết trước, rồi tờ đang ch�
   assert.equal(toUuTien([dangCho, nhapCuaToi], TOI)?.id, "nhap", "bản phác chưa gửi là việc của tôi bây giờ");
 });
 
-test("đóng sổ: đếm tờ còn sống sẽ khoá và lời đề nghị sẽ huỷ", () => {
+test("đóng sổ: đếm tờ đang chờ sẽ huỷ, tờ đã chốt sẽ khoá, lời đề nghị sẽ huỷ", () => {
   const ds = [
     to("nhap", [phienBan(1, null)]),
     to("da_gui", [phienBan(1, TOI)]),
@@ -172,7 +172,7 @@ test("đóng sổ: đếm tờ còn sống sẽ khoá và lời đề nghị s�
     to("het_han", [phienBan(1, TOI)]),
     to("da_giu", [phienBan(1, TOI, { their_agreed: true })]),
   ];
-  assert.deepEqual(demHauQuaDongSo(ds, 1), { so_to_khoa: 3, so_de_nghi_huy: 1 });
-  assert.deepEqual(demHauQuaDongSo([], 0), { so_to_khoa: 0, so_de_nghi_huy: 0 });
-  assert.deepEqual(demHauQuaDongSo(ds, -2), { so_to_khoa: 3, so_de_nghi_huy: 0 }, "số âm không lọt");
+  assert.deepEqual(demHauQuaDongSo(ds, 1), { so_to_huy: 2, so_to_khoa: 1, so_de_nghi_huy: 1 }, "nháp + đã gửi huỷ; chốt khoá; hết hạn và đã giữ không đếm");
+  assert.deepEqual(demHauQuaDongSo([], 0), { so_to_huy: 0, so_to_khoa: 0, so_de_nghi_huy: 0 });
+  assert.deepEqual(demHauQuaDongSo(ds, -2), { so_to_huy: 2, so_to_khoa: 1, so_de_nghi_huy: 0 }, "số âm không lọt");
 });
