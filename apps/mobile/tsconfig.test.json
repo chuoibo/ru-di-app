@@ -260,6 +260,8 @@
     "src/rudi/art/ky-hoa.ts",
     // Bản tính của sổ: một chỗ khai khác biệt giữa các loại sổ; tests/so-ban-tinh-mot-cho.test.mjs
     "src/rudi/so/ban-tinh.ts",
+    // Tờ giấy của sổ hai người: bảy luật §3.3 + hai luật ADR-0027; tests/to-giay-luat.test.mjs
+    "src/rudi/to-giay/to-giay.ts",
     // Lưới ô chất liệu của `ui/Grain.tsx`: compile để test pin «phủ hết hộp» và «≤ 60 view».
     "src/rudi/ui/luoi-chat-lieu.ts",
     // Nhịp chuyển động (UI v2): compile để test pin bốn bậc, luật Reduce
