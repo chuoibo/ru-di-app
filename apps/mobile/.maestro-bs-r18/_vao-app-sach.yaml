@@ -39,6 +39,12 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
     timeout: 150000
+# WHOSE tree is on the device. The emulator is shared: another lane's Metro on
+# another port can repoint the dev client between two runs, and then every
+# screenshot in the table is of somebody else's branch while every flow that
+# only reads the group fixture still passes. The welcome screen prints the
+# fingerprint Metro was started with; pass it with `-e TREE_FINGERPRINT=`.
+- assertVisible: ".*${TREE_FINGERPRINT}.*"
 - tapOn: "Rủ Đi thôi!"
 - extendedWaitUntil:
     visible: "Vào bản trải nghiệm Team Đà Lạt"
