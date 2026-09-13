@@ -2887,59 +2887,75 @@
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47a-chua-co-so.png",
-      "sha256": "e382d86159cf8e997e8df3bd7a7654bb7bf2eaa9731987b90f51a1589b41c125",
+      "sha256": "b58643b8a457f59b1c07f2875a65fc155fdb92223e488843836010dee09d2cfd",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47b-bac-lap-so.png",
-      "sha256": "31720b3d07a3ac6389e0dab71561b757da428dc7ea0d510b14a4d75f42a8f430",
+      "sha256": "b806a107fd32d02a6fb0d74d52870fc0a60cdeffdb76a18853df1e7159ad6191",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47c-ho-de-nghi.png",
-      "sha256": "48e206c5e5f065a688c0b96febd0f2553d93571dcb49c575406015d4b52144d7",
+      "sha256": "2fed36fc047401ff4f6bbd403a35ddc97e3c54e08e50730f8cc9992e294b1adc",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47d-so-da-mo.png",
-      "sha256": "bf7035e0db7f81a20443ad17b8d49254cee22761d51ef1652615b7ca1d303893",
+      "sha256": "ac9b40dd4f58585d5f8da587a845913350b1446de8cad2424a5cb65b4c515366",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47e-ban-phac.png",
-      "sha256": "7608c0055367fa6fe26284a9e5c3b7c44f40612a80b24bb0e38153841079c293",
+      "sha256": "91128806d8a9df3488a5195cf8a5ee6482ff379375ef9bb0876f1c75c2bf7138",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47f-nhan-duoc.png",
-      "sha256": "55396d6333e0d983d5c4df0a91da034d94567c2565ab2aa334a6f549336d400d",
+      "sha256": "5bbe4cf5bbcd69658ebf8ae3a587f619caae247ae487c9bcb86b82a026ad1a05",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/claude/2026-09-14/to-giay-live/47g-da-chot.png",
-      "sha256": "0afea8d28f211e715276cbc1993122768dde5cdf0b3548cf41dd9890e646799c",
+      "sha256": "82122f735dd8363b43e0662cb4219de09b778cc4dff48ba82a3c5e6703b05fb5",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật — đề nghị lập sổ, người kia đồng ý, sổ mở, phác, gửi, ừ, chốt"
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47h-sau-chot.png",
+      "sha256": "6ad7a777ea529c130cf6488fcc9a1199e531788352774fc9affa21da00154096",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47h-xac-nhan-huy.png",
+      "sha256": "be44c5ccfc121c4dc4afb32e5f88d20174a3abbc915f014812d7558698cf032e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
     },
     {
       "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-assignment.png",

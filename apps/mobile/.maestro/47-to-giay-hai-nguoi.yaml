@@ -133,10 +133,10 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Tờ giấy của hai mình"
 - extendedWaitUntil:
-    visible: "Ừ"
+    visible: "Ừ, hẹn.*"
     timeout: 60000
 - takeScreenshot: 47f-nhan-duoc
-- tapOn: "Ừ"
+- tapOn: "Ừ, hẹn.*"
 # Hai người đồng ý cùng một phiên bản: máy chủ chốt và sinh kèo.
 - extendedWaitUntil:
     visible: "Đã chốt"

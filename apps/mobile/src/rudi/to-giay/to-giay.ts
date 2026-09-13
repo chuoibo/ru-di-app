@@ -213,7 +213,12 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
  * accessibility label of the open sheet and printed under it, so it names the
  * state in words, never by colour alone (spec §12.1).
  */
-export function cauTrangThai(to: ToGiay, toiId: string): string {
+export function cauTrangThai(to: ToGiay, toiId: string, tenNguoiKia?: string): string {
+  // «Ca vừa gửi» trả lời «ai đang chờ ai» trong một cái liếc; «Người ấy vừa
+  // gửi» bắt người đọc dựng lại xem đó là ai. Tên là tuỳ chọn vì hàng đã khép
+  // và ca test thuần không có nó, và khi vắng thì câu cũ vẫn đúng.
+  const ho = tenNguoiKia?.trim() || "Người ấy";
+  const hoThuong = tenNguoiKia?.trim() || "người ấy";
   const pb = phienBan(to);
   const toiGui = pb?.author_type === "human" && pb.sent_by === toiId;
   const nep = pb?.author_type === "nep";
@@ -222,13 +227,15 @@ export function cauTrangThai(to: ToGiay, toiId: string): string {
       return "Bản phác, chỉ bạn thấy. Gửi đi thì người ấy mới nhận.";
     case "da_gui":
       if (nep) return "Nếp gửi hộ vì chưa ai mở lời. Cần cả hai cùng ừ.";
-      return toiGui ? "Đã gửi, chờ trả lời. Người ấy chưa xem." : "Người ấy vừa gửi. Bạn ừ, hay đề nghị sửa?";
+      return toiGui ? `Đã gửi, chờ trả lời. ${ho} chưa xem.` : `${ho} vừa gửi. Bạn ừ, hay đề nghị sửa?`;
     case "da_xem":
-      return toiGui ? "Người ấy đã xem, chưa trả lời." : "Bạn đã mở. Ừ, hay đề nghị sửa?";
+      return toiGui ? `${ho} đã xem, chưa trả lời.` : "Bạn đã mở. Ừ, hay đề nghị sửa?";
     case "de_nghi_sua":
       return "Có đề nghị sửa. Phiên bản mới đang chờ.";
     case "dong_y":
-      return daDongY(to, "toi", toiId) ? "Bạn đã ừ. Chờ người ấy ừ cùng phiên bản này." : "Người ấy đã ừ. Còn bạn.";
+      return daDongY(to, "toi", toiId)
+        ? `Bạn đã ừ. Chờ ${hoThuong} ừ cùng phiên bản này.`
+        : `${ho} đã ừ. Còn bạn.`;
     case "chot":
       return `Đã chốt. Hẹn ${pb ? ngayDocDuoc(pb.content.ngay) : "ngày đã ghi"}.`;
     case "da_di":

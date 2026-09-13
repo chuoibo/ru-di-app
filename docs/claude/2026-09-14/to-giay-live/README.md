@@ -44,6 +44,28 @@ buổi tối đọc ra hai thứ tiếng.
   `tests/test_maestro_flows_are_all_reachable.py` đóng lỗ ấy.
 - **Bảng đầy đủ dừng ở flow 45** nếu thiếu `MOBILE_DATABASE_URL`, trước khi tới flow mới.
 
+## Vòng sửa sau `impeccable-finish-reviewer`
+
+Reviewer chạy trong context mới, **đọc mù ba ảnh trước khi biết ý đồ**, và trả về tám mục với
+phán quyết `fix`. Tám mục sửa trong một đợt, dựng lại, chụp lại cùng một lượt flow. Mục nặng
+nhất, và lý do vòng này tồn tại:
+
+**Việc không lấy lại được nổ ra sau một cú chạm.** «Huỷ buổi này» xoá một buổi người kia ĐÃ
+đồng ý và đang trông — nó biến mất trên máy của họ — và nó là một dòng chữ coral trần cách tờ
+giấy 100px, nối thẳng vào `so.huy`. Ba việc khác cũng thế: bỏ bản phác, rút lại, nghỉ tuần.
+Bản dựng này có luật riêng «việc không lấy lại được phải nói ra nó làm gì trước khi làm», và
+`DongSo` đã có sẵn khuôn ấy. `XacNhanViec` là cùng khuôn cho bốn việc còn lại (`47h`), và câu
+của nó gọi TÊN người kia, vì hậu quả rơi lên họ: «Thứ Bảy 19/09 không còn. De QA đã đồng ý
+buổi này và cũng thấy nó biến mất. Không lấy lại được.»
+
+Bảy mục còn lại: góc gấp và con tem coral bám theo LƯỢT chứ không theo «tờ đang mở» (một tờ
+đã gửi đang chờ người kia vẫn hét lên «làm gì đi», đúng trạng thái mà luật «nhìn một cái biết
+ai đang chờ ai» sinh ra để phục vụ) · hai nút coral cùng chữ «Rủ đi chơi» trên một khung ·
+«Ừ» một âm tiết không nói nó cam kết gì, nay là «Ừ, hẹn Thứ Bảy 19/09» · lối thoát tách khỏi
+nhóm chính bằng một nét · tên người kia vào câu trạng thái và con tem · «GỬI CHO BẠN» in hoa
+đọc ra như mệnh lệnh, nay là «<tên> gửi» · con dấu rơi (`dong`) được soạn sẵn mà chưa bao giờ
+bắn, nay bắn khi trạng thái đổi ngay trên màn.
+
 ## Còn nợ
 
 Ba phép đo trong lát (spec 20.5) và pixel-diff màn hội bạn chưa chạy. Đường hội bạn không đổi
