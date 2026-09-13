@@ -37,6 +37,7 @@ export function BanDo({
   const map = useRef<MapRef>(null);
   const [groups, setGroups] = useState<string[][]>([]);
   const [choosing, setChoosing] = useState<string[]>([]);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const projection = useRef(0);
   const updateGroups = async () => {
     const sequence = ++projection.current;
@@ -60,16 +61,17 @@ export function BanDo({
   const hopBanDau = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
 
   useEffect(() => {
-    if (fitDem === 0) return;
+    if (fitDem === 0 || !viewport.width || !viewport.height) return;
     const hop = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
-    if (!hop) {
-      void cam.current?.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration });
-      return;
-    }
-    void cam.current?.fitBounds(hop, { padding, duration });
-    // Only Fit Journey (fitDem) may yank the camera.
+    // Fit after the map's measured frame reaches native, including a tablet
+    // layout change. A hidden view reports zero and keeps its previous frame.
+    const frame = requestAnimationFrame(() => {
+      if (!hop) void cam.current?.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration });
+      else void cam.current?.fitBounds(hop, { padding, duration });
+    });
+    return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitDem, cameraKey, padding]);
+  }, [fitDem, cameraKey, padding, viewport.width, viewport.height]);
 
   useEffect(() => {
     if (!toi) return;
@@ -80,7 +82,10 @@ export function BanDo({
   }, [toi?.dem, padding]);
 
   return (
-    <View style={styles.fill}>
+    <View style={styles.fill} onLayout={(e) => {
+      const { width, height } = e.nativeEvent.layout;
+      if (width > 0 && height > 0) setViewport((previous) => previous.width === width && previous.height === height ? previous : { width, height });
+    }}>
     <Map
       ref={map}
       attribution
