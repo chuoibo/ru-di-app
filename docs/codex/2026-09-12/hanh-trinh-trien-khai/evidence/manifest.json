@@ -1,0 +1,21 @@
+{
+  "source_commit_at_handoff": "edfb9fef",
+  "device": "emulator-5562",
+  "capture_method": "adb exec-out screencap -p",
+  "data": "synthetic local API; PostgreSQL and Valhalla",
+  "scope": "Mixed implementation checkpoints. See bao-cao.md for intermediate captures; hashes prove integrity, not behavior.",
+  "files": [
+    {"name":"06-suggestion.png","sha256":"21eb2bf44bae0c8e0606dfe3f39a0b5d6659ad0c9932cfccc2832ea2d1779c4a","stage":"intermediate"},
+    {"name":"07-applied-timeline.png","sha256":"82ac17b4d37f4f918f49a01cfa5a37d5bd45c07bf6495a7ec47de30a92e4f019","stage":"intermediate"},
+    {"name":"08-final-light.png","sha256":"556cafff13a2158c209e45856a90ec25454c8d10d170378ad2c21b4e3727d0f7","stage":"native-glyph-renderer"},
+    {"name":"09-final-dark.png","sha256":"a5cd91c8e06b2c4122fe7ae1f651ac8ed52940132bae2dd46b9710352ea4b55b","stage":"native-glyph-renderer"},
+    {"name":"10-final-font2.png","sha256":"78a0c5d6907a8e1ae392b5e9618128535eb685e03c7c9c12bf1789254716112b","stage":"native-font2"},
+    {"name":"11-editor-font2.png","sha256":"cceddd668c2abd32f651cd1cb5fc5c6e2a0df92a96f696532934478991c7ae19","stage":"native-font2"},
+    {"name":"12-conflict-offline.png","sha256":"6c3b2823ca7453e2dc8ea8014e8bfbf36870622f50e293c0b6f96cdffbbd3f3d","stage":"before-dashed-draft-lines"},
+    {"name":"13-draft-retained.png","sha256":"5a6a803481e7d920f278906b611ca530dfda94e8f98ca4cc0de917264aee82b1","stage":"native-offline-draft"},
+    {"name":"14-conflict-compare.png","sha256":"3092d0d0fb8c414a1cc26827cfc68f98512ab710e4c2786eab348ad6bb2e161a","stage":"before-shorter-conflict-label"},
+    {"name":"15-wide.png","sha256":"a4c675ea19177ab73c0d582f5fab3fc74b6fe3b4b05da687e08b465ad6277043","stage":"native-wide"},
+    {"name":"16-empty-day.png","sha256":"787b1e61075a08f6fcec286f075bf825ff98c44efbd63533551d2e218b6cd556","stage":"native-phone-empty-recapture"},
+    {"name":"18-final-proposal.png","sha256":"dc345dc0ee12a97d7a6b37498028c8acb0080d80b7a8709b6ebe225beb8f5a98","stage":"native-proposal-with-road-labels"}
+  ]
+}

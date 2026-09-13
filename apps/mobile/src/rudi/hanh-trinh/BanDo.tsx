@@ -207,7 +207,9 @@ export function BanDo({
     const map = mapRef.current;
     if (!map) return;
     const draw = () => {
-    chooser.current?.remove();
+    // A wheel zoom may settle while a popup button is being pressed. Keep
+    // the popup mounted across marker projection updates so the release
+    // still reaches that button; selection/background clicks close it.
     markers.current.forEach((m) => m.remove());
     const pending = [...mocs];
     const groups: MocBanDo[][] = [];
