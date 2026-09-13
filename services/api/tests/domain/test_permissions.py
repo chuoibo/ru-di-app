@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
+from app.domain import permissions  # noqa: E402
 from app.domain.permissions import (  # noqa: E402
     ACTIONS,
     AuthorizationFacts,
@@ -276,3 +277,155 @@ class FriendGraph(unittest.TestCase):
                     ),
                     "role_not_permitted",
                 )
+
+
+class TestPairNotebookDoors(unittest.TestCase):
+    """Mười tám cửa của sổ hai người (ADR-0027). Mỗi cửa: đúng vai `member`,
+    và không cửa nào mở khi thiếu vị từ của nó."""
+
+    CUA = (
+        "view_pair_notebook",
+        "propose_pair_consent",
+        "grant_pair_consent",
+        "revoke_pair_consent",
+        "draft_pair_paper",
+        "view_pair_paper",
+        "edit_pair_draft",
+        "send_pair_paper",
+        "view_pair_paper_as_recipient",
+        "respond_pair_paper",
+        "withdraw_pair_paper",
+        "skip_pair_week",
+        "record_pair_outing_done",
+        "keep_pair_paper_line",
+        "view_pair_constraints",
+        "edit_pair_constraint",
+        "preview_close_pair_notebook",
+        "close_pair_notebook",
+    )
+
+    def facts(self, *proven: str) -> permissions.AuthorizationFacts:
+        return permissions.AuthorizationFacts(
+            actor_id="a",
+            roles=frozenset({"member"}),
+            resource_id="so-1",
+            proven=frozenset(proven),
+            provenance="test",
+        )
+
+    #: Vị từ của TỪNG cửa, viết tay ở đây, độc lập với `_TABLE`.
+    #:
+    #: Ca `test_thieu_bat_ky_vi_tu_nao_la_dong` dưới kia đọc chính `_TABLE` để
+    #: biết phải thử thiếu cái gì, nên xoá một vị từ khỏi bảng chỉ làm vòng lặp
+    #: NGẮN ĐI — nó vẫn xanh. Một phép đo độc lập đã chứng minh điều đó: bỏ
+    #: `version_current` khỏi `respond_pair_paper` thì cả `tests/domain` lẫn
+    #: `tests/api` vẫn 2320 xanh. Bảng quyền là DỮ LIỆU, và dữ liệu cần một
+    #: bản ghim ở nơi khác thì mới có ai cãi lại được khi nó đổi.
+    #:
+    #: Ghim TẬP, không ghim thứ tự: thứ tự quyết định câu từ chối nào được kể
+    #: khi thiếu hai vị từ cùng lúc, và đó là chuyện câu chữ, có ca riêng.
+    VI_TU = {
+        "view_pair_notebook": {"is_group_member"},
+        "propose_pair_consent": {"is_group_member"},
+        "grant_pair_consent": {"is_invitee", "proposal_in_force"},
+        "revoke_pair_consent": {"is_self"},
+        "draft_pair_paper": {"is_group_member", "cycle_active_or_temporary"},
+        "view_pair_paper": {"may_view_paper"},
+        "edit_pair_draft": {"is_draft_owner"},
+        "send_pair_paper": {"is_draft_owner", "version_current"},
+        "view_pair_paper_as_recipient": {"is_not_version_sender"},
+        "respond_pair_paper": {"is_not_version_sender", "version_current"},
+        "withdraw_pair_paper": {"is_group_member", "paper_unseen_unanswered"},
+        "skip_pair_week": {"is_group_member"},
+        "record_pair_outing_done": {"is_group_member"},
+        "keep_pair_paper_line": {"is_group_member"},
+        "view_pair_constraints": {"is_group_member"},
+        "edit_pair_constraint": {"is_self"},
+        "preview_close_pair_notebook": {"is_group_member"},
+        "close_pair_notebook": {"is_group_member"},
+    }
+
+    def test_muoi_tam_cua_deu_co_trong_bang(self):
+        for action in self.CUA:
+            self.assertIn(action, permissions.ACTIONS, action)
+        self.assertEqual(len(set(self.CUA)), 18)
+
+    def test_danh_sach_nay_khong_the_thieu_mot_cua_moi(self):
+        """Chiều ngược lại: một cửa `pair` thêm sau mà không ai ghi vào đây.
+
+        Danh sách viết tay không tự biết mình thiếu, nên nó phải được đối chiếu
+        với bảng thật chứ không chỉ được đọc từ bảng thật.
+        """
+        trong_bang = {action for action in permissions.ACTIONS if "pair" in action}
+        self.assertEqual(trong_bang, set(self.CUA))
+        self.assertEqual(set(self.VI_TU), set(self.CUA))
+
+    def test_vi_tu_cua_tung_cua_dung_nhu_da_ghim(self):
+        """Xoá một vị từ khỏi một cửa là ĐỎ ở đây, và chỉ ở đây."""
+        for action, mong_doi in self.VI_TU.items():
+            self.assertEqual(
+                set(permissions._TABLE[action]["requires"]),
+                mong_doi,
+                f"{action}: vị từ đã đổi — sửa bảng thì sửa cả bản ghim này",
+            )
+
+    def test_khong_cua_nao_dung_vai_ngoai_member(self):
+        """Sổ hai người không có quản trị viên: không vai nào đủ một mình."""
+        for action in self.CUA:
+            self.assertEqual(permissions._TABLE[action]["roles"], {"member"}, action)
+            self.assertTrue(permissions._TABLE[action]["requires"], action)
+
+    def test_thieu_bat_ky_vi_tu_nao_la_dong(self):
+        for action in self.CUA:
+            requires = permissions._TABLE[action]["requires"]
+            self.assertTrue(permissions.can(action, self.facts(*requires)), action)
+            for bo_qua in requires:
+                thieu = tuple(v for v in requires if v != bo_qua)
+                self.assertEqual(
+                    permissions.denial_reason(action, self.facts(*thieu)),
+                    bo_qua,
+                    f"{action} mở dù thiếu {bo_qua}",
+                )
+
+    def test_nguoi_ngoai_so_khong_mo_duoc_cua_nao(self):
+        khach = permissions.AuthorizationFacts(
+            actor_id="z",
+            roles=frozenset({"guest"}),
+            resource_id="so-1",
+            proven=frozenset(
+                {
+                    "is_group_member",
+                    "is_self",
+                    "is_invitee",
+                    "proposal_in_force",
+                    "cycle_active_or_temporary",
+                    "may_view_paper",
+                    "is_draft_owner",
+                    "version_current",
+                    "is_not_version_sender",
+                    "paper_unseen_unanswered",
+                }
+            ),
+            provenance="test",
+        )
+        for action in self.CUA:
+            self.assertEqual(
+                permissions.denial_reason(action, khach), "role_not_permitted", action
+            )
+
+    def test_doc_to_giay_hep_hon_la_o_trong_so(self):
+        """§3.3 luật 1: bản nháp chỉ chủ thấy, nên cửa đọc tờ KHÔNG nhận
+        `is_group_member` làm đủ."""
+        chi_thanh_vien = self.facts("is_group_member")
+        self.assertEqual(
+            permissions.denial_reason("view_pair_paper", chi_thanh_vien),
+            "may_view_paper",
+        )
+
+    def test_tra_loi_khong_the_la_nguoi_gui_phien_ban_do(self):
+        self.assertEqual(
+            permissions.denial_reason(
+                "respond_pair_paper", self.facts("is_group_member", "version_current")
+            ),
+            "is_not_version_sender",
+        )

@@ -507,6 +507,95 @@ _TABLE: dict[str, dict] = {
         "roles": {"member"},
         "requires": ("is_workspace_owner",),
     },
+    # --- sổ hai người và tờ giấy (ADR-0027) -----------------------------
+    # Eighteen doors for one notebook, and every one of them `member` plus a
+    # predicate: nothing here is a role. A notebook belongs to exactly two
+    # people, so «who you are» is never enough and «which notebook» is always
+    # the question.
+    #
+    # `is_group_member` is reused deliberately and exactly. A pair IS a context
+    # with two ACTIVE memberships (ADR-0021 §2.5), and `post_group_message`
+    # already proves the same fact for the same rows when somebody writes into
+    # a private conversation. Minting `is_pair_member` would create two names
+    # for one fact, which is what #128 cost this repository once already.
+    #
+    # ADR-0027 §4: Nếp is never an actor. There is no action here a non-person
+    # could take, and the one sheet Nếp writes is written by the server on a
+    # person's command (`draft_pair_paper`), which is why that door exists.
+    "view_pair_notebook": {"roles": {"member"}, "requires": ("is_group_member",)},
+    "propose_pair_consent": {"roles": {"member"}, "requires": ("is_group_member",)},
+    # Granting is the other person's act. `is_invitee` is reused for the same
+    # reason `respond_to_friend_request` reuses it: the fact is «this offer was
+    # aimed at one named person and I am that person», and a consent proposal
+    # is that shape. `proposal_in_force` is new because no offer in this
+    # product had a deadline of its own before: a consent nobody answered
+    # inside its window stops being an offer rather than waiting forever.
+    "grant_pair_consent": {
+        "roles": {"member"},
+        "requires": ("is_invitee", "proposal_in_force"),
+    },
+    # Taking consent back is the grantor's act alone, and it is `is_self`
+    # because the row names the person: one half of a pair cannot revoke the
+    # other half's grant, which would let one person lock the other out of a
+    # notebook they both agreed to.
+    "revoke_pair_consent": {"roles": {"member"}, "requires": ("is_self",)},
+    # Asking the notebook for a sheet. Either person may, at any time -- the
+    # turn decides whose name Nếp drafts it FOR, not who may ask (§6.3). The
+    # second predicate is what stops a sheet appearing in a notebook that was
+    # never opened or has been closed; `is_temporary` covers the very first
+    # invitation, which happens before a cycle exists (§14.1).
+    "draft_pair_paper": {
+        "roles": {"member"},
+        "requires": ("is_group_member", "cycle_active_or_temporary"),
+    },
+    # §3.3 rule 1: a draft is not a sent sheet. The other person's machine does
+    # not receive one, so reading is narrower than membership and
+    # `may_view_paper` is proved from `draft_owner_id` for a `nhap` sheet.
+    "view_pair_paper": {"roles": {"member"}, "requires": ("may_view_paper",)},
+    "edit_pair_draft": {"roles": {"member"}, "requires": ("is_draft_owner",)},
+    # Sending pins the version: a client that read v1, waited, and pressed send
+    # after the notebook moved on must not send v1's content as v2.
+    "send_pair_paper": {
+        "roles": {"member"},
+        "requires": ("is_draft_owner", "version_current"),
+    },
+    # The view mark (§7.5) is the recipient's, and the recipient is «whoever
+    # did not send this version». One predicate for both this and answering,
+    # because it is one fact.
+    "view_pair_paper_as_recipient": {
+        "roles": {"member"},
+        "requires": ("is_not_version_sender",),
+    },
+    "respond_pair_paper": {
+        "roles": {"member"},
+        "requires": ("is_not_version_sender", "version_current"),
+    },
+    # ADR-0027: withdrawal is the sender's, and only while nothing has come
+    # back. `paper_unseen_unanswered` is proved from the view and response
+    # rows, never from a flag a client sent.
+    "withdraw_pair_paper": {
+        "roles": {"member"},
+        "requires": ("is_group_member", "paper_unseen_unanswered"),
+    },
+    # «Tuần này nghỉ», recording that the outing happened, and keeping a line
+    # afterwards are all things either person may do: they are facts about a
+    # week the two of them share, not about who wrote what.
+    "skip_pair_week": {"roles": {"member"}, "requires": ("is_group_member",)},
+    "record_pair_outing_done": {"roles": {"member"}, "requires": ("is_group_member",)},
+    "keep_pair_paper_line": {"roles": {"member"}, "requires": ("is_group_member",)},
+    # §6.4: the two constraints live in the shared area, so both may read them;
+    # only their owner may write one, because a constraint is something its
+    # owner says about themselves.
+    "view_pair_constraints": {"roles": {"member"}, "requires": ("is_group_member",)},
+    "edit_pair_constraint": {"roles": {"member"}, "requires": ("is_self",)},
+    # Closing is a two-step door on purpose (§7.6): the preview is a read that
+    # produces the revision the close must carry, so the count somebody agreed
+    # to and the rows being closed are provably the same rows.
+    "preview_close_pair_notebook": {
+        "roles": {"member"},
+        "requires": ("is_group_member",),
+    },
+    "close_pair_notebook": {"roles": {"member"}, "requires": ("is_group_member",)},
 }
 
 ACTIONS = tuple(sorted(_TABLE))

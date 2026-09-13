@@ -1,0 +1,166 @@
+"""`pair_notebook` (ADR-0027 K1, K2, K6; spec «Nếp truyền giấy» §6, §7): consent
+belongs to both people and to one cycle, and closing says what it costs."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from app.domain import pair_notebook
+
+A = "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+B = "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+C = "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+NOW = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
+HAI_NGUOI = (A, B)
+
+
+def cho_phep(person: str, purpose: str, **over) -> dict:
+    return {
+        "person_id": person,
+        "purpose": purpose,
+        "granted_at": NOW - timedelta(hours=1),
+        "revoked_at": None,
+        "proposal_expires_at": NOW + timedelta(days=3),
+        **over,
+    }
+
+
+def test_tu_vung_dong():
+    assert pair_notebook.CYCLE_STATES == ("pending", "active", "closed")
+    assert pair_notebook.CONSENT_PURPOSES == ("lap_so", "bat_doi", "doc_chat")
+    assert pair_notebook.CONSTRAINT_KINDS == ("khong_an_duoc", "dung")
+
+
+def test_mot_nguoi_dong_y_khong_mo_duoc_gi():
+    mot_ben = [cho_phep(A, "lap_so")]
+    assert pair_notebook.granted_purposes(mot_ben, HAI_NGUOI, now=NOW) == frozenset()
+
+
+def test_ca_hai_dong_y_thi_muc_dich_do_mo():
+    ca_hai = [cho_phep(A, "lap_so"), cho_phep(B, "lap_so")]
+    assert pair_notebook.granted_purposes(ca_hai, HAI_NGUOI, now=NOW) == frozenset(
+        {"lap_so"}
+    )
+
+
+def test_bac_duoi_khong_keo_theo_bac_tren():
+    """§6.1: lập sổ không tự thành «Một đôi», và không tự cho Nếp đọc chat."""
+    lap_so = [cho_phep(A, "lap_so"), cho_phep(B, "lap_so")]
+    assert pair_notebook.can_bat_doi(lap_so, HAI_NGUOI, now=NOW) is False
+    assert pair_notebook.chat_consent_active(lap_so, HAI_NGUOI, now=NOW) is False
+
+
+def test_bat_doi_can_dung_hai_nguoi_cua_so_nay():
+    lech = [cho_phep(A, "bat_doi"), cho_phep(C, "bat_doi")]
+    assert pair_notebook.can_bat_doi(lech, HAI_NGUOI, now=NOW) is False
+    dung = [cho_phep(A, "bat_doi"), cho_phep(B, "bat_doi")]
+    assert pair_notebook.can_bat_doi(dung, HAI_NGUOI, now=NOW) is True
+
+
+def test_thu_hoi_mot_ben_la_dong_lai_ngay():
+    ca_hai = [cho_phep(A, "doc_chat"), cho_phep(B, "doc_chat")]
+    assert pair_notebook.chat_consent_active(ca_hai, HAI_NGUOI, now=NOW) is True
+    thu_hoi = [cho_phep(A, "doc_chat", revoked_at=NOW), cho_phep(B, "doc_chat")]
+    assert pair_notebook.chat_consent_active(thu_hoi, HAI_NGUOI, now=NOW) is False
+
+
+def test_chua_bam_dong_y_thi_khong_tinh():
+    chua = [cho_phep(A, "lap_so", granted_at=None), cho_phep(B, "lap_so")]
+    assert pair_notebook.granted_purposes(chua, HAI_NGUOI, now=NOW) == frozenset()
+
+
+def test_loi_de_nghi_het_han_khong_con_la_dong_y():
+    het = [
+        cho_phep(A, "lap_so", proposal_expires_at=NOW - timedelta(seconds=1)),
+        cho_phep(B, "lap_so"),
+    ]
+    assert pair_notebook.granted_purposes(het, HAI_NGUOI, now=NOW) == frozenset()
+
+
+def test_muc_dich_la_khong_biet_thi_bo_qua():
+    la = [cho_phep(A, "doc_het"), cho_phep(B, "doc_het")]
+    assert pair_notebook.granted_purposes(la, HAI_NGUOI, now=NOW) == frozenset()
+
+
+def test_mot_nguoi_thi_khong_co_gi_mo():
+    ca_hai = [cho_phep(A, "lap_so"), cho_phep(A, "lap_so")]
+    assert pair_notebook.granted_purposes(ca_hai, (A,), now=NOW) == frozenset()
+
+
+def to(state: str, paper_id: str, **over) -> dict:
+    return {
+        "id": paper_id,
+        "state": state,
+        "current_version": 1,
+        "expires_at": None,
+        **over,
+    }
+
+
+def test_xem_truoc_dong_so_dem_ba_so_phan_khac_nhau():
+    """Nháp BỎ, tờ đang chờ HUỶ, buổi đã chốt KHOÁ. Gộp là nói sai (Phase 2)."""
+    papers = [
+        to("nhap", "p1"),
+        to("da_gui", "p2"),
+        to("da_xem", "p3"),
+        to("chot", "p4"),
+        to("da_di", "p5"),
+        to("da_giu", "p6"),
+        to("het_han", "p7"),
+    ]
+    ra = pair_notebook.xem_truoc_dong_so(papers, [], now=NOW)
+    assert ra["so_nhap_bo"] == 1
+    assert ra["so_to_huy"] == 2
+    assert ra["so_to_khoa"] == 2
+    assert ra["so_de_nghi_huy"] == 0
+
+
+def test_xem_truoc_dem_to_qua_khung_theo_hieu_luc_khong_theo_cot():
+    qua_khung = to("da_gui", "p1", expires_at=NOW - timedelta(seconds=1))
+    ra = pair_notebook.xem_truoc_dong_so([qua_khung], [], now=NOW)
+    assert ra["so_to_huy"] == 0, "hết khung rồi thì không có gì để huỷ"
+
+
+def test_xem_truoc_dem_loi_de_nghi_con_cho():
+    proposals = [
+        {"id": "d1", "completed_at": None, "expires_at": NOW + timedelta(days=1)},
+        {"id": "d2", "completed_at": NOW, "expires_at": NOW + timedelta(days=1)},
+        {"id": "d3", "completed_at": None, "expires_at": NOW - timedelta(seconds=1)},
+    ]
+    ra = pair_notebook.xem_truoc_dong_so([], proposals, now=NOW)
+    assert ra["so_de_nghi_huy"] == 1
+
+
+def test_revision_doi_khi_co_gi_do_doi_va_giu_nguyen_khi_khong():
+    papers = [to("da_gui", "p1"), to("chot", "p2")]
+    mot = pair_notebook.xem_truoc_dong_so(papers, [], now=NOW)
+    hai = pair_notebook.xem_truoc_dong_so(list(reversed(papers)), [], now=NOW)
+    assert mot["revision"] == hai["revision"], "thứ tự đọc không phải là thay đổi"
+    doi = pair_notebook.xem_truoc_dong_so(
+        [to("da_xem", "p1"), to("chot", "p2")], [], now=NOW
+    )
+    assert doi["revision"] != mot["revision"]
+    them = pair_notebook.xem_truoc_dong_so(
+        papers, [{"id": "d1", "completed_at": None, "expires_at": None}], now=NOW
+    )
+    assert them["revision"] != mot["revision"], "một lời đề nghị mới cũng là thay đổi"
+
+
+def test_so_rong_dem_ra_khong():
+    ra = pair_notebook.xem_truoc_dong_so([], [], now=NOW)
+    assert (
+        ra["so_nhap_bo"],
+        ra["so_to_huy"],
+        ra["so_to_khoa"],
+        ra["so_de_nghi_huy"],
+    ) == (0, 0, 0, 0)
+    assert len(ra["revision"]) == 16
+
+
+def test_loi_cua_so_mang_ma_wire():
+    loi = pair_notebook.NotebookError("notebook_revision_stale")
+    assert loi.code == "notebook_revision_stale"
+    with pytest.raises(pair_notebook.NotebookError):
+        raise loi
