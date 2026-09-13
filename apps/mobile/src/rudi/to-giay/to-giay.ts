@@ -94,6 +94,20 @@ export interface ToGiay {
   versions: readonly PhienBanTo[];
   outing_id: string | null;
   keeps: readonly DongGiu[];
+  /** The Monday of the week this sheet belongs to. One sheet per week (§5.1). */
+  tuan: string;
+  /** When an undecided sheet stops being answerable. Read, never written here. */
+  expires_at: string;
+  /**
+   * May somebody record that this outing happened? **The server decides this**
+   * (§3.3 rule 6), and the client never works it out.
+   *
+   * The fixture build showed «Đã đi rồi» the moment a plan was agreed, days
+   * before the evening. Computing it here would need the phone's clock, and a
+   * phone whose date is wrong would show the button on the wrong day -- the two
+   * of them would be looking at different weeks with no way to tell.
+   */
+  co_the_ghi_da_di: boolean;
 }
 
 export type Ai = "toi" | "nguoi_kia";
@@ -252,7 +266,8 @@ export function nutChoTo(to: ToGiay, toiId: string): NutTo[] {
     case "de_nghi_sua":
       return nghi;
     case "chot":
-      return ["da_di", "huy"];
+      // «Đã đi rồi» only once the day has come, and the server is what says so.
+      return to.co_the_ghi_da_di ? ["da_di", "huy"] : ["huy"];
     case "da_di":
       return ["giu"];
     default:
