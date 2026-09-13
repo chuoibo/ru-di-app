@@ -134,7 +134,7 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
       {onReload ? <RudiButton label="Tải bản mới để đối chiếu" variant="outline" disabled={busy} onPress={() => void onReload()} /> : null}
       {outing.timeline_revision !== draft.expected_revision ? <>
         <Text style={[typography.note, { color: colors.inkSoft }]}>Bản của hội: {outing.stops.map((s) => `${s.at} ${s.label}`).join(" → ")}</Text>
-        <RudiButton label="Bỏ bản nháp, dùng bản của hội" variant="outline" disabled={busy} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
+        <RudiButton label="Bỏ nháp, dùng bản mới" accessibilityLabel="Bỏ bản nháp, dùng bản của hội" variant="outline" disabled={busy} onPress={() => { invalidate(nhapTuKeo(outing)); setUndo(null); setConflict(false); }} />
       </> : null}
     </View> : null}
     <View style={styles.row}><RudiButton compact full={false} label="Sửa trang ngày" variant="outline" onPress={() => { setStopId(che.selectedActivityId); setEditing(true); }} /><RudiButton compact full={false} label="Tính lại đường" variant="ghost" disabled={busy} onPress={() => void inspect(false)} /></View>
