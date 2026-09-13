@@ -41,6 +41,7 @@ from app.api.service import ApiService
 from app.db.models import (
     Context,
     Membership,
+    Outing,
     PairNotebook,
     PairPaper,
     PairPaperOuting,
@@ -434,3 +435,56 @@ def test_het_han_khong_bao_gio_thanh_chot_du_hai_nguoi_cung_bam(
         "hết hạn là luật lúc đọc, không phải một hàng ai đó ghi"
     )
     assert service_one.pair_paper(paper_id, _actor(a, context_id)).state == "het_han"
+
+
+def test_chot_hai_lan_tren_cung_mot_to_khong_sinh_keo_thu_hai(
+    two_connections: tuple[Session, Session], monkeypatch: pytest.MonkeyPatch
+):
+    """Lớp thứ hai của K3, gọi thẳng vào nơi nó sống.
+
+    Một phép đo độc lập xoá hai dòng đầu của `_chot` — chỗ dùng lại kèo đã có —
+    và **năm ca đua ở trên vẫn xanh**. Đúng như thế: qua HTTP thì nhánh ấy
+    không tới được. «Ừ» lần hai bị partial unique trên `pair_paper_responses`
+    chặn trước, service phát lại thân cũ, và `_chot` không bao giờ chạy lần thứ
+    hai. Khoá `with_for_update` là cái xếp hàng hai lượt ghi để chuyện đó đúng.
+
+    Nhưng «không tới được hôm nay» không phải «không cần». Nếu `_chot` vào lần
+    thứ hai mà thiếu hai dòng ấy, nó **tạo một kèo mới** rồi mới phát hiện
+    `UNIQUE(paper_id)` từ chối liên kết — và cái kèo vừa tạo nằm lại trong danh
+    sách của hai người như một buổi đi không ai hẹn. Lớp dưới (`link_paper_outing`
+    ném xung đột) chặn được liên kết, không chặn được hàng thừa.
+
+    Nên ca này gọi thẳng `_chot` hai lần, vì đó là hướng mà đường vòng đi tới.
+    Nó là ca hộp trắng có chủ ý, và lý do nó tồn tại nằm ở đây chứ không ở tên
+    hàm.
+    """
+    _monkeypatched_now(monkeypatch)
+    first, _second = two_connections
+    context_id, a, b = _cap(first)
+    service = ApiService(SqlAlchemyApiRepository(first))
+    _mo_so(service, context_id, a, b)
+    paper_id = _to_da_gui(service, context_id, a)
+    chot = service.respond_pair_paper(
+        paper_id, 1, PaperAgreeRequest(kind="dong_y"), _actor(b, context_id)
+    )
+    first.commit()
+    assert chot.state == "chot" and chot.outing_id is not None
+
+    lai = service._chot(
+        SqlAlchemyApiRepository(first).get_pair_paper(paper_id),
+        1,
+        _actor(b, context_id),
+        now=NOW,
+    )
+    first.commit()
+    assert lai == chot.outing_id, "vào lần hai phải nhận lại đúng kèo cũ"
+    assert _dem_keo(first, paper_id) == 1
+    keo = (
+        first.execute(select(Outing).where(Outing.context_id == context_id))
+        .scalars()
+        .all()
+    )
+    assert len(keo) == 1, (
+        "một hàng kèo thừa ở đây là một buổi đi không ai hẹn, nằm trong danh "
+        "sách của hai người"
+    )
