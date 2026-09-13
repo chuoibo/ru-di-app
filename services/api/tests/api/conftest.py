@@ -235,6 +235,26 @@ class SeedCatalogueReads:
         del person_id
         return None
 
+    def get_context(self, context_id):
+        """«An ordinary group», which is what every double using this class is.
+
+        Added when the companion turn started asking what KIND of context it is
+        (ADR-0019 addendum): a pair's conversation is not read until both people
+        have said so, and «is this a pair» is a question only the context row
+        answers. Three hand-written doubles went red at once on
+        `AttributeError`, which is the right failure -- a double that cannot say
+        what kind of context it stands for cannot stand in for the repository
+        on this path any more. Answering `group` here keeps each of them
+        testing exactly what it was written to test.
+        """
+        return ContextRecord(
+            id=context_id,
+            display_name="Hội bạn",
+            created_by_id=context_id,
+            created_at=datetime(2030, 8, 27, 12, tzinfo=UTC),
+            kind="group",
+        )
+
     def list_places(self, *, destination_id=None, category=None):
         rows = [
             record
