@@ -14,6 +14,7 @@ thành `left`; `audit_events` có đúng một hàng `account.deleted` mà
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import func, select, text
@@ -344,3 +345,198 @@ def test_both_reasons_a_pair_dies_answer_with_the_very_same_bytes(
     )
     assert vi_chan.json()["code"] == "direct_message_unavailable"
     assert vi_chan.json()["detail"] == "Cuộc trò chuyện này không còn nhận tin."
+
+
+def test_the_notebook_of_two_survives_one_of_them_ending(postgres_session: Session):
+    """ADR-0027 với ADR-0023 §2.1: mười bảng ở lại, ba bảng đi.
+
+    Bản đồ xoá là dữ liệu, và ca «bản đồ đóng» ở trên chỉ hỏi mỗi bảng ĐÃ ĐƯỢC
+    XẾP chưa — chuyển một bảng từ nhánh `keep` sang `delete` vẫn xanh ở đó. Một
+    phép đo độc lập đã chứng minh: dời `pair_notebooks` sang `delete` thì cả
+    682 ca Postgres lẫn toàn bộ tầng ngoại tuyến vẫn xanh, trong khi hậu quả
+    thật là người còn lại mất buổi tối của chính mình.
+
+    Nên ca này KHÔNG đọc bản đồ. Nó dựng một cuốn sổ thật, kết thúc một tài
+    khoản, rồi đếm từng bảng: mười bảng lịch sử còn nguyên số hàng, ba bảng
+    riêng của người ấy về 0, và hàng của người CÒN LẠI trong ba bảng ấy không
+    bị chạm.
+    """
+    from .test_pair_notebook_postgres import _cap, _chu_ky, _dong_y, _so
+
+    context_id, di, o_lai = _cap(postgres_session)
+    # Trigger T4 đọc roster để biết ai được trả lời, nên hai tư cách thành viên
+    # là tiền đề chứ không phải trang trí.
+    for person_id in (di, o_lai):
+        postgres_session.add(
+            Membership(
+                context_id=context_id,
+                person_id=person_id,
+                role="member",
+                state="active",
+                origin="named",
+                joined_at=NOW,
+                created_at=NOW,
+            )
+        )
+    postgres_session.flush()
+    notebook_id = _so(postgres_session, context_id)
+    cycle_id = _chu_ky(postgres_session, notebook_id, people=(di, o_lai))
+    _dong_y(postgres_session, cycle_id, purpose="lap_so", by=di, people=(di, o_lai))
+    # Trigger T3: hai hàng «đang là một đôi» dưới kia chỉ đứng được khi CẢ HAI
+    # đang giữ đồng ý `bat_doi`. Bậc 2 không kéo bậc 3, kể cả trong một fixture.
+    _dong_y(postgres_session, cycle_id, purpose="bat_doi", by=di, people=(di, o_lai))
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_shared_constraints"
+            " (cycle_id, owner_id, kind, content, version, updated_at)"
+            " VALUES (:c, :a, 'khong_an_duoc', 'Hải sản', 1, :now),"
+            "        (:c, :b, 'dung', 'Đừng rủ muộn.', 1, :now)"
+        ),
+        {"c": cycle_id, "a": di, "b": o_lai, "now": NOW},
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO active_couple_members (person_id, cycle_id, since)"
+            " VALUES (:a, :c, :now), (:b, :c, :now)"
+        ),
+        {"a": di, "b": o_lai, "c": cycle_id, "now": NOW},
+    )
+    paper_id = uuid.uuid4()
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_papers (id, context_id, context_kind, cycle_id,"
+            " is_temporary, draft_owner_id, state, current_version,"
+            " tuan, expires_at, created_at)"
+            " VALUES (:p, :ctx, 'pair', :c, false, :a, 'chot', 1,"
+            " :tuan, :han, :now)"
+        ),
+        {
+            "p": paper_id,
+            "ctx": context_id,
+            "c": cycle_id,
+            "a": di,
+            "tuan": NOW.date(),
+            "han": NOW + timedelta(days=4),
+            "now": NOW,
+        },
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_paper_versions (paper_id, version, content, nguon,"
+            " author_type, sent_at, sent_by, created_at)"
+            " VALUES (:p, 1, '{}'::jsonb, '{}'::jsonb, 'human', :now, :a, :now)"
+        ),
+        {"p": paper_id, "a": di, "now": NOW},
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_paper_responses"
+            " (id, paper_id, version, person_id, kind, created_at)"
+            " VALUES (gen_random_uuid(), :p, 1, :a, 'dong_y', :now),"
+            "        (gen_random_uuid(), :p, 1, :b, 'dong_y', :now)"
+        ),
+        {"p": paper_id, "a": di, "b": o_lai, "now": NOW},
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_paper_views (paper_id, version, person_id, seen_at)"
+            " VALUES (:p, 1, :a, :now), (:p, 1, :b, :now)"
+        ),
+        {"p": paper_id, "a": di, "b": o_lai, "now": NOW},
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_paper_keeps"
+            " (id, paper_id, person_id, line, created_at)"
+            " VALUES (gen_random_uuid(), :p, :b, 'Cái đèn ở góc bàn.', :now)"
+        ),
+        {"p": paper_id, "b": o_lai, "now": NOW},
+    )
+    # Chốt rồi mới đi: tờ giấy phải đang `chot` lúc hàng liên kết được ghi,
+    # vì T2 là CONSTRAINT TRIGGER DEFERRED và nó đọc trạng thái lúc kiểm. Ép
+    # kiểm ngay ở đây rồi mới chuyển sang `da_di`, đúng thứ tự của hai lượt
+    # yêu cầu thật.
+    outing = SqlAlchemyApiRepository(postgres_session).create_outing(
+        context_id=context_id,
+        created_by_id=o_lai,
+        title="Tờ lời rủ",
+        starts_on=NOW.date(),
+        ends_on=NOW.date(),
+        headcount=2,
+        budget_per_person_vnd=0,
+        now=NOW,
+    )
+    postgres_session.execute(
+        text(
+            "INSERT INTO pair_paper_outings (paper_id, version, outing_id, linked_at)"
+            " VALUES (:p, 1, :o, :now)"
+        ),
+        {"p": paper_id, "o": outing.id, "now": NOW},
+    )
+    postgres_session.flush()
+    postgres_session.execute(text("SET CONSTRAINTS ALL IMMEDIATE"))
+    postgres_session.execute(
+        text("UPDATE pair_papers SET state = 'da_di' WHERE id = :p"), {"p": paper_id}
+    )
+    postgres_session.flush()
+
+    def _dem(table: str) -> int:
+        return postgres_session.execute(
+            text(f"SELECT count(*) FROM {table}")  # noqa: S608 -- hằng trong file
+        ).scalar_one()
+
+    O_LAI = (
+        "pair_notebooks",
+        "pair_notebook_cycles",
+        "pair_cycle_participants",
+        "pair_consent_proposals",
+        "pair_consents",
+        "pair_papers",
+        "pair_paper_versions",
+        "pair_paper_responses",
+        "pair_paper_outings",
+        "pair_paper_keeps",
+    )
+    truoc = {table: _dem(table) for table in O_LAI}
+    assert all(truoc.values()), f"ca chưa dựng đủ dữ liệu: {truoc}"
+
+    SqlAlchemyApiRepository(postgres_session).erase_person(di, now=NOW)
+    postgres_session.flush()
+
+    for table in O_LAI:
+        assert _dem(table) == truoc[table], (
+            f"{table} mất hàng khi một người kết thúc — cuốn sổ là ký ức của "
+            f"NGƯỜI CÒN LẠI nữa, xoá nó là lấy mất buổi tối của họ"
+        )
+    assert (
+        postgres_session.execute(
+            text("SELECT count(*) FROM pair_paper_views WHERE person_id = :a"),
+            {"a": di},
+        ).scalar_one()
+        == 0
+    )
+    assert (
+        postgres_session.execute(
+            text("SELECT count(*) FROM pair_shared_constraints WHERE owner_id = :a"),
+            {"a": di},
+        ).scalar_one()
+        == 0
+    )
+    assert (
+        postgres_session.execute(
+            text("SELECT count(*) FROM active_couple_members WHERE person_id = :a"),
+            {"a": di},
+        ).scalar_one()
+        == 0
+    )
+
+    for table, column in (
+        ("pair_paper_views", "person_id"),
+        ("pair_shared_constraints", "owner_id"),
+        ("active_couple_members", "person_id"),
+    ):
+        con = postgres_session.execute(
+            text(f"SELECT count(*) FROM {table} WHERE {column} = :b"),  # noqa: S608
+            {"b": o_lai},
+        ).scalar_one()
+        assert con == 1, f"{table}: hàng của người còn lại bị chạm"
