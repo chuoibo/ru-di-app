@@ -270,6 +270,10 @@ def test_every_write_route_consults_the_store(client, store):
     assert len(write_routes) >= 8, f"route discovery looks broken: {write_routes}"
 
     for method, template in write_routes:
+        if method == "POST" and template == "/outings/{outing_id}/itinerary/preview":
+            # This route has no writes; geometry must never replay past access
+            # revocation or a newer itinerary revision (ADR-0027).
+            continue
         # The handler's own answer is irrelevant here -- most of these will 404
         # or 422 on a placeholder id. The only question is whether the request
         # reached the store at all.
@@ -279,6 +283,16 @@ def test_every_write_route_consults_the_store(client, store):
             method, path, json={}, headers=_key_headers(key=str(uuid.uuid4()))
         )
         assert store.reservations, f"{method} {template} bypassed the idempotency store"
+
+
+def test_itinerary_preview_never_caches_private_geometry(client, store):
+    store.reservations.clear()
+    client.post(
+        f"/outings/{uuid.uuid4()}/itinerary/preview",
+        json={},
+        headers=_key_headers(key=str(uuid.uuid4())),
+    )
+    assert not store.reservations
 
 
 def test_read_requests_never_touch_the_store(client, store):

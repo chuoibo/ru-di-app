@@ -127,6 +127,8 @@ from app.api.schemas import (
     InterestsUpdateRequest,
     InterestTagResponse,
     InterestVocabularyResponse,
+    ItineraryPreviewRequest,
+    ItineraryRequest,
     MapPlace,
     MeetingCandidate,
     MeetingPointRequest,
@@ -878,9 +880,24 @@ def _wire_outing(record: OutingRecord) -> OutingResponse:
                 label=stop.label,
                 place_name=stop.place_name,
                 place_id=stop.place_id,
+                day=stop.day,
+                duration_minutes=stop.duration_minutes,
+                time_locked=stop.time_locked,
+                meeting_point=(
+                    {
+                        "lat": stop.meeting_lat,
+                        "lng": stop.meeting_lng,
+                        "label": stop.meeting_label,
+                    }
+                    if stop.meeting_lat is not None
+                    else None
+                ),
             )
             for stop in record.stops
         ],
+        timeline_revision=record.timeline_revision,
+        itinerary_version=record.itinerary_version,
+        days=list(record.itinerary_days),
     )
 
 
@@ -3368,12 +3385,144 @@ class ApiService:
             }
             for stop in request.stops
         ]
-        return _wire_outing(
-            self.repository.replace_outing_stops(
+        try:
+            saved = self.repository.replace_outing_stops(
                 outing_id=outing_id,
                 stops=stops,
+                expected_revision=request.expected_revision,
             )
+        except RepositoryConflict as exc:
+            self._itinerary_conflict(exc)
+            raise
+        return _wire_outing(saved)
+
+    @staticmethod
+    def _itinerary_conflict(exc: RepositoryConflict) -> None:
+        problems = {
+            "TIMELINE_REVISION_CONFLICT": (
+                409,
+                "timeline_conflict",
+                "Lịch trình đã được sửa. Tải bản mới trước khi lưu.",
+            ),
+            "ITINERARY_UPGRADE_REQUIRED": (
+                409,
+                "itinerary_upgrade_required",
+                "Mở bản app mới để sửa lịch trình này.",
+            ),
+            "STOP_NOT_FOUND": (
+                422,
+                "stop_not_found",
+                "Chặng không thuộc chuyến đi này.",
+            ),
+            "OUTING_NOT_FOUND": (404, "outing_not_found", "Không tìm thấy chuyến đi."),
+        }
+        if exc.code in problems:
+            raise ApiProblem(*problems[exc.code]) from exc
+
+    def authorize_outing_itinerary(
+        self, outing_id: uuid.UUID, actor: Actor
+    ) -> OutingRecord:
+        record = self.repository.get_outing(outing_id)
+        if record is None:
+            raise ApiProblem(404, "outing_not_found", "Không tìm thấy chuyến đi.")
+        _require_permission(
+            "edit_outing_timeline",
+            actor,
+            {"is_group_member": self.repository.is_member(record.context_id, actor.id)},
         )
+        return record
+
+    def _itinerary_draft(
+        self, outing_id: uuid.UUID, request: ItineraryRequest, actor: Actor
+    ) -> tuple[OutingRecord, dict]:
+        record = self.authorize_outing_itinerary(outing_id, actor)
+        if request.expected_revision != record.timeline_revision:
+            raise ApiProblem(
+                409,
+                "timeline_conflict",
+                "Lịch trình đã được sửa. Tải bản mới trước khi tiếp tục.",
+            )
+        known_ids = {str(s.id) for s in record.stops}
+        day_keys = {d.day for d in request.days}
+        for day in request.days:
+            if not record.starts_on <= day.day <= record.ends_on:
+                raise ApiProblem(
+                    422, "itinerary_day_invalid", "Ngày nằm ngoài chuyến đi."
+                )
+            ids = {s.id for s in request.stops if s.day == day.day}
+            if any(
+                anchor and anchor not in ids
+                for anchor in (day.start_stop_id, day.end_stop_id)
+            ):
+                raise ApiProblem(
+                    422,
+                    "itinerary_anchor_invalid",
+                    "Điểm đầu/cuối phải thuộc ngày này.",
+                )
+        normalized = request.model_dump(mode="json")
+        checked = {
+            str(c.stop_id) for c in self.repository.list_outing_checkins(outing_id)
+        }
+        for stop, row in zip(request.stops, normalized["stops"], strict=True):
+            if not stop.id.startswith("tmp-") and stop.id not in known_ids:
+                raise ApiProblem(
+                    422, "stop_not_found", "Chặng không thuộc chuyến đi này."
+                )
+            if stop.day is not None and (
+                not record.starts_on <= stop.day <= record.ends_on
+                or stop.day not in day_keys
+            ):
+                raise ApiProblem(
+                    422, "itinerary_day_invalid", "Chọn cấu hình cho ngày của chặng."
+                )
+            place = self.place_row(stop.place_id) if stop.place_id else None
+            if stop.place_id and place is None:
+                raise ApiProblem(
+                    422, "stop_place_unknown", "Địa điểm không còn trong danh mục."
+                )
+            row["lat"] = (
+                place.get("lat")
+                if place
+                else (stop.meeting_point.lat if stop.meeting_point else None)
+            )
+            row["lng"] = (
+                place.get("lng")
+                if place
+                else (stop.meeting_point.lng if stop.meeting_point else None)
+            )
+            row["checked_in"] = stop.id in checked
+        return record, normalized
+
+    def preview_outing_itinerary(
+        self, outing_id: uuid.UUID, request: ItineraryPreviewRequest, actor: Actor
+    ) -> dict:
+        from app.journey.preview import preview_itinerary
+
+        record, draft = self._itinerary_draft(outing_id, request, actor)
+        if not record.starts_on <= request.day <= record.ends_on:
+            raise ApiProblem(422, "itinerary_day_invalid", "Ngày nằm ngoài chuyến đi.")
+        return preview_itinerary(draft)
+
+    def replace_outing_itinerary(
+        self, outing_id: uuid.UUID, request: ItineraryRequest, actor: Actor
+    ) -> OutingResponse:
+        self._itinerary_draft(outing_id, request, actor)
+        stops = []
+        for stop in request.stops:
+            row = stop.model_dump()
+            row["minute_of_day"] = _minute_of_day(row.pop("at"))
+            stops.append(row)
+        try:
+            saved = self.repository.replace_outing_itinerary(
+                outing_id=outing_id,
+                stops=stops,
+                itinerary_days=[d.model_dump(mode="json") for d in request.days],
+                expected_revision=request.expected_revision,
+            )
+        except RepositoryConflict as exc:
+            self._itinerary_conflict(exc)
+            raise
+        return _wire_outing(saved)
 
     def check_in_to_stop(self, stop_id: uuid.UUID, actor: Actor) -> StopCheckinResponse:
         found = self.repository.get_outing_stop(stop_id)
@@ -3397,6 +3546,10 @@ class ApiService:
                     409,
                     "already_checked_in",
                     "You have already checked in at this stop",
+                ) from exc
+            if exc.code == "STOP_NOT_FOUND":
+                raise ApiProblem(
+                    404, "stop_not_found", "Chặng đã được bỏ khỏi lịch trình."
                 ) from exc
             raise
         return self._wire_stop_checkin(record)

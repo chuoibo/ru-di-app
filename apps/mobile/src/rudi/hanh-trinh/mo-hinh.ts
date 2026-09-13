@@ -14,6 +14,7 @@ export type HoatDongHanhTrinh = {
   tieuDe: string;
   tenDiaDiem: string | null;
   diaChi: string | null;
+  category?: string;
   placeId: string | null;
   lat: number | null;
   lng: number | null;
@@ -27,7 +28,7 @@ export type DoanDuongHanhTrinh = {
   durationSeconds: number;
   transportMode: PhuongTien;
   polyline: ToaDo[];
-  nguon: "osrm" | "geodesic";
+  nguon: "osrm" | "geodesic" | "valhalla";
 };
 
 export type HanhTrinh = {
@@ -41,6 +42,7 @@ export type ChoChieu = {
   lat: number;
   lng: number;
   address?: string | null;
+  category?: string;
 };
 
 export type SlotChieu = {
@@ -55,6 +57,7 @@ export type NgayChieu = {
 };
 
 export type ChangChieu = {
+  meeting_point?: {lat:number;lng:number;label:string} | null;
   id: string;
   at: string;
   label: string;

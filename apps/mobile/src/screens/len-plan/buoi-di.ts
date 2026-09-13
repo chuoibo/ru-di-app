@@ -7,12 +7,19 @@
  */
 import { formatVnd, parseAmountVnd } from "../../../../../packages/shared/money.mjs";
 
+export type DiemHen = { lat: number; lng: number; label: string };
+export type NgayDi = { day: string; transport_mode: "motorbike" | "car" | "walk"; start_at: string; start_stop_id: string | null; end_stop_id: string | null; return_to_start: boolean };
+
 const GIO_24H = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 const NGAY_ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TITLE_MAX = 200;
 const HEADCOUNT_MAX = 1000;
 
 export type ChangDung = {
+  day?: string | null;
+  duration_minutes?: number | null;
+  time_locked?: boolean;
+  meeting_point?: DiemHen | null;
   /** The stop's own address. `position` renumbers whenever the plan is
    *  edited, so it cannot be what a check-in points at. */
   id: string;
@@ -43,6 +50,11 @@ export type CheckIn = {
 /** One stop on its way to PUT /outings/{id}/timeline. No position: the
  *  server assigns that from the array order chosen by the group. */
 export type ChangGui = {
+  id?: string;
+  day?: string | null;
+  duration_minutes?: number | null;
+  time_locked?: boolean;
+  meeting_point?: DiemHen | null;
   at: string;
   label: string;
   place_name: string | null;
@@ -62,6 +74,8 @@ export type BuoiDi = {
   created_at: string;
   stops: ChangDung[];
   timeline_revision: number;
+  itinerary_version?: 1 | 2;
+  days?: NgayDi[];
 };
 
 export type FormTaoBuoiDi = {

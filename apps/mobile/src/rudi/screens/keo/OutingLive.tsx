@@ -59,9 +59,9 @@ import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
 import { HangChang } from "./HangChang";
 import { chieuTuChang, ganMappedTheoId } from "../../hanh-trinh/chieu";
 import { useCheDoLichTrinh } from "../../hanh-trinh/che-do";
-import { ManHinhHanhTrinh } from "../../hanh-trinh/ManHinhHanhTrinh";
+import { SoHanhTrinh } from "../../hanh-trinh/SoHanhTrinh";
 import { ThanhCheDo } from "../../hanh-trinh/ThanhCheDo";
-import { toiUuGanNhat } from "../../hanh-trinh/toi-uu";
+
 
 type Trang =
   | { pha: "dang-doc" }
@@ -129,9 +129,15 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         return;
       }
       const daToi = await docDaToi(keo, phien.person_id);
-      setTrang({ pha: "xong", keo, daToi });
+      setTrang((previous) => previous.pha === "xong" && previous.keo.id === keo.id && previous.keo.timeline_revision > keo.timeline_revision ? previous : { pha: "xong", keo, daToi });
+      setThongBao(null);
     } catch (error) {
-      setTrang({ pha: "hong", loi: loiRaChu(error) });
+      const loi = loiRaChu(error);
+      // A transient refresh failure must not unmount an editor with unsaved
+      // work. Revoked access still clears the previously loaded outing.
+      const revoked = error instanceof ApiError && [401, 403, 404].includes(error.status);
+      setTrang((previous) => previous.pha === "xong" && !revoked ? previous : { pha: "hong", loi });
+      setThongBao(loi);
     }
   }, [contextId, outingId, phien.person_id]);
 
@@ -160,7 +166,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
   }, [hanhTrinh, napDanhMuc]);
 
   const cho = useMemo(
-    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address })),
+    () => danhMuc.map((p) => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, address: p.address, category: p.category })),
     [danhMuc],
   );
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
@@ -224,7 +230,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     setThongBao(null);
     try {
       await danhDauToi(stop.id, keo.context_id, phien.person_id, newAttempt());
-      setTrang({ pha: "xong", keo, daToi: await docDaToi(keo, phien.person_id) });
+      await nap();
     } catch (error) {
       setThongBao(loiRaChu(error));
     } finally {
@@ -291,19 +297,10 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       </>
     ) : null;
 
-  const toiUu = async () => {
-    if (trang.pha !== "xong" || draft !== null) return;
-    const mapped = hanh.activities.filter((a) => a.lat !== null && a.lng !== null);
-    if (mapped.length < 2) return;
-    const ids = toiUuGanNhat(mapped.map((a) => ({ id: a.id, lat: a.lat as number, lng: a.lng as number })));
-    // `at` belongs to the slot, not to the stop: reordering by geography must
-    // not make the evening run backwards. See ganMappedTheoId.
-    await ghiLichTrinh(trang.keo, ganMappedTheoId(trang.keo.stops, ids, "at").map(changGuiTu));
-  };
 
   return (
     <RudiScreen
-      contentStyle={hanhTrinh ? styles.mapInner : undefined}
+      contentStyle={styles.mapInner}
       header={
         <View style={styles.dauMan}>
           <TopBar
@@ -325,11 +322,12 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </Text>
           ) : null}
           {trang.pha === "xong" ? <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} /> : null}
+          {hanhTrinh && thongBao ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{thongBao}</Text> : null}
         </View>
       }
       overlay={overlay}
-      padded={!hanhTrinh}
-      scroll={!hanhTrinh && !dragging}
+      padded={false}
+      scroll={false}
       testID="outing-screen"
     >
       {trang.pha === "dang-doc" ? (
@@ -342,29 +340,13 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "hong" ? (
         <ErrorState body={trang.loi} onRetry={() => void nap()} secondary={{ label: "Về Lên plan", onPress: () => router.back() }} title="Chưa mở được kèo" />
       ) : null}
-      {trang.pha === "xong" && hanhTrinh ? (
-        <ManHinhHanhTrinh
-          dangToiUu={dangGhi}
-          fitDem={che.fitDem}
-          hanh={hanh}
-          onChonDoan={che.chonDoan}
-          onChonMoc={che.chonHoatDong}
-          onKhop={che.khopHanhTrinh}
-          onNen={() => {
-            che.chonHoatDong(null);
-            che.chonDoan(null);
-          }}
-          onToiUu={draft ? undefined : () => void toiUu()}
-          onUserMove={che.userMove}
-          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
-          chanDuoi={tabBarHeight(fontScale)}
-          selectedActivityId={che.selectedActivityId}
-          selectedSegmentId={che.selectedSegmentId}
-          toiDem={che.toiDem}
-        />
+      {trang.pha === "xong" ? (
+        <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
+        <SoHanhTrinh controller={che} outing={trang.keo} places={cho} actorId={phien.person_id} onReload={nap} onSaved={(keo) => setTrang({ ...trang, keo })} onTimeline={() => che.doiCheDo("lich-trinh")} />
+        </View>
       ) : null}
       {trang.pha === "xong" && !hanhTrinh ? (
-        <>
+        <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}>
           <View style={styles.dau}>
             <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
             <Text style={[typography.body, { color: colors.inkSoft }]}>
@@ -456,7 +438,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               Bấm «Thêm chặng», hoặc mở một địa điểm ở Khám phá rồi «Thêm vào kèo».
             </Text>
           )}
-        </>
+        </ScrollView>
       ) : null}
     </RudiScreen>
   );

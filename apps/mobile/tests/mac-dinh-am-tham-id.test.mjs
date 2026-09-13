@@ -178,6 +178,16 @@ function sourceFiles(dir) {
 /* Ids used as ids. Each line says what the value is FOR, because "it is fine"
  * is not a reason anybody can re-check later. */
 const CHO_PHEP = new Map([
+  // ADR-0027: these are persisted anchor references, never display fallbacks.
+  ["rudi/hanh-trinh/SoHanhTrinh.tsx", ["selected ? null : editStop.id"]],
+  ["rudi/hanh-trinh/ke-hoach.ts", [
+    "stops.some((s) => s.id === d.start_stop_id && s.day === d.day) ? d.start_stop_id : null",
+    "stops.some((s) => s.id === d.end_stop_id && s.day === d.day) ? d.end_stop_id : null",
+    "d.start_stop_id === same[0]?.id ? d.start_stop_id : null",
+    "d.end_stop_id === same[same.length - 1]?.id ? d.end_stop_id : null",
+    "d.start_stop_id === id ? null : d.start_stop_id",
+    "d.end_stop_id === id ? null : d.end_stop_id",
+  ]],
   ["navigation/VoTab.tsx", [
     // Which group the tab shell is showing. An argument to navigation.
     "nhom?.id ?? nhomId",

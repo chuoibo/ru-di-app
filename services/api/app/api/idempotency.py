@@ -406,6 +406,23 @@ class IdempotencyMiddleware:
             await self.app(scope, receive, send)
             return
 
+        path_parts = scope["path"].strip("/").split("/")
+        itinerary_write = (
+            scope["method"] == "PUT"
+            and len(path_parts) == 3
+            and path_parts[0] == "outings"
+            and path_parts[2] == "itinerary"
+        )
+        # A preview writes nothing and must always resolve current access/data.
+        if (
+            scope["method"] == "POST"
+            and len(path_parts) == 4
+            and path_parts[0] == "outings"
+            and path_parts[2:] == ["itinerary", "preview"]
+        ):
+            await self.app(scope, receive, send)
+            return
+
         headers = scope.get("headers") or []
         key = _header(headers, _HEADER_BYTES)
         if key is None:
@@ -475,6 +492,12 @@ class IdempotencyMiddleware:
             )
             return
         if isinstance(outcome, Replay):
+            if itinerary_write:
+                # The route rechecks session + membership before exposing private
+                # meeting points. It consumes this response without writing again.
+                scope["itinerary_authorized_replay"] = outcome.response
+                await self.app(scope, _replaying(body), send)
+                return
             await _send_stored(send, outcome.response)
             return
 

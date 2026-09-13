@@ -67,6 +67,7 @@ export function chieuTuNgay(ngay: NgayChieu, places: readonly ChoChieu[]): HanhT
       tieuDe: item.title,
       tenDiaDiem: hop ? place.name : null,
       diaChi: hop ? (place.address ?? null) : null,
+      category: hop ? place.category : undefined,
       placeId: item.placeId ?? null,
       lat: hop ? place.lat : null,
       lng: hop ? place.lng : null,
@@ -87,9 +88,10 @@ export function chieuTuChang(stops: readonly ChangChieu[], places: readonly ChoC
       tieuDe: stop.label,
       tenDiaDiem: hop ? place.name : stop.place_name,
       diaChi: hop ? (place.address ?? null) : null,
+      category: hop ? place.category : undefined,
       placeId: stop.place_id,
-      lat: hop ? place.lat : null,
-      lng: hop ? place.lng : null,
+      lat: hop ? place.lat : stop.meeting_point?.lat ?? null,
+      lng: hop ? place.lng : stop.meeting_point?.lng ?? null,
     };
   });
   return danhSoVaNoi(activities);
