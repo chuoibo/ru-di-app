@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
-import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc } from "../../to-giay/to-giay";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
@@ -119,7 +119,10 @@ export function ToLoiRu({
   // Withdrawing is an escape, not the sender's job while they wait: as the
   // only primary it came out as a solid coral «Rút lại», the loudest thing on
   // a frame whose honest answer is «chờ». Ghost, with the other escapes.
-  const PHU = new Set(["nghi_tuan", "bo", "huy", "da_di", "rut"]);
+  // `da_di` ra khỏi nhóm thoát: nó là việc KHẲNG ĐỊNH của một buổi đã chốt
+  // («hai bạn đã đi rồi»), không phải một lối ra. Để nó ở đó thì một việc
+  // KHÔNG hỏi lại đứng cạnh ba việc có hỏi, và nét kẻ phân nhóm nói sai.
+  const PHU = new Set(["nghi_tuan", "bo", "huy", "rut"]);
   const chinh = nut.filter((n) => !PHU.has(n) && bam[n]);
   const phu = nut.filter((n) => PHU.has(n) && bam[n]);
 
@@ -206,7 +209,7 @@ export function ToLoiRu({
 export function nhanDau(to: ToGiay, toiId: string, tenNguoiKia?: string): string {
   const pb = phienBan(to);
   const toiGui = pb?.author_type === "human" && pb.sent_by === toiId;
-  const ho = tenNguoiKia?.trim() || "Người ấy";
+  const ho = tenNguoiKia?.trim() ? tenNgan(tenNguoiKia) : "Người ấy";
   switch (to.state) {
     case "da_gui":
       // «GỬI CHO BẠN» in hoa đọc ra như một MỆNH LỆNH («gửi cho một người

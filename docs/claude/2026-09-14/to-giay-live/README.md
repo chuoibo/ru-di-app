@@ -66,6 +66,31 @@ nhóm chính bằng một nét · tên người kia vào câu trạng thái và 
 đọc ra như mệnh lệnh, nay là «<tên> gửi» · con dấu rơi (`dong`) được soạn sẵn mà chưa bao giờ
 bắn, nay bắn khi trạng thái đổi ngay trên màn.
 
+## Vòng phán quyết, và một chỗ tôi không sửa theo
+
+Reviewer chấm lại tám mục trên ảnh mới: **sáu resolved, hai partial**. Hai partial:
+
+- **Nhóm lối thoát lẫn một việc không hỏi lại.** «Đã đi rồi» nằm cùng nhóm với ba việc đã có
+  tờ xác nhận, nên nét kẻ phân nhóm nói sai. Đã sửa: `da_di` là việc KHẲNG ĐỊNH của một buổi
+  đã chốt, không phải lối ra, nên nó về nhóm chính.
+- **Con dấu rơi không kiểm được bằng ảnh tĩnh.** Cơ chế đúng ở cả ba mép đọc được từ mã, nhưng
+  **chính chuyển động thì bằng chứng này không nói được**. Ghi ra như thế; đóng nó cần một
+  đoạn quay màn hình qua một cú bấm «Ừ».
+
+Và hai lỗi mới do chính đợt sửa đẻ ra, đã sửa: **tên người dùng không giới hạn nhét vào con
+dấu** (`«NGUYỄN THỊ MINH HÀ GỬI»` sẽ xuống dòng trong dấu hoặc bóp nát cột ngày — đúng lớp lỗi
+TopBar 360dp/1.3 đã trả giá; nay lấy chữ cuối và chặn 10 ký tự, có ca thuần) · **tờ xác nhận
+mount vô điều kiện** với hậu quả rơi về chuỗi rỗng (không tới được hôm nay, nhưng hình dạng
+hỏng của nó là một tờ huỷ mở ra với hậu quả trống).
+
+**Một chỗ không sửa theo, kèm dẫn chứng.** Reviewer nói `XacNhanViec` đảo thứ bậc nút của
+nhà: nút phá huỷ là `outline` ở trên, lối ra là `ghost` ở dưới, trong khi `LapSo` (47c) đặt
+kỳ vọng «khẳng định solid, bỏ qua ghost». Nhưng nhà này có HAI khuôn, không phải một, và
+khuôn phá huỷ đã chốt từ trước: `CaiDatNhom.tsx:201-202` («Rời nhóm» outline, «Ở lại» ghost)
+và `DongSo.tsx` («Đóng sổ» outline, «Giữ sổ» ghost) — cái sau đã qua đọc mù ở Phase 2. Đổi
+riêng tờ này sẽ thành khuôn thứ ba cho cùng một loại việc. Giữ nguyên, ghi lại ở đây để lần
+sau ai đọc còn thấy lựa chọn.
+
 ## Còn nợ
 
 Ba phép đo trong lát (spec 20.5) và pixel-diff màn hội bạn chưa chạy. Đường hội bạn không đổi

@@ -19,6 +19,7 @@ import {
   khacGi,
   laKeHoach,
   nutChoTo,
+  tenNgan,
   toUuTien,
 } from "../dist-test/rudi/to-giay/to-giay.js";
 
@@ -198,4 +199,16 @@ test("nút «Đã đi rồi» chỉ hiện khi máy chủ nói ngày đã tới 
   assert.ok(!nutChoTo(nhap, TOI).includes("da_di"));
   const daDi = to("da_di", chot, { co_the_ghi_da_di: false });
   assert.deepEqual(nutChoTo(daDi, TOI), ["giu"], "đã ghi rồi thì cờ không rút nút giữ lại");
+});
+
+test("tên dài không phá con dấu: lấy chữ cuối, chặn độ dài", () => {
+  // Con dấu là khối chữ hoa nén trong một hàng `space-between` cạnh ngày, không
+  // `maxWidth`, không `numberOfLines`. Tên đầy đủ sẽ xuống dòng trong dấu hoặc
+  // bóp nát cột ngày — cùng lớp lỗi với TopBar ở 360dp/1.3.
+  assert.equal(tenNgan("De QA"), "QA");
+  assert.equal(tenNgan("Nguyễn Thị Minh Hà"), "Hà");
+  assert.equal(tenNgan("  Bình  "), "Bình");
+  assert.ok(tenNgan("Bartholomewwwwwwww").length <= 10, "quá dài thì cắt");
+  assert.ok(tenNgan("Bartholomewwwwwwww").endsWith("…"), "và nói rằng đã cắt");
+  assert.equal(tenNgan(""), "", "chuỗi rỗng vẫn là chuỗi rỗng");
 });

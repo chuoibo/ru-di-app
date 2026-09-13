@@ -209,6 +209,21 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
 }
 
 /**
+ * Tên trên con dấu, cắt cho vừa.
+ *
+ * Con dấu là một khối chữ hoa nén, đứng trong một hàng `space-between` cạnh
+ * ngày; nó không có `maxWidth` và chữ không có `numberOfLines`. «DE QA GỬI»
+ * vừa, «NGUYỄN THỊ MINH HÀ GỬI» thì hoặc xuống dòng trong dấu hoặc bóp nát cột
+ * ngày — đúng lớp lỗi mà TopBar ở 360dp/1.3 đã trả giá một lần. Lấy chữ CUỐI
+ * (tên gọi trong tiếng Việt) và chặn độ dài.
+ */
+export function tenNgan(ten: string): string {
+  const chu = ten.trim().split(/\s+/);
+  const cuoi = chu[chu.length - 1] || ten.trim();
+  return cuoi.length > 10 ? `${cuoi.slice(0, 9)}…` : cuoi;
+}
+
+/**
  * One sentence about where the sheet stands, from my side. Read aloud by the
  * accessibility label of the open sheet and printed under it, so it names the
  * state in words, never by colour alone (spec §12.1).

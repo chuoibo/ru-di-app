@@ -203,22 +203,27 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
       <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) { so.dongYDeNghi(deNghiBatDoi.id); dong(); } }} open={mo === "bat-doi"} />
       <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={so.deNghiBatDoi} onClose={dong} open={mo === "loai-so"} />
       <RangBuoc nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => { so.datRangBuoc(rb); dong(); }} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
-      <XacNhanViec
-        hauQua={viec === null || !toMo ? "" : HAU_QUA[viec](so.tenNguoiKia, phienBan(toMo)?.content.ngay ?? "")}
-        nhanLam={viec === null ? "" : NHAN_LAM[viec]}
-        onClose={() => setViec(null)}
-        onXacNhan={() => {
-          if (!toMo || viec === null) return;
-          if (viec === "bo") so.boNhap(toMo.id);
-          else if (viec === "rut") so.rut(toMo.id);
-          else if (viec === "nghi_tuan") so.nghiTuan(toMo.id);
-          else so.huy(toMo.id);
-          setViec(null);
-        }}
-        open={viec !== null}
-        testID="xac-nhan-viec"
-        tieuDe={viec === null ? "" : TIEU_DE[viec]}
-      />
+      {/* Chỉ tồn tại khi có cả việc lẫn tờ. Bản trước mount vô điều kiện và
+          rơi về chuỗi rỗng khi thiếu một trong hai — không tới được hôm nay,
+          nhưng hình dạng hỏng của nó là một tờ xác nhận huỷ MỞ RA với hậu quả
+          trống và một nút không làm gì. */}
+      {viec !== null && toMo ? (
+        <XacNhanViec
+          hauQua={HAU_QUA[viec](so.tenNguoiKia, phienBan(toMo)?.content.ngay ?? "")}
+          nhanLam={NHAN_LAM[viec]}
+          onClose={() => setViec(null)}
+          onXacNhan={() => {
+            if (viec === "bo") so.boNhap(toMo.id);
+            else if (viec === "rut") so.rut(toMo.id);
+            else if (viec === "nghi_tuan") so.nghiTuan(toMo.id);
+            else so.huy(toMo.id);
+            setViec(null);
+          }}
+          open
+          testID="xac-nhan-viec"
+          tieuDe={TIEU_DE[viec]}
+        />
+      ) : null}
       <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
