@@ -137,7 +137,7 @@ việc đã có người làm như thể còn nợ:
 | 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | **đã merge #613** (2026-09-12); bằng chứng `docs/claude/2026-09-12/to-giay-fixture/` |
 | 3A | BE lát 1, lát cắt **luật và bảng**: domain `pair_paper`/`pair_notebook`, 18 cửa quyền, migration `c4f27a90d1e3` (13 bảng + 4 trigger + `UNIQUE(id, kind)` trên `contexts`), `tests/domain` + `tests/db` + `tests/postgres` | 0027 | **đã merge #614** (2026-09-13); agy đo độc lập, hai đột biến sống sót đã bít — `docs/claude/2026-09-13/pr-614-do-doc-lap.md` |
 | 3B+3C | BE lát 1, lát cắt **bề mặt HTTP**: repository, service, schemas, 19 route, fake repo, `tests/api` (quét cả 19 cửa) + 5 ca đua hai kết nối; kèm khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | PR mở (`claude/p0-w-hn-3b-to-giay-http`) |
-| 4 | Nối live lát 1 | — | chờ 3B |
+| 4 | Nối live lát 1: module 19 route, hook, provider sống sau CÙNG context (không màn nào bị viết lại), hàng ghim trong chat live | — | PR mở (`claude/p0-w-hn-4-to-giay-live`) — **còn nợ vòng native**: máy đang có emulator + Metro của lane khác, chạy bảng bây giờ sẽ lái máy của họ |
 | 5 | Lát 2: sổ bảy mục, ôn thẻ, câu hỏi tuần, ba dòng dặn, núm độ mới, Cài đặt sổ đôi (cờ «Nếp gửi hộ») | 0027 mở rộng | chờ 4 |
 | 6 | Lát 3: hẹn mở gác lúc đọc, túi riêng, thư gửi năm sau, giấy cũ quay lại, bản đồ hai người qua Hành trình | 0027 mở rộng | chờ 5 |
 
@@ -153,6 +153,10 @@ nguyên văn bên dưới vì lý do đo được mới là thứ đáng đọc 
   trước nói sai số phận của nó, và người đọc bắt được ngay ở màn kế («Đã bỏ»).
 - `GET /papers/{pid}` cần một cờ do **máy chủ** tính cho nút «Đã đi rồi» (tên đề xuất `co_the_ghi_da_di`): client không đọc đồng
   hồ (spec §3.3 luật 6) và `content.ngay` là chuỗi cho người đọc, không so được. Hiện nút hiện ngay khi `chot`, kể cả trước ngày hẹn.
+
+**Hai trường thêm vào `PaperSummary` ở Phase 4** (`chang_dau`, `dong_giu_dau`): hàng «Tờ đã khép»
+hiện giờ-việc của chặng đầu hoặc dòng đã giữ, và đọc trọn từng tờ để lấy một dòng ấy là một yêu
+cầu mỗi hàng trên mỗi nhịp poll. Chúng là MẨU chứ không phải câu — màn tự viết «Giữ lại: …».
 
 **Bốn mã lỗi thêm khi hiện thực 3B**, ngoài danh sách trong kế hoạch, tất cả đều là 404 hoặc
 422 cho một thứ không tồn tại: `paper_not_found`, `consent_proposal_not_found`,

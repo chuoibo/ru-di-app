@@ -18,68 +18,10 @@
  */
 import { type ReactNode, useMemo } from "react";
 
-import { type NoiDungTo, type ToGiay } from "./to-giay";
+import { type NoiDungTo } from "./to-giay";
 import { SoDoiContext, type SoDoiApi } from "./SoDoi";
-import type { RangBuoc } from "./so-fixture";
-import type { MucDich, SoHaiNguoi, ToTomTat } from "./to-giay-song";
+import { caHaiDongY, rangBuocCua, toTomTatThanhTo } from "./so-doi-map";
 import { useToGiay } from "./useToGiay";
-
-const KHONG_RANG_BUOC: RangBuoc = { khong_an_duoc: "", dung: "" };
-
-function rangBuocCua(so: SoHaiNguoi | null, ownerId: string | null): RangBuoc {
-  if (so === null || ownerId === null) return KHONG_RANG_BUOC;
-  const cua = so.constraints.filter((row) => row.owner_id === ownerId);
-  return {
-    khong_an_duoc: cua.find((row) => row.kind === "khong_an_duoc")?.content ?? "",
-    dung: cua.find((row) => row.kind === "dung")?.content ?? "",
-  };
-}
-
-function caHaiDongY(so: SoHaiNguoi | null, purpose: MucDich): boolean {
-  if (so === null) return false;
-  const cuaToi = so.my_consents.find((row) => row.purpose === purpose)?.granted === true;
-  return cuaToi && so.their_consents_granted[purpose] === true;
-}
-
-/**
- * A closed row, built from its summary.
- *
- * Real: id, state, version, the date, the first stop, the first kept line.
- * Invented: nothing -- the fields a `ToGiay` has and a summary does not are
- * left empty rather than guessed. That is safe because this object has exactly
- * one reader, the row under «Tờ đã khép», which shows those six facts. Anything
- * that wants more asks `GET /papers/{id}`, which is what opening the row does.
- */
-function toTomTatThanhTo(row: ToTomTat): ToGiay {
-  return {
-    id: row.id,
-    state: row.state,
-    version: row.version,
-    author_type: "human",
-    sent_by: null,
-    versions: [
-      {
-        version: row.version,
-        content: {
-          ngay: row.ngay ?? "",
-          chang: row.chang_dau ? [{ ...row.chang_dau, place_id: null, can_kiem: false }] : [],
-        },
-        ly_do: null,
-        sent_at: null,
-        sent_by: null,
-        author_type: "human",
-        my_response: null,
-        their_agreed: false,
-        viewed_by_recipient_at: null,
-      },
-    ],
-    outing_id: null,
-    keeps: row.dong_giu_dau ? [{ id: `${row.id}-giu`, line: row.dong_giu_dau, created_at: "" }] : [],
-    tuan: row.tuan,
-    expires_at: row.expires_at,
-    co_the_ghi_da_di: false,
-  };
-}
 
 export function SoDoiSongProvider({
   contextId,
