@@ -298,7 +298,7 @@ function TheMoc({
     <View style={styles.khoiThe}>
       {moc.category ? <KyHoa loai={moc.category} gon /> : null}
       <Text style={[typography.caption, { color: colors.inkFaint }]}>{moc.gio}</Text>
-      <Text style={[typography.h2, { color: colors.ink }]}>{moc.tieuDe}</Text>
+      <Text testID="hanh-trinh-selected-stop" style={[typography.h2, { color: colors.ink }]}>{moc.tieuDe}</Text>
       {moc.diaChi ? <Text style={[typography.note, { color: colors.inkSoft }]}>{moc.diaChi}</Text> : null}
       {truoc ? (
         <Text style={[typography.note, { color: colors.inkSoft }]}>

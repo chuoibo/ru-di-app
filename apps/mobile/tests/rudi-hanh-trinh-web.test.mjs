@@ -150,7 +150,7 @@ if (!existsSync(INDEX)) {
       await page.clickLabel(cluster);
       await page.waitFor(() => !!document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'));
       await page.clickChu("3 · 20:00 · Chợ đêm Đà Lạt");
-      await page.waitFor(() => document.body.innerText.includes("Xem chi tiết") && !document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'));
+      await page.waitFor(() => document.querySelector('[data-testid="hanh-trinh-selected-stop"]')?.textContent === "Chợ đêm Đà Lạt" && !document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'), { label: "chi tiết đúng điểm chọn từ cụm" });
       await page.clickLabel("Lịch trình");
       await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Chợ đêm Đà Lạt") && el.getAttribute("aria-selected") === "true"), { label: "điểm chọn từ cụm được giữ ở timeline" });
     });
