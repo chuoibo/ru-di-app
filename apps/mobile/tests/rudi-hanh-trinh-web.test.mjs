@@ -36,6 +36,25 @@ if (!existsSync(INDEX)) {
     let page;
     let server;
 
+    async function openEditor() {
+      // The notebook scrolls independently under a fixed primary action.
+      // Let its scroll settle before a real pointer press; a press during a
+      // scroll is cancelled by the scroll responder, just like on a phone.
+      await page.evaluate(async () => {
+        const button = [...document.querySelectorAll('[role="button"]')].find((el) => el.textContent.trim() === "Sửa trang ngày");
+        button.scrollIntoView({ block: "center" });
+        await new Promise((resolve) => {
+          let timer;
+          const settled = () => { document.removeEventListener("scroll", onScroll, true); resolve(); };
+          const onScroll = () => { clearTimeout(timer); timer = setTimeout(settled, 160); };
+          document.addEventListener("scroll", onScroll, true);
+          onScroll();
+        });
+      });
+      await page.clickChu("Sửa trang ngày");
+      await page.waitFor(() => !!document.querySelector('input[aria-label="Giờ xuất phát"]'), { timeout: 5000, label: "editor mounted" });
+    }
+
     before(async () => {
       assert.ok(chromeBin, "MOBILE_REQUIRE_HANH_TRINH_WEB=1 nhưng không tìm thấy Chrome");
       const cu = lyDoBanDungCu(EXPORT_DIR, ROOT);
@@ -97,10 +116,26 @@ if (!existsSync(INDEX)) {
         { timeout: 10000, label: "về lịch trình" },
       );
       const chon = await page.evaluate(() => {
-        const nut = [...document.querySelectorAll('[role="button"]')].find((el) => (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ"));
+        // Both views remain mounted to preserve the draft and undo; assert the
+        // visible timeline row, never a hidden map marker or rail control.
+        const nut = [...document.querySelectorAll('[role="button"]')].find((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ"));
         return nut ? nut.getAttribute("aria-selected") : null;
       });
       assert.equal(chon, "true", `chặng đã chọn phải còn highlight khi về Lịch trình, nhận ${chon}`);
+      await page.clickLabel("Hành trình");
+      await openEditor();
+      await page.evaluate(() => {
+        const input = document.querySelector('input[aria-label="Giờ xuất phát"]');
+        if (!input) throw new Error("Missing day editor");
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, "07:45");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      await page.clickChu("Xem trên bản đồ");
+      await page.waitFor(() => !document.querySelector('input[aria-label="Giờ xuất phát"]'), { timeout: 5000, label: "editor closed" });
+      await page.clickLabel("Lịch trình");
+      await page.clickLabel("Hành trình");
+      await openEditor();
+      assert.equal(await page.evaluate(() => document.querySelector('input[aria-label="Giờ xuất phát"]')?.value), "07:45", "bản nháp phải còn sau khi đổi chế độ");
     });
   });
 }

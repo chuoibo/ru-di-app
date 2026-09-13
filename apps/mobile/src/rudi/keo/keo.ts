@@ -12,6 +12,7 @@ import {
   docCheckIn,
   docDanhSachBuoiDi,
   luuDongThoiGian,
+  luuHanhTrinh,
   taoBuoiDi,
   ApiError,
   type Attempt,
@@ -57,11 +58,14 @@ export async function taoKeo(contextId: string, personId: string, body: BodyTaoB
 }
 
 export async function luuLichTrinh(
-  outing: Pick<BuoiDi, "id" | "context_id" | "timeline_revision">,
+  outing: Pick<BuoiDi, "id" | "context_id" | "timeline_revision"> & Partial<Pick<BuoiDi, "itinerary_version" | "days">>,
   stops: ChangGui[],
   personId: string,
   attempt: Attempt,
 ): Promise<BuoiDi> {
+  if (outing.itinerary_version === 2) {
+    return dich(() => luuHanhTrinh(outing.id, { expected_revision: outing.timeline_revision, days: outing.days ?? [], stops: stops.map((s, i) => ({ ...s, id: s.id ?? `tmp-${i}-${attempt.key}`, position: i, place_id: s.place_id ?? null, day: s.day ?? null, duration_minutes: s.duration_minutes ?? null, time_locked: s.time_locked ?? true, meeting_point: s.meeting_point ?? null })) }, personId, attempt, outing.context_id));
+  }
   return dich(() => luuDongThoiGian(outing.id, stops, personId, attempt, outing.context_id, outing.timeline_revision));
 }
 
@@ -76,7 +80,7 @@ export async function docDaToi(outing: Pick<BuoiDi, "id" | "context_id">, person
 
 /** A stop as the timeline PUT wants it, from a stop the server already holds. */
 export function changGuiTu(stop: ChangDung): ChangGui {
-  return { at: stop.at, label: stop.label, place_name: stop.place_name, place_id: stop.place_id };
+  return { id: stop.id, at: stop.at, label: stop.label, place_name: stop.place_name, place_id: stop.place_id, day: stop.day, duration_minutes: stop.duration_minutes, time_locked: stop.time_locked, meeting_point: stop.meeting_point };
 }
 
 /** Rebase only order: keep the server's labels/times and any newly added stops. */
@@ -101,7 +105,7 @@ export function ganDiaDiem(
   stopId: string,
   place: { id: string; name: string },
 ): ChangGui[] {
-  return hienTai.map((s) => (s.id === stopId ? { ...changGuiTu(s), place_id: place.id, place_name: place.name } : changGuiTu(s)));
+  return hienTai.map((s) => (s.id === stopId ? { ...changGuiTu(s), place_id: place.id, place_name: place.name, meeting_point: null } : changGuiTu(s)));
 }
 
 /** Today as the form's ISO date, in the phone's own calendar day. */

@@ -1,37 +1,26 @@
 /**
- * Journey view: the day's route on a map, with the same ink route read
- * edge-on underneath it.
- *
- * ## Why the rail, and why it is not a row of dots
- *
- * The map is geography; it cannot be the whole story. Two stops seventy
- * metres apart draw one pin on top of the other at day zoom -- on the
- * emulator (12/09) stop 1 sat entirely behind stop 3 -- and a MapLibre marker
- * puts nothing in the accessibility tree, so a screen reader and a test
- * runner both find an empty map. The rail answers all of that with the
- * product's own language: the hour, the numbered node, the stop, in the order
- * the group agreed on. Selection is shared with the pins, so the two halves
- * always say the same thing.
- *
- * The panel below the rail is the one thing that changes: the day's totals, a
- * chosen stop, or a chosen leg. Nothing floats over the map except the one
- * control that acts on the map.
+ * THESIS: The group unfolds its day as a map and a page from its trip notebook.
+ * OWN-WORLD: Existing paper, ink, coral and place sketches; no new palette.
+ * STORY: Read the route, inspect a stop, compare changes before keeping them.
+ * FIRST VIEWPORT: Geography above a compact, collapsible day page; wide screens
+ * keep the page beside the map. Important times remain with their stops.
+ * FORM: Approved itinerary extension, code-led; no replacement visual world.
  */
-
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 
-import { typography, useRudiTheme, mauMocHanhTrinh, mauSoMoc } from "../theme";
+import { typography, useRudiTheme, mauMocHanhTrinh } from "../theme";
 import { RudiButton } from "../ui";
 import { BanDo } from "./BanDo";
-import { gioTru, lamGiauDoan, layDoanDuong } from "./duong";
+import { gioTru } from "./duong";
 import type { DoanDuongHanhTrinh, HanhTrinh, HoatDongHanhTrinh } from "./mo-hinh";
 import { chuKhoangCach, chuThoiGian, tomTatHanhTrinh } from "./tom-tat";
 import { kieuBanDo, type MocBanDo } from "./kieu-ban-do";
 
-/** Below this, re-ordering the day is not worth offering as an action. */
-const NGUONG_GOI_XEP_LAI = 90;
+import { useMotion } from "../ui/useMotion";
+import { Canh } from "../ui/art/Canh";
+import { KyHoa } from "../ui/art/KyHoa";
 
 export function ManHinhHanhTrinh({
   hanh,
@@ -45,11 +34,21 @@ export function ManHinhHanhTrinh({
   onNen,
   onKhop,
   onToiUu,
+  actions,
+  primaryAction,
+  cameraKey,
+  fitPoints,
+  onGhim,
   onVeLichTrinh,
   chanDuoi = 0,
   dangToiUu = false,
 }: {
   hanh: HanhTrinh;
+  actions?: ReactNode;
+  primaryAction?: ReactNode;
+  cameraKey?: string;
+  fitPoints?: {lat:number;lng:number}[];
+  onGhim?: (point: { lat: number; lng: number }) => void;
   selectedActivityId: string | null;
   selectedSegmentId: string | null;
   fitDem: number;
@@ -68,19 +67,13 @@ export function ManHinhHanhTrinh({
   const router = useRouter();
   const { colors, dark, radius } = useRudiTheme();
   const mau = mauMocHanhTrinh(colors);
-  const [doan, setDoan] = useState<DoanDuongHanhTrinh[]>(hanh.routeSegments);
-  const cache = useRef(new Map<string, Awaited<ReturnType<typeof layDoanDuong>>>());
-
-  useEffect(() => {
-    setDoan(hanh.routeSegments);
-    let song = true;
-    void lamGiauDoan(hanh.routeSegments, hanh.activities, { cache: cache.current }).then((giau) => {
-      if (song) setDoan(giau);
-    });
-    return () => {
-      song = false;
-    };
-  }, [hanh]);
+  const doan = hanh.routeSegments;
+  const { width, height, fontScale } = useWindowDimensions();
+  const [collapsed, setCollapsed] = useState(false);
+  const [availableHeight, setAvailableHeight] = useState(height * 0.65);
+  const wide = width >= 840 && fontScale < 1.8;
+  const motion = useMotion();
+  const padding = useMemo(() => ({ top: 72, left: 40, right: 40, bottom: 40 }), []);
 
   const mocs: MocBanDo[] = useMemo(
     () =>
@@ -102,49 +95,43 @@ export function ManHinhHanhTrinh({
   const tom = tomTatHanhTrinh(hanh.activities, doanHien);
   const mocChon = hanh.activities.find((a) => a.id === selectedActivityId) ?? null;
   const doanChon = doanHien.find((d) => d.id === selectedSegmentId) ?? null;
-  const toi = (() => {
+  const toi = useMemo(() => {
     if (!mocChon || mocChon.lat === null || mocChon.lng === null || toiDem === 0) return null;
     return { lat: mocChon.lat, lng: mocChon.lng, dem: toiDem };
-  })();
+  }, [mocChon?.id, mocChon?.lat, mocChon?.lng, toiDem]);
 
   const coMoc = tom.soChangCoViTri > 0;
-  // The public OSRM demo answers most of the time and not always. When it does
-  // not, every leg is a ruler line and the totals are straight-line estimates
-  // -- say so instead of letting «7,3 km» read as a road distance.
-  const uocLuong = doanHien.length > 0 && doanHien.every((d) => d.nguon === "geodesic");
+  // Unrouted drafts only connect the stops in order. Their straight-line
+  // geometry must never be presented as a measured road distance.
+  const uocLuong = doanHien.length > 0 && doanHien.some((d) => d.nguon === "geodesic");
   const thieu = tom.soChang - tom.soChangCoViTri;
   const tomChu = [
     `${tom.soChangCoViTri} điểm trên bản đồ`,
-    tom.met !== null ? chuKhoangCach(tom.met) : null,
-    tom.giay !== null ? chuThoiGian(tom.giay) : null,
+    !uocLuong && tom.met !== null ? chuKhoangCach(tom.met) : null,
+    !uocLuong && tom.giay !== null ? chuThoiGian(tom.giay) : null,
   ]
     .filter((s): s is string => s !== null)
     .join(" · ");
 
-  // «Xếp lại» is offered only when there is a real saving to name. A bare
-  // percentage told nobody anything; the number people act on is how much
-  // shorter the day gets.
-  // The saving is named in the unit already on screen, never as a percentage:
-  // ADR-0009 quyết định 4 keeps percentages out of what a person reads. The
-  // ratio comes from two tours measured the same way; applying it to the
-  // distance shown keeps the two numbers reconcilable.
-  const gonHon = tom.hieuSuat !== null && tom.hieuSuat < NGUONG_GOI_XEP_LAI ? 100 - tom.hieuSuat : null;
-  const botMet = gonHon !== null && tom.met !== null ? Math.round((tom.met * gonHon) / 100) : null;
-  const moiXepLai = onToiUu !== undefined && tom.soChangCoViTri >= 3 && botMet !== null && botMet >= 500;
-
-  const mauMoc = [mauSoMoc(colors, 1), mauSoMoc(colors, 2), mauSoMoc(colors, 3)];
-  const mauCuaMoc = (so: number) => mauMoc[(so - 1) % mauMoc.length] ?? mau.mocChon;
+  const mauMoc = [colors.accent];
+  const mauCuaMoc = () => colors.accent;
 
   return (
-    <View style={styles.khung}>
+    <View onLayout={(e) => setAvailableHeight(e.nativeEvent.layout.height)} style={[styles.khung, wide && { flexDirection: "row" }]}>
+      <View style={{ flex: 1, minHeight: 0 }}>
       <BanDo
-        doan={doanHien.map((d) => ({ id: d.id, polyline: d.polyline, chon: d.id === selectedSegmentId }))}
+        doan={doanHien.map((d) => ({ id: d.id, polyline: d.polyline, uocLuong: d.nguon === "geodesic", chon: d.id === selectedSegmentId }))}
         fitDem={fitDem}
+        cameraKey={cameraKey ?? hanh.activities.map((a) => a.id).join("|")}
+        padding={padding}
+        fitPoints={fitPoints}
+        duration={motion.ms("standard")}
+        onGhim={onGhim}
         kieu={kieuBanDo(dark)}
         mauDuong={mau.duong}
         mauDuongMo={mau.duongMo}
         mauMoc={mauMoc}
-        mauMocChon={mau.mocChon}
+        mauMocChon={colors.accent}
         mauMocInk={mau.mocInk}
         mauNen={mau.the}
         mauVien={mau.vien}
@@ -162,8 +149,15 @@ export function ManHinhHanhTrinh({
             <RudiButton accessibilityLabel="Khớp hành trình" compact full={false} icon="scan-outline" label="Khớp hành trình" onPress={onKhop} variant="outline" />
           </View>
         ) : null}
-        <View pointerEvents="none" style={styles.dan} />
-        <View style={[styles.the, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.base, marginBottom: 12 + chanDuoi }]}>
+      </View>
+      </View>
+        <View style={[styles.the, { backgroundColor: colors.paper, borderColor: colors.line, paddingBottom: 12 + chanDuoi, maxHeight: wide ? undefined : availableHeight * (fontScale >= 1.8 ? 0.65 : 0.56), width: wide ? 360 : undefined }]}>
+          <Pressable accessibilityRole="button" accessibilityState={{ expanded: !collapsed }} onPress={() => setCollapsed(!collapsed)} style={{ minHeight: 48, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={[typography.label, { color: colors.ink }]}>Trang ngày của hội</Text>
+            <Text style={[typography.caption, { color: colors.accent }]}>{collapsed ? "Mở trang" : "Thu gọn"}</Text>
+          </Pressable>
+          {collapsed ? <Text style={[typography.note, { color: colors.inkSoft }]}>{tomChu}</Text> : <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, paddingBottom: 8 }}>
+
           {coMoc ? (
             <ThanhChang
               mauCuaMoc={mauCuaMoc}
@@ -185,27 +179,19 @@ export function ManHinhHanhTrinh({
             <View style={styles.khoiThe}>
               <Text style={[typography.label, { color: colors.ink }]}>{tomChu}</Text>
               {uocLuong ? (
-                <Text style={[typography.note, { color: colors.inkSoft }]}>Ước lượng theo đường chim bay.</Text>
+                <Text style={[typography.note, { color: colors.inkSoft }]}>Chưa có tuyến đường bộ. Nét nối chỉ thể hiện thứ tự điểm hẹn.</Text>
               ) : null}
               {thieu > 0 ? (
                 <Text style={[typography.note, { color: colors.inkSoft }]}>
                   {thieu === 1 ? "1 hoạt động khác chưa gắn địa điểm" : `${thieu} hoạt động khác chưa gắn địa điểm`}
                 </Text>
               ) : null}
-              {moiXepLai ? (
-                <>
-                  <Text style={[typography.note, { color: colors.inkSoft }]}>
-                    Xếp lại theo đường gần nhất: ngắn hơn khoảng {chuKhoangCach(botMet ?? 0)}.
-                  </Text>
-                  <RudiButton accessibilityLabel="Tối ưu lộ trình" compact disabled={dangToiUu} label="Tối ưu lộ trình" loading={dangToiUu} onPress={onToiUu} />
-                </>
-              ) : tom.soChangCoViTri >= 3 ? (
-                <Text style={[typography.note, { color: colors.inkSoft }]}>Thứ tự hiện tại đã gọn rồi.</Text>
-              ) : null}
+              {onToiUu ? <RudiButton compact disabled={dangToiUu} label="Xem cách đi gọn hơn" loading={dangToiUu} onPress={onToiUu} /> : null}
             </View>
           ) : (
             <View style={styles.khoiThe}>
-              <Text style={[typography.h2, { color: colors.ink }]}>Ngày này chưa có điểm nào trên bản đồ</Text>
+              <Canh id="tim-khong-ra" width={144} />
+              <Text style={[typography.h2, { color: colors.ink }]}>Mở một trang đường mới</Text>
               <Text style={[typography.note, { color: colors.inkSoft }]}>
                 Gắn một quán hoặc một địa điểm vào lịch trình, đường đi sẽ hiện ở đây.
               </Text>
@@ -214,8 +200,10 @@ export function ManHinhHanhTrinh({
               ) : null}
             </View>
           )}
+          {actions}
+          </ScrollView>}
+          {primaryAction}
         </View>
-      </View>
     </View>
   );
 }
@@ -238,8 +226,13 @@ function ThanhChang({
   mauInk: string;
 }) {
   const { colors, radius } = useRudiTheme();
+  const rail = useRef<ScrollView>(null);
+  const positions = useRef<Record<string, number>>({});
+  const selected = mocs.find((m) => m.chon)?.id;
+  useEffect(() => { if (selected) rail.current?.scrollTo({ x: Math.max(0, (positions.current[selected] ?? 0) - 16), animated: false }); }, [selected]);
   return (
     <ScrollView
+      ref={rail}
       contentContainerStyle={styles.thanhTrong}
       horizontal
       showsHorizontalScrollIndicator={false}
@@ -251,6 +244,7 @@ function ThanhChang({
           accessibilityRole="button"
           accessibilityState={{ selected: moc.chon }}
           key={moc.id}
+          onLayout={(e) => { positions.current[moc.id] = e.nativeEvent.layout.x; }}
           onPress={() => onChon(moc.id)}
           style={[
             styles.chang,
@@ -265,7 +259,7 @@ function ThanhChang({
             <Text style={[styles.changSoChu, { color: mauInk }]}>{moc.so}</Text>
           </View>
           <View style={styles.changChu}>
-            <Text style={[typography.caption, { color: colors.inkFaint }]}>{moc.gio}</Text>
+      <Text style={[typography.caption, { color: colors.inkFaint }]}>{moc.gio}</Text>
             <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>
               {moc.tieuDe}
             </Text>
@@ -302,13 +296,14 @@ function TheMoc({
   const { colors } = useRudiTheme();
   return (
     <View style={styles.khoiThe}>
+      {moc.category ? <KyHoa loai={moc.category} gon /> : null}
       <Text style={[typography.caption, { color: colors.inkFaint }]}>{moc.gio}</Text>
       <Text style={[typography.h2, { color: colors.ink }]}>{moc.tieuDe}</Text>
       {moc.diaChi ? <Text style={[typography.note, { color: colors.inkSoft }]}>{moc.diaChi}</Text> : null}
       {truoc ? (
         <Text style={[typography.note, { color: colors.inkSoft }]}>
           {chang
-            ? `Từ ${truoc.tieuDe} · ${chuKhoangCach(chang.distanceMeters)} · ${chuThoiGian(chang.durationSeconds)}`
+            ? chang.nguon === "geodesic" ? `Từ ${truoc.tieuDe} · chưa có đường bộ` : `Từ ${truoc.tieuDe} · ${chuKhoangCach(chang.distanceMeters)} · ${chuThoiGian(chang.durationSeconds)}`
             : `Từ ${truoc.tieuDe}`}
         </Text>
       ) : (
@@ -323,15 +318,14 @@ function TheDoan({ doan, activities }: { doan: DoanDuongHanhTrinh; activities: r
   const { colors } = useRudiTheme();
   const from = activities.find((a) => a.id === doan.fromActivityId);
   const to = activities.find((a) => a.id === doan.toActivityId);
-  const roi = to ? gioTru(to.gio, doan.durationSeconds) : null;
+  const roi = to && doan.nguon !== "geodesic" ? gioTru(to.gio, doan.durationSeconds) : null;
   return (
     <View style={styles.khoiThe}>
       <Text style={[typography.h2, { color: colors.ink }]}>
         {from?.tieuDe ?? "A"} → {to?.tieuDe ?? "B"}
       </Text>
       <Text style={[typography.body, { color: colors.inkSoft }]}>
-        {chuThoiGian(doan.durationSeconds)} · {chuKhoangCach(doan.distanceMeters)}
-        {doan.nguon === "geodesic" ? " · đường chim bay" : ""}
+        {doan.nguon === "geodesic" ? "Chưa có tuyến đường bộ; không tính giờ di chuyển." : `${chuThoiGian(doan.durationSeconds)} · ${chuKhoangCach(doan.distanceMeters)}`}
       </Text>
       {roi && to ? (
         <Text style={[typography.note, { color: colors.inkSoft }]}>
@@ -343,10 +337,10 @@ function TheDoan({ doan, activities }: { doan: DoanDuongHanhTrinh; activities: r
 }
 
 const styles = StyleSheet.create({
-  khung: { flex: 1, minHeight: 280 },
+  khung: { flex: 1, minHeight: 0 },
   hangNut: { paddingHorizontal: 12, paddingTop: 8, alignItems: "flex-start" },
   dan: { flex: 1 },
-  the: { margin: 12, padding: 14, gap: 10, borderWidth: StyleSheet.hairlineWidth },
+  the: { paddingHorizontal: 16, gap: 8, borderTopWidth: StyleSheet.hairlineWidth },
   khoiThe: { gap: 6 },
   thanh: { marginHorizontal: -14, marginTop: -2 },
   thanhTrong: { paddingHorizontal: 14, gap: 8 },

@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from "react-native";
 
 import { tabBarHeight } from "../adaptive";
 import { DEMO_GROUP, LOAI_MAU, PEOPLE, PLACES, demoAssets, formatVnd } from "../fixtures";
@@ -38,9 +38,11 @@ import { Stamp } from "../ui/Stamp";
 import { HangChang } from "./keo/HangChang";
 import { chieuTuNgay, ganMappedVaoCho, idSlot } from "../hanh-trinh/chieu";
 import { useCheDoLichTrinh } from "../hanh-trinh/che-do";
-import { ManHinhHanhTrinh } from "../hanh-trinh/ManHinhHanhTrinh";
+import { SoHanhTrinh } from "../hanh-trinh/SoHanhTrinh";
+import type { BuoiDi } from "../../screens/len-plan/buoi-di";
+import { ngayMacDinh } from "../hanh-trinh/ke-hoach";
 import { ThanhCheDo } from "../hanh-trinh/ThanhCheDo";
-import { toiUuGanNhat } from "../hanh-trinh/toi-uu";
+
 import { choTuId } from "../hanh-trinh/toa-do-mau";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
@@ -159,11 +161,22 @@ export function TripTimelineScreen() {
     if (che.selectedActivityId && !ids.includes(che.selectedActivityId)) che.chonHoatDong(null);
   };
 
-  const toiUu = () => {
-    const mapped = hanh.activities.filter((a) => a.lat !== null && a.lng !== null);
-    if (mapped.length < 2) return;
-    const ids = toiUuGanNhat(mapped.map((a) => ({ id: a.id, lat: a.lat as number, lng: a.lng as number })));
-    session.datHangNgay(day, ganMappedVaoCho(current.items, ids));
+  const [savedJourney, setSavedJourney] = useState<BuoiDi | null>(null);
+  const journeyOuting = useMemo<BuoiDi>(() => savedJourney ?? {
+    id: "fixture-journey", context_id: DEMO_GROUP.id, created_by_id: "fixture", title: session.tripName,
+    starts_on: isoTu(session.startDate), ends_on: isoTu(session.endDate), headcount: 4, budget_per_person_vnd: 0, created_at: "", timeline_revision: 0,
+    days: days.map((_, i) => { const date = new Date(`${isoTu(session.startDate)}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + i); return ngayMacDinh(date.toISOString().slice(0, 10)); }),
+    stops: days.flatMap((d, di) => d.items.map((item, i) => { const date = new Date(`${isoTu(session.startDate)}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + di); return { id: `fixture-${di}-${i}`, position: i, at: item.time, label: item.title, place_name: null, place_id: item.placeId ?? null, day: date.toISOString().slice(0, 10), duration_minutes: null, time_locked: true, meeting_point: null }; })),
+  }, [savedJourney, days, session.tripName, session.startDate, session.endDate]);
+  const saveJourney = (next: BuoiDi) => {
+    setSavedJourney(next);
+    days.forEach((d, i) => { const date = new Date(`${isoTu(session.startDate)}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + i); const iso = date.toISOString().slice(0, 10); session.datHangNgay(i, next.stops.filter((stop) => stop.day === iso).map((stop) => ({ time: stop.at, title: stop.label, icon: "location-outline", color: "accent", ...(stop.place_id ? { placeId: stop.place_id } : {}) }))); });
+  };
+  const journeyDate = journeyOuting.days?.[day]?.day ?? journeyOuting.starts_on;
+  const journeySelection = journeyOuting.stops.filter((s) => s.day === journeyDate).map((s, i) => ({ id: s.id, timelineId: idSlot({ time: s.at, title: s.label, placeId: s.place_id ?? undefined }, i) }));
+  const journeyController = { ...che,
+    selectedActivityId: journeySelection.find((s) => s.timelineId === che.selectedActivityId)?.id ?? null,
+    chonHoatDong: (id: string | null) => che.chonHoatDong(journeySelection.find((s) => s.id === id)?.timelineId ?? null),
   };
 
   const header = (
@@ -181,11 +194,11 @@ export function TripTimelineScreen() {
           />
         }
       />
-      <Inline gap={8} wrap>
+      {hanhTrinh ? null : <Inline gap={8} wrap>
         {days.map((item, index) => (
           <Chip key={item.day} label={"Ngày " + (index + 1)} onPress={() => doiNgay(index)} selected={day === index} />
         ))}
-      </Inline>
+      </Inline>}
       <ThanhCheDo cheDo={che.cheDo} onDoi={che.doiCheDo} />
       {hanhTrinh ? null : (
         <View style={styles.sectionTitleRow}>
@@ -208,7 +221,7 @@ export function TripTimelineScreen() {
   return (
     <RudiScreen
       bottomInset="tab"
-      contentStyle={hanhTrinh ? styles.mapInner : undefined}
+      contentStyle={styles.mapInner}
       header={header}
       overlay={
         <Sheet accessibilityLabel="Tùy chọn chuyến đi" onClose={() => setMenuOpen(false)} open={menuOpen}>
@@ -241,31 +254,15 @@ export function TripTimelineScreen() {
           </View>
         </Sheet>
       }
-      padded={!hanhTrinh}
-      scroll={!hanhTrinh}
+      padded={false}
+      scroll={false}
       testID="trip-timeline-screen"
     >
-      {hanhTrinh ? (
-        <ManHinhHanhTrinh
-          fitDem={che.fitDem}
-          hanh={hanh}
-          onChonDoan={che.chonDoan}
-          onChonMoc={che.chonHoatDong}
-          onKhop={che.khopHanhTrinh}
-          onNen={() => {
-            che.chonHoatDong(null);
-            che.chonDoan(null);
-          }}
-          onToiUu={toiUu}
-          onUserMove={che.userMove}
-          onVeLichTrinh={() => che.doiCheDo("lich-trinh")}
-          chanDuoi={tabBarHeight(fontScale)}
-          selectedActivityId={che.selectedActivityId}
-          selectedSegmentId={che.selectedSegmentId}
-          toiDem={che.toiDem}
-        />
-      ) : (
-        <>
+      <View style={{ flex: 1, display: hanhTrinh ? "flex" : "none" }}>
+        <SoHanhTrinh fixture controller={journeyController} initialDay={journeyDate} onDay={(date) => { const index = journeyOuting.days?.findIndex((d) => d.day === date) ?? 0; if (index >= 0) setDay(index); }} outing={journeyOuting} places={cho} onSaved={saveJourney} onTimeline={() => che.doiCheDo("lich-trinh")} bottom={tabBarHeight(fontScale)} />
+      </View>
+      {hanhTrinh ? null : (
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: tabBarHeight(fontScale) + 48, gap: 20 }}>
           <Photo
             height={200}
             radius={20}
@@ -321,7 +318,7 @@ export function TripTimelineScreen() {
             })}
           </View>
           <ListRow icon="location" onPress={() => router.push("/check-ins/new")} subtitle="Check-in để giữ lại khoảnh khắc cùng nhóm." title="Đến nơi rồi?" />
-        </>
+        </ScrollView>
       )}
     </RudiScreen>
   );

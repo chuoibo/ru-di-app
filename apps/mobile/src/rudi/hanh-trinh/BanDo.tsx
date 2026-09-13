@@ -2,10 +2,10 @@
 
 import { createElement, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { GeoJSONSource, Map, Marker, NavigationControl, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
+import { GeoJSONSource, Map, Marker, NavigationControl, Popup, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
-import { DEM_KHOP, hopGioi, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
+import { DEM_KHOP, hopGioi, hopHanhTrinh, muiTenDoan, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
 
 const CSS_HREF = "https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.css";
 
@@ -27,7 +27,7 @@ function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon
   el.setAttribute("aria-label", `Mốc ${moc.so}`);
   el.setAttribute("role", "button");
   const mau = moc.chon ? mauChon : (mauMoc[(moc.so - 1) % mauMoc.length] ?? mauChon);
-  const co = moc.chon ? 44 : 28;
+  const co = moc.chon ? 52 : 48;
   el.style.cssText = [
     `width:${co}px`,
     `height:${co}px`,
@@ -46,13 +46,6 @@ function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon
   const so = document.createElement("span");
   so.textContent = String(moc.so);
   el.appendChild(so);
-  if (moc.chon && moc.gio) {
-    const gio = document.createElement("span");
-    gio.textContent = moc.gio;
-    gio.style.cssText = "font:600 9px/1 system-ui;margin-top:2px";
-    el.style.height = "44px";
-    el.appendChild(gio);
-  }
   return el;
 }
 
@@ -69,16 +62,23 @@ export function BanDo({
   mauNen,
   kieu,
   fitDem,
+  cameraKey,
+  fitPoints,
+  padding = DEM_KHOP,
+  duration = 0,
+  onGhim,
   toi,
   onUserMove,
   onChonMoc,
   onChonDoan,
   onNen,
 }: BanDoProps) {
-  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo });
-  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo };
+  const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo });
+  cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo };
   const mapRef = useRef<Map | null>(null);
   const markers = useRef<Marker[]>([]);
+  const arrows = useRef<Marker[]>([]);
+  const chooser = useRef<Popup | null>(null);
   const loaded = useRef(false);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [san, setSan] = useState(false);
@@ -89,7 +89,7 @@ export function BanDo({
     damBaoCss();
     const map = new Map({
       container: el,
-      style: kieu,
+      style: kieu.startsWith("{") ? JSON.parse(kieu) : kieu,
       center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
       zoom: 12,
       attributionControl: { compact: true },
@@ -147,6 +147,7 @@ export function BanDo({
         cbs.current.onNen();
       }
     });
+    map.on("contextmenu", (e) => cbs.current.onGhim?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
     map.on("dragstart", () => cbs.current.onUserMove());
     map.on("zoomstart", (e) => {
       if (e.originalEvent) cbs.current.onUserMove();
@@ -163,6 +164,9 @@ export function BanDo({
       ro?.disconnect();
       markers.current.forEach((m) => m.remove());
       markers.current = [];
+      arrows.current.forEach((m) => m.remove());
+      arrows.current = [];
+      chooser.current?.remove();
       map.remove();
       mapRef.current = null;
       loaded.current = false;
@@ -175,6 +179,13 @@ export function BanDo({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    arrows.current.forEach((m) => m.remove());
+    arrows.current = muiTenDoan(doan).map((arrow) => {
+      const el = document.createElement("div"); el.style.cssText = "width:18px;height:20px";
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", "0 0 18 20");
+      for (const [color, width] of [[mauVienDuong, "6"], [mauDuong, "3"]]) { const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); path.setAttribute("d", "M3 14 L9 5 L15 14"); path.setAttribute("fill", "none"); path.setAttribute("stroke", color); path.setAttribute("stroke-width", width); svg.appendChild(path); }
+      el.appendChild(svg); return new Marker({ element: el, rotation: arrow.heading }).setLngLat([arrow.lng, arrow.lat]).addTo(map);
+    });
     const ve = () => {
       const src = map.getSource("hanh-trinh-duong");
       if (src && "setData" in src) (src as GeoJSONSource).setData(tapHop(doan));
@@ -186,24 +197,63 @@ export function BanDo({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const draw = () => {
+    chooser.current?.remove();
     markers.current.forEach((m) => m.remove());
-    markers.current = mocs.map((moc) => {
+    const pending = [...mocs];
+    const groups: MocBanDo[][] = [];
+    while (pending.length) {
+      const first = pending.shift()!;
+      const pixel = map.project([first.lng, first.lat]);
+      const close = pending.filter((m) => pixel.dist(map.project([m.lng, m.lat])) < 52);
+      groups.push([first, ...close]);
+      close.forEach((m) => pending.splice(pending.indexOf(m), 1));
+    }
+    markers.current = groups.map((group) => {
+      const moc = group[0];
       const el = veMoc(moc, cbs.current.mauMoc, cbs.current.mauMocInk, cbs.current.mauMocChon, cbs.current.mauVien);
+      if (group.length > 1) {
+        el.textContent = group.length <= 3 ? group.map((m) => m.so).join(" · ") : `${group.length} điểm`;
+        el.style.minWidth = "52px";
+        el.style.width = "auto";
+        el.style.padding = "0 8px";
+        el.setAttribute("aria-label", `${group.length} điểm gần nhau: ${group.map((m) => m.so).join(", ")}`);
+      }
       el.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        cbs.current.onChonMoc(moc.id);
+        chooser.current?.remove();
+        if (group.length === 1) { cbs.current.onChonMoc(moc.id); return; }
+        const list = document.createElement("div");
+        list.setAttribute("role", "group");
+        list.setAttribute("aria-label", "Chọn điểm hẹn gần nhau");
+        list.style.cssText = `display:flex;flex-direction:column;max-height:220px;overflow:auto;background:${mauNen};padding:8px`;
+        for (const stop of group) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = `${stop.so} · ${stop.gio} · ${stop.tieuDe}`;
+          button.style.cssText = `min-height:48px;text-align:left;padding:8px;background:${mauNen};color:${cbs.current.mauDuong};border:0;font:inherit;cursor:pointer`;
+          button.addEventListener("click", (event) => { event.stopPropagation(); chooser.current?.remove(); cbs.current.onChonMoc(stop.id); });
+          list.appendChild(button);
+        }
+        chooser.current = new Popup({ closeButton: true, maxWidth: "280px", focusAfterOpen: true }).setLngLat([moc.lng, moc.lat]).setDOMContent(list).addTo(map);
+        const content = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-content");
+        if (content) { content.style.background = mauNen; content.style.color = cbs.current.mauDuong; }
       });
       // A round chip marks its point at its centre; native does the same.
       return new Marker({ element: el, anchor: "center" }).setLngLat([moc.lng, moc.lat]).addTo(map);
     });
-  }, [mocs, san]);
+    };
+    draw();
+    map.on("moveend", draw);
+    return () => { map.off("moveend", draw); chooser.current?.remove(); };
+  }, [mocs, san, mauNen]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !san || fitDem === 0) return;
-    const hop = hopGioi(mocs);
+    const hop = (fitPoints?.length ? hopGioi(fitPoints) : hopHanhTrinh(mocs, doan));
     if (!hop) {
-      map.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration: 400 });
+      map.easeTo({ center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat], zoom: 12, duration });
       return;
     }
     map.fitBounds(
@@ -211,18 +261,18 @@ export function BanDo({
         [hop[0], hop[1]],
         [hop[2], hop[3]],
       ],
-      { padding: DEM_KHOP, duration: 600 },
+      { padding, duration },
     );
     // Fit Journey is the only yank; selection uses easeTo, pan stays free.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mocs is read at the tick of fitDem
-  }, [fitDem, san]);
+  }, [fitDem, cameraKey, padding, san]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !toi) return;
     // Same reason as native: the panel owns the bottom of the map.
-    map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration: 500, padding: DEM_KHOP });
-  }, [toi, san]);
+    map.easeTo({ center: [toi.lng, toi.lat], zoom: Math.max(map.getZoom(), 14), duration, padding });
+  }, [toi?.dem, padding, san]);
 
   return (
     <View collapsable={false} style={[styles.fill, { backgroundColor: mauNen }]} testID="ban-do-hanh-trinh">

@@ -2667,3 +2667,13 @@ export async function timKhuonMat(
     { method: "POST", actorId, roles: "member", contexts: contextId },
   );
 }
+
+/** Preview routes without changing the outing. */
+export async function xemTruocHanhTrinh(outingId: string, draft: import("./rudi/hanh-trinh/ke-hoach").BanNhap, day: string, includeSuggestion: boolean, actorId: string, contextId: string): Promise<import("./rudi/hanh-trinh/ke-hoach").XemTruoc> {
+  const { noiDungGui } = await import("./rudi/hanh-trinh/ke-hoach");
+  return callAsActor(`/outings/${outingId}/itinerary/preview`, { method: "POST", body: { ...noiDungGui(draft), day, include_suggestion: includeSuggestion }, actorId, contexts: contextId });
+}
+export async function luuHanhTrinh(outingId: string, draft: import("./rudi/hanh-trinh/ke-hoach").BanNhap, actorId: string, attempt: Attempt, contextId: string): Promise<BuoiDi> {
+  const { noiDungGui } = await import("./rudi/hanh-trinh/ke-hoach");
+  return callAsActor(`/outings/${outingId}/itinerary`, { method: "PUT", body: noiDungGui(draft), actorId, attempt, contexts: contextId });
+}
