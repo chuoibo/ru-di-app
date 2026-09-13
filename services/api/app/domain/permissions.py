@@ -566,9 +566,15 @@ _TABLE: dict[str, dict] = {
         "roles": {"member"},
         "requires": ("is_not_version_sender",),
     },
+    # Order matters here and only here. Both predicates can be missing at once
+    # -- somebody answering a version they sent, which has since been replaced
+    # -- and the table reports the first one. «The sheet has moved on» tells the
+    # person to look again; «that is yours» tells them about a screen they are
+    # no longer looking at. Nothing is hidden by the choice: the actor may read
+    # the sheet either way.
     "respond_pair_paper": {
         "roles": {"member"},
-        "requires": ("is_not_version_sender", "version_current"),
+        "requires": ("version_current", "is_not_version_sender"),
     },
     # ADR-0027: withdrawal is the sender's, and only while nothing has come
     # back. `paper_unseen_unanswered` is proved from the view and response

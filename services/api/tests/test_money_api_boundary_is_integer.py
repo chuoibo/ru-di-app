@@ -203,6 +203,22 @@ ROUTES_WITHOUT_RESPONSE_VALIDATION: dict[tuple[str, str], str] = {
     ): "guest HTML page; RENDERS MONEY with no pydantic boundary",
     ("POST", "/g/{token}/doi-so-tien"): "guest HTML redirect",
     ("POST", "/g/{token}/xin-cach-tinh"): "guest HTML redirect",
+    (
+        "DELETE",
+        "/contexts/{context_id}/notebook/consents/{purpose}",
+    ): "204, no body; taking one's own consent back",
+    (
+        "DELETE",
+        "/contexts/{context_id}/notebook/constraints/{kind}",
+    ): "204, no body",
+    (
+        "POST",
+        "/contexts/{context_id}/notebook/close",
+    ): "204, no body; the counts were in the preview",
+    (
+        "POST",
+        "/papers/{paper_id}/versions/{version}/viewed",
+    ): "204, no body; «đã xem» is a mark, not a reply",
 }
 
 # Floor for Rule A, bound to the count measured when this gate landed. A floor

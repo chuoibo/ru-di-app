@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, cast, delete, func, or_, select, tuple_
+from sqlalchemy import Date, and_, cast, delete, desc, func, or_, select, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
@@ -69,6 +69,16 @@ from app.db.models import (
     OutingInviteSource,
     OutingStop,
     OutingStopCheckin,
+    PairConsent,
+    PairConsentProposal,
+    PairCycleParticipant,
+    PairNotebook,
+    PairNotebookCycle,
+    PairPaper,
+    PairPaperKeep,
+    PairPaperOuting,
+    PairPaperResponse,
+    PairPaperVersion,
     PairPaperView,
     PairSharedConstraint,
     PayerAcknowledgement,
@@ -312,6 +322,131 @@ class ReportRecord:
 
     id: uuid.UUID
     created_at: datetime
+
+
+# --- Sổ hai người và tờ giấy (ADR-0027) ------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class PairConsentRecord:
+    """One person's answer to one proposal, flattened for the domain.
+
+    Carries the PROPOSAL's deadline rather than the grant's: a grant stands
+    until it is revoked, an unanswered offer lapses. `app.domain.pair_notebook`
+    reads exactly these keys.
+    """
+
+    proposal_id: uuid.UUID
+    person_id: uuid.UUID
+    purpose: str
+    granted_at: datetime | None
+    revoked_at: datetime | None
+    proposal_expires_at: datetime
+    terms_version: int
+
+
+@dataclass(frozen=True, slots=True)
+class PairProposalRecord:
+    id: uuid.UUID
+    cycle_id: uuid.UUID
+    purpose: str
+    proposed_by_id: uuid.UUID
+    terms_version: int
+    completed_at: datetime | None
+    created_at: datetime
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairConstraintRecord:
+    owner_id: uuid.UUID
+    kind: str
+    content: str
+    version: int
+    updated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairNotebookRecord:
+    """The notebook as every read of it needs: who is in it, which cycle is
+    live, and what both of them have agreed to.
+
+    `consents` is every row of the live cycle, not a summary: «which purposes
+    are open» is a domain question (`granted_purposes`), and a repository that
+    answered it would be a second place the consent ladder is decided.
+    """
+
+    id: uuid.UUID
+    context_id: uuid.UUID
+    cycle_id: uuid.UUID | None
+    cycle_state: str | None
+    terms_version: int
+    participants: tuple[uuid.UUID, ...]
+    consents: tuple[PairConsentRecord, ...]
+    proposals: tuple[PairProposalRecord, ...]
+    constraints: tuple[PairConstraintRecord, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PairVersionRecord:
+    version: int
+    content: dict
+    ly_do: str | None
+    nguon: dict
+    author_type: str
+    sent_at: datetime | None
+    sent_by: uuid.UUID | None
+
+
+@dataclass(frozen=True, slots=True)
+class PairViewRecord:
+    version: int
+    person_id: uuid.UUID
+    seen_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairResponseRecord:
+    version: int
+    person_id: uuid.UUID
+    kind: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairKeepRecord:
+    id: uuid.UUID
+    person_id: uuid.UUID
+    line: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PairPaperRecord:
+    """One sheet with everything ever written on it.
+
+    Versions, views and responses come whole rather than summarised, for the
+    same reason `consents` does above: who agreed to what version is a rule
+    (`app.domain.pair_paper`), and summarising it here would move the rule.
+    """
+
+    id: uuid.UUID
+    context_id: uuid.UUID
+    cycle_id: uuid.UUID | None
+    is_temporary: bool
+    draft_owner_id: uuid.UUID
+    state: str
+    current_version: int
+    tuan: date
+    expires_at: datetime
+    created_at: datetime
+    done_recorded_by_id: uuid.UUID | None
+    done_recorded_at: datetime | None
+    outing_id: uuid.UUID | None
+    versions: tuple[PairVersionRecord, ...]
+    views: tuple[PairViewRecord, ...]
+    responses: tuple[PairResponseRecord, ...]
+    keeps: tuple[PairKeepRecord, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1486,6 +1621,177 @@ class ApiRepository(Protocol):
     ) -> ReportRecord: ...
 
     def erase_person(self, person_id: uuid.UUID, *, now: datetime) -> ErasureReport: ...
+
+    # --- Sổ hai người và tờ giấy (ADR-0027) --------------------------------
+    #
+    # `now` is a parameter on every writer here, never `func.now()`: the domain
+    # owns the clock for this feature (a week's window, a proposal's window),
+    # and a second clock in SQL is a second answer.
+
+    def get_pair_notebook(self, context_id: uuid.UUID) -> PairNotebookRecord | None: ...
+
+    def create_pair_notebook(
+        self, context_id: uuid.UUID, *, now: datetime
+    ) -> PairNotebookRecord: ...
+
+    def lock_pair_notebook(
+        self, context_id: uuid.UUID
+    ) -> PairNotebookRecord | None: ...
+
+    def open_pair_cycle(
+        self,
+        notebook_id: uuid.UUID,
+        *,
+        participants: tuple[uuid.UUID, ...],
+        terms_version: int,
+        now: datetime,
+    ) -> uuid.UUID: ...
+
+    def activate_pair_cycle(self, cycle_id: uuid.UUID, *, now: datetime) -> None: ...
+
+    def close_pair_cycle(self, cycle_id: uuid.UUID, *, now: datetime) -> None: ...
+
+    def create_consent_proposal(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        purpose: str,
+        proposed_by_id: uuid.UUID,
+        terms_version: int,
+        expires_at: datetime,
+        now: datetime,
+    ) -> PairProposalRecord: ...
+
+    def get_consent_proposal(
+        self, proposal_id: uuid.UUID
+    ) -> PairProposalRecord | None: ...
+
+    def grant_consent(
+        self, proposal_id: uuid.UUID, person_id: uuid.UUID, *, now: datetime
+    ) -> None: ...
+
+    def complete_consent_proposal(
+        self, proposal_id: uuid.UUID, *, now: datetime
+    ) -> None: ...
+
+    def revoke_consents(
+        self, cycle_id: uuid.UUID, purpose: str, person_id: uuid.UUID, *, now: datetime
+    ) -> int: ...
+
+    def set_couple_member(
+        self, person_id: uuid.UUID, cycle_id: uuid.UUID, *, now: datetime
+    ) -> None: ...
+
+    def clear_couple_member(self, person_id: uuid.UUID) -> None: ...
+
+    def couple_cycle_for(self, person_id: uuid.UUID) -> uuid.UUID | None: ...
+
+    def set_pair_constraint(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        owner_id: uuid.UUID,
+        kind: str,
+        content: str,
+        now: datetime,
+    ) -> PairConstraintRecord: ...
+
+    def delete_pair_constraint(
+        self, cycle_id: uuid.UUID, owner_id: uuid.UUID, kind: str
+    ) -> bool: ...
+
+    def create_pair_paper(
+        self,
+        *,
+        context_id: uuid.UUID,
+        cycle_id: uuid.UUID | None,
+        draft_owner_id: uuid.UUID,
+        tuan: date,
+        expires_at: datetime,
+        content: dict,
+        ly_do: str | None,
+        nguon: dict,
+        author_type: str,
+        now: datetime,
+    ) -> PairPaperRecord: ...
+
+    def get_pair_paper(self, paper_id: uuid.UUID) -> PairPaperRecord | None: ...
+
+    def lock_pair_paper(self, paper_id: uuid.UUID) -> PairPaperRecord | None: ...
+
+    def list_pair_papers(
+        self, context_id: uuid.UUID
+    ) -> tuple[PairPaperRecord, ...]: ...
+
+    def update_pair_draft(
+        self, paper_id: uuid.UUID, *, content: dict, ly_do: str | None
+    ) -> None: ...
+
+    def add_paper_version(
+        self,
+        *,
+        paper_id: uuid.UUID,
+        version: int,
+        content: dict,
+        ly_do: str | None,
+        nguon: dict,
+        author_type: str,
+        sent_at: datetime | None,
+        sent_by: uuid.UUID | None,
+        now: datetime,
+    ) -> None: ...
+
+    def mark_version_sent(
+        self,
+        paper_id: uuid.UUID,
+        version: int,
+        *,
+        sent_by: uuid.UUID | None,
+        now: datetime,
+    ) -> None: ...
+
+    def set_paper_state(
+        self,
+        paper_id: uuid.UUID,
+        state: str,
+        *,
+        now: datetime,
+        current_version: int | None = None,
+        recorded_by_id: uuid.UUID | None = None,
+    ) -> None: ...
+
+    def mark_paper_viewed(
+        self, paper_id: uuid.UUID, version: int, person_id: uuid.UUID, *, now: datetime
+    ) -> datetime: ...
+
+    def add_paper_response(
+        self,
+        *,
+        paper_id: uuid.UUID,
+        version: int,
+        person_id: uuid.UUID,
+        kind: str,
+        now: datetime,
+    ) -> None: ...
+
+    def link_paper_outing(
+        self,
+        *,
+        paper_id: uuid.UUID,
+        version: int,
+        outing_id: uuid.UUID,
+        now: datetime,
+    ) -> None: ...
+
+    def get_paper_outing(self, paper_id: uuid.UUID) -> uuid.UUID | None: ...
+
+    def add_paper_keep(
+        self, *, paper_id: uuid.UUID, person_id: uuid.UUID, line: str, now: datetime
+    ) -> PairKeepRecord: ...
+
+    def close_open_pair_papers(
+        self, context_id: uuid.UUID, *, now: datetime
+    ) -> dict[str, int]: ...
 
     def create_story(
         self,
@@ -7167,18 +7473,683 @@ class SqlAlchemyApiRepository:
             for row in rows
         ]
 
+    # --- Sổ hai người và tờ giấy (ADR-0027) --------------------------------
+
+    def _pair_consent_rows(self, cycle_id: uuid.UUID) -> tuple[PairConsentRecord, ...]:
+        rows = self.session.execute(
+            select(PairConsent, PairConsentProposal)
+            .join(
+                PairConsentProposal, PairConsentProposal.id == PairConsent.proposal_id
+            )
+            .where(PairConsentProposal.cycle_id == cycle_id)
+            .order_by(PairConsent.created_at, PairConsent.id)
+        ).all()
+        return tuple(
+            PairConsentRecord(
+                proposal_id=consent.proposal_id,
+                person_id=consent.person_id,
+                purpose=proposal.purpose,
+                granted_at=consent.granted_at,
+                revoked_at=consent.revoked_at,
+                proposal_expires_at=proposal.expires_at,
+                terms_version=proposal.terms_version,
+            )
+            for consent, proposal in rows
+        )
+
+    def _pair_proposal_record(self, row: PairConsentProposal) -> PairProposalRecord:
+        return PairProposalRecord(
+            id=row.id,
+            cycle_id=row.cycle_id,
+            purpose=row.purpose,
+            proposed_by_id=row.proposed_by_id,
+            terms_version=row.terms_version,
+            completed_at=row.completed_at,
+            created_at=row.created_at,
+            expires_at=row.expires_at,
+        )
+
+    def _pair_notebook_record(
+        self, notebook: PairNotebook, cycle: PairNotebookCycle | None
+    ) -> PairNotebookRecord:
+        if cycle is None:
+            return PairNotebookRecord(
+                id=notebook.id,
+                context_id=notebook.context_id,
+                cycle_id=None,
+                cycle_state=None,
+                terms_version=0,
+                participants=(),
+                consents=(),
+                proposals=(),
+                constraints=(),
+            )
+        participants = tuple(
+            self.session.scalars(
+                select(PairCycleParticipant.person_id)
+                .where(PairCycleParticipant.cycle_id == cycle.id)
+                .order_by(
+                    PairCycleParticipant.created_at, PairCycleParticipant.person_id
+                )
+            )
+        )
+        proposals = tuple(
+            self._pair_proposal_record(row)
+            for row in self.session.scalars(
+                select(PairConsentProposal)
+                .where(PairConsentProposal.cycle_id == cycle.id)
+                .order_by(PairConsentProposal.created_at, PairConsentProposal.id)
+            )
+        )
+        constraints = tuple(
+            PairConstraintRecord(
+                owner_id=row.owner_id,
+                kind=row.kind,
+                content=row.content,
+                version=row.version,
+                updated_at=row.updated_at,
+            )
+            for row in self.session.scalars(
+                select(PairSharedConstraint)
+                .where(PairSharedConstraint.cycle_id == cycle.id)
+                .order_by(PairSharedConstraint.owner_id, PairSharedConstraint.kind)
+            )
+        )
+        return PairNotebookRecord(
+            id=notebook.id,
+            context_id=notebook.context_id,
+            cycle_id=cycle.id,
+            cycle_state=cycle.state,
+            terms_version=cycle.terms_version,
+            participants=participants,
+            consents=self._pair_consent_rows(cycle.id),
+            proposals=proposals,
+            constraints=constraints,
+        )
+
+    def _live_cycle(self, notebook_id: uuid.UUID) -> PairNotebookCycle | None:
+        """The one cycle that is not closed, if there is one.
+
+        `uq_pair_cycles_open_per_notebook` is what makes «the one» true; this
+        orders anyway so a schema without it degrades to «the newest» rather
+        than to «whichever the planner felt like».
+        """
+        return self.session.scalars(
+            select(PairNotebookCycle)
+            .where(
+                PairNotebookCycle.notebook_id == notebook_id,
+                PairNotebookCycle.state != "closed",
+            )
+            .order_by(desc(PairNotebookCycle.created_at))
+            .limit(1)
+        ).first()
+
+    def get_pair_notebook(self, context_id: uuid.UUID) -> PairNotebookRecord | None:
+        notebook = self.session.scalars(
+            select(PairNotebook).where(PairNotebook.context_id == context_id)
+        ).first()
+        if notebook is None:
+            return None
+        return self._pair_notebook_record(notebook, self._live_cycle(notebook.id))
+
+    def create_pair_notebook(
+        self, context_id: uuid.UUID, *, now: datetime
+    ) -> PairNotebookRecord:
+        notebook = PairNotebook(context_id=context_id, created_at=now)
+        self.session.add(notebook)
+        self.session.flush()
+        return self._pair_notebook_record(notebook, None)
+
+    def lock_pair_notebook(self, context_id: uuid.UUID) -> PairNotebookRecord | None:
+        """The notebook row, held for the rest of the transaction.
+
+        Taken before anything that must see one consistent notebook: two
+        people pressing «đồng ý» at the same instant, or one pressing while
+        the other closes. The row is a lock target rather than data -- what is
+        read after it is what matters.
+        """
+        notebook = self.session.scalars(
+            select(PairNotebook)
+            .where(PairNotebook.context_id == context_id)
+            .with_for_update()
+        ).first()
+        if notebook is None:
+            return None
+        return self._pair_notebook_record(notebook, self._live_cycle(notebook.id))
+
+    def open_pair_cycle(
+        self,
+        notebook_id: uuid.UUID,
+        *,
+        participants: tuple[uuid.UUID, ...],
+        terms_version: int,
+        now: datetime,
+    ) -> uuid.UUID:
+        cycle = PairNotebookCycle(
+            notebook_id=notebook_id,
+            state="pending",
+            terms_version=terms_version,
+            created_at=now,
+        )
+        self.session.add(cycle)
+        self.session.flush()
+        for person_id in participants:
+            self.session.add(
+                PairCycleParticipant(
+                    cycle_id=cycle.id, person_id=person_id, created_at=now
+                )
+            )
+        self.session.flush()
+        return cycle.id
+
+    def activate_pair_cycle(self, cycle_id: uuid.UUID, *, now: datetime) -> None:
+        cycle = self.session.get(PairNotebookCycle, cycle_id)
+        if cycle is None or cycle.state == "closed":
+            return
+        cycle.state = "active"
+        cycle.opened_at = cycle.opened_at or now
+        self.session.flush()
+
+    def close_pair_cycle(self, cycle_id: uuid.UUID, *, now: datetime) -> None:
+        cycle = self.session.get(PairNotebookCycle, cycle_id)
+        if cycle is None or cycle.state == "closed":
+            return
+        cycle.state = "closed"
+        cycle.closed_at = now
+        self.session.flush()
+
+    def create_consent_proposal(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        purpose: str,
+        proposed_by_id: uuid.UUID,
+        terms_version: int,
+        expires_at: datetime,
+        now: datetime,
+    ) -> PairProposalRecord:
+        proposal = PairConsentProposal(
+            cycle_id=cycle_id,
+            purpose=purpose,
+            proposed_by_id=proposed_by_id,
+            terms_version=terms_version,
+            created_at=now,
+            expires_at=expires_at,
+        )
+        self.session.add(proposal)
+        self.session.flush()
+        return self._pair_proposal_record(proposal)
+
+    def get_consent_proposal(self, proposal_id: uuid.UUID) -> PairProposalRecord | None:
+        row = self.session.get(PairConsentProposal, proposal_id)
+        return None if row is None else self._pair_proposal_record(row)
+
+    def grant_consent(
+        self, proposal_id: uuid.UUID, person_id: uuid.UUID, *, now: datetime
+    ) -> None:
+        """Idempotent: pressing «đồng ý» twice is one grant.
+
+        A second row would break `uq_pair_consents_proposal`; catching that as
+        a conflict and telling somebody their own agreement failed would be a
+        worse answer than doing nothing.
+        """
+        existing = self.session.scalars(
+            select(PairConsent).where(
+                PairConsent.proposal_id == proposal_id,
+                PairConsent.person_id == person_id,
+            )
+        ).first()
+        if existing is not None:
+            if existing.granted_at is None:
+                existing.granted_at = now
+                existing.revoked_at = None
+                self.session.flush()
+            return
+        self.session.add(
+            PairConsent(
+                proposal_id=proposal_id,
+                person_id=person_id,
+                granted_at=now,
+                created_at=now,
+            )
+        )
+        self.session.flush()
+
+    def complete_consent_proposal(
+        self, proposal_id: uuid.UUID, *, now: datetime
+    ) -> None:
+        proposal = self.session.get(PairConsentProposal, proposal_id)
+        if proposal is None or proposal.completed_at is not None:
+            return
+        proposal.completed_at = now
+        self.session.flush()
+
+    def revoke_consents(
+        self, cycle_id: uuid.UUID, purpose: str, person_id: uuid.UUID, *, now: datetime
+    ) -> int:
+        """Take back every live grant this person gave for this purpose.
+
+        Every, not the newest: a purpose asked for twice leaves two proposals,
+        and a revocation that only reached one of them would read as revoked
+        on one screen and granted on another.
+        """
+        rows = list(
+            self.session.scalars(
+                select(PairConsent)
+                .join(
+                    PairConsentProposal,
+                    PairConsentProposal.id == PairConsent.proposal_id,
+                )
+                .where(
+                    PairConsentProposal.cycle_id == cycle_id,
+                    PairConsentProposal.purpose == purpose,
+                    PairConsent.person_id == person_id,
+                    PairConsent.granted_at.is_not(None),
+                    PairConsent.revoked_at.is_(None),
+                )
+                .with_for_update(of=PairConsent)
+            )
+        )
+        for row in rows:
+            row.revoked_at = now
+        self.session.flush()
+        return len(rows)
+
+    def set_couple_member(
+        self, person_id: uuid.UUID, cycle_id: uuid.UUID, *, now: datetime
+    ) -> None:
+        existing = self.session.get(ActiveCoupleMember, person_id)
+        if existing is not None:
+            if existing.cycle_id == cycle_id:
+                return
+            raise RepositoryConflict("couple_slot_taken")
+        self.session.add(
+            ActiveCoupleMember(person_id=person_id, cycle_id=cycle_id, since=now)
+        )
+        self.session.flush()
+
+    def clear_couple_member(self, person_id: uuid.UUID) -> None:
+        row = self.session.get(ActiveCoupleMember, person_id)
+        if row is not None:
+            self.session.delete(row)
+            self.session.flush()
+
+    def couple_cycle_for(self, person_id: uuid.UUID) -> uuid.UUID | None:
+        row = self.session.get(ActiveCoupleMember, person_id)
+        return None if row is None else row.cycle_id
+
+    def set_pair_constraint(
+        self,
+        *,
+        cycle_id: uuid.UUID,
+        owner_id: uuid.UUID,
+        kind: str,
+        content: str,
+        now: datetime,
+    ) -> PairConstraintRecord:
+        row = self.session.get(PairSharedConstraint, (cycle_id, owner_id, kind))
+        if row is None:
+            row = PairSharedConstraint(
+                cycle_id=cycle_id,
+                owner_id=owner_id,
+                kind=kind,
+                content=content,
+                version=1,
+                updated_at=now,
+            )
+            self.session.add(row)
+        else:
+            row.content = content
+            row.version += 1
+            row.updated_at = now
+        self.session.flush()
+        return PairConstraintRecord(
+            owner_id=row.owner_id,
+            kind=row.kind,
+            content=row.content,
+            version=row.version,
+            updated_at=row.updated_at,
+        )
+
+    def delete_pair_constraint(
+        self, cycle_id: uuid.UUID, owner_id: uuid.UUID, kind: str
+    ) -> bool:
+        row = self.session.get(PairSharedConstraint, (cycle_id, owner_id, kind))
+        if row is None:
+            return False
+        self.session.delete(row)
+        self.session.flush()
+        return True
+
+    def _pair_paper_record(self, paper: PairPaper) -> PairPaperRecord:
+        versions = tuple(
+            PairVersionRecord(
+                version=row.version,
+                content=dict(row.content or {}),
+                ly_do=row.ly_do,
+                nguon=dict(row.nguon or {}),
+                author_type=row.author_type,
+                sent_at=row.sent_at,
+                sent_by=row.sent_by,
+            )
+            for row in self.session.scalars(
+                select(PairPaperVersion)
+                .where(PairPaperVersion.paper_id == paper.id)
+                .order_by(PairPaperVersion.version)
+            )
+        )
+        views = tuple(
+            PairViewRecord(
+                version=row.version, person_id=row.person_id, seen_at=row.seen_at
+            )
+            for row in self.session.scalars(
+                select(PairPaperView)
+                .where(PairPaperView.paper_id == paper.id)
+                .order_by(PairPaperView.version, PairPaperView.seen_at)
+            )
+        )
+        responses = tuple(
+            PairResponseRecord(
+                version=row.version,
+                person_id=row.person_id,
+                kind=row.kind,
+                created_at=row.created_at,
+            )
+            for row in self.session.scalars(
+                select(PairPaperResponse)
+                .where(PairPaperResponse.paper_id == paper.id)
+                .order_by(PairPaperResponse.created_at, PairPaperResponse.id)
+            )
+        )
+        keeps = tuple(
+            PairKeepRecord(
+                id=row.id,
+                person_id=row.person_id,
+                line=row.line,
+                created_at=row.created_at,
+            )
+            for row in self.session.scalars(
+                select(PairPaperKeep)
+                .where(PairPaperKeep.paper_id == paper.id)
+                .order_by(PairPaperKeep.created_at, PairPaperKeep.id)
+            )
+        )
+        link = self.session.get(PairPaperOuting, paper.id)
+        return PairPaperRecord(
+            id=paper.id,
+            context_id=paper.context_id,
+            cycle_id=paper.cycle_id,
+            is_temporary=paper.is_temporary,
+            draft_owner_id=paper.draft_owner_id,
+            state=paper.state,
+            current_version=paper.current_version,
+            tuan=paper.tuan,
+            expires_at=paper.expires_at,
+            created_at=paper.created_at,
+            done_recorded_by_id=paper.done_recorded_by_id,
+            done_recorded_at=paper.done_recorded_at,
+            outing_id=None if link is None else link.outing_id,
+            versions=versions,
+            views=views,
+            responses=responses,
+            keeps=keeps,
+        )
+
+    def create_pair_paper(
+        self,
+        *,
+        context_id: uuid.UUID,
+        cycle_id: uuid.UUID | None,
+        draft_owner_id: uuid.UUID,
+        tuan: date,
+        expires_at: datetime,
+        content: dict,
+        ly_do: str | None,
+        nguon: dict,
+        author_type: str,
+        now: datetime,
+    ) -> PairPaperRecord:
+        paper = PairPaper(
+            context_id=context_id,
+            cycle_id=cycle_id,
+            is_temporary=cycle_id is None,
+            draft_owner_id=draft_owner_id,
+            state="nhap",
+            current_version=1,
+            tuan=tuan,
+            expires_at=expires_at,
+            created_at=now,
+        )
+        self.session.add(paper)
+        self.session.flush()
+        self.session.add(
+            PairPaperVersion(
+                paper_id=paper.id,
+                version=1,
+                content=content,
+                ly_do=ly_do,
+                nguon=nguon,
+                author_type=author_type,
+                created_at=now,
+            )
+        )
+        self.session.flush()
+        return self._pair_paper_record(paper)
+
+    def get_pair_paper(self, paper_id: uuid.UUID) -> PairPaperRecord | None:
+        paper = self.session.get(PairPaper, paper_id)
+        return None if paper is None else self._pair_paper_record(paper)
+
+    def lock_pair_paper(self, paper_id: uuid.UUID) -> PairPaperRecord | None:
+        paper = self.session.get(PairPaper, paper_id, with_for_update=True)
+        return None if paper is None else self._pair_paper_record(paper)
+
+    def list_pair_papers(self, context_id: uuid.UUID) -> tuple[PairPaperRecord, ...]:
+        papers = self.session.scalars(
+            select(PairPaper)
+            .where(PairPaper.context_id == context_id)
+            .order_by(desc(PairPaper.created_at), PairPaper.id)
+        ).all()
+        return tuple(self._pair_paper_record(paper) for paper in papers)
+
+    def update_pair_draft(
+        self, paper_id: uuid.UUID, *, content: dict, ly_do: str | None
+    ) -> None:
+        """Rewrite version 1 in place. Only ever called on a `nhap` sheet, and
+        the trigger refuses it the moment that version has been sent."""
+        version = self.session.get(PairPaperVersion, (paper_id, 1))
+        if version is None:
+            return
+        version.content = content
+        version.ly_do = ly_do
+        self.session.flush()
+
+    def add_paper_version(
+        self,
+        *,
+        paper_id: uuid.UUID,
+        version: int,
+        content: dict,
+        ly_do: str | None,
+        nguon: dict,
+        author_type: str,
+        sent_at: datetime | None,
+        sent_by: uuid.UUID | None,
+        now: datetime,
+    ) -> None:
+        self.session.add(
+            PairPaperVersion(
+                paper_id=paper_id,
+                version=version,
+                content=content,
+                ly_do=ly_do,
+                nguon=nguon,
+                author_type=author_type,
+                sent_at=sent_at,
+                sent_by=sent_by,
+                created_at=now,
+            )
+        )
+        self.session.flush()
+
+    def mark_version_sent(
+        self,
+        paper_id: uuid.UUID,
+        version: int,
+        *,
+        sent_by: uuid.UUID | None,
+        now: datetime,
+    ) -> None:
+        row = self.session.get(PairPaperVersion, (paper_id, version))
+        if row is None or row.sent_at is not None:
+            return
+        row.sent_at = now
+        row.sent_by = sent_by
+        self.session.flush()
+
+    def set_paper_state(
+        self,
+        paper_id: uuid.UUID,
+        state: str,
+        *,
+        now: datetime,
+        current_version: int | None = None,
+        recorded_by_id: uuid.UUID | None = None,
+    ) -> None:
+        paper = self.session.get(PairPaper, paper_id)
+        if paper is None:
+            return
+        paper.state = state
+        if current_version is not None:
+            paper.current_version = current_version
+        if state == "da_di":
+            paper.done_recorded_by_id = recorded_by_id
+            paper.done_recorded_at = now
+        self.session.flush()
+
+    def mark_paper_viewed(
+        self, paper_id: uuid.UUID, version: int, person_id: uuid.UUID, *, now: datetime
+    ) -> datetime:
+        """The first look is the one recorded (§7.5). Idempotent by key."""
+        existing = self.session.get(PairPaperView, (paper_id, version, person_id))
+        if existing is not None:
+            return existing.seen_at
+        self.session.add(
+            PairPaperView(
+                paper_id=paper_id, version=version, person_id=person_id, seen_at=now
+            )
+        )
+        self.session.flush()
+        return now
+
+    def add_paper_response(
+        self,
+        *,
+        paper_id: uuid.UUID,
+        version: int,
+        person_id: uuid.UUID,
+        kind: str,
+        now: datetime,
+    ) -> None:
+        """One «ừ» per person per version; the partial unique is the rule.
+
+        A second one is a conflict rather than a no-op: the caller is telling
+        somebody their answer landed, and it landed the first time.
+        """
+        if kind == "dong_y":
+            existing = self.session.scalars(
+                select(PairPaperResponse).where(
+                    PairPaperResponse.paper_id == paper_id,
+                    PairPaperResponse.version == version,
+                    PairPaperResponse.person_id == person_id,
+                    PairPaperResponse.kind == "dong_y",
+                )
+            ).first()
+            if existing is not None:
+                raise RepositoryConflict("paper_already_agreed")
+        self.session.add(
+            PairPaperResponse(
+                paper_id=paper_id,
+                version=version,
+                person_id=person_id,
+                kind=kind,
+                created_at=now,
+            )
+        )
+        self.session.flush()
+
+    def link_paper_outing(
+        self, *, paper_id: uuid.UUID, version: int, outing_id: uuid.UUID, now: datetime
+    ) -> None:
+        """K3: one sheet, one outing. A second attempt is a conflict, which is
+        what a retry after a lost response reads as on the way back in."""
+        existing = self.session.get(PairPaperOuting, paper_id)
+        if existing is not None:
+            raise RepositoryConflict("paper_outing_exists")
+        self.session.add(
+            PairPaperOuting(
+                paper_id=paper_id, version=version, outing_id=outing_id, linked_at=now
+            )
+        )
+        self.session.flush()
+
+    def get_paper_outing(self, paper_id: uuid.UUID) -> uuid.UUID | None:
+        row = self.session.get(PairPaperOuting, paper_id)
+        return None if row is None else row.outing_id
+
+    def add_paper_keep(
+        self, *, paper_id: uuid.UUID, person_id: uuid.UUID, line: str, now: datetime
+    ) -> PairKeepRecord:
+        keep = PairPaperKeep(
+            paper_id=paper_id, person_id=person_id, line=line, created_at=now
+        )
+        self.session.add(keep)
+        self.session.flush()
+        return PairKeepRecord(
+            id=keep.id,
+            person_id=keep.person_id,
+            line=keep.line,
+            created_at=keep.created_at,
+        )
+
+    def close_open_pair_papers(
+        self, context_id: uuid.UUID, *, now: datetime
+    ) -> dict[str, int]:
+        """Closing the notebook: drafts are dropped, sheets in play are
+        cancelled, plans are left alone (§7.6). Returns what it did, by state,
+        so the caller can answer «what happened» with counts rather than a
+        promise."""
+        papers = list(
+            self.session.scalars(
+                select(PairPaper)
+                .where(
+                    PairPaper.context_id == context_id,
+                    PairPaper.state.in_(
+                        ("nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y")
+                    ),
+                )
+                .with_for_update()
+            )
+        )
+        counts = {"bo": 0, "huy": 0}
+        for paper in papers:
+            paper.state = "bo" if paper.state == "nhap" else "huy"
+            counts[paper.state] += 1
+        self.session.flush()
+        return counts
+
 
 __all__ = [
     "AllocationRow",
     "ApiRepository",
     "BatchForPublish",
     "BatchInputs",
-    "ConfirmedExpense",
     "ConfirmationRecord",
+    "ConfirmedExpense",
     "ContextRecord",
     "ExpenseIdentity",
-    "FriendEdgeRecord",
     "FinanceMovement",
+    "FriendEdgeRecord",
     "FrozenBatch",
     "FrozenObligation",
     "GuestEnvelopeRecord",
@@ -7192,6 +8163,15 @@ __all__ = [
     "OutingInviteRecord",
     "OutingRecord",
     "OutingStopRecord",
+    "PairConsentRecord",
+    "PairConstraintRecord",
+    "PairKeepRecord",
+    "PairNotebookRecord",
+    "PairPaperRecord",
+    "PairProposalRecord",
+    "PairResponseRecord",
+    "PairVersionRecord",
+    "PairViewRecord",
     "PaymentReportRecord",
     "PaymentReportTarget",
     "PersonFinanceSummary",

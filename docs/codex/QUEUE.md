@@ -134,13 +134,17 @@ việc đã có người làm như thể còn nợ:
 |---|---|---|---|
 | 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | **đã merge #611** (2026-09-12) |
 | 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | **đã merge #612** (2026-09-12), bốn vòng đọc mù; bằng chứng `docs/claude/2026-09-12/nen-to-giay/` |
-| 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | PR mở (`claude/p0-w-hn-2-to-giay-fixture`); bằng chứng `docs/claude/2026-09-12/to-giay-fixture/` |
-| 3A | BE lát 1, lát cắt **luật và bảng**: domain `pair_paper`/`pair_notebook`, 18 cửa quyền, migration `c4f27a90d1e3` (13 bảng + 4 trigger + `UNIQUE(id, kind)` trên `contexts`), `tests/domain` + `tests/db` + `tests/postgres` | 0027 | PR mở |
-| 3B | BE lát 1, lát cắt **bề mặt HTTP**: repository, service, schemas, 19 route, fake repo, `tests/api` (ca âm mỗi cửa) + ca đua hai kết nối | 0027 | chờ 3A |
-| 3C | Khoản ADR-0019 cho `group_taste`/companion trên `pair`: thiếu `doc_chat` của cả hai thì UNKNOWN và 403 trước khi đọc tin | 0019 | chờ 3A |
-| 4 | Nối live lát 1: module API, hook, màn `*Live`, Maestro `--otp`, pixel-diff màn hội bạn | — | chờ 2, 3 |
+| 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | **đã merge #613** (2026-09-12); bằng chứng `docs/claude/2026-09-12/to-giay-fixture/` |
+| 3A | BE lát 1, lát cắt **luật và bảng**: domain `pair_paper`/`pair_notebook`, 18 cửa quyền, migration `c4f27a90d1e3` (13 bảng + 4 trigger + `UNIQUE(id, kind)` trên `contexts`), `tests/domain` + `tests/db` + `tests/postgres` | 0027 | **đã merge #614** (2026-09-13); agy đo độc lập, hai đột biến sống sót đã bít — `docs/claude/2026-09-13/pr-614-do-doc-lap.md` |
+| 3B+3C | BE lát 1, lát cắt **bề mặt HTTP**: repository, service, schemas, 19 route, fake repo, `tests/api` (quét cả 19 cửa) + 5 ca đua hai kết nối; kèm khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | PR mở (`claude/p0-w-hn-3b-to-giay-http`) |
+| 4 | Nối live lát 1 | — | chờ 3B |
 | 5 | Lát 2: sổ bảy mục, ôn thẻ, câu hỏi tuần, ba dòng dặn, núm độ mới, Cài đặt sổ đôi (cờ «Nếp gửi hộ») | 0027 mở rộng | chờ 4 |
 | 6 | Lát 3: hẹn mở gác lúc đọc, túi riêng, thư gửi năm sau, giấy cũ quay lại, bản đồ hai người qua Hành trình | 0027 mở rộng | chờ 5 |
+
+**Cả hai điều Phase 2 để lại đã vào hợp đồng ở 3B** (`ClosePreviewResponse` mang bốn số
+`so_nhap_bo`/`so_to_huy`/`so_to_khoa`/`so_de_nghi_huy`; `PaperResponse.co_the_ghi_da_di` do máy
+chủ tính, và `POST /papers/{id}/done` cũng từ chối trước ngày đi chứ không chỉ ẩn nút). Giữ lại
+nguyên văn bên dưới vì lý do đo được mới là thứ đáng đọc lại:
 
 **Hai điều Phase 2 để lại cho hợp đồng máy chủ (đo ngày 2026-09-12, đọc mù trên màn thật):**
 
@@ -149,6 +153,13 @@ việc đã có người làm như thể còn nợ:
   trước nói sai số phận của nó, và người đọc bắt được ngay ở màn kế («Đã bỏ»).
 - `GET /papers/{pid}` cần một cờ do **máy chủ** tính cho nút «Đã đi rồi» (tên đề xuất `co_the_ghi_da_di`): client không đọc đồng
   hồ (spec §3.3 luật 6) và `content.ngay` là chuỗi cho người đọc, không so được. Hiện nút hiện ngay khi `chot`, kể cả trước ngày hẹn.
+
+**Bốn mã lỗi thêm khi hiện thực 3B**, ngoài danh sách trong kế hoạch, tất cả đều là 404 hoặc
+422 cho một thứ không tồn tại: `paper_not_found`, `consent_proposal_not_found`,
+`consent_purpose_unknown`, và `constraint_kind_unknown` (mã này đã có trong hợp đồng, nay có
+route phát nó). Ngược lại, `paper_already_agreed` **không còn ra tới wire**: «ừ» lần thứ hai của
+cùng một người trả lại đúng thân cũ, vì một lần gửi lại vì mất mạng và một cú bấm đúp trông
+giống hệt nhau ở tầng đó. Repository vẫn ném `RepositoryConflict` — chỗ ấy đúng là nghiêm.
 
 **Hai điều cần bạn (Codex) biết, đo ngày 2026-09-12:**
 

@@ -30,10 +30,12 @@ Pure functions over dicts. No I/O, no ORM, no framework.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 __all__ = [
     "AUTHOR_TYPES",
+    "MUI_GIO",
     "OPEN_STATES",
     "PAPER_STATES",
     "PLAN_STATES",
@@ -43,9 +45,23 @@ __all__ = [
     "chuyen",
     "co_the_rut",
     "da_du_dong_y",
+    "han_tuan",
     "hieu_luc",
+    "ngay_de_xuat",
     "phac_to_giay",
+    "tuan_cua",
 ]
+
+#: The week is the one the two of them live in, not the one the server's
+#: machine is in. Vietnam has kept a single offset since 1975, but the zone is
+#: named rather than written as `+07:00` so that this and the repository's
+#: `timezone('Asia/Ho_Chi_Minh', ...)` are provably the same clock.
+MUI_GIO = ZoneInfo("Asia/Ho_Chi_Minh")
+
+#: Section 5.1: a sheet belongs to a week, and Saturday is the day it proposes.
+#: Kept as a number rather than a name because `date.weekday()` is what reads
+#: it, and a name would need translating at every use.
+_THU_BAY = 5
 
 #: Section 3.1, in the order the week walks them. The CHECK constraint on
 #: `pair_papers.state` is the second spelling of this tuple, and the client's
@@ -86,6 +102,49 @@ class PaperError(Exception):
     def __init__(self, code: str):
         super().__init__(code)
         self.code = code
+
+
+def tuan_cua(now: datetime) -> date:
+    """The Monday of the week `now` falls in, in Vietnam.
+
+    One sheet per week (section 5.1), so the week has to be a value a unique
+    index can hold, and the same instant must land in the same week for both
+    people no matter where their phones think they are.
+    """
+    here = now.astimezone(MUI_GIO)
+    return (here - timedelta(days=here.weekday())).date()
+
+
+def han_tuan(now: datetime) -> datetime:
+    """When a sheet drafted at `now` stops being answerable.
+
+    Midnight ending Sunday, local. The bound is exclusive and `hieu_luc` reads
+    it with `>=`, so «the week is over» and «the next week has begun» are one
+    instant rather than two adjacent ones with a second of nothing between.
+
+    The arithmetic is local and the answer is UTC. Handing back the local
+    datetime put a `+07:00` deadline on a wire where every other timestamp ends
+    in `Z`, which is two spellings of one instant for a client to get wrong.
+    """
+    here = now.astimezone(MUI_GIO)
+    monday = (here - timedelta(days=here.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    return (monday + timedelta(days=7)).astimezone(UTC)
+
+
+def ngay_de_xuat(now: datetime) -> date:
+    """The day a fresh sheet proposes: this week's Saturday, or today if
+    Saturday has already gone.
+
+    A draft that offers a date in the past is worse than a blank one: the
+    person has to notice and fix it before they can use it, and the one thing
+    a pre-filled sheet is for is not making them start from nothing.
+    """
+    here = now.astimezone(MUI_GIO)
+    today = here.date()
+    saturday = tuan_cua(now) + timedelta(days=_THU_BAY)
+    return saturday if saturday >= today else today
 
 
 def hieu_luc(paper: dict, *, now: datetime) -> str:

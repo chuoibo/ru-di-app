@@ -57,6 +57,16 @@ from app.api.repository import (
     ObligationDraft,
     OtpChallengeRecord,
     OutingInviteRecord,
+    OutingRecord,
+    PairConsentRecord,
+    PairConstraintRecord,
+    PairKeepRecord,
+    PairNotebookRecord,
+    PairPaperRecord,
+    PairProposalRecord,
+    PairResponseRecord,
+    PairVersionRecord,
+    PairViewRecord,
     PaymentReportRecord,
     PaymentReportTarget,
     PersonContextSummaryRecord,
@@ -225,6 +235,26 @@ class SeedCatalogueReads:
         del person_id
         return None
 
+    def get_context(self, context_id):
+        """«An ordinary group», which is what every double using this class is.
+
+        Added when the companion turn started asking what KIND of context it is
+        (ADR-0019 addendum): a pair's conversation is not read until both people
+        have said so, and «is this a pair» is a question only the context row
+        answers. Three hand-written doubles went red at once on
+        `AttributeError`, which is the right failure -- a double that cannot say
+        what kind of context it stands for cannot stand in for the repository
+        on this path any more. Answering `group` here keeps each of them
+        testing exactly what it was written to test.
+        """
+        return ContextRecord(
+            id=context_id,
+            display_name="Hội bạn",
+            created_by_id=context_id,
+            created_at=datetime(2030, 8, 27, 12, tzinfo=UTC),
+            kind="group",
+        )
+
     def list_places(self, *, destination_id=None, category=None):
         rows = [
             record
@@ -303,6 +333,31 @@ class FakeRepository(SeedCatalogueReads):
         self.account_session_ids_by_digest: dict[bytes, uuid.UUID] = {}
         self.left_memberships: set[tuple[uuid.UUID, uuid.UUID]] = set()
         self.admin_memberships: set[tuple[uuid.UUID, uuid.UUID]] = set()
+        # --- Sổ hai người và tờ giấy (ADR-0027) --------------------------
+        #
+        # Dicts, and therefore blind BY CONSTRUCTION to five things the real
+        # schema decides: the composite foreign key that stops a row pointing
+        # at a group while writing 'pair' beside it, the partial unique that
+        # allows one open sheet per notebook, the primary key that allows one
+        # couple per person, the `UNIQUE(paper_id)` that allows one outing per
+        # sheet, and all four triggers. Every one of those is proved in
+        # tests/postgres/test_pair_*.py. Widening this fake until a race
+        # «passes» here is the lie CLAUDE.md names; what it is for is the
+        # orchestration above them -- who may do what, in what order.
+        self.pair_notebooks: dict[uuid.UUID, dict] = {}
+        self.pair_cycles: dict[uuid.UUID, dict] = {}
+        self.pair_cycle_participants: dict[uuid.UUID, list[uuid.UUID]] = {}
+        self.pair_proposals: dict[uuid.UUID, dict] = {}
+        self.pair_consents: dict[tuple[uuid.UUID, uuid.UUID], dict] = {}
+        self.active_couple_members: dict[uuid.UUID, uuid.UUID] = {}
+        self.pair_constraints: dict[tuple[uuid.UUID, uuid.UUID, str], dict] = {}
+        self.pair_papers: dict[uuid.UUID, dict] = {}
+        self.pair_paper_versions: dict[tuple[uuid.UUID, int], dict] = {}
+        self.pair_paper_views: dict[tuple[uuid.UUID, int, uuid.UUID], datetime] = {}
+        self.pair_paper_responses: list[dict] = []
+        self.pair_paper_keeps: dict[uuid.UUID, list[PairKeepRecord]] = {}
+        self.pair_paper_outings: dict[uuid.UUID, tuple[int, uuid.UUID]] = {}
+        self.outings: dict[uuid.UUID, OutingRecord] = {}
         self.leak_guest_input = False
 
     @staticmethod
@@ -2267,6 +2322,470 @@ class FakeRepository(SeedCatalogueReads):
                 if value.obligation_id == receipt.obligation_id
             ),
         )
+
+    # --- Sổ hai người và tờ giấy (ADR-0027) -------------------------------
+
+    def create_outing(
+        self,
+        *,
+        context_id,
+        created_by_id,
+        title,
+        starts_on,
+        ends_on,
+        headcount,
+        budget_per_person_vnd,
+        now,
+    ):
+        """Added for the sheet that becomes an outing when both agree.
+
+        The fake had none, so `ApiService._chot` had nothing to write into and
+        the one write chain in this feature that crosses into another feature
+        could not be driven here at all.
+        """
+        record = OutingRecord(
+            id=uuid.uuid4(),
+            context_id=context_id,
+            created_by_id=created_by_id,
+            title=title,
+            starts_on=starts_on,
+            ends_on=ends_on,
+            headcount=headcount,
+            budget_per_person_vnd=budget_per_person_vnd,
+            created_at=now,
+            stops=(),
+        )
+        self.outings[record.id] = record
+        self.outings_by_context[record.id] = context_id
+        return record
+
+    def get_outing(self, outing_id):
+        return self.outings.get(outing_id)
+
+    def list_outings(self, context_id):
+        return tuple(
+            outing
+            for outing in self.outings.values()
+            if outing.context_id == context_id
+        )
+
+    def _live_pair_cycle(self, notebook_id):
+        return next(
+            (
+                cycle_id
+                for cycle_id, cycle in self.pair_cycles.items()
+                if cycle["notebook_id"] == notebook_id and cycle["state"] != "closed"
+            ),
+            None,
+        )
+
+    def _pair_notebook_record(self, context_id):
+        notebook = self.pair_notebooks[context_id]
+        cycle_id = self._live_pair_cycle(notebook["id"])
+        cycle = None if cycle_id is None else self.pair_cycles[cycle_id]
+        proposals = [
+            row
+            for row in self.pair_proposals.values()
+            if cycle_id is not None and row["cycle_id"] == cycle_id
+        ]
+        consents = []
+        for row in proposals:
+            for (proposal_id, person_id), grant in self.pair_consents.items():
+                if proposal_id != row["id"]:
+                    continue
+                consents.append(
+                    PairConsentRecord(
+                        proposal_id=proposal_id,
+                        person_id=person_id,
+                        purpose=row["purpose"],
+                        granted_at=grant["granted_at"],
+                        revoked_at=grant["revoked_at"],
+                        proposal_expires_at=row["expires_at"],
+                        terms_version=row["terms_version"],
+                    )
+                )
+        return PairNotebookRecord(
+            id=notebook["id"],
+            context_id=context_id,
+            cycle_id=cycle_id,
+            cycle_state=None if cycle is None else cycle["state"],
+            terms_version=1 if cycle is None else cycle["terms_version"],
+            participants=()
+            if cycle_id is None
+            else tuple(self.pair_cycle_participants.get(cycle_id, ())),
+            consents=tuple(consents),
+            proposals=tuple(
+                PairProposalRecord(
+                    id=row["id"],
+                    cycle_id=row["cycle_id"],
+                    purpose=row["purpose"],
+                    proposed_by_id=row["proposed_by_id"],
+                    terms_version=row["terms_version"],
+                    completed_at=row["completed_at"],
+                    created_at=row["created_at"],
+                    expires_at=row["expires_at"],
+                )
+                for row in proposals
+            ),
+            constraints=tuple(
+                PairConstraintRecord(
+                    owner_id=key[1],
+                    kind=key[2],
+                    content=row["content"],
+                    version=row["version"],
+                    updated_at=row["updated_at"],
+                )
+                for key, row in sorted(
+                    self.pair_constraints.items(),
+                    key=lambda kv: (kv[0][1].bytes, kv[0][2]),
+                )
+                if cycle_id is not None and key[0] == cycle_id
+            ),
+        )
+
+    def get_pair_notebook(self, context_id):
+        if context_id not in self.pair_notebooks:
+            return None
+        return self._pair_notebook_record(context_id)
+
+    def create_pair_notebook(self, context_id, *, now):
+        self.pair_notebooks[context_id] = {"id": uuid.uuid4(), "created_at": now}
+        return self._pair_notebook_record(context_id)
+
+    def lock_pair_notebook(self, context_id):
+        # No lock to take. The two-connection races are in
+        # tests/postgres/test_pair_papers_races_postgres.py.
+        return self.get_pair_notebook(context_id)
+
+    def open_pair_cycle(self, notebook_id, *, participants, terms_version, now):
+        cycle_id = uuid.uuid4()
+        self.pair_cycles[cycle_id] = {
+            "notebook_id": notebook_id,
+            "state": "pending",
+            "terms_version": terms_version,
+            "opened_at": None,
+            "closed_at": None,
+            "created_at": now,
+        }
+        self.pair_cycle_participants[cycle_id] = list(participants)
+        return cycle_id
+
+    def activate_pair_cycle(self, cycle_id, *, now):
+        cycle = self.pair_cycles.get(cycle_id)
+        if cycle is None or cycle["state"] == "closed":
+            return
+        cycle["state"] = "active"
+        cycle["opened_at"] = cycle["opened_at"] or now
+
+    def close_pair_cycle(self, cycle_id, *, now):
+        cycle = self.pair_cycles.get(cycle_id)
+        if cycle is None or cycle["state"] == "closed":
+            return
+        cycle["state"] = "closed"
+        cycle["closed_at"] = now
+
+    def create_consent_proposal(
+        self, *, cycle_id, purpose, proposed_by_id, terms_version, expires_at, now
+    ):
+        row = {
+            "id": uuid.uuid4(),
+            "cycle_id": cycle_id,
+            "purpose": purpose,
+            "proposed_by_id": proposed_by_id,
+            "terms_version": terms_version,
+            "completed_at": None,
+            "created_at": now,
+            "expires_at": expires_at,
+        }
+        self.pair_proposals[row["id"]] = row
+        return PairProposalRecord(**row)
+
+    def get_consent_proposal(self, proposal_id):
+        row = self.pair_proposals.get(proposal_id)
+        return None if row is None else PairProposalRecord(**row)
+
+    def grant_consent(self, proposal_id, person_id, *, now):
+        key = (proposal_id, person_id)
+        existing = self.pair_consents.get(key)
+        if existing is not None:
+            if existing["granted_at"] is None:
+                existing["granted_at"] = now
+                existing["revoked_at"] = None
+            return
+        self.pair_consents[key] = {"granted_at": now, "revoked_at": None}
+
+    def complete_consent_proposal(self, proposal_id, *, now):
+        row = self.pair_proposals.get(proposal_id)
+        if row is not None and row["completed_at"] is None:
+            row["completed_at"] = now
+
+    def revoke_consents(self, cycle_id, purpose, person_id, *, now):
+        touched = 0
+        for (proposal_id, who), grant in self.pair_consents.items():
+            proposal = self.pair_proposals.get(proposal_id)
+            if proposal is None or proposal["cycle_id"] != cycle_id:
+                continue
+            if proposal["purpose"] != purpose or who != person_id:
+                continue
+            if grant["granted_at"] is None or grant["revoked_at"] is not None:
+                continue
+            grant["revoked_at"] = now
+            touched += 1
+        return touched
+
+    def set_couple_member(self, person_id, cycle_id, *, now):
+        existing = self.active_couple_members.get(person_id)
+        if existing is not None:
+            if existing == cycle_id:
+                return
+            raise RepositoryConflict("couple_slot_taken")
+        self.active_couple_members[person_id] = cycle_id
+
+    def clear_couple_member(self, person_id):
+        self.active_couple_members.pop(person_id, None)
+
+    def couple_cycle_for(self, person_id):
+        return self.active_couple_members.get(person_id)
+
+    def set_pair_constraint(self, *, cycle_id, owner_id, kind, content, now):
+        key = (cycle_id, owner_id, kind)
+        row = self.pair_constraints.get(key)
+        if row is None:
+            row = {"content": content, "version": 1, "updated_at": now}
+            self.pair_constraints[key] = row
+        else:
+            row["content"] = content
+            row["version"] += 1
+            row["updated_at"] = now
+        return PairConstraintRecord(
+            owner_id=owner_id,
+            kind=kind,
+            content=row["content"],
+            version=row["version"],
+            updated_at=row["updated_at"],
+        )
+
+    def delete_pair_constraint(self, cycle_id, owner_id, kind):
+        return self.pair_constraints.pop((cycle_id, owner_id, kind), None) is not None
+
+    def _pair_paper_record(self, paper_id):
+        paper = self.pair_papers[paper_id]
+        versions = tuple(
+            PairVersionRecord(
+                version=key[1],
+                content=dict(row["content"]),
+                ly_do=row["ly_do"],
+                nguon=dict(row["nguon"]),
+                author_type=row["author_type"],
+                sent_at=row["sent_at"],
+                sent_by=row["sent_by"],
+            )
+            for key, row in sorted(
+                self.pair_paper_versions.items(), key=lambda kv: kv[0][1]
+            )
+            if key[0] == paper_id
+        )
+        link = self.pair_paper_outings.get(paper_id)
+        return PairPaperRecord(
+            id=paper_id,
+            context_id=paper["context_id"],
+            cycle_id=paper["cycle_id"],
+            is_temporary=paper["cycle_id"] is None,
+            draft_owner_id=paper["draft_owner_id"],
+            state=paper["state"],
+            current_version=paper["current_version"],
+            tuan=paper["tuan"],
+            expires_at=paper["expires_at"],
+            created_at=paper["created_at"],
+            done_recorded_by_id=paper["done_recorded_by_id"],
+            done_recorded_at=paper["done_recorded_at"],
+            outing_id=None if link is None else link[1],
+            versions=versions,
+            views=tuple(
+                PairViewRecord(version=key[1], person_id=key[2], seen_at=seen_at)
+                for key, seen_at in sorted(
+                    self.pair_paper_views.items(), key=lambda kv: kv[0][1]
+                )
+                if key[0] == paper_id
+            ),
+            responses=tuple(
+                PairResponseRecord(
+                    version=row["version"],
+                    person_id=row["person_id"],
+                    kind=row["kind"],
+                    created_at=row["created_at"],
+                )
+                for row in self.pair_paper_responses
+                if row["paper_id"] == paper_id
+            ),
+            keeps=tuple(self.pair_paper_keeps.get(paper_id, ())),
+        )
+
+    def create_pair_paper(
+        self,
+        *,
+        context_id,
+        cycle_id,
+        draft_owner_id,
+        tuan,
+        expires_at,
+        content,
+        ly_do,
+        nguon,
+        author_type,
+        now,
+    ):
+        paper_id = uuid.uuid4()
+        self.pair_papers[paper_id] = {
+            "context_id": context_id,
+            "cycle_id": cycle_id,
+            "draft_owner_id": draft_owner_id,
+            "state": "nhap",
+            "current_version": 1,
+            "tuan": tuan,
+            "expires_at": expires_at,
+            "created_at": now,
+            "done_recorded_by_id": None,
+            "done_recorded_at": None,
+        }
+        self.pair_paper_versions[(paper_id, 1)] = {
+            "content": dict(content),
+            "ly_do": ly_do,
+            "nguon": dict(nguon),
+            "author_type": author_type,
+            "sent_at": None,
+            "sent_by": None,
+            "created_at": now,
+        }
+        return self._pair_paper_record(paper_id)
+
+    def get_pair_paper(self, paper_id):
+        if paper_id not in self.pair_papers:
+            return None
+        return self._pair_paper_record(paper_id)
+
+    def lock_pair_paper(self, paper_id):
+        return self.get_pair_paper(paper_id)
+
+    def list_pair_papers(self, context_id):
+        return tuple(
+            self._pair_paper_record(paper_id)
+            for paper_id, paper in sorted(
+                self.pair_papers.items(),
+                key=lambda kv: (kv[1]["created_at"], kv[0].bytes),
+                reverse=True,
+            )
+            if paper["context_id"] == context_id
+        )
+
+    def update_pair_draft(self, paper_id, *, content, ly_do):
+        row = self.pair_paper_versions.get((paper_id, 1))
+        if row is None:
+            return
+        row["content"] = dict(content)
+        row["ly_do"] = ly_do
+
+    def add_paper_version(
+        self,
+        *,
+        paper_id,
+        version,
+        content,
+        ly_do,
+        nguon,
+        author_type,
+        sent_at,
+        sent_by,
+        now,
+    ):
+        self.pair_paper_versions[(paper_id, version)] = {
+            "content": dict(content),
+            "ly_do": ly_do,
+            "nguon": dict(nguon),
+            "author_type": author_type,
+            "sent_at": sent_at,
+            "sent_by": sent_by,
+            "created_at": now,
+        }
+
+    def mark_version_sent(self, paper_id, version, *, sent_by, now):
+        row = self.pair_paper_versions.get((paper_id, version))
+        if row is None or row["sent_at"] is not None:
+            return
+        row["sent_at"] = now
+        row["sent_by"] = sent_by
+
+    def set_paper_state(
+        self, paper_id, state, *, now, current_version=None, recorded_by_id=None
+    ):
+        paper = self.pair_papers.get(paper_id)
+        if paper is None:
+            return
+        paper["state"] = state
+        if current_version is not None:
+            paper["current_version"] = current_version
+        if state == "da_di":
+            paper["done_recorded_by_id"] = recorded_by_id
+            paper["done_recorded_at"] = now
+
+    def mark_paper_viewed(self, paper_id, version, person_id, *, now):
+        key = (paper_id, version, person_id)
+        if key in self.pair_paper_views:
+            return self.pair_paper_views[key]
+        self.pair_paper_views[key] = now
+        return now
+
+    def add_paper_response(self, *, paper_id, version, person_id, kind, now):
+        if kind == "dong_y" and any(
+            row["paper_id"] == paper_id
+            and row["version"] == version
+            and row["person_id"] == person_id
+            and row["kind"] == "dong_y"
+            for row in self.pair_paper_responses
+        ):
+            raise RepositoryConflict("paper_already_agreed")
+        self.pair_paper_responses.append(
+            {
+                "paper_id": paper_id,
+                "version": version,
+                "person_id": person_id,
+                "kind": kind,
+                "created_at": now,
+            }
+        )
+
+    def link_paper_outing(self, *, paper_id, version, outing_id, now):
+        if paper_id in self.pair_paper_outings:
+            raise RepositoryConflict("paper_outing_exists")
+        self.pair_paper_outings[paper_id] = (version, outing_id)
+
+    def get_paper_outing(self, paper_id):
+        link = self.pair_paper_outings.get(paper_id)
+        return None if link is None else link[1]
+
+    def add_paper_keep(self, *, paper_id, person_id, line, now):
+        keep = PairKeepRecord(
+            id=uuid.uuid4(), person_id=person_id, line=line, created_at=now
+        )
+        self.pair_paper_keeps.setdefault(paper_id, []).append(keep)
+        return keep
+
+    def close_open_pair_papers(self, context_id, *, now):
+        counts = {"bo": 0, "huy": 0}
+        for paper in self.pair_papers.values():
+            if paper["context_id"] != context_id:
+                continue
+            if paper["state"] not in (
+                "nhap",
+                "da_gui",
+                "da_xem",
+                "de_nghi_sua",
+                "dong_y",
+            ):
+                continue
+            paper["state"] = "bo" if paper["state"] == "nhap" else "huy"
+            counts[paper["state"]] += 1
+        return counts
 
 
 class ASGITestClient:
