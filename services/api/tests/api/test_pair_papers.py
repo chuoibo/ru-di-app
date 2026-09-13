@@ -228,13 +228,21 @@ def test_two_yeses_make_one_outing_in_the_same_request(client, repository):
     assert _read(client, paper_id).json()["outing_id"] == body["outing_id"]
 
 
-def test_a_second_yes_from_the_same_person_is_a_conflict_not_a_second_outing(client):
+def test_a_second_yes_is_the_same_yes_and_never_a_second_outing(client, repository):
+    """Một lần gửi lại vì mất mạng, và một cú bấm đúp, trông giống hệt nhau ở
+    đây. Cả hai đều là MỘT lời đồng ý, nên câu trả lời là câu cũ.
+
+    Bảo người ta «đồng ý thất bại» trong khi nó đã thành công là câu tệ nhất
+    trong ba câu có thể nói. Partial unique là cái làm chuyện này an toàn: chỉ
+    có đúng một hàng để tìm lại.
+    """
     lap_so(client)
     paper_id = _da_gui(client)
-    _agree(client, paper_id)
-    again = _agree(client, paper_id)
-    assert again.status_code == 409, again.text
-    assert again.json()["code"] == "paper_already_agreed"
+    lan_dau = _agree(client, paper_id)
+    lan_hai = _agree(client, paper_id)
+    assert lan_hai.status_code == 200, lan_hai.text
+    assert lan_hai.json() == lan_dau.json(), "phát lại đúng thân cũ"
+    assert len(repository.pair_paper_outings) == 1, "không có kèo thứ hai"
 
 
 def test_a_counter_proposal_is_a_new_version_its_author_has_agreed_to(client):

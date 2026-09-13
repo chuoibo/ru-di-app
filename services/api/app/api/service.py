@@ -7609,9 +7609,21 @@ class ApiService:
                 now=now,
             )
         except RepositoryConflict as exc:
-            raise ApiProblem(
-                409, exc.code.lower(), "Bạn đã đồng ý tờ này rồi."
-            ) from exc
+            if exc.code != "paper_already_agreed":
+                raise
+            # A replay, not a failure. The row blocking this insert is this
+            # person's own «ừ», already recorded -- which is what a retry after
+            # a lost answer looks like on the way back in, and what a second tap
+            # on one screen looks like too. Telling somebody their agreement
+            # failed when it landed is the worst of the three answers available,
+            # so the state is read back and repeated instead. The partial unique
+            # is what makes this safe: there is exactly one row to find.
+            lai = self.repository.get_pair_paper(paper.id)
+            if lai is None:
+                raise ApiProblem(
+                    404, "paper_not_found", "Không có tờ giấy này."
+                ) from exc
+            return _wire_command(lai, pair_paper.hieu_luc(_paper_dict(lai), now=now))
         after_rows = self.repository.get_pair_paper(paper.id)
         assert after_rows is not None
         du = pair_paper.da_du_dong_y(_rows_as_dicts(after_rows.responses), version)
