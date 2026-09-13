@@ -195,3 +195,65 @@ def test_danh_sach_phuong_thuc_khong_bo_sot_cua_nao():
     }
     thieu = trong_lop - _PHUONG_THUC - _KHONG_PHAI_SO_HAI_NGUOI
     assert thieu == set(), f"phương thức {sorted(thieu)} chưa có trong danh sách"
+
+
+def _duong_cua_client() -> set[tuple[str, str]]:
+    """Mỗi lời gọi trong module client, thành (METHOD, đường dạng FastAPI).
+
+    Đọc `translatedAsActor<T>(LOI_TO_GIAY, \\`/…\\`, { … method: "X" … })` và đổi
+    `${bien}` thành `{bien}`. Mẫu bám vào literal, đúng thứ mà
+    `test_api_contract_unresolved_pin` bắt phải viết thẳng, nên nếu ai gom
+    chúng lại sau một helper thì ca này mất dấu và ca kia đỏ — hai cổng nhìn
+    cùng một chỗ từ hai phía.
+    """
+    nguon = _CLIENT.read_text(encoding="utf-8")
+    ra: set[tuple[str, str]] = set()
+    for duong, phan_con in re.findall(
+        r"translatedAsActor<[^>]+>\(\s*LOI_TO_GIAY,\s*`([^`]+)`,\s*(\{[^;]*?\})\s*\)",
+        nguon,
+        re.S,
+    ):
+        method = re.search(r'method:\s*"([A-Z]+)"', phan_con)
+        assert method is not None, f"lời gọi tới {duong} không nói method"
+        ra.add((method.group(1), re.sub(r"\$\{([A-Za-z0-9_]+)\}", r"{\1}", duong)))
+    return ra
+
+
+def test_moi_duong_client_goi_deu_la_mot_route_that():
+    """Cầu nối cuối cùng giữa hai cây: một lỗi chính tả trong đường dẫn client.
+
+    Không tầng test nào khác bắt được nó. `tests/api` lái app bằng đường của
+    CHÍNH nó, `npm test` không có máy chủ, và `check_server_routes_called` chỉ
+    hỏi «có ai nhắc tới route này không» chứ không hỏi «cái client gõ có phải
+    một route không». Một chữ sai ở đây là một màn 404 trên máy thật.
+    """
+    from app.api.main import create_app
+
+    app = create_app(auth_mode="dev")
+    that = {
+        (method, route.path)
+        for route in app.routes
+        if getattr(route, "methods", None)
+        for method in route.methods - {"HEAD", "OPTIONS"}
+    }
+
+    # Tên tham số hai bên không buộc phải trùng (`{paperId}` của client với
+    # `{paper_id}` của route), nên so theo HÌNH: phương thức và các đoạn tĩnh.
+    def hinh(cap: tuple[str, str]) -> tuple[str, tuple[str, ...]]:
+        method, duong = cap
+        return (
+            method,
+            tuple(
+                "{}" if doan.startswith("{") else doan
+                for doan in duong.strip("/").split("/")
+            ),
+        )
+
+    hinh_that = {hinh(cap) for cap in that}
+    la = sorted(cap for cap in _duong_cua_client() if hinh(cap) not in hinh_that)
+    assert la == [], f"client gọi những đường máy chủ không có: {la}"
+
+
+def test_client_goi_du_muoi_chin_cua():
+    """Và đủ cả mười chín, để «gọi đúng» không đọc thành «gọi hết»."""
+    assert len(_duong_cua_client()) == 19, sorted(_duong_cua_client())
