@@ -507,7 +507,78 @@ class OutingStopInput(ApiModel):
 
 
 class OutingTimelineRequest(ApiModel):
+    expected_revision: Annotated[int, Field(strict=True, ge=0)] | None = None
     stops: Annotated[list[OutingStopInput], Field(max_length=50)]
+
+
+ClockTime = Annotated[StrictStr, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
+
+
+class MeetingPoint(ApiModel):
+    """A deliberately selected group meeting point, never device location."""
+
+    lat: Annotated[float, Field(strict=True, ge=-90, le=90, allow_inf_nan=False)]
+    lng: Annotated[float, Field(strict=True, ge=-180, le=180, allow_inf_nan=False)]
+    label: Annotated[StrictStr, Field(min_length=1, max_length=200)]
+
+    @field_validator("label")
+    @classmethod
+    def _not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("point label must not be blank")
+        return value.strip()
+
+
+class ItineraryStopInput(OutingStopInput):
+    id: Annotated[StrictStr, Field(min_length=1, max_length=80)]
+    day: date | None = None
+    duration_minutes: Annotated[int, Field(strict=True, ge=0, le=1440)] | None = None
+    time_locked: StrictBool = True
+    meeting_point: MeetingPoint | None = None
+
+    @field_validator("id")
+    @classmethod
+    def _valid_id(cls, value: str) -> str:
+        if value.startswith("tmp-") and len(value) > 4:
+            return value
+        try:
+            return str(UUID(value))
+        except ValueError:
+            raise ValueError("stop id must be a UUID or a temporary draft id") from None
+
+    @model_validator(mode="after")
+    def _one_location(self) -> ItineraryStopInput:
+        if self.place_id is not None and self.meeting_point is not None:
+            raise ValueError("choose a catalogue place or a meeting point")
+        return self
+
+
+class ItineraryDay(ApiModel):
+    day: date
+    transport_mode: Literal["motorbike", "car", "walk"]
+    start_at: ClockTime
+    start_stop_id: Annotated[StrictStr, Field(max_length=80)] | None = None
+    end_stop_id: Annotated[StrictStr, Field(max_length=80)] | None = None
+    return_to_start: StrictBool = False
+
+
+class ItineraryRequest(ApiModel):
+    expected_revision: Annotated[int, Field(strict=True, ge=0)]
+    stops: Annotated[list[ItineraryStopInput], Field(max_length=50)]
+    days: Annotated[list[ItineraryDay], Field(max_length=50)]
+
+    @model_validator(mode="after")
+    def _unique_keys(self) -> ItineraryRequest:
+        if len({stop.id for stop in self.stops}) != len(self.stops):
+            raise ValueError("duplicate stop ids")
+        if len({day.day for day in self.days}) != len(self.days):
+            raise ValueError("duplicate days")
+        return self
+
+
+class ItineraryPreviewRequest(ItineraryRequest):
+    day: date
+    include_suggestion: StrictBool = False
 
 
 class OutingStopResponse(ApiModel):
@@ -517,6 +588,10 @@ class OutingStopResponse(ApiModel):
     label: str
     place_name: str | None
     place_id: str | None = None
+    day: date | None = None
+    duration_minutes: int | None = None
+    time_locked: bool = True
+    meeting_point: MeetingPoint | None = None
 
 
 class StopCheckinResponse(ApiModel):
@@ -552,6 +627,9 @@ class OutingResponse(ApiModel):
     budget_per_person_vnd: MoneyVnd
     created_at: datetime
     stops: list[OutingStopResponse]
+    timeline_revision: int = 0
+    itinerary_version: Literal[1, 2] = 1
+    days: list[ItineraryDay] = Field(default_factory=list)
 
 
 class OutingListResponse(ApiModel):

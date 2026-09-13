@@ -54,7 +54,7 @@ test("themChang nối cuối, giữ nguyên thứ tự đã chọn và place_id"
 
 test("ganDiaDiem đổi đúng một chặng, không đụng chặng khác", () => {
   const ra = ganDiaDiem(CHANG, "s-1", { id: "p-quan-oc-di-be", name: "Quán Ốc Dì Bé" });
-  assert.deepEqual(ra[0], { at: "12:00", label: "Ăn trưa", place_name: "Quán Ốc Dì Bé", place_id: "p-quan-oc-di-be" });
+  assert.deepEqual(ra[0], { ...changGuiTu(CHANG[0]), place_name: "Quán Ốc Dì Bé", place_id: "p-quan-oc-di-be", meeting_point: null });
   assert.deepEqual(ra[1], changGuiTu(CHANG[1]));
 });
 

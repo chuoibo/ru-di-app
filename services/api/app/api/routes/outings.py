@@ -5,12 +5,14 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, Request, Response, status
 
 from app.api.deps import Actor, get_actor, get_repository
 from app.api.repository import ApiRepository
 from app.api.schemas import (
     ErrorResponse,
+    ItineraryPreviewRequest,
+    ItineraryRequest,
     OutingCheckinListResponse,
     OutingCreateRequest,
     OutingInviteAcceptResponse,
@@ -21,6 +23,7 @@ from app.api.schemas import (
     OutingTimelineRequest,
     StopCheckinResponse,
 )
+from app.api.search_rate_limit import FixedWindowLimiter
 from app.api.service import ApiService
 
 router = APIRouter(tags=["outings"])
@@ -30,6 +33,49 @@ ERRORS = {
     409: {"model": ErrorResponse},
     422: {"model": ErrorResponse},
 }
+
+
+def get_itinerary_limiter(request: Request) -> FixedWindowLimiter:
+    return request.app.state.itinerary_limiter
+
+
+@router.post("/outings/{outing_id}/itinerary/preview", responses=ERRORS)
+def preview_outing_itinerary(
+    outing_id: UUID,
+    request: ItineraryPreviewRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    limiter: Annotated[FixedWindowLimiter, Depends(get_itinerary_limiter)],
+    response: Response,
+) -> dict:
+    limiter.check(actor.id)
+    response.headers["Cache-Control"] = "no-store"
+    return ApiService(repository).preview_outing_itinerary(outing_id, request, actor)
+
+
+@router.put(
+    "/outings/{outing_id}/itinerary", response_model=OutingResponse, responses=ERRORS
+)
+def replace_outing_itinerary(
+    outing_id: UUID,
+    request: ItineraryRequest,
+    actor: Annotated[Actor, Depends(get_actor)],
+    repository: Annotated[ApiRepository, Depends(get_repository)],
+    idempotency_key: Annotated[str, Header(min_length=1, max_length=255)],
+    http: Request,
+    response: Response,
+) -> OutingResponse | Response:
+    response.headers["Cache-Control"] = "no-store"
+    replay = http.scope.get("itinerary_authorized_replay")
+    if replay is not None:
+        ApiService(repository).authorize_outing_itinerary(outing_id, actor)
+        return Response(
+            content=replay.body,
+            status_code=replay.status_code,
+            media_type=replay.media_type,
+            headers={"Idempotency-Replayed": "true", "Cache-Control": "no-store"},
+        )
+    return ApiService(repository).replace_outing_itinerary(outing_id, request, actor)
 
 
 @router.post(

@@ -23,6 +23,7 @@ import ast
 import pathlib
 import sys
 import unittest
+from graphlib import TopologicalSorter
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
@@ -32,7 +33,9 @@ from app.db.base import Base  # noqa: E402
 MIGRATIONS = pathlib.Path(__file__).resolve().parents[2] / "app/db/migrations/versions"
 
 
-def _upgrade_bodies() -> list[tuple[str, ast.FunctionDef]]:
+def _upgrade_bodies(
+    directory: pathlib.Path = MIGRATIONS,
+) -> list[tuple[str, ast.FunctionDef]]:
     """Every `upgrade()`, in revision order, with its source.
 
     Two things here were wrong before and both only showed up the first time a
@@ -49,11 +52,12 @@ def _upgrade_bodies() -> list[tuple[str, ast.FunctionDef]]:
     """
 
     by_revision: dict[str, tuple[str, ast.Module, ast.FunctionDef]] = {}
-    parents: dict[str, str | None] = {}
-    for path in MIGRATIONS.glob("*.py"):
+    parents: dict[str, tuple[str, ...]] = {}
+    for path in sorted(directory.glob("*.py")):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         revision = down = None
+        has_down = False
         upgrade = None
         for node in tree.body:
             if isinstance(node, ast.FunctionDef) and node.name == "upgrade":
@@ -65,23 +69,36 @@ def _upgrade_bodies() -> list[tuple[str, ast.FunctionDef]]:
                 target, value = node.targets[0].id, node.value
             if target == "revision" and isinstance(value, ast.Constant):
                 revision = value.value
-            elif target == "down_revision" and isinstance(value, ast.Constant):
-                down = value.value
-        assert revision is not None and upgrade is not None, path.name
+            elif target == "down_revision":
+                down = ast.literal_eval(value)
+                has_down = True
+        assert isinstance(revision, str) and upgrade is not None and has_down, path.name
+        assert revision not in by_revision, f"duplicate revision: {revision}"
+        assert down is None or isinstance(down, str | tuple), path.name
+        predecessors = (
+            () if down is None else (down,) if isinstance(down, str) else down
+        )
+        assert all(isinstance(parent, str) for parent in predecessors), path.name
         by_revision[revision] = (source, tree, upgrade)
-        parents[revision] = down
+        parents[revision] = predecessors
 
-    children = {down: rev for rev, down in parents.items()}
+    referenced = {
+        parent for predecessors in parents.values() for parent in predecessors
+    }
+    assert referenced <= parents.keys(), (
+        f"missing revisions: {referenced - parents.keys()}"
+    )
+    # Every parent precedes its child, including both arms of a merge. The
+    # sorter rejects cycles; a single head remains required for upgrade head.
+    order = tuple(TopologicalSorter(parents).static_order())
+    assert len(parents.keys() - referenced) == 1, "expected one migration head"
+    assert sum(not predecessors for predecessors in parents.values()) == 1, (
+        "expected one migration root"
+    )
     ordered: list[tuple[str, ast.FunctionDef]] = []
-    current = children.get(None)
-    while current is not None:
+    for current in order:
         source, _tree, upgrade = by_revision[current]
         ordered.append((source, upgrade))
-        current = children.get(current)
-    assert len(ordered) == len(by_revision), (
-        "the revision chain is broken or branched; "
-        f"walked {len(ordered)} of {len(by_revision)}"
-    )
     return ordered
 
 

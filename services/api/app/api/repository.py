@@ -497,6 +497,12 @@ class OutingStopRecord:
     label: str
     place_name: str | None
     place_id: str | None = None
+    day: date | None = None
+    duration_minutes: int | None = None
+    time_locked: bool = True
+    meeting_lat: float | None = None
+    meeting_lng: float | None = None
+    meeting_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -521,6 +527,9 @@ class OutingRecord:
     budget_per_person_vnd: int
     created_at: datetime
     stops: tuple[OutingStopRecord, ...]
+    timeline_revision: int = 0
+    itinerary_version: int = 1
+    itinerary_days: tuple[dict, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1322,6 +1331,16 @@ class ApiRepository(Protocol):
         *,
         outing_id: uuid.UUID,
         stops: list[dict],
+        expected_revision: int | None = None,
+    ) -> OutingRecord: ...
+
+    def replace_outing_itinerary(
+        self,
+        *,
+        outing_id: uuid.UUID,
+        stops: list[dict],
+        itinerary_days: list[dict],
+        expected_revision: int,
     ) -> OutingRecord: ...
 
     def get_outing_stop(
@@ -2294,6 +2313,12 @@ class SqlAlchemyApiRepository:
             label=stop.label,
             place_name=stop.place_name,
             place_id=stop.place_id,
+            day=stop.day,
+            duration_minutes=stop.duration_minutes,
+            time_locked=stop.time_locked,
+            meeting_lat=stop.meeting_lat,
+            meeting_lng=stop.meeting_lng,
+            meeting_label=stop.meeting_label,
         )
 
     def _outing_record(self, outing: Outing) -> OutingRecord:
@@ -2313,6 +2338,9 @@ class SqlAlchemyApiRepository:
             budget_per_person_vnd=outing.budget_per_person_vnd,
             created_at=outing.created_at,
             stops=tuple(self._outing_stop_record(stop) for stop in stops),
+            timeline_revision=outing.timeline_revision,
+            itinerary_version=outing.itinerary_version,
+            itinerary_days=tuple(outing.itinerary_days or []),
         )
 
     @staticmethod
@@ -3080,10 +3108,23 @@ class SqlAlchemyApiRepository:
         *,
         outing_id: uuid.UUID,
         stops: list[dict],
+        expected_revision: int | None = None,
     ) -> OutingRecord:
-        outing = self.session.get(Outing, outing_id)
+        outing = self.session.scalar(
+            select(Outing)
+            .where(Outing.id == outing_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
         if outing is None:
             raise RepositoryConflict("OUTING_NOT_FOUND")
+        if (
+            expected_revision is not None
+            and outing.timeline_revision != expected_revision
+        ):
+            raise RepositoryConflict("TIMELINE_REVISION_CONFLICT")
+        if outing.itinerary_version == 2:
+            raise RepositoryConflict("ITINERARY_UPGRADE_REQUIRED")
 
         existing_stops = list(
             self.session.scalars(
@@ -3152,10 +3193,93 @@ class SqlAlchemyApiRepository:
                     label=stop["label"],
                     place_name=stop["place_name"],
                     place_id=stop.get("place_id"),
+                    day=outing.starts_on
+                    if outing.starts_on == outing.ends_on
+                    else None,
                 )
                 for position, stop in added
             ]
         )
+        self.session.flush()
+        outing.timeline_revision += 1
+        return self._outing_record(outing)
+
+    def replace_outing_itinerary(
+        self,
+        *,
+        outing_id: uuid.UUID,
+        stops: list[dict],
+        itinerary_days: list[dict],
+        expected_revision: int,
+    ) -> OutingRecord:
+        """Replace v2 itinerary atomically while preserving stop identities."""
+        outing = self.session.scalar(
+            select(Outing)
+            .where(Outing.id == outing_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if outing is None:
+            raise RepositoryConflict("OUTING_NOT_FOUND")
+        if outing.timeline_revision != expected_revision:
+            raise RepositoryConflict("TIMELINE_REVISION_CONFLICT")
+        existing = {
+            row.id: row
+            for row in self.session.scalars(
+                select(OutingStop).where(OutingStop.outing_id == outing_id)
+            )
+        }
+        requested_ids = {
+            uuid.UUID(s["id"]) for s in stops if not s["id"].startswith("tmp-")
+        }
+        if not requested_ids.issubset(existing):
+            raise RepositoryConflict("STOP_NOT_FOUND")
+        for row in existing.values():
+            if row.id not in requested_ids:
+                self.session.delete(row)
+        self.session.flush()
+        # Move survivors out of the unique position range before a permutation.
+        parking = max([r.position for r in existing.values()] + [len(stops)]) + 1
+        for offset, row_id in enumerate(requested_ids):
+            existing[row_id].position = parking + offset
+        self.session.flush()
+        new_ids: dict[str, str] = {}
+        for position, stop in enumerate(stops):
+            row = (
+                existing.get(uuid.UUID(stop["id"]))
+                if not stop["id"].startswith("tmp-")
+                else None
+            )
+            if row is None:
+                row = OutingStop(
+                    id=uuid.uuid4(), outing_id=outing_id, position=position
+                )
+                new_ids[stop["id"]] = str(row.id)
+                self.session.add(row)
+            row.position = position
+            row.minute_of_day = stop["minute_of_day"]
+            row.label = stop["label"]
+            row.place_name = stop.get("place_name")
+            row.place_id = stop.get("place_id")
+            row.day = stop.get("day")
+            row.duration_minutes = stop.get("duration_minutes")
+            row.time_locked = stop.get("time_locked", True)
+            meeting = stop.get("meeting_point")
+            row.meeting_lat = meeting.get("lat") if meeting else None
+            row.meeting_lng = meeting.get("lng") if meeting else None
+            row.meeting_label = meeting.get("label") if meeting else None
+        outing.itinerary_days = [
+            {
+                **day,
+                **{
+                    key: new_ids.get(day.get(key), day.get(key))
+                    for key in ("start_stop_id", "end_stop_id")
+                },
+            }
+            for day in itinerary_days
+        ]
+        outing.itinerary_version = 2
+        outing.timeline_revision += 1
         self.session.flush()
         return self._outing_record(outing)
 
@@ -3177,6 +3301,25 @@ class SqlAlchemyApiRepository:
         person_id: uuid.UUID,
         now: datetime,
     ) -> StopCheckinRecord:
+        stop = self.session.get(OutingStop, stop_id)
+        if stop is None:
+            raise RepositoryConflict("STOP_NOT_FOUND")
+        outing = self.session.scalar(
+            select(Outing)
+            .where(Outing.id == stop.outing_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        # A concurrent editor may have removed the stop while we waited.
+        if (
+            outing is None
+            or self.session.scalar(
+                select(OutingStop.id).where(OutingStop.id == stop_id)
+            )
+            is None
+        ):
+            raise RepositoryConflict("STOP_NOT_FOUND")
+        # A newly arrived member invalidates previews made before the arrival.
         checkin = OutingStopCheckin(
             stop_id=stop_id, person_id=person_id, created_at=now
         )
@@ -3194,6 +3337,8 @@ class SqlAlchemyApiRepository:
             if constraint == "uq_outing_stop_checkins_person":
                 raise RepositoryConflict("ALREADY_CHECKED_IN") from exc
             raise
+        outing.timeline_revision += 1
+        self.session.flush()
         return self._stop_checkin_record(checkin)
 
     def list_outing_checkins(
