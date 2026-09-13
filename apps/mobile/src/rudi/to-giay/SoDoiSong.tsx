@@ -48,7 +48,13 @@ export function SoDoiSongProvider({
       luotCuaToi: true,
       rangBuoc: { toi: rangBuocCua(so, toiId), nguoiKia: rangBuocCua(so, nguoiKiaId) },
       toGiay: toMo ? [toMo, ...toKhac] : toKhac,
-      deNghiCho: (so?.pending_proposals ?? []).map((d) => ({ id: d.id, purpose: d.purpose })),
+      deNghiCho: (so?.pending_proposals ?? []).map((d) => ({
+        id: d.id,
+        purpose: d.purpose,
+        // Ai đề nghị quyết định ai bấm được nút đồng ý. Máy chủ trả
+        // `proposed_by_id`; đọc nó ở đây là chỗ duy nhất biết điều đó.
+        cuaToi: d.proposed_by_id === toiId,
+      })),
       daDong: false,
 
       capId: contextId,
@@ -76,6 +82,8 @@ export function SoDoiSongProvider({
         }
       },
       dongSo: (revision: string) => void song.dongSoNay(revision),
+
+      dongYDeNghi: (id: string) => void song.dongYDeNghiNay(id),
 
       ruDiChoi: () => void song.xinTo(),
       suaNhap: (_id: string, content: NoiDungTo, lyDo: string | null) => void song.suaNhap(content, lyDo),

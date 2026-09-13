@@ -56,7 +56,15 @@ export interface TrangThaiSoDoi {
   rangBuoc: { toi: RangBuoc; nguoiKia: RangBuoc };
   toGiay: readonly ToGiay[];
   /** Consent proposals still waiting for the other person. */
-  deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat" }[];
+  /**
+   * Lời đề nghị đang chờ, kèm AI đã đề nghị.
+   *
+   * `cuaToi` không phải trang trí: người ĐƯỢC đề nghị là người duy nhất bấm
+   * đồng ý được, và bản đầu của màn hiện cùng một câu «chờ người ấy đồng ý»
+   * cho cả hai phía — nên trên máy thật, người nhận lời đề nghị không có cửa
+   * nào để trả lời. Đo được ở vòng native 14/09.
+   */
+  deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
 }
 
@@ -85,6 +93,9 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   datRangBuoc: (rb: Partial<RangBuoc>) => void;
   /** `revision` is the one the person just read. The fixture ignores it. */
   dongSo: (revision: string) => void;
+
+  /** Đồng ý một lời đề nghị người kia vừa gửi. */
+  dongYDeNghi: (id: string) => void;
 
   /** «Rủ đi chơi»: Nếp drafts a sheet for me. */
   ruDiChoi: () => void;
@@ -157,11 +168,15 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
       // constant: nothing can change between the count and the close.
       xemTruocDongSo: async () => ({ revision: "fixture", ...demHauQuaDongSo(s.toGiay, s.deNghiCho.length) }),
 
-      deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so" }] })),
-      deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi" }] })),
+      deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so", cuaToi: true }] })),
+      deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi", cuaToi: true }] })),
       thuHoiBatDoi: () => setS((c) => ({ ...c, batDoi: false, deNghiCho: c.deNghiCho.filter((d) => d.purpose !== "bat_doi") })),
       datRangBuoc: (rb) => setS((c) => ({ ...c, rangBuoc: { ...c.rangBuoc, toi: { ...c.rangBuoc.toi, ...rb } } })),
       dongSo: () => setS((c) => ({ ...c, daDong: true, deNghiCho: [], toGiay: dongSo(c.toGiay) })),
+
+      // Trên bản trải nghiệm, lời đề nghị luôn là của tôi, nên «đồng ý» ở đây
+      // là việc của người kia — cùng một đường với nút dưới `nguoiKia`.
+      dongYDeNghi: (id: string) => api.nguoiKia?.dongYDeNghi(id),
 
       ruDiChoi: () => {
         if (s.daDong || daCoToMo) return null;

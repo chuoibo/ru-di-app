@@ -1,0 +1,130 @@
+# Sổ hai người và tờ giấy trên API prod (ADR-0027, Phase 4).
+#
+# Chạy SAU flow 41 trong cùng lượt: nó để lại một cặp thật giữa C và D, và cặp
+# ấy là điều kiện — sổ hai người chỉ sống trong một context `pair`. Chạy sau 46
+# cũng an toàn: 46 chỉ xoá F.
+#
+# Cả thang đồng ý lẫn vòng tờ giấy, qua HAI tài khoản thật trên một máy:
+#   C: hàng ghim «Tờ giấy của hai mình» → không gian giấy → đề nghị lập sổ.
+#   D: cùng chỗ ấy → «Người ấy đã đề nghị» → Đồng ý → sổ mở.
+#   D: «Rủ đi chơi» → bản phác → Gửi.
+#   C: mở tờ → «Ừ» → «Đã chốt».
+#
+# Vì sao phải hai tài khoản: một bậc đồng ý cần HAI người khác nhau, và «đồng ý»
+# một tờ giấy cũng thế (§3.4). Một máy đóng cả hai vai chỉ có ở bản trải nghiệm,
+# và bản dựng này tắt cửa fixture.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+- runFlow: _dang-xuat-neu-co.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- runFlow: _dang-nhap-c.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+# --- C đề nghị lập sổ ---------------------------------------------------------
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Nhắn riêng"
+    timeout: 60000
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+# Hàng ghim của cặp, dưới tiêu đề. Chỉ cặp mới có; hội bạn không.
+- assertVisible: "Tờ giấy của hai mình"
+- tapOn: "Tờ giấy của hai mình"
+- extendedWaitUntil:
+    visible: "Chưa có sổ hai người"
+    timeout: 60000
+- takeScreenshot: 47a-chua-co-so
+- tapOn: "Đề nghị lập sổ"
+- extendedWaitUntil:
+    visible: "Lập sổ hai người"
+    timeout: 30000
+- takeScreenshot: 47b-bac-lap-so
+- tapOn: "Đề nghị lập sổ"
+# Máy chủ đã ghi lời đề nghị và đồng ý của chính người đề nghị.
+- extendedWaitUntil:
+    visible: "Đã đề nghị.*"
+    timeout: 60000
+- tapOn: "Để sau"
+# --- D nhận lời đề nghị và đồng ý ---------------------------------------------
+- runFlow: _dang-xuat-neu-co.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- runFlow: _dang-nhap-d.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Nhắn riêng"
+    timeout: 60000
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+- tapOn: "Tờ giấy của hai mình"
+- extendedWaitUntil:
+    visible: "Xem lời đề nghị"
+    timeout: 60000
+- tapOn: "Xem lời đề nghị"
+# Phía NGƯỜI NHẬN: một câu nói ai đề nghị, và một nút để trả lời. Bản đầu hiện
+# «chờ người ấy đồng ý» cho cả hai phía, nên người nhận không có việc gì bấm.
+- extendedWaitUntil:
+    visible: "Người ấy đã đề nghị.*"
+    timeout: 30000
+- takeScreenshot: 47c-ho-de-nghi
+- tapOn: "Đồng ý"
+# Cả hai đã đồng ý: sổ mở, và màn đổi sang lời mời viết tờ đầu tiên.
+- extendedWaitUntil:
+    visible: "Rủ đi chơi"
+    timeout: 60000
+- takeScreenshot: 47d-so-da-mo
+# --- D phác một tờ và gửi -----------------------------------------------------
+- tapOn: "Rủ đi chơi"
+- extendedWaitUntil:
+    visible: "Bản phác"
+    timeout: 60000
+- takeScreenshot: 47e-ban-phac
+- tapOn: "Gửi"
+- extendedWaitUntil:
+    visible: "Đã gửi"
+    timeout: 60000
+# --- C mở tờ ra và ừ ----------------------------------------------------------
+- runFlow: _dang-xuat-neu-co.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!"
+    timeout: 60000
+- runFlow: _dang-nhap-c.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Nhắn riêng"
+    timeout: 60000
+- tapOn: "Nhắn riêng"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 60000
+- tapOn: "Tờ giấy của hai mình"
+- extendedWaitUntil:
+    visible: "Ừ"
+    timeout: 60000
+- takeScreenshot: 47f-nhan-duoc
+- tapOn: "Ừ"
+# Hai người đồng ý cùng một phiên bản: máy chủ chốt và sinh kèo.
+- extendedWaitUntil:
+    visible: "Đã chốt"
+    timeout: 60000
+- takeScreenshot: 47g-da-chot
