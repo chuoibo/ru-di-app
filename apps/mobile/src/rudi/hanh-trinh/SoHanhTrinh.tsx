@@ -80,7 +80,15 @@ export function SoHanhTrinh({ outing, places, actorId, onSaved, onReload, onTime
     const subscription = AppState.addEventListener("change", (state) => { if (state === "active" && preview?.status !== "ready" && !dirty) void inspect(false); });
     return () => subscription.remove();
   }, [preview?.status, dirty, day]);
-  const fitPoints = useMemo(() => [preview?.current, preview?.suggestion].flatMap((r) => r?.segments.flatMap((s) => s.geometry.map(([lng, lat]) => ({ lat, lng }))) ?? []), [preview]);
+  const fitPoints = useMemo(() => {
+    const routed = [preview?.current, preview?.suggestion].flatMap((r) => r?.segments.flatMap((s) => s.geometry.map(([lng, lat]) => ({ lat, lng }))) ?? []);
+    if (routed.length) return routed;
+    const located = chieuTuChang(draft.stops, places).activities.filter((a) => a.lat !== null && a.lng !== null);
+    // An empty day keeps the outing's geographic context instead of jumping
+    // to the default city, while displaying no stops from another day.
+    if (located.some((a) => draft.stops.find((s) => s.id === a.id)?.day === day)) return [];
+    return located.map((a) => ({ lat: a.lat!, lng: a.lng! }));
+  }, [preview, draft, places, day]);
   const route = suggestion ? preview?.suggestion : preview?.current;
   const visible = useMemo(() => {
     let stops = draft.stops.filter((s) => s.day === day);

@@ -136,6 +136,23 @@ if (!existsSync(INDEX)) {
       await page.clickLabel("Hành trình");
       await openEditor();
       assert.equal(await page.evaluate(() => document.querySelector('input[aria-label="Giờ xuất phát"]')?.value), "07:45", "bản nháp phải còn sau khi đổi chế độ");
+      await page.clickChu("Xem trên bản đồ");
+      await page.waitFor(() => !document.querySelector('input[aria-label="Giờ xuất phát"]'));
+      const center = await page.evaluate(() => {
+        const canvas = document.querySelector(".maplibregl-canvas");
+        canvas.scrollIntoView({ block: "center" });
+        const box = canvas.getBoundingClientRect();
+        return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      });
+      await page.call("Input.dispatchMouseEvent", { type: "mouseWheel", ...center, deltaX: 0, deltaY: 800 });
+      await page.waitFor(() => [...document.querySelectorAll('[aria-label]')].some((el) => el.getAttribute("aria-label").includes("điểm gần nhau:")), { timeout: 10000, label: "cụm điểm sau khi thu nhỏ bản đồ" });
+      const cluster = await page.evaluate(() => [...document.querySelectorAll('[aria-label]')].find((el) => el.getAttribute("aria-label").includes("điểm gần nhau:")).getAttribute("aria-label"));
+      await page.clickLabel(cluster);
+      await page.waitFor(() => !!document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'));
+      await page.clickChu("3 · 20:00 · Chợ đêm Đà Lạt");
+      await page.waitFor(() => document.body.innerText.includes("Xem chi tiết") && !document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'));
+      await page.clickLabel("Lịch trình");
+      await page.waitFor(() => [...document.querySelectorAll('[role="button"]')].some((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Chợ đêm Đà Lạt") && el.getAttribute("aria-selected") === "true"), { label: "điểm chọn từ cụm được giữ ở timeline" });
     });
   });
 }
