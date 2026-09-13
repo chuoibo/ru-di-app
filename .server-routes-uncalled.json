@@ -90,51 +90,6 @@
       "reason": "F36 gợi ý theo ngữ cảnh. ĐÃ CÓ NGƯỜI GỌI THẬT từ #382: ai-hieu-nhom.ts:221 gọi `${prefix}/contextual-suggestion`. Cùng cơ chế mù và cùng đường bấm với /budget ở trên. Lý do cũ ('chưa màn nào gọi, AI đi qua /ai-turn') đã hết hiệu lực: /ai-turn vẫn là đường của khung chat, nhưng route này giờ có màn riêng đọc nó."
     },
     {
-      "route": "/contexts/{context_id}/notebook",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/close",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/close/preview",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/consents/{purpose}",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/constraints/{kind}",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/proposals",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/papers",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/contexts/{context_id}/papers/draft",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
       "route": "/contexts/{context_id}/photos/{photo_id}",
       "loai": "cong-mu",
       "reason": "DA CO NGUOI GOI THAT, va cong nay khong the thay -- day la o duy nhat trong file thuoc loai do. URL do MAY CHU tra ve trong image_url (schemas.py:1496 cho album, va WidgetPhotoResponse.image_url cho F38), roi client dua thang chuoi ay cho <Anh uri=...>, nen khong bao gio co literal de quet. Truoc day dong nay con dung theo mot nghia khac: duong DUY NHAT toi no la /contexts/{id}/albums, ma route do cung chua ai goi. Nghia do het han hom nay -- man widget (F38) doc anh moi nhat cua nhom qua chinh duong nay, nen byte cua route nay dang chay tren mot man that. Giu dong nay lai la de KHONG ai doc so 0 cua cong thanh 'route nay chet'."
@@ -148,51 +103,6 @@
       "route": "/contexts/{context_id}/suggestion",
       "loai": "cong-mu",
       "reason": "F33 gợi ý từ lịch sử nhóm. ĐÃ CÓ NGƯỜI GỌI THẬT từ #382: ai-hieu-nhom.ts:219 gọi `${prefix}/suggestion`. Cùng cơ chế mù và cùng đường bấm với /budget ở trên. Lý do cũ ('không có literal nào bắt đầu bằng /suggest') là một phép thử trên hình dạng literal, và hình dạng đó không đo được chuyện đường dẫn bị ghép từ hai mảnh."
-    },
-    {
-      "route": "/papers/{paper_id}",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/done",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/draft",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/keeps",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/send",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/skip",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/versions/{version}/responses",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/versions/{version}/viewed",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
-    },
-    {
-      "route": "/papers/{paper_id}/withdraw",
-      "loai": "tinh-nang",
-      "reason": "«Nếp truyền giấy» lát 1, ADR-0027. Máy chủ đi trước màn có chủ ý: 13 màn fixture đã merge ở Phase 2 và đọc mô hình thuần trong apps/mobile/src/rudi/to-giay/, chưa gọi HTTP. Phase 4 nối live bằng to-giay-song.ts và GỠ 18 dòng này; cổng sẽ in GHIM CŨ nếu ai để sót. Nợ này có hạn: một dòng còn ở đây sau Phase 4 nghĩa là một bề mặt máy chủ không người dùng nào bấm được."
     },
     {
       "route": "/places/{place_id}/photos/{photo_id}",

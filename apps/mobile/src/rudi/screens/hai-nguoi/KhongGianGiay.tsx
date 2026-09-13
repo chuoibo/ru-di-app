@@ -57,6 +57,25 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
 
   const dong = () => setMo(null);
 
+  // The close preview is asked for when the sheet opens, not computed while
+  // rendering: on the live build it is a POST that mints the `revision` the
+  // close must carry. `null` until it lands, and the sheet says «đang đếm»
+  // rather than showing zeros somebody could agree to.
+  const [xemTruoc, setXemTruoc] = useState<Awaited<ReturnType<typeof so.xemTruocDongSo>> | null>(null);
+  useEffect(() => {
+    if (mo !== "dong-so") {
+      setXemTruoc(null);
+      return;
+    }
+    let conDung = true;
+    void so.xemTruocDongSo().then((ket) => {
+      if (conDung) setXemTruoc(ket);
+    });
+    return () => {
+      conDung = false;
+    };
+  }, [mo, so]);
+
   let than: React.ReactNode;
   if (so.daDong) {
     than = (
@@ -173,7 +192,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
       <BatMotDoi dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} open={mo === "bat-doi"} />
       <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={so.deNghiBatDoi} onClose={dong} open={mo === "loai-so"} />
       <RangBuoc nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => { so.datRangBuoc(rb); dong(); }} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
-      <DongSo onClose={dong} onDong={() => { so.dongSo(); dong(); }} open={mo === "dong-so"} xemTruoc={so.xemTruocDongSo()} />
+      <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
           <Heading size="h2" subtitle="Bản trải nghiệm: máy này đóng cả vai người ấy. Mỗi nút là một việc người ấy làm trên máy của họ." title="Đóng vai người ấy" />

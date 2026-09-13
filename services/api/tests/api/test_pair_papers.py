@@ -704,3 +704,50 @@ def test_every_pair_route_refuses_a_stranger(client):
             ), f"{method} {path}: {answer.text}"
             swept += 1
     assert swept == 19, f"quét được {swept} cửa, phải là 19"
+
+
+def test_the_list_carries_the_one_line_a_closed_row_shows(client, clock):
+    """Hai mẩu cho dòng phụ của một tờ đã khép, và KHÔNG phải một câu soạn sẵn.
+
+    Màn «Tờ đã khép» hiện giờ-việc của chặng đầu, hoặc dòng đã giữ nếu có. Đọc
+    trọn từng tờ để lấy một dòng ấy là một yêu cầu mỗi hàng, trên mỗi nhịp
+    poll. Nên danh sách mang sẵn hai mẩu — mẩu, không phải câu: màn tự viết
+    «Giữ lại: …» bằng chữ của nó.
+    """
+    lap_so(client)
+    # Sửa TRƯỚC khi gửi: một tờ đã gửi không còn là bản nháp, và bản đầu của ca
+    # này sửa sau khi gửi rồi đọc lại đúng nội dung mặc định.
+    paper_id = _draft(client)
+    assert (
+        _patch(client, paper_id, gio="19:30", viec="Ăn tối, quán mới").status_code
+        == 200
+    )
+    assert _send(client, paper_id).status_code == 200
+    rows = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
+    assert rows[0]["chang_dau"] == {"gio": "19:30", "viec": "Ăn tối, quán mới"}
+    assert rows[0]["dong_giu_dau"] is None
+
+    _agree(client, paper_id)
+    clock(timedelta(days=3))
+    client.post(f"/papers/{paper_id}/done", headers=head(TOI))
+    client.post(
+        f"/papers/{paper_id}/keeps",
+        json={"line": "Cái đèn ở góc bàn."},
+        headers=head(NGUOI_KIA),
+    )
+    rows = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
+    assert rows[0]["dong_giu_dau"] == "Cái đèn ở góc bàn."
+    assert rows[0]["chang_dau"]["viec"] == "Ăn tối, quán mới", "vẫn còn cả hai mẩu"
+
+
+def test_a_sheet_the_list_cannot_read_does_not_take_the_list_down(client, repository):
+    """Một tờ hỏng không được làm hai mươi tuần khác không hiện ra."""
+    import uuid as _uuid
+
+    lap_so(client)
+    paper_id = _draft(client)
+    repository.pair_paper_versions[(_uuid.UUID(paper_id), 1)]["content"] = {"ngay": "x"}
+    rows = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
+    assert len(rows) == 1
+    assert rows[0]["chang_dau"] is None
+    assert rows[0]["ngay"] is None

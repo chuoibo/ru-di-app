@@ -62,7 +62,15 @@ export interface SoHaiNguoi {
   open_paper_id: string | null;
 }
 
-/** One row of `GET /contexts/{id}/papers`; the list carries no content. */
+/**
+ * One row of `GET /contexts/{id}/papers`; no versions, no responses.
+ *
+ * `chang_dau` and `dong_giu_dau` are the two facts a closed row shows besides
+ * the date. They ride on the list because the list is that row's only read:
+ * fetching each closed sheet whole to render one line would be one request per
+ * row on every poll. They arrive as pieces, not as a sentence -- the row writes
+ * «19:00 Ăn tối» or «Giữ lại: …» in its own words.
+ */
 export interface ToTomTat {
   id: string;
   state: ToGiay["state"];
@@ -70,6 +78,8 @@ export interface ToTomTat {
   tuan: string;
   ngay: string | null;
   expires_at: string;
+  chang_dau: { gio: string; viec: string } | null;
+  dong_giu_dau: string | null;
 }
 
 /** What every command answers. Never content -- see the header. */
@@ -130,102 +140,107 @@ export const LOI_TO_GIAY: Record<string, string> = {
 
 type Goi = { actorId: string; attempt?: Attempt };
 
-function doc<T>(path: string, { actorId }: Goi): Promise<T> {
-  return translatedAsActor<T>(LOI_TO_GIAY, path, { actorId, method: "GET" });
-}
-
-function ghi<T>(path: string, method: "POST" | "PATCH" | "PUT" | "DELETE", { actorId, attempt }: Goi, body?: unknown): Promise<T> {
-  return translatedAsActor<T>(LOI_TO_GIAY, path, { actorId, method, attempt, body });
-}
+/**
+ * Every call below writes its path inline, and that is deliberate.
+ *
+ * The first cut routed all nineteen through two helpers taking `path: string`.
+ * `tests/test_api_contract_unresolved_pin.py` went red on both: the contract
+ * gate reads the literal handed to `translatedAsActor`, so a helper hid every
+ * route in this feature behind one unreadable argument. Pinning the two would
+ * have made the gate green while blinding it to all nineteen -- the same trade
+ * the migration parity gate refused when a column helper hid column names.
+ *
+ * So the repetition is the gate's price, paid once per route.
+ */
 
 // --- sổ ---------------------------------------------------------------------
 
 export function docSo(contextId: string, goi: Goi): Promise<SoHaiNguoi> {
-  return doc<SoHaiNguoi>(`/contexts/${contextId}/notebook`, goi);
+  return translatedAsActor<SoHaiNguoi>(LOI_TO_GIAY, `/contexts/${contextId}/notebook`, { actorId: goi.actorId, method: "GET" });
 }
 
 export function deNghiDongY(contextId: string, purpose: MucDich, goi: Goi): Promise<DeNghiCho> {
-  return ghi<DeNghiCho>(`/contexts/${contextId}/notebook/proposals`, "POST", goi, { purpose });
+  return translatedAsActor<DeNghiCho>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/proposals`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { purpose } });
 }
 
 export function dongYDeNghi(contextId: string, proposalId: string, goi: Goi): Promise<DeNghiCho> {
-  return ghi<DeNghiCho>(`/contexts/${contextId}/notebook/proposals/${proposalId}/grant`, "POST", goi);
+  return translatedAsActor<DeNghiCho>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/proposals/${proposalId}/grant`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 export function thuHoiDongY(contextId: string, purpose: MucDich, goi: Goi): Promise<void> {
-  return ghi<void>(`/contexts/${contextId}/notebook/consents/${purpose}`, "DELETE", goi);
+  return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/consents/${purpose}`, { actorId: goi.actorId, method: "DELETE", attempt: goi.attempt });
 }
 
 export function datRangBuoc(contextId: string, kind: LoaiRangBuoc, content: string, goi: Goi): Promise<RangBuocSong> {
-  return ghi<RangBuocSong>(`/contexts/${contextId}/notebook/constraints/${kind}`, "PUT", goi, { content });
+  return translatedAsActor<RangBuocSong>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/constraints/${kind}`, { actorId: goi.actorId, method: "PUT", attempt: goi.attempt, body: { content } });
 }
 
 export function xoaRangBuoc(contextId: string, kind: LoaiRangBuoc, goi: Goi): Promise<void> {
-  return ghi<void>(`/contexts/${contextId}/notebook/constraints/${kind}`, "DELETE", goi);
+  return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/constraints/${kind}`, { actorId: goi.actorId, method: "DELETE", attempt: goi.attempt });
 }
 
 export function xemTruocDongSo(contextId: string, goi: Goi): Promise<XemTruocDongSo> {
-  return ghi<XemTruocDongSo>(`/contexts/${contextId}/notebook/close/preview`, "POST", goi);
+  return translatedAsActor<XemTruocDongSo>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/close/preview`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 /** The revision is what makes the counts somebody read and the rows being closed the same rows. */
 export function dongSo(contextId: string, revision: string, goi: Goi): Promise<void> {
-  return ghi<void>(`/contexts/${contextId}/notebook/close`, "POST", goi, { revision });
+  return translatedAsActor<void>(LOI_TO_GIAY, `/contexts/${contextId}/notebook/close`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { revision } });
 }
 
 // --- tờ giấy ----------------------------------------------------------------
 
 export function docDanhSachTo(contextId: string, goi: Goi): Promise<{ papers: readonly ToTomTat[] }> {
-  return doc<{ papers: readonly ToTomTat[] }>(`/contexts/${contextId}/papers`, goi);
+  return translatedAsActor<{ papers: readonly ToTomTat[] }>(LOI_TO_GIAY, `/contexts/${contextId}/papers`, { actorId: goi.actorId, method: "GET" });
 }
 
 export function xinToMoi(contextId: string, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/contexts/${contextId}/papers/draft`, "POST", goi);
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/contexts/${contextId}/papers/draft`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 export function docTo(paperId: string, goi: Goi): Promise<ToGiay> {
-  return doc<ToGiay>(`/papers/${paperId}`, goi);
+  return translatedAsActor<ToGiay>(LOI_TO_GIAY, `/papers/${paperId}`, { actorId: goi.actorId, method: "GET" });
 }
 
 export function suaNhapSong(paperId: string, content: NoiDungTo, lyDo: string | null, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/draft`, "PATCH", goi, { content, ly_do: lyDo });
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/draft`, { actorId: goi.actorId, method: "PATCH", attempt: goi.attempt, body: { content, ly_do: lyDo } });
 }
 
 /** Pressing send is agreeing to what was sent, so the version is pinned here. */
 export function guiTo(paperId: string, version: number, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/send`, "POST", goi, { version });
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/send`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { version } });
 }
 
 export function danhDauDaXem(paperId: string, version: number, goi: Goi): Promise<void> {
-  return ghi<void>(`/papers/${paperId}/versions/${version}/viewed`, "POST", goi);
+  return translatedAsActor<void>(LOI_TO_GIAY, `/papers/${paperId}/versions/${version}/viewed`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 export function dongY(paperId: string, version: number, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/versions/${version}/responses`, "POST", goi, { kind: "dong_y" });
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/versions/${version}/responses`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { kind: "dong_y" } });
 }
 
 export function deNghiSua(paperId: string, version: number, content: NoiDungTo, lyDo: string | null, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/versions/${version}/responses`, "POST", goi, {
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/versions/${version}/responses`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: {
     kind: "de_nghi_sua",
     content,
     ly_do: lyDo,
-  });
+  } });
 }
 
 export function rutTo(paperId: string, version: number, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/withdraw`, "POST", goi, { version });
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/withdraw`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { version } });
 }
 
 export function nghiTuan(paperId: string, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/skip`, "POST", goi);
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/skip`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 export function ghiDaDi(paperId: string, goi: Goi): Promise<LenhToGiay> {
-  return ghi<LenhToGiay>(`/papers/${paperId}/done`, "POST", goi);
+  return translatedAsActor<LenhToGiay>(LOI_TO_GIAY, `/papers/${paperId}/done`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt });
 }
 
 export function giuMotDong(paperId: string, line: string, goi: Goi): Promise<{ id: string; line: string; created_at: string }> {
-  return ghi<{ id: string; line: string; created_at: string }>(`/papers/${paperId}/keeps`, "POST", goi, { line });
+  return translatedAsActor<{ id: string; line: string; created_at: string }>(LOI_TO_GIAY, `/papers/${paperId}/keeps`, { actorId: goi.actorId, method: "POST", attempt: goi.attempt, body: { line } });
 }
 
 /**

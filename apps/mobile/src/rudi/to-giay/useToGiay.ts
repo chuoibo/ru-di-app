@@ -109,7 +109,15 @@ function toDeMo(so: SoHaiNguoi | null, ds: readonly ToTomTat[]): string | null {
   return kyUc?.id ?? null;
 }
 
-export function useToGiay(contextId: string, personId: string) {
+/**
+ * `nhip: 0` reads on focus and never on a timer.
+ *
+ * The pinned line in the pair chat is the caller that needs it: it shows one
+ * sentence about the sheet, and a second four-second poll running beside the
+ * conversation's own would double that screen's traffic to say the same thing
+ * a beat sooner.
+ */
+export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_MS }: { nhip?: number } = {}) {
   const [trang, setTrang] = useState<TrangThaiSo>(DAU);
   const theHeRef = useRef(0);
   const dangFocus = useRef(false);
@@ -163,14 +171,19 @@ export function useToGiay(contextId: string, personId: string) {
     useCallback(() => {
       dangFocus.current = true;
       void doc(false);
-      const nhip = setInterval(() => {
+      if (nhip <= 0) {
+        return () => {
+          dangFocus.current = false;
+        };
+      }
+      const dongHo = setInterval(() => {
         if (dangFocus.current && AppState.currentState === "active") void doc(false);
-      }, NHIP_SO_MS);
+      }, nhip);
       return () => {
         dangFocus.current = false;
-        clearInterval(nhip);
+        clearInterval(dongHo);
       };
-    }, [doc]),
+    }, [doc, nhip]),
   );
 
   /**
