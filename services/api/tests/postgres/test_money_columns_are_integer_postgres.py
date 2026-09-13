@@ -95,6 +95,19 @@ INEXACT_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
 # jsonb column has to pass through this file, where the blind spot is written
 # down, instead of arriving unnoticed.
 JSONB_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
+    # Sổ hai người (ADR-0027). Một tờ giấy KHÔNG mang tiền: nó mang một ngày,
+    # một hai chặng, và một dòng lý do. Khi hai người chốt, service dựng một
+    # `outings` đi qua đúng cổng tạo outing đang có, và ngân sách sống ở cột
+    # bigint của bảng ấy — không có số tiền nào nằm trong JSONB này, và nếu lát
+    # sau có ai muốn để một con số vào đây thì cổng này là chỗ họ phải nói ra.
+    ("pair_paper_versions", "content"): (
+        "một ngày và một hai chặng ({gio, viec, place_id, can_kiem}); "
+        "không có số tiền, ngân sách của buổi sống ở `outings`"
+    ),
+    ("pair_paper_versions", "nguon"): (
+        "xuất xứ của bản phác (ADR-0019): tên nguồn CHUNG đã dùng và một mốc "
+        "thời gian; không có số nào là tiền"
+    ),
     ("audit_events", "event_data"): (
         "append-only audit payload; amounts inside are a copy of ledger rows, "
         "never the source a balance is recomputed from"

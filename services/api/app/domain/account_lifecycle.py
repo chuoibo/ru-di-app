@@ -74,11 +74,46 @@ ERASURE: dict[str, tuple[str, ...]] = {
         "friend_requests",
         "account_identities",
         "context_read_marks",
+        # Sổ hai người (ADR-0027). Three of its thirteen tables are the
+        # person's own, and they go with the account:
+        #   * a shared constraint is what somebody said about THEMSELVES
+        #     («không ăn được», «đừng»), the same shape as `person_interests`;
+        #   * a view mark is a private note about their own reading, the same
+        #     shape as `context_read_marks`;
+        #   * a couple row is a LIVE state, not history, and a person whose
+        #     account has ended is not in a couple.
+        # The other ten are the conversation's history and stay -- see «keep».
+        "pair_shared_constraints",
+        "pair_paper_views",
+        "active_couple_members",
     ),
     "revoke": ("account_sessions",),
     "leave": ("memberships",),
     "anonymise": ("people",),
     "keep": (
+        # Sổ hai người (ADR-0027): the notebook is a conversation BETWEEN two
+        # people, so its history is the other person's memory too. A sheet, the
+        # versions of it, who agreed to which one, the outing it became and the
+        # line somebody kept about that evening all read like `messages` and
+        # `memories`, and they stay for the same reason: deleting them would
+        # take the surviving person's own evening away from them. Nothing here
+        # keeps a NAME -- the `people` row is anonymised and only its id
+        # remains, exactly as it does for a group.
+        #
+        # Nợ đã biết: a cycle whose participant has ended stays `active` until
+        # somebody closes it. Slice 1 has no closer; the surviving person can
+        # close the notebook by hand and the pair already refuses new messages
+        # (ADR-0023 §2.3.2). Đóng tự động là quyết định của lát sau.
+        "pair_notebooks",
+        "pair_notebook_cycles",
+        "pair_cycle_participants",
+        "pair_consent_proposals",
+        "pair_consents",
+        "pair_papers",
+        "pair_paper_versions",
+        "pair_paper_responses",
+        "pair_paper_outings",
+        "pair_paper_keeps",
         "messages",
         "message_reactions",
         "memories",
@@ -176,6 +211,13 @@ MONEY_TABLES: tuple[str, ...] = (
 #: Bảng mang lời của người KHÁC, hoặc lời của mình trong cuộc trò chuyện của
 #: người khác. Xoá tài khoản của mình không được viết lại thứ người khác đã đọc.
 OTHERS_KEEP_TABLES: tuple[str, ...] = (
+    # Sổ hai người: what the OTHER person wrote, or agreed to, or kept. Listed
+    # here so that moving one of them into «delete» later fails a test rather
+    # than quietly taking a surviving person's evening away.
+    "pair_papers",
+    "pair_paper_versions",
+    "pair_paper_responses",
+    "pair_paper_keeps",
     "messages",
     "message_reactions",
     "memories",

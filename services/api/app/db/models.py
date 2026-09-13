@@ -1079,6 +1079,15 @@ class Context(Base):
             name="context_pair_has_key",
         ),
         UniqueConstraint("pair_key", name="uq_contexts_pair_key"),
+        # The target of the two-person notebook's composite foreign keys
+        # (ADR-0027 §2). A child table carrying only `context_id` plus a CHECK
+        # `context_kind = 'pair'` proves nothing: the CHECK is about the
+        # child's own column, so a row could name a GROUP and still pass by
+        # writing 'pair' next to it. Pointing (context_id, context_kind) at
+        # (id, kind) is what makes the database refuse that, and it needs this
+        # unique to point at. Redundant with the primary key by construction --
+        # `id` alone is already unique -- and harmless for that reason.
+        UniqueConstraint("id", "kind", name="uq_contexts_id_kind"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -2823,3 +2832,614 @@ class AccountSession(Base):
         DateTime(timezone=True), nullable=False
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# --- Sổ hai người và tờ giấy (ADR-0027, spec «Nếp truyền giấy») -------------
+#
+# Thirteen tables that hang off ONE context of kind `pair`. Nothing here is a
+# column on a table the group side uses: `contexts` gains a unique it already
+# satisfied and nothing else, so a notebook can be removed later by dropping
+# these tables (§12, «không đụng hội bạn»).
+#
+# Two spellings, always. Every closed vocabulary appears as a Python tuple in
+# `app/domain/pair_paper.py` or `pair_notebook.py` and as a CHECK constraint
+# here, and the migration is the third. `String(n)` + CHECK rather than a
+# PostgreSQL enum type: adding a value to an enum is a migration that cannot
+# run inside a transaction on older servers, and a CHECK reads the same in
+# `psql` as it does here.
+
+
+_PAPER_STATES_SQL = (
+    "state IN ('nhap', 'da_gui', 'da_xem', 'de_nghi_sua', 'dong_y', 'chot', "
+    "'da_di', 'da_giu', 'nghi_tuan', 'het_han', 'rut', 'bo', 'huy')"
+)
+_PAPER_OPEN_SQL = "state IN ('nhap', 'da_gui', 'da_xem', 'de_nghi_sua', 'dong_y')"
+_AUTHOR_TYPES_SQL = "author_type IN ('human', 'nep')"
+
+
+class PairNotebook(Base):
+    """One notebook, one private conversation.
+
+    `context_id` is unique: two people have at most one notebook between them
+    at a time, and «at a time» is the cycle's job, not a second notebook's.
+    """
+
+    __tablename__ = "pair_notebooks"
+    __table_args__ = (
+        CheckConstraint("context_kind = 'pair'", name="notebook_context_is_pair"),
+        ForeignKeyConstraint(
+            ["context_id", "context_kind"],
+            ["contexts.id", "contexts.kind"],
+            name="fk_pair_notebooks_context",
+        ),
+        UniqueConstraint("context_id", name="uq_pair_notebooks_context"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    context_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    #: Always 'pair'. Carried so the composite key above has something to point
+    #: with; see the CHECK and `Context.uq_contexts_id_kind`.
+    context_kind: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="pair", default="pair"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairNotebookCycle(Base):
+    """One stretch of «this notebook is open», with the consent that opened it.
+
+    Closing does not delete (§7.6). Opening again later is a NEW cycle, so a
+    grant given in 2026 cannot quietly authorise a notebook reopened in 2027 --
+    the same reason `memberships` records re-joining as a new row.
+
+    The partial unique is the invariant: at most one cycle that is not closed,
+    per notebook. Two «active» cycles would make «which consent applies» a
+    question with two answers.
+    """
+
+    __tablename__ = "pair_notebook_cycles"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('pending', 'active', 'closed')", name="cycle_state_known"
+        ),
+        CheckConstraint(
+            "(state = 'closed') = (closed_at IS NOT NULL)",
+            name="cycle_closed_matches_timestamp",
+        ),
+        Index(
+            "uq_pair_cycles_open_per_notebook",
+            "notebook_id",
+            unique=True,
+            postgresql_where=text("state <> 'closed'"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    notebook_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("pair_notebooks.id", name="fk_pair_notebook_cycles_notebook"),
+        nullable=False,
+    )
+    state: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="pending", default="pending"
+    )
+    #: Which wording of the consent text was agreed to. A number, because the
+    #: point is to be able to say «you agreed to version 2» and to ask again
+    #: when the wording changes.
+    terms_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), default=1
+    )
+    opened_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairCycleParticipant(Base):
+    """The two people this cycle is between, written down rather than derived.
+
+    The membership rows could answer it, but they change: somebody may leave a
+    conversation, and a consent given inside a cycle has to keep naming who
+    gave it. The composite key is the rule -- one row per person per cycle.
+    """
+
+    __tablename__ = "pair_cycle_participants"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["cycle_id"],
+            ["pair_notebook_cycles.id"],
+            name="fk_pair_cycle_participants_cycle",
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_pair_cycle_participants_person"
+        ),
+    )
+
+    cycle_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairConsentProposal(Base):
+    """«Shall we?» for one purpose, with a deadline of its own.
+
+    ## Why `expires_at` has no server default
+
+    Same reason as `Story.expires_at`: the window is the product's number, and
+    `app.domain` is where it is spelled. A `now() + interval` here would be a
+    second spelling in SQL, where no test standing on the boundary can reach
+    it. The CHECK below is the part the database can state by itself.
+
+    `completed_at` is set when the last grant lands. An offer nobody completed
+    inside its window stops being an offer; it is not deleted, because «we
+    asked and it lapsed» is a fact the pair may want to see.
+    """
+
+    __tablename__ = "pair_consent_proposals"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('lap_so', 'bat_doi', 'doc_chat')", name="consent_purpose_known"
+        ),
+        CheckConstraint(
+            "expires_at > created_at", name="consent_expires_after_created"
+        ),
+        ForeignKeyConstraint(
+            ["cycle_id"],
+            ["pair_notebook_cycles.id"],
+            name="fk_pair_consent_proposals_cycle",
+        ),
+        ForeignKeyConstraint(
+            ["proposed_by_id"],
+            ["people.id"],
+            name="fk_pair_consent_proposals_proposed_by",
+        ),
+        Index("ix_pair_consent_proposals_cycle", "cycle_id", "purpose"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    cycle_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(16), nullable=False)
+    proposed_by_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
+    terms_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), default=1
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    #: No server default, on purpose. See the class docstring.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
+class PairConsent(Base):
+    """One person's answer to one proposal, and whether they took it back.
+
+    Revoking writes a timestamp rather than deleting the row: «I agreed and
+    then I stopped agreeing» is a different history from «I never agreed», and
+    a notebook that cannot tell them apart cannot explain itself later.
+    """
+
+    __tablename__ = "pair_consents"
+    __table_args__ = (
+        UniqueConstraint("proposal_id", "person_id", name="uq_pair_consents_proposal"),
+        CheckConstraint(
+            "revoked_at IS NULL OR granted_at IS NOT NULL",
+            name="consent_revoke_needs_grant",
+        ),
+        ForeignKeyConstraint(
+            ["proposal_id"],
+            ["pair_consent_proposals.id"],
+            name="fk_pair_consents_proposal",
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_pair_consents_person"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    proposal_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    granted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ActiveCoupleMember(Base):
+    """«This person is in a couple, and this is the cycle that says so.»
+
+    ADR-0027 K2: the key is the PERSON, not the pair. One row per person is
+    what makes «một người chỉ có một sổ đôi» a thing the database refuses
+    rather than a thing the service remembers to check. A deferred trigger
+    (migration) adds the other half: the row may only exist while both people
+    of that cycle hold a live `bat_doi` consent.
+    """
+
+    __tablename__ = "active_couple_members"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["cycle_id"],
+            ["pair_notebook_cycles.id"],
+            name="fk_active_couple_members_cycle",
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_active_couple_members_person"
+        ),
+        Index("ix_active_couple_members_cycle", "cycle_id"),
+    )
+
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    cycle_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    since: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairPaper(Base):
+    """One sheet of paper, one week.
+
+    ## Why the state lives here and the content does not
+
+    A sheet's content is its versions, and a version never changes (see
+    `PairPaperVersion`). What changes is where the week has got to, so the
+    state, the current version number and the deadline are the sheet's own
+    columns and everything that was ever written is somewhere else.
+
+    ## Why at most one open sheet per conversation
+
+    Spec §15.1: «một tờ đang mở», not three cards. The partial unique index is
+    that sentence as a constraint. Without it the rule lives only in the
+    service, and two requests arriving together is exactly when a service-only
+    rule stops holding.
+
+    ## `is_temporary`
+
+    The very first invitation happens before any notebook exists (§14.1): one
+    person asks, and the notebook is what they are being asked FOR. Such a
+    sheet has no cycle, and the CHECK ties the two facts together so a sheet
+    cannot be temporary and filed at once.
+    """
+
+    __tablename__ = "pair_papers"
+    __table_args__ = (
+        CheckConstraint("context_kind = 'pair'", name="paper_context_is_pair"),
+        CheckConstraint(_PAPER_STATES_SQL, name="paper_state_known"),
+        CheckConstraint("current_version >= 1", name="paper_version_positive"),
+        CheckConstraint(
+            "(cycle_id IS NULL) = is_temporary", name="paper_temporary_has_no_cycle"
+        ),
+        CheckConstraint(
+            "(done_recorded_by_id IS NULL) = (done_recorded_at IS NULL)",
+            name="paper_done_has_recorder",
+        ),
+        ForeignKeyConstraint(
+            ["context_id", "context_kind"],
+            ["contexts.id", "contexts.kind"],
+            name="fk_pair_papers_context",
+        ),
+        ForeignKeyConstraint(
+            ["cycle_id"], ["pair_notebook_cycles.id"], name="fk_pair_papers_cycle"
+        ),
+        ForeignKeyConstraint(
+            ["draft_owner_id"], ["people.id"], name="fk_pair_papers_draft_owner"
+        ),
+        ForeignKeyConstraint(
+            ["done_recorded_by_id"],
+            ["people.id"],
+            name="fk_pair_papers_done_recorded_by",
+        ),
+        Index(
+            "uq_pair_papers_open_per_context",
+            "context_id",
+            unique=True,
+            postgresql_where=text(_PAPER_OPEN_SQL),
+        ),
+        Index("ix_pair_papers_context_week", "context_id", desc("tuan")),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    context_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    context_kind: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="pair", default="pair"
+    )
+    cycle_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    is_temporary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false"), default=False
+    )
+    #: Whose turn this sheet belongs to. Not «who wrote it»: when Nếp drafts,
+    #: the version says `nep` and this still names the person it is for.
+    draft_owner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False
+    )
+    state: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default="nhap", default="nhap"
+    )
+    current_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), default=1
+    )
+    #: The Monday of the week this sheet is for. A date rather than a number so
+    #: «tuần này nghỉ» can refuse a second draft for the same week without
+    #: anybody inventing a week-numbering scheme.
+    tuan: Mapped[date] = mapped_column(Date, nullable=False)
+    #: §3.1: `da_di` is recorded by a person, never inferred from the date.
+    done_recorded_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    done_recorded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    #: No server default, on purpose: the week's window is the domain's number.
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+
+class PairPaperVersion(Base):
+    """What was on the paper, at one point, forever.
+
+    A version that has been sent is immutable, and the migration says so with a
+    trigger rather than with a promise: `da_gui` v1 is what the other person
+    read, and an UPDATE would rewrite what they agreed to after they agreed.
+
+    The key is (paper_id, version) because that is what everything else points
+    at: a view, a response and an outing link all belong to one version of one
+    sheet, and a surrogate id would let them point at a version of a different
+    sheet without the database noticing.
+    """
+
+    __tablename__ = "pair_paper_versions"
+    __table_args__ = (
+        CheckConstraint(_AUTHOR_TYPES_SQL, name="version_author_known"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        CheckConstraint(
+            "(sent_at IS NULL) = (author_type = 'human' AND sent_by IS NULL)",
+            name="version_sent_by_human_has_sender",
+        ),
+        ForeignKeyConstraint(
+            ["paper_id"], ["pair_papers.id"], name="fk_pair_paper_versions_paper"
+        ),
+        ForeignKeyConstraint(
+            ["sent_by"], ["people.id"], name="fk_pair_paper_versions_sent_by"
+        ),
+    )
+
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    #: `{ngay, chang: [{gio, viec, place_id, can_kiem}]}`. JSONB because the
+    #: shape belongs to the domain and the database has no opinion about it;
+    #: nothing here is queried by field.
+    content: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb"), default=dict
+    )
+    ly_do: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Provenance (ADR-0019): which sources this version was built from. A
+    #: draft Nếp wrote records the shared sources it used; a version a person
+    #: wrote records nothing, because a person needs no permission to think.
+    nguon: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb"), default=dict
+    )
+    author_type: Mapped[str] = mapped_column(
+        String(8), nullable=False, server_default="human", default="human"
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sent_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairPaperView(Base):
+    """«I opened it», once, per version (§3.3 rule 4, §7.5).
+
+    Separate from the responses table because looking is not answering, and
+    only the RECIPIENT's mark is ever shown -- to the sender, so they know
+    whether silence means «not seen» or «seen and thinking».
+    """
+
+    __tablename__ = "pair_paper_views"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["paper_id", "version"],
+            ["pair_paper_versions.paper_id", "pair_paper_versions.version"],
+            name="fk_pair_paper_views_version",
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_pair_paper_views_person"
+        ),
+    )
+
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, primary_key=True)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairPaperResponse(Base):
+    """One person's answer to one version: «ừ» or «đề nghị sửa».
+
+    The partial unique is the shape of §3.3 rule 3: one agreement per person
+    per version, and no agreement carried over to the next version. A
+    counter-proposal may be made more than once (a person may change their
+    mind about what to change), so only `dong_y` is constrained.
+    """
+
+    __tablename__ = "pair_paper_responses"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('dong_y', 'de_nghi_sua')", name="response_kind_known"
+        ),
+        ForeignKeyConstraint(
+            ["paper_id", "version"],
+            ["pair_paper_versions.paper_id", "pair_paper_versions.version"],
+            name="fk_pair_paper_responses_version",
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_pair_paper_responses_person"
+        ),
+        Index(
+            "uq_pair_responses_agree_per_person",
+            "paper_id",
+            "version",
+            "person_id",
+            unique=True,
+            postgresql_where=text("kind = 'dong_y'"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairPaperOuting(Base):
+    """The one outing a sheet became (ADR-0027 K3).
+
+    The key is the PAPER. Keying by (paper, version) would still let two
+    versions of one sheet each create an outing if both somehow reached
+    `chot`; keying by the sheet makes «gửi lại vì mất mạng không nhân đôi» a
+    thing the database refuses. `outing_id` is unique as well, so the link is
+    one-to-one in both directions.
+
+    A deferred constraint trigger (migration) checks the rest: the sheet is
+    `chot`, the version is its current one, and the outing belongs to the same
+    conversation.
+    """
+
+    __tablename__ = "pair_paper_outings"
+    __table_args__ = (
+        UniqueConstraint("outing_id", name="uq_pair_paper_outings_outing"),
+        ForeignKeyConstraint(
+            ["paper_id", "version"],
+            ["pair_paper_versions.paper_id", "pair_paper_versions.version"],
+            name="fk_pair_paper_outings_version",
+        ),
+        ForeignKeyConstraint(
+            ["outing_id"], ["outings.id"], name="fk_pair_paper_outings_outing"
+        ),
+    )
+
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    outing_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    linked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairPaperKeep(Base):
+    """A line somebody kept about an outing that happened (§7.4).
+
+    The first line is what turns `da_di` into `da_giu`. Blank lines are refused
+    by the database, not only by the client: «giữ lại một điều» that turns out
+    to be three spaces is not a memory.
+    """
+
+    __tablename__ = "pair_paper_keeps"
+    __table_args__ = (
+        # «Có ít nhất một ký tự không phải khoảng trắng», không phải
+        # `length(btrim(line)) > 0`: `btrim` mặc định chỉ cắt DẤU CÁCH, nên một
+        # dòng gồm toàn xuống dòng lọt qua. Ca Postgres bắt được đúng chỗ ấy.
+        CheckConstraint("line ~ '[^[:space:]]'", name="keep_line_not_blank"),
+        ForeignKeyConstraint(
+            ["paper_id"], ["pair_papers.id"], name="fk_pair_paper_keeps_paper"
+        ),
+        ForeignKeyConstraint(
+            ["person_id"], ["people.id"], name="fk_pair_paper_keeps_person"
+        ),
+        Index("ix_pair_paper_keeps_paper", "paper_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    paper_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    line: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class PairSharedConstraint(Base):
+    """«Không ăn được» and «Đừng», one of each per person per cycle (§6.4).
+
+    The key says the rule: a constraint belongs to its owner, and the other
+    person reads it without being able to write it. Two kinds and no more --
+    a free list of «preferences» grows into a profile, and this is meant to
+    stay the smallest thing that keeps a draft from being wrong about somebody.
+    """
+
+    __tablename__ = "pair_shared_constraints"
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('khong_an_duoc', 'dung')", name="constraint_kind_known"
+        ),
+        CheckConstraint("length(content) <= 200", name="constraint_content_length"),
+        ForeignKeyConstraint(
+            ["cycle_id"],
+            ["pair_notebook_cycles.id"],
+            name="fk_pair_shared_constraints_cycle",
+        ),
+        ForeignKeyConstraint(
+            ["owner_id"], ["people.id"], name="fk_pair_shared_constraints_owner"
+        ),
+    )
+
+    cycle_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), primary_key=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    #: Bumped on every write, so a client that read one version and edits from
+    #: a stale screen can be told rather than silently overwrite.
+    version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1"), default=1
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

@@ -24,6 +24,7 @@ from app.api.schemas import ExpenseInput
 from app.db.models import (
     AccountIdentity,
     AccountSession,
+    ActiveCoupleMember,
     AuditEvent,
     Bill,
     BillDiscount,
@@ -68,6 +69,8 @@ from app.db.models import (
     OutingInviteSource,
     OutingStop,
     OutingStopCheckin,
+    PairPaperView,
+    PairSharedConstraint,
     PayerAcknowledgement,
     PaymentReport,
     Person,
@@ -4365,6 +4368,12 @@ class SqlAlchemyApiRepository:
         wipe(PersonInterest, PersonInterest.person_id == person_id)
         wipe(SavedPlace, SavedPlace.person_id == person_id)
         wipe(ContextReadMark, ContextReadMark.person_id == person_id)
+        # Sổ hai người (ADR-0027): the three tables the map calls the person's
+        # own. The other ten are the conversation's history and are not touched
+        # here -- see `account_lifecycle.ERASURE`, which is the whole policy.
+        wipe(PairPaperView, PairPaperView.person_id == person_id)
+        wipe(PairSharedConstraint, PairSharedConstraint.owner_id == person_id)
+        wipe(ActiveCoupleMember, ActiveCoupleMember.person_id == person_id)
         wipe(AccountIdentity, AccountIdentity.person_id == person_id)
         wipe(
             FriendRequest,
