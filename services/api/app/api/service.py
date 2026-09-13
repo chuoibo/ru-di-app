@@ -7160,6 +7160,16 @@ class ApiService:
         now = _now()
         notebook = self._locked_notebook(context_id, now=now)
         cycle_id = notebook.cycle_id
+        if request.purpose != "lap_so" and notebook.cycle_state != "active":
+            # A rung above the first, in a notebook nobody has opened. Checked
+            # BEFORE the branch below, because that branch opens a cycle: asking
+            # for «một đôi» first would otherwise have created the cycle it was
+            # supposed to require, and granting it would write the couple rows
+            # beside a cycle still reading `pending`. Tier 2 does not imply tier
+            # 3, and nothing implies tier 1 either.
+            raise ApiProblem(
+                409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
+            )
         if cycle_id is None:
             if len(members) < 2:
                 raise ApiProblem(409, "cycle_not_active", "Sổ này chưa đủ hai người.")
@@ -7168,12 +7178,6 @@ class ApiService:
                 participants=members,
                 terms_version=DIEU_KHOAN_HIEN_TAI,
                 now=now,
-            )
-        elif request.purpose != "lap_so" and notebook.cycle_state != "active":
-            # A rung above the first, in a notebook nobody has opened yet.
-            # Tier 2 does not imply tier 3, but nothing implies tier 1 either.
-            raise ApiProblem(
-                409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
             )
         proposal = self.repository.create_consent_proposal(
             cycle_id=cycle_id,

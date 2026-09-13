@@ -30,7 +30,7 @@ Pure functions over dicts. No I/O, no ORM, no framework.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 __all__ = [
@@ -121,12 +121,16 @@ def han_tuan(now: datetime) -> datetime:
     Midnight ending Sunday, local. The bound is exclusive and `hieu_luc` reads
     it with `>=`, so «the week is over» and «the next week has begun» are one
     instant rather than two adjacent ones with a second of nothing between.
+
+    The arithmetic is local and the answer is UTC. Handing back the local
+    datetime put a `+07:00` deadline on a wire where every other timestamp ends
+    in `Z`, which is two spellings of one instant for a client to get wrong.
     """
     here = now.astimezone(MUI_GIO)
     monday = (here - timedelta(days=here.weekday())).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
-    return monday + timedelta(days=7)
+    return (monday + timedelta(days=7)).astimezone(UTC)
 
 
 def ngay_de_xuat(now: datetime) -> date:

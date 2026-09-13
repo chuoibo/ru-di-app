@@ -2672,6 +2672,21 @@ class PairProposalCreateRequest(ApiModel):
 class PairConstraintPutRequest(ApiModel):
     content: Annotated[StrictStr, Field(min_length=1, max_length=200)]
 
+    @field_validator("content")
+    @classmethod
+    def _khong_rong(cls, value: str) -> str:
+        """`min_length` counts characters, and three spaces are three.
+
+        Without this, «   » was stored as «» and the screen showed an empty
+        constraint the other person could read as «they have none». Emptying one
+        is what DELETE is for. The table's own CHECK only bounds the length, so
+        this is the only gate.
+        """
+        content = value.strip()
+        if not content:
+            raise ValueError("content must not be blank")
+        return content
+
 
 class ClosePreviewResponse(ApiModel):
     """Ba số phận khác nhau, ba con số. Gộp nháp vào «đang chờ» thì màn xem
