@@ -2441,3 +2441,248 @@ class ReelResponse(ApiModel):
     picks: list[ReelPick]
     #: Rows offered by the server, never a count restated by the model.
     considered_count: int
+
+
+# --- Sổ hai người và tờ giấy (ADR-0027) -------------------------------------
+#
+# Sáu từ vựng đóng, khai bằng `Literal` ở đây, bằng CHECK ở `models.py`, và
+# bằng một tuple ở `app/domain/pair_*.py`. Ba cách đánh vần, một danh sách.
+#
+# Mọi request dưới đây **bỏ mọi trường máy chủ tự quyết**: trạng thái, phiên
+# bản mới, mốc gửi, người gửi, id outing. Một trường như thế trong body là một
+# đường cho client nói dối về điều nó không được quyết.
+
+PairConsentPurpose = Literal["lap_so", "bat_doi", "doc_chat"]
+PairConstraintKind = Literal["khong_an_duoc", "dung"]
+PairResponseKind = Literal["dong_y", "de_nghi_sua"]
+PairAuthorType = Literal["human", "nep"]
+PairCycleState = Literal["pending", "active", "closed"]
+PaperState = Literal[
+    "nhap",
+    "da_gui",
+    "da_xem",
+    "de_nghi_sua",
+    "dong_y",
+    "chot",
+    "da_di",
+    "da_giu",
+    "nghi_tuan",
+    "het_han",
+    "rut",
+    "bo",
+    "huy",
+]
+
+#: Phiên bản luôn được ghim khi sửa hoặc trả lời: một client đọc v1, chờ, rồi
+#: bấm gửi sau khi sổ đã đi tiếp phải bị từ chối, không được ghi đè.
+PaperVersion = Annotated[int, Field(strict=True, ge=1)]
+
+
+class PaperStopInput(ApiModel):
+    """Một chặng. `place_id` có thể rỗng và `can_kiem` mặc định True: §8 nói
+    bản phác nói «chưa biết», không nói «chắc hợp»."""
+
+    #: The same 24-hour spelling `OutingStopInput.at` demands, so that a sheet
+    #: which is agreed can become an outing without reinterpreting its hours.
+    gio: Annotated[StrictStr, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
+    viec: Annotated[StrictStr, Field(min_length=1, max_length=200)]
+    place_id: UUID | None = None
+    can_kiem: StrictBool = True
+
+
+class PaperContentInput(ApiModel):
+    """Nội dung một phiên bản: một ngày, một chỗ chính, và một chặng đi tiếp
+    tuỳ chọn (§5.2). Hai chặng là trần, không phải ba: ba chặng là để tờ giấy
+    gấp ba quyết định buổi tối đi thế nào."""
+
+    ngay: date
+    chang: Annotated[list[PaperStopInput], Field(min_length=1, max_length=2)]
+
+
+class PaperStop(ApiModel):
+    gio: StrictStr
+    viec: StrictStr
+    place_id: UUID | None
+    can_kiem: StrictBool
+
+
+class PaperContent(ApiModel):
+    ngay: date
+    chang: list[PaperStop]
+
+
+class PaperVersionResponse(ApiModel):
+    """Một phiên bản, nhìn từ phía người đọc.
+
+    `viewed_by_recipient_at` chỉ hiện cho NGƯỜI GỬI (§7.5): người nhận không
+    cần biết mình bị theo dõi đã mở lúc nào, người gửi cần biết im lặng nghĩa
+    là «chưa xem» hay «đã xem và đang nghĩ».
+    """
+
+    version: PaperVersion
+    content: PaperContent
+    ly_do: StrictStr | None
+    author_type: PairAuthorType
+    sent_at: datetime | None
+    sent_by: UUID | None
+    my_response: PairResponseKind | None
+    their_agreed: StrictBool
+    viewed_by_recipient_at: datetime | None
+
+
+class PaperKeepResponse(ApiModel):
+    id: UUID
+    line: StrictStr
+    created_at: datetime
+
+
+class PaperResponse(ApiModel):
+    id: UUID
+    state: PaperState
+    version: PaperVersion
+    author_type: PairAuthorType
+    sent_by: UUID | None
+    tuan: date
+    expires_at: datetime
+    outing_id: UUID | None
+    #: Máy chủ tính, không phải client: `content.ngay` là chuỗi cho người đọc
+    #: và client không đọc đồng hồ (§3.3 luật 6).
+    co_the_ghi_da_di: StrictBool
+    versions: list[PaperVersionResponse]
+    keeps: list[PaperKeepResponse]
+
+
+class PaperSummary(ApiModel):
+    id: UUID
+    state: PaperState
+    version: PaperVersion
+    tuan: date
+    ngay: date | None
+    expires_at: datetime
+
+
+class PaperListResponse(ApiModel):
+    papers: list[PaperSummary]
+
+
+class PaperCommandResponse(ApiModel):
+    """Câu trả lời của MỌI lệnh trên tờ giấy: id, trạng thái, phiên bản, và
+    outing nếu vừa sinh ra.
+
+    Không mang nội dung. Một lần gửi lại vì mất mạng phát lại đúng thân này,
+    và một thân rỗng nội dung không bao giờ phát lại được thứ người ta đáng lẽ
+    không còn quyền đọc (ADR-0027 §3).
+    """
+
+    id: UUID
+    state: PaperState
+    version: PaperVersion
+    outing_id: UUID | None = None
+
+
+class PaperDraftEditRequest(ApiModel):
+    content: PaperContentInput
+    ly_do: Annotated[StrictStr, Field(max_length=200)] | None = None
+
+
+class PaperSendRequest(ApiModel):
+    version: PaperVersion
+
+
+class PaperWithdrawRequest(ApiModel):
+    version: PaperVersion
+
+
+class PaperAgreeRequest(ApiModel):
+    kind: Literal["dong_y"]
+
+
+class PaperReviseRequest(ApiModel):
+    kind: Literal["de_nghi_sua"]
+    content: PaperContentInput
+    ly_do: Annotated[StrictStr, Field(max_length=200)] | None = None
+
+
+#: One body for one route, told apart by the word the person actually chose.
+#: A single model with optional `content` would let «ừ» carry a counter-proposal
+#: nobody reads, which is a quiet way for the two halves of the wire to disagree
+#: about what was agreed to.
+PaperResponseRequest = Annotated[
+    PaperAgreeRequest | PaperReviseRequest, Field(discriminator="kind")
+]
+
+
+class PaperKeepRequest(ApiModel):
+    line: Annotated[StrictStr, Field(min_length=1, max_length=200)]
+
+    @field_validator("line")
+    @classmethod
+    def _khong_rong(cls, value: str) -> str:
+        line = value.strip()
+        if not line:
+            raise ValueError("line must not be blank")
+        return line
+
+
+class PairConsentStateResponse(ApiModel):
+    purpose: PairConsentPurpose
+    granted: StrictBool
+
+
+class PairConstraintResponse(ApiModel):
+    owner_id: UUID
+    kind: PairConstraintKind
+    content: StrictStr
+    version: int
+
+
+class PairProposalResponse(ApiModel):
+    id: UUID
+    purpose: PairConsentPurpose
+    expires_at: datetime
+    proposed_by_id: UUID
+    my_granted: StrictBool
+
+
+class PairNotebookResponse(ApiModel):
+    """Sổ, nhìn từ một trong hai người.
+
+    `their_consents_granted` là một bản đồ boolean, không phải hàng đồng ý của
+    người kia: cái người này cần biết là «đã đủ hai chưa», không phải lúc nào
+    người kia bấm.
+    """
+
+    context_id: UUID
+    cycle_state: PairCycleState | None
+    participants: list[UUID]
+    my_consents: list[PairConsentStateResponse]
+    their_consents_granted: dict[str, bool]
+    pending_proposals: list[PairProposalResponse]
+    constraints: list[PairConstraintResponse]
+    #: Lát 1 luôn false và không route nào bật: một hành vi không tắt được là
+    #: một hành vi trái luật hạn mức (§6.3). Công tắc tới ở lát 2.
+    nep_gui_ho: StrictBool
+    open_paper_id: UUID | None
+
+
+class PairProposalCreateRequest(ApiModel):
+    purpose: PairConsentPurpose
+
+
+class PairConstraintPutRequest(ApiModel):
+    content: Annotated[StrictStr, Field(min_length=1, max_length=200)]
+
+
+class ClosePreviewResponse(ApiModel):
+    """Ba số phận khác nhau, ba con số. Gộp nháp vào «đang chờ» thì màn xem
+    trước nói sai số phận của nó và người đọc bắt ngay ở màn kế («Đã bỏ»)."""
+
+    revision: StrictStr
+    so_nhap_bo: int
+    so_to_huy: int
+    so_to_khoa: int
+    so_de_nghi_huy: int
+
+
+class CloseNotebookRequest(ApiModel):
+    revision: Annotated[StrictStr, Field(min_length=1, max_length=64)]

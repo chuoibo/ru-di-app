@@ -46,6 +46,8 @@ from app.api.routes import (
     messages,
     obligations,
     outings,
+    pair_notebooks,
+    pair_papers,
     people,
     photos,
     places,
@@ -224,6 +226,8 @@ def create_app(
     application.include_router(albums.router)
     application.include_router(preferences.router)
     application.include_router(faces.router)
+    application.include_router(pair_notebooks.router)
+    application.include_router(pair_papers.router)
 
     # Middleware, not a decorator on each route: a write route added later is
     # covered the moment it is registered, with no list for anyone to forget.

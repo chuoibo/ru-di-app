@@ -24,7 +24,7 @@ Pure functions over dicts. No I/O, no ORM, no framework.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.domain import pair_paper
 
@@ -35,9 +35,18 @@ __all__ = [
     "NotebookError",
     "can_bat_doi",
     "chat_consent_active",
+    "dang_cho",
+    "granted_by",
     "granted_purposes",
+    "han_de_nghi",
     "xem_truoc_dong_so",
 ]
+
+#: How long an unanswered offer stands. A week, so that «I will think about it»
+#: survives one of them being away, and so that an offer nobody answered stops
+#: being an offer rather than sitting in the notebook forever waiting to be
+#: accepted by somebody who has forgotten it was asked.
+HAN_DE_NGHI = timedelta(days=7)
 
 #: `pending` until both have granted `lap_so`; `closed` is final for that
 #: cycle. The CHECK on `pair_notebook_cycles.state` spells this again.
@@ -60,6 +69,11 @@ class NotebookError(Exception):
         self.code = code
 
 
+def han_de_nghi(now: datetime) -> datetime:
+    """When an offer made at `now` lapses."""
+    return now + HAN_DE_NGHI
+
+
 def _live(consent: dict, *, now: datetime | None) -> bool:
     """A grant that is still in force: granted, not revoked, not expired.
 
@@ -77,6 +91,30 @@ def _live(consent: dict, *, now: datetime | None) -> bool:
     return True
 
 
+def granted_by(
+    consents: tuple[dict, ...] | list[dict],
+    person_id: str,
+    *,
+    now: datetime | None = None,
+) -> frozenset[str]:
+    """What ONE person has granted and not taken back.
+
+    Never the answer to «may this happen» -- that is `granted_purposes`, and
+    both people are part of it. This is only for showing a person their own
+    switches, and for showing each of them which of the two has not answered
+    yet: a screen that said «đang chờ» without saying whose turn it is leaves
+    both of them waiting for the other.
+    """
+    who = str(person_id)
+    return frozenset(
+        str(row["purpose"])
+        for row in consents
+        if str(row["person_id"]) == who
+        and str(row["purpose"]) in CONSENT_PURPOSES
+        and _live(row, now=now)
+    )
+
+
 def granted_purposes(
     consents: tuple[dict, ...] | list[dict],
     participants: tuple[str, ...] | list[str],
@@ -92,16 +130,8 @@ def granted_purposes(
     people = {str(p) for p in participants}
     if len(people) < 2:
         return frozenset()
-    by_purpose: dict[str, set[str]] = {}
-    for row in consents:
-        if not _live(row, now=now):
-            continue
-        purpose = str(row["purpose"])
-        if purpose not in CONSENT_PURPOSES:
-            continue
-        by_purpose.setdefault(purpose, set()).add(str(row["person_id"]))
-    return frozenset(
-        purpose for purpose, granted in by_purpose.items() if people <= granted
+    return frozenset.intersection(
+        *(granted_by(consents, person, now=now) for person in people)
     )
 
 
@@ -176,7 +206,7 @@ def xem_truoc_dong_so(
             to_huy += 1
         elif state in pair_paper.PLAN_STATES:
             to_khoa += 1
-    cho = [p for p in proposals if _cho(p, now=now)]
+    cho = [p for p in proposals if dang_cho(p, now=now)]
     material.extend(f"dn:{p['id']}" for p in cho)
     return {
         "revision": _revision(material),
@@ -187,8 +217,14 @@ def xem_truoc_dong_so(
     }
 
 
-def _cho(proposal: dict, *, now: datetime) -> bool:
-    """An offer still waiting: nobody has completed it and it has not lapsed."""
+def dang_cho(proposal: dict, *, now: datetime) -> bool:
+    """An offer still waiting: nobody has completed it and it has not lapsed.
+
+    Public because two readers ask it -- the preview counts offers that closing
+    would cancel, and the notebook screen lists the ones a person can still
+    answer. Two spellings of «still waiting» is how one screen shows a button
+    for something the other has already given up on.
+    """
     if proposal.get("completed_at"):
         return False
     expires_at = proposal.get("expires_at")

@@ -9,7 +9,7 @@ import secrets
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -43,6 +43,9 @@ from app.api.repository import (
     ObligationDraft,
     OutingInviteRecord,
     OutingRecord,
+    PairNotebookRecord,
+    PairPaperRecord,
+    PairVersionRecord,
     PersonContextSummaryRecord,
     PersonFinanceSummary,
     PersonRecord,
@@ -89,6 +92,8 @@ from app.api.schemas import (
     ChatExpenseDraft,
     ChatExpenseDraftResponse,
     CheckinCreateRequest,
+    CloseNotebookRequest,
+    ClosePreviewResponse,
     CompanionTurnResponse,
     ContextBalanceEntry,
     ContextBalancesResponse,
@@ -156,6 +161,26 @@ from app.api.schemas import (
     OutingResponse,
     OutingStopResponse,
     OutingTimelineRequest,
+    PairConsentStateResponse,
+    PairConstraintPutRequest,
+    PairConstraintResponse,
+    PairNotebookResponse,
+    PairProposalCreateRequest,
+    PairProposalResponse,
+    PaperCommandResponse,
+    PaperContent,
+    PaperContentInput,
+    PaperDraftEditRequest,
+    PaperKeepRequest,
+    PaperKeepResponse,
+    PaperListResponse,
+    PaperResponse,
+    PaperReviseRequest,
+    PaperSendRequest,
+    PaperStop,
+    PaperSummary,
+    PaperVersionResponse,
+    PaperWithdrawRequest,
     PaymentReportRequest,
     PaymentReportResponse,
     PersonContextListResponse,
@@ -222,7 +247,14 @@ from app.api.schemas import (
     WidgetResponse,
 )
 from app.api.sms import SmsDeliveryError, SmsSender
-from app.domain import blocking, permissions, post_audience, story_visibility
+from app.domain import (
+    blocking,
+    pair_notebook,
+    pair_paper,
+    permissions,
+    post_audience,
+    story_visibility,
+)
 from app.domain.account_lifecycle import (
     AccountLifecycleError,
     check_confirmation,
@@ -240,7 +272,13 @@ from app.domain.collection import CollectionError, transition, unmet_publish_gat
 from app.domain.companion import CompanionError, ground_card, plan_turn
 from app.domain.contract import AllocationError
 from app.domain.conversation import has_conversation, summarise_conversation
-from app.domain.direct import can_open, counterpart_of, display_name_for, is_pair
+from app.domain.direct import (
+    KIND_PAIR,
+    can_open,
+    counterpart_of,
+    display_name_for,
+    is_pair,
+)
 from app.domain.direct import pair_key as direct_pair_key
 from app.domain.expense import component_rollups
 from app.domain.faces import MAX_FACES, FaceError, anonymous_boxes
@@ -6972,6 +7010,1093 @@ class ApiService:
         if refused.code in ("ONLY_ADDRESSEE_MAY_ANSWER", "NOT_A_PARTY"):
             return ApiProblem(403, "permission_denied", refused.code.lower())
         return ApiProblem(409, refused.code.lower(), "Lời mời không ở trạng thái đó.")
+
+    # --- Sổ hai người và tờ giấy (ADR-0027) --------------------------------
+
+    def _pair_context_or_404(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> tuple[ContextRecord, tuple[uuid.UUID, ...]]:
+        """The pair this actor is in, or one refusal for three different facts.
+
+        «No such context», «that is a group, not a pair» and «you are not in
+        it» leave by the same door with the same sentence. A 403 here would
+        answer «does these two people have a notebook» for anybody holding an
+        id, which is the one question a two-person notebook must not answer.
+        """
+        context = self.repository.get_context(context_id)
+        if (
+            context is None
+            or context.kind != KIND_PAIR
+            or not self.repository.is_member(context_id, actor.id)
+        ):
+            raise ApiProblem(404, "notebook_not_found", "Không có sổ này.")
+        members = tuple(
+            row.person_id
+            for row in self.repository.list_members(context_id)
+            if row.state == "active"
+        )
+        return context, members
+
+    def _participants(
+        self, notebook: PairNotebookRecord | None, members: tuple[uuid.UUID, ...]
+    ) -> tuple[uuid.UUID, ...]:
+        """Who the cycle is between. The cycle's own list while one is open, so
+        that a membership change later cannot quietly widen what two people
+        agreed to; the conversation's members before the first cycle exists."""
+        if notebook is not None and notebook.cycle_id is not None:
+            return notebook.participants
+        return members
+
+    def pair_notebook(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> PairNotebookResponse:
+        """The notebook as one of the two sees it."""
+        _context, members = self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("view_pair_notebook", actor, {"is_group_member": True})
+        now = _now()
+        notebook = self.repository.get_pair_notebook(context_id)
+        participants = self._participants(notebook, members)
+        other = next((p for p in participants if p != actor.id), None)
+        consents = [] if notebook is None else _consents_as_dicts(notebook)
+        mine = pair_notebook.granted_by(consents, str(actor.id), now=now)
+        theirs = (
+            frozenset()
+            if other is None
+            else pair_notebook.granted_by(consents, str(other), now=now)
+        )
+        pending = []
+        if notebook is not None:
+            for row in notebook.proposals:
+                if not pair_notebook.dang_cho(
+                    {"completed_at": row.completed_at, "expires_at": row.expires_at},
+                    now=now,
+                ):
+                    continue
+                pending.append(
+                    PairProposalResponse(
+                        id=row.id,
+                        purpose=row.purpose,
+                        expires_at=row.expires_at,
+                        proposed_by_id=row.proposed_by_id,
+                        my_granted=row.purpose in mine,
+                    )
+                )
+        return PairNotebookResponse(
+            context_id=context_id,
+            cycle_state=None if notebook is None else notebook.cycle_state,
+            participants=list(participants),
+            my_consents=[
+                PairConsentStateResponse(purpose=purpose, granted=purpose in mine)
+                for purpose in pair_notebook.CONSENT_PURPOSES
+            ],
+            their_consents_granted={
+                purpose: purpose in theirs for purpose in pair_notebook.CONSENT_PURPOSES
+            },
+            pending_proposals=pending,
+            constraints=[]
+            if notebook is None
+            else [
+                PairConstraintResponse(
+                    owner_id=row.owner_id,
+                    kind=row.kind,
+                    content=row.content,
+                    version=row.version,
+                )
+                for row in notebook.constraints
+            ],
+            # Slice 1 has no door that turns this on, and a behaviour that
+            # cannot be turned off would break the limit rule (spec 6.3).
+            nep_gui_ho=False,
+            open_paper_id=self._open_paper_id(context_id, actor, now=now),
+        )
+
+    def _open_paper_id(
+        self, context_id: uuid.UUID, actor: Actor, *, now: datetime
+    ) -> uuid.UUID | None:
+        """The one sheet in play, if there is one. A draft belongs to whoever
+        started it, so the other person's screen must not learn it exists."""
+        for paper in self.repository.list_pair_papers(context_id):
+            state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
+            if state not in pair_paper.OPEN_STATES:
+                continue
+            if state == "nhap" and paper.draft_owner_id != actor.id:
+                continue
+            return paper.id
+        return None
+
+    def _locked_notebook(
+        self, context_id: uuid.UUID, *, now: datetime
+    ) -> PairNotebookRecord:
+        """The notebook row, created if this is the first write, then held.
+
+        Created eagerly so that every write in this feature has a lock target
+        even before a cycle exists: the very first invitation (§14.1) happens
+        in a notebook nobody has opened, and two of them arriving at once must
+        still queue rather than both insert a sheet.
+        """
+        notebook = self.repository.lock_pair_notebook(context_id)
+        if notebook is None:
+            self.repository.create_pair_notebook(context_id, now=now)
+            notebook = self.repository.lock_pair_notebook(context_id)
+        assert notebook is not None
+        return notebook
+
+    def propose_pair_consent(
+        self,
+        context_id: uuid.UUID,
+        request: PairProposalCreateRequest,
+        actor: Actor,
+    ) -> PairProposalResponse:
+        """Ask the other person for one rung of the ladder.
+
+        The asker's own grant is written here, with the proposal, because
+        asking is agreeing: the offer «shall we open a notebook» is not a
+        neutral question one could later claim not to have wanted.
+        """
+        _context, members = self._pair_context_or_404(context_id, actor)
+        _require_pair_permission(
+            "propose_pair_consent", actor, {"is_group_member": True}
+        )
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        cycle_id = notebook.cycle_id
+        if cycle_id is None:
+            if len(members) < 2:
+                raise ApiProblem(409, "cycle_not_active", "Sổ này chưa đủ hai người.")
+            cycle_id = self.repository.open_pair_cycle(
+                notebook.id,
+                participants=members,
+                terms_version=DIEU_KHOAN_HIEN_TAI,
+                now=now,
+            )
+        elif request.purpose != "lap_so" and notebook.cycle_state != "active":
+            # A rung above the first, in a notebook nobody has opened yet.
+            # Tier 2 does not imply tier 3, but nothing implies tier 1 either.
+            raise ApiProblem(
+                409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
+            )
+        proposal = self.repository.create_consent_proposal(
+            cycle_id=cycle_id,
+            purpose=request.purpose,
+            proposed_by_id=actor.id,
+            terms_version=DIEU_KHOAN_HIEN_TAI,
+            expires_at=pair_notebook.han_de_nghi(now),
+            now=now,
+        )
+        self.repository.grant_consent(proposal.id, actor.id, now=now)
+        return PairProposalResponse(
+            id=proposal.id,
+            purpose=proposal.purpose,
+            expires_at=proposal.expires_at,
+            proposed_by_id=proposal.proposed_by_id,
+            my_granted=True,
+        )
+
+    def grant_pair_consent(
+        self, context_id: uuid.UUID, proposal_id: uuid.UUID, actor: Actor
+    ) -> PairProposalResponse:
+        """The second yes, and everything that becomes true because of it."""
+        _context, members = self._pair_context_or_404(context_id, actor)
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        proposal = self.repository.get_consent_proposal(proposal_id)
+        if (
+            proposal is None
+            or notebook.cycle_id is None
+            or proposal.cycle_id != notebook.cycle_id
+        ):
+            raise ApiProblem(
+                404, "consent_proposal_not_found", "Không có lời đề nghị này."
+            )
+        participants = self._participants(notebook, members)
+        _require_pair_permission(
+            "grant_pair_consent",
+            actor,
+            {
+                "is_invitee": (
+                    actor.id in participants and proposal.proposed_by_id != actor.id
+                ),
+                "proposal_in_force": pair_notebook.dang_cho(
+                    {
+                        "completed_at": proposal.completed_at,
+                        "expires_at": proposal.expires_at,
+                    },
+                    now=now,
+                ),
+            },
+        )
+        self.repository.grant_consent(proposal.id, actor.id, now=now)
+        after = self.repository.get_pair_notebook(context_id)
+        assert after is not None
+        du = pair_notebook.granted_purposes(
+            _consents_as_dicts(after), [str(p) for p in participants], now=now
+        )
+        if proposal.purpose in du:
+            self.repository.complete_consent_proposal(proposal.id, now=now)
+            if proposal.purpose == "lap_so":
+                self.repository.activate_pair_cycle(notebook.cycle_id, now=now)
+            elif proposal.purpose == "bat_doi":
+                # K2: one person, one couple. Both rows in this transaction, so
+                # a notebook cannot end up half a couple.
+                try:
+                    for person_id in participants:
+                        self.repository.set_couple_member(
+                            person_id, notebook.cycle_id, now=now
+                        )
+                except RepositoryConflict as exc:
+                    raise ApiProblem(
+                        409,
+                        exc.code.lower(),
+                        "Một trong hai người đang là một đôi ở sổ khác.",
+                    ) from exc
+        return PairProposalResponse(
+            id=proposal.id,
+            purpose=proposal.purpose,
+            expires_at=proposal.expires_at,
+            proposed_by_id=proposal.proposed_by_id,
+            my_granted=True,
+        )
+
+    def revoke_pair_consent(
+        self, context_id: uuid.UUID, purpose: str, actor: Actor
+    ) -> None:
+        """Take back one's own grant. Takes effect at the next read, because
+        every read asks; there is nothing cached to invalidate."""
+        if purpose not in pair_notebook.CONSENT_PURPOSES:
+            raise ApiProblem(404, "consent_purpose_unknown", "Không có mục đích này.")
+        _context, members = self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("revoke_pair_consent", actor, {"is_self": True})
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        if notebook.cycle_id is None:
+            return
+        self.repository.revoke_consents(notebook.cycle_id, purpose, actor.id, now=now)
+        if purpose == "bat_doi":
+            # «Một đôi» is a fact about two people. One of them taking it back
+            # ends it for both, and leaving the other row would keep somebody
+            # who is no longer in a couple from ever forming one.
+            for person_id in self._participants(notebook, members):
+                self.repository.clear_couple_member(person_id)
+        if purpose == "doc_chat":
+            self._drop_unsent_nep_drafts(context_id, now=now)
+
+    def _drop_unsent_nep_drafts(self, context_id: uuid.UUID, *, now: datetime) -> None:
+        """A draft Nếp wrote from the conversation stops being sendable the
+        moment the permission to read the conversation is taken back."""
+        for paper in self.repository.list_pair_papers(context_id):
+            if paper.state != "nhap":
+                continue
+            first = next((v for v in paper.versions if v.version == 1), None)
+            if first is not None and first.author_type == "nep":
+                self.repository.set_paper_state(paper.id, "bo", now=now)
+
+    def put_pair_constraint(
+        self,
+        context_id: uuid.UUID,
+        kind: str,
+        request: PairConstraintPutRequest,
+        actor: Actor,
+    ) -> PairConstraintResponse:
+        """One of the two lines a person writes about themselves (§6.4)."""
+        if kind not in pair_notebook.CONSTRAINT_KINDS:
+            raise ApiProblem(404, "constraint_kind_unknown", "Không có ô này.")
+        self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("edit_pair_constraint", actor, {"is_self": True})
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        if notebook.cycle_id is None:
+            raise ApiProblem(409, "cycle_not_active", "Sổ chưa mở.")
+        row = self.repository.set_pair_constraint(
+            cycle_id=notebook.cycle_id,
+            owner_id=actor.id,
+            kind=kind,
+            content=request.content.strip(),
+            now=now,
+        )
+        return PairConstraintResponse(
+            owner_id=row.owner_id,
+            kind=row.kind,
+            content=row.content,
+            version=row.version,
+        )
+
+    def delete_pair_constraint(
+        self, context_id: uuid.UUID, kind: str, actor: Actor
+    ) -> None:
+        if kind not in pair_notebook.CONSTRAINT_KINDS:
+            raise ApiProblem(404, "constraint_kind_unknown", "Không có ô này.")
+        self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("edit_pair_constraint", actor, {"is_self": True})
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        if notebook.cycle_id is None:
+            return
+        self.repository.delete_pair_constraint(notebook.cycle_id, actor.id, kind)
+
+    def _xem_truoc_dong_so(self, context_id: uuid.UUID, *, now: datetime) -> dict:
+        notebook = self.repository.get_pair_notebook(context_id)
+        papers = [
+            _paper_dict(paper) for paper in self.repository.list_pair_papers(context_id)
+        ]
+        proposals = [] if notebook is None else _proposals_as_dicts(notebook)
+        return pair_notebook.xem_truoc_dong_so(papers, proposals, now=now)
+
+    def preview_close_pair_notebook(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> ClosePreviewResponse:
+        """What closing would do, counted, with a revision that pins it."""
+        self._pair_context_or_404(context_id, actor)
+        _require_pair_permission(
+            "preview_close_pair_notebook", actor, {"is_group_member": True}
+        )
+        return ClosePreviewResponse(**self._xem_truoc_dong_so(context_id, now=_now()))
+
+    def close_pair_notebook(
+        self, context_id: uuid.UUID, request: CloseNotebookRequest, actor: Actor
+    ) -> None:
+        """«Đóng sổ là đóng» (§7.6).
+
+        The revision the person read has to still describe the notebook, or
+        they are agreeing to a different list of consequences than the one on
+        their screen. Nothing is deleted: sheets in play are cancelled, plans
+        that stood stay readable, and the cycle ends.
+        """
+        _context, members = self._pair_context_or_404(context_id, actor)
+        _require_pair_permission(
+            "close_pair_notebook", actor, {"is_group_member": True}
+        )
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        if self._xem_truoc_dong_so(context_id, now=now)["revision"] != request.revision:
+            raise ApiProblem(
+                409,
+                "notebook_revision_stale",
+                "Sổ vừa đổi. Xem lại rồi đóng.",
+            )
+        self.repository.close_open_pair_papers(context_id, now=now)
+        if notebook.cycle_id is not None:
+            for person_id in self._participants(notebook, members):
+                self.repository.clear_couple_member(person_id)
+            self.repository.close_pair_cycle(notebook.cycle_id, now=now)
+
+    def list_pair_papers(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> PaperListResponse:
+        """Every sheet this person may see, newest first, deadline applied."""
+        self._pair_context_or_404(context_id, actor)
+        _require_pair_permission("view_pair_notebook", actor, {"is_group_member": True})
+        now = _now()
+        papers = []
+        for paper in self.repository.list_pair_papers(context_id):
+            state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
+            if state == "nhap" and paper.draft_owner_id != actor.id:
+                continue
+            papers.append(
+                PaperSummary(
+                    id=paper.id,
+                    state=state,
+                    version=paper.current_version,
+                    tuan=paper.tuan,
+                    ngay=_ngay_cua(paper),
+                    expires_at=paper.expires_at,
+                )
+            )
+        return PaperListResponse(papers=papers)
+
+    def draft_pair_paper(
+        self, context_id: uuid.UUID, actor: Actor
+    ) -> PaperCommandResponse:
+        """Ask the notebook for a sheet. One command, never a read with a side
+        effect (ADR-0027 §6): a GET that wrote a sheet would mean opening the
+        screen twice left two."""
+        self._pair_context_or_404(context_id, actor)
+        now = _now()
+        notebook = self._locked_notebook(context_id, now=now)
+        _require_pair_permission(
+            "draft_pair_paper",
+            actor,
+            {
+                "is_group_member": True,
+                "cycle_active_or_temporary": (
+                    notebook.cycle_state == "active" or notebook.cycle_id is None
+                ),
+            },
+        )
+        for paper in self.repository.list_pair_papers(context_id):
+            if (
+                pair_paper.hieu_luc(_paper_dict(paper), now=now)
+                in pair_paper.OPEN_STATES
+            ):
+                raise ApiProblem(
+                    409,
+                    "paper_wrong_state",
+                    "Đang có một tờ mở. Xong tờ này đã.",
+                )
+        constraints = [] if notebook is None else list(notebook.constraints)
+        phac = pair_paper.phac_to_giay(
+            {"ngay": pair_paper.ngay_de_xuat(now), **_KHUNG_MAC_DINH},
+            constraints,
+            now=now,
+        )
+        paper = self.repository.create_pair_paper(
+            context_id=context_id,
+            cycle_id=notebook.cycle_id,
+            draft_owner_id=actor.id,
+            tuan=pair_paper.tuan_cua(now),
+            expires_at=pair_paper.han_tuan(now),
+            content=phac["content"],
+            ly_do=phac["ly_do"] or None,
+            nguon=phac["nguon"],
+            # A person's own draft, pre-filled. The author is whoever will send
+            # it, because they will have read and edited it first; `nep` is for
+            # the sheet Nếp sends by itself, which slice 1 has no door for.
+            author_type="human",
+            now=now,
+        )
+        return _wire_command(paper, paper.state)
+
+    def _readable_paper_or_404(
+        self, paper_id: uuid.UUID, actor: Actor
+    ) -> tuple[PairPaperRecord, tuple[uuid.UUID, ...]]:
+        paper = self.repository.get_pair_paper(paper_id)
+        if paper is None:
+            raise ApiProblem(404, "paper_not_found", "Không có tờ giấy này.")
+        _context, members = self._pair_context_or_404(paper.context_id, actor)
+        _require_pair_permission(
+            "view_pair_paper",
+            actor,
+            {
+                "may_view_paper": (
+                    paper.state != "nhap" or paper.draft_owner_id == actor.id
+                )
+            },
+        )
+        return paper, members
+
+    def pair_paper(self, paper_id: uuid.UUID, actor: Actor) -> PaperResponse:
+        paper, _members = self._readable_paper_or_404(paper_id, actor)
+        return _wire_paper(paper, actor_id=actor.id, now=_now())
+
+    def _locked_paper(
+        self, paper_id: uuid.UUID, actor: Actor
+    ) -> tuple[PairPaperRecord, tuple[uuid.UUID, ...]]:
+        """The sheet, read once for permission and then held for the write.
+
+        Two reads on purpose: the first decides whether this person may see it
+        at all, the second is the row every rule below is applied to, taken
+        after the lock so that «what it was when I looked» and «what I am
+        changing» are the same row.
+        """
+        paper, members = self._readable_paper_or_404(paper_id, actor)
+        locked = self.repository.lock_pair_paper(paper.id)
+        if locked is None:
+            raise ApiProblem(404, "paper_not_found", "Không có tờ giấy này.")
+        return locked, members
+
+    def _chuyen(self, paper: PairPaperRecord, su_kien: str, *, now: datetime, **facts):
+        try:
+            return pair_paper.chuyen(_paper_dict(paper), su_kien, now=now, **facts)
+        except pair_paper.PaperError as exc:
+            raise ApiProblem(409, exc.code, _LOI_TO_GIAY.get(exc.code, "")) from exc
+
+    def edit_pair_draft(
+        self, paper_id: uuid.UUID, request: PaperDraftEditRequest, actor: Actor
+    ) -> PaperCommandResponse:
+        paper, _members = self._locked_paper(paper_id, actor)
+        _require_pair_permission(
+            "edit_pair_draft",
+            actor,
+            {"is_draft_owner": paper.draft_owner_id == actor.id},
+        )
+        now = _now()
+        if pair_paper.hieu_luc(_paper_dict(paper), now=now) != "nhap":
+            raise ApiProblem(
+                409, "paper_wrong_state", "Tờ này đã gửi, sửa thì gửi bản mới."
+            )
+        self.repository.update_pair_draft(
+            paper.id,
+            content=_noi_dung_luu(request.content),
+            ly_do=(request.ly_do or "").strip() or None,
+        )
+        return _wire_command(paper, paper.state)
+
+    def send_pair_paper(
+        self, paper_id: uuid.UUID, request: PaperSendRequest, actor: Actor
+    ) -> PaperCommandResponse:
+        """Hand the sheet over.
+
+        Sending writes the sender's own `dong_y` (§3.4). It is the whole reason
+        a sheet needs «both» rather than «the other one»: the person who
+        pressed send has said yes to what they sent, in a row, once.
+        """
+        paper, _members = self._locked_paper(paper_id, actor)
+        _require_pair_permission(
+            "send_pair_paper",
+            actor,
+            {
+                "is_draft_owner": paper.draft_owner_id == actor.id,
+                "version_current": request.version == paper.current_version,
+            },
+        )
+        now = _now()
+        after = self._chuyen(paper, "gui", now=now)
+        self.repository.mark_version_sent(
+            paper.id, paper.current_version, sent_by=actor.id, now=now
+        )
+        self.repository.add_paper_response(
+            paper_id=paper.id,
+            version=paper.current_version,
+            person_id=actor.id,
+            kind="dong_y",
+            now=now,
+        )
+        self.repository.set_paper_state(paper.id, after["state"], now=now)
+        return _wire_command(paper, after["state"])
+
+    def mark_pair_paper_viewed(
+        self, paper_id: uuid.UUID, version: int, actor: Actor
+    ) -> None:
+        """«Đã xem», recorded once, by the person who received it."""
+        paper, _members = self._locked_paper(paper_id, actor)
+        row = next((v for v in paper.versions if v.version == version), None)
+        if row is None:
+            raise ApiProblem(404, "paper_not_found", "Không có phiên bản này.")
+        _require_pair_permission(
+            "view_pair_paper_as_recipient",
+            actor,
+            {"is_not_version_sender": row.sent_by != actor.id},
+        )
+        now = _now()
+        self.repository.mark_paper_viewed(paper.id, version, actor.id, now=now)
+        if version == paper.current_version and paper.state == "da_gui":
+            after = self._chuyen(paper, "xem", now=now)
+            self.repository.set_paper_state(paper.id, after["state"], now=now)
+
+    def respond_pair_paper(
+        self, paper_id: uuid.UUID, version: int, request, actor: Actor
+    ) -> PaperCommandResponse:
+        """«Ừ» or «đề nghị sửa» -- the two things one may say back."""
+        paper, members = self._locked_paper(paper_id, actor)
+        row = next((v for v in paper.versions if v.version == version), None)
+        if row is None:
+            raise ApiProblem(404, "paper_not_found", "Không có phiên bản này.")
+        _require_pair_permission(
+            "respond_pair_paper",
+            actor,
+            {
+                "is_not_version_sender": row.sent_by != actor.id,
+                "version_current": version == paper.current_version,
+            },
+        )
+        now = _now()
+        if request.kind == "dong_y":
+            return self._dong_y(paper, version, actor, now=now)
+        return self._de_nghi_sua(paper, version, request, actor, now=now)
+
+    def _dong_y(
+        self, paper: PairPaperRecord, version: int, actor: Actor, *, now: datetime
+    ) -> PaperCommandResponse:
+        try:
+            self.repository.add_paper_response(
+                paper_id=paper.id,
+                version=version,
+                person_id=actor.id,
+                kind="dong_y",
+                now=now,
+            )
+        except RepositoryConflict as exc:
+            raise ApiProblem(
+                409, exc.code.lower(), "Bạn đã đồng ý tờ này rồi."
+            ) from exc
+        after_rows = self.repository.get_pair_paper(paper.id)
+        assert after_rows is not None
+        du = pair_paper.da_du_dong_y(_rows_as_dicts(after_rows.responses), version)
+        after = self._chuyen(paper, "dong_y", now=now, du_dong_y=du)
+        if after["state"] != "chot":
+            self.repository.set_paper_state(paper.id, after["state"], now=now)
+            return _wire_command(paper, after["state"])
+        outing_id = self._chot(after_rows, version, actor, now=now)
+        self.repository.set_paper_state(paper.id, "chot", now=now)
+        return _wire_command(paper, "chot", outing_id)
+
+    def _chot(
+        self,
+        paper: PairPaperRecord,
+        version: int,
+        actor: Actor,
+        *,
+        now: datetime,
+    ) -> uuid.UUID:
+        """Both have agreed: the sheet becomes an outing, in this transaction.
+
+        The outing is built as `OutingCreateRequest` rather than passed
+        straight to the repository, so that a plan born here goes through the
+        same validator as one a person typed: a blank title, a backwards pair
+        of dates or a negative budget is refused in one place, not two.
+
+        K3 is the gate on «one sheet, one outing». A retry that lost its
+        answer on the way back finds the link already there and is told the
+        same `outing_id` rather than making a second trip.
+        """
+        existing = self.repository.get_paper_outing(paper.id)
+        if existing is not None:
+            return existing
+        current = next((v for v in paper.versions if v.version == version), None)
+        if current is None:
+            raise ApiProblem(409, "paper_wrong_state", "Tờ giấy này không đọc được.")
+        noi_dung = _noi_dung_wire(current.content)
+        de_nghi = OutingCreateRequest(
+            title=f"Tờ lời rủ {noi_dung.ngay.strftime('%d/%m')}",
+            starts_on=noi_dung.ngay,
+            ends_on=noi_dung.ngay,
+            headcount=2,
+            # No money is decided on a sheet of paper. The outing carries the
+            # reference figure the group flow expects, and nothing here writes
+            # a `_vnd` column with a number somebody did not type.
+            budget_per_person_vnd=0,
+        )
+        outing = self.repository.create_outing(
+            context_id=paper.context_id,
+            created_by_id=actor.id,
+            title=de_nghi.title,
+            starts_on=de_nghi.starts_on,
+            ends_on=de_nghi.ends_on,
+            headcount=de_nghi.headcount,
+            budget_per_person_vnd=de_nghi.budget_per_person_vnd,
+            now=now,
+        )
+        try:
+            self.repository.link_paper_outing(
+                paper_id=paper.id, version=version, outing_id=outing.id, now=now
+            )
+        except RepositoryConflict as exc:
+            already = self.repository.get_paper_outing(paper.id)
+            if already is None:
+                raise ApiProblem(
+                    409, exc.code.lower(), "Tờ này đã có buổi đi rồi."
+                ) from exc
+            return already
+        return outing.id
+
+    def _de_nghi_sua(
+        self,
+        paper: PairPaperRecord,
+        version: int,
+        request: PaperReviseRequest,
+        actor: Actor,
+        *,
+        now: datetime,
+    ) -> PaperCommandResponse:
+        """A counter-proposal is a new version sent by whoever proposed it.
+
+        Which is why their `dong_y` is written with it: they are not asking a
+        question, they are handing back a sheet they have agreed to. The old
+        version keeps their `de_nghi_sua` row, so «what happened to v1» is
+        answerable after v2 exists.
+        """
+        after = self._chuyen(paper, "de_nghi_sua", now=now)
+        moi = paper.current_version + 1
+        self.repository.add_paper_response(
+            paper_id=paper.id,
+            version=version,
+            person_id=actor.id,
+            kind="de_nghi_sua",
+            now=now,
+        )
+        self.repository.add_paper_version(
+            paper_id=paper.id,
+            version=moi,
+            content=_noi_dung_luu(request.content),
+            ly_do=(request.ly_do or "").strip() or None,
+            nguon={"scope": "chung", "dung": ["nguoi"], "luc": now.isoformat()},
+            author_type="human",
+            sent_at=now,
+            sent_by=actor.id,
+            now=now,
+        )
+        self.repository.add_paper_response(
+            paper_id=paper.id,
+            version=moi,
+            person_id=actor.id,
+            kind="dong_y",
+            now=now,
+        )
+        self.repository.set_paper_state(
+            paper.id, after["state"], now=now, current_version=moi
+        )
+        return PaperCommandResponse(
+            id=paper.id, state=after["state"], version=moi, outing_id=paper.outing_id
+        )
+
+    def withdraw_pair_paper(
+        self, paper_id: uuid.UUID, request: PaperWithdrawRequest, actor: Actor
+    ) -> PaperCommandResponse:
+        """Take it back, while there is still nothing to take back from."""
+        paper, _members = self._locked_paper(paper_id, actor)
+        now = _now()
+        co_the = pair_paper.co_the_rut(
+            _paper_dict(paper),
+            _versions_as_dicts(paper),
+            _rows_as_dicts(paper.views),
+            _rows_as_dicts(paper.responses),
+            actor_id=str(actor.id),
+        )
+        _require_pair_permission(
+            "withdraw_pair_paper",
+            actor,
+            {"is_group_member": True, "paper_unseen_unanswered": co_the},
+        )
+        if request.version != paper.current_version:
+            raise ApiProblem(
+                409, "paper_version_stale", "Tờ giấy đã sang phiên bản mới."
+            )
+        after = self._chuyen(paper, "rut", now=now, co_the_rut=co_the)
+        self.repository.set_paper_state(paper.id, after["state"], now=now)
+        return _wire_command(paper, after["state"])
+
+    def skip_pair_week(self, paper_id: uuid.UUID, actor: Actor) -> PaperCommandResponse:
+        """«Tuần này nghỉ». A draft nobody received is dropped; a sheet already
+        sent is cancelled, because the other person is owed an ending."""
+        paper, _members = self._locked_paper(paper_id, actor)
+        _require_pair_permission("skip_pair_week", actor, {"is_group_member": True})
+        now = _now()
+        after = self._chuyen(paper, "nghi_tuan", now=now)
+        self.repository.set_paper_state(paper.id, after["state"], now=now)
+        return _wire_command(paper, after["state"])
+
+    def record_pair_outing_done(
+        self, paper_id: uuid.UUID, actor: Actor
+    ) -> PaperCommandResponse:
+        """«Đã đi rồi», with the name of whoever says so.
+
+        Never inferred from the date: a week that passed is not a promise that
+        anybody went, and the memory this unlocks is worth only as much as the
+        fact behind it.
+        """
+        paper, _members = self._locked_paper(paper_id, actor)
+        _require_pair_permission(
+            "record_pair_outing_done", actor, {"is_group_member": True}
+        )
+        now = _now()
+        if not _co_the_ghi_da_di(paper, now=now):
+            raise ApiProblem(409, "paper_wrong_state", "Chưa tới ngày đi.")
+        after = self._chuyen(paper, "da_di", now=now, nguoi_ghi=True)
+        self.repository.set_paper_state(
+            paper.id, after["state"], now=now, recorded_by_id=actor.id
+        )
+        return _wire_command(paper, after["state"])
+
+    def keep_pair_paper_line(
+        self, paper_id: uuid.UUID, request: PaperKeepRequest, actor: Actor
+    ) -> PaperKeepResponse:
+        """One line kept after the evening. The first one closes the sheet."""
+        paper, _members = self._locked_paper(paper_id, actor)
+        _require_pair_permission(
+            "keep_pair_paper_line", actor, {"is_group_member": True}
+        )
+        now = _now()
+        after = self._chuyen(paper, "giu", now=now)
+        keep = self.repository.add_paper_keep(
+            paper_id=paper.id, person_id=actor.id, line=request.line, now=now
+        )
+        self.repository.set_paper_state(paper.id, after["state"], now=now)
+        return PaperKeepResponse(id=keep.id, line=keep.line, created_at=keep.created_at)
+
+
+# --- Sổ hai người và tờ giấy (ADR-0027) ------------------------------------
+#
+# What the notebook is worth reading for is in `app.domain.pair_paper` and
+# `app.domain.pair_notebook`. What is here is the order of writes, the locks,
+# and the translation between two vocabularies: the permission table's
+# predicate names and the wire's error codes.
+
+#: Which version of the consent wording a grant was given against. One today;
+#: it exists because a grant is «to this text», and re-wording the ladder must
+#: not silently inherit what somebody agreed to before it changed.
+DIEU_KHOAN_HIEN_TAI = 1
+
+#: The skeleton a fresh sheet arrives pre-filled with, until the notebook has a
+#: routine of its own to draw on (slice 2). Generic on purpose: section 8 says
+#: a draft says «chưa biết», so this offers a shape to edit, never a
+#: recommendation. `Create.tsx` promises exactly this -- «Nếp phác sẵn, bạn gửi».
+_KHUNG_MAC_DINH = {"gio": "18:30", "viec": "Ăn tối", "di_tiep": None}
+
+#: The bridge between the two vocabularies. The permission table answers with
+#: the name of the predicate that failed; the client's dictionary translates
+#: wire codes. Mapping them here keeps `_TABLE` the only place a door is
+#: decided while still letting the person read a sentence about their week
+#: rather than «permission_denied: version_current».
+#:
+#: The four that answer 404 are the ones where a 403 would itself be the leak:
+#: a draft the other person has not been sent, and a paper in a notebook that
+#: is not theirs, must be indistinguishable from one that does not exist
+#: (section 3.3 rule 1).
+_TU_CHOI_TO_GIAY: dict[str, tuple[int, str, str]] = {
+    "may_view_paper": (404, "paper_not_found", "Không có tờ giấy này."),
+    "is_draft_owner": (404, "paper_not_found", "Không có tờ giấy này."),
+    "proposal_in_force": (
+        409,
+        "consent_proposal_expired",
+        "Lời đề nghị này đã hết hạn.",
+    ),
+    "paper_unseen_unanswered": (
+        409,
+        "paper_not_withdrawable",
+        "Người kia đã mở tờ này rồi, không rút lại được.",
+    ),
+    "version_current": (
+        409,
+        "paper_version_stale",
+        "Tờ giấy đã sang phiên bản mới.",
+    ),
+    "is_not_version_sender": (
+        409,
+        "paper_self_response",
+        "Đây là tờ bạn gửi, chờ người kia trả lời.",
+    ),
+    "cycle_active_or_temporary": (
+        409,
+        "cycle_not_active",
+        "Sổ chưa mở. Cả hai cùng đồng ý lập sổ trước đã.",
+    ),
+}
+
+
+#: One sentence per refusal `app.domain.pair_paper` can raise, in the language
+#: the person reading it speaks. The code stays the machine's word for it.
+_LOI_TO_GIAY = {
+    "paper_expired": "Tuần này hết rồi. Tuần sau mình rủ lại nhé.",
+    "paper_frozen": "Hai bạn chốt rồi, không sửa nữa.",
+    "paper_wrong_state": "Tờ giấy không ở trạng thái làm được việc này.",
+    "paper_not_withdrawable": "Người kia đã mở tờ này rồi, không rút lại được.",
+    "paper_needs_recorder": "Cần biết ai ghi là hai bạn đã đi.",
+    "paper_event_unknown": "Không làm được việc này với tờ giấy.",
+    "paper_draft_needs_date": "Tờ giấy cần một ngày.",
+}
+
+
+def _require_pair_permission(action: str, actor: Actor, context: dict) -> None:
+    """`_require_permission`, with the refusal said in the wire's words."""
+    try:
+        _require_permission(action, actor, context)
+    except ApiProblem as refused:
+        mapped = _TU_CHOI_TO_GIAY.get(refused.detail)
+        if mapped is None:
+            raise
+        status_code, code, message = mapped
+        raise ApiProblem(status_code, code, message) from refused
+
+
+def _paper_dict(paper: PairPaperRecord) -> dict:
+    """The sheet in the shape `app.domain.pair_paper` reads."""
+    return {
+        "id": str(paper.id),
+        "state": paper.state,
+        "current_version": paper.current_version,
+        "expires_at": paper.expires_at,
+    }
+
+
+def _versions_as_dicts(paper: PairPaperRecord) -> list[dict]:
+    return [
+        {
+            "version": row.version,
+            "author_type": row.author_type,
+            "sent_by": None if row.sent_by is None else str(row.sent_by),
+            "sent_at": row.sent_at,
+        }
+        for row in paper.versions
+    ]
+
+
+def _rows_as_dicts(rows) -> list[dict]:
+    return [
+        {"version": row.version, "person_id": str(row.person_id), **_kind_of(row)}
+        for row in rows
+    ]
+
+
+def _kind_of(row) -> dict:
+    kind = getattr(row, "kind", None)
+    return {} if kind is None else {"kind": kind}
+
+
+def _consents_as_dicts(notebook: PairNotebookRecord) -> list[dict]:
+    return [
+        {
+            "person_id": str(row.person_id),
+            "purpose": row.purpose,
+            "granted_at": row.granted_at,
+            "revoked_at": row.revoked_at,
+            "proposal_expires_at": row.proposal_expires_at,
+        }
+        for row in notebook.consents
+    ]
+
+
+def _proposals_as_dicts(notebook: PairNotebookRecord) -> list[dict]:
+    return [
+        {
+            "id": str(row.id),
+            "completed_at": row.completed_at,
+            "expires_at": row.expires_at,
+        }
+        for row in notebook.proposals
+    ]
+
+
+def _noi_dung_wire(content: dict) -> PaperContent:
+    """Stored JSON as the wire's content, or a refusal.
+
+    Every write goes through `PaperContentInput`, so a row that cannot be read
+    back is a row something else wrote. Saying so is better than rendering a
+    sheet with a missing day.
+    """
+    try:
+        return PaperContent(
+            ngay=date.fromisoformat(str(content["ngay"])),
+            chang=[
+                PaperStop(
+                    gio=str(stop["gio"]),
+                    viec=str(stop["viec"]),
+                    place_id=None
+                    if stop.get("place_id") in (None, "")
+                    else uuid.UUID(str(stop["place_id"])),
+                    can_kiem=bool(stop.get("can_kiem", True)),
+                )
+                for stop in content.get("chang", [])
+            ],
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ApiProblem(
+            409, "paper_wrong_state", "Tờ giấy này không đọc được."
+        ) from exc
+
+
+def _ngay_cua(paper: PairPaperRecord) -> date | None:
+    """The day the current version proposes, or None if it cannot be read."""
+    current = next(
+        (v for v in paper.versions if v.version == paper.current_version), None
+    )
+    if current is None:
+        return None
+    try:
+        return date.fromisoformat(str(current.content["ngay"]))
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _co_the_ghi_da_di(paper: PairPaperRecord, *, now: datetime) -> bool:
+    """May somebody record that this outing happened?
+
+    Section 3.3 rule 6: only from the day itself. The client never reads the
+    clock for this -- a phone whose date is wrong would otherwise show the
+    button on the wrong day, and the two people would see different weeks.
+    """
+    if pair_paper.hieu_luc(_paper_dict(paper), now=now) != "chot":
+        return False
+    ngay = _ngay_cua(paper)
+    return ngay is not None and now.astimezone(pair_paper.MUI_GIO).date() >= ngay
+
+
+def _wire_paper_version(
+    version: PairVersionRecord,
+    *,
+    paper: PairPaperRecord,
+    actor_id: uuid.UUID,
+) -> PaperVersionResponse:
+    """One version as its reader may see it.
+
+    `viewed_by_recipient_at` is filled only for whoever sent that version
+    (section 7.5). The recipient does not need to know when they were observed
+    opening it; the sender does need to know whether silence means «not yet
+    read» or «read, and thinking».
+    """
+    mine = [
+        row
+        for row in paper.responses
+        if row.version == version.version and row.person_id == actor_id
+    ]
+    theirs_agreed = any(
+        row.version == version.version
+        and row.person_id != actor_id
+        and row.kind == "dong_y"
+        for row in paper.responses
+    )
+    seen_at = None
+    if version.sent_by == actor_id:
+        seen_at = next(
+            (
+                row.seen_at
+                for row in paper.views
+                if row.version == version.version and row.person_id != actor_id
+            ),
+            None,
+        )
+    return PaperVersionResponse(
+        version=version.version,
+        content=_noi_dung_wire(version.content),
+        ly_do=version.ly_do,
+        author_type=version.author_type,
+        sent_at=version.sent_at,
+        sent_by=version.sent_by,
+        my_response=None if not mine else mine[-1].kind,
+        their_agreed=theirs_agreed,
+        viewed_by_recipient_at=seen_at,
+    )
+
+
+def _wire_paper(
+    paper: PairPaperRecord, *, actor_id: uuid.UUID, now: datetime
+) -> PaperResponse:
+    current = next(
+        (v for v in paper.versions if v.version == paper.current_version), None
+    )
+    return PaperResponse(
+        id=paper.id,
+        state=pair_paper.hieu_luc(_paper_dict(paper), now=now),
+        version=paper.current_version,
+        author_type="human" if current is None else current.author_type,
+        sent_by=None if current is None else current.sent_by,
+        tuan=paper.tuan,
+        expires_at=paper.expires_at,
+        outing_id=paper.outing_id,
+        co_the_ghi_da_di=_co_the_ghi_da_di(paper, now=now),
+        versions=[
+            _wire_paper_version(row, paper=paper, actor_id=actor_id)
+            for row in paper.versions
+        ],
+        keeps=[
+            PaperKeepResponse(id=row.id, line=row.line, created_at=row.created_at)
+            for row in paper.keeps
+        ],
+    )
+
+
+def _wire_command(paper: PairPaperRecord, state: str, outing_id=None):
+    return PaperCommandResponse(
+        id=paper.id,
+        state=state,
+        version=paper.current_version,
+        outing_id=outing_id if outing_id is not None else paper.outing_id,
+    )
+
+
+def _noi_dung_luu(content: PaperContentInput) -> dict:
+    """The wire's content as the row stores it: a real ISO date, so that the
+    day is a value the server can compare, not a sentence for a screen."""
+    return {
+        "ngay": content.ngay.isoformat(),
+        "chang": [
+            {
+                "gio": stop.gio,
+                "viec": stop.viec,
+                "place_id": None if stop.place_id is None else str(stop.place_id),
+                "can_kiem": stop.can_kiem,
+            }
+            for stop in content.chang
+        ],
+    }
 
 
 __all__ = ["ApiService", "token_digest"]
