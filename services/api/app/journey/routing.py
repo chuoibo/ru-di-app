@@ -40,8 +40,8 @@ def _number(value: Any) -> float:
         isinstance(value, bool)
         or not isinstance(value, int | float)
         or value > 1_000_000_000
-        or not math.isfinite(value)
         or value < 0
+        or not math.isfinite(value)
     ):
         raise ValueError("invalid_cost")
     return value

@@ -135,7 +135,7 @@ def test_truncated_or_overflow_shape_refused(shape):
         _decode_shape(shape)
 
 
-@pytest.mark.parametrize("value", [1e308, 10**400])
+@pytest.mark.parametrize("value", [1e308, 10**400, -1e308, -(10**400)])
 @pytest.mark.parametrize("action", ["matrix", "route"])
 def test_extreme_provider_cost_never_escapes_as_overflow(server, value, action):
     provider, _, replies = server
