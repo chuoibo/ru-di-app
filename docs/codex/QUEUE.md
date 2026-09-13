@@ -135,7 +135,9 @@ việc đã có người làm như thể còn nợ:
 | 0 | ADR vào cây, gạt trạng thái, đồng bộ spec §3, mục này | 0027 · 0019 · 0021 | **đã merge #611** (2026-09-12) |
 | 1 | Nền FE không cần máy chủ: Nếp `gap:"manh"` + `giu-kin`, motif thư gấp ba, `ToGiay`, module bản tính của sổ + cổng đếm rẽ nhánh | — | **đã merge #612** (2026-09-12), bốn vòng đọc mù; bằng chứng `docs/claude/2026-09-12/nen-to-giay/` |
 | 2 | FE lát 1 trên fixture: máy trạng thái client, 13 bề mặt, Maestro fixture, đọc mù khung đầy đủ | — | PR mở (`claude/p0-w-hn-2-to-giay-fixture`); bằng chứng `docs/claude/2026-09-12/to-giay-fixture/` |
-| 3 | BE lát 1: một migration nối `9a5e1c7b3f86` (13 bảng + `UNIQUE(id, kind)` trên `contexts`), 18 cửa quyền, 19 route, fake repo, `tests/api` + `tests/postgres` (kể cả hai kết nối) + `tests/db`; khoản ADR-0019 cho `group_taste`/companion trên `pair` | 0027 · 0019 | chờ 0 |
+| 3A | BE lát 1, lát cắt **luật và bảng**: domain `pair_paper`/`pair_notebook`, 18 cửa quyền, migration `c4f27a90d1e3` (13 bảng + 4 trigger + `UNIQUE(id, kind)` trên `contexts`), `tests/domain` + `tests/db` + `tests/postgres` | 0027 | PR mở |
+| 3B | BE lát 1, lát cắt **bề mặt HTTP**: repository, service, schemas, 19 route, fake repo, `tests/api` (ca âm mỗi cửa) + ca đua hai kết nối | 0027 | chờ 3A |
+| 3C | Khoản ADR-0019 cho `group_taste`/companion trên `pair`: thiếu `doc_chat` của cả hai thì UNKNOWN và 403 trước khi đọc tin | 0019 | chờ 3A |
 | 4 | Nối live lát 1: module API, hook, màn `*Live`, Maestro `--otp`, pixel-diff màn hội bạn | — | chờ 2, 3 |
 | 5 | Lát 2: sổ bảy mục, ôn thẻ, câu hỏi tuần, ba dòng dặn, núm độ mới, Cài đặt sổ đôi (cờ «Nếp gửi hộ») | 0027 mở rộng | chờ 4 |
 | 6 | Lát 3: hẹn mở gác lúc đọc, túi riêng, thư gửi năm sau, giấy cũ quay lại, bản đồ hai người qua Hành trình | 0027 mở rộng | chờ 5 |
@@ -149,6 +151,10 @@ việc đã có người làm như thể còn nợ:
   hồ (spec §3.3 luật 6) và `content.ngay` là chuỗi cho người đọc, không so được. Hiện nút hiện ngay khi `chot`, kể cả trước ngày hẹn.
 
 **Hai điều cần bạn (Codex) biết, đo ngày 2026-09-12:**
+
+**Phase 3 tách làm ba PR** thay vì một như kế hoạch: một PR gộp cả ba tầng là ~5500 dòng qua bốn tầng test, và
+Lead chỉ đọc `main` cộng mô tả PR. Ba lát đều tự đứng được và mỗi lát có bằng chứng riêng; thứ tự giao hàng
+không đổi, Phase 4 vẫn cần cả ba.
 
 - `contexts` chưa có `UNIQUE(id, kind)`, nên FK ghép `(context_id, context_kind)` mà ADR-0027
   §2 đòi sẽ **thêm ràng buộc này vào bảng dùng chung** ở Phase 3. Vô hại về hành vi (một unique
