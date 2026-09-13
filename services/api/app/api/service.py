@@ -1120,6 +1120,30 @@ class ApiService:
             person.budget_band if person is not None else None,
         )
 
+    def _pair_chat_consent(self, context_id: uuid.UUID) -> bool | None:
+        """`None` when this is not a pair; otherwise «may Nếp read them», now.
+
+        ADR-0019 addendum, ADR-0027 §4. Asked at the moment of every read and
+        never cached: a revocation that only takes effect on the next restart
+        is not a revocation.
+        """
+        context = self.repository.get_context(context_id)
+        if context is None or context.kind != KIND_PAIR:
+            return None
+        notebook = self.repository.get_pair_notebook(context_id)
+        if notebook is None:
+            return False
+        members = tuple(
+            row.person_id
+            for row in self.repository.list_members(context_id)
+            if row.state == "active"
+        )
+        return pair_notebook.chat_consent_active(
+            _consents_as_dicts(notebook),
+            [str(person) for person in self._participants(notebook, members)],
+            now=_now(),
+        )
+
     def group_taste(self, context_id: uuid.UUID) -> TasteProfile:
         """One group's taste, summed from its ACTIVE members' own answers.
 
@@ -1132,6 +1156,16 @@ class ApiService:
 
         Two queries for the whole roster, not one per member.
         """
+
+        # ADR-0019 addendum: in a PAIR this sum is not an aggregate, it is a
+        # reading of one other person. With six people «what the group likes»
+        # hides whose answer is whose; with two, anybody can subtract their own
+        # answers and be left holding the other person's. So a pair's taste is
+        # «chưa biết» until both have said Nếp may read them, and the answer is
+        # UNKNOWN rather than a partial sum -- half a sum here would be exactly
+        # the reading the rule forbids.
+        if self._pair_chat_consent(context_id) is False:
+            return UNKNOWN
 
         people = [
             member.person_id
@@ -5578,6 +5612,17 @@ class ApiService:
             actor,
             {"is_group_member": self.repository.is_member(context_id, actor.id)},
         )
+        # BEFORE the conversation is read, not after. A refusal written once
+        # the messages are already in memory is a refusal that has already done
+        # the thing it refuses -- and the code is its own, because the shared
+        # 403 sentence would say «bạn không có quyền» about a permission the
+        # person does have and a consent nobody has given yet.
+        if self._pair_chat_consent(context_id) is False:
+            raise ApiProblem(
+                403,
+                "pair_chat_consent_required",
+                "Cả hai cùng đồng ý cho Nếp đọc tin nhắn thì Nếp mới nói được.",
+            )
 
         page = self.repository.list_messages(context_id, limit=CONTEXT_WINDOW)
         messages = list(reversed(page.messages))
