@@ -104,6 +104,7 @@ export function BanDo({
         map.addLayer({
           id: "hanh-trinh-duong-vien",
           type: "line",
+          filter: ["!=", ["get", "uocLuong"], 1],
           source: "hanh-trinh-duong",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
@@ -115,12 +116,20 @@ export function BanDo({
         map.addLayer({
           id: "hanh-trinh-duong",
           type: "line",
+          filter: ["!=", ["get", "uocLuong"], 1],
           source: "hanh-trinh-duong",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
             "line-color": ["case", ["==", ["get", "chon"], 1], mau.mauDuong, mau.mauDuongMo],
             "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
           },
+        });
+        map.addLayer({
+          id: "hanh-trinh-net-noi",
+          type: "line",
+          source: "hanh-trinh-duong",
+          filter: ["==", ["get", "uocLuong"], 1],
+          paint: { "line-color": mau.mauDuongMo, "line-width": 2, "line-dasharray": [2, 3] },
         });
         map.addLayer({
           id: "hanh-trinh-duong-hit",

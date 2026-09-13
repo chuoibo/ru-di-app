@@ -147,6 +147,7 @@ export function BanDo({
       >
         <Layer
           id="hanh-trinh-duong-vien"
+          filter={["!=", ["get", "uocLuong"], 1]}
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
             "line-color": mauVienDuong,
@@ -157,12 +158,19 @@ export function BanDo({
         />
         <Layer
           id="hanh-trinh-duong-line"
+          filter={["!=", ["get", "uocLuong"], 1]}
           layout={{ "line-cap": "round", "line-join": "round" }}
           paint={{
             "line-color": ["case", ["==", ["get", "chon"], 1], mauDuong, mauDuongMo],
             "line-width": ["case", ["==", ["get", "chon"], 1], 6, 4],
             "line-offset": ["*", ["%", ["get", "thuTu"], 2], 3],
           }}
+          type="line"
+        />
+        <Layer
+          id="hanh-trinh-net-noi"
+          filter={["==", ["get", "uocLuong"], 1]}
+          paint={{ "line-color": mauDuongMo, "line-width": 2, "line-dasharray": [2, 3] }}
           type="line"
         />
       </GeoJSONSource>
