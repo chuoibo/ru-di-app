@@ -15,6 +15,8 @@
  * and unanswered; a sheet Nếp sent needs BOTH to agree). Thirteen surfaces
  * read them. One module, one test file (`tests/to-giay-luat.test.mjs`).
  */
+import { ngayDocDuoc } from "./ngay";
+
 
 /** The 13 states of spec §3.1, spelled the way the server spells them. */
 export const TRANG_THAI_TO = [
@@ -188,7 +190,8 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
 export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] {
   if (!vTruoc) return [];
   const ra: string[] = [];
-  if (v.content.ngay !== vTruoc.content.ngay) ra.push(`Ngày: ${vTruoc.content.ngay} → ${v.content.ngay}`);
+  if (v.content.ngay !== vTruoc.content.ngay)
+    ra.push(`Ngày: ${ngayDocDuoc(vTruoc.content.ngay)} → ${ngayDocDuoc(v.content.ngay)}`);
   const n = Math.max(v.content.chang.length, vTruoc.content.chang.length);
   for (let i = 0; i < n; i++) {
     const ten = i === 0 ? "Chỗ chính" : "Đi tiếp";
@@ -227,7 +230,7 @@ export function cauTrangThai(to: ToGiay, toiId: string): string {
     case "dong_y":
       return daDongY(to, "toi", toiId) ? "Bạn đã ừ. Chờ người ấy ừ cùng phiên bản này." : "Người ấy đã ừ. Còn bạn.";
     case "chot":
-      return `Đã chốt. Hẹn ${pb?.content.ngay ?? "ngày đã ghi"}.`;
+      return `Đã chốt. Hẹn ${pb ? ngayDocDuoc(pb.content.ngay) : "ngày đã ghi"}.`;
     case "da_di":
       return "Đã đi. Giữ lại một điều về buổi này?";
     case "da_giu":

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc } from "../../to-giay/to-giay";
+import { ngayDocDuoc } from "../../to-giay/ngay";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -122,7 +123,7 @@ export function ToLoiRu({
           ))}
           <VetGap />
           <View style={styles.hangCuoi}>
-            <Text style={[typography.label, { color: colors.inkSoft, flexShrink: 1 }]}>{pb?.content.ngay ?? ""}</Text>
+            <Text style={[typography.label, { color: colors.inkSoft, flexShrink: 1 }]}>{pb ? ngayDocDuoc(pb.content.ngay) : ""}</Text>
             <Stamp
               label={nhanDau(to, toiId)}
               testID={testID ? `${testID}-stamp` : undefined}

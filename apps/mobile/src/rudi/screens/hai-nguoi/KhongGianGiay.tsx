@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
 import { type ToGiay, phienBan } from "../../to-giay/to-giay";
+import { ngayDocDuoc } from "../../to-giay/ngay";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { EmptyState } from "../../ui/EmptyState";
@@ -242,7 +243,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
             <Heading size="h2" title="Tờ đã khép" />
             <NhomHang>
               {so.toKhac.map((t) => (
-                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${phienBan(t)?.content.ngay ?? ""}`} />
+                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${ngayDocDuoc(phienBan(t)?.content.ngay ?? "")}`} />
               ))}
             </NhomHang>
           </View>

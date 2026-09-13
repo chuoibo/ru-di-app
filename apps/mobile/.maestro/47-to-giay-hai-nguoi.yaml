@@ -57,6 +57,14 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Để sau"
 # --- D nhận lời đề nghị và đồng ý ---------------------------------------------
+# Về tới một màn mà `_dang-xuat-neu-co` nhận ra: nó rẽ theo «Khám phá» hoặc
+# «Chưa có nhóm nào», và từ không gian giấy thì cả hai đều không thấy — nên nó
+# SKIP cả hai nhánh, không đăng xuất ai, và assert kế tiếp đỏ.
+- pressKey: Back
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
 - runFlow: _dang-xuat-neu-co.yaml
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
@@ -96,11 +104,17 @@ appId: com.lakiet.rudi
     visible: "Bản phác"
     timeout: 60000
 - takeScreenshot: 47e-ban-phac
-- tapOn: "Gửi"
+# Nhãn đầy đủ, không phải «Gửi»: nút nói nó gửi cho AI.
+- tapOn: "Gửi cho người ấy"
 - extendedWaitUntil:
     visible: "Đã gửi"
     timeout: 60000
 # --- C mở tờ ra và ừ ----------------------------------------------------------
+- pressKey: Back
+- pressKey: Back
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 30000
 - runFlow: _dang-xuat-neu-co.yaml
 - extendedWaitUntil:
     visible: "Rủ Đi thôi!"
