@@ -1367,7 +1367,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/recap/GET-contexts-context_id-recap.md"
     },
     {
       "id": "POST /reports",
@@ -1379,7 +1380,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/reports/POST-reports.md"
     },
     {
       "id": "POST /receipts/scan",
@@ -1451,7 +1453,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/social_map/GET-areas.md"
     },
     {
       "id": "GET /contexts/{context_id}/map",
@@ -1463,7 +1466,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/social_map/GET-contexts-context_id-map.md"
     },
     {
       "id": "GET /contexts/{context_id}/heatmap",
@@ -1475,7 +1479,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/social_map/GET-contexts-context_id-heatmap.md"
     },
     {
       "id": "POST /contexts/{context_id}/meet",
@@ -1487,7 +1492,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/social_map/POST-contexts-context_id-meet.md"
     },
     {
       "id": "POST /stories",
@@ -1646,7 +1652,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/preferences/GET-interests.md"
     },
     {
       "id": "PUT /people/me/interests",
@@ -1658,7 +1665,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/preferences/PUT-people-me-interests.md"
     },
     {
       "id": "GET /contexts/{context_id}/preference-profile",
@@ -1670,7 +1678,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "CARDED",
+      "evidence": "docs/migration/routes/preferences/GET-contexts-context_id-preference-profile.md"
     },
     {
       "id": "POST /contexts/{context_id}/photos/{photo_id}/face-boxes",
