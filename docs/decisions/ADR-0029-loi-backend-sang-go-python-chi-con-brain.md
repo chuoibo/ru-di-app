@@ -104,6 +104,24 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
 - Parity giữ nguyên cả lỗi của Python. Nó chứng minh «giống», không chứng minh «đúng». Lỗi tìm thấy trong lúc
   port thành phát hiện riêng, **không sửa trong PR port**.
 
+**Ngoại lệ thứ hai, Lead duyệt ngày 2026-09-14: `MALFORMED-REQUEST-LINE`.** net/http của Go phân tích dòng
+request trước mọi handler, nên cửa trước trả lời khác uvicorn/httptools cho những dòng request mà không client nào
+của sản phẩm gửi. Đo bằng socket thô trên hai stack (22 dòng, Python trực tiếp so với Python qua `core`), 11 dòng
+khác và được chấp nhận có tên:
+
+| Nhóm | Ví dụ | Python (uvicorn) | Go (`core`) |
+|---|---|---|---|
+| escape hỏng trong path | `/%zz`, `/healthz%zz`, `/contexts/%zz`, `/healthz%` | định tuyến (404/401) | 400 `400 Bad Request` |
+| byte non-ASCII thô trong target | `/h\xc3\xa9`, `/h\xe9` | 400 `Invalid HTTP request received.` | 404 |
+| cả hai 400 nhưng khác thân/header | byte DEL, dấu cách trong query, target không bắt đầu bằng `/` | 400 `Invalid HTTP request received.` | 400 `400 Bad Request` |
+| fragment | `/healthz#frag` | bỏ fragment → 200 | 404 |
+| `OPTIONS *` | `OPTIONS *` | 404 JSON | 200 rỗng |
+
+Mọi dòng request hợp lệ khác trong bộ đo đều bằng nhau (escape hỏng trong query, `//`, absolute-form, `%2F`,
+`%0A`, 307 dấu gạch chéo cuối, method viết thường/lạ, `CONNECT`). Danh sách không được lớn lặng lẽ: lượt probe
+(`parity probe`, chặng `parity`) đỏ khi một dòng NGOÀI danh sách bắt đầu khác, và đỏ khi một dòng TRONG danh sách
+hết khác (danh sách cũ). Muốn thêm dòng là sửa ADR này.
+
 ### 2.5 Ba luật tiền trong Go — không đổi luật
 
 1. Số nguyên đồng: `money.VND` là `int64`; `moneylint` (go/analysis) cấm kiểu float, literal phân số,

@@ -3,6 +3,7 @@
 //	parity lint PATH...
 //	parity run --reference URL --candidate URL [--host H] [--json FILE] PATH...
 //	parity canary --reference URL --target URL [--host H] PATH...
+//	parity probe --reference URL --candidate URL
 //
 // Exit codes: 0 every step equal, 1 at least one difference, 2 the run could
 // not be completed (bad scenario, unreachable stack). A run that could not
@@ -26,6 +27,7 @@ import (
 	"mobile/parity/internal/canary"
 	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
+	"mobile/parity/internal/rawprobe"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
 )
@@ -46,6 +48,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return compareStacks(args[1:], stdout, stderr)
 	case "canary":
 		return canaryRun(args[1:], stdout, stderr)
+	case "probe":
+		return probeRun(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -303,5 +307,51 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, "canary: identity equal, every exercised damage caught")
+	return 0
+}
+
+// probeRun sends malformed request lines straight to both stacks. Only the
+// ADR-0029 §2.4 MALFORMED-REQUEST-LINE cases may differ, and every one of them
+// must still differ: a stale list is as wrong as an incomplete one.
+func probeRun(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("probe", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	reference := flags.String("reference", "", "base URL of the Python reference")
+	candidate := flags.String("candidate", "", "base URL of the candidate front door")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *reference == "" || *candidate == "" {
+		fmt.Fprintln(stderr, "parity probe: --reference and --candidate are required")
+		return 2
+	}
+	results, err := rawprobe.Run(context.Background(), *reference, *candidate)
+	if err != nil {
+		fmt.Fprintf(stderr, "INFRA %v\n", err)
+		return 2
+	}
+	differ := 0
+	for _, r := range results {
+		_, accepted := rawprobe.ExpectedDivergence[r.Case.Name]
+		switch {
+		case r.Equal && !accepted:
+			fmt.Fprintf(stdout, "EQUAL    %-20s %s\n", r.Case.Name, r.Reference.Code)
+		case r.Equal && accepted:
+			fmt.Fprintf(stdout, "STALE    %-20s both %s, but ADR-0029 lists it as differing\n", r.Case.Name, r.Reference.Code)
+		case !r.Equal && accepted:
+			differ++
+			fmt.Fprintf(stdout, "ACCEPTED %-20s reference %s, candidate %s\n", r.Case.Name, r.Reference.Code, r.Candidate.Code)
+		default:
+			differ++
+			fmt.Fprintf(stdout, "DIFF     %-20s reference %s %q, candidate %s %q\n", r.Case.Name,
+				r.Reference.Code, r.Reference.Body, r.Candidate.Code, r.Candidate.Body)
+		}
+	}
+	unexpected, stale := rawprobe.Verdict(results, rawprobe.ExpectedDivergence)
+	fmt.Fprintf(stdout, "probe: cases=%d differ=%d accepted=%d unexpected=%d stale=%d\n",
+		len(results), differ, len(rawprobe.ExpectedDivergence), len(unexpected), len(stale))
+	if len(unexpected) > 0 || len(stale) > 0 {
+		return 1
+	}
 	return 0
 }
