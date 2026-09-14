@@ -1,0 +1,142 @@
+package normalize
+
+import (
+	"strings"
+	"testing"
+)
+
+func run(t *testing.T, named map[string]string, texts ...string) []string {
+	t.Helper()
+	b := NewBinder()
+	for literal, name := range named {
+		if err := b.Name(literal, name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, text := range texts {
+		if err := b.Observe(text); err != nil {
+			t.Fatal(err)
+		}
+	}
+	out := make([]string, len(texts))
+	for i, text := range texts {
+		out[i] = b.Apply(text)
+	}
+	return out
+}
+
+func TestSameStructureDifferentValuesNormaliseEqual(t *testing.T) {
+	python := run(t, nil,
+		`{"id":"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b","created_at":"2026-09-14T10:00:00.123456Z"}`,
+		`{"context_id":"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b","member_id":"cafebabe-dead-4bee-8f00-abcdefabcdef","joined_at":"2026-09-14T10:00:01Z"}`,
+	)
+	golang := run(t, nil,
+		`{"id":"aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee","created_at":"2026-09-14T11:30:00.654321Z"}`,
+		`{"context_id":"aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee","member_id":"facefeed-beef-4a11-b222-fedcbafedcba","joined_at":"2026-09-14T11:30:05Z"}`,
+	)
+	for i := range python {
+		if python[i] != golang[i] {
+			t.Fatalf("step %d:\npython %s\ngo     %s", i, python[i], golang[i])
+		}
+	}
+	if !strings.Contains(python[1], `"context_id":"<uuid#1>"`) || !strings.Contains(python[1], `"member_id":"<uuid#2>"`) {
+		t.Fatalf("numbering by first appearance: %s", python[1])
+	}
+}
+
+func TestFormatDifferencesSurviveNormalisation(t *testing.T) {
+	cases := map[string][2]string{
+		"Z vs +00:00":          {`"2026-09-14T10:00:00.123456Z"`, `"2026-09-14T10:00:00.123456+00:00"`},
+		"micro vs milli":       {`"2026-09-14T10:00:00.123456Z"`, `"2026-09-14T10:00:00.123Z"`},
+		"no fraction vs zeros": {`"2026-09-14T10:00:00Z"`, `"2026-09-14T10:00:00.000000Z"`},
+		"uppercase uuid":       {`"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b"`, `"3F2B8C1E-9A4D-4E2F-8B1A-7C6D5E4F3A2B"`},
+		"float point":          {`{"score":1.0}`, `{"score":1}`},
+		"key order":            {`{"a":1,"b":2}`, `{"b":2,"a":1}`},
+		"space separator":      {`"2026-09-14T10:00:00Z"`, `"2026-09-14 10:00:00Z"`}, // repo-guard: allow=long-number reason=timestamp-fixture-not-an-account
+		"escaped vs raw utf8":  {`"Đà Lạt"`, `"\u0110\u00e0 L\u1ea1t"`},
+		"reused id vs two ids": {`"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b","3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b"`, `"aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee","cafebabe-dead-4bee-8f00-abcdefabcdef"`},
+	}
+	for name, pair := range cases {
+		t.Run(name, func(t *testing.T) {
+			python := run(t, nil, pair[0])[0]
+			golang := run(t, nil, pair[1])[0]
+			if python == golang {
+				t.Fatalf("difference hidden: both normalised to %s", python)
+			}
+		})
+	}
+}
+
+func TestTimestampRanksKeepOrderAndEquality(t *testing.T) {
+	out := run(t, nil,
+		`"2026-09-14T10:00:05Z"`,
+		`"2026-09-14T10:00:01Z"`,
+		`"2026-09-14T10:00:01.000000+00:00"`,
+	)
+	if out[0] != `"<ts#2|f0|Z>"` || out[1] != `"<ts#1|f0|Z>"` || out[2] != `"<ts#1|f6|+00:00>"` {
+		t.Fatalf("ranks/shapes = %q", out)
+	}
+}
+
+func TestClockSourceChangeCollapsesRanks(t *testing.T) {
+	// Python stamps two columns at different moments; a port that stamps both
+	// with one clock read must not normalise to the same text.
+	python := run(t, nil, `{"created_at":"2026-09-14T10:00:00.100000Z","accepted_at":"2026-09-14T10:00:00.200000Z"}`)[0]
+	golang := run(t, nil, `{"created_at":"2026-09-14T10:00:00.100000Z","accepted_at":"2026-09-14T10:00:00.100000Z"}`)[0]
+	if python == golang {
+		t.Fatalf("clock collapse hidden: %s", python)
+	}
+}
+
+func TestNamedLiteralsAndTokens(t *testing.T) {
+	persona := "0b6c1d2e-3f40-4a5b-8c6d-7e8f90a1b2c3"
+	token := "Zm9vYmFyYmF6cXV4cXV1eHF1dXhxdXV4cXV1eHF1dXg"
+	out := run(t, map[string]string{persona: "persona:owner", token: "token:invite"},
+		`{"created_by_id":"`+persona+`","link":"/g/`+token+`","other":"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b"}`,
+	)[0]
+	want := `{"created_by_id":"<persona:owner>","link":"/g/<token:invite>","other":"<uuid#1>"}`
+	if out != want {
+		t.Fatalf("got  %s\nwant %s", out, want)
+	}
+}
+
+func TestUnobservedValuesStayLiteral(t *testing.T) {
+	b := NewBinder()
+	_ = b.Observe(`"3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b"`)
+	got := b.Apply(`"aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee"`)
+	if got != `"aaaaaaaa-bbbb-4ccc-9ddd-eeeeeeeeeeee"` {
+		t.Fatalf("unobserved id was numbered: %s", got)
+	}
+	if err := b.Observe("late"); err == nil {
+		t.Fatal("Observe after Apply accepted")
+	}
+}
+
+func TestNameRejectsRebinding(t *testing.T) {
+	b := NewBinder()
+	if err := b.Name("abc", "token:a"); err != nil {
+		t.Fatal(err)
+	}
+	if err := b.Name("abc", "token:b"); err == nil {
+		t.Fatal("rebinding a literal accepted")
+	}
+	if err := b.Name("xyz", "token:a"); err == nil {
+		t.Fatal("two literals under one name accepted")
+	}
+}
+
+func TestShape(t *testing.T) {
+	cases := map[string]string{
+		"2026-09-14T10:00:00Z":             "f0|Z",
+		"2026-09-14T10:00:00.123456Z":      "f6|Z",
+		"2026-09-14T10:00:00.123+07:00":    "f3|+07:00",
+		"2026-09-14 10:00:00":              "space|f0|naive", // repo-guard: allow=long-number reason=timestamp-fixture-not-an-account
+		"2026-09-14T10:00:00.123456789Z":   "f9|Z",
+		"2026-09-14T10:00:00.000001-05:00": "f6|-05:00", // repo-guard: allow=long-number reason=timestamp-fixture-not-an-account
+	}
+	for literal, want := range cases {
+		if got := Shape(literal); got != want {
+			t.Errorf("Shape(%q) = %q, want %q", literal, got, want)
+		}
+	}
+}
