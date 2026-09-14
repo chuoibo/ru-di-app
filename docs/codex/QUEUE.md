@@ -4,6 +4,25 @@
 
 ---
 
+## MỚI 2026-09-14 — Claude nhận chuyển lõi backend sang Go (ADR-0029)
+
+Lead duyệt: 138 route CORE + 3 MIXED sang Go từng router group, 9 route AI giữ bước model ở Python ("brain",
+không DB). Backend do Claude làm theo uỷ quyền ADR-0016/ADR-0029; charter không đổi.
+
+**Đang nhận:** W0 nền móng, nhánh `claude/p0-w-go0-nen-mong-cong-truoc` — `services/core` (cửa trước Go, proxy
+toàn bộ 150 route về Python), `parity/` (bộ so trước/sau), manifest `services/core/ownership/routes.json`.
+Chưa route nào đổi chủ ở W0.
+
+**Điều lane khác cần biết từ bây giờ:**
+- Thêm route hoặc biến môi trường mới trong `services/api` → thêm dòng vào manifest, không thì cổng `ownership` đỏ.
+- Khi một group bắt đầu ghi mốc parity, route của nó sẽ được liệt kê ngay dưới đây; sửa Python chạm tới route
+  đó thì phải ghi mốc lại (ADR-0029 §2.9).
+- Group outings/hành trình (W7) cần thoả thuận đóng băng với lane Codex trước khi ghi mốc.
+
+Route đang đóng băng để ghi mốc: _(chưa có)_
+
+---
+
 ## 0. MỚI 2026-09-03 — ba việc từ nhánh `claude/p0-w-rudi-du-lieu-that`
 
 ### 0a. ĐÃ XONG — phiên đăng nhập ship ở #514. Còn một mảnh: nhóm nào?

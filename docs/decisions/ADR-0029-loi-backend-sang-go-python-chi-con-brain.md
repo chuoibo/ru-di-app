@@ -1,0 +1,249 @@
+# ADR-0029 — Lõi backend chuyển sang Go từng router, Python chỉ còn "brain" AI
+
+- Trạng thái: **Đã chấp nhận** — Lead duyệt kế hoạch ngày 2026-09-14
+  (`/home/lakiet/.claude/plans/i-want-to-do-stateful-lamport.md`).
+- Quyết định bởi: Lead (chuoibo).
+- Hiện thực: Claude, theo sóng W0 → W10 → WAI → decommission (mục 2.3).
+  Backend do Claude làm theo uỷ quyền ADR-0016 §2.3, mở rộng cho chiến dịch này; charter không đổi.
+- Sửa: `docs/architecture/00-layout-va-so-huu.md` («FastAPI, Python 3.12+»),
+  ADR-0011 quyết định 10 (mục 2.7), ADR-0010 §6.4 (mục 2.11).
+- Không đổi: ba luật về tiền, ADR-0004, ADR-0014 (hợp đồng phiên), ADR-0015.
+
+## 1. Bối cảnh
+
+Backend là một FastAPI duy nhất (`services/api`): ~45k dòng app, ~77k dòng test, Postgres 16 + Alembic.
+`main` tại `87653135` phục vụ **150 route** trong 33 router, cộng `/healthz` và `/static`. Quanh route là cả
+một lớp cơ chế dùng chung: bảng `idempotency_keys`, rate limit trong bộ nhớ, commit trước response, auth
+`prod`/`dev`, CORS, header riêng tư của trang khách.
+
+Lead muốn: **mọi thứ AI giữ Python** (companion, đọc hoá đơn/ảnh chụp màn hình, gợi ý, reel, lý do và tìm
+địa điểm, nhận diện mặt); **mọi thứ còn lại sang Go** (API cho mobile, CRUD, auth, sổ tiền, trang khách).
+Và một luật nghiệm thu: mỗi API chỉ tính là xong khi tester chứng minh **Python trước và Go sau** giống nhau về
+cơ chế, đầu ra và hành vi.
+
+Hai sự thật làm việc này khó hơn một lần viết lại:
+
+- **Không có mốc so sánh nào được ghi sẵn.** Không có fixture HTTP, không có snapshot OpenAPI.
+  ~860 ca `tests/api` chạy trong tiến trình trên repository giả nên không bắn được vào một binary Go.
+- **Dây nối đầy bẫy byte.** Float Python giữ `1.0`; thứ tự khoá theo khai báo pydantic; datetime kết thúc `Z`
+  và chỉ có micro giây khi khác 0; câu chữ lỗi 422 của pydantic; fingerprint idempotency chuẩn hoá JSON kiểu
+  Python; Jinja escape khác `html/template`; Pillow nén lại ảnh; Starlette khớp route theo thứ tự đăng ký.
+
+Seam AI thì sạch: **không module AI nào chạm DB**. Mọi route AI cùng một hình: auth + đọc DB → gọi model →
+grounding thuần → tối đa một lần chèn `ai_card`.
+
+## 2. Quyết định
+
+### 2.1 Phân loại 150 route và manifest sở hữu
+
+| Loại | Số | Đi đâu |
+|---|---|---|
+| CORE | 138 | Go |
+| AI | 9 | Go giữ route (auth, DB, limiter), gọi brain Python cho bước model |
+| MIXED | 3 | như AI: `POST /contexts/{id}/messages`, `GET /places`, `GET /places/{id}` |
+
+Chín route AI: `POST …/messages/{mid}/expense-draft` · `POST /contexts/{id}/ai-turn` · `POST /places/search` ·
+`POST /receipts/scan` · `POST /screenshots/scan` · `GET /contexts/{id}/suggestion` ·
+`GET /contexts/{id}/contextual-suggestion` · `GET …/albums/{oid}/reel` · `POST …/photos/{pid}/face-boxes`.
+
+Nguồn sự thật duy nhất về ai phục vụ route nào là **`services/core/ownership/routes.json`**: mỗi route một dòng
+`{id, order, group, class, owner, python, limiter, state, evidence}`. Máy sinh nó từ `create_app().routes`;
+`scripts/check_route_ownership.py` bắt nó khớp thứ tự đăng ký của Python, khớp tập route Go khai, và bắt các
+route dùng chung một limiter phải chuyển cùng nhau (ví dụ `POST /identity/person-id` với `POST /friends/lookup`).
+Lane nào thêm route hoặc biến môi trường mà không thêm dòng thì cổng đỏ.
+
+### 2.2 Cổng trước, proxy, IP khách
+
+- Binary Go `core` (`services/core`) nhận cổng công khai (8099 → 8000). URL gốc của mobile **không đổi**.
+- Route Go sở hữu đi qua chuỗi Go: servererror → CORS → header `/g` → idempotency → handler. Mọi thứ khác
+  (kể cả `/openapi.json`, `/docs`, `/static`, và mọi đường không khớp trọn) được reverse-proxy sang Python.
+- **Python giữ đủ 150 route tới lúc decommission.** Nhờ vậy rollback, fallback và mốc so sánh đều chính xác.
+- Rollback: `MOBILE_FORCE_PYTHON=all|<group>|METHOD /path`, đọc một lần lúc khởi động và ghi log; token lạ
+  hoặc route đã `frozen` thì từ chối khởi động. Chỉ Lead lật máy đang chạy, mỗi lần lật một PR hoặc issue.
+- IP khách: proxy **xoá** mọi `X-Forwarded-*`/`Forwarded` đến từ ngoài rồi đặt XFF bằng địa chỉ socket; giữ
+  `Host` (307 dựng `Location` tuyệt đối từ đó). uvicorn chạy `--proxy-headers --forwarded-allow-ips='*'`, an
+  toàn **chỉ vì** container `api` chỉ tới được từ `core` trên mạng `backend` — cổng docker khẳng định điều đó.
+- Idempotency: middleware Go chỉ bọc route Go sở hữu; middleware Python bọc cái gì tới được nó. Hai bên cùng
+  bảng, cùng scope, cùng fingerprint chuẩn + legacy, cùng nhịp thăm dò 20 → 100 ms trong 5 s, cùng luật nhả
+  khoá khi không-2xx, cùng header replay. Khoá sống qua cutover và rollback theo cả hai chiều.
+- pgx `MaxConns=15`, để Go + SQLAlchemy dưới mức mặc định 100 kết nối của Postgres.
+- `contracts/openapi.json` được commit và gác lệch từ W0.
+
+### 2.3 «Xong» là verdict từng route; một PR mỗi router
+
+Mỗi route đi qua các trạng thái, ghi trong manifest, bằng chứng ở `docs/migration/`:
+
+| Trạng thái | Bằng chứng để vào |
+|---|---|
+| PY | Dòng manifest sinh từ `main` |
+| CARDED | Route card đủ (mục đích, auth, đầu vào, đầu ra theo từng nhánh, tác dụng phụ, mã lỗi, file:line Python, test đang phủ); kịch bản ghi từ **image Python ghim ở merge-base**, tự so K ≥ 3 lần rỗng; corpus 422; ma trận status × kịch bản và bảng × kịch bản đầy |
+| PORTED | Mã Go đã merge sau manifest (owner vẫn `python`); `go test`, tầng Postgres Go, golden và vi sai domain xanh |
+| PARITY-LOCAL | `make parity` 0 khác biệt trên các làn main/limiter/concurrency, corpus 422, replay chéo hai chiều; **mọi route còn proxy cũng 0 khác biệt**; tap chứng minh Go phục vụ; canary đỏ đủ |
+| AGY-PASS | agy PASS; script tự tính lại số; mọi đột biến BREAKS đỏ, KEEPS sống; kiểm giả mạo sạch |
+| RERUN-PASS | Claude chạy lại trong worktree tách rời sạch ở đúng SHA, tái hiện đột biến và khác biệt bằng tay |
+| LIVE-GO | PR merge, owner lật `go`; e2e lát cắt dọc + e2e mobile + Maestro smoke qua `core`; tập rollback |
+| FROZEN | Hết cửa sổ kép (mục 2.9) |
+| PY-DELETED | Xoá ở decommission; bản ghi thành bộ hồi quy của Go |
+
+Một PR mỗi router group; PR chỉ merge khi **mọi** route trong đó ở RERUN-PASS, trừ khi Lead đánh dấu một route
+DEFERRED (ở lại Python, manifest ghi lý do). Route trượt ở cổng nào thì quay về PORTED kèm phát hiện.
+
+### 2.4 Hợp đồng wire bất biến
+
+Port không được đổi byte nào ở biên HTTP: status, header (trừ `date`/`server`, xem mục 8), thân JSON/HTML sau
+khi thay placeholder cho id/token/thời điểm **nhưng giữ nguyên định dạng**, và trạng thái DB sau **từng bước**.
+Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, không được import `services/core`):
+
+- Mốc so sánh luôn là Python. File kịch bản **không có trường kết quả mong đợi**; `parity lint` từ chối các khoá
+  `expect`, `status`, `body`, `assert`. Nhờ vậy agy viết được đầu vào mà không vi phạm ADR-0010 §6.1.
+- Chống xanh giả: tự so K lần trên stack sạch; canary là proxy cố tình làm sai từng bẫy (`Z`→`+00:00`, `1.0`→`1`,
+  đổi thứ tự khoá, 201→200, mất header replay, gzip, đi theo redirect, nuốt lệnh ghi, route proxy mạo nhận là Go)
+  và mọi chế độ phải đỏ; tap ghi ai thực sự phục vụ từng bước.
+- Parity giữ nguyên cả lỗi của Python. Nó chứng minh «giống», không chứng minh «đúng». Lỗi tìm thấy trong lúc
+  port thành phát hiện riêng, **không sửa trong PR port**.
+
+### 2.5 Ba luật tiền trong Go — không đổi luật
+
+1. Số nguyên đồng: `money.VND` là `int64`; `moneylint` (go/analysis) cấm kiểu float, literal phân số,
+   `big.Float`, `ParseFloat` trong gói tiền; mọi trường `*_vnd` phải là `money.VND`.
+2. `Σ` phân bổ `=` tổng: allocator dùng `math/big.Rat`; 41 golden vector và 10 vector tất toán được Go **đọc tại
+   chỗ**, không chép; fuzz vi sai Python ↔ Go gồm cả mã lỗi.
+3. Số dư tính lại được từ sổ: đọc chéo — Go ghi Python đọc, Python ghi Go đọc — trên Postgres thật.
+
+Domain Go thuần: `tools/boundary/domainpure_test.go` là bản Go của `test_import_boundary.py`, chỉ cho import
+danh sách trắng (math/big, strings, time, …), cấm db/net/os/http; có canary phải đỏ.
+
+### 2.6 Transaction, commit trước response, gọi brain trong transaction
+
+Một transaction READ COMMITTED mở lười mỗi request, commit **trước khi ghi response** — như
+`install_commit_before_response` hôm nay. Thứ tự khoá hàng (35 chỗ `FOR UPDATE`) port nguyên văn; log câu lệnh
+Postgres được so theo từng route. Với `/chia-bill`, `/plan`, `@rudi`: chèn tin nhắn → gọi brain → chèn
+`ai_card` → commit → trả lời, **trong cùng một transaction** như Python; lỗi truyền tải cho ra đúng thân
+`intent_error`/`unavailable` như nhánh except của Python.
+
+### 2.7 Python chỉ còn brain
+
+Python kết thúc là dịch vụ nội bộ `/internal/brain/v1/*`: không có trong OpenAPI, chỉ tới được trên mạng
+`backend`, gác bằng `X-Internal-Token` (token trống thì từ chối khởi động), **không có credential DB** (cổng
+compose khẳng định). Lỗi chỉ trả mã, không trả câu prompt hay chữ của model.
+
+- **Sửa ADR-0011 quyết định 10:** nhận diện mặt chạy ở tiến trình brain **cùng máy**; byte ảnh do Go đọc từ
+  storage và không rời máy. Mọi ràng buộc khác của quyết định 10 giữ nguyên.
+- ADR-0025: bộ dựng reel ở cùng máy, dùng chung volume media — đúng như ADR đó yêu cầu.
+- ADR-0024: việc sau response vào `internal/afterresponse`, giới hạn đúng các việc ADR đó liệt kê.
+
+### 2.8 Ảnh upload làm bằng Go, parity cảm nhận
+
+Pillow (EXIF transpose, nén lại JPEG q88 optimize) không tái tạo được từng byte bằng Go. Đây là **ngoại lệ duy
+nhất được duyệt trước** của luật 2.4, lớp `IMG-REENCODE`, chỉ áp cho ba route upload:
+
+- Phải bằng nhau tuyệt đối: status, thân JSON, mã chấp nhận/từ chối, `content_type`, chiều rộng, chiều cao,
+  hướng sau transpose, không còn EXIF/XMP/ICC/tEXt trong đầu ra.
+- PNG: điểm ảnh giải mã giống hệt.
+- JPEG: SSIM kênh sáng ≥ 0,98 **và** sai lệch tuyệt đối trung bình ≤ 2/255 mỗi kênh so với đầu ra Pillow.
+  Ngưỡng này đo lại ở W6 trên corpus ảnh tổng hợp sinh lúc chạy test (không commit byte ảnh); đổi ngưỡng là
+  sửa ADR này.
+- GET của file đã lưu vẫn phải giống từng byte.
+- Định dạng Pillow nhận mà Go không giải mã được liệt kê thành lệch đã duyệt ở mục 8, không lặng lẽ bỏ qua.
+
+### 2.9 Đóng băng và cửa sổ kép
+
+- Khi một group bắt đầu ghi mốc parity, route của nó được ghi vào `docs/codex/QUEUE.md`.
+- `scripts/check_go_owned_python_touch.py` dựng đồ thị gọi AST (route → service → repository → domain) và làm
+  đỏ mọi diff Python chạm được tới route Go đang sở hữu, trừ khi PR mang kèm thay đổi Go với bằng chứng mới hoặc
+  lật route về Python.
+- Sau khi lật: **14 ngày** (hoặc tới lần lật group kế tiếp, lấy cái muộn hơn) tính năng mới trên route đó vào cả
+  hai ngôn ngữ; hết cửa sổ thì `python: frozen`, việc mới chỉ vào Go.
+- Bằng chứng phải mới hơn 24 giờ so với `main` lúc merge; `gate_merge.sh` chạy lại
+  `ownership go-schema go-postgres parity` trên kết quả gộp.
+- Alembic vẫn là chủ schema duy nhất; Go không chạy DDL. Migration mới của lane khác kiểm lại kiểu câu truy vấn
+  Go qua `schema.sql` render từ `alembic upgrade head --sql`.
+
+### 2.10 Luật xoá test
+
+Không xoá test Python nào mà không có thay thế. `services/core/testmap/<group>.json` ánh xạ từng test id sang
+test Go hoặc golden; cổng từ chối xoá khi thiếu ánh xạ. `tests/postgres` chuyển sang Go với `-tags postgres`;
+golden chuyển sang `contracts/golden/` không sửa nội dung.
+
+### 2.11 Sửa ADR-0010 §6.4 cho agy
+
+§6.4 cấm `--dangerously-skip-permissions`, nhưng `scripts/agent_supervisor.py` đang truyền cờ đó cho agy, và
+thiếu cờ thì agy headless từ chối tool `command`. Việc kiểm parity của agy **không bắt đầu** cho tới khi một
+trong hai đường sau chạy được, thử theo thứ tự:
+
+1. allow-rule tiền tố hẹp đúng cho `./parity/bin/parity`, `timeout`, `git -C /tmp/agy-parity-*`,
+   `curl -s …/healthz`, `printf` — Lead áp theo §9.2 (agent không được sửa allow-list của agent khác);
+2. chạy agy trong container chỉ mount worktree kiểm và thư mục báo cáo.
+
+§6.4 **không nới**: cả hai đường đều hẹp hơn cờ bị cấm.
+
+## 3. Hệ quả
+
+- Một ngôn ngữ mới trong repo: toolchain Go 1.23.4 ghim trong `go.mod`, image `golang`/`distroless` ghim digest.
+- Hai triển khai cùng một cơ chế (idempotency, CORS, limiter) sống song song tới decommission.
+- `scripts/gate.sh` thêm các chặng `ownership go-vet go-test go-schema go-postgres parity`; chặng bị bỏ qua là
+  hỏng khi `--strict`.
+- Các cổng hợp đồng (`check_api_contract.py`, `check_server_routes*.py`, `check_actor_headers.py`,
+  `check_cors_contract.py`) giữ nguyên tới decommission, rồi đọc `contracts/openapi.json` do `core openapi` phát.
+- Chiến dịch dài: 150 route, 12 sóng, ~25 PR group, mỗi PR một lượt agy và một lượt chạy lại sạch.
+
+## 4. Cái này KHÔNG chứng minh
+
+- Hành vi trên đầu vào ngoài corpus kịch bản; các nhánh coverage liệt kê là chưa phủ.
+- Rằng Python đúng — parity giữ nguyên lỗi của nó.
+- Hình dạng dữ liệu production (hàng cũ, fingerprint legacy ngoài fixture, Unicode lạ trong tên thật).
+- Tải, query plan, tranh chấp khoá dưới lưu lượng thật; limiter khi chạy nhiều replica.
+- Đường hạnh phúc thật của Google sign-in và SMS gateway (stack kiểm dùng stub và cửa Google đóng).
+- Bất cứ điều gì về hành vi Gemini.
+- Chất lượng thị giác của ảnh ngoài hai chỉ số ở mục 2.8.
+
+## 5. Phương án đã bác
+
+- **Viết lại một lần rồi thay (big bang):** không có điểm rollback, không có mốc so sánh từng route.
+- **Để Python làm cửa trước, chuyển tiếp route đã port sang Go:** mọi request vẫn trả giá Python, và lúc
+  decommission phải đảo topology lần hai.
+- **chi / `net/http` ServeMux:** khớp theo độ cụ thể của đường, không theo thứ tự đăng ký; ServeMux còn 301
+  thay vì 307. Thay bằng router có thứ tự mô phỏng Starlette.
+- **`html/template` cho trang khách:** escape theo ngữ cảnh (`+` thành `&#43;`), không khớp byte Jinja. Thay
+  bằng `text/template` + lượt duyệt cây bọc mọi action bằng `pyescape` (luật markupsafe).
+- **Sidecar Pillow ở Python cho ảnh:** giữ một phụ thuộc không-AI ở Python mãi mãi; Lead chọn Go-native.
+- **Giữ nguyên route AI trong Python kèm truy cập DB:** mọi thay đổi schema phải làm hai lần mãi mãi; Lead chọn
+  brain không DB.
+- **ORM cho Go:** giấu thứ tự flush và khoá — đúng thứ phải so. Thay bằng pgx + sqlc typecheck trên `schema.sql`.
+
+## 6. Cách kiểm chứng
+
+Mỗi group:
+
+```bash
+make parity-canary                       # mọi chế độ bẫy ĐỎ, identity XANH
+make parity GROUP=<g> STRICT=1           # 0 khác biệt, mọi làn
+make parity-422 GROUP=<g>
+make parity-crossreplay GROUP=<g>
+make parity-domain N=20000               # khi chạm domain
+cd services/core && go vet ./... && go test ./...
+scripts/go_postgres_tier.sh              # skip là hỏng
+scripts/agy_parity_qc.sh <g>             # agy; số được script tính lại
+```
+
+Rồi người merge chạy lại trong worktree tách rời sạch. Sau mỗi merge: `scripts/gate.sh --strict`,
+`scripts/e2e_slice.sh` và e2e mobile qua `core`, pytest gốc so số đếm với `main`, Maestro smoke.
+
+Thoát W0 (không route nào do Go sở hữu): `gate.sh --strict` đạt với e2e đi qua `core` ở chế độ prod;
+`make up`/`smoke`/`demo` chạy qua 8099; lượt «trong suốt» (Python trực tiếp so với Python qua `core`) 0 khác
+biệt; canary đỏ đủ; `MOBILE_FORCE_PYTHON=all` khởi động được, token lạ bị từ chối.
+
+## 7. Đường lùi
+
+- Một route hoặc group: `MOBILE_FORCE_PYTHON` rồi khởi động lại `core`. Idempotency cùng bảng nên replay vẫn
+  đúng theo cả hai chiều (có kịch bản replay chéo chứng minh).
+- Cả chiến dịch trước decommission: `MOBILE_FORCE_PYTHON=all` — Python vẫn giữ đủ route.
+- Sau khi một route `frozen`, rollback cho route đó bị từ chối có chủ ý; muốn lùi phải sửa ADR này.
+
+## 8. Câu hỏi mở cho Lead
+
+1. **Chủ schema sau decommission:** giữ image migrate một lần với Alembic + models (công cụ, không phải dịch vụ),
+   hay chuyển sang migration SQL (goose/atlas) từ một baseline đóng băng. Cần ADR riêng.
+2. **Header `server: uvicorn`:** Go có tiếp tục phát chuỗi đó để khớp không, hay đánh dấu là header thay đổi được.
+3. **Định dạng ảnh lệch:** danh sách định dạng Pillow nhận mà Go không giải mã được, đo ở W6, cần Lead duyệt
+   từng dòng.
