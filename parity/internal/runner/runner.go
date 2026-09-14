@@ -48,6 +48,9 @@ type Stack struct {
 	DB dbsnap.Conn
 	// Tap, when set, reads which requests reached this stack's Python.
 	Tap *tap.Client
+	// Python reaches this stack's Python without its front door, for steps
+	// with via: python. A stack that is Python alone passes Client again.
+	Python *httpclient.Client
 	// Sessions is where prod-mode personas get their sessions when DB is nil:
 	// the canary compares the wire only, yet its personas must still sign in.
 	Sessions dbsnap.Conn
@@ -88,6 +91,13 @@ type Run struct {
 func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce string) (*Run, error) {
 	if nonce == "" {
 		return nil, fmt.Errorf("%w: %s: empty run nonce", ErrSetup, sc.ID)
+	}
+	for _, step := range sc.Steps {
+		if step.Via == scenario.ViaPython && stack.Python == nil {
+			// Sending it through the front door instead would compare a
+			// same-implementation replay and call it a cross replay.
+			return nil, fmt.Errorf("%w: %s on %s: step %s is via python and the stack has no Python client", ErrSetup, sc.ID, stack.Name, step.ID)
+		}
 	}
 	scope := sc.ID + "@" + nonce
 	binder := normalize.NewBinder()
@@ -153,7 +163,11 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		if err != nil {
 			return nil, fmt.Errorf("%s step %s: %w", sc.ID, step.ID, err)
 		}
-		resp, err := stack.Client.Do(ctx, req)
+		client := stack.Client
+		if step.Via == scenario.ViaPython {
+			client = stack.Python
+		}
+		resp, err := client.Do(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
 		}

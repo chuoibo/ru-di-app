@@ -36,7 +36,9 @@ này thì chạy lại kịch bản của nó:
 - `map` đọc đồng ý đọc chat của sổ hai người (Go: `service.PairChatConsent`), nên sửa Python của pair notebook
   (`_pair_chat_consent`, `pair_notebook.chat_consent_active`, các truy vấn sổ) cũng phải chạy lại kịch bản
   `w1/social_map/get-map-pair`.
-- Còn thiếu trước `PARITY-LOCAL`: làn đồng thời và cross-replay idempotency hai chiều. Làn limiter không áp dụng
+- Replay chéo idempotency hai chiều đã có (`parity/scenarios/w1/crossreplay`, bước `via: python`) cho ba route W1
+  ghi được: meet, `PUT /people/me/interests`, `POST /reports`.
+- Còn thiếu trước `PARITY-LOCAL`: làn đồng thời. Làn limiter không áp dụng
   cho W1: không route W1 nào chạm limiter trong bộ nhớ (`routes/social_map.py`, `preferences.py`, `recap.py`,
   `reports.py` không có dependency limiter).
 

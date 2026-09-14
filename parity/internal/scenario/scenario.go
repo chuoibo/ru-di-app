@@ -44,6 +44,11 @@ type Step struct {
 	As      string          `yaml:"as"`
 	Request Request         `yaml:"request"`
 	Bind    map[string]Bind `yaml:"bind"`
+	// Via is empty for the stack's front door. ViaPython sends the step to
+	// the stack's Python without the front door, so a key one implementation
+	// stored is replayed by the other; on a stack that is Python alone it
+	// changes nothing.
+	Via string `yaml:"via"`
 }
 
 // Request is sent verbatim after {{variable}} substitution.
@@ -65,6 +70,9 @@ type Bind struct {
 
 // Anonymous is the caller with no credentials.
 const Anonymous = "anonymous"
+
+// ViaPython is the only Step.Via value.
+const ViaPython = "python"
 
 var (
 	idPattern       = regexp.MustCompile(`^[a-z0-9][a-z0-9/_.-]*$`)
@@ -180,6 +188,9 @@ func (sc *Scenario) validate() error {
 			if _, ok := sc.Personas[step.As]; !ok {
 				return fmt.Errorf("%s: as %q is neither %q nor a persona", where, step.As, Anonymous)
 			}
+		}
+		if step.Via != "" && step.Via != ViaPython {
+			return fmt.Errorf("%s: via %q must be absent or %q", where, step.Via, ViaPython)
 		}
 		if !methods[step.Request.Method] {
 			return fmt.Errorf("%s: method %q", where, step.Request.Method)

@@ -1,0 +1,156 @@
+# W1 cross replay · POST /contexts/{id}/meet. One implementation stores the
+# Idempotency-Key row and the other answers the next request with that key:
+# Go must replay what Python stored and refuse what Python would refuse, and
+# the reverse. Steps with via: python skip core on the candidate; on the
+# reference every step is Python, so the comparison is Go against Python.
+id: w1/crossreplay/post-meet
+routes: ['POST /contexts/{context_id}/meet']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hẹn (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hẹn chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  # canonically equal JSON: Go's fingerprint must equal the one Python stored
+  - id: core_replays_python_key_respaced
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-a'
+        content-type: 'application/json'
+      body_raw: '{ "from_areas" : [ "hcm-quan-1", "hcm-thu-duc" ] }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh"]}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-b'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh"]}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-b'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh"]}'
+  - id: python_replays_core_key_respaced
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-b'
+        content-type: 'application/json'
+      body_raw: '{"from_areas": ["hcm-quan-4",   "hcm-binh-thanh"]}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-b'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  # a refusal is released by whichever side answered it, for the other side too
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-c'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","khong-co-khu-nay"]}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-c'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-3","hcm-quan-7"]}'
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-d'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1"]}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-d'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-phu-nhuan","da-lat"]}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'x-meet-d'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-phu-nhuan","da-lat"]}'

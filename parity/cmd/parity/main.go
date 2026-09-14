@@ -119,6 +119,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
 	candidateTap := flags.String("candidate-tap", "", "control URL of the tap between the candidate front door and its Python")
 	servedRoutes := flags.String("served-routes", "", "JSON of `core routes --json`: routes the candidate serves in Go; needs --candidate-tap")
+	candidatePython := flags.String("candidate-python", "", "base URL of the candidate's Python without core (through the tap), for steps with via: python")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -144,6 +145,13 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	var candPython *httpclient.Client
+	if *candidatePython != "" {
+		if candPython, err = httpclient.New(*candidatePython, *host); err != nil {
+			fmt.Fprintln(stderr, err)
+			return 2
+		}
 	}
 	if (*refDSN == "") != (*candDSN == "") {
 		fmt.Fprintln(stderr, "parity run: --reference-dsn and --candidate-dsn go together; one database alone compares nothing")
@@ -205,8 +213,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			served[view.ID] = true
 		}
 	}
-	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB}
-	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap}
+	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB, Python: refClient}
+	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap, Python: candPython}
 
 	ctx := context.Background()
 	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, Accepted: map[string]int{}}
@@ -418,7 +426,7 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		differences := 0
 		for _, sc := range scenarios {
 			nonce := runner.NewNonce()
-			refRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions}, nonce)
+			refRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, nonce)
 			if err != nil {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				_ = server.Close()
@@ -429,7 +437,7 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				_ = server.Close()
 				return 2
 			}
-			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions}, nonce)
+			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient}, nonce)
 			if errors.Is(err, runner.ErrSetup) {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				_ = server.Close()

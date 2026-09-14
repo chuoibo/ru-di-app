@@ -108,6 +108,10 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
 - Chống xanh giả: tự so K lần trên stack sạch; canary là proxy cố tình làm sai từng bẫy (`Z`→`+00:00`, `1.0`→`1`,
   đổi thứ tự khoá, 201→200, mất header replay, gzip, đi theo redirect, nuốt lệnh ghi, route proxy mạo nhận là Go)
   và mọi chế độ phải đỏ; tap ghi ai thực sự phục vụ từng bước.
+- Replay chéo: một bước có `via: python` đi tới Python của stack mà không qua `core` (ở candidate là qua cổng proxy
+  của tap, nên tap vẫn ghi bước đó là tới Python; ở reference mọi bước vốn là Python). Nhờ vậy khoá
+  `Idempotency-Key` do Python lưu được Go trả lời và ngược lại, trong cùng một kịch bản. Stack thiếu client tới
+  Python mà kịch bản có bước như vậy là lỗi dựng, không bao giờ được gửi thay qua cửa trước.
 - Parity giữ nguyên cả lỗi của Python. Nó chứng minh «giống», không chứng minh «đúng». Lỗi tìm thấy trong lúc
   port thành phát hiện riêng, **không sửa trong PR port**.
 
@@ -254,18 +258,21 @@ trong hai đường sau chạy được, thử theo thứ tự:
 
 ## 6. Cách kiểm chứng
 
-Mỗi group:
+Mỗi group, những gì đã chạy được:
 
 ```bash
-make parity-canary                       # mọi chế độ bẫy ĐỎ, identity XANH
-make parity GROUP=<g> STRICT=1           # 0 khác biệt, mọi làn
-make parity-422 GROUP=<g>
-make parity-crossreplay GROUP=<g>
-make parity-domain N=20000               # khi chạm domain
+make parity                              # = scripts/gate.sh parity, dev rồi prod, mỗi chế độ một cặp stack:
+                                         #   canary (mọi chế độ bẫy ĐỎ, identity XANH), lượt chính có ảnh chụp DB
+                                         #   sau từng bước và tap, corpus 422 (scenarios/generated), bước replay
+                                         #   chéo `via: python`, probe dòng request (chỉ dev)
+python3 scripts/render_parity_422_scenarios.py   # sinh lại corpus 422 từ model pydantic thật
 cd services/core && go vet ./... && go test ./...
 scripts/go_postgres_tier.sh              # skip là hỏng
-scripts/agy_parity_qc.sh <g>             # agy; số được script tính lại
 ```
+
+Chưa có (đã hoạch định, chưa dựng): lọc theo group (`GROUP=`), `STRICT=1`, làn limiter, làn đồng thời, fuzz vi
+sai domain (`parity-domain`), `scripts/agy_parity_qc.sh`. Tới khi có, bằng chứng từng route ghi rõ làn nào đã
+chạy.
 
 Rồi người merge chạy lại trong worktree tách rời sạch. Sau mỗi merge: `scripts/gate.sh --strict`,
 `scripts/e2e_slice.sh` và e2e mobile qua `core`, pytest gốc so số đếm với `main`, Maestro smoke.

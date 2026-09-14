@@ -162,6 +162,7 @@ PARITY_IMAGE_ID=$image_id
 PARITY_REF_URL=${api_url[ref]}
 PARITY_CAND_URL=http://127.0.0.1:$core_port
 PARITY_CAND_PYTHON_URL=${api_url[cand]}
+PARITY_CAND_PYTHON_TAP_URL=http://127.0.0.1:$tap_port
 PARITY_CAND_TAP_URL=http://127.0.0.1:$tap_control
 PARITY_SERVED_ROUTES=$work/served-routes.json
 PARITY_TAP_PID=$tap_pid

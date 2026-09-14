@@ -55,6 +55,9 @@ func TestRefusals(t *testing.T) {
 		"unknown field": {func(s string) string {
 			return strings.Replace(s, "  - id: read\n", "  - id: read\n    sleep: 5\n", 1)
 		}, "not found"},
+		"via other than python": {func(s string) string {
+			return strings.Replace(s, "  - id: read\n    as: owner\n", "  - id: read\n    as: owner\n    via: core\n", 1)
+		}, "via"},
 		"unknown persona": {func(s string) string {
 			return strings.Replace(s, "  - id: read\n    as: owner", "  - id: read\n    as: stranger", 1)
 		}, "neither"},
@@ -116,5 +119,15 @@ steps:
 `
 	if _, err := Parse([]byte(devToken)); err == nil || !strings.Contains(err.Error(), "not bound") {
 		t.Fatalf("token variable accepted in dev mode: %v", err)
+	}
+}
+
+func TestViaPythonLoads(t *testing.T) {
+	sc, err := Parse([]byte(strings.Replace(valid, "  - id: read\n    as: owner\n", "  - id: read\n    as: owner\n    via: python\n", 1)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sc.Steps[1].Via != ViaPython || sc.Steps[0].Via != "" {
+		t.Fatalf("via = %q, %q", sc.Steps[0].Via, sc.Steps[1].Via)
 	}
 }
