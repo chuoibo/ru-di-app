@@ -9,17 +9,32 @@
 Lead duyệt: 138 route CORE + 3 MIXED sang Go từng router group, 9 route AI giữ bước model ở Python ("brain",
 không DB). Backend do Claude làm theo uỷ quyền ADR-0016/ADR-0029; charter không đổi.
 
-**Đang nhận:** W0 nền móng, nhánh `claude/p0-w-go0-nen-mong-cong-truoc` — `services/core` (cửa trước Go, proxy
-toàn bộ 150 route về Python), `parity/` (bộ so trước/sau), manifest `services/core/ownership/routes.json`.
-Chưa route nào đổi chủ ở W0.
+**Đang nhận:** W0 nền móng, nhánh `claude/p0-w-go0-nen-mong-cong-truoc` (commit local, chưa push). `services/core`
+là cửa trước Go: `dispatch` chỉ chạy trong Go request khớp FULL vào route manifest giao cho Go, còn lại proxy về
+Python. Manifest hiện giao 0 route cho Go, nên mọi request vẫn do Python trả lời. Đã có trong Go, mỗi phần đo bằng
+golden hoặc oracle chạy chính thư viện Python trong ảnh đã ghim: router kiểu Starlette, JSON kiểu Python, CORS,
+auth dev/prod, lỗi 500 và header trang khách, unit of work pgx, Idempotency-Key (phát lại chéo hai chiều trên cùng
+bảng), bộ giới hạn nhịp trong bộ nhớ. `gate.sh parity` so hai stack cô lập ở cả chế độ dev lẫn prod.
 
 **Điều lane khác cần biết từ bây giờ:**
 - Thêm route hoặc biến môi trường mới trong `services/api` → thêm dòng vào manifest, không thì cổng `ownership` đỏ.
-- Khi một group bắt đầu ghi mốc parity, route của nó sẽ được liệt kê ngay dưới đây; sửa Python chạm tới route
-  đó thì phải ghi mốc lại (ADR-0029 §2.9).
+- Hai khác biệt wire đã được Lead chấp nhận có tên (ADR-0029 §2.4): `MALFORMED-REQUEST-LINE` (dòng request hỏng mà
+  không client nào của sản phẩm gửi) và `RESPONSE-204-CONTENT-LENGTH` (204 phát lại qua idempotency đi qua cửa
+  trước không còn `content-length: 0`). Client không được dựa vào hai điều đó.
+- Khi một group bắt đầu ghi mốc parity, route của nó được liệt kê ngay dưới đây; sửa Python chạm tới route đó thì
+  phải chạy lại kịch bản parity của nó (ADR-0029 §2.9).
 - Group outings/hành trình (W7) cần thoả thuận đóng băng với lane Codex trước khi ghi mốc.
 
-Route đang đóng băng để ghi mốc: _(chưa có)_
+Route đang đóng băng để ghi mốc (W1: route card, kịch bản `parity/scenarios/w1/`, manifest `CARDED`):
+`GET /interests`, `PUT /people/me/interests`, `GET /contexts/{context_id}/preference-profile`, `GET /areas`,
+`GET /contexts/{context_id}/map`, `GET /contexts/{context_id}/heatmap`, `POST /contexts/{context_id}/meet`,
+`GET /contexts/{context_id}/recap`, `POST /reports`.
+
+**Chờ Lead:**
+1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
+   Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
+2. Daemon Docker trên máy dùng chung đã hết subnet; harness chạy host network. Dọn các network không dùng cần Lead
+   cho phép.
 
 ---
 
