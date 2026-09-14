@@ -25,6 +25,8 @@ func All() []Route {
 	return []Route{
 		interestVocabulary(),
 		listAreas(),
+		createReport(),
+		putMyInterests(),
 	}
 }
 

@@ -1380,7 +1380,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/reports/POST-reports.md"
     },
     {
@@ -1665,7 +1665,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/preferences/PUT-people-me-interests.md"
     },
     {

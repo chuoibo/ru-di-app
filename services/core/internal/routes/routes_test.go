@@ -70,6 +70,9 @@ func core(t *testing.T) http.Handler {
 	return h
 }
 
+// staticRouteIDs are the routes scripts/render_static_route_goldens.py renders.
+var staticRouteIDs = []string{"GET /interests", "GET /areas"}
+
 // testdata/python_static_routes.json is rendered by
 // scripts/render_static_route_goldens.py: the real create_app() answering each
 // route over raw ASGI in the pinned image.
@@ -90,8 +93,10 @@ func TestStaticRoutesAnswerWhatPythonAnswers(t *testing.T) {
 	if err := json.Unmarshal(raw, &golden); err != nil {
 		t.Fatal(err)
 	}
-	if len(golden.Responses) != len(All()) {
-		t.Fatalf("%d goldens for %d routes", len(golden.Responses), len(All()))
+	// Only routes that never touch the database can be rendered without one;
+	// the others are compared on real stacks by the parity harness.
+	if len(golden.Responses) != len(staticRouteIDs) {
+		t.Fatalf("%d goldens for %d static routes", len(golden.Responses), len(staticRouteIDs))
 	}
 	h := core(t)
 	for _, want := range golden.Responses {
