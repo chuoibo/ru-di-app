@@ -36,13 +36,21 @@ MANIFEST = ROOT / "services" / "core" / "ownership" / "routes.json"
 CORE = ROOT / "services" / "core"
 
 
+#: States in which a route's Go code is merged while Python still owns it
+#: (ADR-0029 §2.3). A handler may exist for such a row; core serves it only as
+#: a MOBILE_CORE_CANDIDATE_ROUTES candidate.
+CANDIDATE_STATES = frozenset({"PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS"})
+
+
 def go_owned_mismatch(rows: list[dict], go_ids: list[str]) -> list[str]:
     """Rows the manifest gives Go versus routes the binary has handlers for."""
     manifest_go = [row["id"] for row in rows if row["owner"] == "go"]
+    ported = {row["id"] for row in rows if row.get("state") in CANDIDATE_STATES}
     errors = []
-    for route_id in sorted(set(go_ids) - set(manifest_go)):
+    for route_id in sorted(set(go_ids) - set(manifest_go) - ported):
         errors.append(
             f"Go has a handler for {route_id!r} but the manifest owner is python"
+            " and the row is not PORTED or later"
         )
     for route_id in sorted(set(manifest_go) - set(go_ids)):
         errors.append(
@@ -152,6 +160,18 @@ def selftest() -> int:
         red=True,
     )
     expect("manifest row without handler", go_owned_mismatch(good, []), red=True)
+    ported = [row("GET /a", state="PORTED"), *good[1:]]
+    expect(
+        "handler for a ported python row",
+        go_owned_mismatch(ported, ["GET /a", "GET /b"]),
+        red=False,
+    )
+    carded = [row("GET /a", state="CARDED"), *good[1:]]
+    expect(
+        "handler for a carded python row",
+        go_owned_mismatch(carded, ["GET /a", "GET /b"]),
+        red=True,
+    )
 
     shared = [
         row("GET /p", in_memory=["reason_writer"]),

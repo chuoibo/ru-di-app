@@ -87,6 +87,13 @@ Mỗi route đi qua các trạng thái, ghi trong manifest, bằng chứng ở `
 | FROZEN | Hết cửa sổ kép (mục 2.9) |
 | PY-DELETED | Xoá ở decommission; bản ghi thành bộ hồi quy của Go |
 
+**Route ứng viên.** Từ PORTED tới RERUN-PASS, mã Go đã merge nhưng owner vẫn `python`. Để có bằng chứng
+PARITY-LOCAL trước khi lật owner, `core` phục vụ từ Go các route nêu trong `MOBILE_CORE_CANDIDATE_ROUTES` (id
+route, tên group, hoặc `ported` là mọi hàng ở các trạng thái trên). Chỉ hàng ở các trạng thái đó mới được nêu;
+nêu hàng khác thì `core` từ chối khởi động. `MOBILE_FORCE_PYTHON` vẫn thắng, và ứng viên không được tách state
+trong bộ nhớ (limiter, cache) khỏi route Python còn phục vụ. Stack candidate của `parity` và `scripts/e2e_slice.sh`
+đặt `ported`; compose để trống, nên máy dev và host thật vẫn do Python trả lời cho tới khi owner lật.
+
 Một PR mỗi router group; PR chỉ merge khi **mọi** route trong đó ở RERUN-PASS, trừ khi Lead đánh dấu một route
 DEFERRED (ở lại Python, manifest ghi lý do). Route trượt ở cổng nào thì quay về PORTED kèm phát hiện.
 
