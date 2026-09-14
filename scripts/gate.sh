@@ -461,7 +461,8 @@ parity_phase() {
       go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
         --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
       go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
-        --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
+        --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+        --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" scenarios &&
       { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; }
   ) || rc=1
   if [ "$rc" -ne 0 ]; then

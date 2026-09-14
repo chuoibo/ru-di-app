@@ -28,6 +28,7 @@ import (
 	"mobile/parity/internal/httpclient"
 	"mobile/parity/internal/normalize"
 	"mobile/parity/internal/scenario"
+	"mobile/parity/internal/tap"
 )
 
 // DefaultRoles is what apps/mobile sends in dev mode (src/danh-tinh.ts).
@@ -45,6 +46,8 @@ type Stack struct {
 	// snapshot, so the comparison covers what was written, not only what was
 	// answered. nil compares the wire alone.
 	DB dbsnap.Conn
+	// Tap, when set, reads which requests reached this stack's Python.
+	Tap *tap.Client
 	// Sessions is where prod-mode personas get their sessions when DB is nil:
 	// the canary compares the wire only, yet its personas must still sign in.
 	Sessions dbsnap.Conn
@@ -62,6 +65,9 @@ type StepResult struct {
 	// Change is what the step wrote to the stack's database; nil without a DB.
 	Change     *dbsnap.Change
 	NormChange *dbsnap.Change
+	// PythonRequests counts the requests that reached Python during the step;
+	// -1 on a stack without a tap.
+	PythonRequests int
 }
 
 // Run is one scenario's transcript on one stack.
@@ -134,6 +140,14 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		}
 		prev = snap
 	}
+	tapSeq := 0
+	if stack.Tap != nil {
+		last, err := stack.Tap.Last(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s on %s: tap: %v", ErrSetup, sc.ID, stack.Name, err)
+		}
+		tapSeq = last
+	}
 	for _, step := range sc.Steps {
 		req, err := buildRequest(sc, step, vars)
 		if err != nil {
@@ -156,7 +170,15 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		if err := capture(step, resp, vars, binder); err != nil {
 			return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
 		}
-		result := StepResult{StepID: step.ID, Raw: resp}
+		result := StepResult{StepID: step.ID, Raw: resp, PythonRequests: -1}
+		if stack.Tap != nil {
+			last, entries, err := stack.Tap.Since(ctx, tapSeq)
+			if err != nil {
+				return nil, fmt.Errorf("%s on %s step %s: tap: %w", sc.ID, stack.Name, step.ID, err)
+			}
+			tapSeq = last
+			result.PythonRequests = len(entries)
+		}
 		if stack.DB != nil {
 			next, err := dbsnap.Snapshot(ctx, stack.DB)
 			if err != nil {
@@ -342,6 +364,29 @@ func Diff(reference, candidate *Run) []StepDiff {
 		}
 	}
 	return out
+}
+
+// RoutesNotServedInCore lists the routes a scenario names that the candidate
+// serves in Go although every step of the run reached Python. When Go serves a
+// route the scenario exercises, at least one step must have been answered
+// without Python, or the Go code is not what answered. It is a floor, not a
+// per-step proof: a scenario naming two served routes passes on a step of
+// either.
+func RoutesNotServedInCore(sc *scenario.Scenario, run *Run, served map[string]bool) []string {
+	inCore := false
+	for _, step := range run.Steps {
+		if step.PythonRequests == 0 {
+			inCore = true
+			break
+		}
+	}
+	var missing []string
+	for _, id := range sc.Routes {
+		if served[id] && !inCore {
+			missing = append(missing, id)
+		}
+	}
+	return missing
 }
 
 // AcceptedCounts counts, per name, the steps where the two transcripts differ

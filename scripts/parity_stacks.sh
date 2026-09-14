@@ -128,6 +128,15 @@ cmd_up() {
 
   echo "--- candidate: core trước API của candidate"
   ( cd services/core && go build -o "$work/core" ./cmd/core )
+  ( cd parity && go build -o "$work/parity" ./cmd/parity )
+  # The tap records every request that reaches the candidate's Python, so a run
+  # can show which steps core answered in Go without looking inside core.
+  local tap_port tap_control
+  tap_port="$(free_port)"; tap_control="$(free_port)"
+  nohup "$work/parity" tap --listen "127.0.0.1:$tap_port" --control "127.0.0.1:$tap_control" \
+    --upstream "${api_url[cand]}" >"$work/tap.log" 2>&1 &
+  local tap_pid=$!
+  wait_http "http://127.0.0.1:$tap_port/healthz" "tap"
   local core_port live_port
   core_port="$(free_port)"; live_port="$(free_port)"
   # Go routes authenticate and query for themselves, so core runs in the auth
@@ -136,13 +145,14 @@ cmd_up() {
   # candidate stack is for.
   MOBILE_CORE_LISTEN="127.0.0.1:$core_port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" \
-  MOBILE_PYTHON_UPSTREAM="${api_url[cand]}" \
+  MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$tap_port" \
   MOBILE_AUTH_MODE="$auth" \
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
   wait_http "http://127.0.0.1:$core_port/healthz" "core"
+  "$work/core" routes --json >"$work/served-routes.json"
 
   cat >"$env_file" <<ENV
 PARITY_RUN=$run
@@ -152,6 +162,9 @@ PARITY_IMAGE_ID=$image_id
 PARITY_REF_URL=${api_url[ref]}
 PARITY_CAND_URL=http://127.0.0.1:$core_port
 PARITY_CAND_PYTHON_URL=${api_url[cand]}
+PARITY_CAND_TAP_URL=http://127.0.0.1:$tap_control
+PARITY_SERVED_ROUTES=$work/served-routes.json
+PARITY_TAP_PID=$tap_pid
 PARITY_REF_DSN=${dsn[ref]}
 PARITY_CAND_DSN=${dsn[cand]}
 PARITY_CONTAINERS="${containers[*]}"
@@ -178,6 +191,7 @@ cmd_down() {
   # shellcheck disable=SC1090
   . "$env_file"
   kill "$PARITY_CORE_PID" >/dev/null 2>&1 || true
+  kill "${PARITY_TAP_PID:-}" >/dev/null 2>&1 || true
   # shellcheck disable=SC2086
   docker rm -f $PARITY_CONTAINERS >/dev/null 2>&1 || true
   case "$PARITY_WORK" in /tmp/*) rm -rf "$PARITY_WORK" ;; esac

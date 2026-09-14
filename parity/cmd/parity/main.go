@@ -4,6 +4,7 @@
 //	parity run --auth MODE --reference URL --candidate URL [--reference-dsn DSN --candidate-dsn DSN] [--host H] [--json FILE] PATH...
 //	parity canary --auth MODE --reference URL --target URL [--reference-dsn DSN --target-dsn DSN] [--host H] PATH...
 //	parity probe --reference URL --candidate URL
+//	parity tap --listen ADDR --control ADDR --upstream URL
 //
 // Exit codes: 0 every step equal, 1 at least one difference, 2 the run could
 // not be completed (bad scenario, unreachable stack). A run that could not
@@ -23,6 +24,7 @@ import (
 	"os"
 	"sort"
 	"sync/atomic"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -33,6 +35,7 @@ import (
 	"mobile/parity/internal/rawprobe"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
+	"mobile/parity/internal/tap"
 )
 
 func main() {
@@ -53,6 +56,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return canaryRun(args[1:], stdout, stderr)
 	case "probe":
 		return probeRun(args[1:], stdout, stderr)
+	case "tap":
+		return tapRun(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -82,6 +87,13 @@ type scenarioReport struct {
 	Steps []stepReport `json:"steps"`
 }
 
+type tapReport struct {
+	Steps        int      `json:"steps"`
+	InCore       int      `json:"answered_in_core"`
+	ServedRoutes int      `json:"served_routes"`
+	Unserved     []string `json:"unserved,omitempty"`
+}
+
 type report struct {
 	Reference     string           `json:"reference"`
 	DatabaseLane  bool             `json:"database_lane"`
@@ -91,6 +103,7 @@ type report struct {
 	ScenariosDiff int              `json:"scenarios_diff"`
 	Differences   int              `json:"differences"`
 	Accepted      map[string]int   `json:"accepted,omitempty"`
+	Tap           *tapReport       `json:"tap,omitempty"`
 	Results       []scenarioReport `json:"results"`
 }
 
@@ -104,6 +117,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	refDSN := flags.String("reference-dsn", "", "reference database URL; with --candidate-dsn, snapshot both after every step")
 	candDSN := flags.String("candidate-dsn", "", "candidate database URL; with --reference-dsn, snapshot both after every step")
 	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
+	candidateTap := flags.String("candidate-tap", "", "control URL of the tap between the candidate front door and its Python")
+	servedRoutes := flags.String("served-routes", "", "JSON of `core routes --json`: routes the candidate serves in Go; needs --candidate-tap")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -161,11 +176,43 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 	}
+	if *servedRoutes != "" && *candidateTap == "" {
+		fmt.Fprintln(stderr, "parity run: --served-routes needs --candidate-tap; without a tap nothing shows who answered")
+		return 2
+	}
+	var candTap *tap.Client
+	served := map[string]bool{}
+	if *candidateTap != "" {
+		if candTap, err = tap.NewClient(*candidateTap); err != nil {
+			fmt.Fprintln(stderr, "parity run:", err)
+			return 2
+		}
+	}
+	if *servedRoutes != "" {
+		data, err := os.ReadFile(*servedRoutes)
+		if err != nil {
+			fmt.Fprintln(stderr, "parity run:", err)
+			return 2
+		}
+		var views []struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(data, &views); err != nil {
+			fmt.Fprintln(stderr, "parity run: --served-routes:", err)
+			return 2
+		}
+		for _, view := range views {
+			served[view.ID] = true
+		}
+	}
 	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB}
-	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB}
+	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap}
 
 	ctx := context.Background()
 	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, Accepted: map[string]int{}}
+	if candTap != nil {
+		rep.Tap = &tapReport{ServedRoutes: len(served)}
+	}
 	ran := map[string]bool{}
 	for _, sc := range scenarios {
 		nonce := runner.NewNonce()
@@ -185,6 +232,18 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		}
 		diffs := runner.Diff(refRun, candRun)
 		ran[sc.ID] = true
+		if rep.Tap != nil {
+			for _, step := range candRun.Steps {
+				rep.Tap.Steps++
+				if step.PythonRequests == 0 {
+					rep.Tap.InCore++
+				}
+			}
+			for _, id := range runner.RoutesNotServedInCore(sc, candRun, served) {
+				rep.Tap.Unserved = append(rep.Tap.Unserved, sc.ID+": "+id)
+				fmt.Fprintf(stdout, "NOT-IN-CORE %s: Go serves %s, but every step reached Python\n", sc.ID, id)
+			}
+		}
 		for name, n := range runner.AcceptedCounts(refRun, candRun) {
 			rep.Accepted[name] += n
 		}
@@ -254,7 +313,11 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 	}
-	if rep.Differences > 0 || stale > 0 {
+	if rep.Tap != nil {
+		fmt.Fprintf(stdout, "tap: steps=%d answered_in_core=%d served_routes=%d unserved=%d\n",
+			rep.Tap.Steps, rep.Tap.InCore, rep.Tap.ServedRoutes, len(rep.Tap.Unserved))
+	}
+	if rep.Differences > 0 || stale > 0 || (rep.Tap != nil && len(rep.Tap.Unserved) > 0) {
 		return 1
 	}
 	return 0
@@ -494,4 +557,34 @@ func checkAuthMode(ctx context.Context, name string, client *httpclient.Client, 
 		return fmt.Errorf("%s answered GET /people/me with only X-Actor-ID as %d, so it is not running auth=%s", name, resp.Status, mode)
 	}
 	return nil
+}
+
+// tapRun runs the tap between a candidate front door and its Python until the
+// process is stopped.
+func tapRun(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("tap", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	listen := flags.String("listen", "", "address the front door sends Python-bound requests to")
+	control := flags.String("control", "", "address the harness reads the record from")
+	upstream := flags.String("upstream", "", "base URL of the Python API")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	target, err := url.Parse(*upstream)
+	if *listen == "" || *control == "" || err != nil || target.Scheme == "" || target.Host == "" {
+		fmt.Fprintln(stderr, "parity tap: --listen, --control and an --upstream URL are required")
+		return 2
+	}
+	rec := &tap.Recorder{}
+	errs := make(chan error, 2)
+	for _, srv := range []*http.Server{
+		{Addr: *listen, Handler: rec.Proxy(target), ReadHeaderTimeout: 10 * time.Second, MaxHeaderBytes: 1 << 20},
+		{Addr: *control, Handler: rec.Control(), ReadHeaderTimeout: 5 * time.Second},
+	} {
+		srv := srv
+		go func() { errs <- srv.ListenAndServe() }()
+	}
+	fmt.Fprintf(stdout, "tap: %s -> %s, record on %s\n", *listen, *upstream, *control)
+	fmt.Fprintln(stderr, "parity tap:", <-errs)
+	return 2
 }
