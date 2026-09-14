@@ -1,0 +1,56 @@
+# W1 · GET /areas — the fixed district list POST /contexts/{id}/meet accepts.
+# No dependencies at all: not even a database session.
+id: w1/social_map/get-areas
+routes: ['GET /areas']
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/areas'
+  - id: with_actor
+    as: reader
+    request:
+      method: GET
+      path: '/areas'
+  - id: junk_actor_headers_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/areas'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'
+  - id: query_string_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/areas?city=hcm'
+  - id: cors_simple_get
+    as: anonymous
+    request:
+      method: GET
+      path: '/areas'
+      headers:
+        origin: 'http://127.0.0.1:19006'
+  - id: trailing_slash_redirects
+    as: anonymous
+    request:
+      method: GET
+      path: '/areas/'
+  - id: head_not_allowed
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/areas'
+  - id: post_not_allowed
+    as: reader
+    request:
+      method: POST
+      path: '/areas'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"id":"hcm-quan-9"}'

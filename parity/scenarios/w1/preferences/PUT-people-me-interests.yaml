@@ -1,0 +1,398 @@
+# W1 · PUT /people/me/interests — replace the caller's own taste answers.
+# Order of refusals: idempotency key shape, JSON decode, actor, body model,
+# role, vocabulary, person row. GET /people/me reads the stored answer back.
+id: w1/preferences/put-people-me-interests
+routes: ['PUT /people/me/interests']
+auth_mode: dev
+personas:
+  me: {}
+  mate: {}
+  ghost: {}
+steps:
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  # JSON decode runs before get_actor
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests": ['
+  # the idempotency middleware refuses the key before routing
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: ghost_valid_body_no_person_row
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: ghost_unknown_tag_before_person_lookup
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["bia-hoi"]}'
+  - id: register_me
+    as: me
+    request:
+      method: PUT
+      path: '/people/{{persona.me}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tôi (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: me_dedupes_and_reorders
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","an-uong","cafe"],"budget_band":"vua-phai"}'
+  - id: me_profile_after_first_answer
+    as: me
+    request:
+      method: GET
+      path: '/people/me'
+  - id: me_every_tag_reversed
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["game","karaoke","shopping","outdoor","mon-local","nightlife","cafe","an-uong"],"budget_band":"thoai-mai"}'
+  # budget_band absent means skipped and clears the stored band
+  - id: me_untick_and_skip_budget
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["game"]}'
+  - id: me_profile_after_untick
+    as: me
+    request:
+      method: GET
+      path: '/people/me'
+  - id: me_chooses_nothing
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":[],"budget_band":null}'
+  - id: missing_interests
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"budget_band":"tiet-kiem"}'
+  - id: empty_object
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: empty_body
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+  - id: interests_not_a_list
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":"cafe"}'
+  - id: interests_null
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":null}'
+  - id: interest_not_a_string
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":[1]}'
+  - id: interest_null_item
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":[null]}'
+  - id: interest_wrong_case
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["Cafe"]}'
+  - id: interest_leading_space
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":[" cafe"]}'
+  - id: budget_band_unknown
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"sang-chanh"}'
+  - id: budget_band_number
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":100000}'
+  # interests are normalised before the band, so the tag code wins
+  - id: unknown_tag_and_unknown_band
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["bia-hoi"],"budget_band":"x"}'
+  - id: extra_field_person_id
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":[],"person_id":"{{persona.mate}}"}'
+  - id: top_level_array
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["cafe"]'
+  - id: text_plain_content_type
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"interests":["cafe"]}'
+  - id: no_content_type_is_parsed_as_json
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      body_raw: '{"interests":["outdoor"]}'
+  - id: roles_guest_only
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: roles_empty
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: roles_unknown
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        x-actor-roles: 'member,emperor'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: actor_id_not_uuid
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        x-actor-id: 'not-a-uuid'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: trailing_slash_redirects
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":"vua-phai"}'
+  - id: get_not_allowed
+    as: me
+    request:
+      method: GET
+      path: '/people/me/interests'
+  - id: mate_writes_only_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["karaoke"],"budget_band":"tiet-kiem"}'
+  - id: me_profile_unchanged_by_mate
+    as: me
+    request:
+      method: GET
+      path: '/people/me'
+  - id: idem_first_write
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  - id: idem_replay_same_bytes
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  # a declared JSON body is canonicalised before fingerprinting
+  - id: idem_replay_reordered_keys_and_spaces
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-a'
+        content-type: 'application/json'
+      body_raw: '{ "budget_band": "tiet-kiem", "interests": ["outdoor", "cafe"] }'
+  - id: idem_reuse_different_array_order
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  - id: idem_second_distinct_key
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-b'
+        content-type: 'application/json'
+      body_raw: '{"interests":["shopping"]}'
+  # the key is scoped by X-Actor-ID, so this is a fresh write for mate
+  - id: idem_same_key_other_actor
+    as: mate
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  - id: idem_refusal_is_not_stored
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-c'
+        content-type: 'application/json'
+      body_raw: '{"interests":["bia-hoi"]}'
+  - id: idem_same_key_after_refusal_writes
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'w1-interests-c'
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife"]}'
+  - id: idem_key_too_long
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  - id: idem_key_at_limit
+    as: me
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"interests":["mon-local"]}'
+  - id: me_profile_final
+    as: me
+    request:
+      method: GET
+      path: '/people/me'

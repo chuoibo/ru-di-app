@@ -1,0 +1,255 @@
+# W1 · GET /contexts/{id}/heatmap — districts and counts, share_percent by floor division.
+# Shares that do not sum to 100 and ties on visit_count broken by area id are both exercised.
+id: w1/social_map/get-heatmap
+routes: ['GET /contexts/{context_id}/heatmap']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/heatmap'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/heatmap'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/heatmap'
+  # an unknown group is the same 403 is_group_member as a real one, never 404
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/heatmap'
+  - id: stranger_uppercase_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/heatmap'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/heatmap'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/heatmap'
+  - id: stranger_urn_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/heatmap'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/heatmap'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bản đồ nhiệt (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_heatmap
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+      headers:
+        x-actor-roles: ''
+  - id: stranger_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: mate_invited_not_yet_active
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  # MemoryResponse.cursor is base64(created_at|id), opaque to the normaliser; binding it as a token replaces it with a named placeholder on both stacks
+  - id: checkin_da_lat_bbq
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-tiem-nuong-xom-lao"}'
+    bind:
+      cursor_checkin_da_lat_bbq: {from: body, pointer: /cursor, class: token}
+  - id: owner_heatmap_one_row
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: checkin_da_lat_cafe
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+    bind:
+      cursor_checkin_da_lat_cafe: {from: body, pointer: /cursor, class: token}
+  - id: checkin_da_lat_park
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-dreampark"}'
+    bind:
+      cursor_checkin_da_lat_park: {from: body, pointer: /cursor, class: token}
+  - id: checkin_quan_4
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      cursor_checkin_quan_4: {from: body, pointer: /cursor, class: token}
+  - id: checkin_quan_1
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-the-hill-rooftop"}'
+    bind:
+      cursor_checkin_quan_1: {from: body, pointer: /cursor, class: token}
+  - id: checkin_phu_nhuan
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-ca-phe-vot-hem"}'
+    bind:
+      cursor_checkin_phu_nhuan: {from: body, pointer: /cursor, class: token}
+  - id: checkin_quan_3
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-bowling-sky"}'
+    bind:
+      cursor_checkin_quan_3: {from: body, pointer: /cursor, class: token}
+  - id: owner_heatmap_seven
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: checkin_quan_4_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      cursor_checkin_quan_4_again: {from: body, pointer: /cursor, class: token}
+  - id: checkin_quan_4_third
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      cursor_checkin_quan_4_third: {from: body, pointer: /cursor, class: token}
+  - id: owner_heatmap_tie_on_count
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: mate_heatmap_tie_on_count
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap/'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a membership row with left_at set is not membership
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/heatmap'
