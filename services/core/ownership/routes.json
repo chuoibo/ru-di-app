@@ -1466,7 +1466,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/social_map/GET-contexts-context_id-map.md"
     },
     {
@@ -1479,7 +1479,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/social_map/GET-contexts-context_id-heatmap.md"
     },
     {
@@ -1492,7 +1492,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/social_map/POST-contexts-context_id-meet.md"
     },
     {

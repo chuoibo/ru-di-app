@@ -29,11 +29,16 @@ bảng), bộ giới hạn nhịp trong bộ nhớ. `gate.sh parity` so hai stac
 
 Route đang đóng băng để ghi mốc (W1, route card và kịch bản `parity/scenarios/w1/`). Sửa Python chạm tới các route
 này thì chạy lại kịch bản của nó:
-- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /interests`, `GET /areas`, `POST /reports`,
-  `PUT /people/me/interests`, `GET /contexts/{context_id}/recap`, `GET /contexts/{context_id}/preference-profile`.
-- `CARDED`, đang port phần domain/repository: `GET /contexts/{context_id}/map`, `GET /contexts/{context_id}/heatmap`,
-  `POST /contexts/{context_id}/meet`. `map` kéo theo đọc sổ hai người (đồng ý đọc chat) nên cần thêm các phương thức
-  repository của pair notebook.
+- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap, đủ 9/9 route W1: `GET /interests`, `GET /areas`,
+  `POST /reports`, `PUT /people/me/interests`, `GET /contexts/{context_id}/recap`,
+  `GET /contexts/{context_id}/preference-profile`, `GET /contexts/{context_id}/heatmap`,
+  `POST /contexts/{context_id}/meet`, `GET /contexts/{context_id}/map`.
+- `map` đọc đồng ý đọc chat của sổ hai người (Go: `service.PairChatConsent`), nên sửa Python của pair notebook
+  (`_pair_chat_consent`, `pair_notebook.chat_consent_active`, các truy vấn sổ) cũng phải chạy lại kịch bản
+  `w1/social_map/get-map-pair`.
+- Còn thiếu trước `PARITY-LOCAL`: làn đồng thời và cross-replay idempotency hai chiều. Làn limiter không áp dụng
+  cho W1: không route W1 nào chạm limiter trong bộ nhớ (`routes/social_map.py`, `preferences.py`, `recap.py`,
+  `reports.py` không có dependency limiter).
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.

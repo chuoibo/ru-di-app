@@ -29,6 +29,9 @@ func All() []Route {
 		putMyInterests(),
 		groupRecap(),
 		preferenceProfile(),
+		groupHeatmap(),
+		postMeetingPoint(),
+		socialMap(),
 	}
 }
 
