@@ -78,10 +78,18 @@ export const TO_GIAY_CU: readonly ToGiay[] = [
     ],
     outing_id: "outing-w36",
     keeps: [{ id: "to-w36-giu-1", line: "Hàng chè đầu hẻm, lần sau lại.", created_at: "2026-09-06T15:00:00Z" }],
+    tuan: "2026-08-31",
+    expires_at: "2026-09-06T17:00:00Z",
+    co_the_ghi_da_di: true,
   },
   {
     id: "to-w37",
     state: "het_han",
+    tuan: "2026-09-07",
+    expires_at: "2026-09-13T17:00:00Z",
+    // A week nobody answered never becomes a plan, so there is nothing to
+    // record having gone to. The server answers the same way.
+    co_the_ghi_da_di: false,
     version: 1,
     author_type: "human",
     sent_by: TOI_DEMO.id,

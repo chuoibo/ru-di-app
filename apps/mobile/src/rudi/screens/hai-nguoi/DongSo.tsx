@@ -10,9 +10,28 @@ import { Sheet } from "../../ui/Sheet";
  * check against what they see. Destructive action as an `outline` button and
  * the way out as `ghost`, the idiom `CaiDatNhom` uses for leaving a group; no
  * `Alert`. Closing does not bring anything back (§3.3 rule 7).
+ *
+ * `xemTruoc` is `null` while the counts are still being fetched, and then the
+ * sheet says so and the button is not offered. On the live build these numbers
+ * come from the server, and a destructive confirmation that showed «0 tờ sẽ
+ * khoá» for half a second before the real count arrived would be asking
+ * somebody to agree to the wrong thing.
  */
-export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number }; onDong: () => void; testID?: string }) {
+export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: boolean; onClose: () => void; xemTruoc: { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number } | null; onDong: () => void; testID?: string }) {
   const { colors, space } = useRudiTheme();
+  if (xemTruoc === null) {
+    return (
+      <Sheet accessibilityLabel="Đóng sổ hai người" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
+        <View style={[styles.noiDung, { gap: space.md }]}>
+          <Heading size="h2" subtitle="Đóng là đóng. Tờ chưa mở thì thôi; không gì sống lại." title="Đóng sổ hai người?" />
+          <Text style={[typography.body, { color: colors.inkSoft }]} testID="dong-so-dang-dem">
+            Đang đếm những gì sẽ đóng lại…
+          </Text>
+          <RudiButton label="Giữ sổ" onPress={onClose} variant="ghost" />
+        </View>
+      </Sheet>
+    );
+  }
   return (
     <Sheet accessibilityLabel="Đóng sổ hai người" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>

@@ -23,7 +23,9 @@ function BacDongY({
   choPhep,
   khongKeoTheo,
   dangCho,
+  deNghiCuaToi,
   onDeNghi,
+  onDongY,
   nhanDeNghi,
   nguoiKiaDongY,
   testID,
@@ -34,7 +36,18 @@ function BacDongY({
   choPhep: readonly string[];
   khongKeoTheo: readonly string[];
   dangCho: boolean;
+  /**
+   * Lời đề nghị đang chờ là của TÔI hay của người kia.
+   *
+   * Không phải chi tiết: người được đề nghị là người duy nhất bấm đồng ý được.
+   * Bản đầu hiện cùng một câu «chờ người ấy đồng ý» cho cả hai phía, nên trên
+   * máy thật người NHẬN lời đề nghị nhìn thấy một màn không có việc gì để làm
+   * (đo ở vòng native 14/09). `true` khi không có lời đề nghị nào.
+   */
+  deNghiCuaToi: boolean;
   onDeNghi: () => void;
+  /** Đồng ý lời đề nghị của người kia. Chỉ gọi khi `dangCho && !deNghiCuaToi`. */
+  onDongY: () => void;
   nhanDeNghi: string;
   nguoiKiaDongY: (() => void) | null;
   testID: string;
@@ -56,7 +69,16 @@ function BacDongY({
             <Text key={d} style={[typography.body, { color: colors.inkSoft }]}>· {d}</Text>
           ))}
         </View>
-        {dangCho ? (
+        {dangCho && !deNghiCuaToi ? (
+          // Người ấy đề nghị: việc của màn này là một nút, không phải một câu
+          // nói rằng đang chờ chính mình.
+          <>
+            <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
+              Người ấy đã đề nghị. Bạn đồng ý thì sổ mở.
+            </Text>
+            <RudiButton label="Đồng ý" onPress={onDongY} />
+          </>
+        ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
             Đã đề nghị. Chờ người ấy đồng ý trên máy của người ấy; im lặng không phải đồng ý.
           </Text>
@@ -72,7 +94,7 @@ function BacDongY({
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; onDeNghi: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
   return (
     <BacDongY
       {...props}
@@ -85,7 +107,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; onDeNghi: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
   return (
     <BacDongY
       {...props}

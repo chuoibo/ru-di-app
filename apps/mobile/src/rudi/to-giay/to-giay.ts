@@ -15,6 +15,8 @@
  * and unanswered; a sheet Nếp sent needs BOTH to agree). Thirteen surfaces
  * read them. One module, one test file (`tests/to-giay-luat.test.mjs`).
  */
+import { ngayDocDuoc } from "./ngay";
+
 
 /** The 13 states of spec §3.1, spelled the way the server spells them. */
 export const TRANG_THAI_TO = [
@@ -94,6 +96,20 @@ export interface ToGiay {
   versions: readonly PhienBanTo[];
   outing_id: string | null;
   keeps: readonly DongGiu[];
+  /** The Monday of the week this sheet belongs to. One sheet per week (§5.1). */
+  tuan: string;
+  /** When an undecided sheet stops being answerable. Read, never written here. */
+  expires_at: string;
+  /**
+   * May somebody record that this outing happened? **The server decides this**
+   * (§3.3 rule 6), and the client never works it out.
+   *
+   * The fixture build showed «Đã đi rồi» the moment a plan was agreed, days
+   * before the evening. Computing it here would need the phone's clock, and a
+   * phone whose date is wrong would show the button on the wrong day -- the two
+   * of them would be looking at different weeks with no way to tell.
+   */
+  co_the_ghi_da_di: boolean;
 }
 
 export type Ai = "toi" | "nguoi_kia";
@@ -174,7 +190,8 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
 export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] {
   if (!vTruoc) return [];
   const ra: string[] = [];
-  if (v.content.ngay !== vTruoc.content.ngay) ra.push(`Ngày: ${vTruoc.content.ngay} → ${v.content.ngay}`);
+  if (v.content.ngay !== vTruoc.content.ngay)
+    ra.push(`Ngày: ${ngayDocDuoc(vTruoc.content.ngay)} → ${ngayDocDuoc(v.content.ngay)}`);
   const n = Math.max(v.content.chang.length, vTruoc.content.chang.length);
   for (let i = 0; i < n; i++) {
     const ten = i === 0 ? "Chỗ chính" : "Đi tiếp";
@@ -192,11 +209,31 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
 }
 
 /**
+ * Tên trên con dấu, cắt cho vừa.
+ *
+ * Con dấu là một khối chữ hoa nén, đứng trong một hàng `space-between` cạnh
+ * ngày; nó không có `maxWidth` và chữ không có `numberOfLines`. «DE QA GỬI»
+ * vừa, «NGUYỄN THỊ MINH HÀ GỬI» thì hoặc xuống dòng trong dấu hoặc bóp nát cột
+ * ngày — đúng lớp lỗi mà TopBar ở 360dp/1.3 đã trả giá một lần. Lấy chữ CUỐI
+ * (tên gọi trong tiếng Việt) và chặn độ dài.
+ */
+export function tenNgan(ten: string): string {
+  const chu = ten.trim().split(/\s+/);
+  const cuoi = chu[chu.length - 1] || ten.trim();
+  return cuoi.length > 10 ? `${cuoi.slice(0, 9)}…` : cuoi;
+}
+
+/**
  * One sentence about where the sheet stands, from my side. Read aloud by the
  * accessibility label of the open sheet and printed under it, so it names the
  * state in words, never by colour alone (spec §12.1).
  */
-export function cauTrangThai(to: ToGiay, toiId: string): string {
+export function cauTrangThai(to: ToGiay, toiId: string, tenNguoiKia?: string): string {
+  // «Ca vừa gửi» trả lời «ai đang chờ ai» trong một cái liếc; «Người ấy vừa
+  // gửi» bắt người đọc dựng lại xem đó là ai. Tên là tuỳ chọn vì hàng đã khép
+  // và ca test thuần không có nó, và khi vắng thì câu cũ vẫn đúng.
+  const ho = tenNguoiKia?.trim() || "Người ấy";
+  const hoThuong = tenNguoiKia?.trim() || "người ấy";
   const pb = phienBan(to);
   const toiGui = pb?.author_type === "human" && pb.sent_by === toiId;
   const nep = pb?.author_type === "nep";
@@ -205,15 +242,17 @@ export function cauTrangThai(to: ToGiay, toiId: string): string {
       return "Bản phác, chỉ bạn thấy. Gửi đi thì người ấy mới nhận.";
     case "da_gui":
       if (nep) return "Nếp gửi hộ vì chưa ai mở lời. Cần cả hai cùng ừ.";
-      return toiGui ? "Đã gửi, chờ trả lời. Người ấy chưa xem." : "Người ấy vừa gửi. Bạn ừ, hay đề nghị sửa?";
+      return toiGui ? `Đã gửi, chờ trả lời. ${ho} chưa xem.` : `${ho} vừa gửi. Bạn ừ, hay đề nghị sửa?`;
     case "da_xem":
-      return toiGui ? "Người ấy đã xem, chưa trả lời." : "Bạn đã mở. Ừ, hay đề nghị sửa?";
+      return toiGui ? `${ho} đã xem, chưa trả lời.` : "Bạn đã mở. Ừ, hay đề nghị sửa?";
     case "de_nghi_sua":
       return "Có đề nghị sửa. Phiên bản mới đang chờ.";
     case "dong_y":
-      return daDongY(to, "toi", toiId) ? "Bạn đã ừ. Chờ người ấy ừ cùng phiên bản này." : "Người ấy đã ừ. Còn bạn.";
+      return daDongY(to, "toi", toiId)
+        ? `Bạn đã ừ. Chờ ${hoThuong} ừ cùng phiên bản này.`
+        : `${ho} đã ừ. Còn bạn.`;
     case "chot":
-      return `Đã chốt. Hẹn ${pb?.content.ngay ?? "ngày đã ghi"}.`;
+      return `Đã chốt. Hẹn ${pb ? ngayDocDuoc(pb.content.ngay) : "ngày đã ghi"}.`;
     case "da_di":
       return "Đã đi. Giữ lại một điều về buổi này?";
     case "da_giu":
@@ -252,7 +291,8 @@ export function nutChoTo(to: ToGiay, toiId: string): NutTo[] {
     case "de_nghi_sua":
       return nghi;
     case "chot":
-      return ["da_di", "huy"];
+      // «Đã đi rồi» only once the day has come, and the server is what says so.
+      return to.co_the_ghi_da_di ? ["da_di", "huy"] : ["huy"];
     case "da_di":
       return ["giu"];
     default:

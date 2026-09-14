@@ -181,6 +181,7 @@ from app.api.schemas import (
     PaperSendRequest,
     PaperStop,
     PaperSummary,
+    PaperSummaryStop,
     PaperVersionResponse,
     PaperWithdrawRequest,
     PaymentReportRequest,
@@ -7601,6 +7602,8 @@ class ApiService:
                     tuan=paper.tuan,
                     ngay=_ngay_cua(paper),
                     expires_at=paper.expires_at,
+                    chang_dau=_chang_dau(paper),
+                    dong_giu_dau=(paper.keeps[0].line if paper.keeps else None),
                 )
             )
         return PaperListResponse(papers=papers)
@@ -8198,6 +8201,27 @@ def _ngay_cua(paper: PairPaperRecord) -> date | None:
         return date.fromisoformat(str(current.content["ngay"]))
     except (KeyError, TypeError, ValueError):
         return None
+
+
+def _chang_dau(paper: PairPaperRecord) -> PaperSummaryStop | None:
+    """The first stop of the current version, for the list's one line.
+
+    Returns None rather than raising on a row that cannot be read: a list of
+    twenty weeks must not fail to render because one old sheet is malformed.
+    The sheet's own GET is where that is reported.
+    """
+    current = next(
+        (v for v in paper.versions if v.version == paper.current_version), None
+    )
+    if current is None:
+        return None
+    chang = current.content.get("chang") if isinstance(current.content, dict) else None
+    if not isinstance(chang, list) or not chang:
+        return None
+    dau = chang[0]
+    if not isinstance(dau, dict) or "gio" not in dau or "viec" not in dau:
+        return None
+    return PaperSummaryStop(gio=str(dau["gio"]), viec=str(dau["viec"]))
 
 
 def _co_the_ghi_da_di(paper: PairPaperRecord, *, now: datetime) -> bool:

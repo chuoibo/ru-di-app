@@ -2630,13 +2630,30 @@ class PaperResponse(ApiModel):
     keeps: list[PaperKeepResponse]
 
 
+class PaperSummaryStop(ApiModel):
+    gio: StrictStr
+    viec: StrictStr
+
+
 class PaperSummary(ApiModel):
+    """One row of the list of sheets. No versions, no responses.
+
+    `chang_dau` and `dong_giu_dau` are the two facts the closed rows show
+    besides the date, and they are here because the list is the only read that
+    row has: fetching each closed sheet whole to render one line of it would be
+    one request per row on every poll. They are the raw pieces rather than a
+    composed sentence -- the screen writes «19:00 Ăn tối» or «Giữ lại: …» in its
+    own words, and a server that composed the line would own copy it cannot see.
+    """
+
     id: UUID
     state: PaperState
     version: PaperVersion
     tuan: date
     ngay: date | None
     expires_at: datetime
+    chang_dau: PaperSummaryStop | None
+    dong_giu_dau: StrictStr | None
 
 
 class PaperListResponse(ApiModel):

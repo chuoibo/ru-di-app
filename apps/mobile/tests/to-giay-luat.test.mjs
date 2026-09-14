@@ -19,6 +19,7 @@ import {
   khacGi,
   laKeHoach,
   nutChoTo,
+  tenNgan,
   toUuTien,
 } from "../dist-test/rudi/to-giay/to-giay.js";
 
@@ -48,6 +49,12 @@ const to = (state, versions, over = {}) => ({
   versions,
   outing_id: state === "chot" || state === "da_di" || state === "da_giu" ? "outing-1" : null,
   keeps: [],
+  tuan: "2026-09-14",
+  expires_at: "2026-09-20T17:00:00Z",
+  // The server's answer, not a guess. Default true so the cases written before
+  // this field existed keep asking what they were written to ask; the two cases
+  // about the day itself pass it explicitly.
+  co_the_ghi_da_di: true,
   ...over,
 });
 
@@ -175,4 +182,33 @@ test("đóng sổ: đếm tờ đang chờ sẽ huỷ, tờ đã chốt sẽ kho
   assert.deepEqual(demHauQuaDongSo(ds, 1), { so_nhap_bo: 1, so_to_huy: 1, so_to_khoa: 1, so_de_nghi_huy: 1 }, "nháp bỏ; đã gửi huỷ; chốt khoá; hết hạn và đã giữ không đếm");
   assert.deepEqual(demHauQuaDongSo([], 0), { so_nhap_bo: 0, so_to_huy: 0, so_to_khoa: 0, so_de_nghi_huy: 0 });
   assert.deepEqual(demHauQuaDongSo(ds, -2), { so_nhap_bo: 1, so_to_huy: 1, so_to_khoa: 1, so_de_nghi_huy: 0 }, "số âm không lọt");
+});
+
+test("nút «Đã đi rồi» chỉ hiện khi máy chủ nói ngày đã tới (§3.3 luật 6)", () => {
+  const chot = [phienBan(1, TOI, { their_agreed: true, my_response: "dong_y" })];
+  const truocNgay = to("chot", chot, { co_the_ghi_da_di: false });
+  assert.deepEqual(nutChoTo(truocNgay, TOI), ["huy"], "chưa tới ngày thì không có nút ghi đã đi");
+  assert.deepEqual(nutChoTo(truocNgay, KIA), ["huy"], "phía người kia cũng vậy");
+
+  const toiNgay = to("chot", chot, { co_the_ghi_da_di: true });
+  assert.deepEqual(nutChoTo(toiNgay, TOI), ["da_di", "huy"]);
+
+  // Và cờ ấy KHÔNG đổi được gì ở các trạng thái khác: nó chỉ nói về một buổi
+  // đã chốt, không phải một quyền chung.
+  const nhap = to("nhap", [phienBan(1, null)], { co_the_ghi_da_di: true });
+  assert.ok(!nutChoTo(nhap, TOI).includes("da_di"));
+  const daDi = to("da_di", chot, { co_the_ghi_da_di: false });
+  assert.deepEqual(nutChoTo(daDi, TOI), ["giu"], "đã ghi rồi thì cờ không rút nút giữ lại");
+});
+
+test("tên dài không phá con dấu: lấy chữ cuối, chặn độ dài", () => {
+  // Con dấu là khối chữ hoa nén trong một hàng `space-between` cạnh ngày, không
+  // `maxWidth`, không `numberOfLines`. Tên đầy đủ sẽ xuống dòng trong dấu hoặc
+  // bóp nát cột ngày — cùng lớp lỗi với TopBar ở 360dp/1.3.
+  assert.equal(tenNgan("De QA"), "QA");
+  assert.equal(tenNgan("Nguyễn Thị Minh Hà"), "Hà");
+  assert.equal(tenNgan("  Bình  "), "Bình");
+  assert.ok(tenNgan("Bartholomewwwwwwww").length <= 10, "quá dài thì cắt");
+  assert.ok(tenNgan("Bartholomewwwwwwww").endsWith("…"), "và nói rằng đã cắt");
+  assert.equal(tenNgan(""), "", "chuỗi rỗng vẫn là chuỗi rỗng");
 });

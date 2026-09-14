@@ -38,6 +38,17 @@ export interface NepDuLieuPhac {
   lyDo: string;
 }
 
+/**
+ * The week a fixture sheet belongs to, and when it would stop being answerable.
+ *
+ * Written down rather than computed from `Date.now()`: the experience build
+ * must render the same thing on every screenshot, and a sheet whose deadline
+ * moved with the wall clock would make one pinned capture expire and the next
+ * one not.
+ */
+const TUAN_MAU = "2026-09-14";
+const HAN_TUAN_MAU = "2026-09-20T17:00:00Z";
+
 const thay = (ds: readonly ToGiay[], moi: ToGiay): ToGiay[] => ds.map((to) => (to.id === moi.id ? moi : to));
 
 /**
@@ -59,6 +70,12 @@ export function phacToGiay(id: string, du: NepDuLieuPhac): ToGiay {
     versions: [{ version: 1, content, ly_do: du.lyDo, sent_at: null, sent_by: null, author_type: "human", my_response: null, their_agreed: false, viewed_by_recipient_at: null }],
     outing_id: null,
     keeps: [],
+    tuan: TUAN_MAU,
+    expires_at: HAN_TUAN_MAU,
+    // The experience build has no clock: a fixture sheet is never «today», so
+    // the button the server gates stays hidden until `daDi` is pressed through
+    // the fixture's own path. The live build reads the server's answer.
+    co_the_ghi_da_di: true,
   };
 }
 

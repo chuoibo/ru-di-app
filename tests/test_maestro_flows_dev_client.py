@@ -181,7 +181,7 @@ class MaestroFlowsDriveTheDevClient(unittest.TestCase):
         self.assertNotIn("EXPO_PUBLIC_RUDI_ACTOR=", script)
         self.assertIn("canary_otp", script)
         self.assertIn(
-            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*)"
+            "22-*|23-*|24-*|25-*|26-*|27-*|28-*|29-*|31-*|32-*|33-*|34-*|35-*|36-*|37-*|39-*|41-*|42-*|43-*|44-*|45-*|46-*|47-*)"
             ' [ "$OTP" = 1 ] || continue',
             script,
         )

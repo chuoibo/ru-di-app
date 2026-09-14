@@ -1,8 +1,10 @@
+import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
-import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc } from "../../to-giay/to-giay";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
+import { ngayDocDuoc } from "../../to-giay/ngay";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -44,6 +46,7 @@ import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
 export function ToLoiRu({
   to,
   toiId,
+  tenNguoiKia,
   dan,
   onGui,
   onSuaNhap,
@@ -59,6 +62,8 @@ export function ToLoiRu({
 }: {
   to: ToGiay;
   toiId: string;
+  /** The other person's name, so the turn can be stated with it rather than «người ấy». */
+  tenNguoiKia?: string;
   /** This sheet is the thing to do now on this surface. */
   dan?: boolean;
   onGui?: () => void;
@@ -78,8 +83,22 @@ export function ToLoiRu({
   const doc = chuLon(fontScale);
   const pb = phienBan(to);
   const dauTien = phienBan(to, 1);
-  const cau = cauTrangThai(to, toiId);
+  const cau = cauTrangThai(to, toiId, tenNguoiKia);
   const nut = nutChoTo(to, toiId);
+  // Lượt của TÔI, không phải «tờ đang mở». Góc gấp coral và con tem coral là
+  // hai dấu to nhất trên khung, và bản đầu bật cả hai theo trạng thái mở — nên
+  // một tờ đã gửi đang chờ NGƯỜI KIA vẫn hét lên «làm gì đi», giống hệt khung
+  // đang chờ chính mình. Luật «nhìn một cái biết ai đang chờ ai» hỏng đúng ở
+  // trạng thái nó sinh ra để phục vụ.
+  const luotCuaToi = nut.includes("gui") || nut.includes("dong_y");
+  // Con dấu chỉ rơi khi trạng thái đổi TRONG LÚC tờ này đang ở trên màn. Mở
+  // lại một tờ đã chốt từ hôm qua thì nó đã ở đó rồi, và một con dấu rơi lúc
+  // ấy là kể lại một khoảnh khắc không thuộc về người đang nhìn.
+  const truoc = useRef<string | null>(null);
+  const vuaDoi = truoc.current !== null && truoc.current !== `${to.id}:${to.state}` && truoc.current.startsWith(`${to.id}:`);
+  useEffect(() => {
+    truoc.current = `${to.id}:${to.state}`;
+  }, [to.id, to.state]);
   const dangQuyet = ["da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(to.state);
   const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
@@ -100,13 +119,16 @@ export function ToLoiRu({
   // Withdrawing is an escape, not the sender's job while they wait: as the
   // only primary it came out as a solid coral «Rút lại», the loudest thing on
   // a frame whose honest answer is «chờ». Ghost, with the other escapes.
-  const PHU = new Set(["nghi_tuan", "bo", "huy", "da_di", "rut"]);
+  // `da_di` ra khỏi nhóm thoát: nó là việc KHẲNG ĐỊNH của một buổi đã chốt
+  // («hai bạn đã đi rồi»), không phải một lối ra. Để nó ở đó thì một việc
+  // KHÔNG hỏi lại đứng cạnh ba việc có hỏi, và nét kẻ phân nhóm nói sai.
+  const PHU = new Set(["nghi_tuan", "bo", "huy", "rut"]);
   const chinh = nut.filter((n) => !PHU.has(n) && bam[n]);
   const phu = nut.filter((n) => PHU.has(n) && bam[n]);
 
   return (
     <View style={styles.khoi} testID={testID}>
-      <ToGiayView dan={dan} testID={testID ? `${testID}-to` : undefined}>
+      <ToGiayView dan={dan && luotCuaToi} testID={testID ? `${testID}-to` : undefined}>
         <View accessibilityLabel={cau} accessibilityRole="summary" accessible style={styles.thanTo}>
           {hang.length === 0 ? (
             <Text style={[typography.body, { color: colors.inkSoft }]}>Tuần này Nếp chưa có gì để phác. Bạn viết lấy một dòng?</Text>
@@ -122,11 +144,15 @@ export function ToLoiRu({
           ))}
           <VetGap />
           <View style={styles.hangCuoi}>
-            <Text style={[typography.label, { color: colors.inkSoft, flexShrink: 1 }]}>{pb?.content.ngay ?? ""}</Text>
+            <Text style={[typography.label, { color: colors.inkSoft, flexShrink: 1 }]}>{pb ? ngayDocDuoc(pb.content.ngay) : ""}</Text>
             <Stamp
-              label={nhanDau(to, toiId)}
+              // «Con dấu rơi xuống» là khoảnh khắc ký của thế giới này, và nó
+              // chỉ đúng khi trạng thái vừa đổi DƯỚI NGÓN TAY người đang nhìn.
+              dong={vuaDoi}
+              label={nhanDau(to, toiId, tenNguoiKia)}
               testID={testID ? `${testID}-stamp` : undefined}
-              tone={TRANG_THAI_MO.includes(to.state) ? "accent" : "ink"}
+              tilt={vuaDoi ? -2 : 0}
+              tone={luotCuaToi ? "accent" : "ink"}
             />
           </View>
         </View>
@@ -156,14 +182,22 @@ export function ToLoiRu({
         <View style={[styles.nutChinh, doc && styles.nutDoc, { gap: space.sm }]}>
           {chinh.map((n, i) => (
             <View key={n} style={doc ? styles.nutFull : styles.nutNua}>
-              <RudiButton label={CHU_NUT[n]} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
+              <RudiButton label={chuNut(n, pb)} onPress={bam[n]!} variant={i === 0 ? "solid" : "outline"} />
             </View>
           ))}
         </View>
       ) : null}
-      {phu.map((n) => (
-        <RudiButton key={n} label={CHU_NUT[n]} onPress={bam[n]!} variant="ghost" />
-      ))}
+      {phu.length > 0 ? (
+        // Tách khỏi nhóm trên bằng một nét: đây là các lối THOÁT, và «Bỏ bản
+        // phác này» vứt đi thứ vừa viết còn «Huỷ buổi này» xoá một buổi người
+        // kia đang trông. Bảng màu không có tông «phá huỷ» nên nét kẻ mang việc
+        // ấy, và tờ xác nhận ở dưới mới là thứ nói ra hậu quả.
+        <View style={[styles.thoat, { borderTopColor: colors.line, gap: space.sm }]}>
+          {phu.map((n) => (
+            <RudiButton key={n} label={chuNut(n, pb)} onPress={bam[n]!} variant="ghost" />
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -172,16 +206,20 @@ export function ToLoiRu({
  * The readable word on the stamp, from the reader's side. Every state has one
  * (spec §12.1); the ones that depend on who sent the current version say so.
  */
-export function nhanDau(to: ToGiay, toiId: string): string {
+export function nhanDau(to: ToGiay, toiId: string, tenNguoiKia?: string): string {
   const pb = phienBan(to);
   const toiGui = pb?.author_type === "human" && pb.sent_by === toiId;
+  const ho = tenNguoiKia?.trim() ? tenNgan(tenNguoiKia) : "Người ấy";
   switch (to.state) {
     case "da_gui":
-      return pb?.author_type === "nep" ? "Nếp gửi hộ" : toiGui ? "Đã gửi" : "Gửi cho bạn";
+      // «GỬI CHO BẠN» in hoa đọc ra như một MỆNH LỆNH («gửi cho một người
+      // bạn») trước khi đọc ra như một trạng thái. Nói ai gửi thì hết nhập
+      // nhằng, và hàng dưới đó đã nói phải làm gì.
+      return pb?.author_type === "nep" ? "Nếp gửi hộ" : toiGui ? "Đã gửi" : `${ho} gửi`;
     case "da_xem":
       return toiGui ? "Đã xem" : "Chờ bạn";
     case "dong_y":
-      return daDongY(to, "toi", toiId) ? "Bạn đã ừ" : "Người ấy đã ừ";
+      return daDongY(to, "toi", toiId) ? "Bạn đã ừ" : `${ho} đã ừ`;
     case "rut":
       return toiGui ? "Bạn đã rút" : "Đã rút";
     default:
@@ -210,6 +248,18 @@ export const NHAN: Record<ToGiay["state"], string> = {
   huy: "Đã huỷ",
 };
 
+/**
+ * Chữ trên nút, và «Ừ» mang theo cái nó cam kết.
+ *
+ * Một âm tiết trên một nút coral kín có thể là cú bấm biến một lời đề nghị
+ * thành một buổi đã chốt mà đường ra duy nhất là «Huỷ buổi này». Nút phải nói
+ * nó làm gì.
+ */
+function chuNut(n: string, pb: { content: { ngay: string } } | undefined): string {
+  if (n === "dong_y" && pb) return `Ừ, hẹn ${ngayDocDuoc(pb.content.ngay)}`;
+  return CHU_NUT[n];
+}
+
 const CHU_NUT: Record<string, string> = {
   gui: "Gửi cho người ấy",
   sua_nhap: "Sửa trước khi gửi",
@@ -231,6 +281,7 @@ const styles = StyleSheet.create({
   viec: { flex: 1 },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
   lyDo: { paddingHorizontal: 6 },
+  thoat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 6 },
   doi: { borderLeftWidth: StyleSheet.hairlineWidth, paddingLeft: 12, gap: 2 },
   giu: { gap: 2, paddingHorizontal: 6 },
   nutChinh: { flexDirection: "row" },

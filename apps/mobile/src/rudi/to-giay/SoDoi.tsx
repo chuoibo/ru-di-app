@@ -56,7 +56,15 @@ export interface TrangThaiSoDoi {
   rangBuoc: { toi: RangBuoc; nguoiKia: RangBuoc };
   toGiay: readonly ToGiay[];
   /** Consent proposals still waiting for the other person. */
-  deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat" }[];
+  /**
+   * Lời đề nghị đang chờ, kèm AI đã đề nghị.
+   *
+   * `cuaToi` không phải trang trí: người ĐƯỢC đề nghị là người duy nhất bấm
+   * đồng ý được, và bản đầu của màn hiện cùng một câu «chờ người ấy đồng ý»
+   * cho cả hai phía — nên trên máy thật, người nhận lời đề nghị không có cửa
+   * nào để trả lời. Đo được ở vòng native 14/09.
+   */
+  deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
 }
 
@@ -69,16 +77,28 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   toMo: ToGiay | undefined;
   /** Rows under the open sheet: everything else, newest first. */
   toKhac: readonly ToGiay[];
-  xemTruocDongSo: () => { so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number };
+  /**
+   * What closing would do, asked for rather than read.
+   *
+   * A promise because on the live build this is a POST: the count and the
+   * `revision` that pins it are minted together, so that the rows somebody
+   * agreed to close and the rows being closed are provably the same rows. The
+   * fixture answers immediately; the screen holds `null` until either does.
+   */
+  xemTruocDongSo: () => Promise<{ revision: string; so_nhap_bo: number; so_to_huy: number; so_to_khoa: number; so_de_nghi_huy: number }>;
 
   deNghiLapSo: () => void;
   deNghiBatDoi: () => void;
   thuHoiBatDoi: () => void;
   datRangBuoc: (rb: Partial<RangBuoc>) => void;
-  dongSo: () => void;
+  /** `revision` is the one the person just read. The fixture ignores it. */
+  dongSo: (revision: string) => void;
 
-  /** «Rủ đi chơi»: Nếp drafts a sheet for me. Returns its id, or `null` when one is already open. */
-  ruDiChoi: () => string | null;
+  /** Đồng ý một lời đề nghị người kia vừa gửi. */
+  dongYDeNghi: (id: string) => void;
+
+  /** «Rủ đi chơi»: Nếp drafts a sheet for me. */
+  ruDiChoi: () => void;
   suaNhap: (id: string, content: NoiDungTo, lyDo: string | null) => void;
   gui: (id: string) => void;
   boNhap: (id: string) => void;
@@ -99,7 +119,14 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   };
 }
 
-const SoDoiContext = createContext<SoDoiApi | null>(null);
+/**
+ * Exported so a second implementation can stand behind the same door.
+ *
+ * `SoDoiSong` provides this context from the server instead of from the
+ * fixture store, which is why Phase 4 rewrote no screen: every screen asks
+ * `useSoDoi()` and neither knows nor needs to know which one answered.
+ */
+export const SoDoiContext = createContext<SoDoiApi | null>(null);
 
 function seed(): TrangThaiSoDoi {
   return {
@@ -137,13 +164,19 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
       tenNguoiKia: NGUOI_KIA_DEMO.ten,
       toMo,
       toKhac,
-      xemTruocDongSo: () => demHauQuaDongSo(s.toGiay, s.deNghiCho.length),
+      // The fixture has no clock and no other writer, so its revision is a
+      // constant: nothing can change between the count and the close.
+      xemTruocDongSo: async () => ({ revision: "fixture", ...demHauQuaDongSo(s.toGiay, s.deNghiCho.length) }),
 
-      deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so" }] })),
-      deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi" }] })),
+      deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so", cuaToi: true }] })),
+      deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi", cuaToi: true }] })),
       thuHoiBatDoi: () => setS((c) => ({ ...c, batDoi: false, deNghiCho: c.deNghiCho.filter((d) => d.purpose !== "bat_doi") })),
       datRangBuoc: (rb) => setS((c) => ({ ...c, rangBuoc: { ...c.rangBuoc, toi: { ...c.rangBuoc.toi, ...rb } } })),
       dongSo: () => setS((c) => ({ ...c, daDong: true, deNghiCho: [], toGiay: dongSo(c.toGiay) })),
+
+      // Trên bản trải nghiệm, lời đề nghị luôn là của tôi, nên «đồng ý» ở đây
+      // là việc của người kia — cùng một đường với nút dưới `nguoiKia`.
+      dongYDeNghi: (id: string) => api.nguoiKia?.dongYDeNghi(id),
 
       ruDiChoi: () => {
         if (s.daDong || daCoToMo) return null;

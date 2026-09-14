@@ -66,6 +66,7 @@ import { nguonAnh } from "../../ky-niem/ky-niem";
 import { useTinNhan } from "../../chat/useTinNhan";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
+import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
@@ -597,6 +598,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Cài đặt</Text>
           </Pressable>
         </View>
+        {/* «Tờ giấy của hai mình», the room's one fixed line, under the pills
+            and inside the same header block so it scrolls with neither the
+            title nor the conversation. Only in a pair: a group has no notebook,
+            and `soHaiNguoi` reads nothing when this is false. */}
+        {nhanRieng && phien !== null ? <HangToGiaySong contextId={contextId} toiId={phien.person_id} /> : null}
       </View>
       {/* Drawn outside the inverted list: the list flips its own children
           back upright, and an extra flip here once mirrored this copy. */}

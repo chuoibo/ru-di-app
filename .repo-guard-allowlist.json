@@ -2,150 +2,6 @@
   "version": 1,
   "artifacts": [
     {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/06-suggestion.png",
-      "sha256": "21eb2bf44bae0c8e0606dfe3f39a0b5d6659ad0c9932cfccc2832ea2d1779c4a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/07-applied-timeline.png",
-      "sha256": "82ac17b4d37f4f918f49a01cfa5a37d5bd45c07bf6495a7ec47de30a92e4f019",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/08-final-light.png",
-      "sha256": "556cafff13a2158c209e45856a90ec25454c8d10d170378ad2c21b4e3727d0f7",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/09-final-dark.png",
-      "sha256": "a5cd91c8e06b2c4122fe7ae1f651ac8ed52940132bae2dd46b9710352ea4b55b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/10-final-font2.png",
-      "sha256": "78a0c5d6907a8e1ae392b5e9618128535eb685e03c7c9c12bf1789254716112b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/11-editor-font2.png",
-      "sha256": "cceddd668c2abd32f651cd1cb5fc5c6e2a0df92a96f696532934478991c7ae19",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/12-conflict-offline.png",
-      "sha256": "6c3b2823ca7453e2dc8ea8014e8bfbf36870622f50e293c0b6f96cdffbbd3f3d",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/13-draft-retained.png",
-      "sha256": "5a6a803481e7d920f278906b611ca530dfda94e8f98ca4cc0de917264aee82b1",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/14-conflict-compare.png",
-      "sha256": "3092d0d0fb8c414a1cc26827cfc68f98512ab710e4c2786eab348ad6bb2e161a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/15-wide.png",
-      "sha256": "a4c675ea19177ab73c0d582f5fab3fc74b6fe3b4b05da687e08b465ad6277043",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/16-empty-day.png",
-      "sha256": "787b1e61075a08f6fcec286f075bf825ff98c44efbd63533551d2e218b6cd556",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/18-final-proposal.png",
-      "sha256": "dc345dc0ee12a97d7a6b37498028c8acb0080d80b7a8709b6ebe225beb8f5a98",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-assignment.png",
-      "sha256": "523e16086bce722595e01bf004c6d3ba624209211bc8e16868106fb1cacad789",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-create-dark.png",
-      "sha256": "c4e9e06378be5a137b0c1020f423d59698c8219a6857d4009a8632e6452fdba6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-assignment-dark.png",
-      "sha256": "dff72c54b06601ec40483a51e01eb4748489614e41223b2a7a2fa2ac7dc7fc7c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-create-dark.png",
-      "sha256": "38832c91a7838af266b7aebee7e2778797ea3f0bc3d7853ba6065bf14b15dfe4",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-explore.png",
-      "sha256": "c1f184b4432e2ec989fef5234fa3c7f81002f0d2d9393828f31c961451fae097",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android fixture với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh địa điểm thật hoặc người tham gia; README nêu ranh giới."
-    },
-    {
-      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-viewer-resize.png",
-      "sha256": "9670ea5f667c1f30d6ccd0f4d026c8106f2594601ea34281474e6403116a0cb6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh Android probe với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh người tham gia; README nêu ranh giới."
-    },
-    {
       "path": "apps/mobile/assets/android-icon-background.png",
       "sha256": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d",
       "rules": [
@@ -178,16 +34,40 @@
       "reason": "Expo launcher and splash artwork generated by `create-expo-app`. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Contains no participant data."
     },
     {
-      "path": "apps/mobile/assets/icon.png",
-      "sha256": "119462bb78eb240a65c869fc067ee599639b3cb5a41953f25c07b17d2a8c7e0f",
+      "path": "apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf",
+      "sha256": "96b4e880f78318631a573954986c368bfcaa9896e0c0383f917d9ce3fd2b3259",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Expo launcher and splash artwork generated by `create-expo-app`. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Contains no participant data."
+      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
     },
     {
-      "path": "apps/mobile/assets/splash-icon.png",
-      "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
+      "path": "apps/mobile/assets/fonts/BricolageGrotesque-CondensedBold.ttf",
+      "sha256": "5c094bc64bce3d35e4abc9649d0085ac0b89429076dc0f16770556ab75b3e9e8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
+    },
+    {
+      "path": "apps/mobile/assets/fonts/BricolageGrotesque-ExtraBold.ttf",
+      "sha256": "8865d033ae29e63a466bfaf5ed90a65d8b22597d01f7997001e7594eda1d4d3d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
+    },
+    {
+      "path": "apps/mobile/assets/fonts/BricolageGrotesque-SemiBold.ttf",
+      "sha256": "819597313ecf2c5dc7afea5ff184aefffc849a189eb8e6013f9b18e9d1e6a718",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
+    },
+    {
+      "path": "apps/mobile/assets/icon.png",
+      "sha256": "119462bb78eb240a65c869fc067ee599639b3cb5a41953f25c07b17d2a8c7e0f",
       "rules": [
         "controlled-artifact"
       ],
@@ -234,6 +114,38 @@
       "reason": "Ảnh stock công khai của Unsplash dùng riêng cho dữ liệu trình diễn RuDi. Nguồn và tác giả được ghi tại assets/rudi/README.md; không chứa người tham gia hay dữ liệu nghiên cứu. Path và digest được ghim để mọi thay đổi byte phải review lại."
     },
     {
+      "path": "apps/mobile/assets/splash-icon.png",
+      "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Expo launcher and splash artwork generated by `create-expo-app`. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Contains no participant data."
+    },
+    {
+      "path": "apps/mobile/assets/textures/giay-trang.png",
+      "sha256": "4e19dba406313aca03e6d7e936478e31b2c6ceccafc111a72f501b69cf2e59f6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ô chất liệu 256×256 nền trong suốt cho thế giới «nhật ký chuyến đi» (UI v2, ADR-0020): sinh bằng script Pillow seed cố định, không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG bằng imp embed-prompt; README cùng thư mục ghi cấu tạo. Ghim digest để đổi một byte phải review lại."
+    },
+    {
+      "path": "apps/mobile/assets/textures/muc-in.png",
+      "sha256": "5fb4db0927f0bab1637c49e1a63e9563822187c966da5403c413272e996a980d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ô chất liệu 256×256 nền trong suốt «mực in» cho con dấu (UI v2, ADR-0020): sinh bằng scripts/sinh_chat_lieu_ui_v2.py (Python random seed 20260905, chạy lại ra đúng từng byte), không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG (tEXt Comment + imp embed-prompt). Ghim digest để đổi một byte phải review lại."
+    },
+    {
+      "path": "apps/mobile/assets/textures/vai-bia.png",
+      "sha256": "78efe51dd6b5c7c6dd935b0dfaad130ceadbac4385123c07201f18cbcf78f642",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ô chất liệu 256×256 nền trong suốt cho thế giới «nhật ký chuyến đi» (UI v2, ADR-0020): sinh bằng script Pillow seed cố định, không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG bằng imp embed-prompt; README cùng thư mục ghi cấu tạo. Ghim digest để đổi một byte phải review lại."
+    },
+    {
       "path": "apps/mobile/package-lock.json",
       "sha256": "5a7c79f7ff38e4a8bacf55707be3fd04848e23ca0da720ee8621622b28401f3a",
       "rules": [
@@ -241,6 +153,23 @@
         "long-number"
       ],
       "reason": "Lockfile npm của ứng dụng mobile. Các chuỗi base64 là integrity digest của npm và số dài là metadata phiên bản; cả hai thuộc cấu trúc lockfile. Ghim lại 2026-09-03 khi gộp hai nhánh cùng thêm phụ thuộc: `expo-secure-store` cho phiên đăng nhập (ADR-0014, PR #514) và `@react-native-async-storage/async-storage@2.2.0` cho lớp lưu trữ phiên nháp của RuDi, kéo theo is-plain-obj@2.1.0 và merge-options@3.0.4. Sau khi gộp đã chạy `npm install --package-lock-only` để lockfile khớp package.json, rồi mới tính digest — ghim một digest của cây gộp chưa chuẩn hoá là ghim một file không ai từng cài. Toàn bộ dòng thêm là version/resolved/integrity/license/engines từ registry.npmjs.org; không dòng nào mang dữ liệu người tham gia. Ghim lại 2026-09-03 sau khi thêm expo-dev-client + @react-native-google-signin/google-signin (kéo theo react-native-reanimated 4.6.0, react-native-worklets 0.12.1); các số dài vẫn chỉ là version của devtools-protocol và hermes-compiler. Ghim lại 2026-09-05 (UI v2, PR UI-0) sau khi `npx expo install react-native-svg expo-font` (react-native-svg 15.15.4 cho wordmark và minh hoạ vector, expo-font 57.0.3 khai tường minh để nạp display face); mọi dòng thêm là version/resolved/integrity từ registry.npmjs.org. Ghim lại 2026-09-12 (ADR-0026, Hành trình trên bản đồ) sau khi `npx expo install @maplibre/maplibre-react-native maplibre-gl` cho bản đồ hành trình — native dùng module MapLibre, web dùng maplibre-gl; kéo theo @maplibre/maplibre-gl-style-spec, @mapbox/point-geometry, kdbush, pbf, quickselect, tinyqueue và vài gói @turf. Mọi dòng thêm là version/resolved/integrity/bin/engines từ registry.npmjs.org; đã soát toàn bộ 369 dòng thêm, không dòng nào mang dữ liệu người tham gia. Lockfile đã chạy `npm install --package-lock-only` (không đổi byte nào) trước khi tính digest."
+    },
+    {
+      "path": "apps/mobile/public/anh-nhom-dung-san.svg",
+      "sha256": "f4f1a73dbe7e3ed0f16e880a8bc34d570383f6e8096da88d331ec6f55843d556",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Hinh VE stand-in cho mot tam anh nhom, dung DUY NHAT boi cua quet ?man=nhan-mat trong App.tsx de do man F22. Khong phai anh chup, khong co nguoi that, khong co du lieu nguoi tham gia -- va no phai giu nguyen nhu vay: anh chup mot nhom nguoi la dung loai file repo nay co luat khong bao gio commit. La SVG van bi guard chan vi fail-closed voi moi anh; ghim theo digest nen doi mot byte la phai review lai."
+    },
+    {
+      "path": "apps/mobile/src/rudi/ui/Wordmark.tsx",
+      "sha256": "f1d79e99cce6e57cd2acd767fd6ff1fcc454818be9ad6b4636936acd807b1d4f",
+      "rules": [
+        "long-number",
+        "vn-phone"
+      ],
+      "reason": "Wordmark «Rủ Đi» dạng vector: bốn chuỗi `d` của SVG path là toạ độ outline glyph (Baloo 2 ExtraBold, OFL) do fontTools trích, mỗi số làm tròn một chữ số thập phân; các dãy số dài và mẫu giống số điện thoại là toạ độ nối nhau, không phải dữ liệu người. Sinh một lần bởi công cụ ghi trong docs/claude/2026-09-05/ui-v2-direction-round.md; đổi outline thì sinh lại và ghim lại digest."
     },
     {
       "path": "docs/assets/bang-mau.svg",
@@ -340,313 +269,6 @@
       "reason": "Synthetic attack fixtures documented by reviewer"
     },
     {
-      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/01_welcome/01_01_welcome.png",
-      "sha256": "c3b84a9a8588c0cb2a6d58d85c36752a8dc41c499a8bb4ce3c2babcea3e1c438",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/02_login/01_02_login.png",
-      "sha256": "37c7783b4f2fc4dcaa74a5103a067a5d9c3c3386f670d33f18cefb987aa5b55d",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/03_personalization/01_03_personalization.png",
-      "sha256": "1f4831d6929109f447283a3204e147b8f2ad864b9de17f0ca3cbbde83605fe48",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/01_explore/02_01_explore.png",
-      "sha256": "2ef95106b60405f427fb9f1e4858da4443f68178e5bd8ddd2d4e0a6d5c8e1968",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/02_ai_match/02_02_ai_match.png",
-      "sha256": "326371186703619547b8e4ef37f4f111dfe5ab53b880786d7780c34242bd3b2f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/03_place_detail/02_03_place_detail.png",
-      "sha256": "138e96ec6dc264f3c51c0a2b3e867eb2a3cc04f9bc81b11de125aa18147dc725",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/01_group_chat/03_01_group_chat.png",
-      "sha256": "50b24ada164144b556d533ad0d824b94b5a9e4ef39f9ce9fb3669991215ac273",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/02_ai_itinerary/03_02_ai_itinerary.png",
-      "sha256": "dd3d7190ee47b48b4aefe1709ed39dc349b75b4f0b9021d6010100a5ef6f5ae6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/03_voting/03_03_voting.png",
-      "sha256": "36580a7dc8ebe7f89e85f7fc76b3f4dd93af85a5818ca1e4dd18dbcbaba9ba6a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/01_create_outing/04_01_create_outing.png",
-      "sha256": "0992d29f9aa76000ef466f0867cf5a2ba973c6c2673436af01fe6189c19c5e6f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/02_trip_timeline/04_02_trip_timeline.png",
-      "sha256": "73eedf11c585dacfb5df378b40f9220f2869e65cb9f804a99d1c9bf7646e0be2",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/03_check_in/04_03_check_in.png",
-      "sha256": "57bff3ef53c5ee8bf4ca9a0a246b44cd27e5ea4901fd7e0333be6fac7d61bc5a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/01_receipt_review/05_01_receipt_review.png",
-      "sha256": "2813cdc44ff61f88d546698f16cc6abc5b54cfe4a408bdccf6a93ab78b8e3a88",
-      "rules": [
-        "controlled-artifact",
-        "export-filename"
-      ],
-      "reason": "Product design mockup whose FILENAME contains 'receipt'/'bill', which is what trips export-filename. Inspected before pinning: it is rendered design artwork, not a photograph of a real receipt. The bank line it draws is a repeated-digit designer placeholder, and the people shown are stock personas, not participants. Binary, so the guard also fails closed on it; pinned by digest so replacing the bytes requires a fresh review."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/02_ocr_assignment/05_02_ocr_assignment.png",
-      "sha256": "37f81271125e39e44f5b7d4261ac96c61031ed2f3388a8855fbec7e3bdcf7a28",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/03_settlement/05_03_settlement.png",
-      "sha256": "8a53aedfee303e365652f5e9633a058050c84d44ec98db54132491ddcfc24023",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/01_group_wall/06_01_group_wall.png",
-      "sha256": "da3f08ef5a81318f8fbc10a8f58027af0e7bdaf03c29d1b95bc9a3a4215ecf83",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/02_trip_album/06_02_trip_album.png",
-      "sha256": "3af63bdd4000fb6363291b0e866bd61a5ca5d7fab09ac5c9baae12d42c0559c3",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/03_share_moment/06_03_share_moment.png",
-      "sha256": "3063150d11236a38771540981c641f2cb7b3a690aaf0e0ff6212ad3e9f70845f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/01_profile/07_01_profile.png",
-      "sha256": "9437cf7cba7f2349ce23dae8e885d5939da25afa84a3dae9171bc7c7734ae672",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/02_finance/07_02_finance.png",
-      "sha256": "7ed3d5a2c19e356b3828256a8c3b2304a4c703c140b2b9aa96c3a0ea33f58b29",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/03_achievements/07_03_achievements.png",
-      "sha256": "5168ec83824641629a6f9c2970e35e46e04fec4c7ddcbb4d7f45ab6bd45292cd",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/features/02-kham-pha-va-goi-y-dia-diem.png",
-      "sha256": "8074bb766c8bdaee02755ad6ecdd5fa82c0baff879c5730572cf1c5b845d4747",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/features/03-nhom-chat-va-ai-len-ke-hoach.png",
-      "sha256": "a7fe07a8e8d678995c38c0119bc0a59b857ddea898d9fad1b63687cf5c8ec152",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/features/04-chia-bill-thong-minh.png",
-      "sha256": "f617bcd285e5bbba1fb1bc7f7da602e591c00cc36e55355553268aeed4029bb4",
-      "rules": [
-        "controlled-artifact",
-        "export-filename"
-      ],
-      "reason": "Product design mockup whose FILENAME contains 'receipt'/'bill', which is what trips export-filename. Inspected before pinning: it is rendered design artwork, not a photograph of a real receipt. The bank line it draws is a repeated-digit designer placeholder, and the people shown are stock personas, not participants. Binary, so the guard also fails closed on it; pinned by digest so replacing the bytes requires a fresh review."
-    },
-    {
-      "path": "product/features/05-ky-niem-cua-nhom.png",
-      "sha256": "48739191cd727d7768dde383f13801a2d6b5668cdaf6620f48ed5816b50179f9",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/features/06-ho-so-va-hanh-trinh.png",
-      "sha256": "724ec2fcc76d59bc44fbdca0d93488e3f66adb74274004386b84227cbc5a0338",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "product/mockup.png",
-      "sha256": "df1573714e0d1fae4f49fb9e62b4050dd33c33c35e9f9128c94376a6d0dd1345",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
-    },
-    {
-      "path": "tests/qa/package-lock.json",
-      "sha256": "809af944d46575292483dc5b2b1d75bf948b1056e3cf4e973bd8f788e73a8542",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "npm lock file for the QA evidence harnesses under tests/qa/. The long numbers are package version and size fields whose numeric parts run past the guard's threshold; they are structural to the format. Only `long-number` is listed, not `aggregate-base64-fragments` as on the apps/mobile entry -- this file tripped exactly three long-number findings and nothing else, and an allowlist should exempt what the file actually does rather than what a file of its kind might do.\n\nPinned by exact digest rather than exempted by filename, for the reason spelled out on the apps/mobile entry: a name-based exemption is the smuggling route this guard's own tests reject.\n\nIt arrives with the commit that removed 23 absolute home-directory paths from 17 QA scripts. Those scripts imported puppeteer-core and playwright-core by absolute path into one developer's node_modules, so nothing declared them and nothing could install them elsewhere; tests/qa/package.json now does, and this lock file is what makes `npm ci` there reproduce the same tree. Five direct dependencies, pinned to the versions the sibling harnesses rd-qa-02/ and rd-qa-06/ already use."
-    },
-    {
-      "path": "apps/mobile/public/anh-nhom-dung-san.svg",
-      "sha256": "f4f1a73dbe7e3ed0f16e880a8bc34d570383f6e8096da88d331ec6f55843d556",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Hinh VE stand-in cho mot tam anh nhom, dung DUY NHAT boi cua quet ?man=nhan-mat trong App.tsx de do man F22. Khong phai anh chup, khong co nguoi that, khong co du lieu nguoi tham gia -- va no phai giu nguyen nhu vay: anh chup mot nhom nguoi la dung loai file repo nay co luat khong bao gio commit. La SVG van bi guard chan vi fail-closed voi moi anh; ghim theo digest nen doi mot byte la phai review lai."
-    },
-    {
-      "path": "apps/mobile/assets/fonts/BricolageGrotesque-ExtraBold.ttf",
-      "sha256": "8865d033ae29e63a466bfaf5ed90a65d8b22597d01f7997001e7594eda1d4d3d",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf",
-      "sha256": "96b4e880f78318631a573954986c368bfcaa9896e0c0383f917d9ce3fd2b3259",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/fonts/BricolageGrotesque-SemiBold.ttf",
-      "sha256": "819597313ecf2c5dc7afea5ff184aefffc849a189eb8e6013f9b18e9d1e6a718",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/fonts/BricolageGrotesque-CondensedBold.ttf",
-      "sha256": "5c094bc64bce3d35e4abc9649d0085ac0b89429076dc0f16770556ab75b3e9e8",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Font display Bricolage Grotesque (SIL OFL 1.1, tác giả Mathieu Triay / Atelier Triay, nguồn google/fonts ofl/bricolagegrotesque @6ce172f74aa3), instance tĩnh cắt bằng fontTools instancer từ file biến thiên (opsz/wdth/wght) vì RN Android không lái trục biến thiên từ style. Chỉ dùng cho tiêu đề, số tiền lớn và thương hiệu (ADR-0020); body vẫn system. Giấy phép kèm ở OFL-BricolageGrotesque.txt; README.md cùng thư mục ghi trục của từng instance. Path và digest ghim để mọi thay đổi byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/src/rudi/ui/Wordmark.tsx",
-      "sha256": "f1d79e99cce6e57cd2acd767fd6ff1fcc454818be9ad6b4636936acd807b1d4f",
-      "rules": [
-        "long-number",
-        "vn-phone"
-      ],
-      "reason": "Wordmark «Rủ Đi» dạng vector: bốn chuỗi `d` của SVG path là toạ độ outline glyph (Baloo 2 ExtraBold, OFL) do fontTools trích, mỗi số làm tròn một chữ số thập phân; các dãy số dài và mẫu giống số điện thoại là toạ độ nối nhau, không phải dữ liệu người. Sinh một lần bởi công cụ ghi trong docs/claude/2026-09-05/ui-v2-direction-round.md; đổi outline thì sinh lại và ghim lại digest."
-    },
-    {
-      "path": "apps/mobile/assets/textures/vai-bia.png",
-      "sha256": "78efe51dd6b5c7c6dd935b0dfaad130ceadbac4385123c07201f18cbcf78f642",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ô chất liệu 256×256 nền trong suốt cho thế giới «nhật ký chuyến đi» (UI v2, ADR-0020): sinh bằng script Pillow seed cố định, không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG bằng imp embed-prompt; README cùng thư mục ghi cấu tạo. Ghim digest để đổi một byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/textures/giay-trang.png",
-      "sha256": "4e19dba406313aca03e6d7e936478e31b2c6ceccafc111a72f501b69cf2e59f6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ô chất liệu 256×256 nền trong suốt cho thế giới «nhật ký chuyến đi» (UI v2, ADR-0020): sinh bằng script Pillow seed cố định, không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG bằng imp embed-prompt; README cùng thư mục ghi cấu tạo. Ghim digest để đổi một byte phải review lại."
-    },
-    {
-      "path": "apps/mobile/assets/textures/muc-in.png",
-      "sha256": "5fb4db0927f0bab1637c49e1a63e9563822187c966da5403c413272e996a980d",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ô chất liệu 256×256 nền trong suốt «mực in» cho con dấu (UI v2, ADR-0020): sinh bằng scripts/sinh_chat_lieu_ui_v2.py (Python random seed 20260905, chạy lại ra đúng từng byte), không phải ảnh chụp, không chứa người hay dữ liệu thật; provenance nhúng trong PNG (tEXt Comment + imp embed-prompt). Ghim digest để đổi một byte phải review lại."
-    },
-    {
-      "path": "services/api/app/media/fonts/BricolageGrotesque-Bold.ttf",
-      "sha256": "96b4e880f78318631a573954986c368bfcaa9896e0c0383f917d9ce3fd2b3259",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bản chép nguyên byte của apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf (SIL OFL 1.1, cùng digest) để image API dựng thước phim MP4 vẽ chữ bằng Pillow (ADR-0025 §2.1): Docker build context là services/api nên font của mobile không vào image. Giấy phép kèm ở OFL-BricolageGrotesque.txt cùng thư mục. Path và digest ghim để mọi thay đổi byte phải review lại."
-    },
-    {
       "path": "docs/claude/2026-09-08/canh/ab-canh-rong-native.png",
       "sha256": "b2c0be41947bac51eb66b53583972513311a87bfb8aa502ef1a7cc45ba6c001c",
       "rules": [
@@ -711,196 +333,60 @@
       "reason": "Ghép ảnh Android emulator màn Sở thích trước (khảo sát 07/09) và sau đợt 08/09. Fixture, không dữ liệu người tham gia."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/nep-pose-sang.png",
-      "sha256": "d09d2686ac8f446fc7db201ef751b3497081fcf5f4dcd7dd7d066f3c276fed86",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-sang.png",
+      "sha256": "785a478d390bc83859153f0710a72e3d4091225bd54a61400e3472581463780f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ 144/96/48 trên nền sáng, xuất từ tầng art bằng script scratchpad. Vector do mã sinh, không ảnh người."
+      "reason": "Bảng tám sticker của bảng HINH đã ship, cỡ bubble 120 và khay 64, nền sáng, xuất từ dist-test bằng script scratchpad. Vector do mã sinh."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/nep-pose-toi.png",
-      "sha256": "c97d95513071e6f2d0cfab26c2befd92947a8f1c598ffcb5ddbd0d51067243ce",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ trên nền tối, cùng nguồn với bản sáng."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/canh-nam-sang.png",
-      "sha256": "5917e2018ed05eecce817c51a867773adab5a74b8f3a62a0a409ae1a393bc29c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Năm cảnh rỗng, hàng trên có Nếp và hàng dưới nep={false}, nền sáng. Vector do mã sinh."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/canh-nam-toi.png",
-      "sha256": "6a34213c0b852e7b34c0df8c375ad6579f292178f441ce0f6ec9c9ca87f38d49",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Năm cảnh rỗng có và không Nếp trên nền tối, cùng nguồn với bản sáng."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-1.0.png",
-      "sha256": "60ce0ff9dbe4b1027c547065c8bfad48cefc2e5adaff8868b6f93378d729d647",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator (dữ liệu tổng hợp) bàn thử dev: năm cảnh rỗng, trái có Nếp phải nep={false}. Không dữ liệu người tham gia."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-khong-anh-1.0.png",
-      "sha256": "4cb0b98270ee3aabf899ae308f3017458d6f57b64ca5578642259fe53e4b1b44",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh không ảnh."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.0.png",
-      "sha256": "26cf567929bb5d09e4d5223cb6bd4fe58bbaeb95c345dda48f9c9b95c969144f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator màn Khám phá của bản trải nghiệm sau khi gỡ mapping ảnh sai. Fixture."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-1.0.png",
-      "sha256": "a7ff05f7885007b1f53ae22d9362ee86bf0f27b41d6d80fc0fa7bdaa63c672ce",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator bàn thử dev: album hai ngày, ảnh dẫn là ảnh duy nhất của ngày đầu. Dữ liệu tổng hợp."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-album-anh-hong-1.0.png",
-      "sha256": "107257851ee8a3af3a3bae697a338a5d64b9ce76cb539c0d5f8ab23f7866deeb",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator bàn thử dev: nhánh ảnh tải hỏng của album. Nguồn ảnh là loopback đóng, không gọi mạng ngoài."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-album-mo-anh-1.0.png",
-      "sha256": "a4f991493ec83f73374de04c12c6f202f0925b5fae96204cd4b12c491e69ec4c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator album bản trải nghiệm: chạm ảnh mở trình xem đúng ảnh. Fixture."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-toi.png",
-      "sha256": "04c24e06a1fabf3133ad818d4d71905b6c344979422c8656b307cc8a9f19bc80",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-toi.png",
+      "sha256": "4b614104b2525f4aada9002731bebeeea0c9aa15f489a61efd50925e5384c80c",
       "rules": [
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-toi.png",
-      "sha256": "90af44ad80848d1a79c4df52764cf8d5402095717e9d91fea4bfce9c67f63b06",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-1.0.png",
+      "sha256": "25301923e82594f2e293ddb2e5c239f7c4fad8fe109296d1e85b03a940923bb7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev (dữ liệu tổng hợp): sticker «Chờ tí» vẽ bằng ngôn ngữ Nếp trong hai bubble 120 (người khác / mình). Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-toi.png",
+      "sha256": "36e0522f3fa99d0030915d000366fc0a32ea32782f5f1f835a54dc6d1ad2bee6",
       "rules": [
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-cap-lech-1.0.png",
-      "sha256": "e612c896dba2868dde57d78365b890f43ae5190d91835e14bef9119a2e325f6f",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-di-thoi-1.0.png",
+      "sha256": "a61e805f088c4c7e573467bc399eff92a1bbdc0df16ce9b17af1f0394d0c946f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator (dữ liệu tổng hợp) cặp so sánh lệch: một ứng viên có ảnh, một không, cùng một khung."
+      "reason": "Ảnh emulator bàn thử dev: bubble với «Đi thôi!» (hình cũ) để so cùng cỡ cùng chỗ. Sáng 1.0."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-co-anh-1.0.png",
-      "sha256": "138656d3114adeef1061b991a9b6fcce8b45c4c7741a5188b5784362a99f8044",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-1.0.png",
+      "sha256": "212b0d2c88520979bb4f6af133a3dfc727b4cd652bd220dae7d298ef9289f3f0",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh có ảnh."
+      "reason": "Ảnh emulator bàn thử dev: khay sticker thật (KhaySticker, ô 64) với «Chờ tí» cạnh bảy hình cũ. Sáng 1.0."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.3.png",
-      "sha256": "6df07372c3e007d4255370bb51e40fd9c1a3b3f42a458675846f5be8a297b779",
+      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-toi.png",
+      "sha256": "8a64bcdb1c667bc3a85fd6ce94278325c4d286a268e2e6a0949a92a4302594b7",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Như trên, cỡ chữ hệ thống 1.3."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-2.0.png",
-      "sha256": "71ce496c9d2f5cc023bd4632539b45a572b6df615504f7c4ce41298f8ce94875",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Như trên, cỡ chữ hệ thống 2.0."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-1.3.png",
-      "sha256": "01be8582bf6a9c624561a744fe21823463a828348d64bf19eeabfb763d554575",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 1.3."
-    },
-    {
-      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-2.0.png",
-      "sha256": "c86e41a6f9963b755782972dcbbf8279d2f8d72a54f67c7476145a1215e00d28",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 2.0."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/02-album-two-days.png",
-      "sha256": "2a01b81780c1a93b52d20a874e19625070d41b51956060f3bde24881d8cb266e",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): album hai ngày sau R3. Không người tham gia thật."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/06-scenes-light.png",
-      "sha256": "440bb1a261109570d2b594f45acc214d6474732cd5a5e17cb3d0e77f7dea73a8",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): năm cảnh A/B nền sáng, tay Nếp chạm ghế và khung."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/08-explore-error-dark.png",
-      "sha256": "4d0adb029117063845d41b45436fcf0e0f80b3ead34ae6838de255f78e45d690",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu tổng hợp, nguồn ảnh lỗi loopback): nhánh ảnh hỏng của Khám phá trên nền tối trước khi sửa nền khung."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/09-voting-missing-provenance.png",
-      "sha256": "c5e29a7dfc27acc5466ae896607be731b419b4d260a167e3a4916507181c4940",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, ô Bình chọn đặt ảnh stock cạnh tên quán mà không ghi công."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/10-itinerary-missing-provenance.png",
-      "sha256": "da22855ae80cc98a6ee88eab0776599dd6d33e993658ba703a9e2b79362ef087",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, lịch trình AI ngày 2 mất ghi công của hai ảnh minh hoạ."
-    },
-    {
-      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/20-explore-bottom-font2.png",
-      "sha256": "4ee6b0d02351ccb8ab21b2ffd41e6dca5a30ec9723b03cbad50a193781d3da45",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo, cỡ chữ 2.0): Khám phá cuối màn, giá và thanh tab đọc đủ (R4)."
+      "reason": "Như trên, nền tối."
     },
     {
       "path": "docs/claude/2026-09-08/sua-review-2/native-binh-chon-1.0.png",
@@ -983,6 +469,22 @@
       "reason": "Như trên, nền tối: hết mảng beige."
     },
     {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-dau-1.0.png",
+      "sha256": "35f82e15cba79150b0ecb77e42c81f5d2541da39844f69d67e2f6e7f3f74b975",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (fixture) màn Khám phá đầu trang sau khi DiaDiemHienThi đổi sang một trường anh kèm ghi công: ảnh dẫn không ảnh, cặp so sánh. Sáng 1.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-giua-1.0.png",
+      "sha256": "31ffe5a62a859ca6ed5f3e341ef747125e55103369f0d783e9dca176154660e7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, cuộn tới hàng «Đồi Thiên Phúc Đức»: hàng có ảnh minh hoạ in ghi công."
+    },
+    {
       "path": "docs/claude/2026-09-08/sua-review-2/native-lich-trinh-cuoi-1.0.png",
       "sha256": "752976ef394cace33a151a4323dc090510af06ed41b17ac4490d51ce128f65b1",
       "rules": [
@@ -1023,100 +525,148 @@
       "reason": "Ảnh emulator (fixture) timeline chuyến mẫu ngày 2 qua deep link: cùng renderer chặng, cùng câu ghi công."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-dau-1.0.png",
-      "sha256": "35f82e15cba79150b0ecb77e42c81f5d2541da39844f69d67e2f6e7f3f74b975",
+      "path": "docs/claude/2026-09-08/sua-review/canh-nam-sang.png",
+      "sha256": "5917e2018ed05eecce817c51a867773adab5a74b8f3a62a0a409ae1a393bc29c",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator (fixture) màn Khám phá đầu trang sau khi DiaDiemHienThi đổi sang một trường anh kèm ghi công: ảnh dẫn không ảnh, cặp so sánh. Sáng 1.0."
+      "reason": "Năm cảnh rỗng, hàng trên có Nếp và hàng dưới nep={false}, nền sáng. Vector do mã sinh."
     },
     {
-      "path": "docs/claude/2026-09-08/sua-review-2/native-kham-pha-giua-1.0.png",
-      "sha256": "31ffe5a62a859ca6ed5f3e341ef747125e55103369f0d783e9dca176154660e7",
+      "path": "docs/claude/2026-09-08/sua-review/canh-nam-toi.png",
+      "sha256": "6a34213c0b852e7b34c0df8c375ad6579f292178f441ce0f6ec9c9ca87f38d49",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Như trên, cuộn tới hàng «Đồi Thiên Phúc Đức»: hàng có ảnh minh hoạ in ghi công."
+      "reason": "Năm cảnh rỗng có và không Nếp trên nền tối, cùng nguồn với bản sáng."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-sang.png",
-      "sha256": "785a478d390bc83859153f0710a72e3d4091225bd54a61400e3472581463780f",
+      "path": "docs/claude/2026-09-08/sua-review/native-album-anh-hong-1.0.png",
+      "sha256": "107257851ee8a3af3a3bae697a338a5d64b9ce76cb539c0d5f8ab23f7866deeb",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng tám sticker của bảng HINH đã ship, cỡ bubble 120 và khay 64, nền sáng, xuất từ dist-test bằng script scratchpad. Vector do mã sinh."
+      "reason": "Ảnh emulator bàn thử dev: nhánh ảnh tải hỏng của album. Nguồn ảnh là loopback đóng, không gọi mạng ngoài."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/bang-tam-toi.png",
-      "sha256": "4b614104b2525f4aada9002731bebeeea0c9aa15f489a61efd50925e5384c80c",
+      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-1.0.png",
+      "sha256": "a7ff05f7885007b1f53ae22d9362ee86bf0f27b41d6d80fc0fa7bdaa63c672ce",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator bàn thử dev: album hai ngày, ảnh dẫn là ảnh duy nhất của ngày đầu. Dữ liệu tổng hợp."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-album-hai-ngay-toi.png",
+      "sha256": "04c24e06a1fabf3133ad818d4d71905b6c344979422c8656b307cc8a9f19bc80",
       "rules": [
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-1.0.png",
-      "sha256": "25301923e82594f2e293ddb2e5c239f7c4fad8fe109296d1e85b03a940923bb7",
+      "path": "docs/claude/2026-09-08/sua-review/native-album-mo-anh-1.0.png",
+      "sha256": "a4f991493ec83f73374de04c12c6f202f0925b5fae96204cd4b12c491e69ec4c",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator bàn thử dev (dữ liệu tổng hợp): sticker «Chờ tí» vẽ bằng ngôn ngữ Nếp trong hai bubble 120 (người khác / mình). Sáng 1.0."
+      "reason": "Ảnh emulator album bản trải nghiệm: chạm ảnh mở trình xem đúng ảnh. Fixture."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-cho-ti-toi.png",
-      "sha256": "36e0522f3fa99d0030915d000366fc0a32ea32782f5f1f835a54dc6d1ad2bee6",
+      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-1.0.png",
+      "sha256": "60ce0ff9dbe4b1027c547065c8bfad48cefc2e5adaff8868b6f93378d729d647",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) bàn thử dev: năm cảnh rỗng, trái có Nếp phải nep={false}. Không dữ liệu người tham gia."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-canh-ab-toi.png",
+      "sha256": "90af44ad80848d1a79c4df52764cf8d5402095717e9d91fea4bfce9c67f63b06",
       "rules": [
         "controlled-artifact"
       ],
       "reason": "Như trên, nền tối."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-bubble-di-thoi-1.0.png",
-      "sha256": "a61e805f088c4c7e573467bc399eff92a1bbdc0df16ce9b17af1f0394d0c946f",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-cap-lech-1.0.png",
+      "sha256": "e612c896dba2868dde57d78365b890f43ae5190d91835e14bef9119a2e325f6f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator bàn thử dev: bubble với «Đi thôi!» (hình cũ) để so cùng cỡ cùng chỗ. Sáng 1.0."
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) cặp so sánh lệch: một ứng viên có ảnh, một không, cùng một khung."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-1.0.png",
-      "sha256": "212b0d2c88520979bb4f6af133a3dfc727b4cd652bd220dae7d298ef9289f3f0",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-co-anh-1.0.png",
+      "sha256": "138656d3114adeef1061b991a9b6fcce8b45c4c7741a5188b5784362a99f8044",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh emulator bàn thử dev: khay sticker thật (KhaySticker, ô 64) với «Chờ tí» cạnh bảy hình cũ. Sáng 1.0."
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh có ảnh."
     },
     {
-      "path": "docs/claude/2026-09-08/sticker-cho-ti/native-khay-toi.png",
-      "sha256": "8a64bcdb1c667bc3a85fd6ce94278325c4d286a268e2e6a0949a92a4302594b7",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.0.png",
+      "sha256": "26cf567929bb5d09e4d5223cb6bd4fe58bbaeb95c345dda48f9c9b95c969144f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Như trên, nền tối."
+      "reason": "Ảnh emulator màn Khám phá của bản trải nghiệm sau khi gỡ mapping ảnh sai. Fixture."
     },
     {
-      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-sang.png",
-      "sha256": "a9df826b6727136caaf1493a9e4492ec377dec57eb0bc3b3afbee2ba1e5df1a3",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-1.3.png",
+      "sha256": "6df07372c3e007d4255370bb51e40fd9c1a3b3f42a458675846f5be8a297b779",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng."
+      "reason": "Như trên, cỡ chữ hệ thống 1.3."
     },
     {
-      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
-      "sha256": "47810ffb61647ed1c4d31fbae6a2c3f238f7cb0512b0fe37c63ad1b723c659a4",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-hang-2.0.png",
+      "sha256": "71ce496c9d2f5cc023bd4632539b45a572b6df615504f7c4ce41298f8ce94875",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Như trên, nền tối."
+      "reason": "Như trên, cỡ chữ hệ thống 2.0."
     },
     {
-      "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
-      "sha256": "cd38fe495c4603c7334aa8a5225aea085ab0967bb695f74d4d16f6c3b9f96784",
+      "path": "docs/claude/2026-09-08/sua-review/native-kham-pha-khong-anh-1.0.png",
+      "sha256": "4cb0b98270ee3aabf899ae308f3017458d6f57b64ca5578642259fe53e4b1b44",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng."
+      "reason": "Ảnh emulator (dữ liệu tổng hợp) ba bộ dựng Khám phá ở nhánh không ảnh."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-1.3.png",
+      "sha256": "01be8582bf6a9c624561a744fe21823463a828348d64bf19eeabfb763d554575",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 1.3."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/native-so-thich-2.0.png",
+      "sha256": "c86e41a6f9963b755782972dcbbf8279d2f8d72a54f67c7476145a1215e00d28",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh emulator màn Sở thích (fixture) ở cỡ chữ 2.0."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/nep-pose-sang.png",
+      "sha256": "d09d2686ac8f446fc7db201ef751b3497081fcf5f4dcd7dd7d066f3c276fed86",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ 144/96/48 trên nền sáng, xuất từ tầng art bằng script scratchpad. Vector do mã sinh, không ảnh người."
+    },
+    {
+      "path": "docs/claude/2026-09-08/sua-review/nep-pose-toi.png",
+      "sha256": "c97d95513071e6f2d0cfab26c2befd92947a8f1c598ffcb5ddbd0d51067243ce",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng xem trước chín tư thế Nếp ở ba cỡ trên nền tối, cùng nguồn với bản sáng."
     },
     {
       "path": "docs/claude/2026-09-09/canh/bang-canh-sang.png",
@@ -1141,30 +691,6 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo: cảnh chua-co-hoi trên màn «Chưa có nhóm nào», cỡ chữ 1.0, nền sáng. Dữ liệu demo, không có người tham gia."
-    },
-    {
-      "path": "docs/claude/2026-09-09/native/khay-tam-o-1.0.png",
-      "sha256": "ba91b6e37ef0082c68821ac56c15273ba4781ba36c6aa172fbcd4e8c7f6c1c63",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh chụp máy ảo: khay sticker tám ô, cỡ chữ 1.0, nhãn «Cà phê không?» xuống hai dòng thay vì bị cắt. Dữ liệu demo."
-    },
-    {
-      "path": "docs/claude/2026-09-09/native/tam-sticker-hai-co-1.0.png",
-      "sha256": "46584d8ff324724fb5f9b57a0ab4c4da97b527c6de868a24dd102d2fc5903840",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh chụp máy ảo: sáu sticker ở cả hai cỡ đọc trên bàn thử dev, cỡ chữ 1.0. Dữ liệu demo."
-    },
-    {
-      "path": "docs/claude/2026-09-09/native/canh-moi-ab-1.0.png",
-      "sha256": "2e4ad02ce282744cda9ebc9264641454b30510b1c69861a1bc308fc5b1c5fe46",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh chụp máy ảo: bốn cảnh mới ở cả hai bản có Nếp và tắt Nếp, cỡ chữ 1.0. Dữ liệu demo."
     },
     {
       "path": "docs/claude/2026-09-09/may-nep/01-sau-mat-truoc.png",
@@ -1255,6 +781,198 @@
       "reason": "Ảnh chụp máy ảo: màn lỗi thật với cảnh mặc định chua-doc-duoc, không có Nếp. Dữ liệu demo."
     },
     {
+      "path": "docs/claude/2026-09-09/native/canh-moi-ab-1.0.png",
+      "sha256": "2e4ad02ce282744cda9ebc9264641454b30510b1c69861a1bc308fc5b1c5fe46",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: bốn cảnh mới ở cả hai bản có Nếp và tắt Nếp, cỡ chữ 1.0. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/khay-tam-o-1.0.png",
+      "sha256": "ba91b6e37ef0082c68821ac56c15273ba4781ba36c6aa172fbcd4e8c7f6c1c63",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: khay sticker tám ô, cỡ chữ 1.0, nhãn «Cà phê không?» xuống hai dòng thay vì bị cắt. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/native/tam-sticker-hai-co-1.0.png",
+      "sha256": "46584d8ff324724fb5f9b57a0ab4c4da97b527c6de868a24dd102d2fc5903840",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo: sáu sticker ở cả hai cỡ đọc trên bàn thử dev, cỡ chữ 1.0. Dữ liệu demo."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-pose-sang.png",
+      "sha256": "cd38fe495c4603c7334aa8a5225aea085ab0967bb695f74d4d16f6c3b9f96784",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng mười chín pose Nếp ở ba cỡ, nền sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-sang.png",
+      "sha256": "a9df826b6727136caaf1493a9e4492ec377dec57eb0bc3b3afbee2ba1e5df1a3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bảng tám sticker Nếp ở hai cỡ đọc, nền sáng."
+    },
+    {
+      "path": "docs/claude/2026-09-09/tam-sticker/bang-tam-toi.png",
+      "sha256": "47810ffb61647ed1c4d31fbae6a2c3f238f7cb0512b0fe37c63ad1b723c659a4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Như trên, nền tối."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m1-doi-tab-truoc.png",
+      "sha256": "c885b1733ac22dfc1e026a2eb43eb6323fa4c791b9361b7997817765bf668990",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m2-cuon-kham-pha-truoc.png",
+      "sha256": "e520525d35963c8155d4a5eaec8a07d7f4609e0ea04ebd0fcbac6366e4d2421f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m3-sheet-tao-truoc.png",
+      "sha256": "5dce1fe7435fd5a804a2d9374f315060892b5fd059aa1975d9edea639727bcb1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m4-back-chi-tiet-truoc.png",
+      "sha256": "cfed89b59f354ab40f3aced7f8440f0f3b89d1e22418a60bb030c03aa20071c2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m1-doi-tab-truoc.png",
+      "sha256": "cb8799d8354a661c1e3d27e167b2d6eab2b33229173bb7094e1f328a418d422b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m2-cuon-kham-pha-truoc.png",
+      "sha256": "25769c164d79f35a1ee0030170b79e25b752db3bbfaf6196b6474284dca994f1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m3-sheet-tao-truoc.png",
+      "sha256": "924f7846d96f42de74736f9144bd3e352b5c651e750423e265af498208ed720f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m4-back-chi-tiet-truoc.png",
+      "sha256": "e91800b986e9be7daae4848447df1b679909e882aab4c381006c5c6a45f4dbd3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m1-cuoi.png",
+      "sha256": "55769fd72084b98201cfcb38aa23b28ee9e2943a4a7ecbeb1b8223bcebaf6819",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m2-cuoi.png",
+      "sha256": "17f6321ef5dac7cd6c96112b2fa41196da67679d6a397260b4c10df728b48d5c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m3-cuoi.png",
+      "sha256": "6b806efee7014985443332ba8b002fbff0d526621deb6196d3709361970855aa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m4-cuoi.png",
+      "sha256": "9afb24f8efbfbd907b4b4cfaef90081923af65feeb2db5c6dda849b1f89f01bf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m1-cuoi.png",
+      "sha256": "6968bff0b49837cc6617dcef4c68ccace08ae28e976e4b6fa64945e14e2caac9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m2-cuoi.png",
+      "sha256": "99084d26bf77bdb86900d8df18deb83e8c21d3b8e60bcdeda5ce1b43695cf07e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m3-cuoi.png",
+      "sha256": "0b2aae7c3852f50b5187a0fc27b5eba75201bfbde771f731d09c4c173c5bff92",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m4-cuoi.png",
+      "sha256": "327b9b4ed0c986e87f0ee6fcef268638fb26c2e1319953c39f6d6f1dcd01fa10",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/release-thu/release-fixture-khong-co-cua.png",
+      "sha256": "8d9246c4558ceabaa9fb587d9bef45d9e64868845e6d279ae924dc1aed568f1f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
+      "path": "docs/claude/2026-09-10/motion/release-thu/release-live-chan-o-gui-ma.png",
+      "sha256": "e9a60b00885266daa9be76e9f5d18f38d5ac14d4f400b397569a2601fefe8097",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+    },
+    {
       "path": "docs/claude/2026-09-10/native-r11/anh/bang-r11-76-fs1.0-sang.png",
       "sha256": "aabdf2edf79fa16bfaa531772d1cbbb5e2d68032422f6e7eda31a7beac76b082",
       "rules": [
@@ -1309,30 +1027,6 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh chụp máy ảo (F41, audit 09/09): hàng sticker hỏng trên bàn thử ui-lab, hai nút «Thử lại»/«Bỏ» trong khung ở ba cỡ chữ × hai theme. Dữ liệu demo."
-    },
-    {
-      "path": "docs/codex/2026-09-09/native-audit-evidence/16-failed-sticker-dark.png",
-      "sha256": "5d00a30eb461590226c8b552dc9518e68308e409b1d3e3f7e16b141cf0d1e0aa",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
-    },
-    {
-      "path": "docs/codex/2026-09-09/native-audit-evidence/20-explore-font2-dark.png",
-      "sha256": "e09f69e693ec9ccbc7995d71a01e25a62dd19bd06b8aef6805a3bf54b3f2c32f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
-    },
-    {
-      "path": "docs/codex/2026-09-09/native-audit-evidence/22-network-error.png",
-      "sha256": "9e86b41c186179c0353162de2bb8ebfc267660d66d7b71bf60a817cd329a120f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
     },
     {
       "path": "docs/claude/2026-09-10/native-r12/anh/bang-r12-77-fs1.0-sang.png",
@@ -1471,62 +1165,6 @@
       "reason": "Ảnh chụp máy ảo (F43/F44, audit 09/09): câu lỗi mất kết nối không in địa chỉ máy chủ; placeholder ô tìm một dòng ở ba cỡ chữ × hai theme trên bàn thử và màn Khám phá. Dữ liệu demo."
     },
     {
-      "path": "docs/claude/2026-09-10/nghia-hinh/truoc-f45-sang.png",
-      "sha256": "6a1d308ff7ecf53fa50000824220308f4cd3a6b99474053dbc176f92d0accb34",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-vong-1-sang.png",
-      "sha256": "fca950688dcf634264a082dbe5b27a4b3c7a832fe09d6f461eb12386024954d7",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-sang.png",
-      "sha256": "1c9c519867979626edd4d811aa9c6d9a6307b9b42af50bbf396979ae3931cd78",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-sang.png",
-      "sha256": "50b8900a2f326efd4083c20244b197326d23cca7618f1b609895bc3ec7100a48",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-toi.png",
-      "sha256": "e3504d1f6b97391e99e2ee66844e260805eb70faf73bdf55ae77026adb624d98",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-sang.png",
-      "sha256": "618b809730edefb05e0be0b28ad8cf1f764c5eea1153e5bd89a9253d5a090488",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
-      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-toi.png",
-      "sha256": "762ba5c4a69930ca71b2d54d3b7c7493c38c5acb45d4d7ec2bf849edf4413d06",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
-    },
-    {
       "path": "docs/claude/2026-09-10/native-r13/anh/r13-71-bubble-ca-phe.png",
       "sha256": "68164f56caf5ef2a6f21f28d52d068d7ef2ca0a8ec62fe3c13871dcd1d1d2a08",
       "rules": [
@@ -1592,308 +1230,236 @@
       "reason": "Mốc so byte cho tái cấu trúc bảng NEP (F45, 10/09): JSON các lớp vẽ của mười cảnh, mọi dãy số là toạ độ SVG (M/L/C) — không có số điện thoại hay tài khoản. Đổi một byte là phải pin lại."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m1-cuoi.png",
-      "sha256": "55769fd72084b98201cfcb38aa23b28ee9e2943a4a7ecbeb1b8223bcebaf6819",
+      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-sang.png",
+      "sha256": "50b8900a2f326efd4083c20244b197326d23cca7618f1b609895bc3ec7100a48",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m2-cuoi.png",
-      "sha256": "17f6321ef5dac7cd6c96112b2fa41196da67679d6a397260b4c10df728b48d5c",
+      "path": "docs/claude/2026-09-10/nghia-hinh/khong-nhan-toi.png",
+      "sha256": "e3504d1f6b97391e99e2ee66844e260805eb70faf73bdf55ae77026adb624d98",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m3-cuoi.png",
-      "sha256": "6b806efee7014985443332ba8b002fbff0d526621deb6196d3709361970855aa",
+      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-sang.png",
+      "sha256": "618b809730edefb05e0be0b28ad8cf1f764c5eea1153e5bd89a9253d5a090488",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/reduce/motion-m4-cuoi.png",
-      "sha256": "9afb24f8efbfbd907b4b4cfaef90081923af65feeb2db5c6dda849b1f89f01bf",
+      "path": "docs/claude/2026-09-10/nghia-hinh/tam-sticker-toi.png",
+      "sha256": "762ba5c4a69930ca71b2d54d3b7c7493c38c5acb45d4d7ec2bf849edf4413d06",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m1-cuoi.png",
-      "sha256": "6968bff0b49837cc6617dcef4c68ccace08ae28e976e4b6fa64945e14e2caac9",
+      "path": "docs/claude/2026-09-10/nghia-hinh/truoc-f45-sang.png",
+      "sha256": "6a1d308ff7ecf53fa50000824220308f4cd3a6b99474053dbc176f92d0accb34",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m2-cuoi.png",
-      "sha256": "99084d26bf77bdb86900d8df18deb83e8c21d3b8e60bcdeda5ce1b43695cf07e",
+      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-sang.png",
+      "sha256": "1c9c519867979626edd4d811aa9c6d9a6307b9b42af50bbf396979ae3931cd78",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m3-cuoi.png",
-      "sha256": "0b2aae7c3852f50b5187a0fc27b5eba75201bfbde771f731d09c4c173c5bff92",
+      "path": "docs/claude/2026-09-10/nghia-hinh/ung-vien-f45-vong-1-sang.png",
+      "sha256": "fca950688dcf634264a082dbe5b27a4b3c7a832fe09d6f461eb12386024954d7",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Bảng art (SVG của app tô bằng token thật, không phải ảnh máy) cho F45 audit 09/09: trước, ứng viên, sau không nhãn sáng/tối, cả tám sticker. Không có dữ liệu thật."
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client/thuong/motion-m4-cuoi.png",
-      "sha256": "327b9b4ed0c986e87f0ee6fcef268638fb26c2e1319953c39f6d6f1dcd01fa10",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-sang.png",
+      "sha256": "35a3357dcbf0f31159a70e72fbe50010881c0d8267adf5ba7056fa9f0aca9f72",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/claude/2026-09-10/motion/release-thu/release-fixture-khong-co-cua.png",
-      "sha256": "8d9246c4558ceabaa9fb587d9bef45d9e64868845e6d279ae924dc1aed568f1f",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-toi.png",
+      "sha256": "d7f7fcceff39f0bcf83cd507bae905c861c94e85f614167658f88d064503bd3b",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/claude/2026-09-10/motion/release-thu/release-live-chan-o-gui-ma.png",
-      "sha256": "e9a60b00885266daa9be76e9f5d18f38d5ac14d4f400b397569a2601fefe8097",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-sang.png",
+      "sha256": "72d7205fc63003ece2825230c95266128db607271395c5932505e6e81a1083a0",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh chụp máy ảo cho cổng motion (audit 09/09 §5): trạng thái cuối bốn chuỗi đo trên dev client (thường/reduce) và hai bước đỏ của lượt release (không cửa fixture; chặn cleartext). Dữ liệu demo / stack dùng một lần."
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/05-explore.png",
-      "sha256": "91308409c20a3429a191f6743af7b5bdd75737eed9a1317ff09dee7a346f1e86",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-toi.png",
+      "sha256": "7202994c85435fcddb5a05ef9c786a363c5b1721e12d03d56860b65210d154ce",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/43-explore-light2.png",
-      "sha256": "312abdeb33ec059e1605270f08318121f425017a8a4590fe80edcd657cb86a75",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs1.0-sang.png",
+      "sha256": "f5c837f69c50d647eb678672b535c790d1bbb128214f867a8128dad94e1236ed",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/52-explore-dark2.png",
-      "sha256": "9fdb6cffb4daf87aea39fcaa75e333f3c8aa530aabeb266320186aa4c8e72215",
+      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs2.0-toi.png",
+      "sha256": "ce418d530f2aac57d5cac391a6eaa8e28fc736b4e9461dd9d0060dca1e397b79",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/08-messages.png",
-      "sha256": "3176420e72122730f46d007e80dc1bbea439053fe180da157e4f34da7e1759c0",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "3cf6563371f8d9f7df546d32e5503058706fcac72fab14a03dd755d2b120992f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/19-settings.png",
-      "sha256": "d552011632dbccca6629a37c0ef327a8a2dbb07a950a2403ecc40c9477ac683f",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "9b6aeb205b962c27f829505b6dccf1a8ccd3ec74bc98fe0e3c69e050c05c24f5",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/23-scenes-bottom.png",
-      "sha256": "8eadaff38585fbdf49613d82cc79fbed754d0c18e18e6dd41b04eab047344bc8",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "f63f9b1e50743ae7130e9bd5b794bba110eba76fb56ba669b595092a381304ad",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/30-tray-light.png",
-      "sha256": "8a9dfc6073a2656b7011ef3edaf9b9d727c3430a781d6e65176cac126ff51347",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "a14c240819b42ac462a11b4edb4ad4f288836330c63b849e122aa49df071f645",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/31-bubble-ket-xe.png",
-      "sha256": "ea3ab10d63c7170f25bfdef605c5a38b0d27f1aed518380072d13ddd1c2c268c",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-sang.png",
+      "sha256": "58f8a6eadaaf0c893ee1c80c4e188eee3216df989b607baabf72cb6a3c127f97",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/20-error.png",
-      "sha256": "a149ef3f4679971651632b9bde671ef8ccadddfe6971c7df89c3b25fa88763fc",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-toi.png",
+      "sha256": "99a445c12bfea8320c20cf099c74c48c6a70eb06bef133252d96a3a4a7b57486",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/09-profile.png",
-      "sha256": "56e7938ea8f25e6f4894264bae2cda5b1242052ebf23db9be21c4aead33afcae",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-sang.png",
+      "sha256": "ab47c1481ec8532345ab86c043441feb911eaf8e1382cb9abd069036d2c93a81",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-03.png",
-      "sha256": "9154a3064bd42a5b06e4657e969ea42b37dd3b05bb3755143229c4f8b617e549",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-toi.png",
+      "sha256": "da9814a4a56209addf1b519965f487d64ca8586ddb9b17da11223e298e125a64",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-06.png",
-      "sha256": "e703b4823ca956dfa1880aafd45f3fcc6c5bc8fb163b111dabee0a222bfdeed2",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-sang.png",
+      "sha256": "eecfa333248765dec1ed18a5853a42e7e600fef65d3798a57ea32a683476acaa",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-09.png",
-      "sha256": "449605d6126a9d5c190c907a1c976fe9a78f288da94abec437c8e08da320cfbf",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-toi.png",
+      "sha256": "0e5dd11bcb730f06ae03d331d9d7337fef7b245c8b3f451858dafa31ee70b80a",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-native-my-thuat.md",
-      "sha256": "d95b9c41141c1d37467d952f39828dd04ff75660cbdfaf6baed42dc118d492bd",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
-    },
-    {
-      "path": "docs/codex/2026-09-10/assessment-b-ky-thuat.md",
-      "sha256": "6e95baaee58b5b1a13d2d2bcb91222e51bfb4cf38d1145680cac5eb34b1fbfd8",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
-    },
-    {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/environment.json",
-      "sha256": "57fbd353715db87d002bd71b1424a949126ce0b2759ba845ebb1e51dade678cc",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
-    },
-    {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/manifest.json",
-      "sha256": "dc3082b98ae6cc3a2e7edca8df32f9a0538a97f3223605257cb9ea1bb2944573",
-      "rules": [
-        "long-number"
-      ],
-      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
-    },
-    {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-sau-215.png",
-      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-sang.png",
+      "sha256": "ff7c2a85ad6ea1872285a7721f468784984ee5ae1cb5196957a6fa56a77943d2",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-sau-166.png",
-      "sha256": "365e346d3d043f010f138978eab17960298fad1cce0895dda11bcac8d5e87798",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-toi.png",
+      "sha256": "ff8cdc9b3ed6f1161a28bb977c38eb710a9927137b8deb7c9c8e3f4d3b81fbc5",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-truoc-164.png",
-      "sha256": "86a75178b9a9cdde4b371995c6195f8e59d6a9565c815afd380f6875ee147fd5",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-sang.png",
+      "sha256": "d557f6992c71bf288f186857784c5d6a02ac93adc57d1a6a9f7d8decfecb9986",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m1-doi-tab-truoc.png",
-      "sha256": "c885b1733ac22dfc1e026a2eb43eb6323fa4c791b9361b7997817765bf668990",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-toi.png",
+      "sha256": "27eb83b82bc804c9df966bb1e9150ae4f2c474ef8aa74aa44a8a9957c360335b",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m2-cuon-kham-pha-truoc.png",
-      "sha256": "e520525d35963c8155d4a5eaec8a07d7f4609e0ea04ebd0fcbac6366e4d2421f",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-sang.png",
+      "sha256": "ea412d42469f06a3441488a752df0bec3ab960daf2e480b602062032e4ebc06c",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m3-sheet-tao-truoc.png",
-      "sha256": "5dce1fe7435fd5a804a2d9374f315060892b5fd059aa1975d9edea639727bcb1",
+      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-toi.png",
+      "sha256": "fb7db3de1a6958892532f608fa1467f7b43cc6f962823c1b3cdf79f40862b071",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
-    },
-    {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/reduce/m4-back-chi-tiet-truoc.png",
-      "sha256": "cfed89b59f354ab40f3aced7f8440f0f3b89d1e22418a60bb030c03aa20071c2",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
-    },
-    {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m1-doi-tab-truoc.png",
-      "sha256": "cb8799d8354a661c1e3d27e167b2d6eab2b33229173bb7094e1f328a418d422b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
-    },
-    {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m2-cuon-kham-pha-truoc.png",
-      "sha256": "25769c164d79f35a1ee0030170b79e25b752db3bbfaf6196b6474284dca994f1",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
-    },
-    {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m3-sheet-tao-truoc.png",
-      "sha256": "924f7846d96f42de74736f9144bd3e352b5c651e750423e265af498208ed720f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
-    },
-    {
-      "path": "docs/claude/2026-09-10/motion/dev-client-v2/thuong/m4-back-chi-tiet-truoc.png",
-      "sha256": "e91800b986e9be7daae4848447df1b679909e882aab4c381006c5c6a45f4dbd3",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Motion v2 (tái audit 10/09 R2): screencap màn xuất phát của mỗi chuỗi ngay trước gfxinfo reset — chứng minh cửa sổ bắt đầu ở Khám phá"
+      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
     },
     {
       "path": "docs/claude/2026-09-11/motion-v2/r1/a-chi-tiet-scale1-giua-283.png",
@@ -1920,6 +1486,30 @@
       "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
     },
     {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-213.png",
+      "sha256": "cf30a10b6027fd195dbbd0ff21fea159137478bbf5f4c81a8dca70ea821379d9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-214.png",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+    },
+    {
+      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-sau-215.png",
+      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+    },
+    {
       "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-truoc-212.png",
       "sha256": "c5a691559080bdd261eda6b8b34c2aa27d98abbc00ab6f4a6386bb93723d529e",
       "rules": [
@@ -1944,20 +1534,52 @@
       "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client, cây 1cfe0ee4"
     },
     {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-213.png",
-      "sha256": "cf30a10b6027fd195dbbd0ff21fea159137478bbf5f4c81a8dca70ea821379d9",
+      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-sau-166.png",
+      "sha256": "365e346d3d043f010f138978eab17960298fad1cce0895dda11bcac8d5e87798",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
     },
     {
-      "path": "docs/claude/2026-09-11/motion-v2/r1/b-chi-tiet-scale0-giua-214.png",
-      "sha256": "95765f2f455ff2a4a9527f1774ec8fb5b0fcfcfb0982ad3c5546594a845e0c87",
+      "path": "docs/claude/2026-09-11/motion-v2/r1/g-modal-scale0-truoc-164.png",
+      "sha256": "86a75178b9a9cdde4b371995c6195f8e59d6a9565c815afd380f6875ee147fd5",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R1: hai khung giữa của run 2 khung ở lượt b (scale 0): 213 là nền giấy + tab bar (màn cũ đã gỡ, màn mới chưa vẽ), 214 là chi tiết trọn — không có khung hai màn cạnh nhau"
+      "reason": "R1 (tái audit 10/09): khung trích từ screenrecord trước/giữa/sau một lần đổi màn ở scale 1 (trượt) và scale 0 (cắt) trên dev client sau sửa _layout/useMotion"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-sang.png",
+      "sha256": "1451d72803fbb69960520c4084c1af248b01dae97393a4ecfd0b48112478a9c6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-toi.png",
+      "sha256": "4a7841abd1dce76a7e9338a9e28f0342bf33ba49a4d315ed22cf434251e729a4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-sang.png",
+      "sha256": "408873bb50a4ae2a9d5964a35aad9197644efab497379cb1c9d7ac32ab4be0dd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-toi.png",
+      "sha256": "d8d25b3aadb73fb55f9e162752eb5f76c34ead52c6482d63fcf138a9cb681f4e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
     },
     {
       "path": "docs/claude/2026-09-11/native-r14/anh/r14-80-kham-pha-fs1.0-sang.png",
@@ -2024,38 +1646,6 @@
       "reason": "R3: chi tiết địa điểm fixture không ảnh sau sửa (đầu bài gọn, lý do về nhóm), 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-sang.png",
-      "sha256": "1451d72803fbb69960520c4084c1af248b01dae97393a4ecfd0b48112478a9c6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs1.0-toi.png",
-      "sha256": "4a7841abd1dce76a7e9338a9e28f0342bf33ba49a4d315ed22cf434251e729a4",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-sang.png",
-      "sha256": "408873bb50a4ae2a9d5964a35aad9197644efab497379cb1c9d7ac32ab4be0dd",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/native-r14/anh/r13-77-loi-canh-moi-fs2.0-toi.png",
-      "sha256": "d8d25b3aadb73fb55f9e162752eb5f76c34ead52c6482d63fcf138a9cb681f4e",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Polish (tái audit 10/09 ảnh 20): màn lỗi «Đi đâu?» sau khongMoCoi — «thử lại.» xuống dòng cùng nhau, 1.0/2.0 × sáng/tối"
-    },
-    {
       "path": "docs/claude/2026-09-11/native-r14/anh/r14-82-lab-fs1.0-sang.png",
       "sha256": "93ca52727c305a4281d4d9b82040e609f1db0c186f4b3270e9ef40cfa6a445bb",
       "rules": [
@@ -2086,94 +1676,6 @@
         "controlled-artifact"
       ],
       "reason": "R3: bàn thử ui-lab «Khám phá · renderer live» trạng thái Không ảnh — cùng component, ô loại nơi bằng giấy, 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-sang.png",
-      "sha256": "fcac795c9bf58e9ab96487c8cf6e59944e6bc5f01696ddfbd687f18e3aeba672",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-toi.png",
-      "sha256": "7029d5569a062bc73a705f57dea71377844e7b7d0951859528257e705ade58a9",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-sang.png",
-      "sha256": "ccce4791d7fcef5de5b2bdacebff133f76166e785751d68d3fc77ed4c6514e9b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-toi.png",
-      "sha256": "15832be94d43d04f9f872ede6fd76185c9e78d7fb6de3e72b2d15b3cfd91e18c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/tam-sticker-v2-sang.png",
-      "sha256": "8aca1f4ee1f55527f4c67e28874cfb6d9713e24431dae9156bf6645fe651aad0",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-sang.png",
-      "sha256": "75c7d27b8a36ce562aa0276d88ab9146bcbea5c1ebf1546c686154f4b0134610",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-toi.png",
-      "sha256": "2fb2c8ac041bf0c1801dc0645b50596d99fa8a9f0f08527aa9814c243ca272d6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-sang.png",
-      "sha256": "834d741824efbd5419223e54defa19ed8ffc5b1be8d50d038dbe7f9ae58a376b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-toi.png",
-      "sha256": "893a3cd42363e4c29360d61e1d1f805049b7fc65808770b04e35995c5d9373df",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-sang.png",
-      "sha256": "c93cc927c0f827c13c3f046d6e25f852e428181b0bfa0173ce2baa86cfcba43d",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-toi.png",
-      "sha256": "bd1c9fa7638ee3549c3a383c05f9e96ada417ea1f6b9d1ecf5cf9a22be47ab4f",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
       "path": "docs/claude/2026-09-11/native-r16/anh/r16-90-cai-dat-duoi-fs1.0-sang.png",
@@ -2368,6 +1870,38 @@
       "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
     },
     {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-sang.png",
+      "sha256": "cb84b8b4f018975e6ba4f83d275f5b3eaa047fed1e078aca9fbf3248e761c784",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-toi.png",
+      "sha256": "6e344d0f8f12119e85dc88e31690d9648be6e62483a43d2fe7a0e64f60ac1f1c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-sang.png",
+      "sha256": "207d2718678679898b4e1f48ce09f39e8e49e6e04a70a72e47881d5e87a0206c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
+      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-toi.png",
+      "sha256": "1c8e0ed6d97f36259ed1c03e81b88a27135595bf4dbfa77facd0ea0c347328b5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+    },
+    {
       "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-xoa-tai-khoan-1-fs1.0-sang.png",
       "sha256": "4e218110a2b5b55c74772767fd17fb5b160ef313810da50fefd79d5d05bce96a",
       "rules": [
@@ -2432,220 +1966,92 @@
       "reason": "R5 (tái audit 10/09): Cài đặt + bốn màn con về hàng trên giấy (không Card), tờ AI chat gọn, 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-sang.png",
-      "sha256": "cb84b8b4f018975e6ba4f83d275f5b3eaa047fed1e078aca9fbf3248e761c784",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-sang.png",
+      "sha256": "fcac795c9bf58e9ab96487c8cf6e59944e6bc5f01696ddfbd687f18e3aeba672",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
     },
     {
-      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs1.0-toi.png",
-      "sha256": "6e344d0f8f12119e85dc88e31690d9648be6e62483a43d2fe7a0e64f60ac1f1c",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/khong-nhan-v2-toi.png",
+      "sha256": "7029d5569a062bc73a705f57dea71377844e7b7d0951859528257e705ade58a9",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
     },
     {
-      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-sang.png",
-      "sha256": "207d2718678679898b4e1f48ce09f39e8e49e6e04a70a72e47881d5e87a0206c",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-sang.png",
+      "sha256": "75c7d27b8a36ce562aa0276d88ab9146bcbea5c1ebf1546c686154f4b0134610",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/claude/2026-09-11/native-r16/anh/r16-92-ve-rudi-fs2.0-toi.png",
-      "sha256": "1c8e0ed6d97f36259ed1c03e81b88a27135595bf4dbfa77facd0ea0c347328b5",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-71-khay-tam-o-fs1.0-toi.png",
+      "sha256": "2fb2c8ac041bf0c1801dc0645b50596d99fa8a9f0f08527aa9814c243ca272d6",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "R5: màn Về Rủ Đi sau khi bỏ Card (khối chữ trên giấy), 1.0/2.0 × sáng/tối"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/01-explore.png",
-      "sha256": "5c7a26b41cc7e544caaca1f79d77aa304910ed20496695ffe70b953c5693a976",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-sang.png",
+      "sha256": "834d741824efbd5419223e54defa19ed8ffc5b1be8d50d038dbe7f9ae58a376b",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/02-chat.png",
-      "sha256": "ed9cbbc49bf156d8f930cc7f998a4b3188e922a17285469d3ce1946d56da0f05",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs1.0-toi.png",
+      "sha256": "893a3cd42363e4c29360d61e1d1f805049b7fc65808770b04e35995c5d9373df",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/12-explore-dark.png",
-      "sha256": "590defefd366f91f94f6b344a9d85412ab13dbc1cc5d2384a1c5495d81209692",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-sang.png",
+      "sha256": "c93cc927c0f827c13c3f046d6e25f852e428181b0bfa0173ce2baa86cfcba43d",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/13-chat-dark.png",
-      "sha256": "0210031637516576a843b992d008940aa82a550df5971df324b0a82d60b8979e",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/native/r13-73-canh-ab-fs2.0-toi.png",
+      "sha256": "bd1c9fa7638ee3549c3a383c05f9e96ada417ea1f6b9d1ecf5cf9a22be47ab4f",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4: khay sticker và cảnh trên ui-lab native (dev client) với art v3 — khay 64 ở 1.0 sáng/tối, cảnh A/B ở 1.0/2.0 × sáng/tối"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/11-stickers-dark.png",
-      "sha256": "cc6b3465fce5073a8b144cd554b0391693e6b6bb6961228abb0c8ebe407f8b14",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-sang.png",
+      "sha256": "ccce4791d7fcef5de5b2bdacebff133f76166e785751d68d3fc77ed4c6514e9b",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/10-empty-dark.png",
-      "sha256": "793ffbe44e3126feeb4ee29fb13a67782a15e48163784aab2e3255702f376a66",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/sau-v2-toi.png",
+      "sha256": "15832be94d43d04f9f872ede6fd76185c9e78d7fb6de3e72b2d15b3cfd91e18c",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
     },
     {
-      "path": "docs/codex/2026-09-11/native-evidence/20-explore-light2.png",
-      "sha256": "0bd068c05e3f359066217198c94cf76330d2c7681ea5c96f121052ae6fa96996",
+      "path": "docs/claude/2026-09-11/nghia-hinh-v2/tam-sticker-v2-sang.png",
+      "sha256": "8aca1f4ee1f55527f4c67e28874cfb6d9713e24431dae9156bf6645fe651aad0",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-sang.png",
-      "sha256": "35a3357dcbf0f31159a70e72fbe50010881c0d8267adf5ba7056fa9f0aca9f72",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs1.0-toi.png",
-      "sha256": "d7f7fcceff39f0bcf83cd507bae905c861c94e85f614167658f88d064503bd3b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-sang.png",
-      "sha256": "72d7205fc63003ece2825230c95266128db607271395c5932505e6e81a1083a0",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-chat-ai-binh-chon-fs2.0-toi.png",
-      "sha256": "7202994c85435fcddb5a05ef9c786a363c5b1721e12d03d56860b65210d154ce",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs1.0-sang.png",
-      "sha256": "f5c837f69c50d647eb678672b535c790d1bbb128214f867a8128dad94e1236ed",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/binh-chon-co-chu/anh/r17-93-man-binh-chon-fs2.0-toi.png",
-      "sha256": "ce418d530f2aac57d5cac391a6eaa8e28fc736b4e9461dd9d0060dca1e397b79",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native nút bình chọn có chữ trong tờ AI (A4, 11/09), 1.0/2.0 × sáng/tối + màn sau khi bấm"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-sang.png",
-      "sha256": "7ea1836ca37b71e36bf33aa39985e8a3ca34f2d5bb5bb96d29e2e5f402d092a6",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-toi.png",
-      "sha256": "cd3468b04245539c7664797eca3da56e7f4b2fd39713816ea00f8482d8904a6b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-sang.png",
-      "sha256": "24618a64b713d33afd58d76f5ca97308efc6a6adbf38eeffb5b56757d566c2cf",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-toi.png",
-      "sha256": "b1f4e88479c4a00cb216cb8750afa1b24bcdbe3ba1ecd7ef2e6cb386dae75d43",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-sang.png",
-      "sha256": "25113318cc6031c6f43de6d5391af95f6bd04a4f72cef66e966b10ac68aed208",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-toi.png",
-      "sha256": "14865ea81c9fd21c72837aaf08c04d08805122ca318d3fc374edab7719dd08fe",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-sang.png",
-      "sha256": "c5e22f85a515a5137914f46ff5c0b603f1e8a0658a6185698f8331f3247327dd",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-toi.png",
-      "sha256": "c9d301643bda70ec7176d68fcc4193e08c75085cc847709818640f701536cc91",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-sang.png",
-      "sha256": "82c2bd9a1bed0757e4a69d27a1001249ab5fba3671764e2e6c5f99c9069cde3a",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
-    },
-    {
-      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-toi.png",
-      "sha256": "c432fa7383ce7ec5fe9ccadebe5b49113635072552278e2248fe5456db30de49",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
+      "reason": "F45 vòng 2 + R4 (tái audit 10/09): bảng art sau sửa — Kẹt xe có bánh, Trả tiền nè ô bầu dục + khung đôi, bong bóng đuôi thấy trọn, bộ lọc khối che + ô hở viền coral; bảng không nhãn cho kiểm chứng với người chưa đọc brief; tám sticker hai cỡ"
     },
     {
       "path": "docs/claude/2026-09-11/toi-giay-tren-vai/sau/r13-71-khay-tam-o-fs1.0-sang.png",
@@ -2728,132 +2134,84 @@
       "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-sang.png",
-      "sha256": "3cf6563371f8d9f7df546d32e5503058706fcac72fab14a03dd755d2b120992f",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-sang.png",
+      "sha256": "7ea1836ca37b71e36bf33aa39985e8a3ca34f2d5bb5bb96d29e2e5f402d092a6",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs1.0-toi.png",
-      "sha256": "9b6aeb205b962c27f829505b6dccf1a8ccd3ec74bc98fe0e3c69e050c05c24f5",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-71-khay-tam-o-fs1.0-toi.png",
+      "sha256": "cd3468b04245539c7664797eca3da56e7f4b2fd39713816ea00f8482d8904a6b",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-sang.png",
-      "sha256": "f63f9b1e50743ae7130e9bd5b794bba110eba76fb56ba669b595092a381304ad",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-sang.png",
+      "sha256": "24618a64b713d33afd58d76f5ca97308efc6a6adbf38eeffb5b56757d566c2cf",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-80-kham-pha-fs2.0-toi.png",
-      "sha256": "a14c240819b42ac462a11b4edb4ad4f288836330c63b849e122aa49df071f645",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs1.0-toi.png",
+      "sha256": "b1f4e88479c4a00cb216cb8750afa1b24bcdbe3ba1ecd7ef2e6cb386dae75d43",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-sang.png",
-      "sha256": "58f8a6eadaaf0c893ee1c80c4e188eee3216df989b607baabf72cb6a3c127f97",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-sang.png",
+      "sha256": "25113318cc6031c6f43de6d5391af95f6bd04a4f72cef66e966b10ac68aed208",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs1.0-toi.png",
-      "sha256": "99a445c12bfea8320c20cf099c74c48c6a70eb06bef133252d96a3a4a7b57486",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r13-77-loi-canh-moi-fs2.0-toi.png",
+      "sha256": "14865ea81c9fd21c72837aaf08c04d08805122ca318d3fc374edab7719dd08fe",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-sang.png",
-      "sha256": "ab47c1481ec8532345ab86c043441feb911eaf8e1382cb9abd069036d2c93a81",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-sang.png",
+      "sha256": "c5e22f85a515a5137914f46ff5c0b603f1e8a0658a6185698f8331f3247327dd",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r14-81-chi-tiet-fs2.0-toi.png",
-      "sha256": "da9814a4a56209addf1b519965f487d64ca8586ddb9b17da11223e298e125a64",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs1.0-toi.png",
+      "sha256": "c9d301643bda70ec7176d68fcc4193e08c75085cc847709818640f701536cc91",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-sang.png",
-      "sha256": "eecfa333248765dec1ed18a5853a42e7e600fef65d3798a57ea32a683476acaa",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-sang.png",
+      "sha256": "82c2bd9a1bed0757e4a69d27a1001249ab5fba3671764e2e6c5f99c9069cde3a",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs1.0-toi.png",
-      "sha256": "0e5dd11bcb730f06ae03d331d9d7337fef7b245c8b3f451858dafa31ee70b80a",
+      "path": "docs/claude/2026-09-11/toi-giay-tren-vai/truoc/r14-80-kham-pha-fs2.0-toi.png",
+      "sha256": "c432fa7383ce7ec5fe9ccadebe5b49113635072552278e2248fe5456db30de49",
       "rules": [
         "controlled-artifact"
       ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-sang.png",
-      "sha256": "ff7c2a85ad6ea1872285a7721f468784984ee5ae1cb5196957a6fa56a77943d2",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-duoi-fs2.0-toi.png",
-      "sha256": "ff8cdc9b3ed6f1161a28bb977c38eb710a9927137b8deb7c9c8e3f4d3b81fbc5",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-sang.png",
-      "sha256": "d557f6992c71bf288f186857784c5d6a02ac93adc57d1a6a9f7d8decfecb9986",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs1.0-toi.png",
-      "sha256": "27eb83b82bc804c9df966bb1e9150ae4f2c474ef8aa74aa44a8a9957c360335b",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-sang.png",
-      "sha256": "ea412d42469f06a3441488a752df0bec3ab960daf2e480b602062032e4ebc06c",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
-    },
-    {
-      "path": "docs/claude/2026-09-11/ky-hoa-trong-so/anh/r17-97-ky-hoa-lab-tren-fs2.0-toi.png",
-      "sha256": "fb7db3de1a6958892532f608fa1467f7b43cc6f962823c1b3cdf79f40862b071",
-      "rules": [
-        "controlled-artifact"
-      ],
-      "reason": "Ảnh native ký hoạ trong sổ (A1, 11/09): Khám phá + chi tiết không ảnh + bảng ui-lab × 1.0/2.0 × sáng/tối"
+      "reason": "Ảnh native trước/sau bản tối «sổ đóng trên bàn» (A3, 11/09): Khám phá, khay sticker, màn lỗi × sáng/tối × 1.0/2.0"
     },
     {
       "path": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-nep-manh-duoi-fs1.0-sang.png",
@@ -3526,6 +2884,720 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh bằng chứng Phase 2 «Nếp truyền giấy» lát 1 trên fixture (docs/claude/2026-09-12/to-giay-fixture/README.md): bảy flow Maestro r18/100-106 ở bốn cấu hình chữ 1.0/2.0 × sáng/tối, chụp sau hai vòng đọc mù khung đầy đủ"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47a-chua-co-so.png",
+      "sha256": "b58643b8a457f59b1c07f2875a65fc155fdb92223e488843836010dee09d2cfd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47b-bac-lap-so.png",
+      "sha256": "b806a107fd32d02a6fb0d74d52870fc0a60cdeffdb76a18853df1e7159ad6191",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47c-ho-de-nghi.png",
+      "sha256": "2fed36fc047401ff4f6bbd403a35ddc97e3c54e08e50730f8cc9992e294b1adc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47d-so-da-mo.png",
+      "sha256": "ac9b40dd4f58585d5f8da587a845913350b1446de8cad2424a5cb65b4c515366",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47e-ban-phac.png",
+      "sha256": "91128806d8a9df3488a5195cf8a5ee6482ff379375ef9bb0876f1c75c2bf7138",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47f-nhan-duoc.png",
+      "sha256": "5bbe4cf5bbcd69658ebf8ae3a587f619caae247ae487c9bcb86b82a026ad1a05",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47g-da-chot.png",
+      "sha256": "82122f735dd8363b43e0662cb4219de09b778cc4dff48ba82a3c5e6703b05fb5",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47h-sau-chot.png",
+      "sha256": "6ad7a777ea529c130cf6488fcc9a1199e531788352774fc9affa21da00154096",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/claude/2026-09-14/to-giay-live/47h-xac-nhan-huy.png",
+      "sha256": "be44c5ccfc121c4dc4afb32e5f88d20174a3abbc915f014812d7558698cf032e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh bằng chứng Phase 4 «Nếp truyền giấy» nối live sau vòng sửa của impeccable-finish-reviewer (docs/claude/2026-09-14/to-giay-live/README.md): một lượt Maestro chạy hết vòng trên máy ảo Android với API thật và HAI tài khoản thật, cộng một ảnh tờ xác nhận huỷ chụp tay vì flow không đi qua đường ấy"
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-assignment.png",
+      "sha256": "523e16086bce722595e01bf004c6d3ba624209211bc8e16868106fb1cacad789",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/phone-create-dark.png",
+      "sha256": "c4e9e06378be5a137b0c1020f423d59698c8219a6857d4009a8632e6452fdba6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-assignment-dark.png",
+      "sha256": "dff72c54b06601ec40483a51e01eb4748489614e41223b2a7a2fa2ac7dc7fc7c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-create-dark.png",
+      "sha256": "38832c91a7838af266b7aebee7e2778797ea3f0bc3d7853ba6065bf14b15dfe4",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android fixture tổng hợp, main và reviewer Impeccable đã xem; không có dữ liệu người tham gia. Bằng chứng và giới hạn tại README cùng thư mục."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-explore.png",
+      "sha256": "c1f184b4432e2ec989fef5234fa3c7f81002f0d2d9393828f31c961451fae097",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android fixture với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh địa điểm thật hoặc người tham gia; README nêu ranh giới."
+    },
+    {
+      "path": "docs/codex/2026-09-06/wave1-native-evidence/tablet-viewer-resize.png",
+      "sha256": "9670ea5f667c1f30d6ccd0f4d026c8106f2594601ea34281474e6403116a0cb6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android probe với ảnh stock công khai đã có trong repo; main và reviewer Impeccable đã xem. Không phải ảnh người tham gia; README nêu ranh giới."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/02-album-two-days.png",
+      "sha256": "2a01b81780c1a93b52d20a874e19625070d41b51956060f3bde24881d8cb266e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): album hai ngày sau R3. Không người tham gia thật."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/06-scenes-light.png",
+      "sha256": "440bb1a261109570d2b594f45acc214d6474732cd5a5e17cb3d0e77f7dea73a8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): năm cảnh A/B nền sáng, tay Nếp chạm ghế và khung."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/08-explore-error-dark.png",
+      "sha256": "4d0adb029117063845d41b45436fcf0e0f80b3ead34ae6838de255f78e45d690",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu tổng hợp, nguồn ảnh lỗi loopback): nhánh ảnh hỏng của Khám phá trên nền tối trước khi sửa nền khung."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/09-voting-missing-provenance.png",
+      "sha256": "c5e29a7dfc27acc5466ae896607be731b419b4d260a167e3a4916507181c4940",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, ô Bình chọn đặt ảnh stock cạnh tên quán mà không ghi công."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/10-itinerary-missing-provenance.png",
+      "sha256": "da22855ae80cc98a6ee88eab0776599dd6d33e993658ba703a9e2b79362ef087",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo): F21, lịch trình AI ngày 2 mất ghi công của hai ảnh minh hoạ."
+    },
+    {
+      "path": "docs/codex/2026-09-08/review-ngon-ngu-hinh-vong-2-evidence/20-explore-bottom-font2.png",
+      "sha256": "4ee6b0d02351ccb8ab21b2ffd41e6dca5a30ec9723b03cbad50a193781d3da45",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng review vòng 2 của Codex (emulator, dữ liệu demo, cỡ chữ 2.0): Khám phá cuối màn, giá và thanh tab đọc đủ (R4)."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/16-failed-sticker-dark.png",
+      "sha256": "5d00a30eb461590226c8b552dc9518e68308e409b1d3e3f7e16b141cf0d1e0aa",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/20-explore-font2-dark.png",
+      "sha256": "e09f69e693ec9ccbc7995d71a01e25a62dd19bd06b8aef6805a3bf54b3f2c32f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/codex/2026-09-09/native-audit-evidence/22-network-error.png",
+      "sha256": "9e86b41c186179c0353162de2bb8ebfc267660d66d7b71bf60a817cd329a120f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng của Codex cho audit native 09/09 (F41 nút tràn, F44 placeholder cắt, F43 lỗi in URL). Máy ảo, dữ liệu tổng hợp, không có dữ liệu thật."
+    },
+    {
+      "path": "docs/codex/2026-09-10/assessment-b-ky-thuat.md",
+      "sha256": "6e95baaee58b5b1a13d2d2bcb91222e51bfb4cf38d1145680cac5eb34b1fbfd8",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/05-explore.png",
+      "sha256": "91308409c20a3429a191f6743af7b5bdd75737eed9a1317ff09dee7a346f1e86",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/08-messages.png",
+      "sha256": "3176420e72122730f46d007e80dc1bbea439053fe180da157e4f34da7e1759c0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/09-profile.png",
+      "sha256": "56e7938ea8f25e6f4894264bae2cda5b1242052ebf23db9be21c4aead33afcae",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/19-settings.png",
+      "sha256": "d552011632dbccca6629a37c0ef327a8a2dbb07a950a2403ecc40c9477ac683f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/20-error.png",
+      "sha256": "a149ef3f4679971651632b9bde671ef8ccadddfe6971c7df89c3b25fa88763fc",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/23-scenes-bottom.png",
+      "sha256": "8eadaff38585fbdf49613d82cc79fbed754d0c18e18e6dd41b04eab047344bc8",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/30-tray-light.png",
+      "sha256": "8a9dfc6073a2656b7011ef3edaf9b9d727c3430a781d6e65176cac126ff51347",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/31-bubble-ket-xe.png",
+      "sha256": "ea3ab10d63c7170f25bfdef605c5a38b0d27f1aed518380072d13ddd1c2c268c",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/43-explore-light2.png",
+      "sha256": "312abdeb33ec059e1605270f08318121f425017a8a4590fe80edcd657cb86a75",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/52-explore-dark2.png",
+      "sha256": "9fdb6cffb4daf87aea39fcaa75e333f3c8aa530aabeb266320186aa4c8e72215",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/environment.json",
+      "sha256": "57fbd353715db87d002bd71b1424a949126ce0b2759ba845ebb1e51dade678cc",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/manifest.json",
+      "sha256": "dc3082b98ae6cc3a2e7edca8df32f9a0538a97f3223605257cb9ea1bb2944573",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-03.png",
+      "sha256": "9154a3064bd42a5b06e4657e969ea42b37dd3b05bb3755143229c4f8b617e549",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-06.png",
+      "sha256": "e703b4823ca956dfa1880aafd45f3fcc6c5bc8fb163b111dabee0a222bfdeed2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-evidence/motion-frames/reduce-confirm-09.png",
+      "sha256": "449605d6126a9d5c190c907a1c976fe9a78f288da94abec437c8e08da320cfbf",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bằng chứng tái audit Codex 10/09 (ảnh native fixture, khung video Reduce Motion) — trích dẫn trong trả lời 11/09"
+    },
+    {
+      "path": "docs/codex/2026-09-10/reaudit-native-my-thuat.md",
+      "sha256": "d95b9c41141c1d37467d952f39828dd04ff75660cbdfaf6baed42dc118d492bd",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/01-explore.png",
+      "sha256": "5c7a26b41cc7e544caaca1f79d77aa304910ed20496695ffe70b953c5693a976",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/02-chat.png",
+      "sha256": "ed9cbbc49bf156d8f930cc7f998a4b3188e922a17285469d3ce1946d56da0f05",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/10-empty-dark.png",
+      "sha256": "793ffbe44e3126feeb4ee29fb13a67782a15e48163784aab2e3255702f376a66",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/11-stickers-dark.png",
+      "sha256": "cc6b3465fce5073a8b144cd554b0391693e6b6bb6961228abb0c8ebe407f8b14",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/12-explore-dark.png",
+      "sha256": "590defefd366f91f94f6b344a9d85412ab13dbc1cc5d2384a1c5495d81209692",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/13-chat-dark.png",
+      "sha256": "0210031637516576a843b992d008940aa82a550df5971df324b0a82d60b8979e",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-11/native-evidence/20-explore-light2.png",
+      "sha256": "0bd068c05e3f359066217198c94cf76330d2c7681ea5c96f121052ae6fa96996",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh native của Codex 11/09 được trích dẫn trong tra-loi-review-main-5061b610.md (Khám phá/chat/khay/lỗi sáng-tối, 2.0)"
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/06-suggestion.png",
+      "sha256": "21eb2bf44bae0c8e0606dfe3f39a0b5d6659ad0c9932cfccc2832ea2d1779c4a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/07-applied-timeline.png",
+      "sha256": "82ac17b4d37f4f918f49a01cfa5a37d5bd45c07bf6495a7ec47de30a92e4f019",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/08-final-light.png",
+      "sha256": "556cafff13a2158c209e45856a90ec25454c8d10d170378ad2c21b4e3727d0f7",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/09-final-dark.png",
+      "sha256": "a5cd91c8e06b2c4122fe7ae1f651ac8ed52940132bae2dd46b9710352ea4b55b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/10-final-font2.png",
+      "sha256": "78a0c5d6907a8e1ae392b5e9618128535eb685e03c7c9c12bf1789254716112b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/11-editor-font2.png",
+      "sha256": "cceddd668c2abd32f651cd1cb5fc5c6e2a0df92a96f696532934478991c7ae19",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/12-conflict-offline.png",
+      "sha256": "6c3b2823ca7453e2dc8ea8014e8bfbf36870622f50e293c0b6f96cdffbbd3f3d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/13-draft-retained.png",
+      "sha256": "5a6a803481e7d920f278906b611ca530dfda94e8f98ca4cc0de917264aee82b1",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/14-conflict-compare.png",
+      "sha256": "3092d0d0fb8c414a1cc26827cfc68f98512ab710e4c2786eab348ad6bb2e161a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/15-wide.png",
+      "sha256": "a4c675ea19177ab73c0d582f5fab3fc74b6fe3b4b05da687e08b465ad6277043",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/16-empty-day.png",
+      "sha256": "787b1e61075a08f6fcec286f075bf825ff98c44efbd63533551d2e218b6cd556",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "docs/codex/2026-09-12/hanh-trinh-trien-khai/evidence/18-final-proposal.png",
+      "sha256": "dc345dc0ee12a97d7a6b37498028c8acb0080d80b7a8709b6ebe225beb8f5a98",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh Android dữ liệu tổng hợp; reviewer độc lập đã kiểm nội dung và metadata. Xem docs/codex/2026-09-12/hanh-trinh-trien-khai/review-doc-lap.md."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/01_welcome/01_01_welcome.png",
+      "sha256": "c3b84a9a8588c0cb2a6d58d85c36752a8dc41c499a8bb4ce3c2babcea3e1c438",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/02_login/01_02_login.png",
+      "sha256": "37c7783b4f2fc4dcaa74a5103a067a5d9c3c3386f670d33f18cefb987aa5b55d",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/03_personalization/01_03_personalization.png",
+      "sha256": "1f4831d6929109f447283a3204e147b8f2ad864b9de17f0ca3cbbde83605fe48",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/01_explore/02_01_explore.png",
+      "sha256": "2ef95106b60405f427fb9f1e4858da4443f68178e5bd8ddd2d4e0a6d5c8e1968",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/02_ai_match/02_02_ai_match.png",
+      "sha256": "326371186703619547b8e4ef37f4f111dfe5ab53b880786d7780c34242bd3b2f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/02_discovery/03_place_detail/02_03_place_detail.png",
+      "sha256": "138e96ec6dc264f3c51c0a2b3e867eb2a3cc04f9bc81b11de125aa18147dc725",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/01_group_chat/03_01_group_chat.png",
+      "sha256": "50b24ada164144b556d533ad0d824b94b5a9e4ef39f9ce9fb3669991215ac273",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/02_ai_itinerary/03_02_ai_itinerary.png",
+      "sha256": "dd3d7190ee47b48b4aefe1709ed39dc349b75b4f0b9021d6010100a5ef6f5ae6",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/03_group_chat_ai/03_voting/03_03_voting.png",
+      "sha256": "36580a7dc8ebe7f89e85f7fc76b3f4dd93af85a5818ca1e4dd18dbcbaba9ba6a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/01_create_outing/04_01_create_outing.png",
+      "sha256": "0992d29f9aa76000ef466f0867cf5a2ba973c6c2673436af01fe6189c19c5e6f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/02_trip_timeline/04_02_trip_timeline.png",
+      "sha256": "73eedf11c585dacfb5df378b40f9220f2869e65cb9f804a99d1c9bf7646e0be2",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/04_outing_management/03_check_in/04_03_check_in.png",
+      "sha256": "57bff3ef53c5ee8bf4ca9a0a246b44cd27e5ea4901fd7e0333be6fac7d61bc5a",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/01_receipt_review/05_01_receipt_review.png",
+      "sha256": "2813cdc44ff61f88d546698f16cc6abc5b54cfe4a408bdccf6a93ab78b8e3a88",
+      "rules": [
+        "controlled-artifact",
+        "export-filename"
+      ],
+      "reason": "Product design mockup whose FILENAME contains 'receipt'/'bill', which is what trips export-filename. Inspected before pinning: it is rendered design artwork, not a photograph of a real receipt. The bank line it draws is a repeated-digit designer placeholder, and the people shown are stock personas, not participants. Binary, so the guard also fails closed on it; pinned by digest so replacing the bytes requires a fresh review."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/02_ocr_assignment/05_02_ocr_assignment.png",
+      "sha256": "37f81271125e39e44f5b7d4261ac96c61031ed2f3388a8855fbec7e3bdcf7a28",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/05_smart_bill/03_settlement/05_03_settlement.png",
+      "sha256": "8a53aedfee303e365652f5e9633a058050c84d44ec98db54132491ddcfc24023",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/01_group_wall/06_01_group_wall.png",
+      "sha256": "da3f08ef5a81318f8fbc10a8f58027af0e7bdaf03c29d1b95bc9a3a4215ecf83",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/02_trip_album/06_02_trip_album.png",
+      "sha256": "3af63bdd4000fb6363291b0e866bd61a5ca5d7fab09ac5c9baae12d42c0559c3",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/06_memories/03_share_moment/06_03_share_moment.png",
+      "sha256": "3063150d11236a38771540981c641f2cb7b3a690aaf0e0ff6212ad3e9f70845f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/01_profile/07_01_profile.png",
+      "sha256": "9437cf7cba7f2349ce23dae8e885d5939da25afa84a3dae9171bc7c7734ae672",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/02_finance/07_02_finance.png",
+      "sha256": "7ed3d5a2c19e356b3828256a8c3b2304a4c703c140b2b9aa96c3a0ea33f58b29",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/RuDi_Mobile_Product_Mockups/07_profile_finance/03_achievements/07_03_achievements.png",
+      "sha256": "5168ec83824641629a6f9c2970e35e46e04fec4c7ddcbb4d7f45ab6bd45292cd",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/features/02-kham-pha-va-goi-y-dia-diem.png",
+      "sha256": "8074bb766c8bdaee02755ad6ecdd5fa82c0baff879c5730572cf1c5b845d4747",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/features/03-nhom-chat-va-ai-len-ke-hoach.png",
+      "sha256": "a7fe07a8e8d678995c38c0119bc0a59b857ddea898d9fad1b63687cf5c8ec152",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/features/04-chia-bill-thong-minh.png",
+      "sha256": "f617bcd285e5bbba1fb1bc7f7da602e591c00cc36e55355553268aeed4029bb4",
+      "rules": [
+        "controlled-artifact",
+        "export-filename"
+      ],
+      "reason": "Product design mockup whose FILENAME contains 'receipt'/'bill', which is what trips export-filename. Inspected before pinning: it is rendered design artwork, not a photograph of a real receipt. The bank line it draws is a repeated-digit designer placeholder, and the people shown are stock personas, not participants. Binary, so the guard also fails closed on it; pinned by digest so replacing the bytes requires a fresh review."
+    },
+    {
+      "path": "product/features/05-ky-niem-cua-nhom.png",
+      "sha256": "48739191cd727d7768dde383f13801a2d6b5668cdaf6620f48ed5816b50179f9",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/features/06-ho-so-va-hanh-trinh.png",
+      "sha256": "724ec2fcc76d59bc44fbdca0d93488e3f66adb74274004386b84227cbc5a0338",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "product/mockup.png",
+      "sha256": "df1573714e0d1fae4f49fb9e62b4050dd33c33c35e9f9128c94376a6d0dd1345",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Product design mockup, part of the `product/` documentation set the leader asked to publish. Binary, so the guard fails closed on it by design; pinned by digest so replacing the bytes requires a fresh review. Synthetic design artwork: no participant data, no real bill photo, no account number."
+    },
+    {
+      "path": "services/api/app/media/fonts/BricolageGrotesque-Bold.ttf",
+      "sha256": "96b4e880f78318631a573954986c368bfcaa9896e0c0383f917d9ce3fd2b3259",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Bản chép nguyên byte của apps/mobile/assets/fonts/BricolageGrotesque-Bold.ttf (SIL OFL 1.1, cùng digest) để image API dựng thước phim MP4 vẽ chữ bằng Pillow (ADR-0025 §2.1): Docker build context là services/api nên font của mobile không vào image. Giấy phép kèm ở OFL-BricolageGrotesque.txt cùng thư mục. Path và digest ghim để mọi thay đổi byte phải review lại."
+    },
+    {
+      "path": "tests/qa/package-lock.json",
+      "sha256": "809af944d46575292483dc5b2b1d75bf948b1056e3cf4e973bd8f788e73a8542",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "npm lock file for the QA evidence harnesses under tests/qa/. The long numbers are package version and size fields whose numeric parts run past the guard's threshold; they are structural to the format. Only `long-number` is listed, not `aggregate-base64-fragments` as on the apps/mobile entry -- this file tripped exactly three long-number findings and nothing else, and an allowlist should exempt what the file actually does rather than what a file of its kind might do.\n\nPinned by exact digest rather than exempted by filename, for the reason spelled out on the apps/mobile entry: a name-based exemption is the smuggling route this guard's own tests reject.\n\nIt arrives with the commit that removed 23 absolute home-directory paths from 17 QA scripts. Those scripts imported puppeteer-core and playwright-core by absolute path into one developer's node_modules, so nothing declared them and nothing could install them elsewhere; tests/qa/package.json now does, and this lock file is what makes `npm ci` there reproduce the same tree. Five direct dependencies, pinned to the versions the sibling harnesses rd-qa-02/ and rd-qa-06/ already use."
     }
   ]
 }

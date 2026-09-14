@@ -5,12 +5,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
 import { type ToGiay, phienBan } from "../../to-giay/to-giay";
+import { ngayDocDuoc } from "../../to-giay/ngay";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
 import { EmptyState } from "../../ui/EmptyState";
 import { Sheet } from "../../ui/Sheet";
 import { DeNghiSua } from "./DeNghiSua";
 import { DongSo } from "./DongSo";
+import { XacNhanViec } from "./XacNhanViec";
 import { BatMotDoi, LapSo } from "./DongYBac";
 import { GiuMotDieu } from "./GiuMotDieu";
 import { LoaiSo } from "./LoaiSo";
@@ -55,7 +57,30 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
   const pbMo = toMo ? phienBan(toMo) : undefined;
   const toiGuiToMo = pbMo?.author_type === "human" && pbMo.sent_by === so.toiId;
 
+  // Bốn việc không lấy lại được đi qua một tờ xác nhận nói ra hậu quả trước
+  // khi làm — luật của chính bản dựng này, và `DongSo` đã có khuôn ấy.
+  const [viec, setViec] = useState<null | "bo" | "rut" | "nghi_tuan" | "huy">(null);
+
   const dong = () => setMo(null);
+
+  // The close preview is asked for when the sheet opens, not computed while
+  // rendering: on the live build it is a POST that mints the `revision` the
+  // close must carry. `null` until it lands, and the sheet says «đang đếm»
+  // rather than showing zeros somebody could agree to.
+  const [xemTruoc, setXemTruoc] = useState<Awaited<ReturnType<typeof so.xemTruocDongSo>> | null>(null);
+  useEffect(() => {
+    if (mo !== "dong-so") {
+      setXemTruoc(null);
+      return;
+    }
+    let conDung = true;
+    void so.xemTruocDongSo().then((ket) => {
+      if (conDung) setXemTruoc(ket);
+    });
+    return () => {
+      conDung = false;
+    };
+  }, [mo, so]);
 
   let than: React.ReactNode;
   if (so.daDong) {
@@ -91,16 +116,17 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
     than = (
       <ToLoiRu
         dan={dangCoToMo}
-        onBoNhap={() => so.boNhap(toMo.id)}
+        onBoNhap={() => setViec("bo")}
         onDaDi={() => so.daDi(toMo.id)}
         onDeNghiSua={() => setMo("de-nghi-sua")}
         onDongY={() => so.dongY(toMo.id)}
         onGiu={() => setMo("giu")}
         onGui={() => so.gui(toMo.id)}
-        onHuy={() => so.huy(toMo.id)}
-        onNghiTuan={() => so.nghiTuan(toMo.id)}
-        onRut={() => so.rut(toMo.id)}
+        onHuy={() => setViec("huy")}
+        onNghiTuan={() => setViec("nghi_tuan")}
+        onRut={() => setViec("rut")}
         onSuaNhap={() => setMo("de-nghi-sua")}
+        tenNguoiKia={so.tenNguoiKia}
         testID="to-mo"
         to={toMo}
         toiId={so.toiId}
@@ -127,7 +153,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         // No second lead while a plan stands: with «Đã đi rồi» and «Huỷ buổi
         // này» on the sheet, a coral «Rủ đi chơi» underneath made three things
         // to do on one frame (blind read 12/09).
-        !so.daDong && so.lapSo && !dangCoToMo && !(toMo && (toMo.state === "chot" || toMo.state === "da_di")) ? (
+        // …and no second lead while the EMPTY STATE is already offering the same
+        // word: with no sheet at all, «Rủ đi chơi» rendered twice in coral,
+        // 1300px apart, and the second one reads as a different action somebody
+        // then hunts for the difference between (finish review 14/09).
+        !so.daDong && so.lapSo && toMo !== undefined && !dangCoToMo && !(toMo.state === "chot" || toMo.state === "da_di") ? (
           <View style={styles.footer}>
             <RudiButton label="Rủ đi chơi" onPress={() => void so.ruDiChoi()} />
           </View>
@@ -169,11 +199,32 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
           open={mo === "giu"}
         />
       ) : null}
-      <LapSo dangCho={deNghiLapSo !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiLapSo ? () => so.nguoiKia?.dongYDeNghi(deNghiLapSo.id) : null} onClose={dong} onDeNghi={so.deNghiLapSo} open={mo === "lap-so"} />
-      <BatMotDoi dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} open={mo === "bat-doi"} />
+      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiLapSo ? () => so.nguoiKia?.dongYDeNghi(deNghiLapSo.id) : null} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) { so.dongYDeNghi(deNghiLapSo.id); dong(); } }} open={mo === "lap-so"} />
+      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) { so.dongYDeNghi(deNghiBatDoi.id); dong(); } }} open={mo === "bat-doi"} />
       <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={so.deNghiBatDoi} onClose={dong} open={mo === "loai-so"} />
       <RangBuoc nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => { so.datRangBuoc(rb); dong(); }} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
-      <DongSo onClose={dong} onDong={() => { so.dongSo(); dong(); }} open={mo === "dong-so"} xemTruoc={so.xemTruocDongSo()} />
+      {/* Chỉ tồn tại khi có cả việc lẫn tờ. Bản trước mount vô điều kiện và
+          rơi về chuỗi rỗng khi thiếu một trong hai — không tới được hôm nay,
+          nhưng hình dạng hỏng của nó là một tờ xác nhận huỷ MỞ RA với hậu quả
+          trống và một nút không làm gì. */}
+      {viec !== null && toMo ? (
+        <XacNhanViec
+          hauQua={HAU_QUA[viec](so.tenNguoiKia, phienBan(toMo)?.content.ngay ?? "")}
+          nhanLam={NHAN_LAM[viec]}
+          onClose={() => setViec(null)}
+          onXacNhan={() => {
+            if (viec === "bo") so.boNhap(toMo.id);
+            else if (viec === "rut") so.rut(toMo.id);
+            else if (viec === "nghi_tuan") so.nghiTuan(toMo.id);
+            else so.huy(toMo.id);
+            setViec(null);
+          }}
+          open
+          testID="xac-nhan-viec"
+          tieuDe={TIEU_DE[viec]}
+        />
+      ) : null}
+      <DongSo onClose={dong} onDong={() => { if (xemTruoc) { so.dongSo(xemTruoc.revision); dong(); } }} open={mo === "dong-so"} xemTruoc={xemTruoc} />
       <Sheet accessibilityLabel="Đóng vai người ấy" onClose={dong} open={mo === "nguoi-kia"} testID="nguoi-kia">
         <View style={{ gap: space.sm, paddingBottom: 8 }}>
           <Heading size="h2" subtitle="Bản trải nghiệm: máy này đóng cả vai người ấy. Mỗi nút là một việc người ấy làm trên máy của họ." title="Đóng vai người ấy" />
@@ -223,7 +274,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
             <Heading size="h2" title="Tờ đã khép" />
             <NhomHang>
               {so.toKhac.map((t) => (
-                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${phienBan(t)?.content.ngay ?? ""}`} />
+                <ListRow icon="document-text-outline" key={t.id} subtitle={dongTom(t)} title={`${NHAN[t.state]} · ${ngayDocDuoc(phienBan(t)?.content.ngay ?? "")}`} />
               ))}
             </NhomHang>
           </View>
@@ -233,6 +284,34 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
     </RudiScreen>
   );
 }
+
+/**
+ * Mỗi việc một câu nói nó làm gì, cho ai — không phải «bạn có chắc không?».
+ *
+ * Tên người kia có mặt ở đây vì hậu quả rơi lên họ: «Ca cũng thấy buổi biến
+ * mất» là thứ làm người đang bấm dừng lại, còn «không lấy lại được» thì không.
+ */
+const TIEU_DE: Record<"bo" | "rut" | "nghi_tuan" | "huy", string> = {
+  bo: "Bỏ bản phác này?",
+  rut: "Rút lại tờ đã gửi?",
+  nghi_tuan: "Tuần này nghỉ?",
+  huy: "Huỷ buổi đã chốt?",
+};
+
+const NHAN_LAM: Record<"bo" | "rut" | "nghi_tuan" | "huy", string> = {
+  bo: "Bỏ bản phác",
+  rut: "Rút lại",
+  nghi_tuan: "Nghỉ tuần này",
+  huy: "Huỷ buổi này",
+};
+
+const HAU_QUA: Record<"bo" | "rut" | "nghi_tuan" | "huy", (ten: string, ngay: string) => string> = {
+  bo: () => "Những gì bạn vừa viết mất đi. Người ấy chưa từng thấy tờ này, nên không ai được báo.",
+  rut: (ten) => `Tờ biến khỏi màn của ${ten || "người ấy"}. Muốn đổi ý thì gửi một tờ mới.`,
+  nghi_tuan: (ten) => `Tuần này hai bạn không hẹn gì. ${ten || "Người ấy"} cũng thấy tuần này khép lại.`,
+  huy: (ten, ngay) =>
+    `${ngay ? `${ngayDocDuoc(ngay)} không còn. ` : ""}${ten || "Người ấy"} đã đồng ý buổi này và cũng thấy nó biến mất. Không lấy lại được.`,
+};
 
 function dongTom(t: ToGiay): string {
   const pb = phienBan(t);
