@@ -39,6 +39,7 @@ import (
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/problem"
 	"mobile/services/core/internal/httpapi/router"
+	"mobile/services/core/internal/limit"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/repo"
@@ -83,6 +84,12 @@ type Call struct {
 	Actor *auth.Actor
 	// Unit is the request's transaction; route code queries through Unit.Tx.
 	Unit *db.Unit
+	// Body is the request body as read, for a route that parses it by hand.
+	Body []byte
+	// Limits are the process's in-memory limiters (Python's app.state).
+	Limits *limit.Set
+	// PersonIDKey is the raw MOBILE_PERSON_ID_KEY.
+	PersonIDKey string
 }
 
 // Reply is a route's answer when it does not refuse.
@@ -106,6 +113,12 @@ type Env struct {
 	NewUnit func() *db.Unit
 	// Now is the clock a prod session's expiry is checked against.
 	Now func() time.Time
+	// Limits are shared by every request the process serves.
+	Limits *limit.Set
+	// PersonIDKey is MOBILE_PERSON_ID_KEY as the process started with it.
+	// Python reads os.environ on every call; nothing in the app changes it, so
+	// one read at startup gives the same answers.
+	PersonIDKey string
 }
 
 // New builds the handler for one route. status is the route decorator's
@@ -145,7 +158,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// A committed unit ignores this; every other path discards its writes.
 	defer func() { _ = unit.Rollback(ctx) }()
 
-	call := &Call{Request: r, Scope: scope, Unit: unit}
+	call := &Call{Request: r, Scope: scope, Unit: unit, Body: body, Limits: h.env.Limits, PersonIDKey: h.env.PersonIDKey}
 	hook := func(dependency pyval.Dependency) error {
 		switch dependency.Call {
 		case CallGetRepository:

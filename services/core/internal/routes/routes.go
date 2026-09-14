@@ -54,6 +54,8 @@ func All() []Route {
 		listPostComments(),
 		postComment(),
 		deletePostComment(),
+		mintPersonID(),
+		findPersonByPhone(),
 	}
 }
 

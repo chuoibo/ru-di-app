@@ -64,10 +64,8 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   qua `endpoint.Reply.Empty`); chín route posts: `POST /posts`, `GET /posts`, `GET /people/{person_id}/posts`,
   `GET /posts/{post_id}`, `POST /posts/{post_id}/reactions`, `DELETE /posts/{post_id}/reactions/{kind}`,
   `GET /posts/{post_id}/comments`, `POST /posts/{post_id}/comments`,
-  `DELETE /posts/{post_id}/comments/{comment_id}`.
-- Còn ở Python: `POST /friends/lookup`, `POST /identity/person-id`. Hai route này chờ làn limiter: cửa
-  sổ đếm trong bộ nhớ của `core` không thấy lưu lượng canary (canary đi thẳng tới Python của candidate), nên phục
-  vụ chúng bằng Go trong làn chính sẽ làm cổng lệch giả ở 429.
+  `DELETE /posts/{post_id}/comments/{comment_id}`; `POST /identity/person-id` và `POST /friends/lookup`
+  (limiter theo địa chỉ của `core`, 429 so ở làn limiter). Cả 24 route W2 đã PORTED.
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.

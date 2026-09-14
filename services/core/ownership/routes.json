@@ -146,7 +146,7 @@
       "in_memory": [
         "friend_lookup_limit"
       ],
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /bills",
@@ -1250,7 +1250,7 @@
       "in_memory": [
         "person_id_limit"
       ],
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /destinations",

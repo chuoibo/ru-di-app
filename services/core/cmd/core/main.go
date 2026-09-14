@@ -28,6 +28,8 @@ import (
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/router"
 	"mobile/services/core/internal/idem"
+	"mobile/services/core/internal/identity"
+	"mobile/services/core/internal/limit"
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/routes"
@@ -90,7 +92,13 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 	// Go routes authenticate in the auth mode Python resolved and query the
 	// same database. Nothing is opened while Go serves nothing, so a binary
 	// with every route forced back to Python needs no database settings.
-	env := endpoint.Env{Mode: endpoint.Mode(cfg.AuthMode), Now: time.Now, NewUnit: func() *db.Unit { return db.NewUnit(nil) }}
+	env := endpoint.Env{
+		Mode:        endpoint.Mode(cfg.AuthMode),
+		Now:         time.Now,
+		NewUnit:     func() *db.Unit { return db.NewUnit(nil) },
+		Limits:      limit.NewSet(limit.Monotonic),
+		PersonIDKey: getenv(identity.KeyEnvVar),
+	}
 	var idempotency func(http.Handler) http.Handler
 	if len(served) > 0 {
 		pool, err := db.Open(context.Background(), getenv(db.EnvDatabaseURL))

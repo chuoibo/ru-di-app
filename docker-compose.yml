@@ -129,10 +129,10 @@ services:
       # API answers 503 on sign-in rather than falling back to the unkeyed
       # digest that let group members read each other's telephone numbers.
       #
-      # On `api` alone. `migrate` and `seed` share the `x-api-env` anchor and
-      # neither derives an id: seeding uses fixed uuids straight out of
-      # `scripts/seed_dev_data.py`. A secret belongs in exactly the processes
-      # that use it.
+      # On `api` and `core` (whose Go routes derive ids too), never in the
+      # anchor: `migrate` and `seed` share `x-api-env` and neither derives an
+      # id; seeding uses fixed uuids straight out of `scripts/seed_dev_data.py`.
+      # A secret belongs in exactly the processes that use it.
       MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
       # Where uploaded photos land. Unset, `app/media/storage.py` falls back to
       # `$HOME/.local/share/rudi/media` -- inside the container's writable
@@ -211,6 +211,10 @@ services:
       # mode as `api`, from the one anchor both read.
       <<: *api-env
       MOBILE_PYTHON_UPSTREAM: http://api:8000
+      # POST /identity/person-id and POST /friends/lookup derive ids in Go when
+      # served from Go; same key as `api`, or the two would name one number
+      # differently. Unset, those routes answer 503 as Python does.
+      MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
       # Go code merged but not yet owned by Go (manifest PORTED or later) is
       # served from Go only when named here, e.g. `ported`. Empty keeps Python.
       MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}

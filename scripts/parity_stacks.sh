@@ -148,6 +148,7 @@ cmd_up() {
   MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$tap_port" \
   MOBILE_AUTH_MODE="$auth" \
   MOBILE_DATABASE_URL="${dsn[cand]}" \
+  MOBILE_PERSON_ID_KEY="$id_key" \
   MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
