@@ -45,6 +45,15 @@ func All() []Route {
 		listStories(),
 		markStorySeen(),
 		deleteStory(),
+		createPost(),
+		listPosts(),
+		listPersonPosts(),
+		readPost(),
+		reactToPost(),
+		unreactToPost(),
+		listPostComments(),
+		postComment(),
+		deletePostComment(),
 	}
 }
 

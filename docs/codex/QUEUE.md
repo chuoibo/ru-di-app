@@ -61,8 +61,11 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   `POST /votes/{vote_id}/ballots`, `POST /votes/{vote_id}/close` (validator strip của phiếu giờ có bản production
   trong `internal/pyval/ports.go`); `POST /friends/requests`, `POST /friends/requests/{request_id}/respond`;
   `POST /stories`, `GET /stories`, `POST /stories/{story_id}/seen`, `DELETE /stories/{story_id}` (204 không thân
-  qua `endpoint.Reply.Empty`).
-- Còn ở Python: posts (9), `POST /friends/lookup`, `POST /identity/person-id`. Hai route sau chờ làn limiter: cửa
+  qua `endpoint.Reply.Empty`); chín route posts: `POST /posts`, `GET /posts`, `GET /people/{person_id}/posts`,
+  `GET /posts/{post_id}`, `POST /posts/{post_id}/reactions`, `DELETE /posts/{post_id}/reactions/{kind}`,
+  `GET /posts/{post_id}/comments`, `POST /posts/{post_id}/comments`,
+  `DELETE /posts/{post_id}/comments/{comment_id}`.
+- Còn ở Python: `POST /friends/lookup`, `POST /identity/person-id`. Hai route này chờ làn limiter: cửa
   sổ đếm trong bộ nhớ của `core` không thấy lưu lượng canary (canary đi thẳng tới Python của candidate), nên phục
   vụ chúng bằng Go trong làn chính sẽ làm cổng lệch giả ở 429.
 
