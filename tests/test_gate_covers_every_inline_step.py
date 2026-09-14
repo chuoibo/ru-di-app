@@ -243,7 +243,7 @@ INLINE_STEPS: dict[str, Covered] = {
     "test.yml::parity::Canary and parity run, once per auth mode": Covered(
         kind=GATE_KIND,
         stages=("parity",),
-        body_sha="7adaa9f33b32283e",
+        body_sha="5640283aa01c520a",
         why="",
     ),
     # --- test.yml: core (ADR-0029) ----------------------------------------

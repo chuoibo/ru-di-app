@@ -273,8 +273,9 @@ Mỗi group, những gì đã chạy được:
 
 ```bash
 make parity                              # = scripts/gate.sh parity, dev rồi prod, mỗi chế độ một cặp stack:
-                                         #   canary (mọi chế độ bẫy ĐỎ, identity XANH), lượt chính có ảnh chụp DB
-                                         #   sau từng bước và tap, corpus 422 (scenarios/generated), bước replay
+                                         #   lượt chính có ảnh chụp DB sau từng bước và tap, rồi canary (mọi
+                                         #   chế độ bẫy ĐỎ, identity XANH; chạy sau vì chế độ hỏng làm hai DB
+                                         #   lệch nhau), corpus 422 (scenarios/generated), bước replay
                                          #   chéo `via: python`, bước đồng thời `concurrent: N`, probe dòng request (chỉ dev)
 python3 scripts/render_parity_422_scenarios.py   # sinh lại corpus 422 từ model pydantic thật
 cd services/core && go vet ./... && go test ./...
