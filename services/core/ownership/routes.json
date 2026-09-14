@@ -1367,7 +1367,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/recap/GET-contexts-context_id-recap.md"
     },
     {

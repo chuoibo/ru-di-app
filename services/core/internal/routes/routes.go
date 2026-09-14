@@ -27,6 +27,7 @@ func All() []Route {
 		listAreas(),
 		createReport(),
 		putMyInterests(),
+		groupRecap(),
 	}
 }
 
