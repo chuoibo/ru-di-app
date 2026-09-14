@@ -1,0 +1,212 @@
+[
+ {
+  "case": "problem-missing-actor",
+  "method": "GET",
+  "path": "/contexts/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa",
+  "status": 401,
+  "headers": [
+   [
+    "content-length",
+    "64"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"code\":\"authentication_required\",\"detail\":\"Missing X-Actor-ID\"}",
+  "raised": null
+ },
+ {
+  "case": "problem-invalid-actor",
+  "method": "GET",
+  "path": "/contexts/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "64"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"code\":\"invalid_actor_id\",\"detail\":\"X-Actor-ID must be a UUID\"}",
+  "raised": null
+ },
+ {
+  "case": "validation-path-uuid",
+  "method": "GET",
+  "path": "/contexts/khong-phai-uuid",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "188"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"uuid_parsing\",\"loc\":[\"path\",\"context_id\"],\"msg\":\"Input should be a valid UUID, invalid character: found `k` at 1\",\"ctx\":{\"error\":\"invalid character: found `k` at 1\"}}]}",
+  "raised": null
+ },
+ {
+  "case": "validation-missing-field",
+  "method": "POST",
+  "path": "/contexts",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "84"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"display_name\"],\"msg\":\"Field required\"}]}",
+  "raised": null
+ },
+ {
+  "case": "validation-extra-field",
+  "method": "POST",
+  "path": "/contexts",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "101"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"extra_forbidden\",\"loc\":[\"body\",\"extra\"],\"msg\":\"Extra inputs are not permitted\"}]}",
+  "raised": null
+ },
+ {
+  "case": "validation-wrong-type",
+  "method": "POST",
+  "path": "/contexts",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "104"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"display_name\"],\"msg\":\"Input should be a valid string\"}]}",
+  "raised": null
+ },
+ {
+  "case": "validation-too-long",
+  "method": "POST",
+  "path": "/contexts",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "144"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"display_name\"],\"msg\":\"String should have at most 200 characters\",\"ctx\":{\"max_length\":200}}]}",
+  "raised": null
+ },
+ {
+  "case": "validation-json-invalid",
+  "method": "POST",
+  "path": "/contexts",
+  "status": 422,
+  "headers": [
+   [
+    "content-length",
+    "114"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"detail\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",17],\"msg\":\"JSON decode error\",\"ctx\":{\"error\":\"Expecting value\"}}]}",
+  "raised": null
+ },
+ {
+  "case": "server-error-plain",
+  "method": "GET",
+  "path": "/contexts/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa",
+  "status": 500,
+  "headers": [
+   [
+    "content-length",
+    "21"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Internal Server Error",
+  "raised": "OperationalError"
+ },
+ {
+  "case": "server-error-guest",
+  "method": "GET",
+  "path": "/g/ttttttttttttttttttttttttttttttttttttttttttt",
+  "status": 500,
+  "headers": [
+   [
+    "content-length",
+    "21"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ],
+   [
+    "cache-control",
+    "no-store"
+   ],
+   [
+    "referrer-policy",
+    "no-referrer"
+   ],
+   [
+    "x-robots-tag",
+    "noindex, nofollow"
+   ]
+  ],
+  "body": "Internal Server Error",
+  "raised": "OperationalError"
+ },
+ {
+  "case": "problem-vietnamese-detail",
+  "method": "POST",
+  "path": "/auth/otp/request",
+  "status": 429,
+  "headers": [
+   [
+    "content-length",
+    "63"
+   ],
+   [
+    "content-type",
+    "application/json"
+   ]
+  ],
+  "body": "{\"code\":\"rate_limited\",\"detail\":\"Th\u1eed l\u1ea1i sau m\u1ed9t ph\u00fat.\"}",
+  "raised": null
+ }
+]
