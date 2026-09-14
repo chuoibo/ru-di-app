@@ -21,6 +21,9 @@ import (
 	"time"
 
 	"mobile/services/core/internal/config"
+	"mobile/services/core/internal/httpapi/dispatch"
+	"mobile/services/core/internal/httpapi/mw/cors"
+	"mobile/services/core/internal/httpapi/router"
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/ownership"
 )
@@ -70,21 +73,27 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		return 1
 	}
 	served := manifest.GoServed(force)
-	for _, r := range served {
-		if handlers[r.ID] == nil {
-			logger.Error("refusing to start", "error",
-				fmt.Sprintf("manifest gives Go %q but this binary has no handler for it", r.ID))
-			return 1
-		}
-	}
-	if len(served) > 0 {
-		// The ordered router that dispatches Go-owned routes lands with the
-		// first migrated group; until then Go must own nothing.
-		logger.Error("refusing to start", "error", "Go-owned routes need the ordered router")
+	// Every route, Python's included: registration order decides which route a
+	// request belongs to, and a Python route declared first must still win.
+	routes, err := router.New(manifest.Routes)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-
-	front := proxy.New(cfg.PythonUpstream, logger)
+	// Unset and empty give the same loopback-only policy in app/api/cors.py.
+	origins := getenv(cors.OriginsEnvVar)
+	front, err := dispatch.New(dispatch.Options{
+		Router:   routes,
+		Served:   served,
+		Handlers: handlers,
+		Python:   proxy.New(cfg.PythonUpstream, logger),
+		CORS:     cors.New(origins, origins != ""),
+		Logger:   logger,
+	})
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
 	logger.Info("core starting",
 		"listen", cfg.Listen,
 		"liveness", cfg.LivenessListen,
