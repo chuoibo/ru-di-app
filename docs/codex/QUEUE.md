@@ -67,6 +67,15 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   `DELETE /posts/{post_id}/comments/{comment_id}`; `POST /identity/person-id` và `POST /friends/lookup`
   (limiter theo địa chỉ của `core`, 429 so ở làn limiter). Cả 24 route W2 đã PORTED.
 
+Sóng W3 bắt đầu ghi mốc, route đóng băng theo cùng luật: contexts (8: `POST /contexts`, `PATCH /contexts/{context_id}`,
+`POST /contexts/{context_id}/members`, `POST /memberships/{membership_id}/accept`,
+`DELETE /contexts/{context_id}/members/{person_id}`, `GET /contexts/{context_id}/members`,
+`GET /contexts/{context_id}/balances`, `GET /contexts/{context_id}`) và memories (8: `POST` và `GET
+/contexts/{context_id}/memories`, `POST /contexts/{context_id}/checkins`, `GET /contexts/{context_id}/widget`, reaction
+thêm/bỏ và comment thêm/đọc của một memory) — 16 route, vẫn do Python phục vụ. `GET .../balances` đọc sổ và khoá hàng:
+ba luật tiền giữ nguyên, số dư tính lại từ sổ ở cả hai phía.
+- W2 còn thiếu kịch bản replay chéo (`via: python`) và đồng thời (`concurrent: N`) cho 15 route ghi; W1 đã có cả hai.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
