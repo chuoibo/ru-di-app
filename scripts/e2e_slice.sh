@@ -302,9 +302,13 @@ s.bind(('127.0.0.1', 0))
 print(s.getsockname()[1])
 s.close()")" || return 2
 
+  # Same database as the API, and no MOBILE_AUTH_MODE for either, so both run
+  # prod. Merged Go routes (manifest PORTED or later) are served from Go.
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
   MOBILE_PYTHON_UPSTREAM="$API_URL" \
+  MOBILE_DATABASE_URL="$DATABASE_URL" \
+  MOBILE_CORE_CANDIDATE_ROUTES="${MOBILE_CORE_CANDIDATE_ROUTES:-ported}" \
     "$core_bin" serve >"$core_log" 2>&1 &
   CORE_PID=$!
 

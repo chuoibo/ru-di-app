@@ -1453,7 +1453,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/social_map/GET-areas.md"
     },
     {
@@ -1652,7 +1652,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/preferences/GET-interests.md"
     },
     {

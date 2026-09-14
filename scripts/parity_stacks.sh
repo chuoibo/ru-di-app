@@ -130,9 +130,16 @@ cmd_up() {
   ( cd services/core && go build -o "$work/core" ./cmd/core )
   local core_port live_port
   core_port="$(free_port)"; live_port="$(free_port)"
+  # Go routes authenticate and query for themselves, so core runs in the auth
+  # mode and on the database of the Python behind it. Every route whose Go code
+  # is merged (manifest PORTED or later) is served from Go: that is what the
+  # candidate stack is for.
   MOBILE_CORE_LISTEN="127.0.0.1:$core_port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" \
   MOBILE_PYTHON_UPSTREAM="${api_url[cand]}" \
+  MOBILE_AUTH_MODE="$auth" \
+  MOBILE_DATABASE_URL="${dsn[cand]}" \
+  MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
   wait_http "http://127.0.0.1:$core_port/healthz" "core"

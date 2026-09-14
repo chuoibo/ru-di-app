@@ -21,10 +21,16 @@ import (
 	"time"
 
 	"mobile/services/core/internal/config"
+	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/httpapi/dispatch"
+	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/httpapi/mw/cors"
+	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/router"
+	"mobile/services/core/internal/idem"
 	"mobile/services/core/internal/proxy"
+	"mobile/services/core/internal/pyval"
+	"mobile/services/core/internal/routes"
 	"mobile/services/core/ownership"
 )
 
@@ -43,17 +49,12 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 	case "healthcheck":
 		return healthcheck(getenv, stderr)
 	case "routes":
-		return routes(args[1:], stdout, stderr)
+		return listRoutes(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
 	}
 }
-
-// handlers maps a manifest route id to the Go handler that serves it. It is
-// empty until the first router group is migrated; the manifest may not give
-// Go a route that has no handler here.
-var handlers = map[string]http.Handler{}
 
 func serve(getenv func(string) string, stderr io.Writer) int {
 	logger := slog.New(slog.NewJSONHandler(stderr, nil))
@@ -72,10 +73,44 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	served := manifest.GoServed(force)
+	candidates, err := manifest.ParseCandidates(getenv(ownership.EnvCandidateRoutes), force)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	served := append(manifest.GoServed(force), candidates...)
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
-	routes, err := router.New(manifest.Routes)
+	table, err := router.New(manifest.Routes)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+
+	// Go routes authenticate in the auth mode Python resolved and query the
+	// same database. Nothing is opened while Go serves nothing, so a binary
+	// with every route forced back to Python needs no database settings.
+	env := endpoint.Env{Mode: endpoint.Mode(cfg.AuthMode), Now: time.Now, NewUnit: func() *db.Unit { return db.NewUnit(nil) }}
+	var idempotency func(http.Handler) http.Handler
+	if len(served) > 0 {
+		pool, err := db.Open(context.Background(), getenv(db.EnvDatabaseURL))
+		if err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		defer pool.Close()
+		env.NewUnit = func() *db.Unit { return db.NewUnit(pool) }
+		// A store failure is an unhandled exception in Python, answered from
+		// the outermost layer; raising keeps it there instead of inside CORS.
+		idempotency = idem.New(idem.NewPostgresStore(pool), idem.WithErrorHandler(
+			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) }))
+	}
+	contract, err := pyval.Load()
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	handlers, err := routes.Handlers(contract, pyval.NewRegistry(), env)
 	if err != nil {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
@@ -83,12 +118,13 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 	// Unset and empty give the same loopback-only policy in app/api/cors.py.
 	origins := getenv(cors.OriginsEnvVar)
 	front, err := dispatch.New(dispatch.Options{
-		Router:   routes,
-		Served:   served,
-		Handlers: handlers,
-		Python:   proxy.New(cfg.PythonUpstream, logger),
-		CORS:     cors.New(origins, origins != ""),
-		Logger:   logger,
+		Router:      table,
+		Served:      served,
+		Handlers:    handlers,
+		Python:      proxy.New(cfg.PythonUpstream, logger),
+		CORS:        cors.New(origins, origins != ""),
+		Logger:      logger,
+		Idempotency: idempotency,
 	})
 	if err != nil {
 		logger.Error("refusing to start", "error", err.Error())
@@ -99,6 +135,8 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		"liveness", cfg.LivenessListen,
 		"python_upstream", cfg.PythonUpstream.String(),
 		"go_served", len(served),
+		"candidates", len(candidates),
+		"auth_mode", cfg.AuthMode,
 		"manifest_routes", len(manifest.Routes),
 		"force_python", force.Tokens,
 	)
@@ -187,9 +225,9 @@ type routeView struct {
 	Group  string `json:"group"`
 }
 
-// routes prints the routes this binary has handlers for, in manifest order,
-// so the ownership gate can compare them with the manifest's Go-owned rows.
-func routes(args []string, stdout, stderr io.Writer) int {
+// listRoutes prints the routes this binary implements, in manifest order, so
+// the ownership gate can compare them with the manifest.
+func listRoutes(args []string, stdout, stderr io.Writer) int {
 	if len(args) != 1 || args[0] != "--json" {
 		fmt.Fprintln(stderr, "usage: core routes --json")
 		return 2
@@ -199,9 +237,13 @@ func routes(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
+	implemented := map[string]bool{}
+	for _, route := range routes.All() {
+		implemented[route.ID] = true
+	}
 	views := []routeView{}
 	for _, r := range manifest.Routes {
-		if handlers[r.ID] != nil {
+		if implemented[r.ID] {
 			views = append(views, routeView{ID: r.ID, Method: r.Method, Path: r.Path, Group: r.Group})
 		}
 	}

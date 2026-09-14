@@ -207,7 +207,13 @@ services:
       context: ./services/core
     image: mobile-local/core:dev
     environment:
+      # Go routes authenticate and query for themselves: same database and auth
+      # mode as `api`, from the one anchor both read.
+      <<: *api-env
       MOBILE_PYTHON_UPSTREAM: http://api:8000
+      # Go code merged but not yet owned by Go (manifest PORTED or later) is
+      # served from Go only when named here, e.g. `ported`. Empty keeps Python.
+      MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}
       # Rollback without a rebuild: `MOBILE_FORCE_PYTHON=all make up`.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
     ports:
