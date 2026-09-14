@@ -11,7 +11,9 @@ không DB). Backend do Claude làm theo uỷ quyền ADR-0016/ADR-0029; charter 
 
 **Đang nhận:** W0 nền móng, nhánh `claude/p0-w-go0-nen-mong-cong-truoc` (commit local, chưa push). `services/core`
 là cửa trước Go: `dispatch` chỉ chạy trong Go request khớp FULL vào route manifest giao cho Go, còn lại proxy về
-Python. Manifest hiện giao 0 route cho Go, nên mọi request vẫn do Python trả lời. Đã có trong Go, mỗi phần đo bằng
+Python. Manifest vẫn giao 0 route cho Go (owner `python` ở mọi hàng), nên compose và mọi host thật vẫn do Python
+trả lời. Route đã có mã Go (trạng thái `PORTED`) chỉ được Go phục vụ khi `MOBILE_CORE_CANDIDATE_ROUTES` nêu tên —
+stack candidate của `parity` và `scripts/e2e_slice.sh` đặt `ported`; compose để trống. Đã có trong Go, mỗi phần đo bằng
 golden hoặc oracle chạy chính thư viện Python trong ảnh đã ghim: router kiểu Starlette, JSON kiểu Python, CORS,
 auth dev/prod, lỗi 500 và header trang khách, unit of work pgx, Idempotency-Key (phát lại chéo hai chiều trên cùng
 bảng), bộ giới hạn nhịp trong bộ nhớ. `gate.sh parity` so hai stack cô lập ở cả chế độ dev lẫn prod.
@@ -25,10 +27,13 @@ bảng), bộ giới hạn nhịp trong bộ nhớ. `gate.sh parity` so hai stac
   phải chạy lại kịch bản parity của nó (ADR-0029 §2.9).
 - Group outings/hành trình (W7) cần thoả thuận đóng băng với lane Codex trước khi ghi mốc.
 
-Route đang đóng băng để ghi mốc (W1: route card, kịch bản `parity/scenarios/w1/`, manifest `CARDED`):
-`GET /interests`, `PUT /people/me/interests`, `GET /contexts/{context_id}/preference-profile`, `GET /areas`,
-`GET /contexts/{context_id}/map`, `GET /contexts/{context_id}/heatmap`, `POST /contexts/{context_id}/meet`,
-`GET /contexts/{context_id}/recap`, `POST /reports`.
+Route đang đóng băng để ghi mốc (W1, route card và kịch bản `parity/scenarios/w1/`). Sửa Python chạm tới các route
+này thì chạy lại kịch bản của nó:
+- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /interests`, `GET /areas`, `POST /reports`,
+  `PUT /people/me/interests`, `GET /contexts/{context_id}/recap`, `GET /contexts/{context_id}/preference-profile`.
+- `CARDED`, đang port phần domain/repository: `GET /contexts/{context_id}/map`, `GET /contexts/{context_id}/heatmap`,
+  `POST /contexts/{context_id}/meet`. `map` kéo theo đọc sổ hai người (đồng ý đọc chat) nên cần thêm các phương thức
+  repository của pair notebook.
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
