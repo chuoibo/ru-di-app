@@ -1,0 +1,263 @@
+# W2 · POST /friends/requests and POST /friends/requests/{id}/respond: the
+# refusals in the service's order (permission, person, domain, repository) and
+# every transition a request can make: accept, decline and ask again, block by
+# either party, and the silent 409 a blocked person gets for asking again.
+id: w2/friends/friend-request-writes
+routes: ['POST /friends/requests', 'POST /friends/requests/{request_id}/respond']
+auth_mode: dev
+personas:
+  alice: {}
+  bob: {}
+  carol: {}
+  dave: {}
+steps:
+  - id: register_alice
+    as: alice
+    request:
+      method: PUT
+      path: '/people/{{persona.alice}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi đầu (dữ liệu mẫu)"}'
+  - id: register_bob
+    as: bob
+    request:
+      method: PUT
+      path: '/people/{{persona.bob}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi (dữ liệu mẫu)"}'
+  - id: register_carol
+    as: carol
+    request:
+      method: PUT
+      path: '/people/{{persona.carol}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_dave
+    as: dave
+    request:
+      method: PUT
+      path: '/people/{{persona.dave}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: anonymous_asks
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: alice_asks_herself
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.alice}}"}'
+  - id: alice_asks_nobody
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: alice_asks_bob
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.bob}}"}'
+    bind:
+      req_ab: {from: body, pointer: /id, class: uuid}
+  - id: alice_asks_bob_again
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.bob}}"}'
+  - id: bob_asks_alice_back
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.alice}}"}'
+  - id: alice_accepts_her_own_request
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: carol_answers_others_request
+    as: carol
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: bob_answers_unknown_request
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: bob_answers_maybe
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"maybe"}'
+  - id: bob_accepts
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: bob_accepts_again
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: alice_asks_friend_bob_again
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.bob}}"}'
+  - id: alice_blocks_as_requester
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: bob_declines_blocked
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: alice_blocks_again
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ab}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: bob_asks_blocker_alice
+    as: bob
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.alice}}"}'
+  - id: alice_asks_carol
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.carol}}"}'
+    bind:
+      req_ac: {from: body, pointer: /id, class: uuid}
+  - id: carol_declines
+    as: carol
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ac}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: alice_asks_carol_after_decline
+    as: alice
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.carol}}"}'
+    bind:
+      req_ac2: {from: body, pointer: /id, class: uuid}
+  - id: carol_accepts_second_request
+    as: carol
+    request:
+      method: POST
+      path: '/friends/requests/{{req_ac2}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: dave_asks_carol
+    as: dave
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.carol}}"}'
+    bind:
+      req_dc: {from: body, pointer: /id, class: uuid}
+  - id: carol_blocks_dave
+    as: carol
+    request:
+      method: POST
+      path: '/friends/requests/{{req_dc}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: dave_asks_carol_again
+    as: dave
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.carol}}"}'
+  - id: dave_blocks_back
+    as: dave
+    request:
+      method: POST
+      path: '/friends/requests/{{req_dc}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: bob_lists_friends_after_block
+    as: bob
+    request:
+      method: GET
+      path: '/people/{{persona.bob}}/friends'
+  - id: carol_lists_friends
+    as: carol
+    request:
+      method: GET
+      path: '/people/{{persona.carol}}/friends'
