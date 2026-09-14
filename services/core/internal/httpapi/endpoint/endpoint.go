@@ -91,6 +91,9 @@ type Reply struct {
 	Status int
 	// Body is the response model, already in field order.
 	Body pyjson.Value
+	// Empty answers with the status alone: no body and no content headers, as
+	// a Starlette `Response(status_code=...)` does. Body is ignored.
+	Empty bool
 }
 
 // Serve is a route's Go implementation: the body of the Python endpoint.
@@ -196,6 +199,17 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		servererror.Raise(err)
+	}
+	if reply.Empty {
+		if err := unit.Commit(ctx); err != nil {
+			servererror.Raise(err)
+		}
+		status := reply.Status
+		if status == 0 {
+			status = h.status
+		}
+		w.WriteHeader(status)
+		return
 	}
 	encoded, err := pyjson.Compact(reply.Body)
 	if err != nil {

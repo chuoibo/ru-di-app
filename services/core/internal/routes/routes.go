@@ -41,6 +41,10 @@ func All() []Route {
 		getVoteResults(),
 		castVoteBallot(),
 		closeVote(),
+		createStory(),
+		listStories(),
+		markStorySeen(),
+		deleteStory(),
 	}
 }
 

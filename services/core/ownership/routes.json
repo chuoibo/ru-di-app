@@ -1505,7 +1505,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /stories",
@@ -1517,7 +1517,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /stories/{story_id}/seen",
@@ -1529,7 +1529,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "DELETE /stories/{story_id}",
@@ -1541,7 +1541,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/votes",
