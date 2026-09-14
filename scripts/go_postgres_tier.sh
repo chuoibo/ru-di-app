@@ -14,9 +14,9 @@
 #   * no tests: `go test -tags postgres ./...` passes when no file carries the
 #     tag. The run must show the sentinel TestPostgresTierReachesDatabase
 #     passing, or the tier fails.
-#   * a test that skips itself: the idempotency oracle skips without an image
-#     to run Python from. This tier hands it its own API image, and any SKIP
-#     line fails the tier.
+#   * a test that skips itself: the idempotency and repository oracles skip
+#     without an image to run Python from. This tier hands them its own API
+#     image, and any SKIP line fails the tier.
 #
 # Host networking and published loopback ports only: the Docker daemon on the
 # shared machine has no subnets left for new networks.
@@ -86,6 +86,7 @@ set +e
     CORE_TEST_DATABASE_URL="postgresql://mobile:$password@127.0.0.1:$port/mobile" \
     CORE_REQUIRE_POSTGRES_TESTS=1 \
     IDEM_ORACLE_IMAGE="$image" \
+    CORE_PYTHON_IMAGE="$image" \
     go test -tags postgres -count=1 -v "${go_args[@]}"
 ) 2>&1 | tee "$log"
 rc=${PIPESTATUS[0]}
