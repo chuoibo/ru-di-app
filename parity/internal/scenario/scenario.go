@@ -24,9 +24,11 @@ import (
 
 // Scenario is one file.
 type Scenario struct {
-	ID       string             `yaml:"id"`
-	Routes   []string           `yaml:"routes"`
-	AuthMode string             `yaml:"auth_mode"`
+	ID       string   `yaml:"id"`
+	Routes   []string `yaml:"routes"`
+	AuthMode string   `yaml:"auth_mode"`
+	// Lane is empty for the main lane, or LaneLimiter.
+	Lane     string             `yaml:"lane"`
 	Personas map[string]Persona `yaml:"personas"`
 	Steps    []Step             `yaml:"steps"`
 
@@ -156,9 +158,20 @@ func refuseOracleKeys(node *yaml.Node, parentKey string) error {
 	return nil
 }
 
+// LaneLimiter marks a scenario that spends an in-memory rate limiter on
+// purpose. The main run and the canary leave it out: they repeat the corpus,
+// so its refusals would fall on whichever pass met the window first. `parity
+// run --lane limiter` starts each one in a fresh limiter window.
+const LaneLimiter = "limiter"
+
 func (sc *Scenario) validate() error {
 	if !idPattern.MatchString(sc.ID) {
 		return fmt.Errorf("id %q must match %s", sc.ID, idPattern)
+	}
+	switch sc.Lane {
+	case "", LaneLimiter:
+	default:
+		return fmt.Errorf("lane %q: leave it out for the main lane, or write %q", sc.Lane, LaneLimiter)
 	}
 	if len(sc.Routes) == 0 {
 		return errors.New("routes: list the routes this scenario exercises")

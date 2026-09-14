@@ -292,7 +292,8 @@ jobs:
         # subshell: on the left of `||` errexit is off, and a failed canary
         # followed by a passing run would otherwise read green.
         # The run goes first: the canary leaves the two databases unequal
-        # (see scripts/gate.sh parity_phase).
+        # (see scripts/gate.sh parity_phase). The limiter lane goes last, in
+        # dev only: each scenario waits for a fresh window and spends it.
         run: |
           (cd parity && go run ./cmd/parity lint scenarios)
           status=0
@@ -307,7 +308,10 @@ jobs:
                   --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios &&
                 go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
                   --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
-                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; }
+                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
+                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity run --lane limiter --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+                    --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+                    --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; }
             ) || status=1
             scripts/parity_stacks.sh down --env "$env_file"
             [ "$status" -eq 0 ] || break

@@ -5,13 +5,13 @@
 #
 # LIMITER (person_id_limit, 20 per source address per 60 s, in memory): every
 # request that reaches the handler spends one, including refusals. This file
-# spends 6 per pass, none of them bound, and no other w2 file spends it. The
-# canary runs every w2 file once per damage mode (~19 s apart here), so later
-# passes may meet 429s; those only add differences to damage modes, while the
-# identity mode runs first in a fresh window. A bound step on this route would
-# abort the canary's reference run instead, which is why the lookup scenario
-# that mints ids lives in scenarios/w2-limiter-bound. The 429 branch and window
-# roll-over belong to the separate limiter lane.
+# spends 6 per pass, none of them bound, and no other main-lane file spends it.
+# The canary runs every main-lane file once per damage mode (~19 s apart here),
+# so later passes may meet 429s; those only add differences to damage modes,
+# while the identity mode runs first. A bound step on this route would abort the
+# canary's reference run instead, which is why the lookup scenario that mints
+# ids is in the limiter lane (w2/limiter). The 429 branch is in
+# w2/limiter/POST-identity-person-id-limit.yaml; window roll-over is not compared.
 #
 # Phone numbers are sample data (dữ liệu mẫu), split by JSON \t escapes
 # (canonical_mobile strips whitespace) so no digit run reaches the repo.

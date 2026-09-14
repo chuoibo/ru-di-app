@@ -117,6 +117,14 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
   của tap, nên tap vẫn ghi bước đó là tới Python; ở reference mọi bước vốn là Python). Nhờ vậy khoá
   `Idempotency-Key` do Python lưu được Go trả lời và ngược lại, trong cùng một kịch bản. Stack thiếu client tới
   Python mà kịch bản có bước như vậy là lỗi dựng, không bao giờ được gửi thay qua cửa trước.
+- Làn limiter: kịch bản có `lane: limiter` cố ý tiêu một limiter trong bộ nhớ theo địa chỉ (`person_id_limit`,
+  `friend_lookup_limit`). Lượt chính và canary bỏ qua chúng: hai lượt đó lặp corpus, nên 429 sẽ rơi vào lượt nào gặp
+  cửa sổ trước. `parity run --lane limiter` chạy chúng cuối pha dev: mỗi kịch bản chờ tới ngay sau một biên
+  `int(CLOCK_MONOTONIC / 60)` (Python `time.monotonic()` trong container và `limit.Monotonic()` của Go đọc cùng đồng
+  hồ nhân trên máy này), chạy reference rồi candidate trong cùng cửa sổ, và là `INFRA` nếu chạy sang cửa sổ sau. Hai
+  tiến trình đếm riêng, nên mỗi phía gặp limiter khi chưa đếm gì và bước bị 429 phải trùng nhau. Không chứng minh:
+  nhiều replica, địa chỉ khách thật sau proxy (mọi stack ở đây gọi từ 127.0.0.1), lăn cửa sổ giữa chừng, xoá bảng khi
+  quá 10 000 cặp.
 - Đồng thời: bước `concurrent: N` gửi N bản của cùng một request cùng lúc (`{{burst}}` đánh số từng bản). Câu trả
   lời được xếp theo nội dung đã che id, digest và thời điểm (bản giống nhau giữ thứ tự số bản), không theo thứ tự
   về, nên bản nào thắng cuộc đua không làm lệch phép so. Mọi thời điểm cả loạt ghi (câu trả lời và hàng DB) chung

@@ -1,0 +1,350 @@
+# W2 limiter lane · POST /friends/lookup against friend_lookup_limit (30 per
+# source address per 60 s, in memory, routes/friends.py). The actor dependency
+# runs before the handler and spends nothing; every request that reaches the
+# handler spends one, refusals included. `parity run --lane limiter` starts this
+# file in a fresh window on each side, so the 31st is refused on both.
+#
+# Sample numbers (dữ liệu mẫu), split by JSON \t escapes so no digit run reaches
+# the repo.
+id: w2/limiter/post-friends-lookup-limit
+routes: ['POST /friends/lookup', 'POST /identity/person-id']
+auth_mode: dev
+lane: limiter
+personas:
+  seeker: {}
+steps:
+  # spends 0: get_actor refuses before the handler
+  - id: anonymous_is_401
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 0: the actor header is refused before the handler
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 0: the idempotency middleware refuses before routing
+  - id: empty_idempotency_key
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (1 of 30)
+  - id: spend_01_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (2 of 30)
+  - id: spend_02_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (3 of 30)
+  - id: spend_03_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (4 of 30)
+  - id: spend_04_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (5 of 30)
+  - id: spend_05_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # spends 1 (6 of 30)
+  - id: spend_06_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (7 of 30)
+  - id: spend_07_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (8 of 30)
+  - id: spend_08_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (9 of 30)
+  - id: spend_09_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (10 of 30)
+  - id: spend_10_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # spends 1 (11 of 30)
+  - id: spend_11_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (12 of 30)
+  - id: spend_12_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (13 of 30)
+  - id: spend_13_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (14 of 30)
+  - id: spend_14_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (15 of 30)
+  - id: spend_15_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # spends 1 (16 of 30)
+  - id: spend_16_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (17 of 30)
+  - id: spend_17_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (18 of 30)
+  - id: spend_18_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (19 of 30)
+  - id: spend_19_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (20 of 30)
+  - id: spend_20_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # spends 1 (21 of 30)
+  - id: spend_21_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (22 of 30)
+  - id: spend_22_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (23 of 30)
+  - id: spend_23_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (24 of 30)
+  - id: spend_24_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (25 of 30)
+  - id: spend_25_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # spends 1 (26 of 30)
+  - id: spend_26_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # spends 1 (27 of 30)
+  - id: spend_27_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (28 of 30)
+  - id: spend_28_phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"n":1}}'
+  # spends 1 (29 of 30)
+  - id: spend_29_landline
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (30 of 30)
+  - id: spend_30_array_body
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["phone"]'
+  # 31st: 429 rate_limited
+  - id: over_limit_unknown_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # the limiter runs before the body is parsed
+  - id: over_limit_not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # get_actor still comes first
+  - id: over_limit_anonymous_still_401
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'
+  # person_id_limit is separate: 200, not 429
+  - id: person_id_has_its_own_limiter
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'

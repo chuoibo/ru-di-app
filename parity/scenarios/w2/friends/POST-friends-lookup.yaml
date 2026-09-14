@@ -4,13 +4,13 @@
 # all answer the same 404).
 #
 # This file never registers a holder: that needs a bound id from the
-# rate-limited POST /identity/person-id, which the canary cannot survive (see
-# parity/scenarios/w2-limiter-bound/friends/POST-friends-lookup.yaml for the
-# 200, hidden, ended-account and blocked branches).
+# rate-limited POST /identity/person-id, so the 200, hidden, ended-account and
+# blocked branches run in the limiter lane
+# (parity/scenarios/w2/limiter/POST-friends-lookup-holders.yaml).
 #
 # LIMITER: friend_lookup_limit (30 per source address per 60 s) is spent by
 # every step that reaches the handler: 8 in this file, none of them bound. The
-# 429 branch belongs to the separate limiter lane.
+# 429 branch is in w2/limiter/POST-friends-lookup-limit.yaml.
 #
 # Numbers are sample data (dữ liệu mẫu), split by JSON \t escapes; nobody
 # registers them.

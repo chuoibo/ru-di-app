@@ -461,6 +461,8 @@ parity_phase() {
   # afterwards the two databases hold different rows; a scenario that reads
   # other scenarios' rows (the public feed of GET /posts) would differ for
   # that reason alone.
+  # The limiter lane goes last, in dev only: each of its scenarios waits for a
+  # fresh limiter window and spends it, so nothing may run on the stacks after.
   (
     cd parity &&
       go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
@@ -468,7 +470,10 @@ parity_phase() {
         --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios &&
       go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
         --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
-      { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; }
+      { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
+      { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity run --lane limiter --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+          --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+          --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; }
   ) || rc=1
   if [ "$rc" -ne 0 ]; then
     # The containers are removed on teardown; keep their last words.

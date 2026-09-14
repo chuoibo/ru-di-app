@@ -33,6 +33,7 @@ import (
 	"mobile/parity/internal/compare"
 	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
+	"mobile/parity/internal/limiterlane"
 	"mobile/parity/internal/rawprobe"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
@@ -123,6 +124,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	servedRoutes := flags.String("served-routes", "", "JSON of `core routes --json`: routes the candidate serves in Go; needs --candidate-tap")
 	candidatePython := flags.String("candidate-python", "", "base URL of the candidate's Python without core (through the tap), for steps with via: python")
 	burstRepeats := flags.Int("burst-repeats", 3, "reference runs of a scenario with a concurrent step; the candidate must match one of them")
+	laneName := flags.String("lane", "main", "main: scenarios without a lane; limiter: only lane: limiter scenarios, each started in a fresh limiter window")
+	limiterWindow := flags.Float64("limiter-window", 60, "seconds in the stacks' limiter window, for --lane limiter")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -142,6 +145,23 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	if scenarios, err = filterAuth(scenarios, *authMode, stdout); err != nil {
 		fmt.Fprintln(stderr, "parity run:", err)
 		return 2
+	}
+	if scenarios, err = filterLane(scenarios, *laneName, stdout); err != nil {
+		fmt.Fprintln(stderr, "parity run:", err)
+		return 2
+	}
+	var window *limiterlane.Window
+	if *laneName == scenario.LaneLimiter {
+		if _, err := limiterlane.Monotonic(); err != nil {
+			fmt.Fprintln(stderr, "INFRA", err)
+			return 2
+		}
+		if *limiterWindow <= 0 {
+			fmt.Fprintln(stderr, "parity run: --limiter-window must be positive")
+			return 2
+		}
+		now := func() float64 { seconds, _ := limiterlane.Monotonic(); return seconds }
+		window = &limiterlane.Window{Seconds: *limiterWindow, Now: now, Sleep: time.Sleep}
 	}
 	refClient, err := httpclient.New(*reference, *host)
 	if err != nil {
@@ -231,6 +251,14 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	ran := map[string]bool{}
 	for _, sc := range scenarios {
 		nonce := runner.NewNonce()
+		var started int64
+		if window != nil {
+			if sc.HasBursts() {
+				fmt.Fprintf(stderr, "parity run: %s: a limiter-lane scenario cannot burst; the reference repeats a burst scenario and every repeat spends the limiter again\n", sc.ID)
+				return 2
+			}
+			started = window.Start()
+		}
 		refRun, err := runner.Execute(ctx, sc, refStack, nonce)
 		if err != nil {
 			fmt.Fprintf(stderr, "INFRA %v\n", err)
@@ -258,6 +286,12 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		if err != nil {
 			fmt.Fprintf(stderr, "INFRA %v\n", err)
 			return 2
+		}
+		if window != nil {
+			if err := window.Check(started); err != nil {
+				fmt.Fprintf(stderr, "INFRA %s: %v\n", sc.ID, err)
+				return 2
+			}
 		}
 		diffs, matched := runner.Closest(refRuns, candRun)
 		if matched > 0 {
@@ -383,6 +417,10 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if scenarios, err = filterAuth(scenarios, *authMode, stdout); err != nil {
+		fmt.Fprintln(stderr, "parity canary:", err)
+		return 2
+	}
+	if scenarios, err = filterLane(scenarios, "main", stdout); err != nil {
 		fmt.Fprintln(stderr, "parity canary:", err)
 		return 2
 	}
@@ -580,6 +618,30 @@ func filterAuth(scenarios []*scenario.Scenario, mode string, stdout io.Writer) (
 	fmt.Fprintf(stdout, "auth=%s: %d scenario(s) for this mode, %d left for the other\n", mode, len(kept), len(scenarios)-len(kept))
 	if len(kept) == 0 {
 		return nil, fmt.Errorf("--auth %s selects no scenario", mode)
+	}
+	return kept, nil
+}
+
+// filterLane keeps the scenarios of one lane: "main" keeps those without a
+// lane, scenario.LaneLimiter only those marked with it.
+func filterLane(scenarios []*scenario.Scenario, lane string, stdout io.Writer) ([]*scenario.Scenario, error) {
+	want := ""
+	switch lane {
+	case "main":
+	case scenario.LaneLimiter:
+		want = scenario.LaneLimiter
+	default:
+		return nil, fmt.Errorf("--lane %q: main or %s", lane, scenario.LaneLimiter)
+	}
+	kept := make([]*scenario.Scenario, 0, len(scenarios))
+	for _, sc := range scenarios {
+		if sc.Lane == want {
+			kept = append(kept, sc)
+		}
+	}
+	fmt.Fprintf(stdout, "lane=%s: %d scenario(s), %d in another lane\n", lane, len(kept), len(scenarios)-len(kept))
+	if len(kept) == 0 {
+		return nil, fmt.Errorf("--lane %s selects no scenario", lane)
 	}
 	return kept, nil
 }

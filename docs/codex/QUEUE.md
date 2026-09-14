@@ -53,8 +53,8 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   visibility, storyvisibility, postaudience, vote, cursors, identity, photoref; golden từ Python thật 0 lệch).
 - Route card (`docs/migration/routes/{friends,identity,posts,stories,votes}`) và kịch bản viết tay
   (`parity/scenarios/w2`) đủ 24 route. Story có ảnh thật đã vào cổng ở `parity/scenarios/w2/stories-photo`
-  (harness bind `storage_key` thành `<hex32#n>`); tra số đã đăng ký (limiter theo IP) vẫn ngoài cổng, chờ làn
-  limiter — xem `parity/pending-scenarios/README.md`.
+  (harness bind `storage_key` thành `<hex32#n>`); tra số đã đăng ký và nhánh 429 chạy ở làn limiter
+  (`parity/scenarios/w2/limiter`, `lane: limiter`, cuối pha dev của cổng).
 - `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
   `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship);
   `POST /contexts/{context_id}/votes`, `GET /contexts/{context_id}/votes`, `GET /votes/{vote_id}`,

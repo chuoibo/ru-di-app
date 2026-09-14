@@ -78,7 +78,7 @@ Mọi câu từ chối là câu cố định, không chèn đầu vào. 503 củ
 
 ## Kịch bản parity
 
-Hai file, tách vì limiter (lý do ở "Chưa phủ").
+Ba file: một ở lượt chính, hai ở làn limiter (lý do ở "Chưa phủ").
 
 `parity/scenarios/w2/friends/POST-friends-lookup.yaml`, id `w2/friends/post-friends-lookup` (15 bước, `dev`; tiêu 8 lượt `friend_lookup_limit`, không bước nào có `bind` trên route bị giới hạn, nằm trong corpus canary):
 
@@ -88,7 +88,7 @@ Hai file, tách vì limiter (lý do ở "Chưa phủ").
 - 422 của handler: `not_json` (`invalid_body`), `phone_as_object` (`phone_required`), `idem_same_key_after_refusal` (`phone_not_mobile`: key đã được nhả nên request khác dưới cùng key chạy thật, không phải `idempotency_key_reuse`).
 - Framework: `get_not_allowed` (405), `trailing_slash_redirects` (307).
 
-`parity/scenarios/w2-limiter-bound/friends/POST-friends-lookup.yaml`, id `w2-limiter-bound/friends/post-friends-lookup` (28 bước, `dev`; tiêu 10 lượt `friend_lookup_limit` và 2 lượt `person_id_limit`), xác nhận bằng `parity run` có lane DB, **không** nằm trong corpus canary:
+`parity/scenarios/w2/limiter/POST-friends-lookup-holders.yaml`, id `w2/limiter/post-friends-lookup-holders` (28 bước, `dev`, `lane: limiter`; tiêu 10 lượt `friend_lookup_limit` và 2 lượt `person_id_limit`), chạy ở làn limiter có lane DB, không nằm trong corpus canary:
 
 - Chuẩn bị hai người giữ số (dữ liệu mẫu): `mint_holder_id`, `mint_leaver_id` (`POST /identity/person-id`, bind `class: uuid`), `register_holder`, `register_leaver` + `leaver_deletes_account` (gửi dưới `X-Actor-ID` là id dẫn xuất).
 - 200: `seeker_finds_holder`, `seeker_finds_holder_other_spelling`, `idem_same_key_after_refusal`, `blocked_seeker_still_finds_holder`.
@@ -97,12 +97,14 @@ Hai file, tách vì limiter (lý do ở "Chưa phủ").
 - Idempotency: `seeker_finds_holder`, `idem_replay`, `idem_reuse_other_spelling`, `idem_refusal_unregistered_number` + `idem_same_key_after_refusal` (200), `empty_idempotency_key`.
 - Framework: `get_not_allowed`, `trailing_slash_redirects`.
 
+`parity/scenarios/w2/limiter/POST-friends-lookup-limit.yaml`, id `w2/limiter/post-friends-lookup-limit` (37 bước, `dev`, `lane: limiter`): 401 và `X-Actor-ID` hỏng không tốn lượt, middleware idempotency không tốn lượt, 30 lượt tới handler (`invalid_body`, `phone_required` với object lồng và mảng, `phone_not_mobile`, 404), lượt 31 là 429 `rate_limited` kể cả khi thân hỏng, 401 vẫn đi trước khi đã hết lượt, `POST /identity/person-id` vẫn 200 (limiter riêng).
+
 `parity/scenarios/w2/friends/prod-auth.yaml`: `anonymous_lookup` (401 `Missing bearer session`), `owner_lookup_unregistered` (404 qua bearer, tiêu 1 lượt).
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- **Lane limiter tách riêng.** Kịch bản giữ số lượt dưới ngưỡng; 429, lăn cửa sổ, xoá bảng khi quá 10 000 cặp chưa được so. Bản Go phải giữ: 30/60 s, cửa sổ cố định, bộ đếm riêng với `person_id_limit`, lượt bị từ chối không tăng đếm, request bị dependency xác thực chặn không tốn lượt.
-- **Vì sao nhánh có người giữ số nằm ngoài `w2`.** Tìm ra một người cần id dẫn xuất của họ, và cửa HTTP duy nhất là `POST /identity/person-id` (`person_id_limit`, 20/60 s). Id đó phải `bind`. Canary chạy mọi file `w2` một lần cho mỗi chế độ hỏng trên cùng tiến trình, đo được khoảng 19 s mỗi lượt, nên tới bốn lượt rơi vào cùng một cửa sổ; một 429 ở bước có `bind` phía tham chiếu làm canary dừng với `INFRA` (không phải một khác biệt). Vì vậy nhánh 200, ẩn số, tài khoản đã xoá, bị chặn và replay một 200 nằm ở `w2-limiter-bound` và được so bằng `parity run` cách nhau hơn 60 s. Muốn đưa về `w2` thì harness cần một cửa không giới hạn để lấy id, hoặc canary cần dãn nhịp; cả hai ngoài phạm vi lượt này.
+- **Làn limiter.** 429, limiter đứng trước thân và sau dependency xác thực, bộ đếm riêng với `person_id_limit` được so ở làn limiter (ADR-0029 §2.4). Lăn cửa sổ giữa chừng và xoá bảng khi quá 10 000 cặp chưa được so; nhiều replica và địa chỉ khách thật sau proxy không chứng minh được ở đây.
+- **Vì sao nhánh có người giữ số ở làn limiter.** Tìm ra một người cần id dẫn xuất của họ, và cửa HTTP duy nhất là `POST /identity/person-id` (`person_id_limit`, 20/60 s). Id đó phải `bind`; canary lặp corpus chính mỗi chế độ hỏng, nên một 429 ở bước có `bind` sẽ làm canary dừng với `INFRA`. Ở làn limiter, file bắt đầu trong một cửa sổ mới ở mỗi phía.
 - **Trạng thái sống qua các lần chạy.** Hai số trong kịch bản cố định, nên người giữ số tồn tại qua các lần chạy trên cùng stack: lần hai `register_holder` là 200 thay vì 201, `register_leaver` là 404 (tài khoản đã xoá không đăng ký lại được), `leaver_deletes_account` vẫn 204. Kịch bản bật lại `discoverable_by_phone` trước khi kết thúc để lần sau vẫn tra ra. Hai phía dùng chung lịch sử nên vẫn so được; harness không sinh được số điện thoại mới theo nonce.
 - Nhánh `account_identities` (người đăng nhập OTP có id khác id dẫn xuất) chưa phủ: tạo nó cần luồng OTP, mà nhịp 60 s theo số điện thoại làm các lượt canary liên tiếp không tất định.
 - 500 với chữ số toàn chiều rộng: cùng lỗi `canonical.encode("ascii")` như `POST /identity/person-id` (`person_identity.py:179`); bước đó chỉ nằm trong kịch bản identity để không tốn thêm lượt ở đây.

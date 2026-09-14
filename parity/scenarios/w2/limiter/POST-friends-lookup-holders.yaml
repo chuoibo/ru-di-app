@@ -1,14 +1,13 @@
-# W2 (limiter-bound lane) · POST /friends/lookup against numbers that belong to
+# W2 limiter lane · POST /friends/lookup against numbers that belong to
 # somebody: found (200), hidden (discoverable_by_phone false), ended account,
 # blocked pair, and idempotency around a stored 200.
 #
-# Why this file is not under scenarios/w2: finding a holder needs the holder's
+# Why this file is in the limiter lane: finding a holder needs the holder's
 # derived id, and the only HTTP door to it is POST /identity/person-id, which
-# spends person_id_limit (20 per 60 s per source address). The id is bound. The
-# canary runs every w2 file once per damage mode, ~19 s apart on this machine,
-# so four passes can share one 60 s window; a 429 on a bound step makes the
-# canary's reference run fail with INFRA. Kept out of the canary corpus and
-# validated with `parity run` (database lane on), spaced more than 60 s apart.
+# spends person_id_limit (20 per 60 s per source address). The id is bound, and
+# the canary repeats the main corpus once per damage mode, so a bound step could
+# meet a 429 there. `parity run --lane limiter` starts this file in a fresh
+# window on each side instead, with the database lane on.
 # scenarios/w2/friends/POST-friends-lookup.yaml keeps every branch that needs
 # no registered holder.
 #
@@ -17,16 +16,17 @@
 # all answer the same 404). Blocks are not consulted.
 #
 # LIMITERS: friend_lookup_limit is spent by every step that reaches the handler
-# (10 here); person_id_limit by the 2 mints. The 429 branch belongs to the
-# separate limiter lane.
+# (10 here); person_id_limit by the 2 mints. The 429 branches are in
+# w2/limiter/POST-friends-lookup-limit.yaml and POST-identity-person-id-limit.yaml.
 #
 # The two numbers are sample data (dữ liệu mẫu), fixed in this file, so the
 # people they derive to outlive a run: the second run on the same stacks finds
 # them registered (PUT answers 200) and the deleted one stays deleted (PUT
 # answers 404). Both sides share the history, so each run stays comparable.
-id: w2-limiter-bound/friends/post-friends-lookup
+id: w2/limiter/post-friends-lookup-holders
 routes: ['POST /friends/lookup']
 auth_mode: dev
+lane: limiter
 personas:
   seeker: {}
   holder: {}
