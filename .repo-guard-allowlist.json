@@ -3601,11 +3601,19 @@
     },
     {
       "path": "parity/go.sum",
-      "sha256": "e42794fa9b56301ad073de55cac1dea683b320ed951454d8709ffc7156088dd2",
+      "sha256": "61afeeca42741c7853f251f98ac288415c6f0f57c839e9464f3fc0235ca3963f",
       "rules": [
         "long-number"
       ],
-      "reason": "Checksum Go của module parity (ADR-0029): gopkg.in/yaml.v3 v3.0.1 và phụ thuộc test gopkg.in/check.v1. Số dài là mốc thời gian trong pseudo-version của Go module (v0.0.0-yyyymmddhhmmss-commit), không phải số tài khoản hay dữ liệu người tham gia. Ghim 2026-09-14 sau `go mod tidy`; đổi phụ thuộc là đổi digest và phải review lại."
+      "reason": "Checksum Go của module parity (ADR-0029): gopkg.in/yaml.v3 v3.0.1, github.com/jackc/pgx/v5 v5.7.1 và các phụ thuộc test/indirect của chúng (check.v1, go-internal v1.14.1, kr/text v0.2.0, pgpassfile, pgservicefile, puddle, x/crypto, x/text). Số dài là mốc thời gian trong pseudo-version Go module (v0.0.0-yyyymmddhhmmss-commit), không phải số tài khoản hay dữ liệu người tham gia. Ghim lại 2026-09-14 khi thêm pgx cho parity/internal/dbsnap; go-internal được ghim ở v1.14.1 vì v1.16 đòi go 1.25 trong khi repo ghim toolchain go1.23.4. Đổi phụ thuộc là đổi digest và phải review lại."
+    },
+    {
+      "path": "parity/go.mod",
+      "sha256": "71137c54240d0087021a54e8acc4946986b92994bff269530e2cbd388e01c988",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25."
     }
   ]
 }
