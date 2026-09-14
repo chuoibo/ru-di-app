@@ -1,0 +1,49 @@
+# W1 concurrency · PUT /people/me/interests. The write reads the person's tags,
+# then inserts the new ones and deletes the leaving ones, with no lock; the
+# database refuses a second (person_id, tag) row (uq_person_interests_person_tag).
+# Copies with the same answer and no key can therefore race on Python itself: a
+# copy that read before another committed fails on the insert. The harness runs the reference
+# several times and the candidate must reproduce one outcome it produced.
+id: w1/concurrency/put-interests
+routes: ['PUT /people/me/interests']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chọn cùng lúc (dữ liệu mẫu)"}'
+  - id: same_key_burst
+    as: owner
+    concurrent: 4
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'c-interests-same'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  # no key: a per-copy key would name the winner, and which copy wins is
+  # scheduling; only how many copies lose may differ between runs
+  - id: no_key_same_answer_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'
+  - id: owner_reads_profile_back
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'

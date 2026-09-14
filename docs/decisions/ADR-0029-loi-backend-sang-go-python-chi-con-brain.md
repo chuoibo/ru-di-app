@@ -112,6 +112,14 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
   của tap, nên tap vẫn ghi bước đó là tới Python; ở reference mọi bước vốn là Python). Nhờ vậy khoá
   `Idempotency-Key` do Python lưu được Go trả lời và ngược lại, trong cùng một kịch bản. Stack thiếu client tới
   Python mà kịch bản có bước như vậy là lỗi dựng, không bao giờ được gửi thay qua cửa trước.
+- Đồng thời: bước `concurrent: N` gửi N bản của cùng một request cùng lúc (`{{burst}}` đánh số từng bản). Câu trả
+  lời được xếp theo nội dung đã che id, digest và thời điểm (bản giống nhau giữ thứ tự số bản), không theo thứ tự
+  về, nên bản nào thắng cuộc đua không làm lệch phép so. Mọi thời điểm cả loạt ghi (câu trả lời và hàng DB) chung
+  một hạng, vì bản nào xong trước là lịch chạy chứ không phải hành vi; định dạng vẫn được so. Cả loạt so như một đa
+  tập, kèm DB sau loạt.
+  Loạt có thể tranh chấp ngay trên Python (`PUT /people/me/interests` với `uq_person_interests_person_tag`), nên
+  reference chạy kịch bản có loạt K lần (`--burst-repeats`, mặc định 3) và candidate phải khớp trọn một lượt, wire
+  và DB cùng lúc; bước khác nhau giữa các lượt reference được in `RACY`.
 - Parity giữ nguyên cả lỗi của Python. Nó chứng minh «giống», không chứng minh «đúng». Lỗi tìm thấy trong lúc
   port thành phát hiện riêng, **không sửa trong PR port**.
 
@@ -238,6 +246,9 @@ trong hai đường sau chạy được, thử theo thứ tự:
 - Rằng Python đúng — parity giữ nguyên lỗi của nó.
 - Hình dạng dữ liệu production (hàng cũ, fingerprint legacy ngoài fixture, Unicode lạ trong tên thật).
 - Tải, query plan, tranh chấp khoá dưới lưu lượng thật; limiter khi chạy nhiều replica.
+- Tần suất của kết cục tranh chấp: làn đồng thời chỉ đòi candidate ra một kết cục mà Python đã ra trong K lượt. K lượt
+  có thể bỏ sót kết cục hiếm của Python (đỏ giả, chạy lại) và không phân biệt được Go thường thua một cuộc đua mà
+  Python thường thắng.
 - Đường hạnh phúc thật của Google sign-in và SMS gateway (stack kiểm dùng stub và cửa Google đóng).
 - Bất cứ điều gì về hành vi Gemini.
 - Chất lượng thị giác của ảnh ngoài hai chỉ số ở mục 2.8.
@@ -264,13 +275,13 @@ Mỗi group, những gì đã chạy được:
 make parity                              # = scripts/gate.sh parity, dev rồi prod, mỗi chế độ một cặp stack:
                                          #   canary (mọi chế độ bẫy ĐỎ, identity XANH), lượt chính có ảnh chụp DB
                                          #   sau từng bước và tap, corpus 422 (scenarios/generated), bước replay
-                                         #   chéo `via: python`, probe dòng request (chỉ dev)
+                                         #   chéo `via: python`, bước đồng thời `concurrent: N`, probe dòng request (chỉ dev)
 python3 scripts/render_parity_422_scenarios.py   # sinh lại corpus 422 từ model pydantic thật
 cd services/core && go vet ./... && go test ./...
 scripts/go_postgres_tier.sh              # skip là hỏng
 ```
 
-Chưa có (đã hoạch định, chưa dựng): lọc theo group (`GROUP=`), `STRICT=1`, làn limiter, làn đồng thời, fuzz vi
+Chưa có (đã hoạch định, chưa dựng): lọc theo group (`GROUP=`), `STRICT=1`, làn limiter, fuzz vi
 sai domain (`parity-domain`), `scripts/agy_parity_qc.sh`. Tới khi có, bằng chứng từng route ghi rõ làn nào đã
 chạy.
 

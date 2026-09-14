@@ -38,7 +38,8 @@ này thì chạy lại kịch bản của nó:
   `w1/social_map/get-map-pair`.
 - Replay chéo idempotency hai chiều đã có (`parity/scenarios/w1/crossreplay`, bước `via: python`) cho ba route W1
   ghi được: meet, `PUT /people/me/interests`, `POST /reports`.
-- Còn thiếu trước `PARITY-LOCAL`: làn đồng thời. Làn limiter không áp dụng
+- Làn đồng thời đã có (`parity/scenarios/w1/concurrency`, bước `concurrent: N`, reference chạy 3 lượt) cho cùng ba
+  route đó. Làn limiter không áp dụng
   cho W1: không route W1 nào chạm limiter trong bộ nhớ (`routes/social_map.py`, `preferences.py`, `recap.py`,
   `reports.py` không có dependency limiter).
 

@@ -184,3 +184,34 @@ func TestDigestsAreBoundByFirstAppearanceNotByValue(t *testing.T) {
 		}
 	}
 }
+
+func TestTieInstantsSinceSharesOneRank(t *testing.T) {
+	before, first, second := "2026-09-16T10:00:00.000001Z", "2026-09-16T10:00:00.000003Z", "2026-09-16T10:00:00.000002Z"
+	ranked := func(tie bool) string {
+		b := NewBinder()
+		if err := b.Observe(before); err != nil {
+			t.Fatal(err)
+		}
+		mark := b.InstantMark()
+		if err := b.Observe(first + " " + second); err != nil {
+			t.Fatal(err)
+		}
+		if tie {
+			if err := b.TieInstantsSince(mark); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return b.Apply(before + " " + first + " " + second)
+	}
+	if got, want := ranked(false), "<ts#1|f6|Z> <ts#3|f6|Z> <ts#2|f6|Z>"; got != want {
+		t.Fatalf("untied = %q, want %q", got, want)
+	}
+	if got, want := ranked(true), "<ts#1|f6|Z> <ts#2|f6|Z> <ts#2|f6|Z>"; got != want {
+		t.Fatalf("tied = %q, want %q", got, want)
+	}
+	b := NewBinder()
+	_ = b.Apply("")
+	if err := b.TieInstantsSince(0); err == nil {
+		t.Fatal("tying after Apply succeeded")
+	}
+}

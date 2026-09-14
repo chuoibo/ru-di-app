@@ -15,11 +15,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx/v5"
 
@@ -71,6 +73,10 @@ type StepResult struct {
 	// PythonRequests counts the requests that reached Python during the step;
 	// -1 on a stack without a tap.
 	PythonRequests int
+	// Burst holds every response of a concurrent step in a stack-independent
+	// order (see send); Raw and Norm are unused for such a step.
+	Burst     []httpclient.Response
+	BurstNorm []compare.Exchange
 }
 
 // Run is one scenario's transcript on one stack.
@@ -159,32 +165,36 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		tapSeq = last
 	}
 	for _, step := range sc.Steps {
-		req, err := buildRequest(sc, step, vars)
-		if err != nil {
-			return nil, fmt.Errorf("%s step %s: %w", sc.ID, step.ID, err)
-		}
 		client := stack.Client
 		if step.Via == scenario.ViaPython {
 			client = stack.Python
 		}
-		resp, err := client.Do(ctx, req)
+		mark := binder.InstantMark()
+		responses, err := send(ctx, client, sc, step, vars)
 		if err != nil {
 			return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
 		}
-		if err := binder.Observe(string(resp.Body)); err != nil {
-			return nil, err
-		}
-		for _, values := range resp.Header {
-			for _, value := range values {
-				if err := binder.Observe(value); err != nil {
-					return nil, err
+		for _, resp := range responses {
+			if err := binder.Observe(string(resp.Body)); err != nil {
+				return nil, err
+			}
+			for _, values := range resp.Header {
+				for _, value := range values {
+					if err := binder.Observe(value); err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
-		if err := capture(step, resp, vars, binder); err != nil {
-			return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
+		result := StepResult{StepID: step.ID, PythonRequests: -1}
+		if step.Concurrent > 0 {
+			result.Burst = responses
+		} else {
+			result.Raw = responses[0]
+			if err := capture(step, result.Raw, vars, binder); err != nil {
+				return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
+			}
 		}
-		result := StepResult{StepID: step.ID, Raw: resp, PythonRequests: -1}
 		if stack.Tap != nil {
 			last, entries, err := stack.Tap.Since(ctx, tapSeq)
 			if err != nil {
@@ -208,20 +218,20 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 				}
 			}
 		}
+		if step.Concurrent > 0 {
+			if err := binder.TieInstantsSince(mark); err != nil {
+				return nil, err
+			}
+		}
 		run.Steps = append(run.Steps, result)
 	}
 	for i := range run.Steps {
-		raw := run.Steps[i].Raw
-		header := http.Header{}
-		for name, values := range raw.Header {
-			for _, value := range values {
-				header[name] = append(header[name], binder.Apply(value))
+		if run.Steps[i].Burst != nil {
+			for _, raw := range run.Steps[i].Burst {
+				run.Steps[i].BurstNorm = append(run.Steps[i].BurstNorm, normaliseExchange(binder, raw))
 			}
-		}
-		run.Steps[i].Norm = compare.Exchange{
-			Status: raw.Status,
-			Header: header,
-			Body:   binder.Apply(string(raw.Body)),
+		} else {
+			run.Steps[i].Norm = normaliseExchange(binder, run.Steps[i].Raw)
 		}
 		if run.Steps[i].Change != nil {
 			run.Steps[i].NormChange = run.Steps[i].Change.Normalise(binder.Apply)
@@ -365,7 +375,12 @@ func Diff(reference, candidate *Run) []StepDiff {
 	var out []StepDiff
 	for i := range reference.Steps {
 		ref, cand := reference.Steps[i], candidate.Steps[i]
-		diffs := compare.Step(ref.Norm, cand.Norm)
+		var diffs []compare.Difference
+		if ref.Burst != nil || cand.Burst != nil {
+			diffs = compareBursts(ref.BurstNorm, cand.BurstNorm)
+		} else {
+			diffs = compare.Step(ref.Norm, cand.Norm)
+		}
 		var database []dbsnap.Difference
 		switch {
 		case ref.NormChange != nil && cand.NormChange != nil:
@@ -497,4 +512,145 @@ func NewNonce() string {
 		panic(err)
 	}
 	return hex.EncodeToString(b[:])
+}
+
+// send issues a step's request or, for a concurrent step, all its copies at
+// once: every copy is built first, then released together. Responses come back
+// ordered by their masked text, copies alike in it staying in copy order. Ids
+// are numbered in the order responses are observed, so that order must follow
+// neither arrival nor which copy won a race: both differ between stacks.
+// Execute gives the instants a burst wrote one rank for the same reason.
+func send(ctx context.Context, client *httpclient.Client, sc *scenario.Scenario, step scenario.Step, vars map[string]string) ([]httpclient.Response, error) {
+	if step.Concurrent == 0 {
+		req, err := buildRequest(sc, step, vars)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := client.Do(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return []httpclient.Response{resp}, nil
+	}
+	requests := make([]httpclient.Request, step.Concurrent)
+	for i := range requests {
+		copyVars := maps.Clone(vars)
+		copyVars[scenario.BurstVar] = strconv.Itoa(i + 1)
+		req, err := buildRequest(sc, step, copyVars)
+		if err != nil {
+			return nil, err
+		}
+		requests[i] = req
+	}
+	responses := make([]httpclient.Response, len(requests))
+	errs := make([]error, len(requests))
+	release := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := range requests {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-release
+			responses[i], errs[i] = client.Do(ctx, requests[i])
+		}(i)
+	}
+	close(release)
+	wg.Wait()
+	if err := errors.Join(errs...); err != nil {
+		return nil, err
+	}
+	keys := make([]string, len(responses))
+	for i, resp := range responses {
+		header := http.Header{}
+		for name, values := range resp.Header {
+			for _, value := range values {
+				header[name] = append(header[name], normalize.Mask(value))
+			}
+		}
+		keys[i] = exchangeText(compare.Exchange{Status: resp.Status, Header: header, Body: normalize.Mask(string(resp.Body))})
+	}
+	order := make([]int, len(responses))
+	for i := range order {
+		order[i] = i
+	}
+	sort.SliceStable(order, func(a, b int) bool {
+		return keys[order[a]] < keys[order[b]]
+	})
+	sorted := make([]httpclient.Response, len(responses))
+	for k, i := range order {
+		sorted[k] = responses[i]
+	}
+	return sorted, nil
+}
+
+// exchangeText renders an exchange for ordering: status, the headers the
+// comparator does not ignore, sorted, then the body.
+func exchangeText(exchange compare.Exchange) string {
+	lines := make([]string, 0, len(exchange.Header))
+	for name, values := range exchange.Header {
+		lower := strings.ToLower(name)
+		if compare.Volatile[lower] {
+			continue
+		}
+		lines = append(lines, lower+": "+strings.Join(values, "\x00"))
+	}
+	sort.Strings(lines)
+	return fmt.Sprintf("%03d\n%s\n\n%s", exchange.Status, strings.Join(lines, "\n"), exchange.Body)
+}
+
+func normaliseExchange(binder *normalize.Binder, raw httpclient.Response) compare.Exchange {
+	header := http.Header{}
+	for name, values := range raw.Header {
+		for _, value := range values {
+			header[name] = append(header[name], binder.Apply(value))
+		}
+	}
+	return compare.Exchange{Status: raw.Status, Header: header, Body: binder.Apply(string(raw.Body))}
+}
+
+// compareBursts compares two bursts response by response in their ordered form.
+func compareBursts(reference, candidate []compare.Exchange) []compare.Difference {
+	if len(reference) != len(candidate) {
+		return []compare.Difference{{Part: "burst size", Reference: strconv.Itoa(len(reference)), Candidate: strconv.Itoa(len(candidate))}}
+	}
+	var out []compare.Difference
+	for i := range reference {
+		for _, difference := range compare.Step(reference[i], candidate[i]) {
+			difference.Part = fmt.Sprintf("response %d/%d %s", i+1, len(reference), difference.Part)
+			out = append(out, difference)
+		}
+	}
+	return out
+}
+
+// Closest compares candidate with each reference run of one scenario and
+// returns no differences and the index of the first run it matches exactly, or
+// the differences against the first run and -1 when it matches none. A
+// concurrent step can race on Python itself; the candidate must then reproduce
+// one outcome Python produced, on the wire and in the database together.
+func Closest(references []*Run, candidate *Run) ([]StepDiff, int) {
+	for i, reference := range references {
+		if len(Diff(reference, candidate)) == 0 {
+			return nil, i
+		}
+	}
+	return Diff(references[0], candidate), -1
+}
+
+// RacySteps lists the steps whose outcome differed between reference runs of
+// one scenario, in step order.
+func RacySteps(references []*Run) []string {
+	racy := map[string]bool{}
+	for _, other := range references[1:] {
+		for _, d := range Diff(references[0], other) {
+			racy[d.StepID] = true
+		}
+	}
+	var out []string
+	for _, step := range references[0].Steps {
+		if racy[step.StepID] {
+			out = append(out, step.StepID)
+		}
+	}
+	return out
 }

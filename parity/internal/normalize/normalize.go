@@ -40,13 +40,14 @@ var timestamp = regexp.MustCompile(`\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\
 // Binder holds the placeholder assignments for one scenario on one stack.
 // Observe every text in scenario order first, then Apply.
 type Binder struct {
-	named    map[string]string // literal -> placeholder, bound explicitly
-	namedOrd []string          // longest first, so a token never shadows a longer one
-	uuids    map[string]int    // literal -> first-appearance number
-	digests  map[string]int    // literal -> first-appearance number
-	instants map[string]time.Time
-	ranks    map[int64]int
-	frozen   bool
+	named        map[string]string // literal -> placeholder, bound explicitly
+	namedOrd     []string          // longest first, so a token never shadows a longer one
+	uuids        map[string]int    // literal -> first-appearance number
+	digests      map[string]int    // literal -> first-appearance number
+	instants     map[string]time.Time
+	instantOrder []string // timestamp literals in first-observation order
+	ranks        map[int64]int
+	frozen       bool
 }
 
 // NewBinder returns an empty binder.
@@ -109,6 +110,7 @@ func (b *Binder) Observe(text string) error {
 		instant, ok := parseInstant(literal)
 		if ok {
 			b.instants[literal] = instant
+			b.instantOrder = append(b.instantOrder, literal)
 		}
 	}
 	return nil
@@ -203,4 +205,47 @@ func parseInstant(literal string) (time.Time, bool) {
 		}
 	}
 	return time.Time{}, false
+}
+
+// Mask replaces every id, digest and timestamp in text with its kind (and a
+// timestamp's Shape), so texts from different stacks that differ only in those
+// values are equal. It orders responses that arrived together; it never
+// replaces Apply.
+func Mask(text string) string {
+	text = hexRun.ReplaceAllString(text, "<digest>")
+	text = uuid4.ReplaceAllString(text, "<uuid>")
+	return timestamp.ReplaceAllStringFunc(text, func(literal string) string {
+		return "<ts|" + Shape(literal) + ">"
+	})
+}
+
+// InstantMark is how many distinct timestamp literals have been observed.
+func (b *Binder) InstantMark() int { return len(b.instantOrder) }
+
+// TieInstantsSince gives every timestamp literal first observed after mark
+// the rank of the earliest of them. Requests released together finish in an
+// order neither stack controls; ranking the instants they wrote against each
+// other would compare scheduling, not behaviour. Their spelling is still
+// compared through Shape.
+func (b *Binder) TieInstantsSince(mark int) error {
+	if b.frozen {
+		return fmt.Errorf("normalize: TieInstantsSince after Apply")
+	}
+	if mark < 0 || mark > len(b.instantOrder) {
+		return fmt.Errorf("normalize: instant mark %d outside 0..%d", mark, len(b.instantOrder))
+	}
+	literals := b.instantOrder[mark:]
+	if len(literals) == 0 {
+		return nil
+	}
+	earliest := b.instants[literals[0]]
+	for _, literal := range literals[1:] {
+		if b.instants[literal].Before(earliest) {
+			earliest = b.instants[literal]
+		}
+	}
+	for _, literal := range literals {
+		b.instants[literal] = earliest
+	}
+	return nil
 }

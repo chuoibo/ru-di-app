@@ -49,6 +49,10 @@ type Step struct {
 	// stored is replayed by the other; on a stack that is Python alone it
 	// changes nothing.
 	Via string `yaml:"via"`
+	// Concurrent, when set (2 to MaxConcurrent), sends that many copies of the
+	// request at once, and {{burst}} renders 1..N in each copy. Such a step
+	// cannot bind: which of its responses would it capture?
+	Concurrent int `yaml:"concurrent"`
 }
 
 // Request is sent verbatim after {{variable}} substitution.
@@ -73,6 +77,12 @@ const Anonymous = "anonymous"
 
 // ViaPython is the only Step.Via value.
 const ViaPython = "python"
+
+// MaxConcurrent bounds Step.Concurrent.
+const MaxConcurrent = 16
+
+// BurstVar is the template variable a concurrent step's copies are numbered by.
+const BurstVar = "burst"
 
 var (
 	idPattern       = regexp.MustCompile(`^[a-z0-9][a-z0-9/_.-]*$`)
@@ -192,6 +202,14 @@ func (sc *Scenario) validate() error {
 		if step.Via != "" && step.Via != ViaPython {
 			return fmt.Errorf("%s: via %q must be absent or %q", where, step.Via, ViaPython)
 		}
+		if step.Concurrent != 0 {
+			if step.Concurrent < 2 || step.Concurrent > MaxConcurrent {
+				return fmt.Errorf("%s: concurrent %d must be between 2 and %d", where, step.Concurrent, MaxConcurrent)
+			}
+			if len(step.Bind) > 0 {
+				return fmt.Errorf("%s: a concurrent step cannot bind; which of its responses would it capture?", where)
+			}
+		}
 		if !methods[step.Request.Method] {
 			return fmt.Errorf("%s: method %q", where, step.Request.Method)
 		}
@@ -207,7 +225,7 @@ func (sc *Scenario) validate() error {
 		}
 		for _, text := range texts {
 			for _, match := range templatePattern.FindAllStringSubmatch(text, -1) {
-				if !known[match[1]] {
+				if !known[match[1]] && (step.Concurrent == 0 || match[1] != BurstVar) {
 					return fmt.Errorf("%s: {{%s}} is not bound by an earlier step or persona", where, match[1])
 				}
 			}
@@ -219,7 +237,7 @@ func (sc *Scenario) validate() error {
 		sort.Strings(names)
 		for _, name := range names {
 			bind := step.Bind[name]
-			if !namePattern.MatchString(name) || known[name] {
+			if !namePattern.MatchString(name) || known[name] || name == BurstVar {
 				return fmt.Errorf("%s: bind %q must be a new lowercase identifier", where, name)
 			}
 			switch bind.From {
@@ -312,4 +330,14 @@ func LoadPaths(paths ...string) ([]*Scenario, error) {
 		scenarios = append(scenarios, sc)
 	}
 	return scenarios, nil
+}
+
+// HasBursts reports whether any step is concurrent.
+func (sc *Scenario) HasBursts() bool {
+	for _, step := range sc.Steps {
+		if step.Concurrent > 0 {
+			return true
+		}
+	}
+	return false
 }

@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -95,6 +96,7 @@ type tapReport struct {
 }
 
 type report struct {
+	Racy          []string         `json:"racy,omitempty"`
 	Reference     string           `json:"reference"`
 	DatabaseLane  bool             `json:"database_lane"`
 	Candidate     string           `json:"candidate"`
@@ -120,11 +122,16 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	candidateTap := flags.String("candidate-tap", "", "control URL of the tap between the candidate front door and its Python")
 	servedRoutes := flags.String("served-routes", "", "JSON of `core routes --json`: routes the candidate serves in Go; needs --candidate-tap")
 	candidatePython := flags.String("candidate-python", "", "base URL of the candidate's Python without core (through the tap), for steps with via: python")
+	burstRepeats := flags.Int("burst-repeats", 3, "reference runs of a scenario with a concurrent step; the candidate must match one of them")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if *reference == "" || *candidate == "" || flags.NArg() == 0 {
 		fmt.Fprintln(stderr, "parity run: --reference, --candidate and at least one scenario path are required")
+		return 2
+	}
+	if *burstRepeats < 1 {
+		fmt.Fprintln(stderr, "parity run: --burst-repeats must be at least 1")
 		return 2
 	}
 	scenarios, err := scenario.LoadPaths(flags.Args()...)
@@ -233,12 +240,29 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "INFRA %s: the reference answered 401 to every persona step; its sessions or actor headers were not accepted\n", sc.ID)
 			return 2
 		}
+		refRuns := []*runner.Run{refRun}
+		for sc.HasBursts() && len(refRuns) < *burstRepeats {
+			again, err := runner.Execute(ctx, sc, refStack, runner.NewNonce())
+			if err != nil {
+				fmt.Fprintf(stderr, "INFRA %v\n", err)
+				return 2
+			}
+			refRuns = append(refRuns, again)
+		}
+		if racy := runner.RacySteps(refRuns); len(racy) > 0 {
+			rep.Racy = append(rep.Racy, sc.ID+": "+strings.Join(racy, ", "))
+			fmt.Fprintf(stdout, "RACY  %s: the reference answered %s differently across %d runs; the candidate must match one of them\n",
+				sc.ID, strings.Join(racy, ", "), len(refRuns))
+		}
 		candRun, err := runner.Execute(ctx, sc, candStack, nonce)
 		if err != nil {
 			fmt.Fprintf(stderr, "INFRA %v\n", err)
 			return 2
 		}
-		diffs := runner.Diff(refRun, candRun)
+		diffs, matched := runner.Closest(refRuns, candRun)
+		if matched > 0 {
+			refRun = refRuns[matched]
+		}
 		ran[sc.ID] = true
 		if rep.Tap != nil {
 			for _, step := range candRun.Steps {
@@ -345,6 +369,7 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
 	refDSN := flags.String("reference-dsn", "", "reference database URL, used only to seed prod-mode sessions")
 	targetDSN := flags.String("target-dsn", "", "target database URL, used only to seed prod-mode sessions")
+	burstRepeats := flags.Int("burst-repeats", 3, "reference runs of a scenario with a concurrent step; the damaged target must match none of them")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -437,6 +462,16 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				_ = server.Close()
 				return 2
 			}
+			refRuns := []*runner.Run{refRun}
+			for sc.HasBursts() && len(refRuns) < *burstRepeats {
+				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, runner.NewNonce())
+				if err != nil {
+					fmt.Fprintf(stderr, "INFRA %v\n", err)
+					_ = server.Close()
+					return 2
+				}
+				refRuns = append(refRuns, again)
+			}
 			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient}, nonce)
 			if errors.Is(err, runner.ErrSetup) {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
@@ -449,7 +484,8 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				differences++
 				continue
 			}
-			for _, d := range runner.Diff(refRun, candRun) {
+			closest, _ := runner.Closest(refRuns, candRun)
+			for _, d := range closest {
 				differences += len(d.Differences)
 				if mode.Name == "identity" {
 					// Identity must never differ; show why it did.

@@ -131,3 +131,34 @@ func TestViaPythonLoads(t *testing.T) {
 		t.Fatalf("via = %q, %q", sc.Steps[0].Via, sc.Steps[1].Via)
 	}
 }
+
+func TestConcurrentSteps(t *testing.T) {
+	burst := strings.Replace(valid, "  - id: read\n    as: owner\n", "  - id: read\n    as: owner\n    concurrent: 4\n", 1)
+	burst = strings.Replace(burst, "path: /contexts/{{context_id}}\n", "path: /contexts/{{context_id}}?copy={{burst}}\n", 1)
+	sc, err := Parse([]byte(burst))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sc.Steps[1].Concurrent != 4 || !sc.HasBursts() {
+		t.Fatalf("concurrent = %d, HasBursts = %v", sc.Steps[1].Concurrent, sc.HasBursts())
+	}
+	plain, err := Parse([]byte(valid))
+	if err != nil || plain.HasBursts() {
+		t.Fatalf("a scenario without concurrent steps has bursts (err %v)", err)
+	}
+	refused := map[string]string{
+		"one copy":                       strings.Replace(burst, "concurrent: 4", "concurrent: 1", 1),
+		"too many copies":                strings.Replace(burst, "concurrent: 4", "concurrent: 17", 1),
+		"burst in a step not concurrent": strings.Replace(burst, "    concurrent: 4\n", "", 1),
+		"concurrent step binds":          strings.Replace(burst, "    concurrent: 4\n", "    concurrent: 4\n    bind: {again: {from: body, pointer: /id, class: uuid}}\n", 1),
+		"bind named burst":               strings.Replace(burst, "context_id: {from: body", "burst: {from: body", 1),
+	}
+	for name, text := range refused {
+		if text == burst {
+			t.Fatalf("%s: the mutation did not apply", name)
+		}
+		if _, err := Parse([]byte(text)); err == nil {
+			t.Fatalf("%s: accepted", name)
+		}
+	}
+}

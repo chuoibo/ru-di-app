@@ -1,0 +1,67 @@
+# W1 concurrency · POST /contexts/{id}/meet. Copies are released together.
+# Under one Idempotency-Key the first copy reserves the key, the others find it
+# in flight, poll, and replay its answer; under distinct keys every copy is
+# answered on its own. Compared as a multiset, with the database after the burst.
+id: w1/concurrency/post-meet
+routes: ['POST /contexts/{context_id}/meet']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hẹn cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hẹn cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 4
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'c-meet-same'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: distinct_key_burst
+    as: owner
+    concurrent: 4
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'c-meet-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh","da-lat"]}'
+  - id: same_key_after_burst
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'c-meet-same'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'c-meet-same'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-3","hcm-quan-7"]}'
