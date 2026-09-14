@@ -1,0 +1,483 @@
+# W2 · DELETE /posts/{post_id}/comments/{comment_id} — the comment's author or the post's author.
+# Refusal order: idempotency key, actor, path (both UUIDs), readable post (404 post_not_found),
+# comment on this post (404 comment_not_found), role and author rule (403). 204 without a body.
+id: w2/posts/delete-posts-post_id-comments-comment_id
+routes: ['DELETE /posts/{post_id}/comments/{comment_id}']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  stranger: {}
+  rival: {}
+steps:
+  - id: anonymous_unknown_ids
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_ids
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/posts/khong-phai-uuid/comments/cung-khong-phai'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        idempotency-key: ''
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_rival
+    as: rival
+    request:
+      method: PUT
+      path: '/people/{{persona.rival}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_post
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/khong-phai-uuid/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: stranger_non_uuid_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments/cung-khong-phai'
+  # both path errors in one list, post_id first
+  - id: stranger_non_uuid_both
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/khong-phai-uuid/comments/cung-khong-phai'
+  - id: stranger_unknown_post
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: stranger_unknown_post_roles_empty
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        x-actor-roles: ''
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm dọn bình luận (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership_mate}}/accept'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      post_friends: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      post_group: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho mọi người (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_public: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_second_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài công khai thứ hai (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_other: {from: body, pointer: /id, class: uuid}
+  - id: friend_comments_public
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Của bạn thân (dữ liệu mẫu)"}'
+    bind:
+      comment_friend: {from: body, pointer: /id, class: uuid}
+  - id: stranger_comments_public
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Của người lạ (dữ liệu mẫu)"}'
+    bind:
+      comment_stranger: {from: body, pointer: /id, class: uuid}
+  - id: author_comments_public
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Của chủ bài (dữ liệu mẫu)"}'
+    bind:
+      comment_author: {from: body, pointer: /id, class: uuid}
+  - id: stranger_comments_other
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_other}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ở bài khác (dữ liệu mẫu)"}'
+    bind:
+      comment_other: {from: body, pointer: /id, class: uuid}
+  - id: friend_comments_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Dưới bài bạn bè (dữ liệu mẫu)"}'
+    bind:
+      comment_on_friends: {from: body, pointer: /id, class: uuid}
+  - id: mate_comments_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Trong nhóm (dữ liệu mẫu)"}'
+    bind:
+      comment_mate: {from: body, pointer: /id, class: uuid}
+  - id: rival_comments_public
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Của người sẽ chặn (dữ liệu mẫu)"}'
+    bind:
+      comment_rival: {from: body, pointer: /id, class: uuid}
+  # 404 ordering: the post first, then the comment, then permission
+  - id: author_unknown_comment
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: author_comment_of_other_post
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_other}}'
+  - id: stranger_unreadable_post_real_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_friends}}/comments/{{comment_on_friends}}'
+  # uppercase comment id still resolves
+  - id: stranger_uppercase_unknown_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/BBBBBBBB-CCCC-4DDD-8EEE-FFFFFFFFFFFF'
+  - id: friend_deletes_strangers_comment
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+  - id: stranger_deletes_authors_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_author}}'
+  - id: stranger_roles_advancer_own_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+      headers:
+        x-actor-roles: 'advancer'
+  # the comment lookup comes before the role check
+  - id: stranger_roles_advancer_unknown_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: stranger_roles_unknown
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  # the body of a DELETE is not read
+  - id: stranger_deletes_own_with_ignored_body
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"comment_id":"{{comment_author}}"}'
+  - id: stranger_deletes_own_again
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_stranger}}'
+  - id: author_deletes_friends_comment_on_own_post
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_friend}}'
+  - id: author_lists_after_deletes
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  # losing read access also loses the way to one's own comment
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_deletes_own_after_leaving
+    as: mate
+    request:
+      method: DELETE
+      path: '/posts/{{post_group}}/comments/{{comment_mate}}'
+  - id: author_deletes_former_mates_comment
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_group}}/comments/{{comment_mate}}'
+  - id: rival_blocks_author
+    as: rival
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: rival_deletes_own_after_blocking
+    as: rival
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_rival}}'
+  - id: author_deletes_blockers_comment
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_rival}}'
+  # idempotency
+  - id: stranger_comments_for_idem_one
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Sẽ xoá bằng khoá (dữ liệu mẫu)"}'
+    bind:
+      comment_idem_one: {from: body, pointer: /id, class: uuid}
+  - id: stranger_comments_for_idem_two
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cũng sẽ xoá bằng khoá (dữ liệu mẫu)"}'
+    bind:
+      comment_idem_two: {from: body, pointer: /id, class: uuid}
+  - id: friend_comments_for_idem
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Của bạn thân, xoá bằng khoá (dữ liệu mẫu)"}'
+    bind:
+      comment_idem_friend: {from: body, pointer: /id, class: uuid}
+  - id: idem_first
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_idem_one}}'
+      headers:
+        idempotency-key: 'w2-uncomment-a'
+  # a replayed 204 carries content-length: 0 and idempotency-replayed
+  - id: idem_replay
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_idem_one}}'
+      headers:
+        idempotency-key: 'w2-uncomment-a'
+  - id: idem_reuse_different_comment
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_idem_two}}'
+      headers:
+        idempotency-key: 'w2-uncomment-a'
+  - id: idem_refusal_not_stored
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        idempotency-key: 'w2-uncomment-b'
+  - id: idem_same_key_after_refusal
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_idem_two}}'
+      headers:
+        idempotency-key: 'w2-uncomment-b'
+  - id: idem_forbidden_not_stored
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_author}}'
+      headers:
+        idempotency-key: 'w2-uncomment-c'
+  - id: idem_same_key_after_forbidden
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_friends}}/comments/{{comment_idem_friend}}'
+      headers:
+        idempotency-key: 'w2-uncomment-c'
+  - id: idem_validation_refusal_not_stored
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_friends}}/comments/cung-khong-phai'
+      headers:
+        idempotency-key: 'w2-uncomment-d'
+  - id: idem_same_key_after_validation_refusal
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_friends}}/comments/{{comment_on_friends}}'
+      headers:
+        idempotency-key: 'w2-uncomment-d'
+  - id: trailing_slash_redirects
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_author}}/'
+  - id: get_not_allowed
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments/{{comment_author}}'
+  - id: author_deletes_own_comment
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{post_public}}/comments/{{comment_author}}'
+  - id: author_lists_at_end
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'

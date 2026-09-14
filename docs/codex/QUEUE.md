@@ -50,13 +50,20 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   của `POST /contexts/{context_id}/votes`), lý do nằm trong bộ sinh và bộ sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
   parse, limiter theo IP).
 - Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch. Domain đã port (friendship, blocking,
-  visibility, storyvisibility, postaudience, vote, cursors, identity; golden từ Python thật 0 lệch). Kịch bản viết
-  tay đang làm.
+  visibility, storyvisibility, postaudience, vote, cursors, identity, photoref; golden từ Python thật 0 lệch).
+- Route card (`docs/migration/routes/{friends,identity,posts,stories,votes}`) và kịch bản viết tay
+  (`parity/scenarios/w2`) đủ 24 route. Hai bộ chạy được nhưng ngoài cổng, chờ harness: story có ảnh thật
+  (`storage_key` ngẫu nhiên) và tra số đã đăng ký (limiter theo IP) — xem `parity/pending-scenarios/README.md`.
 - `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
   `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship);
   `POST /contexts/{context_id}/votes`, `GET /contexts/{context_id}/votes`, `GET /votes/{vote_id}`,
   `POST /votes/{vote_id}/ballots`, `POST /votes/{vote_id}/close` (validator strip của phiếu giờ có bản production
-  trong `internal/pyval/ports.go`).
+  trong `internal/pyval/ports.go`); `POST /friends/requests`, `POST /friends/requests/{request_id}/respond`;
+  `POST /stories`, `GET /stories`, `POST /stories/{story_id}/seen`, `DELETE /stories/{story_id}` (204 không thân
+  qua `endpoint.Reply.Empty`).
+- Còn ở Python: posts (9), `POST /friends/lookup`, `POST /identity/person-id`. Hai route sau chờ làn limiter: cửa
+  sổ đếm trong bộ nhớ của `core` không thấy lưu lượng canary (canary đi thẳng tới Python của candidate), nên phục
+  vụ chúng bằng Go trong làn chính sẽ làm cổng lệch giả ở 429.
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.

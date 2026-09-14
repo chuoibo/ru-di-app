@@ -1,0 +1,58 @@
+# W2 · POST /identity/person-id in prod mode. The route has no actor
+# dependency, so the auth mode changes only the idempotency scope: a bearer
+# is digested into bearer:<sha256>, and without one the raw X-Actor-ID (or
+# "anonymous") is the scope.
+#
+# LIMITER: spends person_id_limit once per pass. The canary runs this file once
+# per damage mode against the same process, so keep it at one.
+id: w2/identity/prod-auth
+routes: ['POST /identity/person-id']
+auth_mode: prod
+personas:
+  owner: {}
+steps:
+  # spends 1; sample number (dữ liệu mẫu)
+  - id: owner_mint_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-prod-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t07"}'
+  - id: owner_replay
+    as: owner
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-prod-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t07"}'
+  - id: owner_key_reuse_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-prod-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t08"}'
+  # a revoked or junk bearer is not consulted by this route: the middleware
+  # refuses the empty key before anything else reads the request
+  - id: junk_bearer_empty_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t07"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/identity/person-id'

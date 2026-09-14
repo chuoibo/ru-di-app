@@ -1,0 +1,142 @@
+# W2 · POST /identity/person-id — a Vietnamese mobile number in, a keyed
+# (HMAC, version 8) person id out. No actor dependency: X-Actor-* is never
+# read, only the idempotency middleware scopes by it. The body is parsed by
+# hand, so refusals are fixed sentences, never pydantic 422 lists.
+#
+# LIMITER (person_id_limit, 20 per source address per 60 s, in memory): every
+# request that reaches the handler spends one, including refusals. This file
+# spends 6 per pass, none of them bound, and no other w2 file spends it. The
+# canary runs every w2 file once per damage mode (~19 s apart here), so later
+# passes may meet 429s; those only add differences to damage modes, while the
+# identity mode runs first in a fresh window. A bound step on this route would
+# abort the canary's reference run instead, which is why the lookup scenario
+# that mints ids lives in scenarios/w2-limiter-bound. The 429 branch and window
+# roll-over belong to the separate limiter lane.
+#
+# Phone numbers are sample data (dữ liệu mẫu), split by JSON \t escapes
+# (canonical_mobile strips whitespace) so no digit run reaches the repo.
+id: w2/identity/post-identity-person-id
+routes: ['POST /identity/person-id']
+auth_mode: dev
+personas:
+  caller: {}
+  other: {}
+steps:
+  # spends 1: a persona step only so the idempotency scope is fresh per run
+  - id: mint_with_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 0: answered from idempotency_keys, the handler never runs
+  - id: mint_replay
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 0: same number, other bytes, so a different fingerprint
+  - id: mint_key_reuse_other_spelling
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-identity-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t01"}'
+  # spends 0: the scope is the raw X-Actor-ID, so another caller's key is free
+  - id: empty_idempotency_key
+    as: other
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 1: refused, so the key is released
+  - id: idem_refusal_landline
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-identity-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1: the released key now mints; +84, brackets, dots and dashes reach the same id as mint_with_key
+  - id: idem_same_key_other_spelling
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'w2-identity-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t(399)\t00.00-01"}'
+  # spends 1: truncated JSON; junk actor headers are not read by this route
+  - id: not_json_junk_actor_headers
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'thief'
+        content-type: 'application/json'
+      body_raw: '{"phone": '
+  # spends 1: a JSON number is refused with a fixed sentence, never echoed
+  - id: phone_as_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone": 3990}'
+  # spends 1: BUG (reported) -- \d in _MOBILE matches fullwidth digits, then
+  # canonical.encode("ascii") raises and Starlette answers a bare 500
+  - id: fullwidth_digits_crash
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\uff19\uff19\uff10\uff10\uff10\uff10\uff10\uff11"}'
+  # the rest never reach the handler and spend nothing
+  - id: get_not_allowed
+    as: anonymous
+    request:
+      method: GET
+      path: '/identity/person-id'
+  - id: head_not_allowed
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/identity/person-id'
+  - id: trailing_slash_redirects
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  - id: idem_key_too_long
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'

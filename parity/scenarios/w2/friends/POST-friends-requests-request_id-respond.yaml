@@ -1,0 +1,405 @@
+# W2 · POST /friends/requests/{id}/respond — accept, decline or block.
+# Order: JSON decode (422) -> actor (401/422) -> path + body model (422, one
+# list) -> the row, read only for its two parties (404 for a stranger and for
+# an unknown id alike) -> role + is_invitee (403; block widens it to either
+# party) -> domain (409 not_pending / already_blocked) -> locked write (409
+# request_not_open when the pair already holds another live edge).
+id: w2/friends/post-friends-requests-request_id-respond
+routes: ['POST /friends/requests/{request_id}/respond']
+auth_mode: dev
+personas:
+  asker: {}
+  answerer: {}
+  stranger: {}
+  second_asker: {}
+  second_answerer: {}
+  leaver: {}
+steps:
+  - id: anonymous_unknown_request
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: anonymous_non_uuid_request
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests/khong-phai-uuid/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision": '
+  - id: register_asker
+    as: asker
+    request:
+      method: PUT
+      path: '/people/{{persona.asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi (dữ liệu mẫu)"}'
+  - id: register_answerer
+    as: answerer
+    request:
+      method: PUT
+      path: '/people/{{persona.answerer}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người trả lời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_second_asker
+    as: second_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.second_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi hai lần (dữ liệu mẫu)"}'
+  - id: register_second_answerer
+    as: second_answerer
+    request:
+      method: PUT
+      path: '/people/{{persona.second_answerer}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người từ chối rồi chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: asker_asks_answerer
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      request: {from: body, pointer: /id, class: uuid}
+  - id: stranger_non_uuid_request
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests/khong-phai-uuid/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # path and body errors arrive in one 422 list, path first
+  - id: stranger_non_uuid_and_bad_decision
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests/khong-phai-uuid/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"maybe"}'
+  - id: stranger_unknown_request
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # somebody else's real request is the same 404 as one that does not exist
+  - id: stranger_real_request
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: stranger_unhyphenated_unknown_request
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: asker_accepts_own_request
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: asker_declines_own_request
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  # the row is looked up before the role: an unknown id stays 404 without roles
+  - id: roles_empty_unknown_request
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/respond'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: roles_empty_real_request
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: actor_contexts_invalid
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        x-actor-contexts: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: decision_uppercase
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"ACCEPT"}'
+  - id: decision_missing
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: decision_extra_field
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept","note":"hẹn gặp (dữ liệu mẫu)"}'
+  - id: empty_body
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+  - id: get_not_allowed
+    as: answerer
+    request:
+      method: GET
+      path: '/friends/requests/{{request}}/respond'
+  - id: trailing_slash_redirects
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # stored under the key: the answer carries decided_at and other_person_id oriented to the answerer
+  - id: idem_answerer_accepts
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        idempotency-key: 'w2-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: idem_replay
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        idempotency-key: 'w2-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: idem_reuse_different_decision
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        idempotency-key: 'w2-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: accept_again_not_pending
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: decline_after_accept_not_pending
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  # blocking is the one answer either party may give, including from accepted
+  - id: asker_blocks_friendship
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: answerer_blocks_again
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: answerer_accepts_blocked
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # a stale declined row, blocked while the pair holds a newer pending row
+  - id: second_asker_asks
+    as: second_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second_answerer}}"}'
+    bind:
+      old_request: {from: body, pointer: /id, class: uuid}
+  - id: second_answerer_declines
+    as: second_answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{old_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: second_asker_asks_again
+    as: second_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second_answerer}}"}'
+    bind:
+      new_request: {from: body, pointer: /id, class: uuid}
+  # the unique live-edge index refuses the update: 409 request_not_open with its own sentence
+  - id: idem_refusal_block_stale_declined
+    as: second_answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{old_request}}/respond'
+      headers:
+        idempotency-key: 'w2-respond-b'
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: accept_declined_not_pending
+    as: second_answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{old_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # the refusal released the key: the same key answers another request
+  - id: idem_same_key_after_refusal
+    as: second_answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{new_request}}/respond'
+      headers:
+        idempotency-key: 'w2-respond-b'
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: asker_asks_leaver
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      leaver_request: {from: body, pointer: /id, class: uuid}
+  # requester blocking their own pending request is allowed
+  - id: asker_blocks_own_pending
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/{{leaver_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: asker_unblocks_leaver
+    as: asker
+    request:
+      method: DELETE
+      path: '/people/{{persona.leaver}}/block'
+  # unblocking leaves the row declined, never pending again
+  - id: leaver_accepts_after_unblock
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{leaver_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # erase_person deleted every friend_requests row of the ended account
+  - id: request_of_deleted_person_is_gone
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/{{leaver_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'

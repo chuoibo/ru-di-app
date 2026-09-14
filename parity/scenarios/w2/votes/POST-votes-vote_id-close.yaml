@@ -1,0 +1,451 @@
+# W2 · POST /votes/{id}/close — the creator ends a vote.
+# No body model: a JSON or text body is ignored. Refusal order: actor, path UUID,
+# vote lookup (404), role, is_group_member, is_vote_creator (403), already closed
+# (409). A creator who left or deleted the account can never close their vote.
+id: w2/votes/post-votes-vote_id-close
+routes: ['POST /votes/{vote_id}/close']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  ghost: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_vote
+    as: anonymous
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/close'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_vote
+    as: anonymous
+    request:
+      method: POST
+      path: '/votes/khong-phai-uuid/close'
+  # no body parameter, so a broken JSON body is never decoded: 401
+  - id: anonymous_malformed_json_is_not_read
+    as: anonymous
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"force": '
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/khong-phai-uuid/close'
+  - id: stranger_unknown_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/close'
+  # the vote is looked up before the role check: 404, not 403
+  - id: stranger_unknown_vote_roles_empty
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/close'
+      headers:
+        x-actor-roles: ''
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chốt phiếu (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+    bind:
+      m_invitee: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_ghost
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.ghost}}"}'
+    bind:
+      m_ghost: {from: body, pointer: /id, class: uuid}
+  - id: ghost_accepts
+    as: ghost
+    request:
+      method: POST
+      path: '/memberships/{{m_ghost}}/accept'
+  - id: owner_creates_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"}]}'
+    bind:
+      vote: {from: body, pointer: /id, class: uuid}
+      opt_x: {from: body, pointer: /options/0/id, class: uuid}
+  - id: mate_ballot_x
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  # predicates in table order: is_group_member is named first
+  - id: stranger_real_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: invitee_not_yet_active
+    as: invitee
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: mate_not_creator
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  # a group_admin claim does not stand in for being the creator
+  - id: mate_not_creator_group_admin_role
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+      headers:
+        x-actor-roles: ''
+  - id: owner_roles_guest
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_roles_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+      headers:
+        x-actor-roles: 'chu-tich'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: owner_closes_again
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  # creator is checked before closed: 403, not 409
+  - id: mate_closes_closed_vote
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: stranger_closes_closed_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: owner_reads_closed_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: owner_creates_second_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu hai (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote2: {from: body, pointer: /id, class: uuid}
+  - id: owner_closes_with_ignored_json_body
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote2}}/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"closed_at":"2030-01-01T00:00:00Z","force":true}'
+  - id: owner_creates_third_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu ba (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote3: {from: body, pointer: /id, class: uuid}
+  - id: owner_closes_with_group_admin_only
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote3}}/close'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_creates_fourth_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu bốn (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote4: {from: body, pointer: /id, class: uuid}
+  - id: owner_closes_with_text_body
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote4}}/close'
+      headers:
+        content-type: 'text/plain'
+      body_raw: 'chốt đi'
+  - id: leaver_creates_vote
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Người sẽ rời nhóm hỏi (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote5: {from: body, pointer: /id, class: uuid}
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_closes_after_leaving
+    as: leaver
+    request:
+      method: POST
+      path: '/votes/{{vote5}}/close'
+  # nobody may close it any more: the only creator is not a member
+  - id: owner_closes_leavers_vote
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote5}}/close'
+  - id: ghost_creates_vote
+    as: ghost
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Người sẽ xoá tài khoản hỏi (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote6: {from: body, pointer: /id, class: uuid}
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_closes_after_deletion
+    as: ghost
+    request:
+      method: POST
+      path: '/votes/{{vote6}}/close'
+  - id: owner_lists_votes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote6}}/close/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote6}}/close'
+  - id: owner_creates_idem_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu idempotency (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote7: {from: body, pointer: /id, class: uuid}
+  - id: idem_refusal_not_stored
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-a'
+        x-actor-roles: ''
+  # roles are not part of the fingerprint; the 403 released the key
+  - id: idem_first_after_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-a'
+  # the stored 200 replays although a fresh close would be 409
+  - id: idem_replay
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-a'
+  - id: idem_no_key_after_close
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+  - id: idem_second_distinct_key
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-b'
+  # a 409 is not stored either: the same key runs the handler again
+  - id: idem_second_distinct_key_again
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-b'
+  # the ignored body still enters the fingerprint
+  - id: idem_reuse_different_body
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-a'
+        content-type: 'application/json'
+      body_raw: '{"force":true}'
+  - id: mate_same_key_as_owner
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: 'w2-close-a'
+  - id: idem_key_empty
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote7}}/close'
+      headers:
+        idempotency-key: ''

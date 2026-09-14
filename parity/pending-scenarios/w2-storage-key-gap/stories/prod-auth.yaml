@@ -1,0 +1,134 @@
+# W2 storage-key gap · stories in prod auth mode (ADR-0014): the happy path
+# through all four routes on a bearer session, with roles from the roster and
+# the idempotency scope taken from the bearer digest.
+# Refusals that need no photo: w2/stories/prod-auth.
+# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
+# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
+# reaches the wire and which the database lane cannot normalise. With the
+# database lane on, the only differences are those rows (see the card).
+id: w2-storage-key-gap/stories/prod-auth
+routes: ['POST /stories', 'GET /stories', 'POST /stories/{story_id}/seen', 'DELETE /stories/{story_id}']
+auth_mode: prod
+personas:
+  author: {}
+  friend: {}
+steps:
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  # dev answers 403 role_not_permitted to an empty role header; prod creates
+  - id: author_creates_with_empty_roles_header
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  - id: author_creates_story
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'w2-prod-story'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Qua phiên đăng nhập"}'
+    bind:
+      story: {from: body, pointer: /id, class: uuid}
+  # the idempotency scope is the digest of the bearer, not the (ignored) actor header
+  - id: author_create_replay
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'w2-prod-story'
+        x-actor-id: '{{persona.friend}}'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Qua phiên đăng nhập"}'
+  - id: friend_same_key_is_another_scope
+    as: friend
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'w2-prod-story'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Qua phiên đăng nhập"}'
+  - id: friend_feed_not_friend_yet
+    as: friend
+    request:
+      method: GET
+      path: '/stories'
+  - id: friend_seen_not_friend_yet
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # author_display_name is the seeded people.display_name
+  - id: friend_feed_sees_story
+    as: friend
+    request:
+      method: GET
+      path: '/stories'
+  - id: friend_sees_story
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        idempotency-key: 'w2-prod-seen'
+  - id: friend_seen_replay
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        idempotency-key: 'w2-prod-seen'
+  - id: friend_deletes_authors_story
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story}}'
+  - id: author_feed_own_story
+    as: author
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_deletes_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story}}'
+  - id: friend_feed_after_delete
+    as: friend
+    request:
+      method: GET
+      path: '/stories'

@@ -1,0 +1,424 @@
+# W2 · GET /contexts/{id}/votes — every vote of one group, oldest first.
+# Refusal order: actor, path UUID, role + ACTIVE membership (unknown group is 403).
+# Each vote carries the reader's own my_option_id; ballots of people who left or
+# deleted their account keep counting.
+id: w2/votes/get-contexts-context_id-votes
+routes: ['GET /contexts/{context_id}/votes']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  ghost: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/votes'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/votes'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/votes'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/votes'
+  - id: stranger_uppercase_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/votes'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/votes'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/votes'
+  - id: stranger_urn_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/votes'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/votes'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xem phiếu (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+    bind:
+      m_invitee: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_ghost
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.ghost}}"}'
+    bind:
+      m_ghost: {from: body, pointer: /id, class: uuid}
+  - id: ghost_accepts
+    as: ghost
+    request:
+      method: POST
+      path: '/memberships/{{m_ghost}}/accept'
+  - id: owner_lists_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: owner_creates_first_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"}]}'
+    bind:
+      vote_a: {from: body, pointer: /id, class: uuid}
+      opt_a_x: {from: body, pointer: /options/0/id, class: uuid}
+  - id: mate_ballot_on_first
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_a_x}}"}'
+  - id: owner_creates_outing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến mẫu (dữ liệu mẫu)","starts_on":"2030-01-01","ends_on":"2030-01-02","headcount":4,"budget_per_person_vnd":100000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_second_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Chặng đầu? (dữ liệu mẫu)","options":[{"label":"Chợ","place_name":"Chợ Bến Thành"},{"label":"Bảo tàng"},{"label":"Công viên"}],"outing_id":"{{outing}}"}'
+    bind:
+      vote_b: {from: body, pointer: /id, class: uuid}
+      opt_b_z: {from: body, pointer: /options/2/id, class: uuid}
+  - id: leaver_creates_third_vote
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Người sẽ rời nhóm hỏi (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_c: {from: body, pointer: /id, class: uuid}
+  - id: ghost_ballot_on_second
+    as: ghost
+    request:
+      method: POST
+      path: '/votes/{{vote_b}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_b_z}}"}'
+  - id: owner_closes_first
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/close'
+  # created_at order; closed and open votes together; owner cast no ballot
+  - id: owner_lists
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  # my_option_id is the reader's own ballot, and only theirs
+  - id: mate_lists
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: ghost_lists_before_deletion
+    as: ghost
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_roles_member_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-roles: 'member'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-roles: ''
+  - id: owner_roles_guest
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-roles: 'chu-tich'
+  # X-Actor-Contexts is parsed but never consulted: membership comes from the table
+  - id: owner_contexts_header_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-contexts: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: invitee_not_yet_active
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: stranger_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: stranger_claims_the_group_in_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: stranger_creates_other_ctx
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người lạ (dữ liệu mẫu)"}'
+    bind:
+      other_ctx: {from: body, pointer: /id, class: uuid}
+  - id: stranger_creates_own_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{other_ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Nhóm khác hỏi (dữ liệu mẫu)","options":[{"label":"Một"},{"label":"Hai"}]}'
+  - id: stranger_lists_own_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{other_ctx}}/votes'
+  - id: owner_lists_other_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{other_ctx}}/votes'
+  - id: invitee_accepts_late
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept'
+  # an accepted invite reads every vote, older ones included
+  - id: invitee_lists_after_accepting
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  # the leaver's vote stays, created_by_id unchanged
+  - id: owner_lists_after_leaver_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_after_deletion
+    as: ghost
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  # erasure keeps votes and ballots: the ghost's ballot still counts
+  - id: mate_lists_after_ghost_deleted
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: query_string_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes?limit=1&after=x'
+  # the idempotency middleware only looks at POST, PUT, PATCH, DELETE
+  - id: get_ignores_idempotency_key
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: ''
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes/'
+  - id: head_not_allowed
+    as: owner
+    request:
+      method: HEAD
+      path: '/contexts/{{ctx}}/votes'
+  - id: put_not_allowed
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Q"}'

@@ -1,0 +1,754 @@
+# W2 · POST /posts/{post_id}/comments — say something under a post one may read.
+# Refusal order: idempotency key, JSON decode, actor, path + body model, readable post
+# (404, never 403), then role and the wall owner's policy folded into one 403
+# comments_closed. The author is exempt from their own policy.
+id: w2/posts/post-posts-post_id-comments
+routes: ['POST /posts/{post_id}/comments']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  stranger: {}
+  rival: {}
+  ghost: {}
+  departed: {}
+steps:
+  - id: anonymous_unknown_post
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: anonymous_non_uuid_post_blank_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body": "chưa đóng'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_rival
+    as: rival
+    request:
+      method: PUT
+      path: '/people/{{persona.rival}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_departed
+    as: departed
+    request:
+      method: PUT
+      path: '/people/{{persona.departed}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết sẽ rời đi (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_and_blank_body
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: stranger_unknown_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  # body validation runs before the handler: 422 beats the 404
+  - id: stranger_unknown_post_blank_body
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: stranger_unknown_post_roles_empty
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bình luận (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership_mate: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_rival
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.rival}}"}'
+    bind:
+      membership_rival: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership_mate}}/accept'
+  - id: rival_accepts
+    as: rival
+    request:
+      method: POST
+      path: '/memberships/{{membership_rival}}/accept'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghi chú riêng (dữ liệu mẫu)","audience":"only_me"}'
+    bind:
+      post_only_me: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      post_friends: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      post_group: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho mọi người (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_public: {from: body, pointer: /id, class: uuid}
+  - id: rival_posts_public
+    as: rival
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài công khai của người chặn (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_rival_public: {from: body, pointer: /id, class: uuid}
+  - id: departed_posts_public
+    as: departed
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người sắp rời đi (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_departed: {from: body, pointer: /id, class: uuid}
+  # default policy `readers`: whoever may read may comment
+  - id: author_on_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Tự nhắc mình (dữ liệu mẫu)"}'
+  - id: stranger_on_only_me
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: friend_on_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bạn bè ghé qua (dữ liệu mẫu)"}'
+  - id: stranger_on_friends
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: mate_on_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cả nhóm cùng đi (dữ liệu mẫu)"}'
+  - id: friend_on_group
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: stranger_on_public
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Người lạ ghé qua (dữ liệu mẫu)"}'
+  - id: no_content_type_is_parsed_as_json
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      body_raw: '{"body":"Không có content-type (dữ liệu mẫu)"}'
+  # echoed back: JSON escaping of < > & quote backslash, non-ASCII and an emoji
+  - id: body_needs_escaping
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"<b>&\"Quận 9\"</b>\\ à 🙂\n dòng hai"}'
+  - id: body_whitespace_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"   "}'
+  - id: body_at_max_length
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha"}'
+  - id: body_over_max_length
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha ha "}'
+  - id: body_blank
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: body_number
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":42}'
+  - id: body_null
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":null}'
+  - id: missing_body_field
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: extra_field_author_id
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Viết hộ (dữ liệu mẫu)","author_id":"{{persona.author}}"}'
+  - id: empty_request_body
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+  - id: top_level_string
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '"Xin chào"'
+  - id: text_plain_content_type
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  # a missing role is folded into the same comments_closed refusal
+  - id: stranger_roles_advancer_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: stranger_roles_group_admin_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"body":"Vai trưởng nhóm (dữ liệu mẫu)"}'
+  - id: stranger_roles_empty_unreadable
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/comments'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: stranger_roles_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  # policy `friends`
+  - id: author_sets_policy_friends
+    as: author
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"friends"}'
+  - id: stranger_on_public_policy_friends
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: friend_on_public_policy_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bạn bè vẫn được (dữ liệu mẫu)"}'
+  # a groupmate who is not a friend reads the group post but may not comment
+  - id: mate_on_group_policy_friends
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: author_on_public_policy_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chủ tường trả lời (dữ liệu mẫu)"}'
+  # readable comes first: an unreadable post is 404 whatever the policy
+  - id: stranger_on_only_me_policy_friends
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  # a refused comment does not keep its key; the same key works once the wall opens
+  - id: idem_comments_closed_not_stored
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-closed'
+        content-type: 'application/json'
+      body_raw: '{"body":"Thử lại sau khi mở (dữ liệu mẫu)"}'
+  # policy `nobody`
+  - id: author_sets_policy_nobody
+    as: author
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"nobody"}'
+  - id: friend_on_friends_policy_nobody
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: author_on_friends_policy_nobody
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chủ tường vẫn viết được (dữ liệu mẫu)"}'
+  # the commenter's own policy is irrelevant; only the wall owner's counts
+  - id: author_sets_policy_readers
+    as: author
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"readers"}'
+  - id: stranger_sets_own_policy_nobody
+    as: stranger
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"nobody"}'
+  - id: idem_same_key_after_policy_opens
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-closed'
+        content-type: 'application/json'
+      body_raw: '{"body":"Thử lại sau khi mở (dữ liệu mẫu)"}'
+  # blocks
+  - id: rival_blocks_author
+    as: rival
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: rival_on_public_after_blocking
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: rival_on_group_after_blocking
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm vẫn là của nhóm (dữ liệu mẫu)"}'
+  - id: author_on_blockers_public
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_rival_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_on_group_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  # an ended author's posts go with the account
+  - id: stranger_on_departed_before
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_departed}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Trước khi rời đi (dữ liệu mẫu)"}'
+  - id: departed_deletes_account
+    as: departed
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: stranger_on_departed_after
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_departed}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Sau khi rời đi (dữ liệu mẫu)"}'
+  # dev mode trusts the header: an ended commenter still writes, under the anonymous name
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_comments_after_deletion
+    as: ghost
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Viết sau khi xoá tài khoản (dữ liệu mẫu)"}'
+  # idempotency
+  - id: idem_first
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bấm gửi một lần (dữ liệu mẫu)"}'
+  - id: idem_replay
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bấm gửi một lần (dữ liệu mẫu)"}'
+  - id: idem_reuse_different_body
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Nội dung khác (dữ liệu mẫu)"}'
+  - id: idem_second_distinct_key
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bấm gửi một lần (dữ liệu mẫu)"}'
+  - id: idem_refusal_not_stored
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Thử bài không đọc được (dữ liệu mẫu)"}'
+  - id: idem_same_key_after_refusal
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Thử bài đọc được (dữ liệu mẫu)"}'
+  - id: idem_validation_refusal_not_stored
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-d'
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: idem_same_key_after_validation_refusal
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        idempotency-key: 'w2-comment-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Lần này có chữ (dữ liệu mẫu)"}'
+  - id: friend_lists_friends_comments
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{post_friends}}/comments'
+  - id: author_reads_public_counts
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}'
+  - id: trailing_slash_redirects
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)"}'
+  - id: delete_not_allowed
+    as: friend
+    request:
+      method: DELETE
+      path: '/posts/{{post_friends}}/comments'

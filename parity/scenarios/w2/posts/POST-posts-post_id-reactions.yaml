@@ -1,0 +1,878 @@
+# W2 · POST /posts/{post_id}/reactions — one reaction of one kind, recounted totals back.
+# Refusal order: idempotency key, JSON decode, actor, path + body model,
+# readable post (404, never 403), role (403). A second tap of the same kind is 200 again.
+id: w2/posts/post-posts-post_id-reactions
+routes: ['POST /posts/{post_id}/reactions']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  invitee: {}
+  stranger: {}
+  rival: {}
+  shunned: {}
+  pending: {}
+  ghost: {}
+  departed: {}
+steps:
+  - id: anonymous_unknown_post
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_post
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"love"}'
+  # FastAPI decodes a JSON body before resolving dependencies: 422 json_invalid beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind": '
+  # the idempotency middleware answers before routing and before the actor
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: anonymous_with_key_not_stored
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        idempotency-key: 'w2-react-anon-{{persona.stranger}}'
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_rival
+    as: rival
+    request:
+      method: PUT
+      path: '/people/{{persona.rival}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_shunned
+    as: shunned
+    request:
+      method: PUT
+      path: '/people/{{persona.shunned}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: register_pending
+    as: pending
+    request:
+      method: PUT
+      path: '/people/{{persona.pending}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chờ kết bạn (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_departed
+    as: departed
+    request:
+      method: PUT
+      path: '/people/{{persona.departed}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết sẽ rời đi (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # path and body errors arrive in one 422 list, path first
+  - id: stranger_non_uuid_and_bad_kind
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/khong-phai-uuid/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"love"}'
+  # UUID parsing is lax: uppercase, unhyphenated and braced ids reach the handler
+  - id: stranger_uppercase_unknown_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_unhyphenated_unknown_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_braced_unknown_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_unknown_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # body validation runs before the handler: 422 beats the 404
+  - id: stranger_unknown_post_bad_kind
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"love"}'
+  # the readable check runs before the role check: 404, not 403
+  - id: stranger_unknown_post_roles_empty
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm thả tim (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership_mate: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_rival
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.rival}}"}'
+    bind:
+      membership_rival: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_invitee
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership_mate}}/accept'
+  - id: rival_accepts
+    as: rival
+    request:
+      method: POST
+      path: '/memberships/{{membership_rival}}/accept'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: pending_asks_author
+    as: pending
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghi chú riêng (dữ liệu mẫu)","audience":"only_me"}'
+    bind:
+      post_only_me: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      post_friends: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      post_group: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho mọi người (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_public: {from: body, pointer: /id, class: uuid}
+  - id: rival_posts_public
+    as: rival
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài công khai của người chặn (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_rival_public: {from: body, pointer: /id, class: uuid}
+  - id: departed_posts_public
+    as: departed
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người sắp rời đi (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_departed: {from: body, pointer: /id, class: uuid}
+  # audience matrix: the author reads every audience, only_me included
+  - id: author_heart_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: friend_on_only_me
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: friend_on_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  - id: stranger_on_friends
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  # an unanswered request is not a friendship
+  - id: pending_on_friends
+    as: pending
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  - id: mate_on_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  # friends and group are disjoint: a groupmate is not a friend
+  - id: mate_on_friends
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: friend_on_group
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: invitee_not_yet_active_on_group
+    as: invitee
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  # X-Actor-Contexts is a claim, never membership
+  - id: stranger_claims_group_context
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: stranger_on_only_me
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # counts are recounted per kind and sorted by kind; my_reactions is the caller's only
+  - id: stranger_like_public
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: friend_heart_public
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_heart_public
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_heart_public_again
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: author_every_kind_haha
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: author_every_kind_sad
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: author_every_kind_fire
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: no_content_type_is_parsed_as_json
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      body_raw: '{"kind":"wow"}'
+  # role check comes after the readable check
+  - id: stranger_roles_advancer_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: stranger_roles_group_admin_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: stranger_roles_empty_unreadable
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/reactions'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: stranger_roles_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  # body model
+  - id: kind_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"love"}'
+  - id: kind_wrong_case
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"Heart"}'
+  - id: kind_number
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":1}'
+  - id: kind_null
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":null}'
+  - id: missing_kind
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: extra_field_person_id
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart","person_id":"{{persona.author}}"}'
+  - id: empty_body
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+  - id: top_level_array
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["heart"]'
+  - id: text_plain_content_type
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"kind":"heart"}'
+  # blocks: public and friends posts stop crossing both ways; a shared group post stays
+  - id: rival_blocks_author
+    as: rival
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: author_blocks_shunned
+    as: author
+    request:
+      method: POST
+      path: '/people/{{persona.shunned}}/block'
+  - id: rival_on_public_after_blocking
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: author_on_blockers_public
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_rival_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: rival_on_group_after_blocking
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: shunned_on_public
+    as: shunned
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: rival_on_own_public
+    as: rival
+    request:
+      method: POST
+      path: '/posts/{{post_rival_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  # membership is read now: leaving the group takes the group post away
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_on_group_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # an ended author's posts are erased with the account
+  - id: stranger_on_departed_before
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_departed}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: departed_deletes_account
+    as: departed
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: stranger_on_departed_after
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_departed}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  # dev mode trusts the header: an ended reader still reaches a public post
+  - id: ghost_heart_public_before
+    as: ghost
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_heart_public_after
+    as: ghost
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  # idempotency
+  - id: idem_first
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: idem_replay
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: idem_replay_reordered_spaces
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{ "kind" : "haha" }'
+  - id: idem_reuse_different_body
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: idem_reuse_different_post
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: idem_same_key_other_actor
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: idem_second_distinct_key
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-b'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: idem_refusal_not_stored
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_only_me}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-c'
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: idem_same_key_after_refusal
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-c'
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: idem_validation_refusal_not_stored
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-d'
+        content-type: 'application/json'
+      body_raw: '{"kind":"love"}'
+  - id: idem_same_key_after_validation_refusal
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'w2-react-d'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  - id: idem_key_too_long
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: trailing_slash_redirects
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/reactions/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: get_not_allowed
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{post_friends}}/reactions'
+  - id: put_not_allowed
+    as: friend
+    request:
+      method: PUT
+      path: '/posts/{{post_friends}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: author_reads_public_after
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}'

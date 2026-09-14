@@ -1,0 +1,182 @@
+# W2 · stories in prod auth mode (ADR-0014), without a photo. Identity is the
+# bearer session; X-Actor-* headers are ignored, so a junk role header neither
+# 422s nor strips the member role the roster grants every signed-in person.
+# The happy path needs an uploaded photo whose uploaded_images row carries a
+# random storage_key the database lane cannot normalise; it lives in
+# parity/scenarios/w2-storage-key-gap/stories/prod-auth.yaml.
+id: w2/stories/prod-auth
+routes: ['POST /stories', 'GET /stories', 'POST /stories/{story_id}/seen', 'DELETE /stories/{story_id}']
+auth_mode: prod
+personas:
+  author: {}
+  friend: {}
+steps:
+  - id: anonymous_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/stories'
+  - id: anonymous_create
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # JSON is decoded before the session is looked up, in prod as in dev
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url": '
+  - id: junk_bearer_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_seen
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        authorization: 'Basic {{token.friend}}'
+  - id: lowercase_scheme_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        authorization: 'bearer {{token.friend}}'
+  # dev would trust these headers; prod answers as if nobody had signed in
+  - id: actor_headers_ignored_delete
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-id: '{{persona.author}}'
+        x-actor-roles: 'member'
+  - id: anonymous_non_uuid_seen
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories/khong-phai-uuid/seen'
+  - id: author_feed_empty
+    as: author
+    request:
+      method: GET
+      path: '/stories'
+  # dev answers 403 role_not_permitted to an empty role header; prod reads roles from the roster
+  - id: author_roles_header_empty_ignored
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # dev answers 422 invalid_actor_roles to an unknown role; prod never reads the header
+  - id: author_roles_header_unknown_ignored
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: 'thuyen-truong'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # dev answers 422 invalid_actor_id; prod ignores the header and uses the bearer
+  - id: author_actor_id_header_junk_ignored
+    as: author
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: author_other_persons_photo
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.friend}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: author_delete_unknown_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # the idempotency scope is the digest of the bearer; a refusal is not stored
+  - id: author_refusal_with_key
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'w2-prod-story'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: author_same_key_other_body_after_refusal
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: 'w2-prod-story'
+      body_raw: '{"image_url":"/people/{{persona.friend}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: friend_feed_friend_without_stories
+    as: friend
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_signs_out
+    as: author
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: author_feed_after_sign_out
+    as: author
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_create_after_sign_out
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # a revoked session is 401 before the path is parsed
+  - id: author_non_uuid_delete_after_sign_out
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/khong-phai-uuid'

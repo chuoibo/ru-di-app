@@ -1,0 +1,635 @@
+# W2 · GET /posts/{post_id} — one post, or 404 for every reader it is not for.
+# Visibility matrix: author / friend / groupmate / stranger / pending requester /
+# blocked either way (group posts survive a block) / deleted reader / deleted
+# author, plus can_comment and social counts as the reader sees them.
+id: w2/posts/get-posts-post_id
+routes: ['GET /posts/{post_id}']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  stranger: {}
+  requester: {}
+  blocker: {}
+  blocked: {}
+  leaver: {}
+  gone: {}
+steps:
+  - id: anonymous_unknown_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/khong-phai-uuid'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_requester
+    as: requester
+    request:
+      method: PUT
+      path: '/people/{{persona.requester}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người xin kết bạn (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ chặn (dữ liệu mẫu)"}'
+  - id: register_blocked
+    as: blocked
+    request:
+      method: PUT
+      path: '/people/{{persona.blocked}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người đọc sẽ rời (dữ liệu mẫu)"}'
+  - id: register_gone
+    as: gone
+    request:
+      method: PUT
+      path: '/people/{{persona.gone}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết sẽ rời (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_post
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/khong-phai-uuid'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee'
+  - id: stranger_uppercase_unknown_post
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE'
+  - id: stranger_unknown_post
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-roles: 'khong-co-role-nay'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: blocker_asks_author
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      blocker_request: {from: body, pointer: /id, class: uuid}
+  - id: author_accepts_blocker
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{blocker_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: requester_asks_author
+    as: requester
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đọc bài (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      mate_membership: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_blocker
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.blocker}}"}'
+    bind:
+      blocker_membership: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_blocked
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.blocked}}"}'
+    bind:
+      blocked_membership: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{mate_membership}}/accept'
+  - id: blocker_accepts_group
+    as: blocker
+    request:
+      method: POST
+      path: '/memberships/{{blocker_membership}}/accept'
+  - id: blocked_accepts_group
+    as: blocked
+    request:
+      method: POST
+      path: '/memberships/{{blocked_membership}}/accept'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chỉ mình tôi (dữ liệu mẫu)","audience":"only_me"}'
+    bind:
+      p_only_me: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bạn bè thôi (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      p_friends: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cả nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      p_group: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ai cũng đọc (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_public: {from: body, pointer: /id, class: uuid}
+  - id: blocker_posts_public
+    as: blocker
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người sẽ chặn (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_blocker_public: {from: body, pointer: /id, class: uuid}
+  - id: blocked_posts_public
+    as: blocked
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người bị chặn (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_blocked_public: {from: body, pointer: /id, class: uuid}
+  - id: gone_posts_public
+    as: gone
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người sẽ xoá tài khoản (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_gone: {from: body, pointer: /id, class: uuid}
+  # social counts as a reader sees them: kinds sorted, own kinds, comment count
+  - id: friend_reacts_heart
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{p_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: author_reacts_heart
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{p_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: author_reacts_fire
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{p_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: friend_comments
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{p_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Hay quá (dữ liệu mẫu)"}'
+  - id: author_reads_only_me
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_only_me}}'
+  - id: author_reads_friends
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: author_reads_group
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: author_reads_public_with_counts
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  # reading has no role check at all
+  - id: author_roles_empty_reads_own
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_only_me}}'
+      headers:
+        x-actor-roles: ''
+  - id: friend_reads_only_me
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_only_me}}'
+  - id: friend_reads_friends
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: friend_reads_group
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: friend_reads_public_with_counts
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: mate_reads_only_me
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_only_me}}'
+  # sharing a group is not friendship
+  - id: mate_reads_friends
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: mate_reads_group
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: mate_reads_public
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: stranger_reads_only_me
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_only_me}}'
+  - id: stranger_reads_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  # X-Actor-Contexts naming the group buys nothing
+  - id: stranger_reads_group_with_contexts_header
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: stranger_reads_public
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: stranger_roles_guest_reads_public
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+      headers:
+        x-actor-roles: 'guest'
+  # a pending request is not friendship
+  - id: requester_reads_friends
+    as: requester
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: requester_reads_public
+    as: requester
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: blocker_reads_friends_before_block
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: blocker_blocks_author
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: author_blocks_blocked
+    as: author
+    request:
+      method: POST
+      path: '/people/{{persona.blocked}}/block'
+  # a block hides public and friends posts both ways; the shared group's post stays
+  - id: blocker_reads_friends_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: blocker_reads_public_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: blocker_reads_group_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: blocker_reads_own_public
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_blocker_public}}'
+  - id: author_reads_blocker_public
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_blocker_public}}'
+  - id: blocked_reads_public
+    as: blocked
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: blocked_reads_group
+    as: blocked
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: author_reads_blocked_public
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_blocked_public}}'
+  - id: mate_reads_blocked_public
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_blocked_public}}'
+  # lifting the block leaves the edge declined: public comes back, friends does not
+  - id: blocker_lifts_block
+    as: blocker
+    request:
+      method: DELETE
+      path: '/people/{{persona.author}}/block'
+  - id: blocker_reads_public_after_unblock
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: blocker_reads_friends_after_unblock
+    as: blocker
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  # can_comment follows the wall owner's policy for THIS reader
+  - id: author_sets_policy_friends
+    as: author
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"friends"}'
+  - id: mate_reads_group_policy_friends
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: friend_reads_friends_policy_friends
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: author_sets_policy_nobody
+    as: author
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"nobody"}'
+  - id: friend_reads_public_policy_nobody
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: author_reads_own_policy_nobody
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_reads_group_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+  - id: leaver_reads_public_before_deletion
+    as: leaver
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # dev trusts X-Actor-ID, so a deleted reader still reads public posts
+  - id: leaver_reads_public_after_deletion
+    as: leaver
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: stranger_reads_gone_before_deletion
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_gone}}'
+  - id: gone_deletes_account
+    as: gone
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # erasure deletes the author's posts: the id no longer names anything
+  - id: stranger_reads_gone_after_deletion
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_gone}}'
+  - id: gone_reads_own_post_after_deletion
+    as: gone
+    request:
+      method: GET
+      path: '/posts/{{p_gone}}'
+  - id: trailing_slash_redirects
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{p_public}}/'
+  - id: delete_not_allowed
+    as: author
+    request:
+      method: DELETE
+      path: '/posts/{{p_public}}'
+  - id: post_to_post_id_not_allowed
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{p_public}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"x","audience":"only_me"}'

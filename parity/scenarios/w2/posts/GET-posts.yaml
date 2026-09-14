@@ -1,0 +1,402 @@
+# W2 · GET /posts — everything the actor may read, newest first, one page.
+# `public` is readable by everybody, so a feed page reaches back into posts
+# other scenarios wrote. Steps that must depend on this scenario alone use a
+# limit no larger than the posts this scenario made readable to that reader
+# (nothing else writes while a scenario runs); the two steps named
+# *_reads_global_public deliberately do not.
+id: w2/posts/get-posts
+routes: ['GET /posts']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  stranger: {}
+  blocker: {}
+  leaver: {}
+steps:
+  - id: anonymous_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts'
+  # get_actor runs before query validation
+  - id: anonymous_limit_zero
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts?limit=0'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: stranger_limit_zero
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=0'
+  - id: stranger_limit_101
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=101'
+  - id: stranger_limit_negative
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=-1'
+  - id: stranger_limit_not_int
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=abc'
+  - id: stranger_limit_float
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=1.5'
+  - id: stranger_limit_empty
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit='
+  # a repeated scalar query parameter: which occurrence FastAPI reads
+  - id: stranger_limit_repeated
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=1&limit=0'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=1'
+      headers:
+        x-actor-roles: 'khong-co-role-nay'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: blocker_asks_author
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      blocker_request: {from: body, pointer: /id, class: uuid}
+  - id: author_accepts_blocker
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{blocker_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bảng tin (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      mate_membership: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_blocker
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.blocker}}"}'
+    bind:
+      blocker_membership: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{mate_membership}}/accept'
+  - id: blocker_accepts_group
+    as: blocker
+    request:
+      method: POST
+      path: '/memberships/{{blocker_membership}}/accept'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"1 riêng (dữ liệu mẫu)","audience":"only_me"}'
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"2 bạn bè (dữ liệu mẫu)","audience":"friends"}'
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"3 nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"4 công khai (dữ liệu mẫu)","audience":"public"}'
+  - id: mate_posts_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"5 nhóm của bạn cùng nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: friend_posts_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"6 bạn bè của bạn thân (dữ liệu mẫu)","audience":"friends"}'
+  - id: friend_posts_only_me
+    as: friend
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"7 riêng của bạn thân (dữ liệu mẫu)","audience":"only_me"}'
+  - id: stranger_posts_only_me
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"8 riêng của người lạ (dữ liệu mẫu)","audience":"only_me"}'
+  - id: blocker_posts_public
+    as: blocker
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"9 công khai của người sẽ chặn (dữ liệu mẫu)","audience":"public"}'
+  - id: blocker_posts_friends
+    as: blocker
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"10 bạn bè của người sẽ chặn (dữ liệu mẫu)","audience":"friends"}'
+  # author reads 1-6, 9, 10: exactly eight posts written by this scenario
+  - id: author_feed_limit_8
+    as: author
+    request:
+      method: GET
+      path: '/posts?limit=8'
+  - id: author_feed_limit_1
+    as: author
+    request:
+      method: GET
+      path: '/posts?limit=1'
+  # reading the feed has no role check
+  - id: author_roles_empty_feed
+    as: author
+    request:
+      method: GET
+      path: '/posts?limit=2'
+      headers:
+        x-actor-roles: ''
+  # there is no viewer_id parameter; an unknown query is ignored
+  - id: stranger_viewer_id_ignored
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=3&viewer_id={{persona.author}}'
+  # friend reads 2, 4, 6, 7, 9 (not 10: not the blocker's friend)
+  - id: friend_feed_limit_5
+    as: friend
+    request:
+      method: GET
+      path: '/posts?limit=5'
+  # mate reads 3, 4, 5, 9
+  - id: mate_feed_limit_4
+    as: mate
+    request:
+      method: GET
+      path: '/posts?limit=4'
+  # stranger reads 4, 8, 9; X-Actor-Contexts buys no group post
+  - id: stranger_feed_limit_3_with_contexts_header
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=3'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  # GET is not a write method: the idempotency middleware ignores even an empty key
+  - id: stranger_feed_empty_idempotency_key_ignored
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=1'
+      headers:
+        idempotency-key: ''
+  - id: stranger_feed_default_limit_reads_global_public
+    as: stranger
+    request:
+      method: GET
+      path: '/posts'
+  - id: stranger_feed_limit_100_reads_global_public
+    as: stranger
+    request:
+      method: GET
+      path: '/posts?limit=100'
+  - id: blocker_blocks_author
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  # blocked either way: author loses 9 and 10, blocker loses 2 and 4, the group posts stay
+  - id: author_feed_after_block_limit_6
+    as: author
+    request:
+      method: GET
+      path: '/posts?limit=6'
+  - id: blocker_feed_after_block_limit_4
+    as: blocker
+    request:
+      method: GET
+      path: '/posts?limit=4'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a former member keeps their own group post and loses the author's
+  - id: mate_feed_after_leaving_limit_3
+    as: mate
+    request:
+      method: GET
+      path: '/posts?limit=3'
+  - id: leaver_posts_public
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"11 công khai của người sẽ rời (dữ liệu mẫu)","audience":"public"}'
+  - id: leaver_feed_before_deletion_limit_3
+    as: leaver
+    request:
+      method: GET
+      path: '/posts?limit=3'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # dev trusts X-Actor-ID: a deleted reader still gets a feed; their own post is gone
+  - id: leaver_feed_after_deletion_limit_2
+    as: leaver
+    request:
+      method: GET
+      path: '/posts?limit=2'
+  - id: trailing_slash_redirects
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/'
+  - id: delete_not_allowed
+    as: stranger
+    request:
+      method: DELETE
+      path: '/posts'
