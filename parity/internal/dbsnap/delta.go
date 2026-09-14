@@ -170,15 +170,23 @@ var (
 	orderUUID      = regexp.MustCompile(`\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b`)
 	orderTimestamp = regexp.MustCompile(`\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})?`)
 	orderHex       = regexp.MustCompile(`\\\\x[0-9a-f]*`)
+	orderHexRun    = regexp.MustCompile(`[0-9a-f]{32,}`)
 )
 
 // orderMask hides the values two stacks cannot share, so that ordering rows
 // by the masked text gives both stacks the same order. Hex bytea is masked
-// too: a random token digest would otherwise decide the order.
+// too: a random token digest would otherwise decide the order. So is a random
+// storage key, a run of exactly 32 lowercase hex.
 func orderMask(text string) string {
 	text = orderUUID.ReplaceAllString(text, "<uuid>")
 	text = orderTimestamp.ReplaceAllString(text, "<ts>")
-	return orderHex.ReplaceAllString(text, `\\x<hex>`)
+	text = orderHex.ReplaceAllString(text, `\\x<hex>`)
+	return orderHexRun.ReplaceAllStringFunc(text, func(run string) string {
+		if len(run) == 32 {
+			return "<hex32>"
+		}
+		return run
+	})
 }
 
 func sortRows(rows []Row) {

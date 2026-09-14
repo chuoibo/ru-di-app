@@ -4,7 +4,7 @@
 # the framework doors. Stories need an uploaded photo, whose uploaded_images row
 # carries a random storage_key the database lane cannot normalise, so the
 # visibility matrix and the ordering live in
-# parity/scenarios/w2-storage-key-gap/stories/GET-stories.yaml.
+# parity/scenarios/w2/stories-photo/GET-stories.yaml.
 id: w2/stories/get-stories
 routes: ['GET /stories']
 auth_mode: dev

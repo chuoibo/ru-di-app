@@ -1,12 +1,10 @@
-# W2 storage-key gap · DELETE /stories/{id} on real stories: 204 (with the
+# W2 stories with a real photo · DELETE /stories/{id} on real stories: 204 (with the
 # story_views cascade), 403 is_author for a friend, the 404-before-403 matrix,
 # delete twice, and the idempotency replay of a 204.
 # Refusals that need no story: w2/stories/delete-stories-story_id.
-# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
-# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
-# reaches the wire and which the database lane cannot normalise. With the
-# database lane on, the only differences are those rows (see the card).
-id: w2-storage-key-gap/stories/delete-stories-story_id
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/delete-stories-story_id
 routes: ['DELETE /stories/{story_id}']
 auth_mode: dev
 personas:

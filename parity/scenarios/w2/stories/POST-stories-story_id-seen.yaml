@@ -3,7 +3,7 @@
 # A real story needs an uploaded photo whose uploaded_images row carries a
 # random storage_key the database lane cannot normalise, so every step on a
 # real story (200, first look kept, the 404 matrix, replay) lives in
-# parity/scenarios/w2-storage-key-gap/stories/POST-stories-story_id-seen.yaml.
+# parity/scenarios/w2/stories-photo/POST-stories-story_id-seen.yaml.
 id: w2/stories/post-stories-story_id-seen
 routes: ['POST /stories/{story_id}/seen']
 auth_mode: dev

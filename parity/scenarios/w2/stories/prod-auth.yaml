@@ -3,7 +3,7 @@
 # 422s nor strips the member role the roster grants every signed-in person.
 # The happy path needs an uploaded photo whose uploaded_images row carries a
 # random storage_key the database lane cannot normalise; it lives in
-# parity/scenarios/w2-storage-key-gap/stories/prod-auth.yaml.
+# parity/scenarios/w2/stories-photo/prod-auth.yaml.
 id: w2/stories/prod-auth
 routes: ['POST /stories', 'GET /stories', 'POST /stories/{story_id}/seen', 'DELETE /stories/{story_id}']
 auth_mode: prod

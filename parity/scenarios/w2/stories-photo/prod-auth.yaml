@@ -1,12 +1,10 @@
-# W2 storage-key gap · stories in prod auth mode (ADR-0014): the happy path
+# W2 stories with a real photo · stories in prod auth mode (ADR-0014): the happy path
 # through all four routes on a bearer session, with roles from the roster and
 # the idempotency scope taken from the bearer digest.
 # Refusals that need no photo: w2/stories/prod-auth.
-# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
-# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
-# reaches the wire and which the database lane cannot normalise. With the
-# database lane on, the only differences are those rows (see the card).
-id: w2-storage-key-gap/stories/prod-auth
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/prod-auth
 routes: ['POST /stories', 'GET /stories', 'POST /stories/{story_id}/seen', 'DELETE /stories/{story_id}']
 auth_mode: prod
 personas:

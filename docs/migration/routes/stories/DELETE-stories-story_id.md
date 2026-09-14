@@ -76,7 +76,7 @@ Hai file cho route này, tách theo lane (lý do ở mục Chưa phủ).
 - Idempotency, chỉ các nhánh từ chối: `idem_empty_key`, `idem_refusal_not_stored` + `idem_same_key_other_story_after_refusal` (404, không phải reuse).
 - Chuẩn bị: `register_caller`, `caller_deletes_account`.
 
-`parity/scenarios/w2-storage-key-gap/stories/DELETE-stories-story_id.yaml`, id `w2-storage-key-gap/stories/delete-stories-story_id` (36 bước), được xác nhận **chỉ trên wire** (không DSN, vẫn có `--candidate-tap` và `--served-routes`):
+`parity/scenarios/w2/stories-photo/DELETE-stories-story_id.yaml`, id `w2/stories-photo/delete-stories-story_id` (36 bước, lane DB):
 
 - 404 trước 403: `stranger_real_story`, `friend_pending_request`, `friend_roles_empty`, `author_roles_empty`, `author_roles_guest_only`, `friend_deletes_after_block`, `new_friend_after_account_deleted`, `author_deletes_story_one_again`.
 - 403: `friend_deletes_friends_story`, `new_friend_deletes_friends_story`.
@@ -87,13 +87,12 @@ Hai file cho route này, tách theo lane (lý do ở mục Chưa phủ).
 `prod`:
 
 - `parity/scenarios/w2/stories/prod-auth.yaml`, id `w2/stories/prod-auth` (lane DB): `actor_headers_ignored_delete` (401 dù có `X-Actor-ID`), `author_delete_unknown_story` (404), `author_non_uuid_delete_after_sign_out` (401 trước 422 path).
-- `parity/scenarios/w2-storage-key-gap/stories/prod-auth.yaml`, id `w2-storage-key-gap/stories/prod-auth`: `friend_deletes_authors_story` (403), `author_deletes_story` (204).
+- `parity/scenarios/w2/stories-photo/prod-auth.yaml`, id `w2/stories-photo/prod-auth`: `friend_deletes_authors_story` (403), `author_deletes_story` (204).
 
 ## Chưa phủ / lưu ý cho bản Go
 
 - Tác giả xoá story **đã hết hạn** của mình (vẫn tới được vì `can_view` cho tác giả qua trước kiểm hạn): không dời được đồng hồ qua HTTP.
-- **Khoảng trống `storage_key`, lý do corpus tách đôi**: mỗi lần tải ảnh cá nhân (`POST /people/me/photos`) ghi `uploaded_images.storage_key = secrets.token_hex(16)` (`services/api/app/media/storage.py:28-31`, gọi ở `services/api/app/api/service.py:1817`): 32 ký tự hex ngẫu nhiên, **không bao giờ lên wire** (không có trong `UploadedImageResponse`, `services/api/app/api/schemas.py:1334-1342`). Bộ chuẩn hoá của harness chỉ gắn placeholder cho UUID v4 viết thường, digest hex đúng 64 ký tự, timestamp và literal được đặt tên (persona, token đã bind) (`parity/internal/normalize/normalize.go:30-38`, `:64`), nên dòng này luôn khác nhau giữa hai stack, và kịch bản không có cách nào bind nó. Vì mọi story cần một ảnh thật: `w2/stories/*` không có bước nào chèn hay xoá dòng `uploaded_images` (không tải ảnh, không xoá tài khoản của người có ảnh) và được xác nhận với lane DB; `w2-storage-key-gap/stories/*` chứa mọi đường cần ảnh thật và được xác nhận **chỉ trên wire**; một lần chạy file gap có bật lane DB cho thấy khác biệt duy nhất là các dòng `uploaded_images` lệch nhau ở `storage_key` (giống hệt sau khi che cột đó). Cách đóng: một luật che hoặc bind cột `uploaded_images.storage_key` trong harness (phạm vi ADR-0029), **chưa làm ở đây**; khi có luật đó thì gộp hai file lại và chạy cả hai trên lane DB.
-- `w2-storage-key-gap/stories/prod-auth` không chạy được bằng `parity run` khi thiếu DSN: persona `prod` cần database để seed phiên, và truyền DSN là bật lane DB (đo trên cặp stack `prod` mới dựng: đúng 1 khác biệt, dòng `uploaded_images` ở `upload_photo` chỉ khác `storage_key`; `parity: scenarios=1 steps=16 scenarios_diff=1 differences=1 database_lane=on`). Chỉ `parity canary` seed phiên mà không chụp DB.
+- **`storage_key`, lý do corpus tách đôi**: mỗi lần tải ảnh cá nhân (`POST /people/me/photos`) ghi `uploaded_images.storage_key = secrets.token_hex(16)` (`services/api/app/media/storage.py:28-31`, gọi ở `services/api/app/api/service.py:1817`): 32 ký tự hex ngẫu nhiên, **không bao giờ lên wire** (không có trong `UploadedImageResponse`, `services/api/app/api/schemas.py:1334-1342`). Harness bind chuỗi đúng 32 hex thường theo lần xuất hiện thành `<hex32#n>` (ADR-0029 §2.4), nên mọi đường cần ảnh thật (`w2/stories-photo/*`, kể cả `prod-auth`) chạy với lane DB; khoá dùng lại, viết hoa hay độ dài khác vẫn đỏ. `w2/stories/*` giữ các đường không cần ảnh.
 - Replay 204: Python gửi `content-length: 0`, Go thì không; harness đã chấp nhận riêng cặp này (ADR-0029 §2.4, `w0/replay-204`). Bản Go không được thêm `content-type` vào 204.
 - Hai người cùng xoá một lúc và 409 in-flight chưa phủ.
 - Role check nằm trong cổng 404, trước `is_author`: bản Go tách thành 403 sẽ lệch `author_roles_empty`.

@@ -3,7 +3,7 @@
 # A real story needs an uploaded photo whose uploaded_images row carries a
 # random storage_key the database lane cannot normalise, so 204, the 403
 # is_author branch, the 404-before-403 matrix and replay live in
-# parity/scenarios/w2-storage-key-gap/stories/DELETE-stories-story_id.yaml.
+# parity/scenarios/w2/stories-photo/DELETE-stories-story_id.yaml.
 id: w2/stories/delete-stories-story_id
 routes: ['DELETE /stories/{story_id}']
 auth_mode: dev

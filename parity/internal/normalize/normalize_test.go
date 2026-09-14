@@ -125,6 +125,66 @@ func TestNameRejectsRebinding(t *testing.T) {
 	}
 }
 
+// A storage key is random per upload, so two stacks share only where it is
+// reused. Reuse, case and length must still show.
+func TestStorageKeysAreBoundByFirstAppearanceNotByValue(t *testing.T) {
+	key := func(c string) string { return strings.Repeat(c, 32) }
+	rows := func(first, second string) []string {
+		return []string{
+			`{"storage_key":"` + first + `"}`,
+			`{"storage_key":"` + second + `","replaces":"` + first + `"}`,
+		}
+	}
+	apply := func(texts []string) []string {
+		b := NewBinder()
+		for _, text := range texts {
+			if err := b.Observe(text); err != nil {
+				t.Fatal(err)
+			}
+		}
+		out := make([]string, len(texts))
+		for i, text := range texts {
+			out[i] = b.Apply(text)
+		}
+		return out
+	}
+	ref := apply(rows(key("a"), key("b")))
+	cand := apply(rows(key("c"), key("d")))
+	if strings.Join(ref, "\n") != strings.Join(cand, "\n") {
+		t.Fatalf("same key pattern differs:\n%v\n%v", ref, cand)
+	}
+	if ref[1] != `{"storage_key":"<hex32#2>","replaces":"<hex32#1>"}` {
+		t.Fatalf("not bound: %v", ref)
+	}
+
+	// The candidate reused one key where the reference wrote two.
+	if reused := apply(rows(key("c"), key("c"))); reused[1] == ref[1] {
+		t.Fatalf("key reuse hidden: %v", reused)
+	}
+
+	for _, literal := range []string{strings.Repeat("a", 31), strings.Repeat("a", 33), strings.Repeat("A", 32), strings.Repeat("a", 63)} {
+		if got := apply([]string{literal})[0]; got != literal {
+			t.Fatalf("%d-character run %q bound as %q", len(literal), literal[:4], got)
+		}
+	}
+	// Two keys written side by side are one 64-character run: a digest.
+	if got := apply([]string{key("a") + key("b")})[0]; got != "<digest#1>" {
+		t.Fatalf("64-character run bound as %q", got)
+	}
+
+	masks := map[string]string{
+		key("a"):                "<hex32>",
+		strings.Repeat("a", 33): strings.Repeat("a", 33),
+		strings.Repeat("a", 64): "<digest>",
+		strings.Repeat("a", 65): "<digest>",
+	}
+	for literal, want := range masks {
+		if got := Mask(literal); got != want {
+			t.Errorf("Mask(%d-character run) = %q, want %q", len(literal), got, want)
+		}
+	}
+}
+
 func TestShape(t *testing.T) {
 	cases := map[string]string{
 		"2026-09-14T10:00:00Z":             "f0|Z",

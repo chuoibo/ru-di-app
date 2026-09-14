@@ -1,12 +1,10 @@
-# W2 storage-key gap · POST /stories — every branch that needs a real photo:
+# W2 stories with a real photo · POST /stories — every branch that needs a real photo:
 # 201 (caption normalisation, limit, no content-type, group_admin only), the 403
 # on somebody else's real photo, the idempotency replay set, and the photo
 # erased with the account. Refusals that need no photo: w2/stories/post-stories.
-# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
-# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
-# reaches the wire and which the database lane cannot normalise. With the
-# database lane on, the only differences are those rows (see the card).
-id: w2-storage-key-gap/stories/post-stories
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/post-stories
 routes: ['POST /stories']
 auth_mode: dev
 personas:

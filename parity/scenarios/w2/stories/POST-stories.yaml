@@ -4,7 +4,7 @@
 # No step here uploads a photo: an uploaded_images row carries a random
 # storage_key the database lane cannot normalise. Every path that needs a real
 # photo (201, replay, 403 on a real photo) lives in
-# parity/scenarios/w2-storage-key-gap/stories/POST-stories.yaml.
+# parity/scenarios/w2/stories-photo/POST-stories.yaml.
 id: w2/stories/post-stories
 routes: ['POST /stories']
 auth_mode: dev

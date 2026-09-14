@@ -1,12 +1,10 @@
-# W2 storage-key gap · POST /stories/{id}/seen on real stories: 200 and the
+# W2 stories with a real photo · POST /stories/{id}/seen on real stories: 200 and the
 # first look kept, the 404 matrix (stranger, pending, no role, blocked, block
 # lifted, deleted story, deleted account), replay (also after a block).
 # Refusals that need no story: w2/stories/post-stories-story_id-seen.
-# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
-# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
-# reaches the wire and which the database lane cannot normalise. With the
-# database lane on, the only differences are those rows (see the card).
-id: w2-storage-key-gap/stories/post-stories-story_id-seen
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/post-stories-story_id-seen
 routes: ['POST /stories/{story_id}/seen']
 auth_mode: dev
 personas:

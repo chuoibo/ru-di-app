@@ -15,6 +15,11 @@
 // construction; what still has to match is which rows and answers share one.
 // That a Go digest equals Python's value is the business of the package's own
 // golden tests and of cross-implementation replay, not of this comparison.
+//
+// A 32-character lowercase hex run (a storage key from secrets.token_hex(16))
+// becomes <hex32#n> the same way. The key is random per upload and never sent
+// back, so only the database lane sees it; what has to match is which rows
+// share a key, and that a key is 32 lowercase hex at all.
 package normalize
 
 import (
@@ -29,9 +34,15 @@ import (
 // unhyphenated id stays a literal, so a formatting change still shows.
 var uuid4 = regexp.MustCompile(`\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b`)
 
-// hexRun finds maximal runs of lowercase hex; only runs of exactly 64 are
-// digests, so a longer or shorter run, or uppercase hex, stays literal.
-var hexRun = regexp.MustCompile(`[0-9a-f]{64,}`)
+// hexRun finds maximal runs of lowercase hex; only runs of exactly 64
+// (digests) or exactly 32 (random keys) are bound, so any other length, or
+// uppercase hex, stays literal.
+var hexRun = regexp.MustCompile(`[0-9a-f]{32,}`)
+
+const (
+	digestLen = 64
+	keyLen    = 32
+)
 
 // Broad on purpose: a malformed-but-close timestamp is still bound, and its
 // shape suffix records exactly how it was malformed.
@@ -44,6 +55,7 @@ type Binder struct {
 	namedOrd     []string          // longest first, so a token never shadows a longer one
 	uuids        map[string]int    // literal -> first-appearance number
 	digests      map[string]int    // literal -> first-appearance number
+	keys         map[string]int    // 32-hex literal -> first-appearance number
 	instants     map[string]time.Time
 	instantOrder []string // timestamp literals in first-observation order
 	ranks        map[int64]int
@@ -56,6 +68,7 @@ func NewBinder() *Binder {
 		named:    map[string]string{},
 		uuids:    map[string]int{},
 		digests:  map[string]int{},
+		keys:     map[string]int{},
 		instants: map[string]time.Time{},
 	}
 }
@@ -94,8 +107,15 @@ func (b *Binder) Observe(text string) error {
 	}
 	text = b.replaceNamed(text)
 	for _, run := range hexRun.FindAllString(text, -1) {
-		if _, seen := b.digests[run]; len(run) == 64 && !seen {
-			b.digests[run] = len(b.digests) + 1
+		switch len(run) {
+		case digestLen:
+			if _, seen := b.digests[run]; !seen {
+				b.digests[run] = len(b.digests) + 1
+			}
+		case keyLen:
+			if _, seen := b.keys[run]; !seen {
+				b.keys[run] = len(b.keys) + 1
+			}
 		}
 	}
 	for _, id := range uuid4.FindAllString(text, -1) {
@@ -126,6 +146,9 @@ func (b *Binder) Apply(text string) string {
 	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
 		if n, ok := b.digests[run]; ok {
 			return fmt.Sprintf("<digest#%d>", n)
+		}
+		if n, ok := b.keys[run]; ok {
+			return fmt.Sprintf("<hex32#%d>", n)
 		}
 		return run
 	})
@@ -212,7 +235,15 @@ func parseInstant(literal string) (time.Time, bool) {
 // values are equal. It orders responses that arrived together; it never
 // replaces Apply.
 func Mask(text string) string {
-	text = hexRun.ReplaceAllString(text, "<digest>")
+	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
+		switch {
+		case len(run) >= digestLen:
+			return "<digest>"
+		case len(run) == keyLen:
+			return "<hex32>"
+		}
+		return run
+	})
 	text = uuid4.ReplaceAllString(text, "<uuid>")
 	return timestamp.ReplaceAllStringFunc(text, func(literal string) string {
 		return "<ts|" + Shape(literal) + ">"

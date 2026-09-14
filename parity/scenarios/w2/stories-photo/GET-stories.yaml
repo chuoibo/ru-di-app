@@ -1,13 +1,11 @@
-# W2 storage-key gap · GET /stories — the rail with real stories: visibility
+# W2 stories with a real photo · GET /stories — the rail with real stories: visibility
 # matrix (author, group mate who is not a friend, pending request, friend,
 # blocked either way, block lifted, asked again, deleted author, deleted
 # reader) and ordering (own first, unseen, newest first; seen per reader).
 # Branches that need no story: w2/stories/get-stories.
-# Validated on the wire lane only (no --reference-dsn/--candidate-dsn): every
-# upload writes uploaded_images.storage_key = secrets.token_hex(16), which never
-# reaches the wire and which the database lane cannot normalise. With the
-# database lane on, the only differences are those rows (see the card).
-id: w2-storage-key-gap/stories/get-stories
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/get-stories
 routes: ['GET /stories']
 auth_mode: dev
 personas:

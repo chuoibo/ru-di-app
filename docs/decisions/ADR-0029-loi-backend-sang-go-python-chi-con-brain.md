@@ -103,6 +103,11 @@ Port không được đổi byte nào ở biên HTTP: status, header (trừ `dat
 khi thay placeholder cho id/token/thời điểm **nhưng giữ nguyên định dạng**, và trạng thái DB sau **từng bước**.
 Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, không được import `services/core`):
 
+- Giá trị ngẫu nhiên kịch bản không đặt tên được bind theo lần xuất hiện và vẫn giữ định dạng: uuid4 viết thường
+  có gạch thành `<uuid#n>`, chuỗi đúng 64 hex thường (fingerprint, digest token) thành `<digest#n>`, chuỗi đúng 32
+  hex thường thành `<hex32#n>` (`uploaded_images.storage_key = secrets.token_hex(16)`, không bao giờ lên wire nên
+  chỉ làn database thấy). Cái phải khớp là hàng nào dùng chung một giá trị: viết hoa, độ dài khác, dùng lại một
+  khoá hay đổi sang dạng khác vẫn đỏ. Một giá trị sai mà vẫn duy nhất thì bị che, như uuid4.
 - Mốc so sánh luôn là Python. File kịch bản **không có trường kết quả mong đợi**; `parity lint` từ chối các khoá
   `expect`, `status`, `body`, `assert`. Nhờ vậy agy viết được đầu vào mà không vi phạm ADR-0010 §6.1.
 - Chống xanh giả: tự so K lần trên stack sạch; canary là proxy cố tình làm sai từng bẫy (`Z`→`+00:00`, `1.0`→`1`,
