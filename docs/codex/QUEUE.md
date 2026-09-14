@@ -49,7 +49,9 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   (`image_url` có pattern ở `POST /stories` và `POST /posts`, path Literal ở `DELETE .../reactions/{kind}`, validator
   của `POST /contexts/{context_id}/votes`), lý do nằm trong bộ sinh và bộ sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
   parse, limiter theo IP).
-- Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch; domain và kịch bản viết tay đang làm.
+- Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch. Domain đã port (friendship, blocking,
+  visibility, storyvisibility, postaudience, vote, cursors, identity; golden từ Python thật 0 lệch). Kịch bản viết
+  tay đang làm.
 - `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
   `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship).
 

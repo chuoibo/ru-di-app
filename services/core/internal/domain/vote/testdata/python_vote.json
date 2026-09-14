@@ -1,0 +1,745 @@
+{
+ "generator": "scripts/render_domain_w2_goldens.py",
+ "module": "app.domain.vote",
+ "mode": "vote",
+ "python": "3.12.14",
+ "seed": 41,
+ "constants": {
+  "names": [
+   "VoteError",
+   "tally"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "tally",
+   "name": "test_the_spec_example_reports_a_clear_winner",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bep-me-in",
+      "position": 1
+     },
+     {
+      "id": "som-tum",
+      "position": 2
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "binh",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "chi",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "dung",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "em",
+      "option_id": "bep-me-in"
+     },
+     {
+      "voter_id": "phuc",
+      "option_id": "bep-me-in"
+     },
+     {
+      "voter_id": "giang",
+      "option_id": "som-tum"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 7,
+     "counts": [
+      [
+       "pizza",
+       4
+      ],
+      [
+       "bep-me-in",
+       2
+      ],
+      [
+       "som-tum",
+       1
+      ]
+     ],
+     "leading_option_ids": [
+      "pizza"
+     ],
+     "is_tie": false,
+     "decided_option_id": "pizza"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "test_an_option_nobody_chose_still_appears_with_zero",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bun-cha",
+      "position": 1
+     },
+     {
+      "id": "som-tum",
+      "position": 2
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "pizza"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 1,
+     "counts": [
+      [
+       "pizza",
+       1
+      ],
+      [
+       "bun-cha",
+       0
+      ],
+      [
+       "som-tum",
+       0
+      ]
+     ],
+     "leading_option_ids": [
+      "pizza"
+     ],
+     "is_tie": false,
+     "decided_option_id": "pizza"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "test_a_level_result_is_reported_as_a_tie_and_decides_nothing",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bun-cha",
+      "position": 1
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "binh",
+      "option_id": "bun-cha"
+     },
+     {
+      "voter_id": "chi",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "dung",
+      "option_id": "bun-cha"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 4,
+     "counts": [
+      [
+       "pizza",
+       2
+      ],
+      [
+       "bun-cha",
+       2
+      ]
+     ],
+     "leading_option_ids": [
+      "pizza",
+      "bun-cha"
+     ],
+     "is_tie": true,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "test_a_three_way_tie_lists_every_leader_in_order",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bun-cha",
+      "position": 1
+     },
+     {
+      "id": "som-tum",
+      "position": 2
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "som-tum"
+     },
+     {
+      "voter_id": "binh",
+      "option_id": "bun-cha"
+     },
+     {
+      "voter_id": "chi",
+      "option_id": "pizza"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 3,
+     "counts": [
+      [
+       "pizza",
+       1
+      ],
+      [
+       "bun-cha",
+       1
+      ],
+      [
+       "som-tum",
+       1
+      ]
+     ],
+     "leading_option_ids": [
+      "pizza",
+      "bun-cha",
+      "som-tum"
+     ],
+     "is_tie": true,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "no_ballots",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bun-cha",
+      "position": 1
+     }
+    ],
+    "ballots": []
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 0,
+     "counts": [
+      [
+       "pizza",
+       0
+      ],
+      [
+       "bun-cha",
+       0
+      ]
+     ],
+     "leading_option_ids": [],
+     "is_tie": false,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "single_option_no_ballots",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     }
+    ],
+    "ballots": []
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 0,
+     "counts": [
+      [
+       "pizza",
+       0
+      ]
+     ],
+     "leading_option_ids": [],
+     "is_tie": false,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "duplicate_ballot",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     },
+     {
+      "id": "bun-cha",
+      "position": 1
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "pizza"
+     },
+     {
+      "voter_id": "an",
+      "option_id": "bun-cha"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "DUPLICATE_BALLOT",
+     "code": "DUPLICATE_BALLOT"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "unknown_option",
+   "args": {
+    "options": [
+     {
+      "id": "pizza",
+      "position": 0
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "somewhere-else"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "UNKNOWN_OPTION",
+     "code": "UNKNOWN_OPTION"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "no_options",
+   "args": {
+    "options": [],
+    "ballots": []
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "NO_OPTIONS",
+     "code": "NO_OPTIONS"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "no_options_with_ballots",
+   "args": {
+    "options": [],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "x"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "NO_OPTIONS",
+     "code": "NO_OPTIONS"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "duplicate_position",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 1
+     },
+     {
+      "id": "b",
+      "position": 1
+     }
+    ],
+    "ballots": []
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "DUPLICATE_POSITION",
+     "code": "DUPLICATE_POSITION"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "duplicate_position_is_checked_before_ballots",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 1
+     },
+     {
+      "id": "b",
+      "position": 1
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "zzz"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "DUPLICATE_POSITION",
+     "code": "DUPLICATE_POSITION"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "positions_sort_the_options",
+   "args": {
+    "options": [
+     {
+      "id": "c",
+      "position": 30
+     },
+     {
+      "id": "a",
+      "position": -4
+     },
+     {
+      "id": "b",
+      "position": 7
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "b"
+     },
+     {
+      "voter_id": "binh",
+      "option_id": "c"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 2,
+     "counts": [
+      [
+       "a",
+       0
+      ],
+      [
+       "b",
+       1
+      ],
+      [
+       "c",
+       1
+      ]
+     ],
+     "leading_option_ids": [
+      "b",
+      "c"
+     ],
+     "is_tie": true,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "one_id_at_two_positions_counts_once_and_leads_twice",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 1
+     },
+     {
+      "id": "a",
+      "position": 2
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "a"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 1,
+     "counts": [
+      [
+       "a",
+       1
+      ]
+     ],
+     "leading_option_ids": [
+      "a",
+      "a"
+     ],
+     "is_tie": true,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "one_id_at_two_positions_with_no_ballots",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 1
+     },
+     {
+      "id": "a",
+      "position": 2
+     }
+    ],
+    "ballots": []
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 0,
+     "counts": [
+      [
+       "a",
+       0
+      ]
+     ],
+     "leading_option_ids": [],
+     "is_tie": false,
+     "decided_option_id": null
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "duplicate_voter_wins_over_a_later_unknown_option",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 0
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "a"
+     },
+     {
+      "voter_id": "an",
+      "option_id": "zzz"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "DUPLICATE_BALLOT",
+     "code": "DUPLICATE_BALLOT"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "unknown_option_wins_over_a_later_duplicate_voter",
+   "args": {
+    "options": [
+     {
+      "id": "a",
+      "position": 0
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "an",
+      "option_id": "zzz"
+     },
+     {
+      "voter_id": "an",
+      "option_id": "a"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "VoteError",
+     "message": "UNKNOWN_OPTION",
+     "code": "UNKNOWN_OPTION"
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "empty_ids",
+   "args": {
+    "options": [
+     {
+      "id": "",
+      "position": 0
+     },
+     {
+      "id": "x",
+      "position": 1
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "",
+      "option_id": ""
+     },
+     {
+      "voter_id": "x",
+      "option_id": "x"
+     },
+     {
+      "voter_id": "y",
+      "option_id": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 3,
+     "counts": [
+      [
+       "",
+       2
+      ],
+      [
+       "x",
+       1
+      ]
+     ],
+     "leading_option_ids": [
+      ""
+     ],
+     "is_tie": false,
+     "decided_option_id": ""
+    }
+   }
+  },
+  {
+   "fn": "tally",
+   "name": "uuid_ids",
+   "args": {
+    "options": [
+     {
+      "id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "position": 0
+     },
+     {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "position": 1
+     }
+    ],
+    "ballots": [
+     {
+      "voter_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "option_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     },
+     {
+      "voter_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "option_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     },
+     {
+      "voter_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "option_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "total_ballots": 3,
+     "counts": [
+      [
+       "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+       1
+      ],
+      [
+       "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+       2
+      ]
+     ],
+     "leading_option_ids": [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+     ],
+     "is_tie": false,
+     "decided_option_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+    }
+   }
+  }
+ ]
+}

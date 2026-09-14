@@ -1,0 +1,1912 @@
+{
+ "generator": "scripts/render_domain_w2_goldens.py",
+ "module": "app.domain.blocking",
+ "mode": "blocking",
+ "python": "3.12.14",
+ "seed": 41,
+ "constants": {
+  "direct_message_unavailable": "direct_message_unavailable",
+  "names": [
+   "DIRECT_MESSAGE_UNAVAILABLE",
+   "blocker_of",
+   "dm_allowed",
+   "hidden_between",
+   "is_blocked"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/0",
+   "args": {
+    "edge": null
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/0",
+   "args": {
+    "edge": null
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/0",
+   "args": {
+    "edge": null
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/0/false",
+   "args": {
+    "edge": null,
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/0/true",
+   "args": {
+    "edge": null,
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/1",
+   "args": {
+    "edge": {
+     "state": "pending"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/1",
+   "args": {
+    "edge": {
+     "state": "pending"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/1",
+   "args": {
+    "edge": {
+     "state": "pending"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/1/false",
+   "args": {
+    "edge": {
+     "state": "pending"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/1/true",
+   "args": {
+    "edge": {
+     "state": "pending"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/2",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/2",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/2",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/2/false",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/2/true",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/3",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/3",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/3",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/3/false",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/3/true",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/4",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/4",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/4",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/4/false",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/4/true",
+   "args": {
+    "edge": {
+     "state": "pending",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/5",
+   "args": {
+    "edge": {
+     "state": "accepted"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/5",
+   "args": {
+    "edge": {
+     "state": "accepted"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/5",
+   "args": {
+    "edge": {
+     "state": "accepted"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/5/false",
+   "args": {
+    "edge": {
+     "state": "accepted"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/5/true",
+   "args": {
+    "edge": {
+     "state": "accepted"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/6",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/6",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/6",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/6/false",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/6/true",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/7",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/7",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/7",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/7/false",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/7/true",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/8",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/8",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/8",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/8/false",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/8/true",
+   "args": {
+    "edge": {
+     "state": "accepted",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/9",
+   "args": {
+    "edge": {
+     "state": "declined"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/9",
+   "args": {
+    "edge": {
+     "state": "declined"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/9",
+   "args": {
+    "edge": {
+     "state": "declined"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/9/false",
+   "args": {
+    "edge": {
+     "state": "declined"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/9/true",
+   "args": {
+    "edge": {
+     "state": "declined"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/10",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/10",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/10",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/10/false",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/10/true",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/11",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/11",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/11",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/11/false",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/11/true",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/12",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/12",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/12",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/12/false",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/12/true",
+   "args": {
+    "edge": {
+     "state": "declined",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/13",
+   "args": {
+    "edge": {
+     "state": "blocked"
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/13",
+   "args": {
+    "edge": {
+     "state": "blocked"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/13",
+   "args": {
+    "edge": {
+     "state": "blocked"
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/13/false",
+   "args": {
+    "edge": {
+     "state": "blocked"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/13/true",
+   "args": {
+    "edge": {
+     "state": "blocked"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/14",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/14",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/14",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/14/false",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/14/true",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/15",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/15",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/15",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/15/false",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/15/true",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/16",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/16",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": ""
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/16",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/16/false",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/16/true",
+   "args": {
+    "edge": {
+     "state": "blocked",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/17",
+   "args": {
+    "edge": {
+     "state": "Blocked"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/17",
+   "args": {
+    "edge": {
+     "state": "Blocked"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/17",
+   "args": {
+    "edge": {
+     "state": "Blocked"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/17/false",
+   "args": {
+    "edge": {
+     "state": "Blocked"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/17/true",
+   "args": {
+    "edge": {
+     "state": "Blocked"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/18",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/18",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/18",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/18/false",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/18/true",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/19",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/19",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/19",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/19/false",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/19/true",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/20",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/20",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/20",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/20/false",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/20/true",
+   "args": {
+    "edge": {
+     "state": "Blocked",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/21",
+   "args": {
+    "edge": {
+     "state": "blocked "
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/21",
+   "args": {
+    "edge": {
+     "state": "blocked "
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/21",
+   "args": {
+    "edge": {
+     "state": "blocked "
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/21/false",
+   "args": {
+    "edge": {
+     "state": "blocked "
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/21/true",
+   "args": {
+    "edge": {
+     "state": "blocked "
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/22",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/22",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/22",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/22/false",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/22/true",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/23",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/23",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/23",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/23/false",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/23/true",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/24",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/24",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/24",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/24/false",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/24/true",
+   "args": {
+    "edge": {
+     "state": "blocked ",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/25",
+   "args": {
+    "edge": {
+     "state": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/25",
+   "args": {
+    "edge": {
+     "state": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/25",
+   "args": {
+    "edge": {
+     "state": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/25/false",
+   "args": {
+    "edge": {
+     "state": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/25/true",
+   "args": {
+    "edge": {
+     "state": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/26",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/26",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/26",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": null
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/26/false",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": null
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/26/true",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": null
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/27",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/27",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/27",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/27/false",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/27/true",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_blocked",
+   "name": "is_blocked/28",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "blocker_of",
+   "name": "blocker_of/28",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "hidden_between",
+   "name": "hidden_between/28",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": ""
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/28/false",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": ""
+    },
+    "other_deleted": false
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "dm_allowed",
+   "name": "dm_allowed/28/true",
+   "args": {
+    "edge": {
+     "state": "",
+     "decided_by_id": ""
+    },
+    "other_deleted": true
+   },
+   "result": {
+    "ok": false
+   }
+  }
+ ]
+}
