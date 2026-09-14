@@ -1,0 +1,201 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "receipts",
+ "routes": [
+  {
+   "id": "POST /receipts/scan",
+   "order": 112,
+   "method": "POST",
+   "path": "/receipts/scan",
+   "name": "scan_receipt",
+   "endpoint": "app.api.routes.receipts.scan_receipt",
+   "status_code": null,
+   "path_convertors": {},
+   "body": {
+    "kind": "multipart",
+    "field_info": "File",
+    "media_type": "multipart/form-data",
+    "embed": true,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.receipts.scan_receipt",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.receipts.scan_receipt",
+     []
+    ],
+    "body": [
+     {
+      "name": "image",
+      "alias": "image",
+      "in": "body",
+      "field_info": "File",
+      "annotation": "fastapi.datastructures.UploadFile",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "multipart/form-data",
+      "schema": {
+       "type": "function-plain",
+       "function": {
+        "kind": "with-info",
+        "name": "fastapi.datastructures.UploadFile._validate"
+       }
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_receipt_reader",
+      "name": "reader",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_receipt_reader",
+       []
+      ]
+     },
+     {
+      "call": "app.api.routes.receipts.get_receipt_scan_limiter",
+      "name": "limiter",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.receipts.get_receipt_scan_limiter",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {}
+}

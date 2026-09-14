@@ -1,0 +1,654 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "guests",
+ "routes": [
+  {
+   "id": "GET /g/{token}",
+   "order": 73,
+   "method": "GET",
+   "path": "/g/{token}",
+   "name": "guest_page",
+   "endpoint": "app.api.routes.guests.guest_page",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.guests.guest_page",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.guest_page",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "specials": {
+     "request": "request"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /g/{token}/da-chuyen",
+   "order": 74,
+   "method": "POST",
+   "path": "/g/{token}/da-chuyen",
+   "name": "report_payment",
+   "endpoint": "app.api.routes.guests.report_payment",
+   "status_code": 201,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": {
+    "kind": "form",
+    "field_info": "Form",
+    "media_type": "application/x-www-form-urlencoded",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.guests.report_payment",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.report_payment",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "app.api.schemas.PaymentReportRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.PaymentReportRequest"
+      }
+     }
+    ],
+    "specials": {
+     "request": "http_request"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /g/{token}/khong-phai-toi",
+   "order": 75,
+   "method": "GET",
+   "path": "/g/{token}/khong-phai-toi",
+   "name": "not_me_page",
+   "endpoint": "app.api.routes.guests.not_me_page",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.guests.not_me_page",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.not_me_page",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "specials": {
+     "request": "request"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /g/{token}/khong-phai-toi",
+   "order": 76,
+   "method": "POST",
+   "path": "/g/{token}/khong-phai-toi",
+   "name": "not_me_submit",
+   "endpoint": "app.api.routes.guests.not_me_submit",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.guests.not_me_submit",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.not_me_submit",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "specials": {
+     "request": "request"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /g/{token}/doi-so-tien",
+   "order": 77,
+   "method": "GET",
+   "path": "/g/{token}/doi-so-tien",
+   "name": "wrong_amount_page",
+   "endpoint": "app.api.routes.guests.wrong_amount_page",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.guests.wrong_amount_page",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.wrong_amount_page",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "query": [
+     {
+      "name": "obligation_id",
+      "alias": "obligation_id",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     }
+    ],
+    "specials": {
+     "request": "request"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /g/{token}/doi-so-tien",
+   "order": 78,
+   "method": "POST",
+   "path": "/g/{token}/doi-so-tien",
+   "name": "wrong_amount_submit",
+   "endpoint": "app.api.routes.guests.wrong_amount_submit",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": {
+    "kind": "form",
+    "field_info": "Form",
+    "media_type": "application/x-www-form-urlencoded",
+    "embed": true,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.guests.wrong_amount_submit",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.wrong_amount_submit",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "obligation_id",
+      "alias": "obligation_id",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "str"
+      }
+     },
+     {
+      "name": "reason",
+      "alias": "reason",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /g/{token}/xin-cach-tinh",
+   "order": 79,
+   "method": "POST",
+   "path": "/g/{token}/xin-cach-tinh",
+   "name": "request_evidence",
+   "endpoint": "app.api.routes.guests.request_evidence",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": {
+    "kind": "form",
+    "field_info": "Form",
+    "media_type": "application/x-www-form-urlencoded",
+    "embed": true,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.guests.request_evidence",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.guests.request_evidence",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 32
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 128
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^[A-Za-z0-9_-]+$')"
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str",
+       "min_length": 32,
+       "max_length": 128,
+       "pattern": "^[A-Za-z0-9_-]+$"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "obligation_id",
+      "alias": "obligation_id",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.PaymentReportRequest": {
+   "type": "model",
+   "class": "app.api.schemas.PaymentReportRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "PaymentReportRequest",
+    "fields": [
+     {
+      "name": "obligation_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     },
+     {
+      "name": "idempotency_key",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "uuid"
+        }
+       },
+       "default": null
+      },
+      "annotation": "uuid.UUID | None",
+      "required": false
+     }
+    ]
+   }
+  }
+ }
+}

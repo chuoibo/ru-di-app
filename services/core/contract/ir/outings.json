@@ -1,0 +1,3107 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "outings",
+ "routes": [
+  {
+   "id": "POST /outings/{outing_id}/itinerary/preview",
+   "order": 49,
+   "method": "POST",
+   "path": "/outings/{outing_id}/itinerary/preview",
+   "name": "preview_outing_itinerary",
+   "endpoint": "app.api.routes.outings.preview_outing_itinerary",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.outings.preview_outing_itinerary",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.preview_outing_itinerary",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ItineraryPreviewRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ItineraryPreviewRequest"
+      }
+     }
+    ],
+    "specials": {
+     "response": "response"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.routes.outings.get_itinerary_limiter",
+      "name": "limiter",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.outings.get_itinerary_limiter",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "PUT /outings/{outing_id}/itinerary",
+   "order": 50,
+   "method": "PUT",
+   "path": "/outings/{outing_id}/itinerary",
+   "name": "replace_outing_itinerary",
+   "endpoint": "app.api.routes.outings.replace_outing_itinerary",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.outings.replace_outing_itinerary",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.replace_outing_itinerary",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "header": [
+     {
+      "name": "idempotency_key",
+      "alias": "idempotency-key",
+      "in": "header",
+      "field_info": "Header",
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 255
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "convert_underscores": true,
+      "schema": {
+       "type": "str",
+       "min_length": 1,
+       "max_length": 255
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ItineraryRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ItineraryRequest"
+      }
+     }
+    ],
+    "specials": {
+     "request": "http",
+     "response": "response"
+    },
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /contexts/{context_id}/outings",
+   "order": 51,
+   "method": "POST",
+   "path": "/contexts/{context_id}/outings",
+   "name": "create_outing",
+   "endpoint": "app.api.routes.outings.create_outing",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.outings.create_outing",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.create_outing",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.OutingCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.OutingCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/outings",
+   "order": 52,
+   "method": "GET",
+   "path": "/contexts/{context_id}/outings",
+   "name": "list_context_outings",
+   "endpoint": "app.api.routes.outings.list_context_outings",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.list_context_outings",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.list_context_outings",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "PUT /outings/{outing_id}/timeline",
+   "order": 53,
+   "method": "PUT",
+   "path": "/outings/{outing_id}/timeline",
+   "name": "replace_outing_timeline",
+   "endpoint": "app.api.routes.outings.replace_outing_timeline",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.outings.replace_outing_timeline",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.replace_outing_timeline",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.OutingTimelineRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.OutingTimelineRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /outing-stops/{stop_id}/checkins",
+   "order": 54,
+   "method": "POST",
+   "path": "/outing-stops/{stop_id}/checkins",
+   "name": "check_in_to_stop",
+   "endpoint": "app.api.routes.outings.check_in_to_stop",
+   "status_code": 201,
+   "path_convertors": {
+    "stop_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.check_in_to_stop",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.check_in_to_stop",
+     []
+    ],
+    "path": [
+     {
+      "name": "stop_id",
+      "alias": "stop_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /outings/{outing_id}/checkins",
+   "order": 55,
+   "method": "GET",
+   "path": "/outings/{outing_id}/checkins",
+   "name": "list_outing_checkins",
+   "endpoint": "app.api.routes.outings.list_outing_checkins",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.list_outing_checkins",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.list_outing_checkins",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /outings/{outing_id}/invites",
+   "order": 56,
+   "method": "POST",
+   "path": "/outings/{outing_id}/invites",
+   "name": "create_outing_invite",
+   "endpoint": "app.api.routes.outings.create_outing_invite",
+   "status_code": 201,
+   "path_convertors": {
+    "outing_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.outings.create_outing_invite",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.create_outing_invite",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.OutingInviteCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.OutingInviteCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /outings/{outing_id}/invites/{invite_id}/revoke",
+   "order": 57,
+   "method": "POST",
+   "path": "/outings/{outing_id}/invites/{invite_id}/revoke",
+   "name": "revoke_outing_invite",
+   "endpoint": "app.api.routes.outings.revoke_outing_invite",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor",
+    "invite_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.revoke_outing_invite",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.revoke_outing_invite",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "invite_id",
+      "alias": "invite_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /outings/{outing_id}/invites/{invite_id}/rotate",
+   "order": 58,
+   "method": "POST",
+   "path": "/outings/{outing_id}/invites/{invite_id}/rotate",
+   "name": "rotate_outing_invite",
+   "endpoint": "app.api.routes.outings.rotate_outing_invite",
+   "status_code": null,
+   "path_convertors": {
+    "outing_id": "StringConvertor",
+    "invite_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.rotate_outing_invite",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.rotate_outing_invite",
+     []
+    ],
+    "path": [
+     {
+      "name": "outing_id",
+      "alias": "outing_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "invite_id",
+      "alias": "invite_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /outing-invites/{token}/accept",
+   "order": 59,
+   "method": "POST",
+   "path": "/outing-invites/{token}/accept",
+   "name": "accept_outing_invite",
+   "endpoint": "app.api.routes.outings.accept_outing_invite",
+   "status_code": null,
+   "path_convertors": {
+    "token": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.outings.accept_outing_invite",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.outings.accept_outing_invite",
+     []
+    ],
+    "path": [
+     {
+      "name": "token",
+      "alias": "token",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.ItineraryDay": {
+   "type": "model",
+   "class": "app.api.schemas.ItineraryDay",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ItineraryDay",
+    "fields": [
+     {
+      "name": "day",
+      "schema": {
+       "type": "date"
+      },
+      "annotation": "datetime.date",
+      "required": true
+     },
+     {
+      "name": "transport_mode",
+      "schema": {
+       "type": "literal",
+       "expected": [
+        "motorbike",
+        "car",
+        "walk"
+       ]
+      },
+      "annotation": "Literal['motorbike', 'car', 'walk']",
+      "required": true
+     },
+     {
+      "name": "start_at",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^([01][0-9]|2[0-3]):[0-5][0-9]$')"
+       }
+      ]
+     },
+     {
+      "name": "start_stop_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "max_length": 80
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=80))] | None",
+      "required": false
+     },
+     {
+      "name": "end_stop_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "max_length": 80
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=80))] | None",
+      "required": false
+     },
+     {
+      "name": "return_to_start",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "bool",
+        "strict": true
+       },
+       "default": false
+      },
+      "annotation": "bool",
+      "required": false,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ItineraryPreviewRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.ItineraryRequest._unique_keys"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.ItineraryPreviewRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "model_validators": [
+      {
+       "name": "_unique_keys",
+       "function": "app.api.schemas.ItineraryRequest._unique_keys",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "ItineraryPreviewRequest",
+     "fields": [
+      {
+       "name": "expected_revision",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "ge": 0
+       },
+       "annotation": "int",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "Ge",
+         "ge": 0
+        }
+       ]
+      },
+      {
+       "name": "stops",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ItineraryStopInput"
+        },
+        "max_length": 50
+       },
+       "annotation": "list[app.api.schemas.ItineraryStopInput]",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "MaxLen",
+         "max_length": 50
+        }
+       ]
+      },
+      {
+       "name": "days",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ItineraryDay"
+        },
+        "max_length": 50
+       },
+       "annotation": "list[app.api.schemas.ItineraryDay]",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "MaxLen",
+         "max_length": 50
+        }
+       ]
+      },
+      {
+       "name": "day",
+       "schema": {
+        "type": "date"
+       },
+       "annotation": "datetime.date",
+       "required": true
+      },
+      {
+       "name": "include_suggestion",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "bool",
+         "strict": true
+        },
+        "default": false
+       },
+       "annotation": "bool",
+       "required": false,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.ItineraryRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.ItineraryRequest._unique_keys"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.ItineraryRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "model_validators": [
+      {
+       "name": "_unique_keys",
+       "function": "app.api.schemas.ItineraryRequest._unique_keys",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "ItineraryRequest",
+     "fields": [
+      {
+       "name": "expected_revision",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "ge": 0
+       },
+       "annotation": "int",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "Ge",
+         "ge": 0
+        }
+       ]
+      },
+      {
+       "name": "stops",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ItineraryStopInput"
+        },
+        "max_length": 50
+       },
+       "annotation": "list[app.api.schemas.ItineraryStopInput]",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "MaxLen",
+         "max_length": 50
+        }
+       ]
+      },
+      {
+       "name": "days",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ItineraryDay"
+        },
+        "max_length": 50
+       },
+       "annotation": "list[app.api.schemas.ItineraryDay]",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "MaxLen",
+         "max_length": 50
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.ItineraryStopInput": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.ItineraryStopInput._one_location"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.ItineraryStopInput",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "field_validators": [
+      {
+       "name": "_strip_label",
+       "function": "app.api.schemas.OutingStopInput._strip_label",
+       "fields": [
+        "label"
+       ],
+       "mode": "after"
+      },
+      {
+       "name": "_strip_place_name",
+       "function": "app.api.schemas.OutingStopInput._strip_place_name",
+       "fields": [
+        "place_name"
+       ],
+       "mode": "after"
+      },
+      {
+       "name": "_valid_id",
+       "function": "app.api.schemas.ItineraryStopInput._valid_id",
+       "fields": [
+        "id"
+       ],
+       "mode": "after"
+      }
+     ],
+     "model_validators": [
+      {
+       "name": "_one_location",
+       "function": "app.api.schemas.ItineraryStopInput._one_location",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "ItineraryStopInput",
+     "fields": [
+      {
+       "name": "at",
+       "schema": {
+        "type": "str",
+        "strict": true,
+        "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+       },
+       "annotation": "str",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "_PydanticGeneralMetadata",
+         "text": "_PydanticGeneralMetadata(pattern='^([01][0-9]|2[0-3]):[0-5][0-9]$')"
+        }
+       ]
+      },
+      {
+       "name": "label",
+       "schema": {
+        "type": "function-after",
+        "function": {
+         "kind": "no-info",
+         "name": "app.api.schemas.OutingStopInput._strip_label"
+        },
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 200
+        }
+       },
+       "annotation": "str",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "MinLen",
+         "min_length": 1
+        },
+        {
+         "kind": "MaxLen",
+         "max_length": 200
+        }
+       ]
+      },
+      {
+       "name": "place_name",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "function-after",
+         "function": {
+          "kind": "no-info",
+          "name": "app.api.schemas.OutingStopInput._strip_place_name"
+         },
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str",
+           "strict": true,
+           "max_length": 200
+          }
+         }
+        },
+        "default": null
+       },
+       "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=200))] | None",
+       "required": false
+      },
+      {
+       "name": "place_id",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "str",
+          "strict": true,
+          "min_length": 1,
+          "max_length": 80
+         }
+        },
+        "default": null
+       },
+       "annotation": "Annotated[str, Strict(strict=True), Field(MinLen(min_length=1), MaxLen(max_length=80))] | None",
+       "required": false
+      },
+      {
+       "name": "id",
+       "schema": {
+        "type": "function-after",
+        "function": {
+         "kind": "no-info",
+         "name": "app.api.schemas.ItineraryStopInput._valid_id"
+        },
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 80
+        }
+       },
+       "annotation": "str",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "MinLen",
+         "min_length": 1
+        },
+        {
+         "kind": "MaxLen",
+         "max_length": 80
+        }
+       ]
+      },
+      {
+       "name": "day",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "date"
+         }
+        },
+        "default": null
+       },
+       "annotation": "datetime.date | None",
+       "required": false
+      },
+      {
+       "name": "duration_minutes",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "int",
+          "strict": true,
+          "ge": 0,
+          "le": 1440
+         }
+        },
+        "default": null
+       },
+       "annotation": "Annotated[int, Field(Strict(strict=True), Ge(ge=0), Le(le=1440))] | None",
+       "required": false
+      },
+      {
+       "name": "time_locked",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "bool",
+         "strict": true
+        },
+        "default": true
+       },
+       "annotation": "bool",
+       "required": false,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        }
+       ]
+      },
+      {
+       "name": "meeting_point",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "ref",
+          "ref": "app.api.schemas.MeetingPoint"
+         }
+        },
+        "default": null
+       },
+       "annotation": "app.api.schemas.MeetingPoint | None",
+       "required": false
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.MeetingPoint": {
+   "type": "model",
+   "class": "app.api.schemas.MeetingPoint",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {
+    "field_validators": [
+     {
+      "name": "_not_blank",
+      "function": "app.api.schemas.MeetingPoint._not_blank",
+      "fields": [
+       "label"
+      ],
+      "mode": "after"
+     }
+    ]
+   },
+   "schema": {
+    "type": "model-fields",
+    "model_name": "MeetingPoint",
+    "fields": [
+     {
+      "name": "lat",
+      "schema": {
+       "type": "float",
+       "strict": true,
+       "ge": -90,
+       "le": 90,
+       "allow_inf_nan": false
+      },
+      "annotation": "float",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Ge",
+        "ge": -90
+       },
+       {
+        "kind": "Le",
+        "le": 90
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(allow_inf_nan=False)"
+       }
+      ]
+     },
+     {
+      "name": "lng",
+      "schema": {
+       "type": "float",
+       "strict": true,
+       "ge": -180,
+       "le": 180,
+       "allow_inf_nan": false
+      },
+      "annotation": "float",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Ge",
+        "ge": -180
+       },
+       {
+        "kind": "Le",
+        "le": 180
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(allow_inf_nan=False)"
+       }
+      ]
+     },
+     {
+      "name": "label",
+      "schema": {
+       "type": "function-after",
+       "function": {
+        "kind": "no-info",
+        "name": "app.api.schemas.MeetingPoint._not_blank"
+       },
+       "schema": {
+        "type": "str",
+        "strict": true,
+        "min_length": 1,
+        "max_length": 200
+       }
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 200
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "app.api.schemas.OutingCreateRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.OutingCreateRequest._dates_are_in_order"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.OutingCreateRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "field_validators": [
+      {
+       "name": "_strip_title",
+       "function": "app.api.schemas.OutingCreateRequest._strip_title",
+       "fields": [
+        "title"
+       ],
+       "mode": "after"
+      }
+     ],
+     "model_validators": [
+      {
+       "name": "_dates_are_in_order",
+       "function": "app.api.schemas.OutingCreateRequest._dates_are_in_order",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "OutingCreateRequest",
+     "fields": [
+      {
+       "name": "title",
+       "schema": {
+        "type": "function-after",
+        "function": {
+         "kind": "no-info",
+         "name": "app.api.schemas.OutingCreateRequest._strip_title"
+        },
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 200
+        }
+       },
+       "annotation": "str",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "MinLen",
+         "min_length": 1
+        },
+        {
+         "kind": "MaxLen",
+         "max_length": 200
+        }
+       ]
+      },
+      {
+       "name": "starts_on",
+       "schema": {
+        "type": "date"
+       },
+       "annotation": "datetime.date",
+       "required": true
+      },
+      {
+       "name": "ends_on",
+       "schema": {
+        "type": "date"
+       },
+       "annotation": "datetime.date",
+       "required": true
+      },
+      {
+       "name": "headcount",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "gt": 0,
+        "le": 1000
+       },
+       "annotation": "int",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "Gt",
+         "gt": 0
+        },
+        {
+         "kind": "Le",
+         "le": 1000
+        }
+       ]
+      },
+      {
+       "name": "budget_per_person_vnd",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "ge": 0
+       },
+       "annotation": "int",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "Ge",
+         "ge": 0
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.OutingInviteCreateRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.OutingInviteCreateRequest._person_matches_source"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.OutingInviteCreateRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "model_validators": [
+      {
+       "name": "_person_matches_source",
+       "function": "app.api.schemas.OutingInviteCreateRequest._person_matches_source",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "OutingInviteCreateRequest",
+     "fields": [
+      {
+       "name": "source",
+       "schema": {
+        "type": "literal",
+        "expected": [
+         "group",
+         "friend",
+         "link"
+        ]
+       },
+       "annotation": "Literal['group', 'friend', 'link']",
+       "required": true
+      },
+      {
+       "name": "person_id",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "uuid"
+         }
+        },
+        "default": null
+       },
+       "annotation": "uuid.UUID | None",
+       "required": false
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.OutingStopInput": {
+   "type": "model",
+   "class": "app.api.schemas.OutingStopInput",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {
+    "field_validators": [
+     {
+      "name": "_strip_label",
+      "function": "app.api.schemas.OutingStopInput._strip_label",
+      "fields": [
+       "label"
+      ],
+      "mode": "after"
+     },
+     {
+      "name": "_strip_place_name",
+      "function": "app.api.schemas.OutingStopInput._strip_place_name",
+      "fields": [
+       "place_name"
+      ],
+      "mode": "after"
+     }
+    ]
+   },
+   "schema": {
+    "type": "model-fields",
+    "model_name": "OutingStopInput",
+    "fields": [
+     {
+      "name": "at",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='^([01][0-9]|2[0-3]):[0-5][0-9]$')"
+       }
+      ]
+     },
+     {
+      "name": "label",
+      "schema": {
+       "type": "function-after",
+       "function": {
+        "kind": "no-info",
+        "name": "app.api.schemas.OutingStopInput._strip_label"
+       },
+       "schema": {
+        "type": "str",
+        "strict": true,
+        "min_length": 1,
+        "max_length": 200
+       }
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 200
+       }
+      ]
+     },
+     {
+      "name": "place_name",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "function-after",
+        "function": {
+         "kind": "no-info",
+         "name": "app.api.schemas.OutingStopInput._strip_place_name"
+        },
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "str",
+          "strict": true,
+          "max_length": 200
+         }
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=200))] | None",
+      "required": false
+     },
+     {
+      "name": "place_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 80
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MinLen(min_length=1), MaxLen(max_length=80))] | None",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.OutingTimelineRequest": {
+   "type": "model",
+   "class": "app.api.schemas.OutingTimelineRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "OutingTimelineRequest",
+    "fields": [
+     {
+      "name": "expected_revision",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "int",
+         "strict": true,
+         "ge": 0
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[int, Field(Strict(strict=True), Ge(ge=0))] | None",
+      "required": false
+     },
+     {
+      "name": "stops",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "ref",
+        "ref": "app.api.schemas.OutingStopInput"
+       },
+       "max_length": 50
+      },
+      "annotation": "list[app.api.schemas.OutingStopInput]",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MaxLen",
+        "max_length": 50
+       }
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

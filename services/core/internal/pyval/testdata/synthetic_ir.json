@@ -1,0 +1,148 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "pyval_synthetic",
+ "routes": [
+  {
+   "id": "GET /pyval-synthetic/order/{item}",
+   "order": 156,
+   "method": "GET",
+   "path": "/pyval-synthetic/order/{item}",
+   "name": "order",
+   "endpoint": "pyval_synthetic.order",
+   "status_code": null,
+   "path_convertors": {
+    "item": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "pyval_synthetic.order",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "pyval_synthetic.order",
+     []
+    ],
+    "path": [
+     {
+      "name": "item",
+      "alias": "item",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "int",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "int"
+      }
+     }
+    ],
+    "query": [
+     {
+      "name": "q",
+      "alias": "q",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Ge",
+        "ge": 1
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "int",
+       "ge": 1
+      }
+     }
+    ],
+    "header": [
+     {
+      "name": "x_count",
+      "alias": "x-count",
+      "in": "header",
+      "field_info": "Header",
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Ge",
+        "ge": 1
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "convert_underscores": true,
+      "schema": {
+       "type": "int",
+       "ge": 1
+      }
+     },
+     {
+      "name": "x_tag",
+      "alias": "x-tag",
+      "in": "header",
+      "field_info": "Header",
+      "annotation": "list[int] | None",
+      "required": false,
+      "default": null,
+      "sequence": true,
+      "scalar": false,
+      "convert_underscores": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "list",
+         "items_schema": {
+          "type": "int"
+         }
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "x_name",
+      "alias": "x-name",
+      "in": "header",
+      "field_info": "Header",
+      "annotation": "str",
+      "required": false,
+      "default": "abc",
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 3
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "convert_underscores": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "str",
+        "min_length": 3
+       },
+       "default": "abc"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {}
+}

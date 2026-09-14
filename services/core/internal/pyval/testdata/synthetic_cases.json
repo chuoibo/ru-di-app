@@ -1,0 +1,703 @@
+{
+ "image": "mobile-parity-api:7bf58e3d",
+ "route": "GET /pyval-synthetic/order/{item}",
+ "cases": [
+  {
+   "name": "valid",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "X-Tag",
+     "1"
+    ],
+    [
+     "X-Tag",
+     "2"
+    ],
+    [
+     "X-Name",
+     "abcd"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "l",
+       [
+        [
+         "i",
+         "1"
+        ],
+        [
+         "i",
+         "2"
+        ]
+       ]
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abcd"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "valid defaults",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "n"
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abc"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "query and header below bound",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=0",
+   "headers": [
+    [
+     "X-Count",
+     "0"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}},{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "query and header unparsable",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=x",
+   "headers": [
+    [
+     "X-Count",
+     "y"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"},{\"type\":\"int_parsing\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "path query header all invalid",
+   "path": {
+    "item": "z"
+   },
+   "query": "q=0",
+   "headers": [
+    [
+     "X-Count",
+     "0"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"path\",\"item\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"},{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}},{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "query and header missing",
+   "path": {
+    "item": "1"
+   },
+   "query": "",
+   "headers": [],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"query\",\"q\"],\"msg\":\"Field required\"},{\"type\":\"missing\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Field required\"}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "header name lower case",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=-1",
+   "headers": [
+    [
+     "x-count",
+     "0"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}},{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "every parameter faulty",
+   "path": {
+    "item": "z"
+   },
+   "query": "q=x",
+   "headers": [
+    [
+     "X-Count",
+     "0"
+    ],
+    [
+     "X-Tag",
+     "a"
+    ],
+    [
+     "X-Name",
+     "ab"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"path\",\"item\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"},{\"type\":\"int_parsing\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"},{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}},{\"type\":\"int_parsing\",\"loc\":[\"header\",\"x-tag\",0],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"},{\"type\":\"string_too_short\",\"loc\":[\"header\",\"x-name\"],\"msg\":\"String should have at least 3 characters\",\"ctx\":{\"min_length\":3}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "repeated query and header",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=x&q=0",
+   "headers": [
+    [
+     "X-Count",
+     "0"
+    ],
+    [
+     "X-Count",
+     "1"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}},{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "repeated header valid first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "X-Count",
+     "0"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "n"
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abc"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "repeated header invalid first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "0"
+    ],
+    [
+     "X-Count",
+     "2"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "repeated header mixed case valid first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "x-count",
+     "2"
+    ],
+    [
+     "X-COUNT",
+     "0"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "n"
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abc"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "repeated header mixed case invalid first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-COUNT",
+     "abc"
+    ],
+    [
+     "x-count",
+     "3"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"header\",\"x-count\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "repeated string header short first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "X-Name",
+     "ab"
+    ],
+    [
+     "X-Name",
+     "abcd"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"header\",\"x-name\"],\"msg\":\"String should have at least 3 characters\",\"ctx\":{\"min_length\":3}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "repeated string header long first",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "x-name",
+     "abcd"
+    ],
+    [
+     "X-NAME",
+     "ab"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "n"
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abcd"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "repeated query last valid",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=0&q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "n"
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abc"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  },
+  {
+   "name": "repeated query last invalid",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5&q=0",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"q\"],\"msg\":\"Input should be greater than or equal to 1\",\"ctx\":{\"ge\":1}}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "sequence header keeps order",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "X-Tag",
+     "1"
+    ],
+    [
+     "X-Tag",
+     "x"
+    ],
+    [
+     "X-Tag",
+     "3"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"header\",\"x-tag\",1],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "sequence header mixed case",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "x-tag",
+     "2"
+    ],
+    [
+     "X-TAG",
+     "y"
+    ]
+   ],
+   "want": {
+    "body": "{\"detail\":[{\"type\":\"int_parsing\",\"loc\":[\"header\",\"x-tag\",1],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\"}]}",
+    "content_type": "application/json",
+    "status": 422
+   }
+  },
+  {
+   "name": "sequence header all valid mixed case",
+   "path": {
+    "item": "1"
+   },
+   "query": "q=5",
+   "headers": [
+    [
+     "X-Count",
+     "2"
+    ],
+    [
+     "X-Tag",
+     "3"
+    ],
+    [
+     "x-tag",
+     "4"
+    ]
+   ],
+   "want": {
+    "accepted": [
+     [
+      "item",
+      [
+       "i",
+       "1"
+      ]
+     ],
+     [
+      "q",
+      [
+       "i",
+       "5"
+      ]
+     ],
+     [
+      "x_count",
+      [
+       "i",
+       "2"
+      ]
+     ],
+     [
+      "x_tag",
+      [
+       "l",
+       [
+        [
+         "i",
+         "3"
+        ],
+        [
+         "i",
+         "4"
+        ]
+       ]
+      ]
+     ],
+     [
+      "x_name",
+      [
+       "s",
+       "abc"
+      ]
+     ]
+    ],
+    "status": 299
+   }
+  }
+ ]
+}

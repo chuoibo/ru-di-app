@@ -1,0 +1,722 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "expenses",
+ "routes": [
+  {
+   "id": "POST /expenses",
+   "order": 5,
+   "method": "POST",
+   "path": "/expenses",
+   "name": "propose_expense",
+   "endpoint": "app.api.routes.expenses.propose_expense",
+   "status_code": 201,
+   "path_convertors": {},
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.expenses.propose_expense",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.expenses.propose_expense",
+     []
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ExpenseInput",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ExpenseInput"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /expenses/{expense_id}/confirm",
+   "order": 6,
+   "method": "POST",
+   "path": "/expenses/{expense_id}/confirm",
+   "name": "confirm_expense",
+   "endpoint": "app.api.routes.expenses.confirm_expense",
+   "status_code": 201,
+   "path_convertors": {
+    "expense_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.expenses.confirm_expense",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.expenses.confirm_expense",
+     []
+    ],
+    "path": [
+     {
+      "name": "expense_id",
+      "alias": "expense_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ExpenseConfirmationRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ExpenseConfirmationRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.ExpenseConfirmationRequest": {
+   "type": "model",
+   "class": "app.api.schemas.ExpenseConfirmationRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ExpenseConfirmationRequest",
+    "fields": [
+     {
+      "name": "proposal",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ExpenseInput"
+      },
+      "annotation": "app.api.schemas.ExpenseInput",
+      "required": true
+     },
+     {
+      "name": "expected_allocations",
+      "schema": {
+       "type": "dict",
+       "keys_schema": {
+        "type": "uuid"
+       },
+       "values_schema": {
+        "type": "int",
+        "strict": true
+       }
+      },
+      "annotation": "dict[uuid.UUID, Annotated[int, Field(Strict(strict=True))]]",
+      "required": true
+     },
+     {
+      "name": "acknowledge_as_advancer",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "bool",
+        "strict": true
+       },
+       "default": false
+      },
+      "annotation": "bool",
+      "required": false,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ExpenseDiscountInput": {
+   "type": "model",
+   "class": "app.api.schemas.ExpenseDiscountInput",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ExpenseDiscountInput",
+    "fields": [
+     {
+      "name": "discount_id",
+      "schema": {
+       "type": "str",
+       "strict": true
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "amount_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "scope",
+      "schema": {
+       "type": "literal",
+       "expected": [
+        "global_proportional",
+        "item"
+       ]
+      },
+      "annotation": "Literal['global_proportional', 'item']",
+      "required": true
+     },
+     {
+      "name": "item_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True)] | None",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ExpenseInput": {
+   "type": "model",
+   "class": "app.api.schemas.ExpenseInput",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {
+    "field_validators": [
+     {
+      "name": "_occurred_at_has_timezone",
+      "function": "app.api.schemas._require_timezone",
+      "fields": [
+       "occurred_at"
+      ],
+      "mode": "after"
+     }
+    ]
+   },
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ExpenseInput",
+    "fields": [
+     {
+      "name": "context_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     },
+     {
+      "name": "description",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True)] | None",
+      "required": false
+     },
+     {
+      "name": "recorded_by_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     },
+     {
+      "name": "paid_by_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     },
+     {
+      "name": "verification_scope",
+      "schema": {
+       "type": "literal",
+       "expected": [
+        "totals_only",
+        "items_reviewed"
+       ]
+      },
+      "annotation": "Literal['totals_only', 'items_reviewed']",
+      "required": true
+     },
+     {
+      "name": "occurred_at",
+      "schema": {
+       "type": "function-after",
+       "function": {
+        "kind": "no-info",
+        "name": "app.api.schemas._require_timezone"
+       },
+       "schema": {
+        "type": "datetime",
+        "microseconds_precision": "truncate"
+       }
+      },
+      "annotation": "datetime.datetime",
+      "required": true
+     },
+     {
+      "name": "participants",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "uuid"
+       }
+      },
+      "annotation": "list[uuid.UUID]",
+      "required": true
+     },
+     {
+      "name": "total_amount_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "items",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ExpenseItemInput"
+        }
+       },
+       "default_factory": {
+        "name": "builtins.list"
+       },
+       "default_factory_takes_data": false
+      },
+      "annotation": "list[app.api.schemas.ExpenseItemInput]",
+      "required": false
+     },
+     {
+      "name": "surcharges",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ExpenseSurchargeInput"
+        }
+       },
+       "default_factory": {
+        "name": "builtins.list"
+       },
+       "default_factory_takes_data": false
+      },
+      "annotation": "list[app.api.schemas.ExpenseSurchargeInput]",
+      "required": false
+     },
+     {
+      "name": "discounts",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.ExpenseDiscountInput"
+        }
+       },
+       "default_factory": {
+        "name": "builtins.list"
+       },
+       "default_factory_takes_data": false
+      },
+      "annotation": "list[app.api.schemas.ExpenseDiscountInput]",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ExpenseItemInput": {
+   "type": "model",
+   "class": "app.api.schemas.ExpenseItemInput",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ExpenseItemInput",
+    "fields": [
+     {
+      "name": "item_id",
+      "schema": {
+       "type": "str",
+       "strict": true
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "label",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True)] | None",
+      "required": false
+     },
+     {
+      "name": "amount_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "shared_by",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "uuid"
+       }
+      },
+      "annotation": "list[uuid.UUID]",
+      "required": true
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ExpenseSurchargeInput": {
+   "type": "model",
+   "class": "app.api.schemas.ExpenseSurchargeInput",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ExpenseSurchargeInput",
+    "fields": [
+     {
+      "name": "surcharge_id",
+      "schema": {
+       "type": "str",
+       "strict": true
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "kind",
+      "schema": {
+       "type": "str",
+       "strict": true
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "amount_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "mode",
+      "schema": {
+       "type": "literal",
+       "expected": [
+        "proportional",
+        "even"
+       ]
+      },
+      "annotation": "Literal['proportional', 'even']",
+      "required": true
+     }
+    ]
+   }
+  }
+ }
+}
