@@ -3,8 +3,8 @@ package routes
 import (
 	"encoding/json"
 	"strconv"
-	"testing"
 	"strings"
+	"testing"
 
 	"mobile/services/core/internal/domain/scoring"
 	"mobile/services/core/internal/domain/taste"
