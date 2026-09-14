@@ -1,0 +1,425 @@
+{
+ "uuid": [
+  {
+   "input": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "{abcdefab-cdef-abcd-efab-cdefabcdefab}",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "{{abcdefab-cdef-abcd-efab-cdefabcdefab}",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "{abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "urn:uuid:abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "URN:UUID:abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "uurn:uid:abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "urn:abcdefab-cdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "abcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "a-b-c-d-e-f-a-b-c-d-e-f-a-b-c-d-e-f-a-b-c-d-e-f-a-b-c-d-e-f-a-b",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": " bcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "0bcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "bcdefabcdefabcdefabcdefabcdefab ",
+   "uuid": "0bcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "\u00a0bcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "0bcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "\u0085bcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "0bcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "\u001cbcdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "abcd_fabcdefabcdefabcdefabcdefab",
+   "uuid": "0abcdfab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "abcd__abcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "_bcdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "bcdefabcdefabcdefabcdefabcdefab_",
+   "error": true
+  },
+  {
+   "input": "0xcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "00cdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "0X_defabcdefabcdefabcdefabcdefab",
+   "uuid": "000defab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "+bcdefabcdefabcdefabcdefabcdefab",
+   "uuid": "0bcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "-bcdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "+-cdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "- cdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "bcdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "abcdefabcdefabcdefabcdefabcdefaba",
+   "error": true
+  },
+  {
+   "input": "",
+   "error": true
+  },
+  {
+   "input": "gbcdefabcdefabcdefabcdefabcdefab",
+   "error": true
+  },
+  {
+   "input": "abcdefabcdef-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  },
+  {
+   "input": "uuid:abcdefab-cuuid:def-abcd-efab-cdefabcdefab",
+   "uuid": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+  }
+ ],
+ "actor": [
+  {
+   "input": {
+    "id": null,
+    "roles": null,
+    "contexts": null
+   },
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing X-Actor-ID"
+   }
+  },
+  {
+   "input": {
+    "id": "",
+    "roles": null,
+    "contexts": null
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_id",
+    "detail": "X-Actor-ID must be a UUID"
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": null,
+    "contexts": null
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB",
+    "roles": "member",
+    "contexts": null
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [
+     "member"
+    ],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "{abcdefab-cdef-abcd-efab-cdefabcdefab}",
+    "roles": "member, advancer",
+    "contexts": null
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [
+     "advancer",
+     "member"
+    ],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "member,,advancer,",
+    "contexts": null
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [
+     "advancer",
+     "member"
+    ],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": " member\u00a0",
+    "contexts": null
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [
+     "member"
+    ],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "Member",
+    "contexts": null
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_roles",
+    "detail": "X-Actor-Roles contains an unknown role"
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "member,emperor",
+    "contexts": null
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_roles",
+    "detail": "X-Actor-Roles contains an unknown role"
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "",
+    "contexts": ""
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "group_admin,platform_moderator",
+    "contexts": "abcdefab-cdef-abcd-efab-cdefabcdefab"
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [
+     "group_admin",
+     "platform_moderator"
+    ],
+    "contexts": [
+     "abcdefab-cdef-abcd-efab-cdefabcdefab"
+    ]
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": null,
+    "contexts": "abcdefab-cdef-abcd-efab-cdefabcdefab, abcdefabcdefabcdefabcdefabcdefab"
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [],
+    "contexts": [
+     "abcdefab-cdef-abcd-efab-cdefabcdefab"
+    ]
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": null,
+    "contexts": " , "
+   },
+   "actor": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": [],
+    "contexts": []
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": null,
+    "contexts": "khong-phai-uuid"
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_contexts",
+    "detail": "X-Actor-Contexts must contain comma-separated UUIDs"
+   }
+  },
+  {
+   "input": {
+    "id": "khong-phai-uuid",
+    "roles": "emperor",
+    "contexts": "khong-phai-uuid"
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_id",
+    "detail": "X-Actor-ID must be a UUID"
+   }
+  },
+  {
+   "input": {
+    "id": "abcdefab-cdef-abcd-efab-cdefabcdefab",
+    "roles": "emperor",
+    "contexts": "khong-phai-uuid"
+   },
+   "problem": {
+    "status": 422,
+    "code": "invalid_actor_roles",
+    "detail": "X-Actor-Roles contains an unknown role"
+   }
+  }
+ ],
+ "bearer": [
+  {
+   "input": null,
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Bearer tok",
+   "token": "tok"
+  },
+  {
+   "input": "bearer  tok ",
+   "token": "tok"
+  },
+  {
+   "input": "BEARER tok",
+   "token": "tok"
+  },
+  {
+   "input": "Bearer",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Bearer ",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Bearer \u00a0",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Basic tok",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Bearer\ttok",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "Bearer a b",
+   "token": "a b"
+  },
+  {
+   "input": " Bearer tok",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  },
+  {
+   "input": "",
+   "problem": {
+    "status": 401,
+    "code": "authentication_required",
+    "detail": "Missing bearer session"
+   }
+  }
+ ]
+}

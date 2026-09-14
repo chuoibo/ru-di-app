@@ -1,0 +1,3062 @@
+[
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "no-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-loopback",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-loopback-ip-no-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://127.0.0.1"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://127.0.0.1"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-https-localhost",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "https://localhost"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-empty-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-uppercase-scheme",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "HTTP://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-trailing-space",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost "
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-nbsp",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost\u00a0"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-listed",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://rudi.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-evil",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-empty-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    ""
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-two-origins",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "origin",
+    "http://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-existing-vary",
+  "method": "GET",
+  "path": "/with-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding, Origin"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-two-vary",
+  "method": "GET",
+  "path": "/with-two-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding, Origin"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-stale-acao",
+  "method": "GET",
+  "path": "/with-acao",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-cookie",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "simple-post",
+  "method": "POST",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "options-without-request-method",
+  "method": "OPTIONS",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-ok",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-ok-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Authorization, Idempotency-Key,content-type"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-unknown-header",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-empty-request-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-trailing-comma",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-safelisted-only",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Accept-Language"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-lowercase-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "post"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS method"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-empty-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS method"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-all-failures",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "access-control-request-method",
+    "TRACE"
+   ],
+   [
+    "access-control-request-headers",
+    "x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "39"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, method, headers"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-listed-origin",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://admin.rudi.example"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "loopback-default",
+  "raw_origins": null,
+  "case": "preflight-cookie",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "no-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-loopback",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-loopback-ip-no-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://127.0.0.1"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-https-localhost",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-empty-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-uppercase-scheme",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "HTTP://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-trailing-space",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost "
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-nbsp",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost\u00a0"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-listed",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://rudi.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "https://rudi.example"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-evil",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-empty-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    ""
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-two-origins",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "origin",
+    "http://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-existing-vary",
+  "method": "GET",
+  "path": "/with-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-two-vary",
+  "method": "GET",
+  "path": "/with-two-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding"
+   ],
+   [
+    "vary",
+    "Cookie"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-stale-acao",
+  "method": "GET",
+  "path": "/with-acao",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "https://stale.example"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-cookie",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "simple-post",
+  "method": "POST",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "options-without-request-method",
+  "method": "OPTIONS",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-ok",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-ok-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Authorization, Idempotency-Key,content-type"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-unknown-header",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "31"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, headers"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-empty-request-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "31"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, headers"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-trailing-comma",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "31"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, headers"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-safelisted-only",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Accept-Language"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-lowercase-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "post"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "30"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, method"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-empty-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "30"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, method"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-all-failures",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "access-control-request-method",
+    "TRACE"
+   ],
+   [
+    "access-control-request-headers",
+    "x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "39"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin, method, headers"
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-listed-origin",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://admin.rudi.example"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "access-control-allow-origin",
+    "https://admin.rudi.example"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "explicit-list",
+  "raw_origins": " https://rudi.example ,https://admin.rudi.example,, ",
+  "case": "preflight-cookie",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "vary",
+    "Origin"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS origin"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "no-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-loopback",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-loopback-ip-no-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://127.0.0.1"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-https-localhost",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-empty-port",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-uppercase-scheme",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "HTTP://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-trailing-space",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost "
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-nbsp",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost\u00a0"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-listed",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://rudi.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-evil",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-empty-origin",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    ""
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-two-origins",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "origin",
+    "http://localhost"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-existing-vary",
+  "method": "GET",
+  "path": "/with-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-two-vary",
+  "method": "GET",
+  "path": "/with-two-vary",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "vary",
+    "Accept-Encoding"
+   ],
+   [
+    "vary",
+    "Cookie"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-stale-acao",
+  "method": "GET",
+  "path": "/with-acao",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-cookie",
+  "method": "GET",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "https://evil.example"
+   ],
+   [
+    "vary",
+    "Origin"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "simple-post",
+  "method": "POST",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "options-without-request-method",
+  "method": "OPTIONS",
+  "path": "/plain",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ]
+  ],
+  "status": 200,
+  "headers": [
+   [
+    "content-type",
+    "application/json"
+   ],
+   [
+    "content-length",
+    "2"
+   ],
+   [
+    "access-control-allow-origin",
+    "*"
+   ]
+  ],
+  "body": "{}"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-ok",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-ok-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Authorization, Idempotency-Key,content-type"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-unknown-header",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-empty-request-headers",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-trailing-comma",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "authorization,"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "23"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS headers"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-safelisted-only",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "access-control-request-headers",
+    "Accept-Language"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-lowercase-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "post"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS method"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-empty-method",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    ""
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "22"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS method"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-all-failures",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://evil.example"
+   ],
+   [
+    "access-control-request-method",
+    "TRACE"
+   ],
+   [
+    "access-control-request-headers",
+    "x-other"
+   ]
+  ],
+  "status": 400,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ],
+   [
+    "content-length",
+    "31"
+   ],
+   [
+    "content-type",
+    "text/plain; charset=utf-8"
+   ]
+  ],
+  "body": "Disallowed CORS method, headers"
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-listed-origin",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "https://admin.rudi.example"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ },
+ {
+  "config": "wildcard",
+  "raw_origins": "*",
+  "case": "preflight-cookie",
+  "method": "OPTIONS",
+  "path": "/contexts",
+  "request_headers": [
+   [
+    "origin",
+    "http://localhost:8081"
+   ],
+   [
+    "access-control-request-method",
+    "POST"
+   ],
+   [
+    "cookie",
+    "a=b"
+   ]
+  ],
+  "status": 204,
+  "headers": [
+   [
+    "access-control-allow-origin",
+    "*"
+   ],
+   [
+    "access-control-allow-methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+   ],
+   [
+    "access-control-max-age",
+    "600"
+   ],
+   [
+    "access-control-allow-headers",
+    "Accept, Accept-Language, Content-Language, Content-Type, authorization, content-type, idempotency-key, x-actor-contexts, x-actor-id, x-actor-roles"
+   ]
+  ],
+  "body": ""
+ }
+]
