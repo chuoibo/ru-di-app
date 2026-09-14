@@ -95,7 +95,7 @@ stage_help() {
     shared)    echo "node packages/shared/money.test.mjs (test.yml: shared)" ;;
     mobile)    echo "tsc, npm test with MOBILE_REQUIRE_WEB_A11Y=1, expo export --platform all (test.yml: mobile)" ;;
     mobile-native) echo "lái .maestro trên máy ảo Android thật qua Expo Go -- target sẽ ship, không phải react-native-web (test.yml: mobile-native)" ;;
-    docker)    echo "image pinned, builds, non-root, no dev tooling, serves /healthz (test.yml: docker)" ;;
+    docker)    echo "api and core images pinned, build, non-root, api has no dev tooling, core no shell, both healthy (test.yml: docker)" ;;
     postgres)  echo "every live case -- tests/postgres AND tests/qa -- against a real PostgreSQL it provisions itself (postgres-repository.yml)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
   esac
@@ -177,7 +177,9 @@ gate_docker_cleanup() {
   [ "${MOBILE_GATE_NAMES_INHERITED:-0}" = "1" ] && return 0
   have docker || return 0
   docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null 2>&1 || true
+  docker rm -f "$MOBILE_GATE_CORE_CONTAINER" >/dev/null 2>&1 || true
   docker image rm -f "$MOBILE_GATE_IMAGE" >/dev/null 2>&1 || true
+  docker image rm -f "$MOBILE_GATE_CORE_IMAGE" >/dev/null 2>&1 || true
 }
 trap gate_docker_cleanup EXIT
 
@@ -569,19 +571,48 @@ do_docker() {
   # container's own HEALTHCHECK cannot be satisfied by a stranger.
   docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null 2>&1 || true
   docker run -d --name "$MOBILE_GATE_CONTAINER" "$MOBILE_GATE_IMAGE" >/dev/null || return 1
-  local i status
+  wait_container_healthy "$MOBILE_GATE_CONTAINER" || return 1
+
+  # ADR-0029: the Go front door ships as its own image, held to the same bar.
+  local core_image="$MOBILE_GATE_CORE_IMAGE" core_container="$MOBILE_GATE_CORE_CONTAINER"
+  echo "--- core: base images pinned by digest"
+  scripts/check_dockerfile_pinning.sh services/core/Dockerfile || return 1
+  echo "--- core: build"
+  ( cd services/core && docker build -t "$core_image" . ) || return 1
+  echo "--- core: runs as a non-root user and ships no shell"
+  local user
+  user="$(docker image inspect --format '{{.Config.User}}' "$core_image")"
+  echo "image user = ${user:-<unset>}"
+  case "${user%%:*}" in
+    ""|0|root) echo "ảnh core chạy bằng root" >&2; return 1 ;;
+  esac
+  if docker run --rm --entrypoint sh "$core_image" -c true >/dev/null 2>&1; then
+    echo "ảnh core có shell -- nền distroless đã bị thay" >&2; return 1
+  fi
+  echo "--- core: the container reports healthy"
+  docker rm -f "$core_container" >/dev/null 2>&1 || true
+  # Any upstream will do: core's healthcheck asks whether core itself serves
+  # and deliberately never goes through Python.
+  docker run -d --name "$core_container" --health-interval 2s \
+    -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 "$core_image" >/dev/null || return 1
+  wait_container_healthy "$core_container"
+}
+
+# Poll a container's own HEALTHCHECK. Removes the container on every outcome.
+wait_container_healthy() {
+  local name="$1" i status
   for i in $(seq 1 60); do
-    status="$(docker inspect --format '{{.State.Health.Status}}' "$MOBILE_GATE_CONTAINER" 2>/dev/null)"
+    status="$(docker inspect --format '{{.State.Health.Status}}' "$name" 2>/dev/null)"
     case "$status" in
-      healthy) echo "container healthy sau ${i}s"; docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null; return 0 ;;
-      unhealthy) echo "container unhealthy" >&2; docker logs "$MOBILE_GATE_CONTAINER"; docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null; return 1 ;;
+      healthy) echo "$name healthy sau ${i}s"; docker rm -f "$name" >/dev/null; return 0 ;;
+      unhealthy) echo "$name unhealthy" >&2; docker logs "$name"; docker rm -f "$name" >/dev/null; return 1 ;;
     esac
-    if [ "$(docker inspect --format '{{.State.Running}}' "$MOBILE_GATE_CONTAINER" 2>/dev/null)" != "true" ]; then
-      echo "container thoát trước khi healthy" >&2; docker logs "$MOBILE_GATE_CONTAINER"; docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null; return 1
+    if [ "$(docker inspect --format '{{.State.Running}}' "$name" 2>/dev/null)" != "true" ]; then
+      echo "$name thoát trước khi healthy" >&2; docker logs "$name"; docker rm -f "$name" >/dev/null; return 1
     fi
     sleep 1
   done
-  echo "container không bao giờ healthy" >&2; docker logs "$MOBILE_GATE_CONTAINER"; docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null; return 1
+  echo "$name không bao giờ healthy" >&2; docker logs "$name"; docker rm -f "$name" >/dev/null; return 1
 }
 
 do_postgres() {

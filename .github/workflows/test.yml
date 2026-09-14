@@ -388,6 +388,46 @@ jobs:
           docker rm -f api >/dev/null
           exit 1
 
+      # ADR-0029: the Go front door ships as its own image, held to the same bar.
+      - name: Core base images are pinned by digest
+        run: scripts/check_dockerfile_pinning.sh services/core/Dockerfile
+
+      - name: Build core
+        working-directory: services/core
+        run: docker build -t mobile-core:ci .
+
+      - name: Core runs as a non-root user without a shell
+        run: |
+          user=$(docker image inspect --format '{{.Config.User}}' mobile-core:ci)
+          echo "image user = ${user:-<unset>}"
+          case "${user%%:*}" in
+            ""|0|root) echo "::error::core image runs as root"; exit 1 ;;
+          esac
+          if docker run --rm --entrypoint sh mobile-core:ci -c true >/dev/null 2>&1; then
+            echo "::error::core image ships a shell"
+            exit 1
+          fi
+
+      - name: The core container reports healthy
+        # Any upstream will do: core's healthcheck never goes through Python.
+        run: |
+          docker run -d --name core --health-interval 2s -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 mobile-core:ci
+          for i in $(seq 1 60); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' core)
+            case "$status" in
+              healthy) echo "core healthy after ${i}s"; docker rm -f core >/dev/null; exit 0 ;;
+              unhealthy) echo "::error::core went unhealthy"; docker logs core; docker rm -f core >/dev/null; exit 1 ;;
+            esac
+            if [ "$(docker inspect --format '{{.State.Running}}' core)" != "true" ]; then
+              echo "::error::core exited before becoming healthy"; docker logs core; docker rm -f core >/dev/null; exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::core never became healthy"
+          docker logs core
+          docker rm -f core >/dev/null
+          exit 1
+
       - name: Image size
         run: |
           size=$(docker image inspect mobile-api:ci --format '{{.Size}}')

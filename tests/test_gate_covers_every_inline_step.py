@@ -326,6 +326,30 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="83312e5632b67af6",
         why="prints ::notice:: with the image size and has no threshold to fail against",
     ),
+    "test.yml::docker::Core base images are pinned by digest": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="395ff271d1459ddc",
+        why="",
+    ),
+    "test.yml::docker::Build core": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="62f43c32a5a70fbc",
+        why="",
+    ),
+    "test.yml::docker::Core runs as a non-root user without a shell": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="157345d2e5e58ef5",
+        why="",
+    ),
+    "test.yml::docker::The core container reports healthy": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="f37b9c2f2297fa73",
+        why="",
+    ),
     # --- test.yml: shared -------------------------------------------------
     "test.yml::shared::present": Covered(
         kind=GATE_KIND,

@@ -57,3 +57,6 @@ fi
 
 MOBILE_GATE_IMAGE="mobile-api:gate-${MOBILE_GATE_RUN_ID}"
 MOBILE_GATE_CONTAINER="mobile-api-gate-${MOBILE_GATE_RUN_ID}"
+# ADR-0029: the Go front door is a second image, per run like the first.
+MOBILE_GATE_CORE_IMAGE="mobile-core:gate-${MOBILE_GATE_RUN_ID}"
+MOBILE_GATE_CORE_CONTAINER="mobile-core-gate-${MOBILE_GATE_RUN_ID}"
