@@ -1,0 +1,58 @@
+# W0 transparency: the doors every client meets before any route logic runs.
+# With zero Go-owned routes, core must be invisible on all of them.
+id: w0/framework-doors
+routes: ["GET /healthz"]
+auth_mode: dev
+personas:
+  caller: {}
+steps:
+  - id: healthz
+    as: anonymous
+    request: {method: GET, path: /healthz}
+  - id: healthz_trailing_slash
+    as: anonymous
+    request: {method: GET, path: /healthz/}
+  - id: healthz_wrong_method
+    as: anonymous
+    request: {method: POST, path: /healthz}
+  - id: healthz_head
+    as: anonymous
+    request: {method: HEAD, path: /healthz}
+  - id: unknown_path
+    as: anonymous
+    request: {method: GET, path: /khong-co-duong-nay}
+  - id: double_slash
+    as: anonymous
+    request: {method: GET, path: //healthz}
+  - id: encoded_slash
+    as: caller
+    request: {method: GET, path: /contexts/a%2Fb}
+  - id: preflight_allowed
+    as: anonymous
+    request:
+      method: OPTIONS
+      path: /contexts
+      headers:
+        origin: http://localhost:8081
+        access-control-request-method: POST
+        access-control-request-headers: authorization,idempotency-key,content-type
+  - id: preflight_disallowed_origin
+    as: anonymous
+    request:
+      method: OPTIONS
+      path: /contexts
+      headers:
+        origin: https://evil.example
+        access-control-request-method: POST
+  - id: simple_cors_get
+    as: anonymous
+    request:
+      method: GET
+      path: /healthz
+      headers: {origin: "http://127.0.0.1:19006"}
+  - id: openapi_document
+    as: anonymous
+    request: {method: GET, path: /openapi.json}
+  - id: static_file_missing
+    as: anonymous
+    request: {method: GET, path: /static/khong-co.css}
