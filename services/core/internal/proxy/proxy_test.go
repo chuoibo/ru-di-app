@@ -1,15 +1,19 @@
 package proxy
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 type seen struct {
@@ -183,5 +187,70 @@ func TestLargeStreamedBodyArrivesWhole(t *testing.T) {
 	resp.Body.Close()
 	if len(got.body) != len(payload) {
 		t.Fatalf("upstream got %d bytes, want %d", len(got.body), len(payload))
+	}
+}
+
+// crashingUpstream answers 500 and then drops the connection without reading
+// further, as uvicorn does after an unhandled exception.
+func crashingUpstream(t *testing.T) *url.URL {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { listener.Close() })
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func(conn net.Conn) {
+				defer conn.Close()
+				req, err := http.ReadRequest(bufio.NewReader(conn))
+				if err != nil {
+					return
+				}
+				_, _ = io.Copy(io.Discard, req.Body)
+				_, _ = io.WriteString(conn, "HTTP/1.1 500 Internal Server Error\r\n"+
+					"Content-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nInternal Server Error")
+				time.Sleep(300 * time.Millisecond)
+			}(conn)
+		}
+	}()
+	target, _ := url.Parse("http://" + listener.Addr().String())
+	return target
+}
+
+func postStatus(t *testing.T, base string) int {
+	t.Helper()
+	resp, err := rawClient().Post(base+"/reports", "application/json", strings.NewReader(`{}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	return resp.StatusCode
+}
+
+func TestAPythonCrashNeverTurnsTheNextRequestInto502(t *testing.T) {
+	target := crashingUpstream(t)
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	// The reproduction: with keep-alive upstream, the request after a 500 is
+	// written onto the dropped connection and core answers 502 itself.
+	reusing := New(target, logger).(*httputil.ReverseProxy)
+	reusing.Transport = newTransport(true)
+	withKeepAlive := httptest.NewServer(reusing)
+	defer withKeepAlive.Close()
+	if first, second := postStatus(t, withKeepAlive.URL), postStatus(t, withKeepAlive.URL); first != 500 || second != http.StatusBadGateway {
+		t.Fatalf("reproduction changed: got %d then %d, expected 500 then 502", first, second)
+	}
+
+	fixed := httptest.NewServer(New(target, logger))
+	defer fixed.Close()
+	for i := 0; i < 3; i++ {
+		if code := postStatus(t, fixed.URL); code != 500 {
+			t.Fatalf("request %d through core: %d, want Python's 500", i, code)
+		}
 	}
 }

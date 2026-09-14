@@ -53,12 +53,7 @@ func New(base, host string) (*Client, error) {
 		base: strings.TrimSuffix(base, "/"),
 		host: host,
 		http: &http.Client{
-			Transport: &http.Transport{
-				Proxy:               nil,
-				DisableCompression:  true,
-				ForceAttemptHTTP2:   false,
-				MaxIdleConnsPerHost: 16,
-			},
+			Transport: newTransport(false),
 			CheckRedirect: func(*http.Request, []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
@@ -99,4 +94,19 @@ func (c *Client) Do(ctx context.Context, req Request) (Response, error) {
 		return Response{}, fmt.Errorf("httpclient: reading %s %s: %w", req.Method, req.Path, err)
 	}
 	return Response{Status: resp.StatusCode, Header: resp.Header.Clone(), Body: data}, nil
+}
+
+// newTransport builds the harness transport with keep-alive off. uvicorn closes
+// a connection right after answering an unhandled exception with 500, without a
+// Connection: close header (run_asgi calls transport.close()). A pooled client
+// can write its next request onto that connection, and Go does not retry a PUT
+// or POST, so the harness would report EOF for something that is not a
+// difference between the stacks. keepAlive exists so a test can show that.
+func newTransport(keepAlive bool) *http.Transport {
+	return &http.Transport{
+		Proxy:              nil,
+		DisableCompression: true,
+		ForceAttemptHTTP2:  false,
+		DisableKeepAlives:  !keepAlive,
+	}
 }
