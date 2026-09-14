@@ -233,6 +233,31 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="7d692291339c065c",
         why="",
     ),
+    # --- test.yml: core (ADR-0029) ----------------------------------------
+    "test.yml::core::Install": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        body_sha="5fb6f04e930e11ea",
+        why="pip install of the pinned dev requirements; the ownership gate imports the app",
+    ),
+    "test.yml::core::Format and vet": Covered(
+        kind=GATE_KIND,
+        stages=("go-vet",),
+        body_sha="25a261a675b568e7",
+        why="",
+    ),
+    "test.yml::core::Test": Covered(
+        kind=GATE_KIND,
+        stages=("go-test",),
+        body_sha="a8496b1836c1e6e4",
+        why="",
+    ),
+    "test.yml::core::Route manifest matches the app and the binary": Covered(
+        kind=GATE_KIND,
+        stages=("ownership",),
+        body_sha="9e90b526b63fd631",
+        why="",
+    ),
     # --- test.yml: screens ------------------------------------------------
     # The third link in the chain `client-routes` and `server-routes` are the
     # first two of: whether a screen that calls its routes correctly is itself

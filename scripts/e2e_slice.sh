@@ -91,6 +91,7 @@ done
 
 CONTAINER=""
 API_PID=""
+CORE_PID=""
 WORK_DIR=""
 
 cleanup() {
@@ -99,6 +100,10 @@ cleanup() {
   # next reader diagnoses a stale answer as somebody else's bug.
   if [ "$KEEP" -eq 1 ]; then
     return
+  fi
+  if [ -n "$CORE_PID" ]; then
+    kill "$CORE_PID" >/dev/null 2>&1 || true
+    wait "$CORE_PID" 2>/dev/null || true
   fi
   if [ -n "$API_PID" ]; then
     kill "$API_PID" >/dev/null 2>&1 || true
@@ -267,6 +272,61 @@ s.close()")" || { echo "không tìm được cổng trống" >&2; return 2; }
   done
   echo "API không bao giờ trả lời /healthz" >&2
   tail -30 "$API_LOG" >&2
+  return 2
+}
+
+# --- the front door -------------------------------------------------------
+
+# ADR-0029: clients reach the API through the Go front door, so the slice does
+# too. Everything below talks to API_URL, which from here on is core; uvicorn
+# stays reachable only as core's upstream. Go missing is a failure, not a skip:
+# a slice that quietly bypasses the front door proves nothing about it.
+start_core() {
+  if ! command -v go >/dev/null 2>&1; then
+    echo "không có go trên PATH — lát cắt dọc phải đi qua cửa trước Go (ADR-0029)" >&2
+    return 2
+  fi
+  local core_bin="$WORK_DIR/core" core_log="$WORK_DIR/core.log" port liveness
+  ( cd "$REPO_ROOT/services/core" && go build -o "$core_bin" ./cmd/core ) || {
+    echo "go build ./cmd/core thất bại" >&2
+    return 2
+  }
+  port="$(python3 -c "import socket
+s = socket.socket()
+s.bind(('127.0.0.1', 0))
+print(s.getsockname()[1])
+s.close()")" || return 2
+  liveness="$(python3 -c "import socket
+s = socket.socket()
+s.bind(('127.0.0.1', 0))
+print(s.getsockname()[1])
+s.close()")" || return 2
+
+  MOBILE_CORE_LISTEN="127.0.0.1:$port" \
+  MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
+  MOBILE_PYTHON_UPSTREAM="$API_URL" \
+    "$core_bin" serve >"$core_log" 2>&1 &
+  CORE_PID=$!
+
+  local upstream="$API_URL" i
+  API_URL="http://127.0.0.1:$port"
+  for i in $(seq 1 30); do
+    # Through core, so this proves the whole chain: core answers and reaches
+    # the uvicorn above.
+    if curl -fsS --max-time 2 "$API_URL/healthz" >/dev/null 2>&1; then
+      echo "cửa trước Go: $API_URL -> $upstream (sẵn sàng sau ${i}s)"
+      return 0
+    fi
+    if ! kill -0 "$CORE_PID" 2>/dev/null; then
+      echo "core thoát trước khi trả lời /healthz" >&2
+      tail -30 "$core_log" >&2
+      CORE_PID=""
+      return 2
+    fi
+    sleep 1
+  done
+  echo "core không bao giờ trả lời /healthz" >&2
+  tail -30 "$core_log" >&2
   return 2
 }
 
@@ -462,6 +522,7 @@ command -v npm  >/dev/null 2>&1 || { echo "không có npm" >&2; exit 2; }
 
 provision_db || exit $?
 start_api || exit $?
+start_core || exit $?
 mint_sessions || exit $?
 redeem_a_real_invite || exit $?
 login_by_otp || exit $?

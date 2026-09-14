@@ -49,7 +49,9 @@ Chín route AI: `POST …/messages/{mid}/expense-draft` · `POST /contexts/{id}/
 Nguồn sự thật duy nhất về ai phục vụ route nào là **`services/core/ownership/routes.json`**: mỗi route một dòng
 `{id, order, group, class, owner, python, limiter, state, evidence}`. Máy sinh nó từ `create_app().routes`;
 `scripts/check_route_ownership.py` bắt nó khớp thứ tự đăng ký của Python, khớp tập route Go khai, và bắt các
-route dùng chung một limiter phải chuyển cùng nhau (ví dụ `POST /identity/person-id` với `POST /friends/lookup`).
+route dùng chung một trạng thái trong bộ nhớ (limiter, cache) phải chuyển cùng nhau — ví dụ `GET /places` và
+`GET /places/{place_id}` dùng chung `reason_writer`. (`POST /friends/lookup` **không** dùng chung limiter với
+`POST /identity/person-id`: `friend_lookup_limit` được tách riêng có chủ ý.)
 Lane nào thêm route hoặc biến môi trường mà không thêm dòng thì cổng đỏ.
 
 ### 2.2 Cổng trước, proxy, IP khách

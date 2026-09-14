@@ -218,6 +218,45 @@ jobs:
         name: Every header the client sends survives the CORS preflight
         run: python3 scripts/check_cors_contract.py
 
+  # ADR-0029: the Go front door. The same commands as the ownership, go-vet and
+  # go-test stages of scripts/gate.sh.
+  core:
+    name: go front door and route ownership
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -r services/api/requirements-dev.txt
+
+      - name: Format and vet
+        working-directory: services/core
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt wants to change: $unformatted"
+            exit 1
+          fi
+          go vet ./...
+
+      - name: Test
+        working-directory: services/core
+        run: go test -count=1 ./...
+
+      - name: Route manifest matches the app and the binary
+        # Selftest first: the gate must be seen red on each failure it exists for.
+        run: |
+          python3 scripts/check_route_ownership.py --selftest
+          python3 scripts/check_route_ownership.py
+
   screens:
     name: every screen is rendered by something
     # The third link in the chain the `api` job holds the first two of.
@@ -527,6 +566,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # ADR-0029: the slice runs through the Go front door, so it needs Go.
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
 
       - if: steps.present.outputs.found == 'true'
         uses: actions/setup-node@v4
