@@ -28,6 +28,7 @@ func All() []Route {
 		createReport(),
 		putMyInterests(),
 		groupRecap(),
+		preferenceProfile(),
 	}
 }
 

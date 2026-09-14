@@ -1678,7 +1678,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "CARDED",
+      "state": "PORTED",
       "evidence": "docs/migration/routes/preferences/GET-contexts-context_id-preference-profile.md"
     },
     {
