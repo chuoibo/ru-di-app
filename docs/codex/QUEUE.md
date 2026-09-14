@@ -45,8 +45,9 @@ này thì chạy lại kịch bản của nó:
 
 Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (5), `POST /identity/person-id`, stories (4), posts
 (9), votes (5) — 24 route, vẫn do Python phục vụ.
-- Corpus 422 sinh cho 13 route (`parity/scenarios/generated/w2-422`). 9 route hoãn, lý do nằm trong bộ sinh và bộ
-  sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
+- Corpus 422 sinh cho 18 route (`parity/scenarios/generated/w2-422`, gồm cả tham số query). 4 route hoãn
+  (`image_url` có pattern ở `POST /stories` và `POST /posts`, path Literal ở `DELETE .../reactions/{kind}`, validator
+  của `POST /contexts/{context_id}/votes`), lý do nằm trong bộ sinh và bộ sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
   parse, limiter theo IP).
 - Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch; domain và kịch bản viết tay đang làm.
 - `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,

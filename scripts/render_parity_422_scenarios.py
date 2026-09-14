@@ -59,6 +59,7 @@ import re
 import sys
 import types
 import typing
+import urllib.parse
 import uuid
 
 
@@ -100,16 +101,16 @@ WAVES: dict[str, Wave] = {
             ("GET", "/votes/{vote_id}"),
             ("POST", "/votes/{vote_id}/ballots"),
             ("POST", "/votes/{vote_id}/close"),
+            ("GET", "/people/{person_id}/friend-requests"),
+            ("GET", "/posts"),
+            ("GET", "/people/{person_id}/posts"),
+            ("GET", "/posts/{post_id}/comments"),
+            ("POST", "/posts/{post_id}/comments"),
         ),
         deferred=(
-            ("GET", "/people/{person_id}/friend-requests", "query ['direction']"),
             ("POST", "/stories", "carries ['pattern']"),
             ("POST", "/posts", "carries ['pattern']"),
-            ("GET", "/posts", "query ['limit']"),
-            ("GET", "/people/{person_id}/posts", "query ['limit']"),
             ("DELETE", "/posts/{post_id}/reactions/{kind}", "path kind is literal"),
-            ("GET", "/posts/{post_id}/comments", "query ['limit', 'after']"),
-            ("POST", "/posts/{post_id}/comments", "step id 'body_null'"),
             ("POST", "/contexts/{context_id}/votes", "'function-after' is not probed"),
         ),
         excluded=(
@@ -526,6 +527,21 @@ class RouteIR:
     actor_header: bool
     body: Shape | None
     body_field: typing.Any
+    #: (alias, Shape, FastAPI ModelField) for each query parameter
+    query_params: tuple = ()
+
+
+def query_core_schema(param: typing.Any) -> dict:
+    """A query parameter's schema without the `default` wrapper.
+
+    FastAPI applies the default before validation when the key is absent, and
+    the header comment reads it from the field; what a present value must be is
+    the wrapped schema.
+    """
+    schema = param._type_adapter.core_schema
+    while schema.get("type") == "default":
+        schema = schema["schema"]
+    return schema
 
 
 def read_route(app: typing.Any, method: str, path: str) -> RouteIR:
@@ -542,10 +558,15 @@ def read_route(app: typing.Any, method: str, path: str) -> RouteIR:
         raise RenderError(f"{where}: {len(hits)} APIRoutes match")
     route = hits[0]
     dependants = list(walk_dependants(route.dependant))
-    queries = [p.alias for d in dependants for p in d.query_params]
     cookies = [p.alias for d in dependants for p in d.cookie_params]
-    if queries or cookies:
-        raise RenderError(f"{where}: query {queries} / cookie {cookies} not probed")
+    if cookies:
+        raise RenderError(f"{where}: cookie {cookies} not probed")
+    query_params = []
+    for param in (p for d in dependants for p in d.query_params):
+        shape = read_shape(query_core_schema(param), {}, f"{where} query {param.alias}")
+        if shape.kind in ("list", "model"):
+            raise RenderError(f"{where}: query {param.alias} is {describe(shape)}")
+        query_params.append((param.alias, shape, param))
     headers = {p.alias.lower() for d in dependants for p in d.header_params}
     if headers - ACTOR_HEADERS:
         raise RenderError(f"{where}: headers {sorted(headers - ACTOR_HEADERS)}")
@@ -574,6 +595,7 @@ def read_route(app: typing.Any, method: str, path: str) -> RouteIR:
         actor_header=ACTOR_ID_HEADER in headers,
         body=body,
         body_field=route.body_field,
+        query_params=tuple(query_params),
     )
 
 
@@ -712,6 +734,16 @@ def ident(name: str) -> str:
     return text if text[:1].isalpha() else f"f_{text}"
 
 
+def field_ident(name: str) -> str:
+    """A body field's step-id stem, kept clear of the envelope's own ids.
+
+    `body_null`, `body_array` and `body_empty_object` probe the whole body, so a
+    field named `body` would give its null probe the envelope's id.
+    """
+    key = ident(name)
+    return f"field_{key}" if key == "body" or key.startswith("body_") else key
+
+
 def uuid_variants(value: str) -> tuple[tuple[str, str], ...]:
     bare = value.replace("-", "")
     return (
@@ -819,7 +851,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         if field.required:
             steps.note(f"required field {field.name} missing")
             steps.add(
-                f"missing_{ident(field.name)}",
+                f"missing_{field_ident(field.name)}",
                 PERSONA,
                 method,
                 path,
@@ -842,7 +874,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         )
         for label, value in probes:
             steps.add(
-                f"{ident(field.name)}_{label}",
+                f"{field_ident(field.name)}_{label}",
                 PERSONA,
                 method,
                 path,
@@ -866,7 +898,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         steps.note(f"{field.name}: near misses of the member {member!r}")
         for label, value in misses:
             steps.add(
-                f"{ident(field.name)}_{label}",
+                f"{field_ident(field.name)}_{label}",
                 PERSONA,
                 method,
                 path,
@@ -894,7 +926,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         for n in lengths:
             text = mixed_text(n)
             steps.add(
-                f"{ident(field.name)}_len_{n}_mixed",
+                f"{field_ident(field.name)}_len_{n}_mixed",
                 PERSONA,
                 method,
                 path,
@@ -911,7 +943,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
             body = ctx.with_value(field.name, SENTINEL)
             text = substitute(body, '"' + utf16_escape(ASTRAL) * n + '"')
             steps.add(
-                f"{ident(field.name)}_len_{n}_escaped_astral",
+                f"{field_ident(field.name)}_len_{n}_escaped_astral",
                 PERSONA,
                 method,
                 path,
@@ -934,7 +966,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         for n in lengths:
             value = [items[i % len(items)] for i in range(n)]
             steps.add(
-                f"{ident(field.name)}_len_{n}",
+                f"{field_ident(field.name)}_len_{n}",
                 PERSONA,
                 method,
                 path,
@@ -949,7 +981,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         if head:
             label, value = head[0]
             steps.add(
-                f"{ident(field.name)}_item_{label}_first",
+                f"{field_ident(field.name)}_item_{label}_first",
                 PERSONA,
                 method,
                 path,
@@ -959,7 +991,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
         if tail:
             label, value = tail[0]
             steps.add(
-                f"{ident(field.name)}_item_{label}_after_valid",
+                f"{field_ident(field.name)}_item_{label}_after_valid",
                 PERSONA,
                 method,
                 path,
@@ -977,7 +1009,7 @@ def body_steps(ir: RouteIR, steps: Steps, vocab: dict) -> None:
             continue
         steps.note(f"{field.name}: a lone high surrogate as a JSON escape")
         steps.add(
-            f"{ident(field.name)}_lone_surrogate",
+            f"{field_ident(field.name)}_lone_surrogate",
             PERSONA,
             method,
             path,
@@ -1115,7 +1147,10 @@ def bodyless_steps(ir: RouteIR, steps: Steps) -> None:
                     fill_path(ir, {name: value}),
                 )
     else:
-        steps.note("no path, query or body parameters to validate")
+        if ir.query_params:
+            steps.note("no path or body parameters; query parameters follow")
+        else:
+            steps.note("no path, query or body parameters to validate")
         steps.add("owner_plain", PERSONA, method, path)
         steps.add("anonymous_plain", ANONYMOUS, method, path)
 
@@ -1158,6 +1193,112 @@ def bodyless_steps(ir: RouteIR, steps: Steps) -> None:
         path,
         ((ACTOR_ID_HEADER, NOT_A_UUID),),
     )
+
+
+#: Query strings each query parameter is tried with; kept only where refused.
+QUERY_PROBES: tuple[tuple[str, str], ...] = (
+    ("empty", ""),
+    ("text", "x"),
+    ("float", "1.5"),
+    ("exponent", "1e2"),
+    ("plus_sign", "+1"),
+    ("space", " 1"),
+    ("zero", "0"),
+    ("negative", "-1"),
+)
+
+
+def query_url(path: str, pairs: typing.Sequence[tuple[str, str]]) -> str:
+    return (
+        path
+        + "?"
+        + "&".join(
+            f"{urllib.parse.quote(name, safe='')}={urllib.parse.quote(value, safe='')}"
+            for name, value in pairs
+        )
+    )
+
+
+def query_refuses(field: typing.Any, alias: str, value: str) -> bool:
+    """FastAPI's own query field decides, as `request_params_to_args` does.
+
+    A present key reaches validation as its string, the empty string included;
+    Starlette hands over the last value of a repeated key.
+    """
+    _value, errors = field.validate(value, {}, loc=("query", alias))
+    return bool(errors)
+
+
+def query_valid_value(alias: str, shape: Shape, field: typing.Any) -> str:
+    candidates = [
+        str(int(b) + d) for b, d in ((shape.ge, 0), (shape.gt, 1)) if b is not None
+    ]
+    for value in [*candidates, "1", "x"]:
+        if not query_refuses(field, alias, value):
+            return value
+    raise RenderError(f"query {alias}: no candidate value is accepted")
+
+
+def query_steps(ir: RouteIR, steps: Steps) -> None:
+    method, path = ir.method, fill_path(ir)
+    valid = {
+        alias: query_valid_value(alias, shape, field)
+        for alias, shape, field in ir.query_params
+    }
+    steps.note("every query parameter at a value its field accepts")
+    steps.add("query_all_valid", PERSONA, method, query_url(path, list(valid.items())))
+    for alias, shape, field in ir.query_params:
+        key = ident(alias)
+        probes = list(QUERY_PROBES)
+        for label, bound, delta in (
+            ("below_ge", shape.ge, -1),
+            ("above_le", shape.le, 1),
+            ("at_gt", shape.gt, 0),
+            ("at_lt", shape.lt, 0),
+        ):
+            if bound is not None:
+                probes.append((label, str(int(bound) + delta)))
+        refused = [(lb, v) for lb, v in probes if query_refuses(field, alias, v)]
+        if not refused:
+            continue
+        steps.note(f"query {alias}: {describe(shape)}; strings the query field refuses")
+        for label, value in refused:
+            steps.add(
+                f"query_{key}_{label}",
+                PERSONA,
+                method,
+                query_url(path, [(alias, value)]),
+            )
+        label, value = refused[0]
+        steps.note(f"query {alias}: a repeated key is read from its last value")
+        steps.add(
+            f"query_{key}_repeated_last_refused",
+            PERSONA,
+            method,
+            query_url(path, [(alias, valid[alias]), (alias, value)]),
+        )
+        steps.add(
+            f"query_{key}_repeated_last_accepted",
+            PERSONA,
+            method,
+            query_url(path, [(alias, value), (alias, valid[alias])]),
+        )
+        if ir.actor_header:
+            steps.note(f"precedence: the actor dependency before query {alias}")
+            steps.add(
+                f"anonymous_query_{key}_{label}",
+                ANONYMOUS,
+                method,
+                query_url(path, [(alias, value)]),
+            )
+        for name, _shape in ir.path_params:
+            steps.note(f"precedence: path {name} and query {alias} refused together")
+            steps.add(
+                f"query_{key}_{label}_bad_{ident(name)}",
+                PERSONA,
+                method,
+                query_url(fill_path(ir, {name: NOT_A_UUID}), [(alias, value)]),
+            )
 
 
 # --------------------------------------------------------------------------
@@ -1219,7 +1360,13 @@ def header_comment(ir: RouteIR) -> list[str]:
             state = "required" if field.required else f"default {field.default!r}"
             lines.append(f"#   {field.name}: {describe(field.shape)}, {state}")
     actor = "X-Actor-ID via get_actor" if ir.actor_header else "none"
-    lines.append(f"# Query: none. Actor header: {actor}.")
+    if not ir.query_params:
+        lines.append(f"# Query: none. Actor header: {actor}.")
+        return lines
+    for alias, shape, field in ir.query_params:
+        state = "required" if field.required else f"default {field.default!r}"
+        lines.append(f"# Query {alias}: {describe(shape)}, {state}")
+    lines.append(f"# Actor header: {actor}.")
     return lines
 
 
@@ -1315,6 +1462,8 @@ def route_steps(app: typing.Any, method: str, path: str, vocab: dict) -> tuple:
         body_steps(ir, steps, vocab)
     else:
         bodyless_steps(ir, steps)
+    if ir.query_params:
+        query_steps(ir, steps)
     return ir, steps
 
 
