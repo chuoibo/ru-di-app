@@ -1,0 +1,65 @@
+# ADR-0029 §2.4 RESPONSE-204-CONTENT-LENGTH. Python replays a 204 with
+# content-length: 0; through Go's net/http that header is gone. The comparator
+# accepts exactly that, and this scenario must show it on every run: parity run
+# reports the exception stale when the two sides stop differing here.
+id: w0/replay-204
+routes: ["DELETE /contexts/{context_id}/members/{person_id}"]
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers: {content-type: application/json}
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers: {content-type: application/json}
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: /contexts
+      headers: {content-type: application/json}
+      body_raw: '{"display_name":"Nhóm thử 204 (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers: {content-type: application/json}
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request: {method: POST, path: '/memberships/{{membership}}/accept'}
+  # first answer: 204 with no content-length on either side
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+      headers: {idempotency-key: replay-204-k1}
+  # the replay: Python adds content-length: 0, Go cannot
+  - id: mate_leaves_replayed
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+      headers: {idempotency-key: replay-204-k1}
+  - id: mate_leaves_again_without_key
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'

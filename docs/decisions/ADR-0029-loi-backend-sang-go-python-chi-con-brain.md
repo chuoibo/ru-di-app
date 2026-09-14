@@ -122,6 +122,20 @@ Mọi dòng request hợp lệ khác trong bộ đo đều bằng nhau (escape h
 (`parity probe`, chặng `parity`) đỏ khi một dòng NGOÀI danh sách bắt đầu khác, và đỏ khi một dòng TRONG danh sách
 hết khác (danh sách cũ). Muốn thêm dòng là sửa ADR này.
 
+**Ngoại lệ thứ ba, Lead duyệt ngày 2026-09-15: `RESPONSE-204-CONTENT-LENGTH`.** Khi một `Idempotency-Key` được
+dùng lại cho route trả 204, middleware idempotency của Python phát lại kèm `content-length: 0`. net/http của Go
+không bao giờ gửi `Content-Length` cho 204 (RFC 9110 §8.6 cấm), nên qua `core` header đó biến mất — cả khi Python
+trả lời qua proxy lẫn khi route đã do Go phục vụ. Đo trên stack dev với
+`DELETE /contexts/{context_id}/members/{person_id}`: lần đầu không phía nào có `content-length`; lần phát lại
+Python gửi `content-length: 0` và `idempotency-replayed: true`, qua `core` chỉ còn `Idempotency-Replayed: true`.
+Status, các header khác và thân rỗng bằng nhau. Bộ so chấp nhận **đúng** cặp đó: 204 ở cả hai phía, reference có
+đúng một giá trị `0`, candidate không có header. Chiều ngược lại, giá trị khác `0`, header lặp hay status khác vẫn
+là khác biệt. Kịch bản `w0/replay-204` phải cho thấy khác biệt này ở mọi lượt: `parity run` in số lần chấp nhận
+và đỏ `STALE` khi kịch bản đã chạy mà hai phía không còn khác, để ngoại lệ không nằm lại khi nguyên nhân đã hết.
+
+Header được so theo ngữ nghĩa HTTP: tên không phân biệt hoa thường, thứ tự giữa các tên khác nhau không được so
+(net/http viết tên dạng chuẩn và tự sắp xếp); số lần lặp và thứ tự giá trị của cùng một tên vẫn phải khớp.
+
 ### 2.5 Ba luật tiền trong Go — không đổi luật
 
 1. Số nguyên đồng: `money.VND` là `int64`; `moneylint` (go/analysis) cấm kiểu float, literal phân số,

@@ -2,8 +2,11 @@
 //
 // The verdict is byte-based. Status must match; every header except the two
 // that legitimately vary per response (date, server) must match in name,
-// value and number of occurrences; the body must match byte for byte. A
-// structural diff is produced for humans, but it never softens the verdict.
+// value and number of occurrences; the body must match byte for byte. Header
+// names compare case-insensitively and the order between different names is
+// not compared, as HTTP defines them. The one accepted divergence is named in
+// AcceptedDivergence. A structural diff is produced for humans, but it never
+// softens the verdict.
 package compare
 
 import (
@@ -16,6 +19,34 @@ import (
 // Volatile headers are the only ones not compared. Keep this list short: every
 // entry is a place where a difference cannot be seen.
 var Volatile = map[string]bool{"date": true, "server": true}
+
+// Response204ContentLength is ADR-0029 §2.4's RESPONSE-204-CONTENT-LENGTH.
+// Python's idempotency replay sends content-length: 0 on a 204, and Go's
+// net/http never sends Content-Length on a 204 (RFC 9110 §8.6 forbids it).
+// Exactly that pair is accepted: a 204 on both sides, the reference's only
+// content-length value "0", the candidate's absent. The other direction, another
+// value, a repeated header or another status is still a difference.
+const Response204ContentLength = "RESPONSE-204-CONTENT-LENGTH"
+
+// AcceptedDivergence maps each accepted divergence to the scenario that must
+// show it on every run, so an exception whose cause went away is noticed
+// instead of lingering.
+var AcceptedDivergence = map[string]string{
+	Response204ContentLength: "w0/replay-204",
+}
+
+// Accepted names the accepted divergences a pair of exchanges shows.
+func Accepted(reference, candidate Exchange) []string {
+	if reference.Status != 204 || candidate.Status != 204 {
+		return nil
+	}
+	ref := lowered(reference.Header)["content-length"]
+	_, inCandidate := lowered(candidate.Header)["content-length"]
+	if len(ref) == 1 && ref[0] == "0" && !inCandidate {
+		return []string{Response204ContentLength}
+	}
+	return nil
+}
 
 // Exchange is one response after normalisation.
 type Exchange struct {
@@ -45,8 +76,9 @@ func Step(reference, candidate Exchange) []Difference {
 	}
 	refHeaders := lowered(reference.Header)
 	candHeaders := lowered(candidate.Header)
+	accepted204 := len(Accepted(reference, candidate)) > 0
 	for _, name := range unionNames(refHeaders, candHeaders) {
-		if Volatile[name] {
+		if Volatile[name] || (accepted204 && name == "content-length") {
 			continue
 		}
 		ref, inRef := refHeaders[name]

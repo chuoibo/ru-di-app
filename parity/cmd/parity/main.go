@@ -21,11 +21,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"sync/atomic"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mobile/parity/internal/canary"
+	"mobile/parity/internal/compare"
 	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
 	"mobile/parity/internal/rawprobe"
@@ -88,6 +90,7 @@ type report struct {
 	Steps         int              `json:"steps"`
 	ScenariosDiff int              `json:"scenarios_diff"`
 	Differences   int              `json:"differences"`
+	Accepted      map[string]int   `json:"accepted,omitempty"`
 	Results       []scenarioReport `json:"results"`
 }
 
@@ -162,7 +165,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB}
 
 	ctx := context.Background()
-	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil}
+	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, Accepted: map[string]int{}}
+	ran := map[string]bool{}
 	for _, sc := range scenarios {
 		nonce := runner.NewNonce()
 		refRun, err := runner.Execute(ctx, sc, refStack, nonce)
@@ -180,6 +184,10 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 		diffs := runner.Diff(refRun, candRun)
+		ran[sc.ID] = true
+		for name, n := range runner.AcceptedCounts(refRun, candRun) {
+			rep.Accepted[name] += n
+		}
 		result := scenarioReport{ID: sc.ID, File: sc.File, Equal: len(diffs) == 0}
 		byStep := map[string][]string{}
 		dbByStep := map[string][]string{}
@@ -214,6 +222,25 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		}
 		rep.Results = append(rep.Results, result)
 	}
+	// An accepted divergence is checked where its scenario ran: it must still
+	// show, or the exception outlived its cause (ADR-0029 §2.4).
+	stale := 0
+	names := make([]string, 0, len(compare.AcceptedDivergence))
+	for name := range compare.AcceptedDivergence {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		scenarioID := compare.AcceptedDivergence[name]
+		if !ran[scenarioID] {
+			continue
+		}
+		fmt.Fprintf(stdout, "accepted: %s=%d (ADR-0029 §2.4, shown by %s)\n", name, rep.Accepted[name], scenarioID)
+		if rep.Accepted[name] == 0 {
+			stale++
+			fmt.Fprintf(stdout, "STALE %s: %s ran and the two sides no longer differ this way; remove the exception from ADR-0029 §2.4\n", name, scenarioID)
+		}
+	}
 	lane := "off"
 	if rep.DatabaseLane {
 		lane = "on"
@@ -227,7 +254,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 	}
-	if rep.Differences > 0 {
+	if rep.Differences > 0 || stale > 0 {
 		return 1
 	}
 	return 0

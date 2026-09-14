@@ -344,6 +344,21 @@ func Diff(reference, candidate *Run) []StepDiff {
 	return out
 }
 
+// AcceptedCounts counts, per name, the steps where the two transcripts differ
+// in a way ADR-0029 §2.4 accepts.
+func AcceptedCounts(reference, candidate *Run) map[string]int {
+	counts := map[string]int{}
+	for i := range reference.Steps {
+		if i >= len(candidate.Steps) {
+			break
+		}
+		for _, name := range compare.Accepted(reference.Steps[i].Norm, candidate.Steps[i].Norm) {
+			counts[name]++
+		}
+	}
+	return counts
+}
+
 // PersonasRefused reports whether every step sent as a persona was answered
 // 401. Such a transcript is equal on both sides and proves nothing: the seeded
 // sessions went to another database, or dev personas met prod stacks. It does
