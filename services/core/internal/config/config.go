@@ -19,6 +19,7 @@ const (
 	EnvLivenessListen = "MOBILE_CORE_LIVENESS_LISTEN"
 	EnvPythonUpstream = "MOBILE_PYTHON_UPSTREAM"
 	EnvForcePython    = "MOBILE_FORCE_PYTHON"
+	EnvAuthMode       = "MOBILE_AUTH_MODE"
 )
 
 const (
@@ -36,6 +37,10 @@ type Config struct {
 	// ForcePython is the raw MOBILE_FORCE_PYTHON value. It is validated
 	// against the ownership manifest, which this package does not know about.
 	ForcePython string
+	// AuthMode is MOBILE_AUTH_MODE resolved the way app/api/auth_mode.py
+	// resolves it: "prod" or "dev". Go routes must authenticate in the same
+	// mode as the Python process behind this front door.
+	AuthMode string
 }
 
 // Load reads and validates every variable. getenv is os.Getenv in production.
@@ -60,7 +65,37 @@ func Load(getenv func(string) string) (Config, error) {
 		return Config{}, err
 	}
 	cfg.PythonUpstream = upstream
+	mode, err := resolveAuthMode(getenv(EnvAuthMode))
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.AuthMode = mode
 	return cfg, nil
+}
+
+// resolveAuthMode is resolve_auth_mode: absent or empty is prod; surrounding
+// whitespace (str.strip's set) and case are forgiven; any other value refuses
+// to start instead of guessing.
+func resolveAuthMode(raw string) (string, error) {
+	value := strings.ToLower(strings.TrimFunc(raw, pyIsSpace))
+	switch value {
+	case "":
+		return "prod", nil
+	case "prod", "dev":
+		return value, nil
+	}
+	return "", fmt.Errorf("%s must be 'prod' or 'dev'; refusing to guess", EnvAuthMode)
+}
+
+// pyIsSpace is str.isspace for one code point. It differs from unicode.IsSpace
+// in U+001C..U+001F, which Python counts as whitespace.
+func pyIsSpace(r rune) bool {
+	switch {
+	case r >= '\t' && r <= '\r', r >= 0x1c && r <= 0x1f, r == ' ', r == 0x85, r == 0xa0, r == 0x1680,
+		r >= 0x2000 && r <= 0x200a, r == 0x2028, r == 0x2029, r == 0x202f, r == 0x205f, r == 0x3000:
+		return true
+	}
+	return false
 }
 
 func orDefault(value, fallback string) string {
