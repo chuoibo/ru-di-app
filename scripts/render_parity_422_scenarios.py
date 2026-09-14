@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the generated 422 parity corpus for the W1 pilot routes.
+"""Render the generated 422 parity corpus for one wave of routes.
 
 ADR-0029 §2.3 asks for a 422 corpus before a route is CARDED, and §2.4 makes
 the Python answer the reference for every byte. This script writes that corpus
@@ -8,7 +8,7 @@ so the files stay inside ADR-0010 §6.1 and pass `parity lint`.
 
 The cases are read off the shipped application, not off the source text:
 
-- `create_app()` gives the APIRoute for each entry of WAVE, and FastAPI's
+- `create_app()` gives the APIRoute for each route of the wave, and FastAPI's
   dependency tree gives its path, query, header, cookie and body parameters;
 - the body model is read twice: from pydantic-core's schema, which is what
   validates (kinds, strictness, length and number bounds, Literal members,
@@ -32,9 +32,14 @@ Run inside the pinned API image; no database and no network are needed:
     docker run --rm --network none --user "$(id -u):$(id -g)" \\
       -v "$PWD":/repo --entrypoint python mobile-parity-api:7bf58e3d \\
       /repo/scripts/render_parity_422_scenarios.py \\
-      --out /repo/parity/scenarios/generated/w1-422
+      --wave w1 --out /repo/parity/scenarios/generated/w1-422
 
 `--check` renders in memory and exits 1 naming every file that differs.
+
+A wave may defer a route the generator cannot probe yet, naming a fragment of
+the refusal it raises; the render fails when a deferred route renders or is
+refused for another reason, so a deferral cannot outlive its cause. A route
+can also be excluded with a reason, for what generated steps must not touch.
 
 Every rendered file is parsed back with PyYAML and compared with the steps it
 was meant to hold, and scanned with `scripts/repo_guard.py`'s own content
@@ -56,19 +61,81 @@ import types
 import typing
 import uuid
 
-WAVE: tuple[tuple[str, str], ...] = (
-    ("PUT", "/people/me/interests"),
-    ("POST", "/reports"),
-    ("POST", "/contexts/{context_id}/meet"),
-    ("GET", "/contexts/{context_id}/preference-profile"),
-    ("GET", "/contexts/{context_id}/map"),
-    ("GET", "/contexts/{context_id}/heatmap"),
-    ("GET", "/contexts/{context_id}/recap"),
-    ("GET", "/interests"),
-    ("GET", "/areas"),
-)
-SCENARIO_PREFIX = "generated/w1-422"
-REPO_DIR = "parity/scenarios/generated/w1-422"
+
+@dataclasses.dataclass(frozen=True)
+class Wave:
+    routes: tuple[tuple[str, str], ...]
+    #: (method, path, fragment of the RenderError it must still raise)
+    deferred: tuple[tuple[str, str, str], ...] = ()
+    #: (method, path, why generated steps must not exercise it)
+    excluded: tuple[tuple[str, str, str], ...] = ()
+
+
+WAVES: dict[str, Wave] = {
+    "w1": Wave(
+        routes=(
+            ("PUT", "/people/me/interests"),
+            ("POST", "/reports"),
+            ("POST", "/contexts/{context_id}/meet"),
+            ("GET", "/contexts/{context_id}/preference-profile"),
+            ("GET", "/contexts/{context_id}/map"),
+            ("GET", "/contexts/{context_id}/heatmap"),
+            ("GET", "/contexts/{context_id}/recap"),
+            ("GET", "/interests"),
+            ("GET", "/areas"),
+        )
+    ),
+    "w2": Wave(
+        routes=(
+            ("POST", "/friends/requests"),
+            ("POST", "/friends/requests/{request_id}/respond"),
+            ("GET", "/people/{person_id}/friends"),
+            ("GET", "/stories"),
+            ("POST", "/stories/{story_id}/seen"),
+            ("DELETE", "/stories/{story_id}"),
+            ("GET", "/posts/{post_id}"),
+            ("POST", "/posts/{post_id}/reactions"),
+            ("DELETE", "/posts/{post_id}/comments/{comment_id}"),
+            ("GET", "/contexts/{context_id}/votes"),
+            ("GET", "/votes/{vote_id}"),
+            ("POST", "/votes/{vote_id}/ballots"),
+            ("POST", "/votes/{vote_id}/close"),
+        ),
+        deferred=(
+            ("GET", "/people/{person_id}/friend-requests", "query ['direction']"),
+            ("POST", "/stories", "carries ['pattern']"),
+            ("POST", "/posts", "carries ['pattern']"),
+            ("GET", "/posts", "query ['limit']"),
+            ("GET", "/people/{person_id}/posts", "query ['limit']"),
+            ("DELETE", "/posts/{post_id}/reactions/{kind}", "path kind is literal"),
+            ("GET", "/posts/{post_id}/comments", "query ['limit', 'after']"),
+            ("POST", "/posts/{post_id}/comments", "step id 'body_null'"),
+            ("POST", "/contexts/{context_id}/votes", "'function-after' is not probed"),
+        ),
+        excluded=(
+            (
+                "POST",
+                "/friends/lookup",
+                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+            ),
+            (
+                "POST",
+                "/identity/person-id",
+                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+            ),
+        ),
+    ),
+}
+
+
+def scenario_prefix(wave: str) -> str:
+    return f"generated/{wave}-422"
+
+
+def repo_dir(wave: str) -> str:
+    return f"parity/scenarios/generated/{wave}-422"
+
+
 GENERATOR = "scripts/render_parity_422_scenarios.py"
 
 PERSONA = "owner"
@@ -1156,9 +1223,9 @@ def header_comment(ir: RouteIR) -> list[str]:
     return lines
 
 
-def render_file(ir: RouteIR, steps: list[Step]) -> tuple[str, dict]:
+def render_file(ir: RouteIR, steps: list[Step], prefix: str) -> tuple[str, dict]:
     stem = file_stem(ir.method, ir.path)
-    scenario_id = f"{SCENARIO_PREFIX}/{stem}"
+    scenario_id = f"{prefix}/{stem}"
     route_id = f"{ir.method} {ir.path}"
     lines = header_comment(ir)
     lines += [
@@ -1212,8 +1279,8 @@ def load_guard() -> typing.Any:
     return module
 
 
-def guard_hits(guard: typing.Any, name: str, text: str) -> list[str]:
-    repo_path = f"{REPO_DIR}/{name}"
+def guard_hits(guard: typing.Any, directory: str, name: str, text: str) -> list[str]:
+    repo_path = f"{directory}/{name}"
     raw = text.encode("utf-8")
     hits = []
     if len(raw) >= MAX_FILE_BYTES:
@@ -1241,47 +1308,77 @@ def guard_hits(guard: typing.Any, name: str, text: str) -> list[str]:
     return hits
 
 
-def render(app: typing.Any) -> tuple[dict[str, str], dict[str, int]]:
+def route_steps(app: typing.Any, method: str, path: str, vocab: dict) -> tuple:
+    ir = read_route(app, method, path)
+    steps = Steps(f"{method} {path}")
+    if ir.body is not None:
+        body_steps(ir, steps, vocab)
+    else:
+        bodyless_steps(ir, steps)
+    return ir, steps
+
+
+def render(app: typing.Any, wave_name: str) -> tuple[dict[str, str], dict[str, int]]:
     import yaml
 
+    wave = WAVES[wave_name]
     vocab = vocabulary()
     guard = load_guard()
     files: dict[str, str] = {}
     counts: dict[str, int] = {}
-    for method, path in WAVE:
-        ir = read_route(app, method, path)
-        steps = Steps(f"{method} {path}")
-        if ir.body is not None:
-            body_steps(ir, steps, vocab)
-        else:
-            bodyless_steps(ir, steps)
+    for method, path in wave.routes:
+        ir, steps = route_steps(app, method, path, vocab)
         if not steps.items or len(steps.items) > MAX_STEPS:
             raise RenderError(
                 f"{method} {path}: {len(steps.items)} steps, the cap is {MAX_STEPS}"
             )
-        text, intended = render_file(ir, steps.items)
+        text, intended = render_file(ir, steps.items, scenario_prefix(wave_name))
         name = file_stem(method, path) + ".yaml"
         if yaml.safe_load(text) != intended:
             raise RenderError(f"{name}: YAML does not read back as the steps")
-        hits = guard_hits(guard, name, text)
+        hits = guard_hits(guard, repo_dir(wave_name), name, text)
         if hits:
             raise RenderError(f"{name} would trip the repository guard: {hits}")
         files[name] = text
         counts[f"{method} {path}"] = len(steps.items)
+    for method, path, reason in wave.deferred:
+        try:
+            route_steps(app, method, path, vocab)
+        except RenderError as exc:
+            if reason in str(exc):
+                continue
+            raise RenderError(
+                f"{method} {path}: deferred for {reason!r}, now refused with: {exc}"
+            ) from exc
+        raise RenderError(
+            f"{method} {path}: deferred for {reason!r} but it renders now; add it to the wave"
+        )
     return files, counts
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
+    parser.add_argument("--wave", required=True, choices=sorted(WAVES))
     parser.add_argument("--out", required=True, type=pathlib.Path)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--app-root", default="/srv")
     args = parser.parse_args()
     try:
-        files, counts = render(bootstrap(args.app_root))
+        files, counts = render(bootstrap(args.app_root), args.wave)
     except RenderError as exc:
         print(f"render_parity_422_scenarios: {exc}", file=sys.stderr)
         return 2
+    wave = WAVES[args.wave]
+    for method, path, reason in wave.deferred:
+        print(
+            f"render_parity_422_scenarios: deferred {method} {path}: refused ({reason})",
+            file=sys.stderr,
+        )
+    for method, path, reason in wave.excluded:
+        print(
+            f"render_parity_422_scenarios: excluded {method} {path}: {reason}",
+            file=sys.stderr,
+        )
     existing = {p.name for p in args.out.glob("*.yaml")} if args.out.is_dir() else set()
     if args.check:
         drift = sorted(
