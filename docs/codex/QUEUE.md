@@ -43,6 +43,13 @@ này thì chạy lại kịch bản của nó:
   cho W1: không route W1 nào chạm limiter trong bộ nhớ (`routes/social_map.py`, `preferences.py`, `recap.py`,
   `reports.py` không có dependency limiter).
 
+Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (5), `POST /identity/person-id`, stories (4), posts
+(9), votes (5) — 24 route, vẫn do Python phục vụ.
+- Corpus 422 sinh cho 13 route (`parity/scenarios/generated/w2-422`). 9 route hoãn, lý do nằm trong bộ sinh và bộ
+  sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
+  parse, limiter theo IP).
+- Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch; domain và kịch bản viết tay đang làm.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
