@@ -32,6 +32,8 @@ func All() []Route {
 		groupHeatmap(),
 		postMeetingPoint(),
 		socialMap(),
+		listFriendRequests(),
+		listFriends(),
 	}
 }
 

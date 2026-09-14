@@ -49,6 +49,8 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
   parse, limiter theo IP).
 - Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch; domain và kịch bản viết tay đang làm.
+- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
+  `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship).
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
