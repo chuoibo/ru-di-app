@@ -233,6 +233,19 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="7d692291339c065c",
         why="",
     ),
+    # --- test.yml: parity (ADR-0029) --------------------------------------
+    "test.yml::parity::Harness unit tests": Covered(
+        kind=GATE_KIND,
+        stages=("parity",),
+        body_sha="a8496b1836c1e6e4",
+        why="",
+    ),
+    "test.yml::parity::Canary and transparency run": Covered(
+        kind=GATE_KIND,
+        stages=("parity",),
+        body_sha="16b2ef469905cdf3",
+        why="",
+    ),
     # --- test.yml: core (ADR-0029) ----------------------------------------
     "test.yml::core::Install": Covered(
         kind=SETUP_KIND,
@@ -252,10 +265,22 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="a8496b1836c1e6e4",
         why="",
     ),
+    "test.yml::core::Real-PostgreSQL tests on a disposable database": Covered(
+        kind=GATE_KIND,
+        stages=("go-postgres",),
+        body_sha="e9f9152379fb882b",
+        why="",
+    ),
     "test.yml::core::Route manifest matches the app and the binary": Covered(
         kind=GATE_KIND,
         stages=("ownership",),
         body_sha="9e90b526b63fd631",
+        why="",
+    ),
+    "test.yml::core::Python changes do not reach routes Go already serves": Covered(
+        kind=GATE_KIND,
+        stages=("python-touch",),
+        body_sha="9123ca8edcd742ae",
         why="",
     ),
     # --- test.yml: screens ------------------------------------------------

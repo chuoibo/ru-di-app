@@ -40,7 +40,7 @@ DC = $(COMPOSE) -p $(PROJECT)
 WAIT_TIMEOUT ?= 300
 
 .DEFAULT_GOAL := help
-.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb
+.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres
 
 # `demo` phải gọi đúng bộ container mà `up` vừa dựng. Trên nhánh này biến đó là
 # $(COMPOSE); PR #60 (đang mở, cùng lane) đổi nó thành $(DC) = compose kèm
@@ -125,6 +125,19 @@ test-db: ## Chạy tầng PostgreSQL thật trên database dùng một lần —
 # lane nào — nên không cần `make up` trước, và chạy song song được với người khác.
 e2e: ## Chạy lát cắt dọc qua src/api.ts trên API + database dùng một lần
 	@scripts/e2e_slice.sh
+
+parity: ## Bộ so parity (ADR-0029): test harness, canary và lượt trong suốt qua core trên hai stack cô lập
+	@scripts/gate.sh parity
+
+parity-up: ## Dựng hai stack cô lập để so tay — ENV=<file env> bắt buộc, AUTH=dev hoặc prod
+	@test -n "$(ENV)" || { echo "cần ENV=<đường file env>, ví dụ ENV=/tmp/parity.env" >&2; exit 2; }
+	@scripts/parity_stacks.sh up --auth $(or $(AUTH),dev) --env "$(ENV)"
+
+parity-down: ## Tắt hai stack đã dựng bằng parity-up — ENV=<file env>
+	@scripts/parity_stacks.sh down --env "$(ENV)"
+
+go-postgres: ## Test Postgres thật của services/core trên database dùng một lần (bỏ qua là hỏng)
+	@scripts/go_postgres_tier.sh
 
 up: ## Dựng ảnh, chạy migration, bật API, seed dữ liệu mẫu, rồi tự kiểm
 	@# Trước `docker build`, không phải sau: build mất vài phút, và một cảnh

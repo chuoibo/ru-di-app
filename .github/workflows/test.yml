@@ -251,11 +251,59 @@ jobs:
         working-directory: services/core
         run: go test -count=1 ./...
 
+      - name: Real-PostgreSQL tests on a disposable database
+        # Builds the API image to migrate the schema with Alembic, then runs
+        # `go test -tags postgres`; a skip or a missing sentinel fails.
+        run: scripts/go_postgres_tier.sh
+
       - name: Route manifest matches the app and the binary
         # Selftest first: the gate must be seen red on each failure it exists for.
         run: |
           python3 scripts/check_route_ownership.py --selftest
           python3 scripts/check_route_ownership.py
+
+      - name: Python changes do not reach routes Go already serves
+        # The checkout is shallow; the gate needs main to know what changed.
+        run: |
+          git fetch --no-tags --depth=200 origin main:refs/remotes/origin/main
+          python3 scripts/check_go_owned_python_touch.py --selftest
+          python3 scripts/check_go_owned_python_touch.py --base origin/main
+
+  # ADR-0029: the parity harness. Same commands as the `parity` stage of
+  # scripts/gate.sh.
+  parity:
+    name: parity harness on two isolated stacks
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: parity/go.mod
+
+      - name: Harness unit tests
+        working-directory: parity
+        run: go test -count=1 ./...
+
+      - name: Canary and transparency run
+        # `&&` inside the subshell: on the left of `||` errexit is off, and a
+        # failed canary followed by a passing run would otherwise read green.
+        run: |
+          env_file="$(mktemp)"
+          scripts/parity_stacks.sh up --auth dev --env "$env_file"
+          . "$env_file"
+          status=0
+          (
+            cd parity &&
+              go run ./cmd/parity lint scenarios &&
+              go run ./cmd/parity canary --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" scenarios &&
+              go run ./cmd/parity run --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+                --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
+              go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"
+          ) || status=1
+          scripts/parity_stacks.sh down --env "$env_file"
+          exit "$status"
 
   screens:
     name: every screen is rendered by something

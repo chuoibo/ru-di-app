@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker postgres e2e)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres e2e)
 
 stage_help() {
   case "$1" in
@@ -85,6 +85,7 @@ stage_help() {
     screens)   echo "every screen under apps/mobile/src/screens is rendered by something the entry point reaches" ;;
     cors)      echo "every header and method apps/mobile sends survives the CORS preflight (test.yml: contract)" ;;
     ownership) echo "route manifest matches the Python app and the Go binary; shared limiters have one owner (ADR-0029)" ;;
+    python-touch) echo "no Python change on this branch reaches a route Go already serves (ADR-0029 §2.9)" ;;
     go-vet)    echo "gofmt -l and go vet on services/core, the Go front door (ADR-0029)" ;;
     go-test)   echo "go test ./... on services/core: config, transparent proxy, route manifest (ADR-0029)" ;;
     api)       echo "pytest services/api/tests tests (test.yml: api)" ;;
@@ -96,7 +97,9 @@ stage_help() {
     mobile)    echo "tsc, npm test with MOBILE_REQUIRE_WEB_A11Y=1, expo export --platform all (test.yml: mobile)" ;;
     mobile-native) echo "lái .maestro trên máy ảo Android thật qua Expo Go -- target sẽ ship, không phải react-native-web (test.yml: mobile-native)" ;;
     docker)    echo "api and core images pinned, build, non-root, api has no dev tooling, core no shell, both healthy (test.yml: docker)" ;;
+    parity)    echo "harness unit tests; two isolated stacks from the API image; canary catches every exercised damage; W0 scenarios equal through core (ADR-0029)" ;;
     postgres)  echo "every live case -- tests/postgres AND tests/qa -- against a real PostgreSQL it provisions itself (postgres-repository.yml)" ;;
+    go-postgres) echo "Go core tests on a disposable PostgreSQL migrated by Alembic; a skip or a missing sentinel is a failure (ADR-0029)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
   esac
 }
@@ -420,6 +423,13 @@ do_ownership() {
   python3 scripts/check_route_ownership.py
 }
 
+do_python-touch() {
+  python3 scripts/check_go_owned_python_touch.py --selftest || return 1
+  local base
+  base="$(guard_range_base)"
+  python3 scripts/check_go_owned_python_touch.py --base "${base:-origin/main}"
+}
+
 do_go-vet() {
   local unformatted
   unformatted="$(cd services/core && gofmt -l .)" || return 1
@@ -432,6 +442,39 @@ do_go-vet() {
 }
 
 do_go-test() { ( cd services/core && go test -count=1 ./... ); }
+
+do_go-postgres() { scripts/go_postgres_tier.sh; }
+
+do_parity() {
+  ( cd parity && go test -count=1 ./... ) || return 1
+  local env_file rc=0
+  env_file="$(mktemp)"
+  scripts/parity_stacks.sh up --auth dev --env "$env_file" || { rm -f "$env_file"; return 1; }
+  # shellcheck disable=SC1090
+  . "$env_file"
+  # `&&`, not separate lines: inside a subshell on the left of `||`, errexit
+  # is off, and a failed canary followed by a passing run would read green.
+  (
+    cd parity &&
+      go run ./cmd/parity lint scenarios &&
+      go run ./cmd/parity canary --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" scenarios &&
+      go run ./cmd/parity run --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+        --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
+      go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"
+  ) || rc=1
+  if [ "$rc" -ne 0 ]; then
+    # The containers are removed on teardown; keep their last words.
+    local container
+    for container in $PARITY_CONTAINERS; do
+      case "$container" in
+        *-api) echo "--- log cuối của $container"; docker logs --tail 30 "$container" 2>&1 ;;
+      esac
+    done
+  fi
+  scripts/parity_stacks.sh down --env "$env_file" >/dev/null || true
+  rm -f "$env_file"
+  return "$rc"
+}
 
 do_api() { python3 -m pytest services/api/tests tests -q; }
 
@@ -707,6 +750,22 @@ check_prereq() {
       # honest answer is a skip with a reason, and --strict makes it loud.
       [ "$(git rev-list --count "$base"..HEAD)" -gt 0 ] || {
         echo "nhánh không thêm commit nào trên origin/main -- không có gì để quét"; return 1; } ;;
+    go-postgres)
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/go.mod ] || return 2
+      have docker && have go || { echo "cần docker và go"; return 1; }
+      docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
+    parity)
+      # ADR-0029. The harness needs docker for the stacks and go for itself;
+      # missing either is a skip, and --strict makes it a failure.
+      [ -d parity ] || { echo "parity/ không có trên nhánh này"; return 1; }
+      [ -f parity/go.mod ] || return 2
+      have docker && have go && have curl || { echo "cần docker, go và curl"; return 1; }
+      docker info >/dev/null 2>&1 || { echo "docker daemon không trả lời"; return 1; } ;;
+    python-touch)
+      [ -d services/core ] || { echo "services/core không có trên nhánh này"; return 1; }
+      [ -f services/core/ownership/routes.json ] || return 2
+      git rev-parse --verify origin/main >/dev/null 2>&1 || { echo "không có origin/main để so"; return 1; } ;;
     ownership|go-vet|go-test)
       # ADR-0029. Absent services/core means the branch predates the Go front
       # door, and skipping says so. Present without go.mod is a defect: the
@@ -877,6 +936,9 @@ broken_why() {
     mobile-native) echo "apps/mobile có mặt nhưng thiếu .maestro -- xoá bảng flow không được biến chặng này thành xanh" ;;
     e2e) echo "apps/mobile có mặt nhưng thiếu tests/e2e/vertical-slice.test.mjs -- từ chối bỏ qua" ;;
     ownership|go-vet|go-test) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
+    python-touch) echo "services/core có mặt nhưng thiếu ownership/routes.json -- từ chối bỏ qua" ;;
+    parity) echo "parity/ có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
+    go-postgres) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     demo-watch) echo "thiếu scripts/demo_watch.py -- xoá canh gác không được biến chặng này thành xanh" ;;
     hero-walk) echo "thiếu scripts/hero_walk.sh -- xoá bài đi bộ không được biến chặng này thành xanh" ;;
     *) echo "thiếu file mà chặng này cần -- từ chối bỏ qua" ;;

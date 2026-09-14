@@ -69,7 +69,9 @@ cmd_up() {
   env_file="${env_file:-$work/stacks.env}"
 
   if [ -z "$image" ]; then
-    image="mobile-parity-api:$(git rev-parse --short HEAD)"
+    # Commit plus a hash of this checkout's path: two worktrees at one commit
+    # with different uncommitted Python must not overwrite each other's tag.
+    image="mobile-parity-api:$(git rev-parse --short HEAD)-$(printf '%s' "$REPO_ROOT" | cksum | cut -d' ' -f1)"
     echo "--- dựng ảnh Python từ cây này: $image"
     ( cd services/api && docker build -q -t "$image" . ) >/dev/null
   fi
@@ -117,6 +119,7 @@ cmd_up() {
       -e MOBILE_PERSON_ID_KEY="$id_key" \
       -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 \
       -e MOBILE_MEDIA_ROOT=/tmp/parity-media -e TZ=UTC \
+      -e PYTHONUNBUFFERED=1 \
       "$image" uvicorn app.api.main:app --host 127.0.0.1 --port "$api_port" >/dev/null
     containers+=("$api_name")
     wait_http "http://127.0.0.1:$api_port/healthz" "$role API"
