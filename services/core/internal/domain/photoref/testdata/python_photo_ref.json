@@ -1,0 +1,1000 @@
+{
+ "generator": "scripts/render_domain_w2_goldens.py",
+ "module": "app.domain.photo_ref",
+ "mode": "photo_ref",
+ "python": "3.12.14",
+ "seed": 41,
+ "constants": {
+  "owner_context": "context",
+  "owner_person": "person",
+  "names": [
+   "OWNER_CONTEXT",
+   "OWNER_PERSON",
+   "PhotoRef",
+   "PhotoUrlError",
+   "context_photo_url",
+   "parse_photo_url",
+   "person_photo_url"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/0",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/0",
+   "args": {
+    "image_url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/0",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/1",
+   "args": {
+    "image_url": "$sp:/peopl|e/A1A1|A1A1-B|1B1-4C|1C-8D1|D-E1E1|E1E1E1|E1/pho|tos/a1|a1a1a1|-b1b1-|4c1c-8|d1d-e1|e1e1e1|e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/1",
+   "args": {
+    "image_url": "$sp:/conte|xts/A1|A1A1A1|-B1B1-|4C1C-8|D1D-E1|E1E1E1|E1E1/p|hotos/|a1a1a1|a1-b1b|1-4c1c|-8d1d-|e1e1e1|e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/1",
+   "args": {
+    "image_url": "$sp:/peopl|e/a1a1|a1a1-b|1b1-4c|1c-8d1|d-e1e1|e1e1e1|e1/pho|tos/A1|A1A1A1|-B1B1-|4C1C-8|D1D-E1|E1E1E1|E1E1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/2",
+   "args": {
+    "image_url": "/people/a1a1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/2",
+   "args": {
+    "image_url": "/contexts/a1a1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/2",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1b1b14c1c8d1de1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/3",
+   "args": {
+    "image_url": "/people/{a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1}/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/3",
+   "args": {
+    "image_url": "/contexts/{a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1}/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/3",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/{a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1}"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/4",
+   "args": {
+    "image_url": "/people/urn:uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/4",
+   "args": {
+    "image_url": "/contexts/urn:uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/4",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/urn:uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/5",
+   "args": {
+    "image_url": "/people/uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/5",
+   "args": {
+    "image_url": "/contexts/uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/5",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/uuid:a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/6",
+   "args": {
+    "image_url": "/people/0xa1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/6",
+   "args": {
+    "image_url": "/contexts/0xa1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/6",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/0xa1a1a1b1b14c1c8d1de1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/7",
+   "args": {
+    "image_url": "/people/ 1a1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/7",
+   "args": {
+    "image_url": "/contexts/ 1a1a1a1b1b14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/7",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/ 1a1a1a1b1b14c1c8d1de1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/8",
+   "args": {
+    "image_url": "/people/a1a1a1a1b1_14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/8",
+   "args": {
+    "image_url": "/contexts/a1a1a1a1b1_14c1c8d1de1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/8",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1b1_14c1c8d1de1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/9",
+   "args": {
+    "image_url": "/people/a\u0661a\u0661a\u0661a\u0661-b\u0661b\u0661-\u0664c\u0661c-\u0668d\u0661d-e\u0661e\u0661e\u0661e\u0661e\u0661e\u0661/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/9",
+   "args": {
+    "image_url": "/contexts/a\u0661a\u0661a\u0661a\u0661-b\u0661b\u0661-\u0664c\u0661c-\u0668d\u0661d-e\u0661e\u0661e\u0661e\u0661e\u0661e\u0661/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "context",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/9",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a\u0661a\u0661a\u0661a\u0661-b\u0661b\u0661-\u0664c\u0661c-\u0668d\u0661d-e\u0661e\u0661e\u0661e\u0661e\u0661e\u0661"
+   },
+   "result": {
+    "ok": {
+     "owner_kind": "person",
+     "owner_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/10",
+   "args": {
+    "image_url": "/people/not-a-uuid/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/10",
+   "args": {
+    "image_url": "/contexts/not-a-uuid/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/10",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/not-a-uuid"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/11",
+   "args": {
+    "image_url": "/people//photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/11",
+   "args": {
+    "image_url": "/contexts//photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/11",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/people/12",
+   "args": {
+    "image_url": "/people/\ud83d\ude00/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_id/contexts/12",
+   "args": {
+    "image_url": "/contexts/\ud83d\ude00/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "photo_id/12",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/\ud83d\ude00"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/0",
+   "args": {
+    "image_url": "$sp:/Peopl|e/a1a1|a1a1-b|1b1-4c|1c-8d1|d-e1e1|e1e1e1|e1/pho|tos/a1|a1a1a1|-b1b1-|4c1c-8|d1d-e1|e1e1e1|e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/1",
+   "args": {
+    "image_url": "/person/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/2",
+   "args": {
+    "image_url": "/context/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/3",
+   "args": {
+    "image_url": "/groups/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/4",
+   "args": {
+    "image_url": "/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/5",
+   "args": {
+    "image_url": "//a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/6",
+   "args": {
+    "image_url": "/ people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "owner_word/7",
+   "args": {
+    "image_url": "/people /a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/0",
+   "args": {
+    "image_url": ""
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/1",
+   "args": {
+    "image_url": "/"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/2",
+   "args": {
+    "image_url": "//"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/3",
+   "args": {
+    "image_url": "people"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/4",
+   "args": {
+    "image_url": "people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/5",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/6",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/7",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photo/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/8",
+   "args": {
+    "image_url": "$sp:/peopl|e/a1a1|a1a1-b|1b1-4c|1c-8d1|d-e1e1|e1e1e1|e1/Pho|tos/a1|a1a1a1|-b1b1-|4c1c-8|d1d-e1|e1e1e1|e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/9",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1?size=large"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/10",
+   "args": {
+    "image_url": "/people/../photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/11",
+   "args": {
+    "image_url": "//people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/12",
+   "args": {
+    "image_url": "https://host/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/13",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/extra"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/14",
+   "args": {
+    "image_url": " /people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "parse_photo_url",
+   "name": "shape/15",
+   "args": {
+    "image_url": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1\\photos\\a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "raised": {
+     "type": "PhotoUrlError",
+     "message": "MALFORMED",
+     "code": "MALFORMED"
+    }
+   }
+  },
+  {
+   "fn": "person_photo_url",
+   "name": "person_photo_url/0",
+   "args": {
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "/people/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   }
+  },
+  {
+   "fn": "person_photo_url",
+   "name": "person_photo_url/1",
+   "args": {
+    "person_id": "",
+    "photo_id": ""
+   },
+   "result": {
+    "ok": "/people//photos/"
+   }
+  },
+  {
+   "fn": "person_photo_url",
+   "name": "person_photo_url/2",
+   "args": {
+    "person_id": "x",
+    "photo_id": "y/z"
+   },
+   "result": {
+    "ok": "/people/x/photos/y/z"
+   }
+  },
+  {
+   "fn": "context_photo_url",
+   "name": "context_photo_url/0",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "photo_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   }
+  },
+  {
+   "fn": "context_photo_url",
+   "name": "context_photo_url/1",
+   "args": {
+    "context_id": "",
+    "photo_id": ""
+   },
+   "result": {
+    "ok": "/contexts//photos/"
+   }
+  },
+  {
+   "fn": "context_photo_url",
+   "name": "context_photo_url/2",
+   "args": {
+    "context_id": "x",
+    "photo_id": "y/z"
+   },
+   "result": {
+    "ok": "/contexts/x/photos/y/z"
+   }
+  }
+ ]
+}

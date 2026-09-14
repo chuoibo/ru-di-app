@@ -81,6 +81,7 @@ from app.api import cursors, person_identity  # noqa: E402
 from app.domain import (  # noqa: E402
     blocking,
     friendship,
+    photo_ref,
     post_audience,
     story_visibility,
     visibility,
@@ -2547,6 +2548,126 @@ def identity_fuzz() -> list[dict]:
 # Modes
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# photo_ref
+# ---------------------------------------------------------------------------
+
+PHOTO_OWNER_WORDS = ("people", "contexts")
+PHOTO_NEAR_WORDS = (
+    "People",
+    "person",
+    "context",
+    "groups",
+    "photos",
+    "",
+    " people",
+    "people ",
+)
+
+
+def photo_ref_shape(ref) -> dict:
+    return {
+        "owner_kind": ref.owner_kind,
+        "owner_id": ref.owner_id,
+        "photo_id": ref.photo_id,
+        "url": ref.url,
+    }
+
+
+def photo_ref_constants() -> dict:
+    return {
+        "owner_context": photo_ref.OWNER_CONTEXT,
+        "owner_person": photo_ref.OWNER_PERSON,
+        "names": public_names(photo_ref),
+    }
+
+
+def photo_case(name: str, url: str) -> dict:
+    return case("parse_photo_url", name, {"image_url": url}, shape=photo_ref_shape)
+
+
+def photo_ref_edges() -> list[dict]:
+    out: list[dict] = []
+    ids = (
+        GOOD_ID,
+        GOOD_ID.upper(),
+        HEX_ID,
+        "{" + GOOD_ID + "}",
+        "urn:uuid:" + GOOD_ID,
+        "uuid:" + GOOD_ID,
+        "0x" + HEX_ID[2:],
+        " " + HEX_ID[1:],
+        HEX_ID[:10] + "_" + HEX_ID[11:],
+        "".join(ARABIC_INDIC[int(c)] if c.isdigit() else c for c in GOOD_ID),
+        "not-a-uuid",
+        "",
+        GRINNING_FACE,
+    )
+    for i, some_id in enumerate(ids):
+        for word in PHOTO_OWNER_WORDS:
+            out.append(
+                photo_case(
+                    f"owner_id/{word}/{i}", f"/{word}/{some_id}/photos/{GOOD_ID}"
+                )
+            )
+        out.append(photo_case(f"photo_id/{i}", f"/people/{GOOD_ID}/photos/{some_id}"))
+    for i, word in enumerate(PHOTO_NEAR_WORDS):
+        out.append(photo_case(f"owner_word/{i}", f"/{word}/{GOOD_ID}/photos/{GOOD_ID}"))
+    shapes = (
+        "",
+        "/",
+        "//",
+        "people",
+        f"people/{GOOD_ID}/photos/{GOOD_ID}",
+        f"/people/{GOOD_ID}/photos/{GOOD_ID}/",
+        f"/people/{GOOD_ID}/photos",
+        f"/people/{GOOD_ID}/photo/{GOOD_ID}",
+        f"/people/{GOOD_ID}/Photos/{GOOD_ID}",
+        f"/people/{GOOD_ID}/photos/{GOOD_ID}?size=large",
+        f"/people/../photos/{GOOD_ID}",
+        f"//people/{GOOD_ID}/photos/{GOOD_ID}",
+        f"https://host/people/{GOOD_ID}/photos/{GOOD_ID}",
+        f"/people/{GOOD_ID}/photos/{GOOD_ID}/extra",
+        f" /people/{GOOD_ID}/photos/{GOOD_ID}",
+        f"/people/{GOOD_ID}\\photos\\{GOOD_ID}",
+    )
+    for i, url in enumerate(shapes):
+        out.append(photo_case(f"shape/{i}", url))
+    for fn, owner in (
+        ("person_photo_url", "person_id"),
+        ("context_photo_url", "context_id"),
+    ):
+        for i, (a, b) in enumerate(((GOOD_ID, GOOD_ID), ("", ""), ("x", "y/z"))):
+            out.append(case(fn, f"{fn}/{i}", {owner: a, "photo_id": b}))
+    return out
+
+
+def photo_ref_fuzz() -> list[dict]:
+    rng = random.Random(SEED * 1000 + 9)
+    out: list[dict] = []
+    for i in range(3000):
+        near = PHOTO_NEAR_WORDS + (random_text(rng),)
+        parts = [
+            "" if rng.random() < 0.92 else random_text(rng),
+            rng.choice(PHOTO_OWNER_WORDS) if rng.random() < 0.85 else rng.choice(near),
+            uuid_text(rng) if rng.random() < 0.9 else random_text(rng),
+            "photos"
+            if rng.random() < 0.9
+            else rng.choice(("photo", "Photos", "", random_text(rng))),
+            uuid_text(rng) if rng.random() < 0.9 else random_text(rng),
+        ]
+        roll = rng.random()
+        if roll < 0.04:
+            parts.append(random_text(rng))
+        elif roll < 0.08:
+            del parts[rng.randrange(len(parts))]
+        url = "/".join(parts)
+        if rng.random() < 0.1:
+            url = mutate(rng, url, UUID_MUTATIONS + ("/",))
+        out.append(photo_case(f"fuzz/{i}", url))
+    return out
+
+
 FUNCTIONS = {
     "pair_key": friendship.pair_key,
     "is_live_edge": friendship.is_live_edge,
@@ -2585,6 +2706,9 @@ FUNCTIONS = {
     "derive_phone_digest": person_identity.derive_phone_digest,
     "derive_code_digest": person_identity.derive_code_digest,
     "read_key": person_identity.read_key,
+    "parse_photo_url": photo_ref.parse_photo_url,
+    "person_photo_url": photo_ref.person_photo_url,
+    "context_photo_url": photo_ref.context_photo_url,
 }
 
 #: module -> (Go package path, module, constants, edges, fuzz, fuzz shards)
@@ -2645,6 +2769,14 @@ MODULES = {
         identity_edges,
         identity_fuzz,
         4,
+    ),
+    "photo_ref": (
+        "internal/domain/photoref",
+        photo_ref,
+        photo_ref_constants,
+        photo_ref_edges,
+        photo_ref_fuzz,
+        1,
     ),
 }
 
