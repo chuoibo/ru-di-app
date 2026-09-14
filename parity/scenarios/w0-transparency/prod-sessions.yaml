@@ -1,0 +1,52 @@
+# W0 transparency in prod mode (ADR-0014): identity is a bearer session looked
+# up by digest, and X-Actor-* headers are ignored. The harness seeds a session
+# per persona into each stack's own database before the first step.
+id: w0/prod-sessions
+routes: ["GET /people/me", "GET /sessions", "DELETE /sessions/current"]
+auth_mode: prod
+personas:
+  owner: {}
+  other: {}
+steps:
+  - id: me_with_session
+    as: owner
+    request: {method: GET, path: /people/me}
+  - id: sessions_list
+    as: owner
+    request: {method: GET, path: /sessions}
+  - id: anonymous_me
+    as: anonymous
+    request: {method: GET, path: /people/me}
+  - id: junk_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: /people/me
+      headers: {authorization: "Bearer khong-phai-token-that"}
+  - id: lowercase_scheme
+    as: anonymous
+    request:
+      method: GET
+      path: /people/me
+      headers: {authorization: "bearer {{token.other}}"}
+  - id: basic_scheme
+    as: anonymous
+    request:
+      method: GET
+      path: /people/me
+      headers: {authorization: "Basic {{token.other}}"}
+  - id: actor_headers_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: /people/me
+      headers: {x-actor-id: "{{persona.owner}}", x-actor-roles: member}
+  - id: revoke_current
+    as: other
+    request: {method: DELETE, path: /sessions/current}
+  - id: me_after_revoke
+    as: other
+    request: {method: GET, path: /people/me}
+  - id: owner_still_signed_in
+    as: owner
+    request: {method: GET, path: /sessions}

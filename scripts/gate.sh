@@ -445,22 +445,24 @@ do_go-test() { ( cd services/core && go test -count=1 ./... ); }
 
 do_go-postgres() { scripts/go_postgres_tier.sh; }
 
-do_parity() {
-  ( cd parity && go test -count=1 ./... ) || return 1
-  local env_file rc=0
+# One pair of stacks per auth mode: a scenario means something only against
+# stacks started in the mode it was written for. The raw-socket probe runs in
+# dev, where the ADR-0029 exception list was measured.
+parity_phase() {
+  local mode="$1" env_file rc=0
   env_file="$(mktemp)"
-  scripts/parity_stacks.sh up --auth dev --env "$env_file" || { rm -f "$env_file"; return 1; }
+  scripts/parity_stacks.sh up --auth "$mode" --env "$env_file" || { rm -f "$env_file"; return 1; }
   # shellcheck disable=SC1090
   . "$env_file"
   # `&&`, not separate lines: inside a subshell on the left of `||`, errexit
   # is off, and a failed canary followed by a passing run would read green.
   (
     cd parity &&
-      go run ./cmd/parity lint scenarios &&
-      go run ./cmd/parity canary --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" scenarios &&
-      go run ./cmd/parity run --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+      go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
+        --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
+      go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
         --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
-      go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"
+      { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; }
   ) || rc=1
   if [ "$rc" -ne 0 ]; then
     # The containers are removed on teardown; keep their last words.
@@ -474,6 +476,12 @@ do_parity() {
   scripts/parity_stacks.sh down --env "$env_file" >/dev/null || true
   rm -f "$env_file"
   return "$rc"
+}
+
+do_parity() {
+  ( cd parity && go test -count=1 ./... && go run ./cmd/parity lint scenarios ) || return 1
+  parity_phase dev || return 1
+  parity_phase prod
 }
 
 do_api() { python3 -m pytest services/api/tests tests -q; }

@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -97,11 +98,11 @@ func both(t *testing.T, refZone, candZone string) []StepDiff {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ref, err := Execute(context.Background(), sc, stack(t, "reference", fakeAPI(t, refZone)))
+	ref, err := Execute(context.Background(), sc, stack(t, "reference", fakeAPI(t, refZone)), "t1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	cand, err := Execute(context.Background(), sc, stack(t, "candidate", fakeAPI(t, candZone)))
+	cand, err := Execute(context.Background(), sc, stack(t, "candidate", fakeAPI(t, candZone)), "t1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,5 +145,132 @@ func TestPointer(t *testing.T) {
 	}
 	if _, err := pointer(body, "/a/missing"); err == nil {
 		t.Fatal("missing key accepted")
+	}
+}
+
+func TestSessionTokensAreDeterministicAndShapedLikeTheRealOnes(t *testing.T) {
+	a := SessionToken("w0/prod-sessions", "owner")
+	if a != SessionToken("w0/prod-sessions", "owner") {
+		t.Fatal("token not deterministic")
+	}
+	if a == SessionToken("w0/prod-sessions", "other") || a == SessionToken("w0/other", "owner") {
+		t.Fatal("tokens collide across personas or scenarios")
+	}
+	if len(a) != 43 || strings.ContainsAny(a, "+/=") {
+		t.Fatalf("token %q is not 43 base64url characters", a)
+	}
+}
+
+func TestProdPersonasSendABearerAndDevPersonasDoNot(t *testing.T) {
+	prod, err := scenario.Parse([]byte(`
+id: t/prod
+routes: ["GET /people/me"]
+auth_mode: prod
+personas: {owner: {}}
+steps:
+  - {id: me, as: owner, request: {method: GET, path: /people/me}}
+  - {id: by_hand, as: anonymous, request: {method: GET, path: /people/me, headers: {authorization: "bearer {{token.owner}}"}}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	vars := map[string]string{"persona.owner": PersonaID("t/prod", "owner"), "token.owner": SessionToken("t/prod", "owner")}
+	req, err := buildRequest(prod, prod.Steps[0], vars)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req.Header.Get("Authorization") != "Bearer "+vars["token.owner"] || req.Header.Get("X-Actor-ID") != "" {
+		t.Fatalf("prod headers = %v", req.Header)
+	}
+	byHand, err := buildRequest(prod, prod.Steps[1], vars)
+	if err != nil || byHand.Header.Get("Authorization") != "bearer "+vars["token.owner"] {
+		t.Fatalf("hand-written bearer = %v %v", byHand.Header, err)
+	}
+}
+
+func TestProdPersonasWithoutADatabaseAreASetupFailureNotADifference(t *testing.T) {
+	sc, err := scenario.Parse([]byte(`
+id: t/prod-no-db
+routes: ["GET /people/me"]
+auth_mode: prod
+personas: {owner: {}}
+steps:
+  - {id: me, as: owner, request: {method: GET, path: /people/me}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = Execute(context.Background(), sc, stack(t, "reference", fakeAPI(t, "Z")), "t1")
+	if !errors.Is(err, ErrSetup) {
+		t.Fatalf("err = %v, want ErrSetup", err)
+	}
+}
+
+func TestPersonasRefusedOnlyWhenEveryPersonaStepIs401(t *testing.T) {
+	sc, err := scenario.Parse([]byte(`
+id: t/refused
+routes: ["GET /people/me"]
+auth_mode: prod
+personas: {owner: {}}
+steps:
+  - {id: a, as: owner, request: {method: GET, path: /people/me}}
+  - {id: b, as: anonymous, request: {method: GET, path: /people/me}}
+  - {id: c, as: owner, request: {method: GET, path: /people/me}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	run := func(statuses ...int) *Run {
+		r := &Run{}
+		for _, status := range statuses {
+			r.Steps = append(r.Steps, StepResult{Raw: httpclient.Response{Status: status}})
+		}
+		return r
+	}
+	if !PersonasRefused(sc, run(401, 200, 401)) {
+		t.Fatal("every persona step 401 (anonymous 200) not reported")
+	}
+	if PersonasRefused(sc, run(401, 401, 200)) {
+		t.Fatal("one persona step answered, still reported refused")
+	}
+	anonymousOnly, err := scenario.Parse([]byte(`
+id: t/anonymous
+routes: ["GET /people/me"]
+auth_mode: prod
+steps:
+  - {id: a, as: anonymous, request: {method: GET, path: /people/me}}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if PersonasRefused(anonymousOnly, run(401)) {
+		t.Fatal("a scenario without persona steps reported refused")
+	}
+}
+
+func TestEveryRunStartsWithPeopleTheStackHasNeverSeen(t *testing.T) {
+	sc, err := scenario.Parse([]byte(script))
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := fakeAPI(t, "Z")
+	first, err := Execute(context.Background(), sc, stack(t, "reference", server), NewNonce())
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := Execute(context.Background(), sc, stack(t, "reference", server), NewNonce())
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, errA := pointer(first.Steps[0].Raw.Body, "/created_by_id")
+	b, errB := pointer(second.Steps[0].Raw.Body, "/created_by_id")
+	if errA != nil || errB != nil || a == b {
+		t.Fatalf("both runs acted as %q / %q (%v %v)", a, b, errA, errB)
+	}
+	if diffs := Diff(first, second); len(diffs) != 0 {
+		t.Fatalf("fresh personas changed the normalised transcript: %+v", diffs)
+	}
+	if _, err := Execute(context.Background(), sc, stack(t, "reference", server), ""); !errors.Is(err, ErrSetup) {
+		t.Fatalf("empty nonce: err = %v", err)
 	}
 }

@@ -55,7 +55,7 @@ Route không ném `ApiProblem` nào. Chỉ có 405 và 307 của framework.
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- Chạy `auth_mode: dev`; persona `prod` chưa có trong harness. Route không xác thực nên không đổi theo mode.
+- Chạy `auth_mode: dev`. Harness đã có persona phiên `prod` (`w0/prod-sessions`), nhưng route không xác thực nên không đổi theo mode.
 - Float: `strconv.FormatFloat(v, 'f', -1, 64)` cho kết quả giống `repr` với các giá trị hiện có. Nếu sau này có toạ độ nguyên (ví dụ `106.0`), Python ghi `106.0` còn Go ghi `106`. Canary `float-lost-point` chỉ bắt được nếu có giá trị như vậy.
 - Top-level là mảng: đừng bọc thành `{"areas": [...]}`.
 - Danh sách này và bộ kiểm `find_area` của `meet` phải cùng một nguồn; bản Go nên dùng chung một bảng cho cả hai route.

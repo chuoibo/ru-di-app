@@ -154,7 +154,7 @@ ENV
   echo
   echo "Hai stack đã lên (auth=$auth, ảnh $image)."
   echo "  env:  $env_file"
-  echo "  so:   (cd parity && go run ./cmd/parity run --reference ${api_url[ref]} --candidate http://127.0.0.1:$core_port scenarios/)"
+  echo "  so:   (cd parity && go run ./cmd/parity run --auth $auth --reference ${api_url[ref]} --candidate http://127.0.0.1:$core_port scenarios/)"
   echo "  tắt:  scripts/parity_stacks.sh down --env $env_file"
 }
 

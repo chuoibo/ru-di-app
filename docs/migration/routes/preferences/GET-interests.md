@@ -60,7 +60,7 @@ Route không ném `ApiProblem` nào. Chỉ có trả lời của framework: 405 
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- Kịch bản chạy `auth_mode: dev`; harness chưa dựng được persona `prod`. Route không xác thực, nên khác biệt ở `prod` chỉ có thể đến từ middleware.
+- Kịch bản chạy `auth_mode: dev`. Harness đã có persona phiên `prod` (kịch bản `w0/prod-sessions`, cổng chạy cả hai mode), nhưng route không xác thực nên chưa thêm kịch bản `prod`: khác biệt ở `prod` chỉ có thể đến từ middleware.
 - Không phủ: DB không kết nối được. Python vẫn mở session, nên có thể 500 khi pool cạn; một bản Go trả hằng số sẽ không 500. Nếu chọn vậy thì ghi lại là khác biệt có chủ ý.
 - Thứ tự phần tử là dữ liệu, không được sort lại. `max_vnd` phải giữ được `null` (không `omitempty`).
 - Không thoát chữ tiếng Việt thành `\uXXXX`. `encoding/json` của Go giữ UTF-8 nhưng mặc định thoát `<`, `>`, `&` (không có trong dữ liệu này, nhưng xem `POST /contexts/{context_id}/meet`).

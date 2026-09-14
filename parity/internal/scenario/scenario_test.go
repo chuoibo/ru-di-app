@@ -93,3 +93,28 @@ func TestRender(t *testing.T) {
 		t.Fatal("missing variable accepted")
 	}
 }
+
+func TestProdScenariosRefuseRolesAndKnowTokens(t *testing.T) {
+	withRoles := `
+id: t/prod-roles
+routes: ["GET /people/me"]
+auth_mode: prod
+personas: {owner: {roles: [member]}}
+steps:
+  - {id: me, as: owner, request: {method: GET, path: /people/me}}
+`
+	if _, err := Parse([]byte(withRoles)); err == nil || !strings.Contains(err.Error(), "derives roles") {
+		t.Fatalf("roles in prod accepted: %v", err)
+	}
+	devToken := `
+id: t/dev-token
+routes: ["GET /people/me"]
+auth_mode: dev
+personas: {owner: {}}
+steps:
+  - {id: me, as: anonymous, request: {method: GET, path: /people/me, headers: {authorization: "Bearer {{token.owner}}"}}}
+`
+	if _, err := Parse([]byte(devToken)); err == nil || !strings.Contains(err.Error(), "not bound") {
+		t.Fatalf("token variable accepted in dev mode: %v", err)
+	}
+}

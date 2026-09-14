@@ -150,9 +150,12 @@ func (sc *Scenario) validate() error {
 	default:
 		return fmt.Errorf("auth_mode %q must be dev or prod", sc.AuthMode)
 	}
-	for name := range sc.Personas {
+	for name, persona := range sc.Personas {
 		if !namePattern.MatchString(name) || name == Anonymous {
 			return fmt.Errorf("persona %q: names are lowercase identifiers other than %q", name, Anonymous)
+		}
+		if sc.AuthMode == "prod" && len(persona.Roles) > 0 {
+			return fmt.Errorf("persona %q: in prod mode the server derives roles from the roster; remove them", name)
 		}
 	}
 	if len(sc.Steps) == 0 {
@@ -161,6 +164,10 @@ func (sc *Scenario) validate() error {
 	known := map[string]bool{}
 	for name := range sc.Personas {
 		known["persona."+name] = true
+		if sc.AuthMode == "prod" {
+			// A prod persona's bearer token, for steps that send it by hand.
+			known["token."+name] = true
+		}
 	}
 	stepIDs := map[string]bool{}
 	for index, step := range sc.Steps {

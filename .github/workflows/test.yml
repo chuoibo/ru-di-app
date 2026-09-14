@@ -274,7 +274,7 @@ jobs:
   parity:
     name: parity harness on two isolated stacks
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -286,23 +286,29 @@ jobs:
         working-directory: parity
         run: go test -count=1 ./...
 
-      - name: Canary and transparency run
-        # `&&` inside the subshell: on the left of `||` errexit is off, and a
-        # failed canary followed by a passing run would otherwise read green.
+      - name: Canary and parity run, once per auth mode
+        # One pair of stacks per mode: a scenario means something only against
+        # stacks started in the mode it was written for. `&&` inside the
+        # subshell: on the left of `||` errexit is off, and a failed canary
+        # followed by a passing run would otherwise read green.
         run: |
-          env_file="$(mktemp)"
-          scripts/parity_stacks.sh up --auth dev --env "$env_file"
-          . "$env_file"
+          (cd parity && go run ./cmd/parity lint scenarios)
           status=0
-          (
-            cd parity &&
-              go run ./cmd/parity lint scenarios &&
-              go run ./cmd/parity canary --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" scenarios &&
-              go run ./cmd/parity run --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
-                --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
-              go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"
-          ) || status=1
-          scripts/parity_stacks.sh down --env "$env_file"
+          for mode in dev prod; do
+            env_file="$(mktemp)"
+            scripts/parity_stacks.sh up --auth "$mode" --env "$env_file"
+            . "$env_file"
+            (
+              cd parity &&
+                go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
+                  --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
+                go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+                  --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" scenarios &&
+                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; }
+            ) || status=1
+            scripts/parity_stacks.sh down --env "$env_file"
+            [ "$status" -eq 0 ] || break
+          done
           exit "$status"
 
   screens:

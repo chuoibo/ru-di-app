@@ -1,8 +1,8 @@
 // Command parity compares the Python reference with a candidate stack.
 //
 //	parity lint PATH...
-//	parity run --reference URL --candidate URL [--host H] [--json FILE] PATH...
-//	parity canary --reference URL --target URL [--host H] PATH...
+//	parity run --auth MODE --reference URL --candidate URL [--reference-dsn DSN --candidate-dsn DSN] [--host H] [--json FILE] PATH...
+//	parity canary --auth MODE --reference URL --target URL [--reference-dsn DSN --target-dsn DSN] [--host H] PATH...
 //	parity probe --reference URL --candidate URL
 //
 // Exit codes: 0 every step equal, 1 at least one difference, 2 the run could
@@ -13,6 +13,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -99,6 +100,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	jsonOut := flags.String("json", "", "write a JSON report here")
 	refDSN := flags.String("reference-dsn", "", "reference database URL; with --candidate-dsn, snapshot both after every step")
 	candDSN := flags.String("candidate-dsn", "", "candidate database URL; with --reference-dsn, snapshot both after every step")
+	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -109,6 +111,10 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	scenarios, err := scenario.LoadPaths(flags.Args()...)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if scenarios, err = filterAuth(scenarios, *authMode, stdout); err != nil {
+		fmt.Fprintln(stderr, "parity run:", err)
 		return 2
 	}
 	refClient, err := httpclient.New(*reference, *host)
@@ -143,18 +149,32 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		defer candPool.Close()
 		refDB, candDB = refPool, candPool
 	}
+	for _, side := range []struct {
+		name   string
+		client *httpclient.Client
+	}{{"reference", refClient}, {"candidate", candClient}} {
+		if err := checkAuthMode(context.Background(), side.name, side.client, *authMode); err != nil {
+			fmt.Fprintln(stderr, "INFRA", err)
+			return 2
+		}
+	}
 	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB}
 	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB}
 
 	ctx := context.Background()
 	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil}
 	for _, sc := range scenarios {
-		refRun, err := runner.Execute(ctx, sc, refStack)
+		nonce := runner.NewNonce()
+		refRun, err := runner.Execute(ctx, sc, refStack, nonce)
 		if err != nil {
 			fmt.Fprintf(stderr, "INFRA %v\n", err)
 			return 2
 		}
-		candRun, err := runner.Execute(ctx, sc, candStack)
+		if runner.PersonasRefused(sc, refRun) {
+			fmt.Fprintf(stderr, "INFRA %s: the reference answered 401 to every persona step; its sessions or actor headers were not accepted\n", sc.ID)
+			return 2
+		}
+		candRun, err := runner.Execute(ctx, sc, candStack, nonce)
 		if err != nil {
 			fmt.Fprintf(stderr, "INFRA %v\n", err)
 			return 2
@@ -224,6 +244,9 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 	reference := flags.String("reference", "", "base URL of the Python reference")
 	target := flags.String("target", "", "base URL of the isolated Python the canary proxy fronts")
 	host := flags.String("host", "parity.test", "Host header sent to both stacks")
+	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
+	refDSN := flags.String("reference-dsn", "", "reference database URL, used only to seed prod-mode sessions")
+	targetDSN := flags.String("target-dsn", "", "target database URL, used only to seed prod-mode sessions")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -236,6 +259,10 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
+	if scenarios, err = filterAuth(scenarios, *authMode, stdout); err != nil {
+		fmt.Fprintln(stderr, "parity canary:", err)
+		return 2
+	}
 	targetURL, err := url.Parse(*target)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -245,6 +272,41 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if (*refDSN == "") != (*targetDSN == "") {
+		fmt.Fprintln(stderr, "parity canary: --reference-dsn and --target-dsn go together")
+		return 2
+	}
+	targetClient, err := httpclient.New(*target, *host)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	for _, side := range []struct {
+		name   string
+		client *httpclient.Client
+	}{{"reference", refClient}, {"target", targetClient}} {
+		if err := checkAuthMode(context.Background(), side.name, side.client, *authMode); err != nil {
+			fmt.Fprintln(stderr, "INFRA", err)
+			return 2
+		}
+	}
+	// Sessions only: the canary compares the wire and never snapshots.
+	var refSessions, targetSessions dbsnap.Conn
+	if *refDSN != "" {
+		refPool, err := pgxpool.New(context.Background(), *refDSN)
+		if err != nil {
+			fmt.Fprintln(stderr, "parity canary: reference database:", err)
+			return 2
+		}
+		defer refPool.Close()
+		targetPool, err := pgxpool.New(context.Background(), *targetDSN)
+		if err != nil {
+			fmt.Fprintln(stderr, "parity canary: target database:", err)
+			return 2
+		}
+		defer targetPool.Close()
+		refSessions, targetSessions = refPool, targetPool
 	}
 
 	failed := 0
@@ -265,13 +327,24 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		}
 		differences := 0
 		for _, sc := range scenarios {
-			refRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient})
+			nonce := runner.NewNonce()
+			refRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions}, nonce)
 			if err != nil {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				_ = server.Close()
 				return 2
 			}
-			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient})
+			if runner.PersonasRefused(sc, refRun) {
+				fmt.Fprintf(stderr, "INFRA %s: the reference answered 401 to every persona step; its sessions or actor headers were not accepted\n", sc.ID)
+				_ = server.Close()
+				return 2
+			}
+			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions}, nonce)
+			if errors.Is(err, runner.ErrSetup) {
+				fmt.Fprintf(stderr, "INFRA %v\n", err)
+				_ = server.Close()
+				return 2
+			}
 			if err != nil {
 				// A damaged response can break a later step's bind; that is
 				// the comparator's job to notice, so count it as caught.
@@ -354,4 +427,44 @@ func probeRun(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// filterAuth keeps the scenarios written for the mode the stacks were started
+// in. A scenario run against the other mode answers 401 or ignores its
+// headers on both sides alike, which reads as equal and proves nothing, so the
+// mode is required and the number left out is printed.
+func filterAuth(scenarios []*scenario.Scenario, mode string, stdout io.Writer) ([]*scenario.Scenario, error) {
+	if mode != "dev" && mode != "prod" {
+		return nil, fmt.Errorf("--auth %q: say which mode the stacks run in, dev or prod", mode)
+	}
+	kept := make([]*scenario.Scenario, 0, len(scenarios))
+	for _, sc := range scenarios {
+		if sc.AuthMode == mode {
+			kept = append(kept, sc)
+		}
+	}
+	fmt.Fprintf(stdout, "auth=%s: %d scenario(s) for this mode, %d left for the other\n", mode, len(kept), len(scenarios)-len(kept))
+	if len(kept) == 0 {
+		return nil, fmt.Errorf("--auth %s selects no scenario", mode)
+	}
+	return kept, nil
+}
+
+// checkAuthMode asks a stack the one question whose answer depends only on its
+// auth mode (ADR-0014): GET /people/me with a well-formed X-Actor-ID and no
+// bearer. Dev trusts the header and does not answer 401; prod ignores it and
+// does. Statuses alone cannot catch the mix-up: a prod scenario run against
+// dev stacks came out equal on every step, because the session routes read
+// the bearer in both modes while every other step was 401 on both sides.
+func checkAuthMode(ctx context.Context, name string, client *httpclient.Client, mode string) error {
+	header := http.Header{}
+	header.Set("X-Actor-ID", runner.PersonaID("parity/auth-mode", "sentinel"))
+	resp, err := client.Do(ctx, httpclient.Request{Method: http.MethodGet, Path: "/people/me", Header: header})
+	if err != nil {
+		return fmt.Errorf("%s: auth mode check: %w", name, err)
+	}
+	if (resp.Status == http.StatusUnauthorized) != (mode == "prod") {
+		return fmt.Errorf("%s answered GET /people/me with only X-Actor-ID as %d, so it is not running auth=%s", name, resp.Status, mode)
+	}
+	return nil
 }

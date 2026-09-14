@@ -8,6 +8,13 @@
 // zone was written. Go writing "+00:00" where Python wrote "Z", or milliseconds
 // where Python wrote microseconds, therefore still differs after
 // normalisation. Numbers and ordinary text are never replaced.
+//
+// A 64-character lowercase hex digest the scenario did not name (a request
+// fingerprint, a stored token digest) becomes <digest#n> by first appearance.
+// A hash over a request that carries a generated id differs between stacks by
+// construction; what still has to match is which rows and answers share one.
+// That a Go digest equals Python's value is the business of the package's own
+// golden tests and of cross-implementation replay, not of this comparison.
 package normalize
 
 import (
@@ -22,6 +29,10 @@ import (
 // unhyphenated id stays a literal, so a formatting change still shows.
 var uuid4 = regexp.MustCompile(`\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b`)
 
+// hexRun finds maximal runs of lowercase hex; only runs of exactly 64 are
+// digests, so a longer or shorter run, or uppercase hex, stays literal.
+var hexRun = regexp.MustCompile(`[0-9a-f]{64,}`)
+
 // Broad on purpose: a malformed-but-close timestamp is still bound, and its
 // shape suffix records exactly how it was malformed.
 var timestamp = regexp.MustCompile(`\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})?`)
@@ -32,6 +43,7 @@ type Binder struct {
 	named    map[string]string // literal -> placeholder, bound explicitly
 	namedOrd []string          // longest first, so a token never shadows a longer one
 	uuids    map[string]int    // literal -> first-appearance number
+	digests  map[string]int    // literal -> first-appearance number
 	instants map[string]time.Time
 	ranks    map[int64]int
 	frozen   bool
@@ -42,6 +54,7 @@ func NewBinder() *Binder {
 	return &Binder{
 		named:    map[string]string{},
 		uuids:    map[string]int{},
+		digests:  map[string]int{},
 		instants: map[string]time.Time{},
 	}
 }
@@ -79,6 +92,11 @@ func (b *Binder) Observe(text string) error {
 		return fmt.Errorf("normalize: Observe after Apply")
 	}
 	text = b.replaceNamed(text)
+	for _, run := range hexRun.FindAllString(text, -1) {
+		if _, seen := b.digests[run]; len(run) == 64 && !seen {
+			b.digests[run] = len(b.digests) + 1
+		}
+	}
 	for _, id := range uuid4.FindAllString(text, -1) {
 		if _, seen := b.uuids[id]; !seen {
 			b.uuids[id] = len(b.uuids) + 1
@@ -103,6 +121,12 @@ func (b *Binder) Apply(text string) string {
 		b.freeze()
 	}
 	text = b.replaceNamed(text)
+	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
+		if n, ok := b.digests[run]; ok {
+			return fmt.Sprintf("<digest#%d>", n)
+		}
+		return run
+	})
 	text = uuid4.ReplaceAllStringFunc(text, func(id string) string {
 		if n, ok := b.uuids[id]; ok {
 			return fmt.Sprintf("<uuid#%d>", n)

@@ -140,3 +140,47 @@ func TestShape(t *testing.T) {
 		}
 	}
 }
+
+func TestDigestsAreBoundByFirstAppearanceNotByValue(t *testing.T) {
+	digest := func(c string) string { return strings.Repeat(c, 64) }
+	transcript := func(first, second string) []string {
+		return []string{
+			`{"fingerprint":"` + first + `"}`,
+			`{"fingerprint":"` + first + `","token_digest":"\\x` + second + `"}`,
+		}
+	}
+	apply := func(texts []string) []string {
+		b := NewBinder()
+		for _, text := range texts {
+			if err := b.Observe(text); err != nil {
+				t.Fatal(err)
+			}
+		}
+		out := make([]string, len(texts))
+		for i, text := range texts {
+			out[i] = b.Apply(text)
+		}
+		return out
+	}
+	ref := apply(transcript(digest("a"), digest("b")))
+	cand := apply(transcript(digest("c"), digest("d")))
+	if strings.Join(ref, "\n") != strings.Join(cand, "\n") {
+		t.Fatalf("same reuse pattern differs:\n%v\n%v", ref, cand)
+	}
+	if !strings.Contains(ref[1], `"<digest#1>"`) || !strings.Contains(ref[1], `\\x<digest#2>`) {
+		t.Fatalf("not bound: %v", ref)
+	}
+
+	// A different reuse pattern still shows: the candidate stored a new
+	// digest where the reference reused the first one.
+	broken := apply([]string{`{"fingerprint":"` + digest("c") + `"}`, `{"fingerprint":"` + digest("e") + `"}`})
+	if ref[0] != broken[0] || strings.Contains(broken[1], "<digest#1>") {
+		t.Fatalf("reuse pattern difference hidden: %v vs %v", ref, broken)
+	}
+
+	for _, literal := range []string{strings.Repeat("a", 63), strings.Repeat("a", 65), strings.Repeat("A", 64)} {
+		if got := apply([]string{literal})[0]; got != literal {
+			t.Fatalf("%d-character run %q bound as %q", len(literal), literal[:4], got)
+		}
+	}
+}

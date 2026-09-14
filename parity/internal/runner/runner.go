@@ -7,16 +7,21 @@ package runner
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 
 	"mobile/parity/internal/compare"
 	"mobile/parity/internal/dbsnap"
@@ -40,7 +45,14 @@ type Stack struct {
 	// snapshot, so the comparison covers what was written, not only what was
 	// answered. nil compares the wire alone.
 	DB dbsnap.Conn
+	// Sessions is where prod-mode personas get their sessions when DB is nil:
+	// the canary compares the wire only, yet its personas must still sign in.
+	Sessions dbsnap.Conn
 }
+
+// ErrSetup marks a failure before any step ran. It is never a difference: a
+// canary that counted a failed seed as "damage caught" would be green blind.
+var ErrSetup = errors.New("parity setup")
 
 // StepResult is one step's response, raw and normalised.
 type StepResult struct {
@@ -61,7 +73,17 @@ type Run struct {
 
 // Execute runs every step of sc against stack. A transport failure is an
 // infrastructure error, never a difference.
-func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack) (*Run, error) {
+//
+// nonce is shared by both stacks of one comparison and fresh for every
+// comparison. Persona ids and session tokens derive from it, so each run starts
+// with people the stack has never seen. With ids fixed per scenario, a second
+// run met the idempotency keys and rows the first had left, and the gate's
+// database lane, which runs after the canary, only ever saw "key reused".
+func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce string) (*Run, error) {
+	if nonce == "" {
+		return nil, fmt.Errorf("%w: %s: empty run nonce", ErrSetup, sc.ID)
+	}
+	scope := sc.ID + "@" + nonce
 	binder := normalize.NewBinder()
 	vars := map[string]string{}
 	personaNames := make([]string, 0, len(sc.Personas))
@@ -70,10 +92,36 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack) (*Run, err
 	}
 	sort.Strings(personaNames)
 	for _, name := range personaNames {
-		id := PersonaID(sc.ID, name)
+		id := PersonaID(scope, name)
 		vars["persona."+name] = id
 		if err := binder.Name(id, "persona:"+name); err != nil {
 			return nil, err
+		}
+	}
+
+	if sc.AuthMode == "prod" && len(personaNames) > 0 {
+		sessions := stack.DB
+		if sessions == nil {
+			sessions = stack.Sessions
+		}
+		if sessions == nil {
+			return nil, fmt.Errorf("%w: %s: prod-mode personas need each stack's database to seed sessions into", ErrSetup, sc.ID)
+		}
+		for _, name := range personaNames {
+			token := SessionToken(scope, name)
+			vars["token."+name] = token
+			if err := binder.Name(token, "token:session-"+name); err != nil {
+				return nil, err
+			}
+			digest := sha256.Sum256([]byte(token))
+			if err := binder.Name(hex.EncodeToString(digest[:]), "token-digest:session-"+name); err != nil {
+				return nil, err
+			}
+		}
+		// Seeded before the baseline snapshot, so the seed is never counted as
+		// something a step wrote.
+		if err := seedSessions(ctx, scope, sessions, personaNames); err != nil {
+			return nil, fmt.Errorf("%w: %s on %s: seeding sessions: %v", ErrSetup, sc.ID, stack.Name, err)
 		}
 	}
 
@@ -161,7 +209,7 @@ func buildRequest(sc *scenario.Scenario, step scenario.Step, vars map[string]str
 		header.Set("X-Actor-Roles", strings.Join(roles, ","))
 	}
 	if sc.AuthMode == "prod" && step.As != scenario.Anonymous {
-		return httpclient.Request{}, fmt.Errorf("prod-mode personas need seeded sessions, which this harness does not create yet")
+		header.Set("Authorization", "Bearer "+vars["token."+step.As])
 	}
 	for name, value := range step.Request.Headers {
 		rendered, err := scenario.Render(value, vars)
@@ -296,7 +344,27 @@ func Diff(reference, candidate *Run) []StepDiff {
 	return out
 }
 
-// PersonaID is a name-based (version 5) UUID for a scenario's persona.
+// PersonasRefused reports whether every step sent as a persona was answered
+// 401. Such a transcript is equal on both sides and proves nothing: the seeded
+// sessions went to another database, or dev personas met prod stacks. It does
+// not catch prod personas on dev stacks, where the session routes still read
+// the bearer; the CLI's auth mode check covers that.
+func PersonasRefused(sc *scenario.Scenario, run *Run) bool {
+	persona := 0
+	for i, step := range sc.Steps {
+		if step.As == scenario.Anonymous || i >= len(run.Steps) {
+			continue
+		}
+		persona++
+		if run.Steps[i].Raw.Status != 401 {
+			return false
+		}
+	}
+	return persona > 0
+}
+
+// PersonaID is a name-based (version 5) UUID for a persona within a run scope
+// (scenario id and run nonce).
 func PersonaID(scenarioID, persona string) string {
 	h := sha1.New()
 	h.Write(personaNamespace[:])
@@ -307,4 +375,52 @@ func PersonaID(scenarioID, persona string) string {
 	u[6] = (u[6] & 0x0f) | 0x50
 	u[8] = (u[8] & 0x3f) | 0x80
 	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:16])
+}
+
+// SessionToken is a prod persona's bearer token: deterministic per run scope and
+// persona, 43 base64url characters like secrets.token_urlsafe(32). It opens a
+// session only in a disposable parity database.
+func SessionToken(scenarioID, persona string) string {
+	sum := sha256.Sum256([]byte("parity-session:" + scenarioID + "/" + persona))
+	return base64.RawURLEncoding.EncodeToString(sum[:])
+}
+
+// seedSessions gives every prod persona a people row and a live session,
+// written the same way into each stack's database. issued_via is 'genesis',
+// the one door that needs no invite row. A rerun (the canary, then the run)
+// puts the session back to live, so a step that revoked it last time does not
+// quietly turn this run's persona steps into 401s on both sides.
+func seedSessions(ctx context.Context, scope string, conn dbsnap.Conn, names []string) error {
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	for _, name := range names {
+		person := PersonaID(scope, name)
+		digest := sha256.Sum256([]byte(SessionToken(scope, name)))
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO people (id, display_name) VALUES ($1, $2)
+			 ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, deleted_at = NULL`,
+			person, name); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO account_sessions (id, person_id, token_digest, issued_via, expires_at)
+			 VALUES ($1, $2, $3, 'genesis', now() + interval '30 days')
+			 ON CONFLICT (id) DO UPDATE SET revoked_at = NULL, expires_at = EXCLUDED.expires_at`,
+			PersonaID(scope, name+"/session"), person, digest[:]); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
+// NewNonce returns a fresh run nonce for Execute.
+func NewNonce() string {
+	var b [6]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(b[:])
 }
