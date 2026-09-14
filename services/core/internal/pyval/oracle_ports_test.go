@@ -35,7 +35,7 @@ func registerAppPorts(reg *Registry) {
 			return pyjson.String(stripped), nil
 		}
 	}
-	stripOrNone := func(_ *Call, v Value) (Value, error) {
+	stripOrNoneTest := func(_ *Call, v Value) (Value, error) {
 		s, ok := v.(pyjson.String)
 		if !ok {
 			return pyjson.Null{}, nil
@@ -58,10 +58,7 @@ func registerAppPorts(reg *Registry) {
 	reg.Register("app.api.routes.places.PlaceSearchRequest._reject_blank", blank("query must not be blank", false))
 	reg.Register(schemas+"MeetingPoint._not_blank", blank("point label must not be blank", false))
 	reg.Register(schemas+"OutingStopInput._strip_label", blank("label must not be blank", false))
-	reg.Register(schemas+"VoteOptionInput._strip_label", blank("label must not be blank", false))
-	reg.Register(schemas+"VoteCreateRequest._strip_question", blank("question must not be blank", false))
-	reg.Register(schemas+"OutingStopInput._strip_place_name", stripOrNone)
-	reg.Register(schemas+"VoteOptionInput._strip_place_name", stripOrNone)
+	reg.Register(schemas+"OutingStopInput._strip_place_name", stripOrNoneTest)
 
 	field := func(v Value, name string) Value {
 		m, ok := v.(*Model)

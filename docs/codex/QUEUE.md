@@ -53,7 +53,10 @@ Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (
   visibility, storyvisibility, postaudience, vote, cursors, identity; golden từ Python thật 0 lệch). Kịch bản viết
   tay đang làm.
 - `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
-  `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship).
+  `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship);
+  `POST /contexts/{context_id}/votes`, `GET /contexts/{context_id}/votes`, `GET /votes/{vote_id}`,
+  `POST /votes/{vote_id}/ballots`, `POST /votes/{vote_id}/close` (validator strip của phiếu giờ có bản production
+  trong `internal/pyval/ports.go`).
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.

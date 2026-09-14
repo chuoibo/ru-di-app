@@ -34,6 +34,11 @@ func All() []Route {
 		socialMap(),
 		listFriendRequests(),
 		listFriends(),
+		createVote(),
+		listContextVotes(),
+		getVoteResults(),
+		castVoteBallot(),
+		closeVote(),
 	}
 }
 

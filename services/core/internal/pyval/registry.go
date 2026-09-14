@@ -37,7 +37,8 @@ type Registry struct {
 	funcs map[string]ValidatorFunc
 }
 
-// NewRegistry returns a registry holding pydantic's own internal validators.
+// NewRegistry returns a registry holding pydantic's own internal validators
+// and the ports of the app validators on routes Go serves.
 func NewRegistry() *Registry {
 	r := &Registry{funcs: map[string]ValidatorFunc{}}
 	for name, typ := range map[string]string{
@@ -48,6 +49,7 @@ func NewRegistry() *Registry {
 	} {
 		r.Register("pydantic._internal._validators."+name, compareValidator(typ))
 	}
+	registerServedValidators(r)
 	return r
 }
 
