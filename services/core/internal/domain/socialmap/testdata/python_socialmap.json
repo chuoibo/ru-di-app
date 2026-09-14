@@ -1,0 +1,509 @@
+{
+ "mode": "socialmap",
+ "host": {
+  "machine": "x86_64",
+  "libc": "glibc 2.41",
+  "python": "3.12.14",
+  "fma_avx2": true
+ },
+ "constants": {
+  "private_checkin_fields": [
+   "author_id",
+   "created_at",
+   "caption"
+  ],
+  "visited_keys": [
+   "place_id",
+   "place_name",
+   "lat",
+   "lng",
+   "visit_count"
+  ],
+  "trending_keys": [
+   "place_id",
+   "place_name",
+   "lat",
+   "lng",
+   "rating",
+   "rating_count"
+  ],
+  "heatmap_keys": [
+   "id",
+   "label",
+   "lat",
+   "lng",
+   "visit_count",
+   "share_percent"
+  ]
+ },
+ "cases": {
+  "checkins": [
+   {
+    "name": "empty",
+    "checkins": [],
+    "visited": {
+     "rows": []
+    },
+    "heatmap": {
+     "rows": []
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "repeat_visits",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451"
+    ],
+    "visited": {
+     "rows": [
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|2",
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|3|100"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "count_then_id",
+    "checkins": [
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451",
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024"
+    ],
+    "visited": {
+     "rows": [
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1",
+      "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|2|66",
+      "hcm-quan-4|Qu\u1eadn 4, TP.HCM|10.759|106.705|1|33"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "photo_is_not_a_visit",
+    "checkins": [
+     "~|~|~|~"
+    ],
+    "visited": {
+     "rows": []
+    },
+    "heatmap": {
+     "rows": []
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "blank_place_id",
+    "checkins": [
+     "|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383"
+    ],
+    "visited": {
+     "rows": []
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|1|100"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "blank_name_falls_back",
+    "checkins": [
+     "p-tiem-nuong-xom-lao||11.9404|108.4383",
+     "p-lung-chung-cafe|~|11.9512|108.4451"
+    ],
+    "visited": {
+     "rows": [
+      "p-lung-chung-cafe|p-lung-chung-cafe|11.9512|108.4451|1",
+      "p-tiem-nuong-xom-lao|p-tiem-nuong-xom-lao|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|2|100"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "lat_without_lng",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|~",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|~|108.4451"
+    ],
+    "visited": {
+     "rows": []
+    },
+    "heatmap": {
+     "rows": []
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "first_snapshot_wins",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-tiem-nuong-xom-lao|Renamed|11.0|108.0"
+    ],
+    "visited": {
+     "rows": [
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|2"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|1|100"
+     ]
+    },
+    "unknown": "ok:1"
+   },
+   {
+    "name": "heatmap_buckets",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024"
+    ],
+    "visited": {
+     "rows": [
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1",
+      "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|2|66",
+      "hcm-quan-4|Qu\u1eadn 4, TP.HCM|10.759|106.705|1|33"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "hanoi_is_unknown",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-hanoi|x|21.0278|105.8342"
+    ],
+    "visited": {
+     "rows": [
+      "p-hanoi|x|21.0278|105.8342|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|1|100"
+     ]
+    },
+    "unknown": "ok:1"
+   },
+   {
+    "name": "only_unknown",
+    "checkins": [
+     "p-hanoi|x|21.0278|105.8342"
+    ],
+    "visited": {
+     "rows": [
+      "p-hanoi|x|21.0278|105.8342|1"
+     ]
+    },
+    "heatmap": {
+     "rows": []
+    },
+    "unknown": "ok:1"
+   },
+   {
+    "name": "antipode_raises",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-antipode|Far|-10.7769|-73.2991"
+    ],
+    "visited": {
+     "rows": [
+      "p-antipode|Far|-10.7769|-73.2991|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|1|100"
+     ]
+    },
+    "unknown": "ok:1"
+   },
+   {
+    "name": "nan_coordinates",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|nan|108.4383",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|inf"
+    ],
+    "visited": {
+     "rows": [
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|inf|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|nan|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "raise": "raise:ValueError:math domain error"
+    },
+    "unknown": "raise:ValueError:math domain error"
+   },
+   {
+    "name": "seven_rows",
+    "checkins": [
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451",
+     "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372",
+     "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429"
+    ],
+    "visited": {
+     "rows": [
+      "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|3",
+      "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429|1",
+      "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372|1",
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|4|57",
+      "hcm-quan-4|Qu\u1eadn 4, TP.HCM|10.759|106.705|3|42"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "tie_on_count",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451",
+     "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372",
+     "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429"
+    ],
+    "visited": {
+     "rows": [
+      "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|3",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|3",
+      "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429|1",
+      "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372|1",
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|6|66",
+      "hcm-quan-4|Qu\u1eadn 4, TP.HCM|10.759|106.705|3|33"
+     ]
+    },
+    "unknown": "ok:0"
+   },
+   {
+    "name": "catalogue",
+    "checkins": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451",
+     "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372",
+     "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429",
+     "p-dreampark|Khu vui ch\u01a1i DREAMpark|11.9601|108.4498",
+     "p-lau-ga-la-e|L\u1ea9u G\u00e0 L\u00e1 \u00c9 Tao Ng\u1ed9|11.9339|108.4287",
+     "p-nuong-ngoi-troi-thong|N\u01b0\u1edbng Ng\u00f3i Tr\u1eddi Th\u00f4ng|11.9285|108.4451",
+     "p-song-mau-workshop|S\u1ed1ng M\u00e0u Workshop|11.9478|108.4557",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024",
+     "p-the-hill-rooftop|The Hill Rooftop|10.7702|106.6944",
+     "p-ca-phe-vot-hem|C\u00e0 Ph\u00ea V\u1ee3t H\u1ebbm 330|10.7935|106.6801",
+     "p-bowling-sky|Bowling Sky Center|10.7864|106.6893"
+    ],
+    "visited": {
+     "rows": [
+      "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429|1",
+      "p-bowling-sky|Bowling Sky Center|10.7864|106.6893|1",
+      "p-ca-phe-vot-hem|C\u00e0 Ph\u00ea V\u1ee3t H\u1ebbm 330|10.7935|106.6801|1",
+      "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372|1",
+      "p-dreampark|Khu vui ch\u01a1i DREAMpark|11.9601|108.4498|1",
+      "p-lau-ga-la-e|L\u1ea9u G\u00e0 L\u00e1 \u00c9 Tao Ng\u1ed9|11.9339|108.4287|1",
+      "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|1",
+      "p-nuong-ngoi-troi-thong|N\u01b0\u1edbng Ng\u00f3i Tr\u1eddi Th\u00f4ng|11.9285|108.4451|1",
+      "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|1",
+      "p-song-mau-workshop|S\u1ed1ng M\u00e0u Workshop|11.9478|108.4557|1",
+      "p-the-hill-rooftop|The Hill Rooftop|10.7702|106.6944|1",
+      "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|1"
+     ]
+    },
+    "heatmap": {
+     "rows": [
+      "da-lat|\u0110\u00e0 L\u1ea1t|11.9429|108.4428|8|66",
+      "hcm-phu-nhuan|Ph\u00fa Nhu\u1eadn, TP.HCM|10.799|106.68|1|8",
+      "hcm-quan-1|Qu\u1eadn 1, TP.HCM|10.7769|106.7009|1|8",
+      "hcm-quan-3|Qu\u1eadn 3, TP.HCM|10.784|106.687|1|8",
+      "hcm-quan-4|Qu\u1eadn 4, TP.HCM|10.759|106.705|1|8"
+     ]
+    },
+    "unknown": "ok:0"
+   }
+  ],
+  "trending": [
+   {
+    "name": "catalogue",
+    "places": [
+     "p-tiem-nuong-xom-lao|Ti\u1ec7m N\u01b0\u1edbng X\u00f3m L\u00e0o|11.9404|108.4383|4.7|128|~",
+     "p-lung-chung-cafe|L\u01b0ng Ch\u1eebng Cafe|11.9512|108.4451|4.6|156|~",
+     "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372|4.5|112|hot",
+     "p-an-cafe-da-lat|An Cafe \u0110\u00e0 L\u1ea1t|11.9376|108.4429|4.4|98|~",
+     "p-dreampark|Khu vui ch\u01a1i DREAMpark|11.9601|108.4498|4.6|118|new",
+     "p-lau-ga-la-e|L\u1ea9u G\u00e0 L\u00e1 \u00c9 Tao Ng\u1ed9|11.9339|108.4287|4.5|204|~",
+     "p-nuong-ngoi-troi-thong|N\u01b0\u1edbng Ng\u00f3i Tr\u1eddi Th\u00f4ng|11.9285|108.4451|4.3|76|~",
+     "p-song-mau-workshop|S\u1ed1ng M\u00e0u Workshop|11.9478|108.4557|4.8|64|new",
+     "p-quan-oc-di-be|Qu\u00e1n \u1ed0c D\u00ec B\u00e9|10.7561|106.7024|4.4|311|~",
+     "p-the-hill-rooftop|The Hill Rooftop|10.7702|106.6944|4.2|89|hot",
+     "p-ca-phe-vot-hem|C\u00e0 Ph\u00ea V\u1ee3t H\u1ebbm 330|10.7935|106.6801|4.5|142|~",
+     "p-bowling-sky|Bowling Sky Center|10.7864|106.6893|4.1|57|~"
+    ],
+    "trending": {
+     "rows": [
+      "p-chill-dem-da-lat|Chill \u0110\u00eam \u0110\u00e0 L\u1ea1t|11.9435|108.4372|4.5|112",
+      "p-the-hill-rooftop|The Hill Rooftop|10.7702|106.6944|4.2|89"
+     ]
+    }
+   },
+   {
+    "name": "empty",
+    "places": [],
+    "trending": {
+     "rows": []
+    }
+   },
+   {
+    "name": "flags_and_duplicates",
+    "places": [
+     "b|B|1.0|2.0|~|~|hot",
+     "a|A|1.0|2.0|4.5|3|HOT",
+     "a|A2|1.0|2.0|4.0|0|hot",
+     "a|A3|1.5|2.5|1.0|1|hot",
+     "c|C|1.0|2.0|3.0|1|hot ",
+     "d|D|1.0|2.0|3.0|1|~",
+     "\u00e9|E|1.0|2.0|3.0|1|hot"
+    ],
+    "trending": {
+     "rows": [
+      "a|A2|1.0|2.0|4.0|0",
+      "a|A3|1.5|2.5|1.0|1",
+      "b|B|1.0|2.0|~|~",
+      "\u00e9|E|1.0|2.0|3.0|1"
+     ]
+    }
+   },
+   {
+    "name": "many_duplicate_ids",
+    "places": [
+     "same|twin-0|0.0|2.0|~|~|hot",
+     "z-38|twin-1|1.0|2.0|~|~|hot",
+     "same|twin-2|2.0|2.0|~|~|hot",
+     "z-36|twin-3|3.0|2.0|~|~|hot",
+     "same|twin-4|4.0|2.0|~|~|hot",
+     "z-34|twin-5|5.0|2.0|~|~|hot",
+     "same|twin-6|6.0|2.0|~|~|hot",
+     "z-32|twin-7|7.0|2.0|~|~|hot",
+     "same|twin-8|8.0|2.0|~|~|hot",
+     "z-30|twin-9|9.0|2.0|~|~|hot",
+     "same|twin-10|10.0|2.0|~|~|hot",
+     "z-28|twin-11|11.0|2.0|~|~|hot",
+     "same|twin-12|12.0|2.0|~|~|hot",
+     "z-26|twin-13|13.0|2.0|~|~|hot",
+     "same|twin-14|14.0|2.0|~|~|hot",
+     "z-24|twin-15|15.0|2.0|~|~|hot",
+     "same|twin-16|16.0|2.0|~|~|hot",
+     "z-22|twin-17|17.0|2.0|~|~|hot",
+     "same|twin-18|18.0|2.0|~|~|hot",
+     "z-20|twin-19|19.0|2.0|~|~|hot",
+     "same|twin-20|20.0|2.0|~|~|hot",
+     "z-18|twin-21|21.0|2.0|~|~|hot",
+     "same|twin-22|22.0|2.0|~|~|hot",
+     "z-16|twin-23|23.0|2.0|~|~|hot",
+     "same|twin-24|24.0|2.0|~|~|hot",
+     "z-14|twin-25|25.0|2.0|~|~|hot",
+     "same|twin-26|26.0|2.0|~|~|hot",
+     "z-12|twin-27|27.0|2.0|~|~|hot",
+     "same|twin-28|28.0|2.0|~|~|hot",
+     "z-10|twin-29|29.0|2.0|~|~|hot",
+     "same|twin-30|30.0|2.0|~|~|hot",
+     "z-08|twin-31|31.0|2.0|~|~|hot",
+     "same|twin-32|32.0|2.0|~|~|hot",
+     "z-06|twin-33|33.0|2.0|~|~|hot",
+     "same|twin-34|34.0|2.0|~|~|hot",
+     "z-04|twin-35|35.0|2.0|~|~|hot",
+     "same|twin-36|36.0|2.0|~|~|hot",
+     "z-02|twin-37|37.0|2.0|~|~|hot",
+     "same|twin-38|38.0|2.0|~|~|hot",
+     "z-00|twin-39|39.0|2.0|~|~|hot"
+    ],
+    "trending": {
+     "rows": [
+      "same|twin-0|0.0|2.0|~|~",
+      "same|twin-2|2.0|2.0|~|~",
+      "same|twin-4|4.0|2.0|~|~",
+      "same|twin-6|6.0|2.0|~|~",
+      "same|twin-8|8.0|2.0|~|~",
+      "same|twin-10|10.0|2.0|~|~",
+      "same|twin-12|12.0|2.0|~|~",
+      "same|twin-14|14.0|2.0|~|~",
+      "same|twin-16|16.0|2.0|~|~",
+      "same|twin-18|18.0|2.0|~|~",
+      "same|twin-20|20.0|2.0|~|~",
+      "same|twin-22|22.0|2.0|~|~",
+      "same|twin-24|24.0|2.0|~|~",
+      "same|twin-26|26.0|2.0|~|~",
+      "same|twin-28|28.0|2.0|~|~",
+      "same|twin-30|30.0|2.0|~|~",
+      "same|twin-32|32.0|2.0|~|~",
+      "same|twin-34|34.0|2.0|~|~",
+      "same|twin-36|36.0|2.0|~|~",
+      "same|twin-38|38.0|2.0|~|~",
+      "z-00|twin-39|39.0|2.0|~|~",
+      "z-02|twin-37|37.0|2.0|~|~",
+      "z-04|twin-35|35.0|2.0|~|~",
+      "z-06|twin-33|33.0|2.0|~|~",
+      "z-08|twin-31|31.0|2.0|~|~",
+      "z-10|twin-29|29.0|2.0|~|~",
+      "z-12|twin-27|27.0|2.0|~|~",
+      "z-14|twin-25|25.0|2.0|~|~",
+      "z-16|twin-23|23.0|2.0|~|~",
+      "z-18|twin-21|21.0|2.0|~|~",
+      "z-20|twin-19|19.0|2.0|~|~",
+      "z-22|twin-17|17.0|2.0|~|~",
+      "z-24|twin-15|15.0|2.0|~|~",
+      "z-26|twin-13|13.0|2.0|~|~",
+      "z-28|twin-11|11.0|2.0|~|~",
+      "z-30|twin-9|9.0|2.0|~|~",
+      "z-32|twin-7|7.0|2.0|~|~",
+      "z-34|twin-5|5.0|2.0|~|~",
+      "z-36|twin-3|3.0|2.0|~|~",
+      "z-38|twin-1|1.0|2.0|~|~"
+     ]
+    }
+   }
+  ]
+ }
+}
