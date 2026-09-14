@@ -3614,6 +3614,22 @@
         "long-number"
       ],
       "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25."
+    },
+    {
+      "path": "services/core/go.mod",
+      "sha256": "54f206c9e055ca7e018c0c024c51c5ee761447efbabdc9598a7d61983510c820",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "go.mod của cửa trước Go services/core (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian commit upstream, không phải số tài khoản. Ghim 2026-09-14 khi thêm pgx v5.7.1 (v5.11 đòi go 1.25); go 1.23 / toolchain go1.23.4 giữ nguyên."
+    },
+    {
+      "path": "services/core/go.sum",
+      "sha256": "4a03a26472c5df773653cf10ce6f08f1bbb7689138893bd0d39d0ffc67d36a28",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "Checksum Go của services/core (ADR-0029): github.com/jackc/pgx/v5 v5.7.1 và phụ thuộc gián tiếp (pgpassfile, pgservicefile, puddle/v2, golang.org/x/crypto, golang.org/x/text, golang.org/x/sync). Số dài là mốc thời gian trong pseudo-version Go module, không phải số tài khoản hay dữ liệu người tham gia. Ghim 2026-09-14; đổi phụ thuộc là đổi digest và phải review lại."
     }
   ]
 }
