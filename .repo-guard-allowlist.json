@@ -3609,11 +3609,11 @@
     },
     {
       "path": "parity/go.mod",
-      "sha256": "71137c54240d0087021a54e8acc4946986b92994bff269530e2cbd388e01c988",
+      "sha256": "621bb5526109dbe623c965bf668fd38589f690a5d123b711852b393aa37d70d8",
       "rules": [
         "long-number"
       ],
-      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25."
+      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync)."
     },
     {
       "path": "services/core/go.mod",

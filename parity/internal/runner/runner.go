@@ -8,6 +8,8 @@ package runner
 import (
 	"context"
 	"crypto/sha1"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,6 +19,7 @@ import (
 	"strings"
 
 	"mobile/parity/internal/compare"
+	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
 	"mobile/parity/internal/normalize"
 	"mobile/parity/internal/scenario"
@@ -33,6 +36,10 @@ var personaNamespace = [16]byte{0x5f, 0x0e, 0x4c, 0x2a, 0x9b, 0x1d, 0x4e, 0x7a, 
 type Stack struct {
 	Name   string
 	Client *httpclient.Client
+	// DB is the stack's own database. When set, every step is followed by a
+	// snapshot, so the comparison covers what was written, not only what was
+	// answered. nil compares the wire alone.
+	DB dbsnap.Conn
 }
 
 // StepResult is one step's response, raw and normalised.
@@ -40,6 +47,9 @@ type StepResult struct {
 	StepID string
 	Raw    httpclient.Response
 	Norm   compare.Exchange
+	// Change is what the step wrote to the stack's database; nil without a DB.
+	Change     *dbsnap.Change
+	NormChange *dbsnap.Change
 }
 
 // Run is one scenario's transcript on one stack.
@@ -68,6 +78,14 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack) (*Run, err
 	}
 
 	run := &Run{ScenarioID: sc.ID, Stack: stack.Name}
+	var prev *dbsnap.Snap
+	if stack.DB != nil {
+		snap, err := dbsnap.Snapshot(ctx, stack.DB)
+		if err != nil {
+			return nil, fmt.Errorf("%s on %s: baseline snapshot: %w", sc.ID, stack.Name, err)
+		}
+		prev = snap
+	}
 	for _, step := range sc.Steps {
 		req, err := buildRequest(sc, step, vars)
 		if err != nil {
@@ -90,7 +108,23 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack) (*Run, err
 		if err := capture(step, resp, vars, binder); err != nil {
 			return nil, fmt.Errorf("%s on %s step %s: %w", sc.ID, stack.Name, step.ID, err)
 		}
-		run.Steps = append(run.Steps, StepResult{StepID: step.ID, Raw: resp})
+		result := StepResult{StepID: step.ID, Raw: resp}
+		if stack.DB != nil {
+			next, err := dbsnap.Snapshot(ctx, stack.DB)
+			if err != nil {
+				return nil, fmt.Errorf("%s on %s step %s: snapshot: %w", sc.ID, stack.Name, step.ID, err)
+			}
+			result.Change = dbsnap.Delta(prev, next)
+			prev = next
+			// The response was observed above and the database comes after it,
+			// so an id first returned in a body keeps that body's number.
+			for _, text := range result.Change.Texts() {
+				if err := binder.Observe(text); err != nil {
+					return nil, err
+				}
+			}
+		}
+		run.Steps = append(run.Steps, result)
 	}
 	for i := range run.Steps {
 		raw := run.Steps[i].Raw
@@ -104,6 +138,9 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack) (*Run, err
 			Status: raw.Status,
 			Header: header,
 			Body:   binder.Apply(string(raw.Body)),
+		}
+		if run.Steps[i].Change != nil {
+			run.Steps[i].NormChange = run.Steps[i].Change.Normalise(binder.Apply)
 		}
 	}
 	return run, nil
@@ -179,6 +216,12 @@ func capture(step scenario.Step, resp httpclient.Response, vars map[string]strin
 			if err := binder.Name(value, "token:"+name); err != nil {
 				return err
 			}
+			// Services keep sha256(token) as bytea, which row_to_json renders as
+			// "\\x<hex>"; naming the hex keeps those rows comparable too.
+			digest := sha256.Sum256([]byte(value))
+			if err := binder.Name(hex.EncodeToString(digest[:]), "token-digest:"+name); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -222,19 +265,32 @@ func pointer(body []byte, ptr string) (string, error) {
 	}
 }
 
-// StepDiff lists the differences in one step.
+// StepDiff lists the differences in one step: on the wire and in the database.
 type StepDiff struct {
 	StepID      string
 	Differences []compare.Difference
+	Database    []dbsnap.Difference
 }
+
+// DatabaseLaneMismatch marks a step where only one stack was snapshotted. A
+// comparison that quietly skipped the database there would read as equal.
+const DatabaseLaneMismatch = "database-lane-on-one-side"
 
 // Diff compares two transcripts of the same scenario step by step.
 func Diff(reference, candidate *Run) []StepDiff {
 	var out []StepDiff
 	for i := range reference.Steps {
-		diffs := compare.Step(reference.Steps[i].Norm, candidate.Steps[i].Norm)
-		if len(diffs) > 0 {
-			out = append(out, StepDiff{StepID: reference.Steps[i].StepID, Differences: diffs})
+		ref, cand := reference.Steps[i], candidate.Steps[i]
+		diffs := compare.Step(ref.Norm, cand.Norm)
+		var database []dbsnap.Difference
+		switch {
+		case ref.NormChange != nil && cand.NormChange != nil:
+			database = dbsnap.Compare(ref.NormChange, cand.NormChange)
+		case (ref.NormChange == nil) != (cand.NormChange == nil):
+			database = []dbsnap.Difference{{Kind: DatabaseLaneMismatch}}
+		}
+		if len(diffs) > 0 || len(database) > 0 {
+			out = append(out, StepDiff{StepID: ref.StepID, Differences: diffs, Database: database})
 		}
 	}
 	return out

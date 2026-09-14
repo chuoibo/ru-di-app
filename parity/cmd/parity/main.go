@@ -21,7 +21,10 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"mobile/parity/internal/canary"
+	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
@@ -62,6 +65,7 @@ func lint(paths []string, stdout, stderr io.Writer) int {
 type stepReport struct {
 	ID          string   `json:"id"`
 	Differences []string `json:"differences,omitempty"`
+	Database    []string `json:"database,omitempty"`
 }
 
 type scenarioReport struct {
@@ -73,6 +77,7 @@ type scenarioReport struct {
 
 type report struct {
 	Reference     string           `json:"reference"`
+	DatabaseLane  bool             `json:"database_lane"`
 	Candidate     string           `json:"candidate"`
 	Scenarios     int              `json:"scenarios"`
 	Steps         int              `json:"steps"`
@@ -88,6 +93,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	candidate := flags.String("candidate", "", "base URL of the candidate front door")
 	host := flags.String("host", "parity.test", "Host header sent to both stacks")
 	jsonOut := flags.String("json", "", "write a JSON report here")
+	refDSN := flags.String("reference-dsn", "", "reference database URL; with --candidate-dsn, snapshot both after every step")
+	candDSN := flags.String("candidate-dsn", "", "candidate database URL; with --reference-dsn, snapshot both after every step")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
@@ -110,11 +117,33 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 2
 	}
-	refStack := runner.Stack{Name: "reference", Client: refClient}
-	candStack := runner.Stack{Name: "candidate", Client: candClient}
+	if (*refDSN == "") != (*candDSN == "") {
+		fmt.Fprintln(stderr, "parity run: --reference-dsn and --candidate-dsn go together; one database alone compares nothing")
+		return 2
+	}
+	// Interfaces stay nil when no DSN is given: a nil *pgxpool.Pool stored in
+	// dbsnap.Conn would look like a database lane that is switched on.
+	var refDB, candDB dbsnap.Conn
+	if *refDSN != "" {
+		refPool, err := pgxpool.New(context.Background(), *refDSN)
+		if err != nil {
+			fmt.Fprintln(stderr, "parity run: reference database:", err)
+			return 2
+		}
+		defer refPool.Close()
+		candPool, err := pgxpool.New(context.Background(), *candDSN)
+		if err != nil {
+			fmt.Fprintln(stderr, "parity run: candidate database:", err)
+			return 2
+		}
+		defer candPool.Close()
+		refDB, candDB = refPool, candPool
+	}
+	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB}
+	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB}
 
 	ctx := context.Background()
-	rep := report{Reference: *reference, Candidate: *candidate}
+	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil}
 	for _, sc := range scenarios {
 		refRun, err := runner.Execute(ctx, sc, refStack)
 		if err != nil {
@@ -129,14 +158,19 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		diffs := runner.Diff(refRun, candRun)
 		result := scenarioReport{ID: sc.ID, File: sc.File, Equal: len(diffs) == 0}
 		byStep := map[string][]string{}
+		dbByStep := map[string][]string{}
 		for _, d := range diffs {
 			for _, difference := range d.Differences {
 				byStep[d.StepID] = append(byStep[d.StepID], difference.String())
 				rep.Differences++
 			}
+			for _, difference := range d.Database {
+				dbByStep[d.StepID] = append(dbByStep[d.StepID], difference.String())
+				rep.Differences++
+			}
 		}
 		for _, step := range sc.Steps {
-			result.Steps = append(result.Steps, stepReport{ID: step.ID, Differences: byStep[step.ID]})
+			result.Steps = append(result.Steps, stepReport{ID: step.ID, Differences: byStep[step.ID], Database: dbByStep[step.ID]})
 			rep.Steps++
 		}
 		rep.Scenarios++
@@ -149,12 +183,19 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 				for _, difference := range d.Differences {
 					fmt.Fprintf(stdout, "  step %s — %s\n", d.StepID, difference)
 				}
+				for _, difference := range d.Database {
+					fmt.Fprintf(stdout, "  step %s — database: %s\n", d.StepID, difference)
+				}
 			}
 		}
 		rep.Results = append(rep.Results, result)
 	}
-	fmt.Fprintf(stdout, "parity: scenarios=%d steps=%d scenarios_diff=%d differences=%d\n",
-		rep.Scenarios, rep.Steps, rep.ScenariosDiff, rep.Differences)
+	lane := "off"
+	if rep.DatabaseLane {
+		lane = "on"
+	}
+	fmt.Fprintf(stdout, "parity: scenarios=%d steps=%d scenarios_diff=%d differences=%d database_lane=%s\n",
+		rep.Scenarios, rep.Steps, rep.ScenariosDiff, rep.Differences, lane)
 	if *jsonOut != "" {
 		data, _ := json.MarshalIndent(rep, "", "  ")
 		if err := os.WriteFile(*jsonOut, append(data, '\n'), 0o644); err != nil {
