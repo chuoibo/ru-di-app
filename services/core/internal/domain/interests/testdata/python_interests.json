@@ -1,0 +1,1647 @@
+{
+ "generator": "scripts/render_domain_w1_goldens.py",
+ "module": "app.domain.interests",
+ "mode": "interests",
+ "python": "3.12.14",
+ "seed": 29,
+ "constants": {
+  "interest_tags": [
+   [
+    "an-uong",
+    "\u0102n u\u1ed1ng"
+   ],
+   [
+    "cafe",
+    "Cafe"
+   ],
+   [
+    "nightlife",
+    "Nightlife"
+   ],
+   [
+    "mon-local",
+    "M\u00f3n local"
+   ],
+   [
+    "outdoor",
+    "Outdoor"
+   ],
+   [
+    "shopping",
+    "Shopping"
+   ],
+   [
+    "karaoke",
+    "Karaoke"
+   ],
+   [
+    "game",
+    "Game"
+   ]
+  ],
+  "interest_ids": [
+   "an-uong",
+   "cafe",
+   "nightlife",
+   "mon-local",
+   "outdoor",
+   "shopping",
+   "karaoke",
+   "game"
+  ],
+  "max_interests": 8,
+  "budget_bands": [
+   {
+    "id": "tiet-kiem",
+    "label": "D\u01b0\u1edbi 100K",
+    "min_vnd": 0,
+    "max_vnd": 100000
+   },
+   {
+    "id": "vua-phai",
+    "label": "100K\u2013250K",
+    "min_vnd": 100000,
+    "max_vnd": 250000
+   },
+   {
+    "id": "thoai-mai",
+    "label": "250K\u2013500K",
+    "min_vnd": 250000,
+    "max_vnd": 500000
+   }
+  ],
+  "budget_band_ids": [
+   "tiet-kiem",
+   "vua-phai",
+   "thoai-mai"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "normalise_interests",
+   "name": "test_order_is_the_vocabularys_and_not_the_callers/first",
+   "args": [
+    [
+     "cafe",
+     "an-uong"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_order_is_the_vocabularys_and_not_the_callers/second",
+   "args": [
+    [
+     "an-uong",
+     "cafe"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_repeats_collapse",
+   "args": [
+    [
+     "cafe",
+     "cafe",
+     "cafe"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "cafe"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_empty_is_a_real_answer",
+   "args": [
+    []
+   ],
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_an_unknown_word_is_refused_rather_than_dropped",
+   "args": [
+    [
+     "cafe",
+     "du-thuyen"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_a_non_string_is_refused",
+   "args": [
+    [
+     "cafe",
+     7
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_a_bare_string_is_not_a_list_of_tags",
+   "args": [
+    "cafe"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "test_choosing_everything_is_allowed",
+   "args": [
+    [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "empty_tuple",
+   "args": [
+    {
+     "$tuple": []
+    }
+   ],
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "max_reversed",
+   "args": [
+    [
+     "game",
+     "karaoke",
+     "shopping",
+     "outdoor",
+     "mon-local",
+     "nightlife",
+     "cafe",
+     "an-uong"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "max_plus_one_with_duplicate",
+   "args": [
+    [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game",
+     "an-uong"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "every_id_twice_interleaved",
+   "args": [
+    [
+     "an-uong",
+     "game",
+     "cafe",
+     "karaoke",
+     "nightlife",
+     "shopping",
+     "mon-local",
+     "outdoor",
+     "outdoor",
+     "mon-local",
+     "shopping",
+     "nightlife",
+     "karaoke",
+     "cafe",
+     "game",
+     "an-uong"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "tuple_every_id_reversed",
+   "args": [
+    {
+     "$tuple": [
+      "game",
+      "karaoke",
+      "shopping",
+      "outdoor",
+      "mon-local",
+      "nightlife",
+      "cafe",
+      "an-uong"
+     ]
+    }
+   ],
+   "result": {
+    "ok": [
+     "an-uong",
+     "cafe",
+     "nightlife",
+     "mon-local",
+     "outdoor",
+     "shopping",
+     "karaoke",
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "twenty_repeats",
+   "args": [
+    {
+     "$runs": [
+      [
+       "game",
+       20
+      ]
+     ]
+    }
+   ],
+   "result": {
+    "ok": [
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/an-uong",
+   "args": [
+    [
+     "an-uong"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "an-uong"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/cafe",
+   "args": [
+    [
+     "cafe"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "cafe"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/nightlife",
+   "args": [
+    [
+     "nightlife"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "nightlife"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/mon-local",
+   "args": [
+    [
+     "mon-local"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "mon-local"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/outdoor",
+   "args": [
+    [
+     "outdoor"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "outdoor"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/shopping",
+   "args": [
+    [
+     "shopping"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "shopping"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/karaoke",
+   "args": [
+    [
+     "karaoke"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "karaoke"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "one/game",
+   "args": [
+    [
+     "game"
+    ]
+   ],
+   "result": {
+    "ok": [
+     "game"
+    ]
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "unknown_before_non_string",
+   "args": [
+    [
+     "du-thuyen",
+     7
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "non_string_before_unknown",
+   "args": [
+    [
+     7,
+     "du-thuyen"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "known_then_none",
+   "args": [
+    [
+     "cafe",
+     null
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/none",
+   "args": [
+    null
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/dict",
+   "args": [
+    {
+     "cafe": true
+    }
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/int",
+   "args": [
+    7
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/float",
+   "args": [
+    "$f:0x1.0000000000000p+0"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/bool",
+   "args": [
+    true
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/bytes",
+   "args": [
+    "$o:bytes"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/set",
+   "args": [
+    "$o:set"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_list/empty_string",
+   "args": [
+    ""
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interests_not_a_list",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/none",
+   "args": [
+    [
+     "an-uong",
+     null
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/true",
+   "args": [
+    [
+     "an-uong",
+     true
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/zero",
+   "args": [
+    [
+     "an-uong",
+     0
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/float",
+   "args": [
+    [
+     "an-uong",
+     "$f:0x1.0000000000000p+0"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/bytes",
+   "args": [
+    [
+     "an-uong",
+     "$o:bytes"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/nested_list",
+   "args": [
+    [
+     "an-uong",
+     [
+      "cafe"
+     ]
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/nested_tuple",
+   "args": [
+    [
+     "an-uong",
+     {
+      "$tuple": [
+       "cafe"
+      ]
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "not_a_string/dict",
+   "args": [
+    [
+     "an-uong",
+     {
+      "cafe": 1
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/upper",
+   "args": [
+    [
+     "cafe",
+     "Cafe"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/shout",
+   "args": [
+    [
+     "cafe",
+     "CAFE"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/leading_space",
+   "args": [
+    [
+     "cafe",
+     " cafe"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/trailing_space",
+   "args": [
+    [
+     "cafe",
+     "cafe "
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/no_break_space",
+   "args": [
+    [
+     "cafe",
+     "cafe\u00a0"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/ideographic_space",
+   "args": [
+    [
+     "cafe",
+     "\u3000cafe"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/unit_separator",
+   "args": [
+    [
+     "cafe",
+     "cafe\u001f"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/zero_width_space",
+   "args": [
+    [
+     "cafe",
+     "ca\u200bfe"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/byte_order_mark",
+   "args": [
+    [
+     "cafe",
+     "\ufeffcafe"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/precomposed_accent",
+   "args": [
+    [
+     "cafe",
+     "caf\u00e9"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/combining_accent",
+   "args": [
+    [
+     "cafe",
+     "cafe\u0301"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/unicode_hyphen",
+   "args": [
+    [
+     "cafe",
+     "an\u2010uong"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/en_dash",
+   "args": [
+    [
+     "cafe",
+     "an\u2013uong"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/underscore",
+   "args": [
+    [
+     "cafe",
+     "an_uong"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/fullwidth",
+   "args": [
+    [
+     "cafe",
+     "\uff43\uff41\uff46\uff45"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/nul",
+   "args": [
+    [
+     "cafe",
+     "cafe\u0000"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/astral",
+   "args": [
+    [
+     "cafe",
+     "cafe\ud83d\ude00"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/empty",
+   "args": [
+    [
+     "cafe",
+     ""
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/label_not_id",
+   "args": [
+    [
+     "cafe",
+     "\u0102n u\u1ed1ng"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/prefix",
+   "args": [
+    [
+     "cafe",
+     "caf"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_interests",
+   "name": "near_miss/dollar",
+   "args": [
+    [
+     "cafe",
+     {
+      "$str": [
+       [
+        "$cafe",
+        1
+       ]
+      ]
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "interest_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_a_skipped_budget_is_none_and_not_the_cheapest_band",
+   "args": [
+    null
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_a_skipped_budget_is_none_and_not_the_cheapest_band",
+   "args": [
+    null
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_a_band_this_build_dropped_reads_as_no_answer",
+   "args": [
+    "sang-chanh"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_an_unknown_band_is_refused_on_the_way_in",
+   "args": [
+    "sang-chanh"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_band_ids_resolve_to_themselves/tiet-kiem",
+   "args": [
+    "tiet-kiem"
+   ],
+   "result": {
+    "ok": "tiet-kiem"
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_band_ids_resolve_to_themselves/tiet-kiem",
+   "args": [
+    "tiet-kiem"
+   ],
+   "result": {
+    "ok": {
+     "id": "tiet-kiem",
+     "label": "D\u01b0\u1edbi 100K",
+     "min_vnd": 0,
+     "max_vnd": 100000
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_band_ids_resolve_to_themselves/vua-phai",
+   "args": [
+    "vua-phai"
+   ],
+   "result": {
+    "ok": "vua-phai"
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_band_ids_resolve_to_themselves/vua-phai",
+   "args": [
+    "vua-phai"
+   ],
+   "result": {
+    "ok": {
+     "id": "vua-phai",
+     "label": "100K\u2013250K",
+     "min_vnd": 100000,
+     "max_vnd": 250000
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "test_band_ids_resolve_to_themselves/thoai-mai",
+   "args": [
+    "thoai-mai"
+   ],
+   "result": {
+    "ok": "thoai-mai"
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "test_band_ids_resolve_to_themselves/thoai-mai",
+   "args": [
+    "thoai-mai"
+   ],
+   "result": {
+    "ok": {
+     "id": "thoai-mai",
+     "label": "250K\u2013500K",
+     "min_vnd": 250000,
+     "max_vnd": 500000
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/empty",
+   "args": [
+    ""
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/empty",
+   "args": [
+    ""
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/title_case",
+   "args": [
+    "Vua-Phai"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/title_case",
+   "args": [
+    "Vua-Phai"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/leading_space",
+   "args": [
+    " vua-phai"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/leading_space",
+   "args": [
+    " vua-phai"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/ideographic_space",
+   "args": [
+    "vua-phai\u3000"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/ideographic_space",
+   "args": [
+    "vua-phai\u3000"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/file_separator",
+   "args": [
+    "vua-phai\u001c"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/file_separator",
+   "args": [
+    "vua-phai\u001c"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/label_not_id",
+   "args": [
+    "100K\u2013250K"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/label_not_id",
+   "args": [
+    "100K\u2013250K"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/interest_id",
+   "args": [
+    "cafe"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/interest_id",
+   "args": [
+    "cafe"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/underscore",
+   "args": [
+    "tiet_kiem"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/underscore",
+   "args": [
+    "tiet_kiem"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/combining_mark",
+   "args": [
+    "tiet-kiem\u0301"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/combining_mark",
+   "args": [
+    "tiet-kiem\u0301"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "near_miss/astral",
+   "args": [
+    "thoai-mai\ud83d\ude00"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_unknown",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "budget_band",
+   "name": "near_miss/astral",
+   "args": [
+    "thoai-mai\ud83d\ude00"
+   ],
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/zero",
+   "args": [
+    0
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/one",
+   "args": [
+    1
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/float",
+   "args": [
+    "$f:0x1.0000000000000p+0"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/true",
+   "args": [
+    true
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/false",
+   "args": [
+    false
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/list",
+   "args": [
+    [
+     "vua-phai"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/tuple",
+   "args": [
+    {
+     "$tuple": [
+      "vua-phai"
+     ]
+    }
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/dict",
+   "args": [
+    {
+     "id": "vua-phai"
+    }
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "normalise_budget_band",
+   "name": "not_a_string/bytes",
+   "args": [
+    "$o:bytes"
+   ],
+   "result": {
+    "raised": {
+     "type": "InterestError",
+     "message": "budget_band_not_a_string",
+     "code": null
+    }
+   }
+  }
+ ]
+}
