@@ -2,6 +2,7 @@ package pyval
 
 import (
 	"errors"
+	"strings"
 
 	"mobile/services/core/internal/pyjson"
 )
@@ -19,6 +20,50 @@ func registerServedValidators(r *Registry) {
 	// W3 contexts (schemas.py ContextUpdateRequest).
 	r.Register(schemas+"ContextUpdateRequest._something_to_change",
 		somethingToChange([]string{"display_name", "theme"}, "tên nhóm không được rỗng"))
+	// W4 money (schemas.py _require_timezone and BillDiscountCreateRequest;
+	// routes/budget.py _parse_candidate_money).
+	r.Register(schemas+"_require_timezone", requireTimezone)
+	r.Register(schemas+"BillDiscountCreateRequest._target_matches_scope", targetMatchesScope)
+	r.Register("app.api.routes.budget._parse_candidate_money", parseCandidateMoney)
+}
+
+// requireTimezone is _require_timezone: a datetime without a UTC offset is
+// refused.
+func requireTimezone(_ *Call, v Value) (Value, error) {
+	if dt, ok := v.(DateTime); !ok || !dt.Aware {
+		return nil, ValueError("datetime must include a UTC offset")
+	}
+	return v, nil
+}
+
+// targetMatchesScope is BillDiscountCreateRequest._target_matches_scope: an
+// item-scoped discount names its item and a global one does not.
+func targetMatchesScope(_ *Call, v Value) (Value, error) {
+	if (validatedField(v, "scope") == pyjson.String("item")) != !isNone(validatedField(v, "item_key")) {
+		return nil, ValueError("an item-scoped discount needs item_key and a global one must not carry it")
+	}
+	return v, nil
+}
+
+// parseCandidateMoney is routes/budget.py _parse_candidate_money: an ASCII
+// digit string becomes its int; anything else passes through, for the strict
+// int check after it to refuse.
+func parseCandidateMoney(_ *Call, v Value) (Value, error) {
+	s, ok := v.(pyjson.String)
+	if !ok || s == "" {
+		return v, nil
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return v, nil
+		}
+	}
+	digits := strings.TrimLeft(string(s), "0")
+	if digits == "" {
+		return pyjson.NewInt(0), nil
+	}
+	n, _ := pyjson.ParseInt(digits)
+	return n, nil
 }
 
 // somethingToChange is a partial-update model's `_something_to_change`: at

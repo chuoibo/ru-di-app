@@ -46,12 +46,6 @@ func registerAppPorts(reg *Registry) {
 		return pyjson.Null{}, nil
 	}
 	const schemas = "app.api.schemas."
-	reg.Register(schemas+"_require_timezone", func(_ *Call, v Value) (Value, error) {
-		if dt, ok := v.(DateTime); !ok || !dt.Aware {
-			return nil, ValueError("datetime must include a UTC offset")
-		}
-		return v, nil
-	})
 	reg.Register(schemas+"OutingCreateRequest._strip_title", blank("title must not be blank", false))
 	reg.Register(schemas+"PairConstraintPutRequest._khong_rong", blank("content must not be blank", false))
 	reg.Register(schemas+"PaperKeepRequest._khong_rong", blank("line must not be blank", false))
@@ -95,12 +89,6 @@ func registerAppPorts(reg *Registry) {
 	}
 	reg.Register(schemas+"ProfileUpdateRequest._something_to_change",
 		somethingToChange([]string{"display_name", "bio", "city", "wall_comment_policy", "discoverable_by_phone"}, "t\u00ean hi\u1ec3n th\u1ecb kh\u00f4ng \u0111\u01b0\u1ee3c r\u1ed7ng"))
-	reg.Register(schemas+"BillDiscountCreateRequest._target_matches_scope", func(_ *Call, v Value) (Value, error) {
-		if (field(v, "scope") == pyjson.String("item")) != !isNone(field(v, "item_key")) {
-			return nil, ValueError("an item-scoped discount needs item_key and a global one must not carry it")
-		}
-		return v, nil
-	})
 	reg.Register(schemas+"ItineraryRequest._unique_keys", func(_ *Call, v Value) (Value, error) {
 		ids := map[string]bool{}
 		stops, _ := field(v, "stops").(List)
@@ -147,22 +135,6 @@ func registerAppPorts(reg *Registry) {
 			return nil, ValueError("a group or friend invite must name a person")
 		}
 		return v, nil
-	})
-	reg.Register("app.api.routes.budget._parse_candidate_money", func(_ *Call, v Value) (Value, error) {
-		s, ok := v.(pyjson.String)
-		if !ok || s == "" {
-			return v, nil
-		}
-		for i := 0; i < len(s); i++ {
-			if s[i] < '0' || s[i] > '9' {
-				return v, nil
-			}
-		}
-		n, _ := pyjson.ParseInt(strings.TrimLeft(string(s), "0"))
-		if strings.TrimLeft(string(s), "0") == "" {
-			n = pyjson.NewInt(0)
-		}
-		return n, nil
 	})
 }
 
