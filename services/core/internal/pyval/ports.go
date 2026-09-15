@@ -2,6 +2,7 @@ package pyval
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"mobile/services/core/internal/pyjson"
@@ -45,6 +46,9 @@ func targetMatchesScope(_ *Call, v Value) (Value, error) {
 	return v, nil
 }
 
+// maxIntStrDigits is CPython's default sys.get_int_max_str_digits().
+const maxIntStrDigits = 4300
+
 // parseCandidateMoney is routes/budget.py _parse_candidate_money: an ASCII
 // digit string becomes its int; anything else passes through, for the strict
 // int check after it to refuse.
@@ -57,6 +61,11 @@ func parseCandidateMoney(_ *Call, v Value) (Value, error) {
 		if s[i] < '0' || s[i] > '9' {
 			return v, nil
 		}
+	}
+	// int() refuses a decimal string past sys.get_int_max_str_digits(), 4300 by
+	// default, counting leading zeros; pydantic reports the ValueError.
+	if len(s) > maxIntStrDigits {
+		return nil, ValueError(fmt.Sprintf("Exceeds the limit (%d digits) for integer string conversion: value has %d digits; use sys.set_int_max_str_digits() to increase the limit", maxIntStrDigits, len(s)))
 	}
 	digits := strings.TrimLeft(string(s), "0")
 	if digits == "" {
