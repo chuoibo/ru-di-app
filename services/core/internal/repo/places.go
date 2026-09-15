@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Place is PlaceRecord, field for field.
@@ -88,33 +90,78 @@ func (r Repository) ListPlaces(ctx context.Context, filter PlaceFilter) ([]Place
 	defer rows.Close()
 	out := []Place{}
 	for rows.Next() {
-		var p Place
-		var kinds, traits, groupFit, activities, reviews []byte
-		var created, updated any
-		if err := rows.Scan(&p.ID, &p.DestinationID, &p.Name, &p.Category, &kinds,
-			&p.Address, &p.Lat, &p.Lng, &p.Rating, &p.RatingCount,
-			&p.PriceMinVND, &p.PriceMaxVND, &p.OpenHours, &p.OpenNow,
-			&p.TravelMinutes, &p.DistanceKM, &p.PhotoCount, &traits,
-			&groupFit, &activities, &p.Flag, &p.Description,
-			&reviews, &p.Source, &p.SourceRef, &p.License,
-			&created, &updated); err != nil {
+		p, err := scanPlace(rows)
+		if err != nil {
 			return nil, err
 		}
-		if p.Kinds, err = pythonListOrEmpty(kinds); err != nil {
-			return nil, err
-		}
-		if p.Traits, err = pythonListOrEmpty(traits); err != nil {
-			return nil, err
-		}
-		p.GroupFit = jsonOrNone(groupFit)
-		p.Activities = jsonOrNone(activities)
-		p.Reviews = jsonOrNone(reviews)
 		out = append(out, p)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+// scanPlace reads one row of every mapped column in declaration order and
+// builds the record the way _place_record does.
+func scanPlace(row pgx.Row) (Place, error) {
+	var p Place
+	var kinds, traits, groupFit, activities, reviews []byte
+	var created, updated any
+	if err := row.Scan(&p.ID, &p.DestinationID, &p.Name, &p.Category, &kinds,
+		&p.Address, &p.Lat, &p.Lng, &p.Rating, &p.RatingCount,
+		&p.PriceMinVND, &p.PriceMaxVND, &p.OpenHours, &p.OpenNow,
+		&p.TravelMinutes, &p.DistanceKM, &p.PhotoCount, &traits,
+		&groupFit, &activities, &p.Flag, &p.Description,
+		&reviews, &p.Source, &p.SourceRef, &p.License,
+		&created, &updated); err != nil {
+		return Place{}, err
+	}
+	var err error
+	if p.Kinds, err = pythonListOrEmpty(kinds); err != nil {
+		return Place{}, err
+	}
+	if p.Traits, err = pythonListOrEmpty(traits); err != nil {
+		return Place{}, err
+	}
+	p.GroupFit = jsonOrNone(groupFit)
+	p.Activities = jsonOrNone(activities)
+	p.Reviews = jsonOrNone(reviews)
+	return p, nil
+}
+
+// GetPlace is get_place: `session.get(Place, id)`, every mapped column
+// labelled table_column, nil when there is none, then the same record
+// building as ListPlaces (so a stored kinds of `true` is ErrPythonTypeError
+// here too). ApiService.place_row reaches it on a fresh service, whose
+// catalogue cache is still empty.
+//
+// SQLAlchemy note: a second session.get of the same id in one session answers
+// from the identity map without a statement; Go reads again.
+func (r Repository) GetPlace(ctx context.Context, placeID string) (*Place, error) {
+	p, err := scanPlace(r.Q.QueryRow(ctx,
+		`SELECT places.id AS places_id, places.destination_id AS places_destination_id, places.name AS places_name,
+		        places.category AS places_category, places.kinds AS places_kinds, places.address AS places_address,
+		        places.lat AS places_lat, places.lng AS places_lng, places.rating AS places_rating,
+		        places.rating_count AS places_rating_count, places.price_min_vnd AS places_price_min_vnd,
+		        places.price_max_vnd AS places_price_max_vnd, places.open_hours AS places_open_hours,
+		        places.open_now AS places_open_now, places.travel_minutes AS places_travel_minutes,
+		        places.distance_km AS places_distance_km, places.photo_count AS places_photo_count,
+		        places.traits AS places_traits, places.group_fit AS places_group_fit,
+		        places.activities AS places_activities, places.flag AS places_flag,
+		        places.description AS places_description, places.reviews AS places_reviews,
+		        places.source AS places_source, places.source_ref AS places_source_ref,
+		        places.license AS places_license, places.created_at AS places_created_at,
+		        places.updated_at AS places_updated_at
+		   FROM places
+		  WHERE places.id = $1::VARCHAR`, placeID))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
 }
 
 // jsonOrNone is what json.loads leaves of a JSONB value: nil for SQL NULL and
