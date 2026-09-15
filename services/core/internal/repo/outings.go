@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -41,4 +42,57 @@ func (r Repository) GetOuting(ctx context.Context, outingID string) (*Outing, er
 		return nil, err
 	}
 	return &o, nil
+}
+
+// OutingInput is create_outing's keyword arguments. StartsOn and EndsOn are
+// calendar days.
+type OutingInput struct {
+	ContextID          string
+	CreatedByID        string
+	Title              string
+	StartsOn, EndsOn   time.Time
+	Headcount          int64
+	BudgetPerPersonVND int64
+	Now                time.Time
+}
+
+// CreateOuting is create_outing, reached in W8 from the second «ừ» on a paper
+// (ApiService._chot).
+//
+// Statements, in Python's order:
+//  1. the INSERT of every column the caller gives (created_at its clock), in
+//     table order, with RETURNING of the three columns left to server defaults
+//     (timeline_revision, itinerary_version, itinerary_days): the unit of
+//     work fetches them eagerly;
+//  2. `_outing_record`'s stops by position (none yet).
+//
+// The record carries what was written and what RETURNING read. The CHECKs on
+// dates, headcount, budget and a blank title refuse in PostgreSQL.
+func (r Repository) CreateOuting(ctx context.Context, in OutingInput) (Outing, error) {
+	id, err := newUUID()
+	if err != nil {
+		return Outing{}, err
+	}
+	created := pythonInstant(in.Now)
+	o := Outing{ID: id, ContextID: in.ContextID, CreatedByID: in.CreatedByID, Title: in.Title,
+		StartsOn: calendarDay(in.StartsOn), EndsOn: calendarDay(in.EndsOn), Headcount: in.Headcount,
+		BudgetPerPersonVND: in.BudgetPerPersonVND, CreatedAt: created.UTC()}
+	var days []byte
+	if err := r.Q.QueryRow(ctx,
+		`INSERT INTO outings (id, context_id, created_by_id, title, starts_on, ends_on, headcount,
+		                      budget_per_person_vnd, created_at)
+		 VALUES ($1::UUID, $2::UUID, $3::UUID, $4::VARCHAR, $5::DATE, $6::DATE, $7::INTEGER, $8::BIGINT,
+		         $9::TIMESTAMP WITH TIME ZONE)
+		 RETURNING outings.timeline_revision, outings.itinerary_version, outings.itinerary_days`,
+		id, in.ContextID, in.CreatedByID, in.Title, o.StartsOn, o.EndsOn, sqlInteger(in.Headcount),
+		in.BudgetPerPersonVND, created).Scan(&o.TimelineRevision, &o.ItineraryVersion, &days); err != nil {
+		return Outing{}, err
+	}
+	if o.ItineraryDays, err = jsonArrayElements(days); err != nil {
+		return Outing{}, err
+	}
+	if o.Stops, err = r.outingStops(ctx, o.ID); err != nil {
+		return Outing{}, err
+	}
+	return o, nil
 }

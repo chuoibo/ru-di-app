@@ -70,13 +70,19 @@ type PairNotebook struct {
 //     -- last, because Python evaluates `consents=self._pair_consent_rows(...)`
 //     inside the record constructor, after the three locals above.
 func (r Repository) GetPairNotebook(ctx context.Context, contextID string) (*PairNotebook, error) {
+	return r.readPairNotebook(ctx, contextID, "")
+}
+
+// readPairNotebook is GetPairNotebook with `suffix` appended to the first
+// statement: "" for get_pair_notebook, " FOR UPDATE" for lock_pair_notebook.
+func (r Repository) readPairNotebook(ctx context.Context, contextID, suffix string) (*PairNotebook, error) {
 	var notebook PairNotebook
 	var contextKind string
 	var notebookCreated time.Time
 	err := r.Q.QueryRow(ctx,
 		`SELECT pair_notebooks.id, pair_notebooks.context_id, pair_notebooks.context_kind, pair_notebooks.created_at
 		   FROM pair_notebooks
-		  WHERE pair_notebooks.context_id = $1::UUID`, contextID).
+		  WHERE pair_notebooks.context_id = $1::UUID`+suffix, contextID).
 		Scan(&notebook.ID, &notebook.ContextID, &contextKind, &notebookCreated)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -84,6 +90,12 @@ func (r Repository) GetPairNotebook(ctx context.Context, contextID string) (*Pai
 	if err != nil {
 		return nil, err
 	}
+	return r.pairNotebookRecord(ctx, notebook)
+}
+
+// pairNotebookRecord is `_pair_notebook_record(notebook, self._live_cycle(notebook.id))`
+// for a notebook row already read: statements 2 to 6 of GetPairNotebook.
+func (r Repository) pairNotebookRecord(ctx context.Context, notebook PairNotebook) (*PairNotebook, error) {
 	notebook.Participants = []string{}
 	notebook.Consents = []PairConsent{}
 	notebook.Proposals = []PairProposal{}
@@ -93,7 +105,7 @@ func (r Repository) GetPairNotebook(ctx context.Context, contextID string) (*Pai
 	var termsVersion int
 	var openedAt, closedAt *time.Time
 	var cycleCreated time.Time
-	err = r.Q.QueryRow(ctx,
+	err := r.Q.QueryRow(ctx,
 		`SELECT pair_notebook_cycles.id, pair_notebook_cycles.notebook_id, pair_notebook_cycles.state,
 		        pair_notebook_cycles.terms_version, pair_notebook_cycles.opened_at,
 		        pair_notebook_cycles.closed_at, pair_notebook_cycles.created_at
