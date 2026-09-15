@@ -1,0 +1,27 @@
+{
+  "note": "Go-built JPEG inputs (seeds in corpus_test.go) -\u003e Pillow 12.2.0 decode outcome; pixel digests are sha256 prefixes.",
+  "cases": {
+    "go-arith/prog-420-2": "JPEG RGB 64x48 7d60898422e5e6c1",
+    "go-arith/seq-420-1": "JPEG RGB 64x48 46f28c62626cdbd9",
+    "go-colorspace/adobe-rgb": "JPEG RGB 40x23 7ab47b4b13b3e66d",
+    "go-colorspace/cmyk-adobe0": "JPEG CMYK 29x18 e341062136f4bfc7",
+    "go-colorspace/ycck-adobe2": "JPEG CMYK 29x18 bc85b45dc8ab6849",
+    "go-corrupt-scan/flip-3": "JPEG RGB 61x45 8badbfa2cef8cf14",
+    "go-exif/ascii-one-digit": "next-plugin",
+    "go-exif/rational-dpi": "JPEG RGB 35x27 fd52226e071ff103",
+    "go-exif/two-exif-segments": "JPEG RGB 35x27 fd52226e071ff103",
+    "go-finish-limit/marker-at-block-+8": "JPEG RGB 260x260 3aa3d8fa3534ceba",
+    "go-finish-limit/marker-at-block--2": "load-error",
+    "go-markers/tables-only-prefix": "JPEG RGB 35x27 fd52226e071ff103",
+    "go-mpo/short-entries": "next-plugin",
+    "go-mpo/two-images": "MPO RGB 35x27 fd52226e071ff103",
+    "go-progressive-garbage/huff-420-3": "JPEG RGB 64x48 04dc455ba3c3c169",
+    "go-restart/every-2": "JPEG RGB 97x61 19c66cd4dbc8c359",
+    "go-restart/renumbered-2": "JPEG RGB 97x61 a70e05094d75850d",
+    "go-sampling/411-33x31": "JPEG RGB 33x31 fc1cfbaaebf95dc3",
+    "go-sampling/420-33x31": "JPEG RGB 33x31 1f5b2ae85397e560",
+    "go-sampling/mixed-33x31": "JPEG RGB 33x31 fd20b71853edb9cb",
+    "go-truncation/junk-8-instead-of-eoi": "JPEG RGB 61x45 1dda4d5458038167",
+    "go-truncation/no-eoi": "load-error"
+  }
+}

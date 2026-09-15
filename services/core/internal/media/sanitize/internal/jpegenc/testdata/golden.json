@@ -1,0 +1,28 @@
+{
+  "source": "Pillow 12.2.0 + libjpeg-turbo 3.1.4.1 in mobile-parity-api:7bf58e3d, Image.frombytes(RGB).save(JPEG, quality=88, optimize=True)",
+  "cases": [
+    {"w":1,"h":1,"pattern":"noise","seed":1,"sha16":"aa7fbabc29393316","size":287},
+    {"w":2,"h":1,"pattern":"gradient","seed":18,"sha16":"e89c025b27d16da5","size":319},
+    {"w":7,"h":9,"pattern":"edges","seed":28,"sha16":"e7442357dedc8e75","size":345},
+    {"w":8,"h":8,"pattern":"saturated","seed":37,"sha16":"86c45a19752f4eb5","size":287},
+    {"w":9,"h":9,"pattern":"photo","seed":48,"sha16":"7e7aa98023daf0d5","size":327},
+    {"w":15,"h":17,"pattern":"noise","seed":49,"sha16":"8e67540cf307d29a","size":562},
+    {"w":16,"h":16,"pattern":"flat","seed":59,"sha16":"5045408f762c8ef3","size":288},
+    {"w":17,"h":15,"pattern":"edges","seed":68,"sha16":"072c001d54831b4f","size":483},
+    {"w":33,"h":1,"pattern":"gradient","seed":74,"sha16":"f8052c0a2f568355","size":318},
+    {"w":1,"h":33,"pattern":"saturated","seed":85,"sha16":"eeac28f48ed0507d","size":291},
+    {"w":640,"h":480,"pattern":"noise","seed":89,"sha16":"2425590b7eeddf9b","size":238315},
+    {"w":640,"h":480,"pattern":"photo","seed":96,"sha16":"1f51b8964c82afa7","size":26976},
+    {"w":1001,"h":750,"pattern":"edges","seed":100,"sha16":"1f54fbdcbec7669c","size":272727},
+    {"w":65501,"h":1,"pattern":"gradient","seed":911,"error":"OSError: broken data stream when writing image file"},
+    {"w":13000,"h":5,"pattern":"mixed","seed":1003,"noise":17420,"sha16":"5a30305ca59f7595","size":65535},
+    {"w":13000,"h":5,"pattern":"mixed","seed":1000,"noise":18100,"error":"OSError: broken data stream when writing image file"},
+    {"w":13000,"h":5,"pattern":"mixed","seed":1000,"noise":18091,"error":"OSError: broken data stream when writing image file"},
+    {"w":5,"h":20000,"pattern":"mixed","seed":2000,"noise":56401,"sha16":"f0945bb6ed937b00","size":99999},
+    {"w":5,"h":20000,"pattern":"mixed","seed":2000,"noise":56383,"error":"OSError: broken data stream when writing image file"},
+    {"w":5,"h":20000,"pattern":"mixed","seed":2004,"noise":55135,"error":"OSError: broken data stream when writing image file"},
+    {"w":20000,"h":3,"pattern":"mixed","seed":3000,"noise":16406,"sha16":"6187b34be4eaa87f","size":79999},
+    {"w":20000,"h":3,"pattern":"mixed","seed":3000,"noise":16409,"error":"OSError: broken data stream when writing image file"},
+    {"w":20000,"h":3,"pattern":"mixed","seed":3000,"noise":16408,"error":"OSError: broken data stream when writing image file"}
+  ]
+}

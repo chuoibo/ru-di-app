@@ -1,0 +1,2226 @@
+{
+ "note": "Seeds and parameters -\u003e what sanitize_image answered in mobile-parity-api:7bf58e3d. sha256 is truncated to 16 hex characters. Regenerate with MEDIA_SANITIZE_UPDATE_GOLDEN=1 go test -tags oracle -run TestOracle.",
+ "cases": [
+  {
+   "name": "png-rgba-\u003epng/1x1-noise",
+   "spec": {
+    "kind": "png",
+    "seed": 100,
+    "w": 1,
+    "h": 1,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 1,
+    "height": 1,
+    "size": 70,
+    "sha256": "2607:95cf:6c17:3513"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/1x1-smooth",
+   "spec": {
+    "kind": "png",
+    "seed": 101,
+    "w": 1,
+    "h": 1,
+    "params": {
+     "color_type": 6,
+     "pattern": "smooth"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 1,
+    "height": 1,
+    "size": 70,
+    "sha256": "5054:833a:2456:e1e5"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/2x3-noise",
+   "spec": {
+    "kind": "png",
+    "seed": 110,
+    "w": 2,
+    "h": 3,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 2,
+    "height": 3,
+    "size": 93,
+    "sha256": "36b3:9ce6:2e03:4067"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/2x3-smooth",
+   "spec": {
+    "kind": "png",
+    "seed": 111,
+    "w": 2,
+    "h": 3,
+    "params": {
+     "color_type": 6,
+     "pattern": "smooth"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 2,
+    "height": 3,
+    "size": 93,
+    "sha256": "280f:76e1:8167:7dee"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/17x11-noise",
+   "spec": {
+    "kind": "png",
+    "seed": 120,
+    "w": 17,
+    "h": 11,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 17,
+    "height": 11,
+    "size": 827,
+    "sha256": "bb06:fb6c:6f60:dd3c"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/17x11-smooth",
+   "spec": {
+    "kind": "png",
+    "seed": 121,
+    "w": 17,
+    "h": 11,
+    "params": {
+     "color_type": 6,
+     "pattern": "smooth"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 17,
+    "height": 11,
+    "size": 515,
+    "sha256": "a7d9:5778:ef56:bdb7"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/255x1-noise",
+   "spec": {
+    "kind": "png",
+    "seed": 130,
+    "w": 255,
+    "h": 1,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 255,
+    "height": 1,
+    "size": 1089,
+    "sha256": "6696:a2ff:507c:162c"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/255x1-smooth",
+   "spec": {
+    "kind": "png",
+    "seed": 131,
+    "w": 255,
+    "h": 1,
+    "params": {
+     "color_type": 6,
+     "pattern": "smooth"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 255,
+    "height": 1,
+    "size": 375,
+    "sha256": "b452:3c05:cc5d:af55"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/1x300-noise",
+   "spec": {
+    "kind": "png",
+    "seed": 140,
+    "w": 1,
+    "h": 300,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 1,
+    "height": 300,
+    "size": 1483,
+    "sha256": "690e:6925:9982:f31b"
+   }
+  },
+  {
+   "name": "png-rgba-\u003epng/1x300-smooth",
+   "spec": {
+    "kind": "png",
+    "seed": 141,
+    "w": 1,
+    "h": 300,
+    "params": {
+     "color_type": 6,
+     "pattern": "smooth"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 1,
+    "height": 300,
+    "size": 458,
+    "sha256": "3d22:c5ed:fc8b:c6a9"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/1x1-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 301,
+    "w": 1,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 1,
+    "height": 1,
+    "size": 286,
+    "sha256": "c086:6996:6aaa:001e"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/1x2-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 311,
+    "w": 1,
+    "h": 2,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 1,
+    "height": 2,
+    "size": 292,
+    "sha256": "aa30:5821:667a:d9fa"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/2x1-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 321,
+    "w": 2,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 2,
+    "height": 1,
+    "size": 291,
+    "sha256": "0178:f82d:1e8c:23a1"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/7x9-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 331,
+    "w": 7,
+    "h": 9,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 7,
+    "height": 9,
+    "size": 309,
+    "sha256": "d36f:8444:2ee4:d026"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/8x8-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 341,
+    "w": 8,
+    "h": 8,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 8,
+    "height": 8,
+    "size": 305,
+    "sha256": "441d:2d0f:32f5:5a57"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/9x9-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 351,
+    "w": 9,
+    "h": 9,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 9,
+    "height": 9,
+    "size": 317,
+    "sha256": "469d:57d6:2410:057a"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/15x17-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 361,
+    "w": 15,
+    "h": 17,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 15,
+    "height": 17,
+    "size": 345,
+    "sha256": "7e09:9123:dea4:4fc7"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/16x16-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 371,
+    "w": 16,
+    "h": 16,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 16,
+    "height": 16,
+    "size": 332,
+    "sha256": "33ea:44c0:f837:ecce"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/17x15-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 381,
+    "w": 17,
+    "h": 15,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 17,
+    "height": 15,
+    "size": 349,
+    "sha256": "34b5:d78a:a006:dfa2"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/33x1-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 391,
+    "w": 33,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 33,
+    "height": 1,
+    "size": 331,
+    "sha256": "3a08:7058:a7ff:7a01"
+   }
+  },
+  {
+   "name": "png-rgb-\u003ejpeg/1x33-photo",
+   "spec": {
+    "kind": "png",
+    "seed": 401,
+    "w": 1,
+    "h": 33,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 1,
+    "height": 33,
+    "size": 322,
+    "sha256": "5b92:7223:cd1b:fd32"
+   }
+  },
+  {
+   "name": "png-modes/gray8-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 601,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 0
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 317,
+    "sha256": "ef75:2c90:1a37:18d8"
+   }
+  },
+  {
+   "name": "png-modes/gray1-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 611,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 1,
+     "color_type": 0
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 334,
+    "sha256": "dff3:0563:dde5:6cad"
+   }
+  },
+  {
+   "name": "png-modes/gray2-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 621,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 2,
+     "color_type": 0
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 285,
+    "sha256": "2cff:7171:a8e2:1f44"
+   }
+  },
+  {
+   "name": "png-modes/gray4-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 631,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 4,
+     "color_type": 0
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 325,
+    "sha256": "9482:c628:c552:8772"
+   }
+  },
+  {
+   "name": "png-modes/gray16-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 641,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 16,
+     "color_type": 0
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 285,
+    "sha256": "2cff:7171:a8e2:1f44"
+   }
+  },
+  {
+   "name": "png-modes/gray8-trns-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 651,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 0,
+     "trns": "gray"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 312,
+    "sha256": "fd91:caa6:dadc:b9cd"
+   }
+  },
+  {
+   "name": "png-modes/rgb16-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 661,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 16,
+     "color_type": 2
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 318,
+    "sha256": "75a5:e0de:5f4d:41c4"
+   }
+  },
+  {
+   "name": "png-modes/rgb8-trns-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 671,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 2,
+     "trns": "rgb"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 317,
+    "sha256": "d6c3:f55b:eb44:6678"
+   }
+  },
+  {
+   "name": "png-modes/la8-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 681,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 4
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 284,
+    "sha256": "1add:9434:9910:4ee3"
+   }
+  },
+  {
+   "name": "png-modes/la16-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 691,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 16,
+     "color_type": 4
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 289,
+    "sha256": "df34:f4f1:b76c:0844"
+   }
+  },
+  {
+   "name": "png-modes/rgba16-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 701,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 16,
+     "color_type": 6
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 291,
+    "sha256": "d5b9:a132:3a54:801c"
+   }
+  },
+  {
+   "name": "png-modes/p8-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 711,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 3
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 419,
+    "sha256": "689e:95e9:49ea:94db"
+   }
+  },
+  {
+   "name": "png-modes/p4-small-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 721,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 4,
+     "color_type": 3,
+     "colors": 5
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 392,
+    "sha256": "7a44:7b23:2b8f:ee61"
+   }
+  },
+  {
+   "name": "png-modes/p8-trns-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 731,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 3,
+     "trns": "palette"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 439,
+    "sha256": "9965:ec6c:8aa7:c228"
+   }
+  },
+  {
+   "name": "png-modes/p2-trns-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 741,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 2,
+     "color_type": 3,
+     "trns": "palette"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 318,
+    "sha256": "0e57:6eb8:346a:f0be"
+   }
+  },
+  {
+   "name": "png-modes/rgba-interlaced-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 751,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "interlace": true
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 298,
+    "sha256": "4891:55be:223f:626c"
+   }
+  },
+  {
+   "name": "png-modes/rgb-interlaced-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 761,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 2,
+     "interlace": true
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 321,
+    "sha256": "6bc7:0e33:c75e:1ba1"
+   }
+  },
+  {
+   "name": "png-modes/p1-interlaced-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 771,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bit_depth": 1,
+     "color_type": 3,
+     "interlace": true
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 308,
+    "sha256": "0218:56f9:8639:431e"
+   }
+  },
+  {
+   "name": "png-modes/rgb-split-idat-13x7",
+   "spec": {
+    "kind": "png",
+    "seed": 781,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 2,
+     "idat_split": 7
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 319,
+    "sha256": "7692:b5a7:aa92:65fb"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-0",
+   "spec": {
+    "kind": "png",
+    "seed": 800,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 0
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 298,
+    "sha256": "210e:aca1:5f2d:5cd7"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-0",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 840,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 0
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 37,
+    "height": 21,
+    "size": 431,
+    "sha256": "7aeb:5afd:08cd:273c"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-1",
+   "spec": {
+    "kind": "png",
+    "seed": 801,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 1
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 295,
+    "sha256": "0d6a:0b38:bfcf:e094"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-1",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 841,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 1
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 37,
+    "height": 21,
+    "size": 444,
+    "sha256": "0005:ee29:8551:7977"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-2",
+   "spec": {
+    "kind": "png",
+    "seed": 802,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 2
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 304,
+    "sha256": "abee:493a:0bbb:78b9"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-2",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 842,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 2
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 37,
+    "height": 21,
+    "size": 447,
+    "sha256": "f5d1:5641:27b8:2491"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-3",
+   "spec": {
+    "kind": "png",
+    "seed": 803,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 3
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 296,
+    "sha256": "aab6:8119:06fd:aae6"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-3",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 843,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 3
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 37,
+    "height": 21,
+    "size": 456,
+    "sha256": "a12f:525f:8b82:68c7"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-4",
+   "spec": {
+    "kind": "png",
+    "seed": 804,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 4
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 13,
+    "height": 7,
+    "size": 305,
+    "sha256": "19d8:e137:1f65:548b"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-4",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 844,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 4
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 37,
+    "height": 21,
+    "size": 456,
+    "sha256": "1033:19b4:075d:7fdc"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-5",
+   "spec": {
+    "kind": "png",
+    "seed": 805,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 5
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 7,
+    "height": 13,
+    "size": 299,
+    "sha256": "bec8:975c:ead6:7087"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-5",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 845,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 5
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 21,
+    "height": 37,
+    "size": 457,
+    "sha256": "1da9:8902:3f8a:25ea"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-6",
+   "spec": {
+    "kind": "png",
+    "seed": 806,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 6
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 7,
+    "height": 13,
+    "size": 305,
+    "sha256": "d270:7a8b:524e:7731"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-6",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 846,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 6
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 21,
+    "height": 37,
+    "size": 432,
+    "sha256": "c68f:1068:97ef:89e7"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-7",
+   "spec": {
+    "kind": "png",
+    "seed": 807,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 7
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 7,
+    "height": 13,
+    "size": 299,
+    "sha256": "66fc:f021:70d4:ee05"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-7",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 847,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 7
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 21,
+    "height": 37,
+    "size": 444,
+    "sha256": "5c16:c73a:4417:12e7"
+   }
+  },
+  {
+   "name": "exif-orientation/png-exif-8",
+   "spec": {
+    "kind": "png",
+    "seed": 808,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "color_type": 6,
+     "exif": {
+      "orientation": 8
+     }
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 7,
+    "height": 13,
+    "size": 304,
+    "sha256": "609d:291b:3e85:acee"
+   }
+  },
+  {
+   "name": "exif-orientation/jpeg-exif-8",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 848,
+    "w": 37,
+    "h": 21,
+    "params": {
+     "exif": {
+      "orientation": 8
+     },
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 21,
+    "height": 37,
+    "size": 451,
+    "sha256": "8ef5:245c:aa51:21be"
+   }
+  },
+  {
+   "name": "jpeg-\u003ejpeg/std-1x1",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1000,
+    "w": 1,
+    "h": 1,
+    "params": {
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 1,
+    "height": 1,
+    "size": 287,
+    "sha256": "8a12:2149:4223:abdf"
+   }
+  },
+  {
+   "name": "jpeg-\u003ejpeg/std-9x9",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1001,
+    "w": 9,
+    "h": 9,
+    "params": {
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 9,
+    "height": 9,
+    "size": 316,
+    "sha256": "a75d:7c6d:2536:bffa"
+   }
+  },
+  {
+   "name": "jpeg-\u003ejpeg/std-17x15",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1002,
+    "w": 17,
+    "h": 15,
+    "params": {
+     "pattern": "photo"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 17,
+    "height": 15,
+    "size": 357,
+    "sha256": "b468:f697:1c11:5266"
+   }
+  },
+  {
+   "name": "jpeg-truncated/cut-200",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1030,
+    "w": 64,
+    "h": 48,
+    "params": {
+     "truncate": 200
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "png-truncated/cut-200",
+   "spec": {
+    "kind": "png",
+    "seed": 1040,
+    "w": 64,
+    "h": 33,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo",
+     "truncate": 240
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "jpeg-truncated/cut-600",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1030,
+    "w": 64,
+    "h": 48,
+    "params": {
+     "truncate": 600
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "png-truncated/cut-600",
+   "spec": {
+    "kind": "png",
+    "seed": 1040,
+    "w": 64,
+    "h": 33,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo",
+     "truncate": 640
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "jpeg-truncated/cut-900",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1030,
+    "w": 64,
+    "h": 48,
+    "params": {
+     "truncate": 900
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "png-truncated/cut-900",
+   "spec": {
+    "kind": "png",
+    "seed": 1040,
+    "w": 64,
+    "h": 33,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo",
+     "truncate": 940
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "jpeg-truncated/cut-1100",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 1030,
+    "w": 64,
+    "h": 48,
+    "params": {
+     "truncate": 1100
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "png-truncated/cut-1100",
+   "spec": {
+    "kind": "png",
+    "seed": 1040,
+    "w": 64,
+    "h": 33,
+    "params": {
+     "color_type": 2,
+     "pattern": "photo",
+     "truncate": 1140
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "ppm/P1",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1200,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": true,
+     "magic": "P1"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 394,
+    "sha256": "9144:196e:c6ef:ba57"
+   }
+  },
+  {
+   "name": "ppm/P2",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1201,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": false,
+     "magic": "P2"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 312,
+    "sha256": "d388:c864:226f:4568"
+   }
+  },
+  {
+   "name": "ppm/P3",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1202,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": true,
+     "magic": "P3"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 319,
+    "sha256": "c3fc:a481:5a40:33bb"
+   }
+  },
+  {
+   "name": "ppm/P4",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1203,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": false,
+     "magic": "P4"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 392,
+    "sha256": "e2ca:2c3d:5c7e:d43f"
+   }
+  },
+  {
+   "name": "ppm/P5",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1204,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": true,
+     "magic": "P5"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 316,
+    "sha256": "561e:9e3a:dfb5:46f0"
+   }
+  },
+  {
+   "name": "ppm/P6",
+   "spec": {
+    "kind": "ppm",
+    "seed": 1205,
+    "w": 11,
+    "h": 5,
+    "params": {
+     "comment": false,
+     "magic": "P6"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 11,
+    "height": 5,
+    "size": 318,
+    "sha256": "36b1:e224:8783:a515"
+   }
+  },
+  {
+   "name": "ppm/parity-scenario",
+   "spec": {
+    "kind": "garbage",
+    "seed": 0,
+    "params": {
+     "len": 0,
+     "magic": [
+      80,
+      51,
+      10,
+      49,
+      32,
+      49,
+      10,
+      50,
+      53,
+      53,
+      10,
+      50,
+      48,
+      48,
+      32,
+      49,
+      50,
+      48,
+      32,
+      52,
+      48,
+      10
+     ]
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 1,
+    "height": 1,
+    "size": 286,
+    "sha256": "8d2e:9012:2a7d:b6b7"
+   }
+  },
+  {
+   "name": "gif/go-transparent-false",
+   "spec": {
+    "kind": "gif",
+    "seed": 1300,
+    "w": 23,
+    "h": 9,
+    "params": {
+     "transparent": false
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 23,
+    "height": 9,
+    "size": 543,
+    "sha256": "fe85:01f8:dd2b:e228"
+   }
+  },
+  {
+   "name": "gif/go-transparent-true",
+   "spec": {
+    "kind": "gif",
+    "seed": 1301,
+    "w": 23,
+    "h": 9,
+    "params": {
+     "transparent": true
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 23,
+    "height": 9,
+    "size": 781,
+    "sha256": "bed7:2bda:fbcd:b6f8"
+   }
+  },
+  {
+   "name": "bmp/go-24",
+   "spec": {
+    "kind": "bmp",
+    "seed": 1403,
+    "w": 13,
+    "h": 7,
+    "params": {
+     "bits": 24
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 13,
+    "height": 7,
+    "size": 307,
+    "sha256": "99c3:ac16:4f21:d4fe"
+   }
+  },
+  {
+   "name": "refuse-size/10MiB+1",
+   "spec": {
+    "kind": "garbage",
+    "seed": 0,
+    "params": {
+     "fill": 0,
+     "len": 10485753,
+     "magic": [
+      137,
+      80,
+      78,
+      71,
+      13,
+      10,
+      26,
+      10
+     ]
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_too_large",
+    "detail": "Image exceeds the 10485760-byte upload limit."
+   }
+  },
+  {
+   "name": "refuse-size/10MiB",
+   "spec": {
+    "kind": "garbage",
+    "seed": 0,
+    "params": {
+     "fill": 0,
+     "len": 10485760
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-10000x5000",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 10000,
+    "h": 5000,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-50000001x1",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 50000001,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-7071x7071",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 7071,
+    "h": 7071,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-7072x7072",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 7072,
+    "h": 7072,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-9459x9459",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 9459,
+    "h": 9459,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-9460x9460",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 9460,
+    "h": 9460,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-13377x13377",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 13377,
+    "h": 13377,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-13378x13378",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 13378,
+    "h": 13378,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "image_dimensions_too_large",
+    "detail": "Image exceeds the 50000000-pixel limit."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-60000x1",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 60000,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "refuse-dimensions/png-header-1x60000",
+   "spec": {
+    "kind": "png",
+    "seed": 0,
+    "w": 1,
+    "h": 60000,
+    "params": {
+     "color_type": 2,
+     "header_only": true
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-0",
+   "spec": {
+    "kind": "garbage",
+    "seed": 0,
+    "params": {
+     "len": 0
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-1",
+   "spec": {
+    "kind": "garbage",
+    "seed": 1,
+    "params": {
+     "len": 1
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-2",
+   "spec": {
+    "kind": "garbage",
+    "seed": 2,
+    "params": {
+     "len": 2
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-15",
+   "spec": {
+    "kind": "garbage",
+    "seed": 15,
+    "params": {
+     "len": 15
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-16",
+   "spec": {
+    "kind": "garbage",
+    "seed": 16,
+    "params": {
+     "len": 16
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "garbage/random-17",
+   "spec": {
+    "kind": "garbage",
+    "seed": 17,
+    "params": {
+     "len": 17
+    }
+   },
+   "want": {
+    "result": "rejected",
+    "code": "not_an_image",
+    "detail": "The uploaded bytes could not be decoded as a complete image."
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/noise-256x256",
+   "spec": {
+    "kind": "png",
+    "seed": 2101,
+    "w": 256,
+    "h": 256,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 256,
+    "height": 256,
+    "size": 51136,
+    "sha256": "927f:ae63:90aa:142a"
+   }
+  },
+  {
+   "name": "png-idat-chunking/noise-100x100",
+   "spec": {
+    "kind": "png",
+    "seed": 2200,
+    "w": 100,
+    "h": 100,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 100,
+    "height": 100,
+    "size": 40173,
+    "sha256": "3482:e09b:e70e:4360"
+   }
+  },
+  {
+   "name": "png-idat-chunking/noise-200x200",
+   "spec": {
+    "kind": "png",
+    "seed": 2201,
+    "w": 200,
+    "h": 200,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 200,
+    "height": 200,
+    "size": 160417,
+    "sha256": "d957:e3ec:9b86:1903"
+   }
+  },
+  {
+   "name": "png-idat-chunking/noise-17000x2",
+   "spec": {
+    "kind": "png",
+    "seed": 2202,
+    "w": 17000,
+    "h": 2,
+    "params": {
+     "color_type": 6,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/png",
+    "width": 17000,
+    "height": 2,
+    "size": 136221,
+    "sha256": "9c1c:6bd2:4c65:3518"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/wh-term-decides-ok",
+   "spec": {
+    "kind": "png",
+    "seed": 5,
+    "w": 400,
+    "h": 300,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 400,
+    "height": 300,
+    "size": 94518,
+    "sha256": "6a2e:2412:f714:8138"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/wh-term-decides-ok-tall",
+   "spec": {
+    "kind": "png",
+    "seed": 1,
+    "w": 16,
+    "h": 6000,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 16,
+    "height": 6000,
+    "size": 74813,
+    "sha256": "eb0e:c6e5:2365:ce35"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/4w-term-decides-ok",
+   "spec": {
+    "kind": "png",
+    "seed": 1,
+    "w": 32000,
+    "h": 1,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 32000,
+    "height": 1,
+    "size": 67754,
+    "sha256": "82f5:00dc:bde2:c48e"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/4w-term-exceeded",
+   "spec": {
+    "kind": "png",
+    "seed": 7,
+    "w": 20000,
+    "h": 2,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "error",
+    "code": "OSError"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/65536-term-one-byte-below",
+   "spec": {
+    "kind": "png",
+    "seed": 52,
+    "w": 12868,
+    "h": 2,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 12868,
+    "height": 2,
+    "size": 65535,
+    "sha256": "76d0:46e4:1718:3563"
+   }
+  },
+  {
+   "name": "jpeg-encoder-buffer/65536-term-exactly-reached",
+   "spec": {
+    "kind": "png",
+    "seed": 246,
+    "w": 12857,
+    "h": 2,
+    "params": {
+     "color_type": 2,
+     "pattern": "noise"
+    }
+   },
+   "want": {
+    "result": "error",
+    "code": "OSError"
+   }
+  },
+  {
+   "name": "jpeg-\u003ejpeg/noise-input-over-one-decoder-block",
+   "spec": {
+    "kind": "jpeg",
+    "seed": 2300,
+    "w": 400,
+    "h": 300,
+    "params": {
+     "pattern": "noise",
+     "quality": 95
+    }
+   },
+   "want": {
+    "result": "ok",
+    "content_type": "image/jpeg",
+    "width": 400,
+    "height": 300,
+    "size": 88368,
+    "sha256": "9d77:aa4d:70df:f6cd"
+   }
+  }
+ ]
+}
