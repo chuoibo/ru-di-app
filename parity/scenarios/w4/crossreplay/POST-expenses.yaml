@@ -1,0 +1,180 @@
+# W4 cross replay · POST /expenses (201, one expenses row). A proposal stored
+# under a key by one implementation is replayed, not written twice, by the
+# other; the fingerprint is canonical JSON (sorted keys, compact, UTF-8 kept
+# raw), so key order and spacing still replay across implementations, while a
+# reordered participants array is another request. An allocator 422 or a 404
+# for an unknown context is not stored by either side. Texts are sample data
+# (dữ liệu mẫu).
+id: w4/crossreplay/post-expenses
+routes: ['POST /expenses']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đề xuất chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo \"một\" 🙂 (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100001}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo \"một\" 🙂 (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100001}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-a'
+        content-type: 'application/json'
+      body_raw: '{ "total_amount_vnd" : 100001, "participants" : [ "{{persona.owner}}", "{{persona.mate}}" ], "occurred_at" : "2030-01-02T19:00:00+07:00", "verification_scope" : "totals_only", "paid_by_id" : "{{persona.owner}}", "recorded_by_id" : "{{persona.owner}}", "description" : "Bữa chéo "một" 🙂 (dữ liệu mẫu)", "context_id" : "{{ctx}}" }'
+  - id: core_refuses_python_key_reversed_participants
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo \"một\" 🙂 (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.mate}}","{{persona.owner}}"],"total_amount_vnd":100001}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T20:00:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000,"items":[{"item_id":"lau","amount_vnd":60000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]},{"item_id":"bia","amount_vnd":20000,"shared_by":["{{persona.mate}}"]}],"surcharges":[{"surcharge_id":"vat","kind":"VAT","amount_vnd":10000,"mode":"proportional"}]}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T20:00:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000,"items":[{"item_id":"lau","amount_vnd":60000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]},{"item_id":"bia","amount_vnd":20000,"shared_by":["{{persona.mate}}"]}],"surcharges":[{"surcharge_id":"vat","kind":"VAT","amount_vnd":10000,"mode":"proportional"}]}'
+  - id: python_replays_core_key_reordered
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"surcharges":[{"mode":"proportional","amount_vnd":10000,"kind":"VAT","surcharge_id":"vat"}],"items":[{"shared_by":["{{persona.owner}}","{{persona.mate}}"],"amount_vnd":60000,"item_id":"lau"},{"shared_by":["{{persona.mate}}"],"amount_vnd":20000,"item_id":"bia"}],"total_amount_vnd":90000,"participants":["{{persona.owner}}","{{persona.mate}}"],"occurred_at":"2030-01-02T20:00:00Z","verification_scope":"items_reviewed","paid_by_id":"{{persona.mate}}","recorded_by_id":"{{persona.owner}}","description":"Bữa chéo hai (dữ liệu mẫu)","context_id":"{{ctx}}"}'
+  # an explicit empty discounts list is not the absent key: another request
+  - id: python_refuses_core_key_explicit_default
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa chéo hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T20:00:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000,"items":[{"item_id":"lau","amount_vnd":60000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]},{"item_id":"bia","amount_vnd":20000,"shared_by":["{{persona.mate}}"]}],"surcharges":[{"surcharge_id":"vat","kind":"VAT","amount_vnd":10000,"mode":"proportional"}],"discounts":[]}'
+  # an allocator 422 is not stored: the same key then writes on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":[],"total_amount_vnd":1000}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  # a 404 for an unknown context is not stored either
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":2000}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":2000}'
+  # the anonymous scope crosses implementations too
+  - id: python_stores_anonymous_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":500}'
+  - id: core_replays_anonymous_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'x-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":500}'

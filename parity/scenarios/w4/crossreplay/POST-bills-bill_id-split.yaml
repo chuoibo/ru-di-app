@@ -1,0 +1,208 @@
+# W4 cross replay · POST /bills/{id}/split (200, a preview; writes nothing but
+# the idempotency row). A preview stored under a key by one implementation is
+# replayed by the other exactly as it was computed, even after the shares
+# changed; another body under the key is refused, and {} and an explicit
+# default are different bodies. A 422 (the for_ledger gate) and a 403 (no
+# role) are not stored by either side. Texts are sample data (dữ liệu mẫu).
+id: w4/crossreplay/post-bills-bill_id-split
+routes: ['POST /bills/{bill_id}/split']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chia hoá đơn chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn chia hoá đơn chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia hoá đơn chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":80001,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":50001,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":2,"unit_price_vnd":15000,"line_total_vnd":30000,"suggested_participant_ids":["{{persona.mate}}"]}],"surcharges":[{"surcharge_key":"vat","kind":"VAT","amount_vnd":8000,"mode":"proportional"}]}'
+    bind:
+      bill: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.owner}}"}'
+  - id: owner_moves_tra_without_key
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.owner}}"]}]}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.owner}}"}'
+  - id: core_replays_python_key_spaced
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-a'
+        content-type: 'application/json'
+      body_raw: '{ "paid_by_id" : "{{persona.owner}}" }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.owner}}","for_ledger":false}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-b'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: mate_moves_pho_without_key
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["pho"]}'
+  - id: python_replays_core_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-b'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: python_replays_core_key_spaced
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-b'
+        content-type: 'application/json'
+      body_raw: '{ }'
+  - id: python_refuses_core_key_explicit_default
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-b'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":null}'
+  # a 422 (the for_ledger gate: suggestions remain) is not stored
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-c'
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-c'
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":false}'
+  # a 403 (no role) is not stored
+  - id: core_refusal_releases_key
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-d'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  - id: python_uses_key_core_released
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-d'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  - id: core_replays_what_python_stored_after_release
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'x-split-d'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'

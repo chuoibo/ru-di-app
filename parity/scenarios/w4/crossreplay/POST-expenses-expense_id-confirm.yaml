@@ -1,0 +1,192 @@
+# W4 cross replay · POST /expenses/{id}/confirm (201, one expense version and its
+# confirmed allocations). Versions interleave across implementations: Python
+# writes version 1, Go version 2, and so on, and a key stored by one side is
+# replayed by the other instead of writing another version. A 409
+# proposal_changed or a 403 is not stored by either side. Amounts are integer
+# VND; texts are sample data (dữ liệu mẫu).
+id: w4/crossreplay/post-expenses-expense_id-confirm
+routes: ['POST /expenses/{expense_id}/confirm']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xác nhận chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  # Python stores version 1, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-a'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-a'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-a'
+        content-type: 'application/json'
+      body_raw: '{ "acknowledge_as_advancer": true, "expected_allocations": { "{{persona.mate}}": 100000, "{{persona.owner}}": 100000 }, "proposal": { "total_amount_vnd": 200000, "participants": [ "{{persona.owner}}", "{{persona.mate}}" ], "occurred_at": "2030-01-02T19:00:00+07:00", "verification_scope": "totals_only", "paid_by_id": "{{persona.owner}}", "recorded_by_id": "{{persona.owner}}", "description": "Bữa tối chéo (dữ liệu mẫu)", "context_id": "{{ctx}}" } }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-a'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  # Go stores version 2, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-b'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo sửa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200001},"expected_allocations":{"{{persona.owner}}":100001,"{{persona.mate}}":100000}}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-b'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo sửa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200001},"expected_allocations":{"{{persona.owner}}":100001,"{{persona.mate}}":100000}}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-b'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo sửa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200001},"expected_allocations":{"{{persona.owner}}":100001,"{{persona.mate}}":100000},"acknowledge_as_advancer":false}'
+  # a 409 proposal_changed is not stored: the same key then writes version 3 on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-c'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":200000}}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-c'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":150000,"{{persona.mate}}":150000}}'
+  # a 403 is_named_advancer is not stored: the mate then writes version 4 on Python
+  - id: core_refusal_releases_key
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-d'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":150000,"{{persona.mate}}":150000},"acknowledge_as_advancer":true}'
+  - id: python_uses_key_core_released
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-d'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":150000,"{{persona.mate}}":150000}}'
+  - id: core_replays_what_python_stored_after_release
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-d'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":150000,"{{persona.mate}}":150000}}'
+  # the owner's key is not the mate's: same key string, other scope, a new version 5
+  - id: owner_same_key_other_scope
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'x-conf-d'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300000},"expected_allocations":{"{{persona.owner}}":150000,"{{persona.mate}}":150000}}'

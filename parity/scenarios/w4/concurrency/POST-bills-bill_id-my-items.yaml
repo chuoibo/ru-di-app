@@ -1,0 +1,95 @@
+# W4 concurrency · POST /bills/{id}/my-items. Copies are released together.
+# Under one key the burst writes once and the other copies replay it. Without
+# a key, one person's identical claim twice at once: the write locks the bill
+# row FOR UPDATE before it reads the lines and the caller's shares, so the
+# copies queue; the second deletes the shares the first wrote and writes the
+# same set again. Both answer 200 with the same lines and shares; decided_at
+# is one rank for the whole burst. Another body under the completed key is
+# refused. Texts are sample data (dữ liệu mẫu).
+id: w4/concurrency/post-bills-bill_id-my-items
+routes: ['POST /bills/{bill_id}/my-items']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm nhận món cùng lúc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn nhận món cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận món cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":80000,"items_total_vnd":80000,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":50000,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":2,"unit_price_vnd":15000,"line_total_vnd":30000,"suggested_participant_ids":["{{persona.mate}}"]}]}'
+    bind:
+      bill: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        idempotency-key: 'c-claim-same'
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["pho"]}'
+  - id: no_key_same_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra"]}'
+  - id: same_key_other_body_burst
+    as: mate
+    concurrent: 2
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        idempotency-key: 'c-claim-same'
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra"]}'

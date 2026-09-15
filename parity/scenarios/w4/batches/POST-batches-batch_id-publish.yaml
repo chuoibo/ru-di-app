@@ -1,0 +1,389 @@
+# W4 · POST /batches/{id}/publish — refusals only. A publish that succeeds
+# answers guest_links[].path = "/g/" + a random token the harness cannot bind,
+# so no step here may succeed: every batch published below either carries an
+# expense whose payer did not acknowledge, or is refused earlier.
+# Order: idempotency key, JSON, actor, path and body validation, then: batch
+# exists (404, row locked FOR UPDATE, before any permission), publish_batch
+# (batch_owner is derived only for the owner: 403 role_not_permitted or
+# owns_batch), expiry in the future (422), publish gates (409).
+# Texts are sample data (dữ liệu mẫu).
+id: w4/batches/post-batches-batch_id-publish
+routes: ['POST /batches/{batch_id}/publish']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_batch
+    as: anonymous
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method": '
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_batch
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/khong-phai-uuid/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: stranger_unknown_batch
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gửi đợt thu (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # the payer does not acknowledge: this batch can never pass the gate
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000},"acknowledge_as_advancer":false}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      pending_batch: {from: body, pointer: /batch_id, class: uuid}
+  # not the owner, with batch_owner in the default dev roles: owns_batch
+  - id: stranger_publishes
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: stranger_roles_member_only
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: mate_publishes
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: mate_roles_member_only
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # permission before the expiry
+  - id: mate_expiry_in_past
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  - id: owner_expiry_in_past
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  - id: owner_expiry_without_offset
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00"}'
+  - id: owner_unknown_delivery_method
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"sms","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_missing_delivery_method
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_gate_unacknowledged
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # the owner's batch_owner role is derived, so header roles cannot remove it
+  - id: owner_roles_member_only_gate
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_roles_empty_gate
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # one acknowledged expense and one pending one in the same batch
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi_acknowledged
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_proposes_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_lunch_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000}}'
+    bind:
+      lunch_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_batches_mixed
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_v}}","{{lunch_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      mixed_batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: mate_gate_mixed_acknowledgement
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{mixed_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # a batch that would pass the gate: only refusals that come before the gate
+  - id: owner_proposes_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      breakfast: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_breakfast_acknowledged
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{breakfast}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      breakfast_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_acknowledged
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{breakfast_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ready_batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_ready_batch_expiry_in_past
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{ready_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00Z"}'
+  - id: mate_ready_batch_not_owner
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{ready_batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # idempotency: nothing is ever stored, so a key is released after every refusal
+  - id: owner_key_gate_refused
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        idempotency-key: 'w4-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_key_gate_refused_again
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        idempotency-key: 'w4-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_key_other_body_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        idempotency-key: 'w4-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  - id: owner_empty_idempotency_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{pending_batch}}/publish'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{pending_batch}}/publish'

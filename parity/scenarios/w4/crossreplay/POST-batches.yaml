@@ -1,0 +1,261 @@
+# W4 cross replay · POST /batches (201: a frozen batch, its version, obligations,
+# obligation sources and an audit event). A batch stored under a key by one
+# implementation is replayed, not frozen twice, by the other; key order and
+# spacing still replay (canonical JSON fingerprint), another due date under the
+# key is refused. A 409 (versions already batched) is not stored by either side,
+# so the key then writes on the other side. Amounts are integer VND; texts are
+# sample data (dữ liệu mẫu).
+id: w4/crossreplay/post-batches
+routes: ['POST /batches']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm gom chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn gom chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gom chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: propose_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      e1: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e1}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000}}'
+    bind:
+      v1: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: propose_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      e2: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e2}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000}}'
+    bind:
+      v2: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: propose_three
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản ba (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      e3: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_three
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e3}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản ba (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000}}'
+    bind:
+      v3: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: propose_four
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      e4: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_four
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e4}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000}}'
+    bind:
+      v4: {from: body, pointer: /expense_version_id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-a'
+        content-type: 'application/json'
+      body_raw: '{ "due_at" : "2030-02-01T12:00:00+07:00", "expense_version_ids" : [ "{{v1}}" ], "context_id" : "{{ctx}}" }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-02T12:00:00+07:00"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: python_replays_core_key_reordered
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-b'
+        content-type: 'application/json'
+      body_raw: '{"due_at": "2030-02-01T12:00:00+07:00",   "context_id": "{{ctx}}", "expense_version_ids": ["{{v2}}"]}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}","{{v3}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  # a 409 is not stored: the same key then writes on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v3}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v4}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'x-batch-d'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v4}}"],"due_at":"2030-02-01T12:00:00+07:00"}'

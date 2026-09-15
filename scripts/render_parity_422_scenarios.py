@@ -152,6 +152,34 @@ WAVES: dict[str, Wave] = {
             ),
         ),
     ),
+    "w4": Wave(
+        routes=(
+            ("GET", "/bills/{bill_id}"),
+            ("PUT", "/bills/{bill_id}/assignments"),
+            ("POST", "/bills/{bill_id}/my-items"),
+            ("POST", "/bills/{bill_id}/split"),
+            ("GET", "/batches/{batch_id}/obligations"),
+            ("GET", "/contexts/{context_id}/batches"),
+            ("POST", "/obligations/{obligation_id}/confirm-receipt"),
+            ("GET", "/people/{person_id}/finance"),
+        ),
+        deferred=(
+            # occurred_at carries a timezone field_validator
+            ("POST", "/expenses", "'function-after' is not probed"),
+            ("POST", "/expenses/{expense_id}/confirm", "'function-after' is not probed"),
+            # surcharges and discounts default through default_factory
+            (
+                "POST",
+                "/bills",
+                "carries ['default_factory', 'default_factory_takes_data']",
+            ),
+            # the candidate query parses digits in a BeforeValidator
+            ("GET", "/contexts/{context_id}/budget", "'function-after' is not probed"),
+            # due_at and guest_link_expires_at carry a timezone field_validator
+            ("POST", "/batches", "'function-after' is not probed"),
+            ("POST", "/batches/{batch_id}/publish", "'function-after' is not probed"),
+        ),
+    ),
 }
 
 

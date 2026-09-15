@@ -1,0 +1,266 @@
+# W4 cross replay · POST /obligations/{id}/confirm-receipt (201: one
+# receipt_confirmations row and an audit event). Two idempotency layers cross
+# implementations: the Idempotency-Key header (a stored 201 is replayed by the
+# other side, another body under it is refused) and the body idempotency_key,
+# unique across the table (the same request returns the receipt the other side
+# stored; another amount under it is 409). A refusal is not stored, so its
+# header key then writes on the other side. Body keys borrow this run's group
+# id. Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/crossreplay/post-obligations-obligation_id-confirm-receipt
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm nhận chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn trả chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận tiền chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  # header key: Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{ "idempotency_key" : "{{kp}}-aaaaaaaaaaaa", "amount_vnd" : 1000 }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":2000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  # header key: Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaab"}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaab"}'
+  - id: python_replays_core_key_reordered
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"idempotency_key": "{{kp}}-aaaaaaaaaaab",   "amount_vnd": 1000}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaab","payment_report_id":null}'
+  # body key without a header: the stored receipt comes back from either side
+  - id: python_stores_body_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaac"}'
+  - id: core_same_body_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaac"}'
+  - id: core_body_key_other_amount
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1001,"idempotency_key":"{{kp}}-aaaaaaaaaaac"}'
+  - id: core_stores_body_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaad"}'
+  - id: python_same_body_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaad"}'
+  - id: python_body_key_other_amount
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":999,"idempotency_key":"{{kp}}-aaaaaaaaaaad"}'
+  # a 404 is not stored: the header key then writes on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-e'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaae"}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-e'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaae"}'
+  # a 409 (body key reused with another amount) is not stored either
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-f'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5,"idempotency_key":"{{kp}}-aaaaaaaaaaac"}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-f'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaf"}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'x-rcpt-f'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaf"}'

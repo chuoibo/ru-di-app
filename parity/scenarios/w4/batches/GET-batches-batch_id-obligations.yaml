@@ -1,0 +1,403 @@
+# W4 · GET /batches/{id}/obligations — the collection board of one batch.
+# Order: actor, path, batch exists (404 unknown_batch, before any permission),
+# view_collection_board (member + ACTIVE membership of the batch's group).
+# Status is derived per request from receipt events; without a published guest
+# link, disputed stays false and payment_reported_at null. Rows are ordered by
+# sender_id only. Every obligation comes from one expense and the amounts inside
+# a batch differ, which keeps the database lane's new rows apart.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/batches/get-batches-batch_id-obligations
+routes: ['GET /batches/{batch_id}/obligations']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_batch
+    as: anonymous
+    request:
+      method: GET
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/obligations'
+  - id: anonymous_non_uuid_batch
+    as: anonymous
+    request:
+      method: GET
+      path: '/batches/khong-phai-uuid/obligations'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/obligations'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_batch
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/khong-phai-uuid/obligations'
+  - id: stranger_unknown_batch
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/obligations'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bảng thu (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  # batch A: two senders owing the owner 25001 and 25000; which row is index 0
+  # depends on the person ids, so each receipt below lands on the same status
+  # whichever row it is
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":25001,"{{persona.third}}":25000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_a: {from: body, pointer: /batch_id, class: uuid}
+      ob_first: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+      ob_second: {from: body, pointer: /obligations/1/obligation_id, class: uuid}
+  - id: owner_board_outstanding
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: stranger_real_batch
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+      headers:
+        x-actor-roles: ''
+  # a sender reads the whole board, the other sender's row included
+  - id: mate_reads_board
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: owner_confirms_part_of_first
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_first}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{dinner}}"}'
+  - id: owner_board_partial
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: owner_over_confirms_second
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_second}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":30000,"idempotency_key":"{{dinner_v}}"}'
+  - id: third_board_partial_and_over
+    as: third
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  # batch B: one sender (the owner) owing two recipients; ORDER BY sender_id ties
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: third_proposes_breakfast
+    as: third
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":20000}'
+    bind:
+      breakfast: {from: body, pointer: /expense_id, class: uuid}
+  - id: third_confirms_breakfast
+    as: third
+    request:
+      method: POST
+      path: '/expenses/{{breakfast}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.third}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      breakfast_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_one_sender_two_recipients
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_v}}","{{breakfast_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_b: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_board_same_sender_twice
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_b}}/obligations'
+  # batch C: one obligation confirmed to the dong
+  - id: mate_proposes_lunch
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":10000}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_lunch
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":10000},"expected_allocations":{"{{persona.owner}}":5000,"{{persona.mate}}":5000},"acknowledge_as_advancer":true}'
+    bind:
+      lunch_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_batches_lunch
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_c: {from: body, pointer: /batch_id, class: uuid}
+      ob_c: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: mate_confirms_exact
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_c}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{lunch}}"}'
+  - id: owner_board_confirmed
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_c}}/obligations'
+  # batch D: one obligation taking one receipt of 2**63 - 1 dong
+  - id: mate_proposes_snack
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bánh (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":2000}'
+    bind:
+      snack: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_snack
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{snack}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bánh (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":2000},"expected_allocations":{"{{persona.owner}}":1000,"{{persona.mate}}":1000},"acknowledge_as_advancer":true}'
+    bind:
+      snack_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_batches_snack
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{snack_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_d: {from: body, pointer: /batch_id, class: uuid}
+      ob_d: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: mate_confirms_int64_max
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_d}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{snack}}"}'  # repo-guard: allow=long-number reason=int64-receipt-board-probe
+  - id: owner_board_int64_receipt
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_d}}/obligations'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations'
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations?status=confirmed'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_a}}/obligations/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch_a}}/obligations'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

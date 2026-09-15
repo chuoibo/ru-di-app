@@ -1,0 +1,492 @@
+# W4 · POST /obligations/{id}/confirm-receipt — the recipient says money arrived.
+# Order: idempotency header, JSON, actor, path and body validation, then:
+# obligation exists (404, row locked FOR UPDATE, before any permission),
+# confirm_receipt (role recipient + recipient of THIS obligation, 403), the
+# body idempotency_key (globally unique: the same request returns the stored
+# receipt, anything else is 409), payment_report_id must name a report of this
+# obligation (409). Status is derived from every receipt of the obligation.
+# amount_vnd has no upper bound: one receipt of 2**63 - 1 per obligation only
+# (two would break the collection_obligation_progress bigint cast).
+# Body keys borrow this run's group id so they never meet a key from another run.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/obligations/post-obligations-obligation_id-confirm-receipt
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_obligation
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd": '
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        x-actor-roles: 'recipient,thu-quy'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_obligation
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/khong-phai-uuid/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  # body validation before the obligation lookup
+  - id: stranger_zero_amount_unknown_obligation
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":0,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: stranger_unknown_obligation
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xác nhận nhận tiền (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  # two obligations, both owed to the owner: 25001 and 25000 (distinct amounts keep
+  # their obligation_sources rows apart); which one is index 0 depends on ids
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":25001,"{{persona.third}}":25000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob_a: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+      ob_b: {from: body, pointer: /obligations/1/obligation_id, class: uuid}
+  # one obligation owed to the mate, 20000
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_batches_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob_m: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: stranger_confirms
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: third_confirms_owners_obligation
+    as: third
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  # the sender of an obligation may not confirm it
+  - id: owner_confirms_as_sender
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: mate_roles_member_only
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  # existence is answered before the role
+  - id: mate_roles_empty_unknown_obligation
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: owner_confirms_partial
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  # the body key: the same request returns the stored receipt, no new row
+  - id: owner_same_body_key_again
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"idempotency_key":"{{kp}}-aaaaaaaaaaaa","amount_vnd":10000}'
+  - id: owner_same_body_key_other_amount
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10001,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: owner_same_body_key_other_obligation
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_b}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  # the key is global: another recipient learns it is taken
+  - id: mate_reuses_owners_body_key
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: owner_same_body_key_with_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa","payment_report_id":"dddddddd-eeee-4fff-8aaa-bbbbbbbbbbbb"}'
+  - id: owner_unknown_payment_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaab","payment_report_id":"dddddddd-eeee-4fff-8aaa-bbbbbbbbbbbb"}'
+  # 30000 received on 25001 or 25000 owed: over_confirmed either way
+  - id: owner_confirms_past_amount
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":20000,"idempotency_key":"{{kp}}-aaaaaaaaaaac","payment_report_id":null}'
+  - id: owner_over_confirms
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1,"idempotency_key":"{{kp}}-aaaaaaaaaaad"}'
+  # one receipt of 2**63 - 1 on the second obligation, and nothing else on it
+  - id: owner_confirms_int64_max
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_b}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{kp}}-aaaaaaaaaaae"}'  # repo-guard: allow=long-number reason=int64-receipt-amount-probe
+  # the same key with 2**63: compared, refused, never written
+  - id: owner_int64_key_reused_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_b}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775808,"idempotency_key":"{{kp}}-aaaaaaaaaaae"}'  # repo-guard: allow=long-number reason=int64-receipt-amount-probe
+  # a fresh key with 2**63: the bigint insert fails and nothing is stored
+  - id: mate_amount_past_int64
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775808,"idempotency_key":"{{kp}}-aaaaaaaaaaaf"}'  # repo-guard: allow=long-number reason=int64-receipt-amount-probe
+  - id: mate_same_key_after_failed_insert
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":20000,"idempotency_key":"{{kp}}-aaaaaaaaaaaf"}'
+  - id: owner_amount_float
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000.0,"idempotency_key":"{{kp}}-aaaaaaaaaaba"}'
+  - id: owner_amount_string
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":"1000","idempotency_key":"{{kp}}-aaaaaaaaaaba"}'
+  - id: owner_amount_negative
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":-1,"idempotency_key":"{{kp}}-aaaaaaaaaaba"}'
+  - id: owner_body_key_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"khong-phai-uuid"}'
+  - id: owner_body_key_missing
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000}'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaba","confirmed_by_id":"{{persona.owner}}"}'
+  # the idempotency header: replay, reuse with another body, refusal releases
+  - id: owner_header_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaaba"}'
+  - id: owner_header_key_replay_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{ "idempotency_key": "{{kp}}-aaaaaaaaaaba", "amount_vnd": 1000 }'
+  - id: owner_header_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-rcpt-a'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":2000,"idempotency_key":"{{kp}}-aaaaaaaaaaba"}'
+  - id: mate_header_key_refused
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaabb"}'
+  - id: mate_header_key_after_refusal
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-rcpt-b'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaabb"}'
+  - id: owner_empty_idempotency_key
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaabc"}'
+  # no membership check: a recipient who left the group still confirms
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_confirms_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob_m}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-aaaaaaaaaabc"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/obligations/{{ob_a}}/confirm-receipt'

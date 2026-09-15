@@ -1,0 +1,71 @@
+# W4 concurrency · POST /expenses (201, one expenses row per write). Copies are
+# released together. Under one key the burst writes once and the other copies
+# wait for the winner and replay it; under distinct keys every copy writes its
+# own row; a different body under the completed key is refused by every copy.
+# Nothing unique constrains an expense identity, so no copy can lose a database
+# race. Texts are sample data (dữ liệu mẫu).
+id: w4/concurrency/post-expenses
+routes: ['POST /expenses']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đề xuất cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'c-exp-same'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cùng lúc (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":10001}'
+  - id: distinct_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'c-exp-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khác khoá (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":2000}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'c-exp-same'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cùng lúc (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":10002}'
+  # the anonymous scope, keyed by this run's group id
+  - id: anonymous_same_key_burst
+    as: anonymous
+    concurrent: 3
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'c-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":300}'

@@ -1,0 +1,568 @@
+# W4 · POST /bills/{bill_id}/split — project a bill draft onto the allocator
+# and preview the split between the group's ACTIVE roster. Writes nothing.
+# Order: idempotency key, JSON, actor, path and body validation, bill exists
+# (404), role + ACTIVE membership (403), roster read (participants = ACTIVE,
+# excluded = invited, both in byte order), bill projection (422 "Bill cannot
+# be projected"), for_ledger needs every share confirmed (422), allocator (422
+# "Bill cannot be allocated"). paid_by_id is never checked against the roster.
+# With no printed total the allocator total is lines + surcharges - discounts
+# in Python ints. Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/bill/post-bills-bill_id-split
+routes: ['POST /bills/{bill_id}/split']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_bill
+    as: anonymous
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # FastAPI decodes a JSON body before resolving the actor: 422 beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger": '
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/split'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_bill
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/khong-phai-uuid/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: stranger_unknown_bill
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia hoá đơn (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+    bind:
+      m_invitee: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_dinner_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":180000,"items_total_vnd":175000,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở bò (dữ liệu mẫu)","quantity":2,"unit_price_vnd":50000,"line_total_vnd":100000,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"Nem","name":"Nem rán (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.mate}}"]},{"item_key":"tra","name":"Trà đá (dữ liệu mẫu)","quantity":3,"unit_price_vnd":5000,"line_total_vnd":15000,"suggested_participant_ids":["{{persona.third}}"]}],"surcharges":[{"surcharge_key":"vat","kind":"VAT","amount_vnd":12000,"mode":"proportional"},{"surcharge_key":"phi","kind":"service","amount_vnd":5000,"mode":"even"}],"discounts":[{"discount_key":"voucher","amount_vnd":2000,"scope":"global_proportional"},{"discount_key":"giam-pho","amount_vnd":10000,"scope":"item","item_key":"pho"}]}'
+    bind:
+      dinner: {from: body, pointer: /id, class: uuid}
+  - id: stranger_real_bill
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: invitee_splits
+    as: invitee
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{}'
+  # a preview of guesses; the invitee is listed as excluded
+  - id: owner_previews_suggested_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_for_ledger_with_suggestions
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  - id: owner_confirms_pho_and_nem
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{dinner}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}","{{persona.mate}}"]},{"item_key":"Nem","participant_ids":["{{persona.third}}"]}]}'
+  - id: owner_confirms_tra
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{dinner}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.owner}}"]}]}'
+  - id: owner_splits_for_ledger
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  # a payer outside the roster is accepted: warning advancer_not_participant
+  - id: mate_splits_paid_by_stranger
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.stranger}}"}'
+  - id: third_splits_paid_by_null
+    as: third
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":false,"paid_by_id":null}'
+  # projection refusals, then allocator refusals, one bill each
+  - id: owner_creates_bill_without_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":0,"confidence":0,"needs_review":false,"items":[]}'
+    bind:
+      empty_bill: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_bill_without_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{empty_bill}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_creates_unassigned_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":50000,"items_total_vnd":50000,"confidence":40,"needs_review":true,"items":[{"item_key":"com","name":"Cơm (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":50000,"suggested_participant_ids":[]}]}'
+    bind:
+      unassigned: {from: body, pointer: /id, class: uuid}
+  # the projection refuses before the for_ledger gate
+  - id: owner_splits_unassigned_for_ledger
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{unassigned}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true}'
+  - id: owner_creates_printed_mismatch_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":90000,"items_total_vnd":100000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":100000,"suggested_participant_ids":["{{persona.owner}}"]}]}'
+    bind:
+      mismatch: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_printed_mismatch
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{mismatch}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # an item discount whose target is no line was stored unchecked
+  - id: owner_creates_bill_discount_target_missing
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":100,"scope":"item","item_key":"khong-co"}]}'
+    bind:
+      missing_target: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_discount_target_missing
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{missing_target}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_creates_bill_item_discount_over_line
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":0,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":1001,"scope":"item","item_key":"pho"}]}'
+    bind:
+      over_item: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_item_discount_over_line
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{over_item}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_creates_bill_global_discount_over_base
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":0,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":1001,"scope":"global_proportional"}]}'
+    bind:
+      over_base: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_global_discount_over_base
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{over_base}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # no printed total: lines - discounts goes negative, NEGATIVE_AMOUNT comes
+  # before the arithmetic group
+  - id: owner_creates_bill_discount_over_lines_unprinted
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":1001,"scope":"global_proportional"}]}'
+    bind:
+      negative: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_negative_total
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{negative}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # pydantic lets an empty surcharge kind through; the allocator does not
+  - id: owner_creates_bill_empty_surcharge_kind
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}],"surcharges":[{"surcharge_key":"phi","kind":"","amount_vnd":100,"mode":"even"}]}'
+    bind:
+      empty_kind: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_empty_surcharge_kind
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{empty_kind}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # pydantic caps item_key at 64 characters and nothing else; the allocator
+  # refuses an id with surrounding spaces
+  - id: owner_creates_bill_padded_item_key
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1000,"confidence":90,"needs_review":false,"items":[{"item_key":"pho ","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000,"suggested_participant_ids":["{{persona.owner}}"]}]}'
+    bind:
+      padded_key: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_padded_item_key
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{padded_key}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_creates_bill_over_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1000000000001,"confidence":90,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1000000000001,"suggested_participant_ids":["{{persona.owner}}"]}]}'  # repo-guard: allow=long-number reason=allocator-ceiling-probe
+    bind:
+      over_ceiling: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_over_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{over_ceiling}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # lines 2**62 and 2**62-1 fit bigint, and so does their sum; with a surcharge
+  # of 2**62 and no printed total the allocator total is past int64:
+  # AMOUNT_TOO_LARGE, where a wrapped int64 sum would read NEGATIVE_AMOUNT
+  - id: owner_creates_bill_total_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":9223372036854775807,"confidence":90,"needs_review":false,"items":[{"item_key":"a","name":"Món một (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":4611686018427387904,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"b","name":"Món hai (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":4611686018427387903,"suggested_participant_ids":["{{persona.mate}}"]}],"surcharges":[{"surcharge_key":"phi","kind":"service","amount_vnd":4611686018427387904,"mode":"even"}]}'  # repo-guard: allow=long-number reason=int64-split-total-probe
+    bind:
+      past_int64: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_total_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{past_int64}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # remainders across three people, the advancer wins the tie
+  - id: owner_creates_odd_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":100001,"confidence":90,"needs_review":false,"items":[{"item_key":"lau","name":"Lẩu (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":100001,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"]}]}'
+    bind:
+      odd: {from: body, pointer: /id, class: uuid}
+  - id: owner_splits_odd_bill_paid_by_mate
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  # pydantic: strict bool, a payer that is no uuid, a participant list the body cannot carry
+  - id: owner_invalid_split_body
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":"true","paid_by_id":"khong-phai-uuid","participant_ids":["{{persona.owner}}"]}'
+  # idempotency: a stored preview replays; reuse; a refusal that releases
+  - id: owner_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        idempotency-key: 'w4-split-a'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_key_replay_spaced
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        idempotency-key: 'w4-split-a'
+        content-type: 'application/json'
+      body_raw: '{ }'
+  - id: owner_key_reused_explicit_default
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        idempotency-key: 'w4-split-a'
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":false}'
+  - id: owner_key_refused_gate
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        idempotency-key: 'w4-split-b'
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true}'
+  - id: owner_key_after_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{odd}}/split'
+      headers:
+        idempotency-key: 'w4-split-b'
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":false}'
+  # the roster moves the split: the invitee joins, the mate leaves
+  - id: invitee_accepts
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept'
+  - id: owner_previews_after_invitee_joined
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_splits_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # the confirmed shares still name the mate, who is off the roster
+  - id: owner_splits_after_mate_left
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{dinner}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{dinner}}/split'

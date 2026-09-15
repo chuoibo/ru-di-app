@@ -1,0 +1,201 @@
+# W4 · bills in prod auth mode (ADR-0014): identity is a bearer session read by
+# digest; X-Actor-* headers are ignored. Every session holder carries member,
+# so the bill doors come down to ACTIVE membership of the bill's group.
+# The harness seeds a people row and a live session per persona before step one.
+# Texts are sample data (dữ liệu mẫu).
+id: w4/bill/prod-auth
+routes: ['POST /bills', 'GET /bills/{bill_id}', 'PUT /bills/{bill_id}/assignments', 'POST /bills/{bill_id}/my-items', 'POST /bills/{bill_id}/split']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_create_missing_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","printed_total_vnd":null,"items_total_vnd":0,"confidence":0,"needs_review":false,"items":[]}'
+  - id: junk_bearer_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_splits
+    as: anonymous
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/split'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+        content-type: 'application/json'
+      body_raw: '{}'
+  # dev would trust these headers; prod answers 401 Missing bearer session
+  - id: actor_headers_ignored_claims
+    as: anonymous
+    request:
+      method: POST
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/my-items'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"item_keys":[]}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hoá đơn prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # in dev an empty X-Actor-Roles is 403 role_not_permitted; prod ignores it
+  - id: owner_creates_bill_empty_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":90000,"items_total_vnd":90000,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":2,"unit_price_vnd":15000,"line_total_vnd":30000,"suggested_participant_ids":["{{persona.mate}}"]}]}'
+    bind:
+      bill: {from: body, pointer: /id, class: uuid}
+  - id: stranger_unknown_bill
+    as: stranger
+    request:
+      method: GET
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: stranger_reads_claiming_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/bills/{{bill}}'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-contexts: '{{ctx}}'
+  - id: stranger_creates_in_group
+    as: stranger
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":0,"confidence":0,"needs_review":false,"items":[]}'
+  - id: owner_lowercase_scheme_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/bills/{{bill}}'
+      headers:
+        authorization: 'bearer {{token.owner}}'
+  - id: mate_claims_tra
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra"]}'
+  - id: stranger_assigns
+    as: stranger
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.stranger}}"]}]}'
+  - id: owner_assigns_pho
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}","{{persona.mate}}"]}]}'
+  - id: stranger_splits
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_splits_for_ledger
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  - id: idem_first
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'w4-bills-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  - id: idem_replay
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'w4-bills-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  # the key scope is the bearer digest, so the stranger's request runs and is refused
+  - id: stranger_same_key
+    as: stranger
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        idempotency-key: 'w4-bills-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_reads_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/bills/{{bill}}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_after_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{bill}}'

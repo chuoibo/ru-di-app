@@ -1,0 +1,145 @@
+# W4 concurrency · POST /obligations/{id}/confirm-receipt. Copies are released
+# together; get_receipt_target locks the obligation row FOR UPDATE, so copies
+# on one obligation run one after the other. Under one Idempotency-Key the burst
+# writes once and the others replay; another body under the completed key is
+# refused by every copy. Without the header, copies sharing one body
+# idempotency_key: the second finds the stored receipt and returns it, so every
+# copy answers the same 201 and one row exists. Both obligations are owed to the
+# owner (25001 and 25000) and each takes 10000, partially_confirmed either way,
+# so which one is index 0 does not matter. No burst of distinct body keys: its
+# rows differ only by uuid4 values, which the database lane orders by random id.
+# Body keys borrow this run's group id. Amounts are integer VND; texts are
+# sample data (dữ liệu mẫu).
+id: w4/concurrency/post-obligations-obligation_id-confirm-receipt
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm nhận cùng lúc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn trả cùng lúc (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận tiền cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":70001,"items":[{"item_id":"lau","amount_vnd":20000,"shared_by":["{{persona.owner}}"]},{"item_id":"bia","amount_vnd":25001,"shared_by":["{{persona.mate}}"]},{"item_id":"nuoc","amount_vnd":25000,"shared_by":["{{persona.third}}"]}]},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":25001,"{{persona.third}}":25000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob_a: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+      ob_b: {from: body, pointer: /obligations/1/obligation_id, class: uuid}
+  - id: header_same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'c-rcpt-same'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
+  - id: body_same_key_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/obligations/{{ob_b}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-aaaaaaaaaaab"}'
+  - id: header_same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/obligations/{{ob_a}}/confirm-receipt'
+      headers:
+        idempotency-key: 'c-rcpt-same'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":20000,"idempotency_key":"{{kp}}-aaaaaaaaaaaa"}'
