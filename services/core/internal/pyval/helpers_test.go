@@ -50,6 +50,12 @@ func goTree(v Value) any {
 		return []any{"s", latin1(string(x))}
 	case Bytes:
 		return []any{"y", latin1(string(x))}
+	case *UploadFile:
+		headers := []any{}
+		for _, h := range x.Headers {
+			headers = append(headers, []any{latin1(h[0]), latin1(h[1])})
+		}
+		return []any{"file", latin1(x.Filename), latin1(string(x.Content)), headers, x.Size()}
 	case UUID:
 		return []any{"u", x.String()}
 	case Date:

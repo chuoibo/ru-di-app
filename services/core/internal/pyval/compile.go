@@ -452,7 +452,7 @@ func (c *compiler) compileModelFields(n *pyjson.OrderedMap, cfg config, class, w
 			}
 		}
 		schema := mustGet(f, "schema")
-		mf := modelField{name: name, v: c.compile(schema, cfg, where+"."+name)}
+		mf := modelField{name: name, alias: irString(f, "alias"), v: c.compile(schema, cfg, where+"."+name)}
 		if d, ok := mf.v.(*defaultValidator); ok {
 			mf.def = d
 		}

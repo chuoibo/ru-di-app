@@ -49,8 +49,41 @@ func NewRegistry() *Registry {
 	} {
 		r.Register("pydantic._internal._validators."+name, compareValidator(typ))
 	}
+	r.Register("fastapi.datastructures.UploadFile._validate", validateUploadFile)
 	registerServedValidators(r)
 	return r
+}
+
+// validateUploadFile is fastapi.datastructures.UploadFile._validate
+// (datastructures.py:152-155): an UploadFile passes, anything else is
+// ValueError(f"Expected UploadFile, received: {type(value)}").
+func validateUploadFile(_ *Call, v Value) (Value, error) {
+	if f, ok := v.(*UploadFile); ok {
+		return f, nil
+	}
+	return nil, ValueError("Expected UploadFile, received: " + pyTypeRepr(v))
+}
+
+// pyTypeRepr is repr(type(v)) for the values a form or JSON body holds.
+func pyTypeRepr(v Value) string {
+	name := "object"
+	switch v.(type) {
+	case nil, pyjson.Null:
+		name = "NoneType"
+	case pyjson.Bool:
+		name = "bool"
+	case pyjson.Int:
+		name = "int"
+	case pyjson.Float:
+		name = "float"
+	case pyjson.String:
+		name = "str"
+	case pyjson.List, List:
+		name = "list"
+	case *pyjson.OrderedMap, *Dict:
+		name = "dict"
+	}
+	return "<class '" + name + "'>"
 }
 
 // Register installs f under name, replacing any earlier registration.

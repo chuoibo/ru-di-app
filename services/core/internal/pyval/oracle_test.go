@@ -61,6 +61,7 @@ os.environ["MOBILE_DATABASE_URL"] = "postgresql+psycopg://nobody:nothing@127.0.0
 sys.path.insert(0, "/srv")
 from pydantic import BaseModel
 from fastapi.routing import APIRoute
+from starlette.datastructures import UploadFile
 from starlette.responses import Response
 from app.api.main import create_app
 
@@ -82,6 +83,9 @@ def tree(v):
     if isinstance(v, uuid.UUID): return ["u", str(v)]
     if isinstance(v, dt.datetime): return ["dt", v.isoformat()]
     if isinstance(v, dt.date): return ["date", v.isoformat()]
+    if isinstance(v, UploadFile):
+        v.file.seek(0)
+        return ["file", lat(v.filename.encode("utf-8", "surrogatepass")), lat(v.file.read()), [[lat(k), lat(x)] for k, x in v.headers.raw], v.size]
     if isinstance(v, BaseModel):
         names = list(type(v).model_fields)
         return ["m", qual(type(v)), [[k, tree(getattr(v, k))] for k in names], [k for k in names if k in v.model_fields_set]]
@@ -90,6 +94,7 @@ def tree(v):
     return ["?", type(v).__name__]
 
 app = create_app()
+#@extra-routes
 # IdempotencyMiddleware answers every request that carries Idempotency-Key
 # before routing, and needs the database to do it. What this oracle measures
 # is how that header validates, so the layer is left out; no other case
@@ -222,15 +227,24 @@ func TestOracle(t *testing.T) {
 	sort.Strings(ids)
 
 	var cases []oracleCase
+	formRoutes, formCaseCount := 0, 0
 	for _, id := range ids {
 		g := &gen{r: rand.New(rand.NewPCG(seed, hashString(id))), route: bound[id]}
-		if w1Set[id] {
+		switch {
+		case bound[id].form:
+			// Form and File routes: random form bodies (oracle_forms_test.go).
+			g.budget = 400
+			g.formRandom()
+			formRoutes++
+			formCaseCount += len(g.cases)
+		case w1Set[id]:
 			g.budget = 900
 			g.w1Extras()
-		} else {
+			g.generic()
+		default:
 			g.budget = 160
+			g.generic()
 		}
-		g.generic()
 		cases = append(cases, g.cases...)
 	}
 
@@ -301,6 +315,8 @@ func TestOracle(t *testing.T) {
 		t.Logf("  category %-28s cases=%5d mismatches=%d", k, tl.total, tl.bad)
 	}
 	t.Logf("skipped (not bindable): %d routes", len(skipped))
+	t.Logf("form and file routes: %d, form cases: %d; other routes: %d, cases: %d",
+		formRoutes, formCaseCount, len(ids)-formRoutes, len(cases)-formCaseCount)
 	t.Logf("oracle %s seed=%d scope=%s: %d routes, %d cases, %d mismatches, took %s",
 		image, seed, scope, len(ids), len(cases), mismatches, time.Since(started).Round(time.Millisecond))
 }
@@ -331,15 +347,33 @@ func clip(s string, n int) string {
 // oracleDriverOverride replaces oracleDriver for one pythonAnswers call.
 var oracleDriverOverride string
 
+// oracleRoutesMarker is the oracleDriver line a test replaces with code that
+// adds routes to the app before any endpoint is stubbed.
+const oracleRoutesMarker = "#@extra-routes\n"
+
+var (
+	// oracleDockerArgs are extra `docker run` arguments, e.g. a mount.
+	oracleDockerArgs []string
+	// oracleCacheSalt joins the cache key: the content of a mounted file.
+	oracleCacheSalt string
+	// oracleCacheSuffix is appended to PYVAL_ORACLE_CACHE, so tests that
+	// ask different questions keep separate caches.
+	oracleCacheSuffix string
+)
+
 func pythonAnswers(t *testing.T, image string, stdin []byte, n int) [][]byte {
 	t.Helper()
 	driver := oracleDriver
 	if oracleDriverOverride != "" {
 		driver = oracleDriverOverride
 	}
-	sum := sha256.Sum256(append([]byte(image+"\n"+driver+"\n"), stdin...))
+	head := image + "\n" + strings.Join(oracleDockerArgs, "\n") + "\n" + oracleCacheSalt + "\n" + driver + "\n"
+	sum := sha256.Sum256(append([]byte(head), stdin...))
 	key := hex.EncodeToString(sum[:])
 	cache := os.Getenv("PYVAL_ORACLE_CACHE")
+	if cache != "" {
+		cache += oracleCacheSuffix
+	}
 	if cache != "" {
 		if data, err := os.ReadFile(cache); err == nil {
 			if head, rest, ok := bytes.Cut(data, []byte("\n")); ok && string(head) == key {
@@ -351,7 +385,9 @@ func pythonAnswers(t *testing.T, image string, stdin []byte, n int) [][]byte {
 			}
 		}
 	}
-	cmd := exec.Command("docker", "run", "--rm", "-i", "--network", "none", "--entrypoint", "python", image, "-c", driver)
+	args := append([]string{"run", "--rm", "-i", "--network", "none"}, oracleDockerArgs...)
+	args = append(args, "--entrypoint", "python", image, "-c", driver)
+	cmd := exec.Command("docker", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = bytes.NewReader(stdin), &stdout, &stderr
 	if err := cmd.Run(); err != nil {
@@ -450,7 +486,7 @@ func goOutcome(t *testing.T, r *Route, oc oracleCase) []byte {
 			t.Fatal(werr)
 		}
 	case errors.As(err, &be):
-		if werr := WriteBodyError(rec); werr != nil {
+		if werr := be.Respond(rec); werr != nil {
 			t.Fatal(werr)
 		}
 	case err != nil:

@@ -12,15 +12,25 @@ import (
 // Numeric coercions of pydantic-core 2.46.5 (src/input/shared.rs) as they
 // apply to Python-mode validation of what json.loads and Starlette produce.
 
-// strAsInt is str_as_int: trim (Rust White_Space), refuse more than 4300
-// bytes, then parse as a base-10 integer; on failure retry without a
-// non-empty all-zero fraction, then without digit separators. Measured:
-// "1.00" and "1_0.0" parse, "1.", ".0", "1.0_0" and "1__0" do not.
+// strAsInt is str_as_int as measured on pydantic-core 2.46.5:
+//
+//  1. An integer scan runs on the untrimmed text first: a run of ASCII
+//     digits that starts with 1-9, after an optional "-", and ends more
+//     than 4300 bytes into the text is int_parsing_size, whatever follows
+//     it ("1"*4301+"a", "-"+"1"*4300+".0").
+//  2. Otherwise the text is trimmed (Rust White_Space) and parsed as a
+//     base-10 integer; on failure again without a non-empty all-zero
+//     fraction, then without digit separators. "1.00" and "1_0.0" parse,
+//     "1.", ".0", "1.0_0" and "1__0" do not.
+//  3. That parse refuses, as int_parsing, a value with more than 4300
+//     significant digits counting a "-" but not a "+" or leading zeros:
+//     " "+"1"*4301, "+"+"1"*4301 and "-0"+"1"*4300 are int_parsing,
+//     "0"*5000+"1"*4300 parses.
 func strAsInt(s string) (pyjson.Int, string) {
-	s = rustTrim(s)
-	if len(s) > pyjson.IntMaxStrDigits {
+	if intScanTooLarge(s) {
 		return pyjson.Int{}, "int_parsing_size"
 	}
+	s = rustTrim(s)
 	if v, ok := parseRustInt(s); ok {
 		return v, ""
 	}
@@ -39,11 +49,29 @@ func strAsInt(s string) (pyjson.Int, string) {
 	return pyjson.Int{}, "int_parsing"
 }
 
+// intScanTooLarge is step 1 of strAsInt.
+func intScanTooLarge(s string) bool {
+	i := 0
+	if i < len(s) && s[i] == '-' {
+		i++
+	}
+	if i >= len(s) || s[i] < '1' || s[i] > '9' {
+		return false
+	}
+	for i < len(s) && isDigit(s[i]) {
+		i++
+	}
+	return i > pyjson.IntMaxStrDigits
+}
+
 // parseRustInt is i64::from_str / BigInt::from_str: an optional sign, then
-// ASCII digits only.
+// ASCII digits only, refused past 4300 significant digits counting a "-"
+// (strAsInt step 3).
 func parseRustInt(s string) (pyjson.Int, bool) {
+	negative := false
 	digits := s
 	if digits != "" && (digits[0] == '+' || digits[0] == '-') {
+		negative = digits[0] == '-'
 		digits = digits[1:]
 	}
 	if digits == "" {
@@ -54,8 +82,20 @@ func parseRustInt(s string) (pyjson.Int, bool) {
 			return pyjson.Int{}, false
 		}
 	}
-	if s[0] == '+' {
-		s = s[1:]
+	significant := strings.TrimLeft(digits, "0")
+	counted := len(significant)
+	if negative {
+		counted++
+	}
+	if counted > pyjson.IntMaxStrDigits {
+		return pyjson.Int{}, false
+	}
+	if significant == "" {
+		return pyjson.NewInt(0), true
+	}
+	s = significant
+	if negative {
+		s = "-" + significant
 	}
 	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return pyjson.NewInt(n), true

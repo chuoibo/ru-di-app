@@ -625,7 +625,7 @@ func (v *modelValidator) name() string { return v.name_ }
 // the fields; builtins (str, bytes, list, int, None...) have no attributes to
 // read and fail with model_attributes_type.
 func (v *modelValidator) validate(st *state, in any) (Value, *vErr) {
-	m, ok := in.(*pyjson.OrderedMap)
+	m, ok := asDict(in)
 	if !ok {
 		return nil, errSimple("model_attributes_type")
 	}
@@ -633,10 +633,38 @@ func (v *modelValidator) validate(st *state, in any) (Value, *vErr) {
 	return v.fields.validateDict(st, m)
 }
 
+// dictSource is a Python dict a model validates: what json.loads produced,
+// or the dict FastAPI builds from a form, whose values may be UploadFiles.
+type dictSource interface {
+	lookup(key string) (any, bool)
+	keyList() []string
+}
+
+type jsonDict struct{ m *pyjson.OrderedMap }
+
+func (j jsonDict) lookup(key string) (any, bool) {
+	v, ok := j.m.Get(key)
+	return v, ok
+}
+
+func (j jsonDict) keyList() []string { return j.m.Keys() }
+
+func asDict(in any) (dictSource, bool) {
+	switch x := in.(type) {
+	case *pyjson.OrderedMap:
+		return jsonDict{x}, true
+	case *formDict:
+		return x, true
+	}
+	return nil, false
+}
+
 type modelField struct {
 	name string
-	v    validator
-	def  *defaultValidator
+	// alias is the field's alias when the model declares one.
+	alias string
+	v     validator
+	def   *defaultValidator
 }
 
 type modelFieldsValidator struct {
@@ -648,7 +676,7 @@ type modelFieldsValidator struct {
 func (v *modelFieldsValidator) name() string { return "model-fields" }
 
 func (v *modelFieldsValidator) validate(st *state, in any) (Value, *vErr) {
-	m, ok := in.(*pyjson.OrderedMap)
+	m, ok := asDict(in)
 	if !ok {
 		return nil, errSimple("model_attributes_type")
 	}
@@ -658,12 +686,12 @@ func (v *modelFieldsValidator) validate(st *state, in any) (Value, *vErr) {
 // validateDict is ModelFieldsValidator::validate over a dict: fields in
 // declaration order (value error, or default, or missing), then, unless
 // extra is ignored, every input key no field used, in input order.
-func (v *modelFieldsValidator) validateDict(st *state, m *pyjson.OrderedMap) (Value, *vErr) {
+func (v *modelFieldsValidator) validateDict(st *state, m dictSource) (Value, *vErr) {
 	out := &Model{Class: v.class}
 	data := map[string]Value{}
 	var lines []lineError
 	for _, f := range v.fields {
-		raw, present := m.Get(f.name)
+		raw, present := m.lookup(f.name)
 		if present {
 			prevData, prevField := st.data, st.fieldName
 			st.data, st.fieldName = data, f.name
@@ -690,7 +718,7 @@ func (v *modelFieldsValidator) validateDict(st *state, m *pyjson.OrderedMap) (Va
 		lines = append(lines, errMissing().withOuter(f.name).lines...)
 	}
 	if v.extra != "ignore" {
-		for _, k := range m.Keys() {
+		for _, k := range m.keyList() {
 			if hasSurrogate(k) {
 				// `either_str.as_cow()?` returns at once, dropping the rest.
 				return nil, errStringUnicode()

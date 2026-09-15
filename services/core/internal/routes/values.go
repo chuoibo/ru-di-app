@@ -20,6 +20,25 @@ func bodyModel(call *endpoint.Call, name string) (*pyval.Model, error) {
 	return model, nil
 }
 
+// bodyString reads an embedded form field, Annotated[str, Form()]: pyval
+// hands it over as the str FastAPI passed, "" included.
+func bodyString(call *endpoint.Call, name string) (string, error) {
+	text, ok := call.Values[name].(pyjson.String)
+	if !ok {
+		return "", fmt.Errorf("routes: body %q is %T, not a string", name, call.Values[name])
+	}
+	return string(text), nil
+}
+
+// bodyUpload reads an Annotated[UploadFile, File()] parameter.
+func bodyUpload(call *endpoint.Call, name string) (*pyval.UploadFile, error) {
+	file, ok := call.Values[name].(*pyval.UploadFile)
+	if !ok {
+		return nil, fmt.Errorf("routes: body %q is %T, not an UploadFile", name, call.Values[name])
+	}
+	return file, nil
+}
+
 func field(model *pyval.Model, name string) (pyval.Value, error) {
 	value, ok := model.Get(name)
 	if !ok {

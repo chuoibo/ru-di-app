@@ -141,7 +141,7 @@ func featureImplemented(f string) bool {
 	case strings.HasPrefix(f, "param:"):
 		return f != "param:cookie"
 	case strings.HasPrefix(f, "body:"):
-		return f == "body:json"
+		return f == "body:json" || f == "body:form" || f == "body:multipart"
 	case strings.HasPrefix(f, "config."):
 		return strings.HasPrefix(f, "config.extra_fields_behavior=") || strings.HasPrefix(f, "config.strict=")
 	}

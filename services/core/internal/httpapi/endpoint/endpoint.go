@@ -189,7 +189,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.As(err, &bodyError):
 		_ = unit.Rollback(ctx)
-		_ = pyval.WriteBodyError(w)
+		_ = bodyError.Respond(w)
 		return
 	case errors.As(err, &refusal):
 		_ = unit.Rollback(ctx)

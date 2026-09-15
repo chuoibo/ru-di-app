@@ -70,17 +70,6 @@ func TestBindRefusesAnUnportedValidator(t *testing.T) {
 	}
 }
 
-func TestBindRefusesUnsupportedFeatures(t *testing.T) {
-	c := loadContract(t)
-	rep, err := c.Inspect("POST /contexts/{context_id}/photos", NewRegistry())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(rep.Unsupported) == 0 {
-		t.Fatal("a multipart route bound as if pyval could parse multipart")
-	}
-}
-
 const (
 	actor   = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
 	context = "cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"

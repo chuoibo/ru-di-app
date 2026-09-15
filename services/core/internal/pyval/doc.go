@@ -53,6 +53,42 @@
 //     other is tried (a date from a midnight datetime, a datetime from a
 //     date) and the fallback's parse error is the one reported.
 //
+// # Form and File bodies
+//
+// Measured against python-multipart 0.0.20 in the same image
+// (form.go, multipart.go, options_header.go, codecs.go):
+//
+//   - A route whose body field is Form or File always reads the body with
+//     request.form(), empty or not, and never as JSON. Only the first
+//     Content-Type header counts. Without ";" it is lowercased and stripped;
+//     with ";" email.message decides, and the type keeps its case, so
+//     "Application/X-WWW-Form-Urlencoded; charset=utf-8" is no form. Any
+//     type other than multipart/form-data or
+//     application/x-www-form-urlencoded, JSON included, is an empty form:
+//     every field is missing. The charset parameter of an urlencoded body
+//     is ignored.
+//   - Urlencoded: "&" and ";" separate; "+" is a space; names and values are
+//     latin-1 decoded, then percent escapes (only) decoded as UTF-8 with
+//     replacement, so raw UTF-8 bytes arrive as latin-1 mojibake; an
+//     invalid escape stays as typed; a field without "=" has the value ""
+//     unless it ends the body, where it is dropped. A repeated name takes
+//     its last value. There is no size limit.
+//   - Multipart: Starlette's refusals are 400 with their own detail
+//     ("Missing boundary in multipart.", a part without a name, a part over
+//     1024 KB without a filename, more than 1000 files or fields); a parse
+//     error, or header parameters that raise, is the generic 400. A part
+//     with a filename parameter is an UploadFile, whatever the field's
+//     type; text is decoded with the content type's charset, latin-1 when
+//     that fails or names no text codec.
+//   - Form fields: FastAPI treats "" as missing for a Form or File
+//     parameter, then puts every form name it did not take back into the
+//     dict, so a required str field sent empty is "" after all, and an
+//     optional one gets its default only when that default is not None.
+//     Fields of a model declared as one Form parameter get no such rule.
+//     Errors are at ["body", name], after path, query and header errors;
+//     extra fields of a forbidding model come after its fields, in form
+//     order.
+//
 // Validator functions written in Python (field_validator, model_validator)
 // cannot be generated; they are ported by hand into a Registry under the
 // name the IR gives them, and Contract.Bind refuses a route whose schemas

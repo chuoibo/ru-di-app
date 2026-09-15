@@ -149,12 +149,20 @@ func (c *Contract) compile(id string, reg *Registry) (*Route, Report, error) {
 		if body, ok := b.(*pyjson.OrderedMap); ok {
 			r.hasBody = true
 			r.embed = irBool(body, "embed")
-			if kind := irString(body, "kind"); kind != "json" {
+			switch kind := irString(body, "kind"); kind {
+			case "json":
+			case "form", "multipart":
+				// Form, or File (a Form subclass): read with request.form().
+				r.form = true
+			default:
 				comp.unsupportedf("%s request body", kind)
 			}
 		}
 	}
 	r.root = comp.dependant(mustGet(ir.node, "dependant").(*pyjson.OrderedMap))
+	if r.form {
+		comp.bindForm(r.root, r.embed)
+	}
 	rep := Report{
 		Validators:   sortedKeys(comp.functions),
 		Unregistered: sortedKeys(comp.missing),
@@ -169,9 +177,12 @@ type param struct {
 	in       string
 	required bool
 	sequence bool
-	def      Value
-	factory  func() Value
-	v        validator
+	// fieldInfo is the FastAPI params class: Path, Query, Header, Body,
+	// Form or File.
+	fieldInfo string
+	def       Value
+	factory   func() Value
+	v         validator
 }
 
 func (p *param) defaultValue() Value {
@@ -188,6 +199,9 @@ type dependant struct {
 	cacheKey string
 	params   map[string][]*param
 	deps     []*dependant
+	// formFields are the fields read from a form body (bindForm); nil on a
+	// JSON route.
+	formFields []formField
 }
 
 func (c *compiler) dependant(n *pyjson.OrderedMap) *dependant {
@@ -224,11 +238,12 @@ func (c *compiler) dependant(n *pyjson.OrderedMap) *dependant {
 
 func (c *compiler) param(n *pyjson.OrderedMap, in string) *param {
 	p := &param{
-		name:     irString(n, "name"),
-		alias:    irString(n, "alias"),
-		in:       in,
-		required: irBool(n, "required"),
-		sequence: irBool(n, "sequence"),
+		name:      irString(n, "name"),
+		alias:     irString(n, "alias"),
+		in:        in,
+		required:  irBool(n, "required"),
+		sequence:  irBool(n, "sequence"),
+		fieldInfo: irString(n, "field_info"),
 	}
 	if in != "body" && in != "path" && !irBool(n, "scalar") && !p.sequence {
 		c.unsupportedf("%s parameter %s declared as a model", in, p.name)
@@ -264,7 +279,9 @@ type Route struct {
 
 	hasBody bool
 	embed   bool
-	root    *dependant
+	// form is a body field of Form or File: the body is read as a form.
+	form bool
+	root *dependant
 }
 
 // Request is what validation reads from an HTTP request.
@@ -314,20 +331,52 @@ type Dependency struct {
 // propagates out of FastAPI before any later parameter is validated.
 type Hook func(Dependency) error
 
-// BodyError is the HTTPException(400, "There was an error parsing the body")
-// get_request_handler raises when json.loads fails with anything other than
-// JSONDecodeError: undecodable bytes, an int beyond 4300 digits, nesting
-// beyond the recursion limit.
-type BodyError struct{ Err error }
+// BodyError is an HTTPException(400) raised while the body is read, before
+// any dependency runs:
+//
+//   - "There was an error parsing the body", which get_request_handler
+//     raises when reading fails with anything other than JSONDecodeError:
+//     undecodable JSON bytes, an int beyond 4300 digits, nesting beyond the
+//     recursion limit, a malformed multipart body, header parameters that
+//     raise;
+//   - Starlette's own message (Detail) for a MultiPartException: a missing
+//     boundary or part name, a part over 1024 KB, over 1000 files or fields.
+type BodyError struct {
+	Err error
+	// Detail is the HTTPException detail when Starlette chose it; empty for
+	// FastAPI's generic message.
+	Detail string
+}
 
 func (e *BodyError) Error() string { return "pyval: error parsing the body: " + e.Err.Error() }
 
 func (e *BodyError) Unwrap() error { return e.Err }
 
-// WriteBodyError answers a BodyError as FastAPI's http_exception_handler does.
+const bodyParseDetail = "There was an error parsing the body"
+
+// Message is the detail FastAPI answers e with.
+func (e *BodyError) Message() string {
+	if e.Detail != "" {
+		return e.Detail
+	}
+	return bodyParseDetail
+}
+
+// Respond answers e as FastAPI's http_exception_handler does.
+func (e *BodyError) Respond(w http.ResponseWriter) error {
+	return writeBodyError(w, e.Message())
+}
+
+// WriteBodyError answers a BodyError without a Detail as FastAPI's
+// http_exception_handler does. A form route can raise one with a Detail:
+// use (*BodyError).Respond.
 func WriteBodyError(w http.ResponseWriter) error {
+	return writeBodyError(w, bodyParseDetail)
+}
+
+func writeBodyError(w http.ResponseWriter, detail string) error {
 	body := pyjson.NewOrderedMap()
-	body.Set("detail", pyjson.String("There was an error parsing the body"))
+	body.Set("detail", pyjson.String(detail))
 	encoded, err := pyjson.Compact(body)
 	if err != nil {
 		return err
@@ -347,15 +396,26 @@ func WriteBodyError(w http.ResponseWriter) error {
 //     it as JSON if content-type is missing, empty, application/json or
 //     application/*+json; otherwise keep the bytes. A JSONDecodeError is a
 //     422 json_invalid at once, before any dependency; any other decoding
-//     failure is *BodyError.
+//     failure is *BodyError. A Form or File route reads the body as a form
+//     instead, empty or not (form.go); a failure there is *BodyError too.
 //  2. Sub-dependencies depth first: each one's own parameters are validated
 //     and, when they produced no error, hook runs it unless an earlier call
 //     with the same cache key already did. Errors accumulate; a hook error
 //     returns at once.
 //  3. The endpoint's path, query, header, cookie and then body parameters.
+//
+// Any other error is a request this package cannot answer the way Python
+// would (a multipart charset whose codec is not ported); serve it as an
+// unhandled failure.
 func (r *Route) Validate(req *Request, hook Hook) (*Result, error) {
 	var body any
-	if r.hasBody && len(req.Body) > 0 {
+	if r.form {
+		fd, err := readForm(req)
+		if err != nil {
+			return nil, err
+		}
+		body = fd
+	} else if r.hasBody && len(req.Body) > 0 {
 		ct, present := req.header("content-type")
 		if !present || ct == "" || contentTypeIsJSON(ct) {
 			v, err := pyjson.Loads(req.Body)
@@ -446,7 +506,16 @@ func (s *solver) solve(d *dependant) (map[string]Value, []lineError, error) {
 			values[p.name] = v
 		}
 	}
-	if bodyParams := d.params["body"]; len(bodyParams) > 0 {
+	if fd, ok := s.body.(*formData); ok && len(d.params["body"]) > 0 {
+		formValues, formLines, err := s.solveForm(d, fd)
+		if err != nil {
+			return nil, nil, err
+		}
+		lines = append(lines, formLines...)
+		for k, v := range formValues {
+			values[k] = v
+		}
+	} else if bodyParams := d.params["body"]; len(bodyParams) > 0 {
 		if len(bodyParams) == 1 && !s.route.embed {
 			p := bodyParams[0]
 			v, e := s.validateValue(p, s.body, !isNone(s.body), false, []any{"body"})
@@ -483,6 +552,41 @@ func (s *solver) solve(d *dependant) (map[string]Value, []lineError, error) {
 				values[p.name] = v
 			}
 		}
+	}
+	return values, lines, nil
+}
+
+// solveForm is request_body_to_args over a FormData: the dict
+// _extract_form_body builds is the body of a lone unembedded model
+// parameter, or the source every embedded parameter is looked up in.
+func (s *solver) solveForm(d *dependant, fd *formData) (map[string]Value, []lineError, error) {
+	values := map[string]Value{}
+	var lines []lineError
+	body := d.params["body"]
+	dict := extractFormBody(d.formFields, fd)
+	if len(body) == 1 && !s.route.embed {
+		p := body[0]
+		v, e := s.validateValue(p, dict, true, false, []any{"body"})
+		if e != nil {
+			if e.fatal != nil {
+				return nil, nil, e.fatal
+			}
+			return values, e.lines, nil
+		}
+		values[p.name] = v
+		return values, nil, nil
+	}
+	for _, p := range body {
+		raw, present := dict.lookup(p.alias)
+		v, e := s.validateValue(p, raw, present && !isNone(raw), false, []any{"body", p.alias})
+		if e != nil {
+			if e.fatal != nil {
+				return nil, nil, e.fatal
+			}
+			lines = append(lines, e.lines...)
+			continue
+		}
+		values[p.name] = v
 	}
 	return values, lines, nil
 }

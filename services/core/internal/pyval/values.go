@@ -8,7 +8,7 @@ import (
 // object pydantic produced. It is one of
 //
 //	pyjson.Null, pyjson.Bool, pyjson.Int, pyjson.Float, pyjson.String
-//	List, *Dict, UUID, Date, DateTime, *Model, Bytes
+//	List, *Dict, UUID, Date, DateTime, *Model, Bytes, *UploadFile
 //
 // plus, under an `any` schema, the raw pyjson.List or *pyjson.OrderedMap
 // that json.loads produced.
@@ -19,6 +19,33 @@ type List []Value
 
 // Bytes is Python bytes: a request body FastAPI did not decode as JSON.
 type Bytes []byte
+
+// UploadFile is the starlette.datastructures.UploadFile a multipart part
+// with a filename parameter becomes (formparsers.py:199-211).
+type UploadFile struct {
+	// Filename is the filename parameter, decoded with the request charset
+	// or latin-1; it may be empty.
+	Filename string
+	// Headers are the part's headers in order: the name lowercased (ASCII)
+	// and the value, both as the bytes received.
+	Headers [][2]string
+	// Content is the part's data.
+	Content []byte
+}
+
+// Size is UploadFile.size.
+func (f *UploadFile) Size() int { return len(f.Content) }
+
+// ContentType is UploadFile.content_type: the first content-type header of
+// the part, latin-1 decoded.
+func (f *UploadFile) ContentType() (string, bool) {
+	for _, h := range f.Headers {
+		if h[0] == "content-type" {
+			return latin1(h[1]), true
+		}
+	}
+	return "", false
+}
 
 // UUID is uuid.UUID.
 type UUID [16]byte

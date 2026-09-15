@@ -123,6 +123,11 @@ func TestOracleScalars(t *testing.T) {
 			add("int", schema, g.numberish())
 		}
 	}
+	// Strings around sys.get_int_max_str_digits(): where int_parsing_size
+	// ends and int_parsing begins.
+	for _, s := range longIntStrings(g) {
+		add("int-long", `{"type":"int"}`, pyjson.String(s))
+	}
 	for _, schema := range []string{`{"type":"float"}`, `{"type":"float","strict":true}`, `{"type":"float","ge":-90,"le":90}`, `{"type":"float","allow_inf_nan":false,"gt":0.5}`} {
 		for i := 0; i < 1500; i++ {
 			add("float", schema, g.numberish())
@@ -213,6 +218,32 @@ func TestOracleScalars(t *testing.T) {
 		mismatches += bad[k]
 	}
 	t.Logf("scalar oracle %s seed=%d: %d cases, %d mismatches, took %s", image, seed, len(cases), mismatches, time.Since(started).Round(time.Millisecond))
+}
+
+// longIntStrings builds digit runs of 4298 to 4302 characters with signs,
+// leading zeros, separators, fractions, padding and trailing text, plus
+// random mixes of those pieces.
+func longIntStrings(g *gen) []string {
+	var out []string
+	for _, n := range []int{4298, 4299, 4300, 4301, 4302} {
+		run := strings.Repeat("7", n)
+		for _, s := range []string{
+			run, "-" + run, "+" + run, "0" + run, "-0" + run, "+0" + run, "00" + run, " " + run, run + " ",
+			" " + run, "\x1c" + run, " -" + run, " +" + run, run + ".0", run + ".00", run + "." + strings.Repeat("0", 5000),
+			run + ".5", run + "e0", run + "a", "a" + run, run + "_7", "7_" + run, run[:20] + "_" + run[20:], "-" + run + "_7",
+			strings.Repeat("0", 5000) + run, strings.Repeat("0_", 3000) + "7", strings.Repeat("7_", n/2) + "7", "-" + run + " x",
+			run + "-", strings.Repeat("0", n), "-" + strings.Repeat("0", n), "1" + run[1:],
+		} {
+			out = append(out, s)
+		}
+	}
+	pieces := []string{"", "-", "+", "0", "00", " ", "\t", "_", "."}
+	tails := []string{"", ".0", "_7", " ", "a", ".5", "0"}
+	for i := 0; i < 300; i++ {
+		n := 4290 + g.r.IntN(20)
+		out = append(out, pick(g, pieces...)+pick(g, pieces...)+strings.Repeat(pick(g, "7", "1", "9"), n)+pick(g, tails...)+pick(g, tails...))
+	}
+	return out
 }
 
 func scalarOutcome(t *testing.T, v validator, in pyjson.Value) []byte {
