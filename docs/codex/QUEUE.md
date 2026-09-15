@@ -94,6 +94,18 @@ Sóng W4 (tiền) bắt đầu ghi mốc, route đóng băng theo cùng luật: 
 do Python phục vụ. Ba luật tiền giữ nguyên: golden vector allocator và tất toán đọc tại chỗ, fuzz vi sai gồm cả mã
 lỗi, tổng dẫn xuất đúng từng chữ số (ADR-0029 §2.5).
 
+Sóng W4 (tiền) PORTED: 14 route do Go phục vụ làm candidate — bill 5 (`405d0204`), đợt thu 4 (`919b19d8`),
+khoản chi 2 + confirm-receipt + tài chính + ngân sách (`282c994c`), cùng `ae15bd7c` (pyval từ chối như `int()` quá
+4300 chữ số). Cổng parity trên cây cuối: dev 183 kịch bản/5978 bước, limiter 5/119, prod 16/350, 0 khác biệt; 63/156
+route PORTED. Số tiền request không trần mà Python so sánh hoặc in lại được đọc chính xác (ADR-0029 §2.5).
+
+Sóng W5 (trang khách) bắt đầu ghi mốc, route đóng băng theo cùng luật: guests (7: `GET /g/{token}`,
+`POST /g/{token}/da-chuyen`, `GET /g/{token}/khong-phai-toi`, `POST /g/{token}/khong-phai-toi`,
+`GET /g/{token}/doi-so-tien`, `POST /g/{token}/doi-so-tien`, `POST /g/{token}/xin-cach-tinh`), cùng
+`app/web/templates/guest*.html`, `app/web/guest_view.py`, `app/web/objection_view.py`, `app/api/guest_privacy.py`.
+HTML so từng byte; thân form (`Form()`) cần pyval hỗ trợ trước. `/static` (mount của Starlette, ETag và
+Last-Modified theo mtime của tệp) vẫn do Python phục vụ, quyết riêng sau W5.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
