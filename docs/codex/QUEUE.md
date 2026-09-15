@@ -123,11 +123,23 @@ Sóng W8 (sổ đôi) bắt đầu ghi mốc, route đóng băng theo cùng lu�
 `POST …/versions/{version}/responses`, `POST /papers/{paper_id}/withdraw`, `/skip`, `/done`, `/keeps`), cùng
 `app/domain/pair_notebook.py` và `app/domain/pair_paper.py`. W7 (outings) chờ thoả thuận đóng băng với lane Codex.
 
+Sóng W5 (trang khách) PORTED: 7 route /g/{token} do Go phục vụ làm candidate — repository khách (`11b284a2`), view
+và template khớp Jinja từng byte (`87bc1e76`), thẻ và kịch bản (`c5ba2bc4`), thân Form()/File() trong pyval
+(`92557cdf`), hạ tầng trả HTML/303 thô và trang link hỏng (`4116ce20`), route (`dbe439b2`). Cổng parity trên cây có 70 route Go:
+dev 208 kịch bản/6858 bước, limiter 5/119, prod 18/404, 0 khác biệt; 70/156 route PORTED.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
 2. Daemon Docker trên máy dùng chung đã hết subnet; harness chạy host network. Dọn các network không dùng cần Lead
    cho phép.
+3. Cửa trước Go (net/http) từ chối Host chứa «/» bằng 400 trước routing, cho mọi route kể cả route proxy, còn uvicorn
+   nhận (Python cũng tự mâu thuẫn: trang link khách xét request.url.path dựng từ Host). Đề xuất gộp vào ngoại lệ đã
+   duyệt MALFORMED-REQUEST-LINE; cần Lead xác nhận.
+4. Ảnh W6: bản Go giống từng byte với Pillow cho JPEG, PNG, WebP, GIF, BMP, PPM và các plugin đơn giản, nên ngoại lệ
+   parity cảm nhận của ADR-0029 §2.8 không cần. Còn các định dạng Pillow mở được mà Go chưa port (AVIF, JPEG2000, TIFF
+   nén, ICO/CUR/ICNS, DDS/FTEX nén, FLI, PCD, …): chọn trả 415 not_an_image như lệch có ghi, port codec, hay giữ route
+   ảnh ở Python.
 
 ---
 

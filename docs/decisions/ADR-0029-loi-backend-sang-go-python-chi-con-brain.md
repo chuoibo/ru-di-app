@@ -213,19 +213,26 @@ compose khẳng định). Lỗi chỉ trả mã, không trả câu prompt hay ch
 - ADR-0025: bộ dựng reel ở cùng máy, dùng chung volume media — đúng như ADR đó yêu cầu.
 - ADR-0024: việc sau response vào `internal/afterresponse`, giới hạn đúng các việc ADR đó liệt kê.
 
-### 2.8 Ảnh upload làm bằng Go, parity cảm nhận
+### 2.8 Ảnh upload làm bằng Go, giống từng byte với Pillow
 
-Pillow (EXIF transpose, nén lại JPEG q88 optimize) không tái tạo được từng byte bằng Go. Đây là **ngoại lệ duy
-nhất được duyệt trước** của luật 2.4, lớp `IMG-REENCODE`, chỉ áp cho ba route upload:
+Ban đầu mục này duyệt trước một ngoại lệ parity cảm nhận (`IMG-REENCODE`: JPEG lệch byte nhưng SSIM kênh sáng
+≥ 0,98 và sai lệch trung bình ≤ 2/255). Đo ở W6: `UploadedImageResponse.byte_size` và cột `uploaded_images.byte_size`
+là độ dài đầu ra Pillow, nên lệch byte làm thân JSON và hàng DB khác nhau — ngoại lệ đó không giữ được chính yêu cầu
+«thân JSON bằng nhau». Bản port Go thuần (`internal/media/sanitize`, `CGO_ENABLED=0`) đạt giống từng byte, nên
+`IMG-REENCODE` không được dùng:
 
-- Phải bằng nhau tuyệt đối: status, thân JSON, mã chấp nhận/từ chối, `content_type`, chiều rộng, chiều cao,
-  hướng sau transpose, không còn EXIF/XMP/ICC/tEXt trong đầu ra.
-- PNG: điểm ảnh giải mã giống hệt.
-- JPEG: SSIM kênh sáng ≥ 0,98 **và** sai lệch tuyệt đối trung bình ≤ 2/255 mỗi kênh so với đầu ra Pillow.
-  Ngưỡng này đo lại ở W6 trên corpus ảnh tổng hợp sinh lúc chạy test (không commit byte ảnh); đổi ngưỡng là
-  sửa ADR này.
+- Phải bằng nhau tuyệt đối: status, thân JSON (kể cả `byte_size`, `width`, `height`, `content_type`), mã và detail từ
+  chối, byte file đã lưu, byte GET của file đó.
+- Đã chứng minh bằng oracle chạy `sanitize_image` thật trong image ghim trên corpus sinh lúc test (không commit byte
+  ảnh): JPEG (baseline, progressive, MPO, CMYK), PNG, WebP, GIF, BMP/DIB, PPM, hướng EXIF/XMP, và các plugin đơn giản
+  (TGA, SGI, SUN, IM, PSD, PCX, XPM, XBM, QOI, …).
+- Phụ thuộc phiên bản: Pillow 12.2.0 với libjpeg-turbo 3.1.4.1, libwebp 1.6.0 và zlib 1.3.1 (libz của Debian mà
+  `_imaging` liên kết, dù `features` ghi zlib-ng). Đổi Pillow, image nền hay gói zlib1g phải chạy lại
+  `go test -tags oracle ./internal/media/sanitize/...` trước khi merge.
+- Định dạng Pillow mở được mà Go chưa port (AVIF, JPEG2000, TIFF nén, khung ICO/CUR/ICNS, DDS/FTEX nén BCn, FLI, PCD,
+  BLP1/IPTC có JPEG, LAB, …) trả `*UnsupportedError`; chính sách cho chúng (trả 415 `not_an_image` như lệch có ghi,
+  port codec, hay giữ route ảnh ở Python) là câu hỏi mở ở mục 8, chờ Lead.
 - GET của file đã lưu vẫn phải giống từng byte.
-- Định dạng Pillow nhận mà Go không giải mã được liệt kê thành lệch đã duyệt ở mục 8, không lặng lẽ bỏ qua.
 
 ### 2.9 Đóng băng và cửa sổ kép
 
