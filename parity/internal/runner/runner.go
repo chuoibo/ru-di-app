@@ -273,6 +273,17 @@ func buildRequest(sc *scenario.Scenario, step scenario.Step, vars map[string]str
 		}
 		body = []byte(rendered)
 	}
+	if step.Request.BodyParts != nil {
+		// The boundary is read back from the header the request carries, so
+		// the body and the header can never name two different boundaries.
+		boundary, err := scenario.Boundary(header.Get("Content-Type"))
+		if err != nil {
+			return httpclient.Request{}, err
+		}
+		if body, err = multipartBody(boundary, *step.Request.BodyParts, vars); err != nil {
+			return httpclient.Request{}, err
+		}
+	}
 	return httpclient.Request{Method: step.Request.Method, Path: path, Header: header, Body: body}, nil
 }
 

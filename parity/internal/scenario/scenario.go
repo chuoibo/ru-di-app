@@ -63,6 +63,9 @@ type Request struct {
 	Path    string            `yaml:"path"`
 	Headers map[string]string `yaml:"headers"`
 	BodyRaw *string           `yaml:"body_raw"`
+	// BodyParts, instead of BodyRaw, is a multipart/form-data body the runner
+	// assembles from parts, some of them generated images (see parts.go).
+	BodyParts *[]Part `yaml:"body_parts"`
 }
 
 // Bind captures a value from a response.
@@ -235,6 +238,13 @@ func (sc *Scenario) validate() error {
 		}
 		if step.Request.BodyRaw != nil {
 			texts = append(texts, *step.Request.BodyRaw)
+		}
+		if step.Request.BodyParts != nil {
+			partTexts, err := validateParts(step.Request)
+			if err != nil {
+				return fmt.Errorf("%s: %w", where, err)
+			}
+			texts = append(texts, partTexts...)
 		}
 		for _, text := range texts {
 			for _, match := range templatePattern.FindAllStringSubmatch(text, -1) {
