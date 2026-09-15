@@ -1,0 +1,209 @@
+# W2 cross replay · POST /votes/{id}/ballots (200, one vote_ballots row per
+# voter). A ballot stored under a key by one implementation is replayed by the
+# other with the answer it stored, even after the vote closes; another option
+# under the key is refused by the other; a 403 is not stored by either side.
+# Texts are sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-votes-vote_id-ballots
+routes: ['POST /votes/{vote_id}/ballots']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn bỏ phiếu chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm lá phiếu chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"},{"label":"Cơm tấm"}]}'
+    bind:
+      vote: {from: body, pointer: /id, class: uuid}
+      opt_x: {from: body, pointer: /options/0/id, class: uuid}
+      opt_y: {from: body, pointer: /options/1/id, class: uuid}
+      opt_z: {from: body, pointer: /options/2/id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-a'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: core_replays_python_key
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-a'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: core_replays_python_key_respaced
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-a'
+        content-type: 'application/json'
+      body_raw: '{ "option_id" : "{{opt_x}}" }'
+  - id: core_refuses_python_key_other_option
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-a'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-b'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'
+  - id: python_replays_core_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-b'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'
+  - id: python_refuses_core_key_other_option
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-b'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_z}}"}'
+  # a 403 (no role) is not stored: the other side then casts
+  - id: python_refusal_releases_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_z}}"}'
+  - id: core_uses_key_python_released
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-c'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_z}}"}'
+  - id: core_refusal_releases_key
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-d'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: python_uses_key_core_released
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-d'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: core_replays_what_python_stored_after_release
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-d'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: owner_closes_vote
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  # a fresh ballot would now be 409 vote_closed: the stored answers still replay
+  - id: core_replays_python_key_after_close
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-a'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: python_replays_core_key_after_close
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'x-ballot-b'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'

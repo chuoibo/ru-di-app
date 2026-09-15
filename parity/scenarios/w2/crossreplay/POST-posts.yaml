@@ -1,0 +1,147 @@
+# W2 cross replay · POST /posts (201, one posts row). A post written through one
+# implementation with a key is replayed, not written twice, by the other; the
+# fingerprint is canonical JSON (sorted keys, compact, UTF-8 kept raw), so key
+# order and spacing still replay across implementations. A 403 or a service
+# 422 is not stored by either side. Texts are sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-posts
+routes: ['POST /posts']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết chéo (dữ liệu mẫu)"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo <b>&\"một\"</b> 🙂 (dữ liệu mẫu)","audience":"public"}'
+  - id: core_replays_python_key
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo <b>&\"một\"</b> 🙂 (dữ liệu mẫu)","audience":"public"}'
+  - id: core_replays_python_key_reordered
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-a'
+        content-type: 'application/json'
+      body_raw: '{ "audience" : "public", "body" : "Bài chéo <b>&\"một\"</b> 🙂 (dữ liệu mẫu)" }'
+  - id: core_refuses_python_key_other_body
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo <b>&\"một\"</b> 🙂 (dữ liệu mẫu)","audience":"friends"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo hai (dữ liệu mẫu)","audience":"friends"}'
+  - id: python_replays_core_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo hai (dữ liệu mẫu)","audience":"friends"}'
+  - id: python_replays_core_key_reordered
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-b'
+        content-type: 'application/json'
+      body_raw: '{"audience": "friends",   "body": "Bài chéo hai (dữ liệu mẫu)"}'
+  - id: python_refuses_core_key_other_body
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo hai (dữ liệu mẫu)","audience":"only_me"}'
+  # a 403 (no role) is not stored: the same request then writes on the other side
+  - id: python_refusal_releases_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo ba (dữ liệu mẫu)","audience":"public"}'
+  - id: core_uses_key_python_released
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo ba (dữ liệu mẫu)","audience":"public"}'
+  # a service 422 (a group audience that names no group) is not stored
+  - id: core_refusal_releases_key
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo bốn (dữ liệu mẫu)","audience":"group"}'
+  - id: python_uses_key_core_released
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo bốn (dữ liệu mẫu)","audience":"only_me"}'
+  - id: core_replays_what_python_stored_after_release
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'x-post-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài chéo bốn (dữ liệu mẫu)","audience":"only_me"}'

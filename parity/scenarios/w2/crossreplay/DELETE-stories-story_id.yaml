@@ -1,0 +1,158 @@
+# W2 cross replay · DELETE /stories/{id} (204, deletes the row). A deletion
+# stored under a key by one implementation is replayed by the other although the
+# story is gone; another story under the key is refused by the other. A 204
+# replayed through core carries no content-length, the one accepted divergence
+# (ADR-0029 §2.4 RESPONSE-204-CONTENT-LENGTH). The no-role 404 is not stored by
+# either side. Texts and the 1x1 PPM photo are sample data (dữ liệu mẫu).
+id: w2/crossreplay/delete-stories-story_id
+routes: ['DELETE /stories/{story_id}']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả gỡ story chéo (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_one
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một"}'
+    bind:
+      story_one: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_two
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_three
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"ba"}'
+    bind:
+      story_three: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_four
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"bốn"}'
+    bind:
+      story_four: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: author
+    via: python
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        idempotency-key: 'x-unstory-a'
+  # a fresh delete would now be 404 story_not_found: only a replay answers 204
+  - id: core_replays_python_key
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        idempotency-key: 'x-unstory-a'
+  - id: core_refuses_python_key_other_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_two}}'
+      headers:
+        idempotency-key: 'x-unstory-a'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_two}}'
+      headers:
+        idempotency-key: 'x-unstory-b'
+  - id: python_replays_core_key
+    as: author
+    via: python
+    request:
+      method: DELETE
+      path: '/stories/{{story_two}}'
+      headers:
+        idempotency-key: 'x-unstory-b'
+  - id: python_refuses_core_key_other_story
+    as: author
+    via: python
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        idempotency-key: 'x-unstory-b'
+  # no role is 404 inside the view gate, not stored: the same deletion then runs
+  - id: python_refusal_releases_key
+    as: author
+    via: python
+    request:
+      method: DELETE
+      path: '/stories/{{story_three}}'
+      headers:
+        idempotency-key: 'x-unstory-c'
+        x-actor-roles: ''
+  - id: core_uses_key_python_released
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_three}}'
+      headers:
+        idempotency-key: 'x-unstory-c'
+  - id: core_refusal_releases_key
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'x-unstory-d'
+        x-actor-roles: ''
+  - id: python_uses_key_core_released
+    as: author
+    via: python
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'x-unstory-d'
+  - id: core_replays_what_python_stored_after_release
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'x-unstory-d'

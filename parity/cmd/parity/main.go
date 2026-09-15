@@ -269,8 +269,10 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 		refRuns := []*runner.Run{refRun}
+		nonces := []string{nonce}
 		for sc.HasBursts() && len(refRuns) < *burstRepeats {
-			again, err := runner.Execute(ctx, sc, refStack, runner.NewNonce())
+			nonces = append(nonces, runner.NewNonce())
+			again, err := runner.Execute(ctx, sc, refStack, nonces[len(nonces)-1])
 			if err != nil {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				return 2
@@ -296,6 +298,19 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		diffs, matched := runner.Closest(refRuns, candRun)
 		if matched > 0 {
 			refRun = refRuns[matched]
+		}
+		// The candidate repeats a burst scenario as often as the reference did,
+		// with the same nonces, so both databases hold the same rows for the
+		// scenarios that follow (a public feed read later sees every repeat).
+		// Each repeat must match a reference run as well.
+		for i := 1; i < len(nonces); i++ {
+			again, err := runner.Execute(ctx, sc, candStack, nonces[i])
+			if err != nil {
+				fmt.Fprintf(stderr, "INFRA %v\n", err)
+				return 2
+			}
+			more, _ := runner.Closest(refRuns, again)
+			diffs = append(diffs, more...)
 		}
 		ran[sc.ID] = true
 		if rep.Tap != nil {
@@ -501,8 +516,10 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				return 2
 			}
 			refRuns := []*runner.Run{refRun}
+			nonces := []string{nonce}
 			for sc.HasBursts() && len(refRuns) < *burstRepeats {
-				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, runner.NewNonce())
+				nonces = append(nonces, runner.NewNonce())
+				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, nonces[len(nonces)-1])
 				if err != nil {
 					fmt.Fprintf(stderr, "INFRA %v\n", err)
 					_ = server.Close()
@@ -523,6 +540,20 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				continue
 			}
 			closest, _ := runner.Closest(refRuns, candRun)
+			for i := 1; i < len(nonces); i++ {
+				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient}, nonces[i])
+				if errors.Is(err, runner.ErrSetup) {
+					fmt.Fprintf(stderr, "INFRA %v\n", err)
+					_ = server.Close()
+					return 2
+				}
+				if err != nil {
+					differences++
+					continue
+				}
+				more, _ := runner.Closest(refRuns, again)
+				closest = append(closest, more...)
+			}
 			for _, d := range closest {
 				differences += len(d.Differences)
 				if mode.Name == "identity" {

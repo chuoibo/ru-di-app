@@ -1,0 +1,157 @@
+# W2 cross replay · POST /contexts/{id}/votes (201, one votes row and its
+# vote_options). A vote opened through one implementation with a key is
+# replayed, not opened twice, by the other; nested option objects in another key
+# order still replay; another option order is refused by the other. A 403 or a
+# pydantic 422 is not stored by either side. Texts are sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-contexts-context_id-votes
+routes: ['POST /contexts/{context_id}/votes']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm bỏ phiếu chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bỏ phiếu chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-a'
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay đi đâu? (dữ liệu mẫu)","options":[{"label":"Quán nướng","place_name":" Lưng Chừng "},{"label":"Đi dạo"}]}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-a'
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay đi đâu? (dữ liệu mẫu)","options":[{"label":"Quán nướng","place_name":" Lưng Chừng "},{"label":"Đi dạo"}]}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-a'
+        content-type: 'application/json'
+      body_raw: '{ "options" : [ { "place_name" : " Lưng Chừng ", "label" : "Quán nướng" }, { "label" : "Đi dạo" } ], "question" : "Tối nay đi đâu? (dữ liệu mẫu)" }'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-a'
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay đi đâu? (dữ liệu mẫu)","options":[{"label":"Đi dạo"},{"label":"Quán nướng","place_name":" Lưng Chừng "}]}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-b'
+        content-type: 'application/json'
+      body_raw: '{"question":"Mấy giờ? (dữ liệu mẫu)","options":[{"label":"Bảy giờ"},{"label":"Tám giờ"}]}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-b'
+        content-type: 'application/json'
+      body_raw: '{"question":"Mấy giờ? (dữ liệu mẫu)","options":[{"label":"Bảy giờ"},{"label":"Tám giờ"}]}'
+  - id: python_replays_core_key_reordered
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-b'
+        content-type: 'application/json'
+      body_raw: '{"options": [{"label": "Bảy giờ"}, {"label": "Tám giờ"}], "question": "Mấy giờ? (dữ liệu mẫu)"}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-b'
+        content-type: 'application/json'
+      body_raw: '{"question":"Mấy giờ nhỉ? (dữ liệu mẫu)","options":[{"label":"Bảy giờ"},{"label":"Tám giờ"}]}'
+  # a 403 (no role) is not stored: the same request then opens a vote on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"question":"Đi xem phim? (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Để sau"}]}'
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-c'
+        content-type: 'application/json'
+      body_raw: '{"question":"Đi xem phim? (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Để sau"}]}'
+  # a pydantic 422 (one option) is not stored
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-d'
+        content-type: 'application/json'
+      body_raw: '{"question":"Ăn gì? (dữ liệu mẫu)","options":[{"label":"Phở"}]}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-d'
+        content-type: 'application/json'
+      body_raw: '{"question":"Ăn gì? (dữ liệu mẫu)","options":[{"label":"Phở"},{"label":"Bún chả"}]}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'x-vote-d'
+        content-type: 'application/json'
+      body_raw: '{"question":"Ăn gì? (dữ liệu mẫu)","options":[{"label":"Phở"},{"label":"Bún chả"}]}'

@@ -1,0 +1,60 @@
+# W2 concurrency · POST /stories (201, one stories row per write). Copies are
+# released together. Under one key the burst writes once and the other copies
+# replay; under distinct keys every copy writes its own row from the same photo;
+# a different caption under the completed key is refused by every copy. Nothing
+# unique constrains a story. The upload's storage_key is compared as <hex32#n>.
+# Texts and the 1x1 PPM photo are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-stories
+routes: ['POST /stories']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story cùng lúc (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'c-story-same'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Cùng lúc (dữ liệu mẫu)"}'
+  - id: distinct_key_burst
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'c-story-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Khác khoá (dữ liệu mẫu)"}'
+  - id: same_key_other_body_burst
+    as: author
+    concurrent: 2
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'c-story-same'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Cùng lúc, sửa lại (dữ liệu mẫu)"}'

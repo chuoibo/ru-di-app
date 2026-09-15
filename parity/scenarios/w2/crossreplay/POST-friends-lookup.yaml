@@ -1,0 +1,173 @@
+# W2 cross replay, limiter lane · POST /friends/lookup (200 stored under a key).
+# One implementation stores the answer and the other replays it, in both
+# directions; another spelling of the number under the key is refused by the
+# other; a 403 or 404 is not stored by either side.
+#
+# Why the limiter lane: finding a holder needs the holder's derived id, bound
+# from the rate-limited POST /identity/person-id (see
+# w2/limiter/POST-friends-lookup-holders.yaml). No step bursts: the lane refuses
+# concurrent steps, because every reference repeat would spend the limiter again.
+#
+# LIMITERS: friend_lookup_limit (30 per 60 s) is spent by each step that reaches
+# a handler; replays and key refusals are answered by the middleware first. The
+# reference Python spends 6; the candidate spends 3 in core and 3 in its own
+# Python (the via: python steps), two separate counters. person_id_limit is
+# spent once per side by the mint.
+#
+# Both numbers are sample data (dữ liệu mẫu), split by JSON \t escapes and fixed
+# in this file, so the holder outlives a run: on the second run the holder's PUT
+# answers 200 on both sides.
+id: w2/crossreplay/post-friends-lookup
+routes: ['POST /friends/lookup']
+auth_mode: dev
+lane: limiter
+personas:
+  seeker: {}
+  holder: {}
+steps:
+  - id: register_seeker
+    as: seeker
+    request:
+      method: PUT
+      path: '/people/{{persona.seeker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người tìm chéo (dữ liệu mẫu)"}'
+  - id: mint_holder_id
+    as: holder
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+    bind:
+      holder_id: {from: body, pointer: /person_id, class: uuid}
+  - id: register_holder
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{holder_id}}'
+      headers:
+        x-actor-id: '{{holder_id}}'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người giữ số chéo (dữ liệu mẫu)"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: seeker
+    via: python
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: core_replays_python_key
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: core_replays_python_key_respaced
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{ "phone" : "03\t99\t00\t00\t06" }'
+  # same person, other bytes: a different fingerprint
+  - id: core_refuses_python_key_other_spelling
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t06"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: python_replays_core_key
+    as: seeker
+    via: python
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: python_refuses_core_key_other_spelling
+    as: seeker
+    via: python
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t06"}'
+  # a 403 (no role) is not stored
+  - id: python_refusal_releases_key
+    as: seeker
+    via: python
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: core_uses_key_python_released
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-c'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  # a 404 (nobody holds this number) is not stored
+  - id: core_refusal_releases_key
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-d'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t07"}'
+  - id: python_uses_key_core_released
+    as: seeker
+    via: python
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-d'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'
+  - id: core_replays_what_python_stored_after_release
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'x-lookup-d'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t06"}'

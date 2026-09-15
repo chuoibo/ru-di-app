@@ -1,0 +1,97 @@
+# W2 concurrency · POST /friends/requests/{id}/respond. Copies are released
+# together. Under one key the burst decides once and the other copies replay.
+# Without a key, the write locks the row (FOR UPDATE, populate_existing) and asks
+# the domain again on the locked row, so a copy that decided on a stale read
+# still loses with the code a fresh read would give: two blocks of an accepted
+# request are 200 + 409 already_blocked, two accepts of a pending one are
+# 200 + 409 not_pending, whichever copy wins. Names are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-friends-requests-request_id-respond
+routes: ['POST /friends/requests/{request_id}/respond']
+auth_mode: dev
+personas:
+  answerer: {}
+  first_asker: {}
+  second_asker: {}
+steps:
+  - id: register_answerer
+    as: answerer
+    request:
+      method: PUT
+      path: '/people/{{persona.answerer}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người trả lời cùng lúc (dữ liệu mẫu)"}'
+  - id: register_first_asker
+    as: first_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.first_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi một (dữ liệu mẫu)"}'
+  - id: register_second_asker
+    as: second_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.second_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi hai (dữ liệu mẫu)"}'
+  - id: first_asks
+    as: first_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_one: {from: body, pointer: /id, class: uuid}
+  - id: second_asks
+    as: second_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_two: {from: body, pointer: /id, class: uuid}
+  - id: same_key_accept_burst
+    as: answerer
+    concurrent: 3
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'c-respond-same'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: no_key_block_burst
+    as: answerer
+    concurrent: 2
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: no_key_accept_burst
+    as: answerer
+    concurrent: 2
+    request:
+      method: POST
+      path: '/friends/requests/{{req_two}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: same_key_other_body_burst
+    as: answerer
+    concurrent: 2
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'c-respond-same'
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'

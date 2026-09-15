@@ -1,0 +1,69 @@
+# W2 concurrency · POST /posts/{id}/reactions. Copies are released together.
+# Under one key the burst reacts once and the other copies replay. Without a key,
+# copies of the same kind race on uq_post_reactions_one_per_kind: one INSERT
+# wins, and every other copy's INSERT (in a savepoint) waits for it, fails, reads
+# the winner's row and answers the same 200 with the same totals. There is no
+# pre-check, so a copy that starts after the winner committed takes that same
+# branch. Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-posts-post_id-reactions
+routes: ['POST /posts/{post_id}/reactions']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thả tim cùng lúc (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để thả tim cùng lúc (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'c-react-same'
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: no_key_same_kind_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  - id: same_key_other_body_burst
+    as: reader
+    concurrent: 2
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'c-react-same'
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'

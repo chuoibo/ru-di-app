@@ -1,0 +1,157 @@
+# W2 cross replay · POST /posts/{id}/comments (201, one post_comments row). A
+# comment written through one implementation with a key is replayed, not written
+# twice, by the other. The first body carries HTML characters, an emoji and an
+# escaped newline, so both canonical JSON encoders must agree byte for byte. A
+# 403 or a pydantic 422 is not stored by either side. Texts are sample data
+# (dữ liệu mẫu).
+id: w2/crossreplay/post-posts-post_id-comments
+routes: ['POST /posts/{post_id}/comments']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bình luận chéo (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để bình luận chéo (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghé qua <b>&\"chéo\"</b> 🙂\n dòng hai (dữ liệu mẫu)"}'
+  - id: core_replays_python_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghé qua <b>&\"chéo\"</b> 🙂\n dòng hai (dữ liệu mẫu)"}'
+  - id: core_replays_python_key_respaced
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-a'
+        content-type: 'application/json'
+      body_raw: '{ "body" : "Ghé qua <b>&\"chéo\"</b> 🙂\n dòng hai (dữ liệu mẫu)" }'
+  - id: core_refuses_python_key_other_body
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghé qua lần khác (dữ liệu mẫu)"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo hai (dữ liệu mẫu)"}'
+  - id: python_replays_core_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo hai (dữ liệu mẫu)"}'
+  - id: python_refuses_core_key_other_body
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo hai, sửa lại (dữ liệu mẫu)"}'
+  # a 403 (no role) is not stored: the same request then writes on the other side
+  - id: python_refusal_releases_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo ba (dữ liệu mẫu)"}'
+  - id: core_uses_key_python_released
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo ba (dữ liệu mẫu)"}'
+  # a pydantic 422 (empty body) is not stored
+  - id: core_refusal_releases_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-d'
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: python_uses_key_core_released
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo bốn (dữ liệu mẫu)"}'
+  - id: core_replays_what_python_stored_after_release
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'x-comment-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận chéo bốn (dữ liệu mẫu)"}'

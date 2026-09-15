@@ -1,0 +1,59 @@
+# W2 concurrency · POST /contexts/{id}/votes (201, one votes row and its options
+# per write). Copies are released together. Under one key the burst opens one
+# vote and the other copies replay; under distinct keys every copy opens its own;
+# a different body under the completed key is refused by every copy. Nothing
+# unique constrains a vote across writes. Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-contexts-context_id-votes
+routes: ['POST /contexts/{context_id}/votes']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bỏ phiếu cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'c-vote-same'
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"}]}'
+  - id: distinct_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'c-vote-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"question":"Mấy giờ? (dữ liệu mẫu)","options":[{"label":"Bảy giờ"},{"label":"Tám giờ"}]}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        idempotency-key: 'c-vote-same'
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Phở"},{"label":"Bún chả"}]}'

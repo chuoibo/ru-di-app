@@ -1,0 +1,74 @@
+# W2 concurrency · POST /votes/{id}/close. Copies are released together. Under
+# one key the burst closes once and the other copies replay the stored 200.
+# Without a key, two closes of one open vote at once: the write locks the vote
+# row (FOR UPDATE) and refuses an already-closed vote with 409
+# vote_already_closed.
+# Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-votes-vote_id-close
+routes: ['POST /votes/{vote_id}/close']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chốt cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chốt phiếu cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_one
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu một (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_one: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_two
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu hai (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_two: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/votes/{{vote_one}}/close'
+      headers:
+        idempotency-key: 'c-close-same'
+  - id: no_key_close_twice_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/votes/{{vote_two}}/close'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/votes/{{vote_one}}/close'
+      headers:
+        idempotency-key: 'c-close-same'
+        content-type: 'application/json'
+      body_raw: '{"force":true}'

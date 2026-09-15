@@ -1,0 +1,96 @@
+# W2 concurrency · POST /votes/{id}/ballots. Copies are released together. Under
+# one key the burst casts once and the other copies replay. Without a key, one
+# voter's first ballot twice at once: the write locks the vote row (FOR UPDATE),
+# so the copies queue; the first INSERTs and answers replaced_previous_ballot
+# false, the second then finds that ballot under its own FOR UPDATE, UPDATEs
+# updated_at and answers true. uq_vote_ballots_one_per_person is never reached.
+# Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-votes-vote_id-ballots
+routes: ['POST /votes/{vote_id}/ballots']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn bỏ phiếu cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm lá phiếu cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"}]}'
+    bind:
+      vote: {from: body, pointer: /id, class: uuid}
+      opt_x: {from: body, pointer: /options/0/id, class: uuid}
+      opt_y: {from: body, pointer: /options/1/id, class: uuid}
+  - id: same_key_burst
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'c-ballot-same'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: no_key_first_ballot_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: same_key_other_body_burst
+    as: mate
+    concurrent: 2
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        idempotency-key: 'c-ballot-same'
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'
