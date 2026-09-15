@@ -106,6 +106,15 @@ Sóng W5 (trang khách) bắt đầu ghi mốc, route đóng băng theo cùng lu
 HTML so từng byte; thân form (`Form()`) cần pyval hỗ trợ trước. `/static` (mount của Starlette, ETag và
 Last-Modified theo mtime của tệp) vẫn do Python phục vụ, quyết riêng sau W5.
 
+Sóng W6 (ảnh) bắt đầu ghi mốc, route đóng băng theo cùng luật: photos (6: `POST /contexts/{context_id}/photos`,
+`GET /contexts/{context_id}/photos/{photo_id}`, `POST /people/{person_id}/avatar`, `GET /people/{person_id}/avatar`,
+`POST /people/me/photos`, `GET /people/{person_id}/photos/{photo_id}`), cùng `app/media/images.py` và
+`app/media/storage.py`. Phát hiện trước khi port: `UploadedImageResponse.byte_size` và cột
+`uploaded_images.byte_size` là độ dài ảnh sau khi Pillow nén lại, nên parity cảm nhận của ADR-0029 §2.8 (JPEG lệch
+byte nhưng SSIM ≥ 0,98) không giữ được thân JSON bằng nhau như chính mục đó đòi. Đang đo khả năng nén lại giống từng
+byte bằng Go thuần (port đường mã hoá libjpeg-turbo/zlib mà Pillow trong image ghim dùng); nếu không khả thi cho một
+định dạng, quyết định về byte_size quay lại Lead cùng số đo.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
