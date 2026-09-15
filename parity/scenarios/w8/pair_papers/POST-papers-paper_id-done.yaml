@@ -1,0 +1,301 @@
+# W8 · POST /papers/{id}/done. Either person, once the plan stands and its day has come
+# in Vietnam. Every other case, a draft, a sent sheet, a future day or a sheet already
+# recorded, answers the same 409 paper_wrong_state «Chưa tới ngày đi.». The notebook
+# being closed changes nothing here. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_papers/post-papers-paper_id-done
+routes: ['POST /papers/{paper_id}/done']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_records
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/done'
+  - id: stranger_records_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/done'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_records_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: mate_records_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: owner_dates_future
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_records_sent
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_records_future_plan
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: stranger_records_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: owner_records_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: mate_reads_future_plan
+    as: mate
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: past_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: past_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_2}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: past_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: past_mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_records_past_plan
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/done'
+  - id: owner_records_again
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/done'
+  - id: owner_reads_recorded
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper_2}}'
+  - id: keyed_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_3: {from: body, pointer: /id, class: uuid}
+  - id: keyed_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_3}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: keyed_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: keyed_mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_records_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/done'
+      headers:
+        idempotency-key: 'w8-da-di-a'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/done'
+      headers:
+        idempotency-key: 'w8-da-di-a'
+  - id: mate_records_after_owner
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/done'
+  - id: closed_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_4: {from: body, pointer: /id, class: uuid}
+  - id: closed_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_4}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: closed_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: closed_mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  - id: mate_records_after_close
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/done'
+  - id: owner_keeps_after_close
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'

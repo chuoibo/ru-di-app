@@ -166,7 +166,11 @@ WAVES: dict[str, Wave] = {
         deferred=(
             # occurred_at carries a timezone field_validator
             ("POST", "/expenses", "'function-after' is not probed"),
-            ("POST", "/expenses/{expense_id}/confirm", "'function-after' is not probed"),
+            (
+                "POST",
+                "/expenses/{expense_id}/confirm",
+                "'function-after' is not probed",
+            ),
             # surcharges and discounts default through default_factory
             (
                 "POST",
@@ -195,6 +199,59 @@ WAVES: dict[str, Wave] = {
             ("GET", "/g/{token}/doi-so-tien", "carries ['pattern']"),
             ("POST", "/g/{token}/doi-so-tien", "carries ['pattern']"),
             ("POST", "/g/{token}/xin-cach-tinh", "carries ['pattern']"),
+        ),
+    ),
+    # The two-person notebook. Seven routes are refused before their body: a path
+    # parameter that is a plain str (purpose, kind) or an int (version), a body
+    # holding a date, and a line with an after-validator. Their 422s are
+    # hand-written in parity/scenarios/w8/pair_notebooks and pair_papers.
+    "w8": Wave(
+        routes=(
+            ("GET", "/contexts/{context_id}/notebook"),
+            ("POST", "/contexts/{context_id}/notebook/proposals"),
+            ("POST", "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant"),
+            ("POST", "/contexts/{context_id}/notebook/close/preview"),
+            ("POST", "/contexts/{context_id}/notebook/close"),
+            ("GET", "/contexts/{context_id}/papers"),
+            ("POST", "/contexts/{context_id}/papers/draft"),
+            ("GET", "/papers/{paper_id}"),
+            ("POST", "/papers/{paper_id}/send"),
+            ("POST", "/papers/{paper_id}/withdraw"),
+            ("POST", "/papers/{paper_id}/skip"),
+            ("POST", "/papers/{paper_id}/done"),
+        ),
+        deferred=(
+            (
+                "DELETE",
+                "/contexts/{context_id}/notebook/consents/{purpose}",
+                "path purpose is str",
+            ),
+            (
+                "PUT",
+                "/contexts/{context_id}/notebook/constraints/{kind}",
+                "path kind is str",
+            ),
+            (
+                "DELETE",
+                "/contexts/{context_id}/notebook/constraints/{kind}",
+                "path kind is str",
+            ),
+            ("PATCH", "/papers/{paper_id}/draft", "core schema 'date' is not probed"),
+            (
+                "POST",
+                "/papers/{paper_id}/versions/{version}/viewed",
+                "path version is int",
+            ),
+            (
+                "POST",
+                "/papers/{paper_id}/versions/{version}/responses",
+                "path version is int",
+            ),
+            (
+                "POST",
+                "/papers/{paper_id}/keeps",
+                "core schema 'function-after' is not probed",
+            ),
         ),
     ),
 }

@@ -1,0 +1,114 @@
+# W8 cross replay · POST /contexts/{context_id}/papers/draft. A 2xx stored under a header key by one side is replayed by
+# the other; another request under that key is 422 idempotency_key_reuse; a refusal
+# frees the key. Go serves none of these routes yet, so both paths reach Python; the
+# file is here for when one side is Go. Texts are sample data (dữ liệu mẫu).
+id: w8/crossreplay/post-contexts-context_id-papers-draft
+routes: ['POST /contexts/{context_id}/papers/draft']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: python_drafts
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-a'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: front_replays
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-a'
+  - id: front_same_key_with_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-a'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_skips
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  # the stored 201 names the skipped sheet
+  - id: front_replays_after_skip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-a'
+  - id: front_drafts
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-b'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: python_replays_front
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-x-phac-b'
+  - id: python_lists_one_open
+    as: mate
+    via: python
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'

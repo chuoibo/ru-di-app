@@ -1,0 +1,364 @@
+# W8 · POST …/notebook/close/preview. Three counts, the pending offers, and a 16-hex
+# revision over every sheet's (id, state) and every pending offer's id. An empty
+# notebook previews the digest of nothing; any other revision is bound by name
+# because it hashes generated ids. The preview writes nothing and takes no lock. It
+# counts the other person's draft, keeps counting plans after the notebook closed,
+# and under a header key replays a revision that has gone stale. Texts are sample data.
+id: w8/pair_notebooks/post-contexts-context_id-notebook-close-preview
+routes: ['POST /contexts/{context_id}/notebook/close/preview']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_previews
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/close/preview'
+  - id: stranger_previews_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/close/preview'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: owner_previews_fresh
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: mate_previews_fresh
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: stranger_previews_pair
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: owner_previews_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{grp}}/notebook/close/preview'
+  - id: owner_previews_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+      headers:
+        x-actor-roles: 'advancer'
+  # no body is read
+  - id: owner_previews_with_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"khong-dung"}'
+  - id: owner_gets_preview
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_previews_pending_offer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_offer: {from: body, pointer: /revision, class: token}
+  - id: mate_previews_pending_offer
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  # completed offers leave the material: the empty revision again
+  - id: owner_previews_open_empty
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: mate_previews_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_draft: {from: body, pointer: /revision, class: token}
+  - id: owner_dates_paper
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  # content is not in the material
+  - id: owner_previews_after_edit
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_previews_sent
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_sent: {from: body, pointer: /revision, class: token}
+  - id: mate_views
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: owner_previews_seen
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_seen: {from: body, pointer: /revision, class: token}
+  - id: mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_previews_plan
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_plan: {from: body, pointer: /revision, class: token}
+  - id: mate_records_done
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: owner_previews_done
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_done: {from: body, pointer: /revision, class: token}
+  - id: owner_keeps
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: owner_previews_kept
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_kept: {from: body, pointer: /revision, class: token}
+  - id: owner_drafts_second
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_second
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/skip'
+  - id: owner_previews_skipped
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_skipped: {from: body, pointer: /revision, class: token}
+  - id: third_sheet_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_3: {from: body, pointer: /id, class: uuid}
+  - id: third_sheet_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_3}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: third_sheet_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: third_sheet_mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_proposes_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+  - id: owner_previews_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+      headers:
+        idempotency-key: 'w8-xem-truoc-a'
+    bind:
+      rev_chat: {from: body, pointer: /revision, class: token}
+  - id: owner_proposes_bat_doi
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+  - id: owner_replays_stale_preview
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+      headers:
+        idempotency-key: 'w8-xem-truoc-a'
+  - id: owner_previews_current
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_current: {from: body, pointer: /revision, class: token}
+  - id: owner_closes_with_replayed_revision
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_chat}}"}'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_current}}"}'
+  # the plan still counts as a sheet that would lock
+  - id: owner_previews_closed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_closed: {from: body, pointer: /revision, class: token}
+  - id: mate_previews_closed
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'

@@ -1,0 +1,239 @@
+# W8 · GET /contexts/{id}/papers. Newest first, the deadline applied, and a draft listed
+# only for its owner. Each row carries the current version's day and first stop, and
+# the first line kept. Every sheet here is temporary: no notebook is ever opened.
+# Texts are sample data (dữ liệu mẫu).
+id: w8/pair_papers/get-contexts-context_id-papers
+routes: ['GET /contexts/{context_id}/papers']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/papers'
+  - id: stranger_lists_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/papers'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: owner_lists_fresh
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: stranger_lists_pair
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_lists_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{grp}}/papers'
+  - id: owner_lists_as_advancer
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      p1: {from: body, pointer: /id, class: uuid}
+  - id: owner_lists_own_draft
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: mate_lists_without_draft
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_edits_two_stops
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{p1}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"18:00","viec":"Bún chả đầu ngõ (dữ liệu mẫu)"},{"gio":"20:30","viec":"Đi dạo hồ (dữ liệu mẫu)"}]}}'
+  - id: owner_lists_edited
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{p1}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_lists_sent
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: mate_views
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{p1}}/versions/1/viewed'
+  - id: mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{p1}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_records_done
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{p1}}/done'
+  - id: mate_keeps
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{p1}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Chỗ ngồi cạnh cửa sổ (dữ liệu mẫu)"}'
+  - id: owner_keeps
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{p1}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Nước chấm vừa miệng (dữ liệu mẫu)"}'
+  - id: owner_lists_kept
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: mate_drafts
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      p2: {from: body, pointer: /id, class: uuid}
+  - id: mate_skips
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{p2}}/skip'
+  - id: withdrawn_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      p3: {from: body, pointer: /id, class: uuid}
+  - id: withdrawn_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{p3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_withdraws
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{p3}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_drafts_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      p4: {from: body, pointer: /id, class: uuid}
+  - id: owner_lists_all
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: mate_lists_all
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_lists_with_query
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers?state=nhap'
+  - id: owner_lists_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers/'

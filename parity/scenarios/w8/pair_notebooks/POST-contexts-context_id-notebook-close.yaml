@@ -1,0 +1,439 @@
+# W8 · POST …/notebook/close. The pair and roles first, then the notebook row is locked
+# (created on a fresh pair) and the revision recomputed: any mismatch is 409
+# notebook_revision_stale. Closing drops drafts to bo, cancels open sheets to huy,
+# leaves plans alone, clears both couple rows and closes the live cycle; with no cycle
+# it still settles the sheets. Constraint edits do not change the revision; a new offer
+# does. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_notebooks/post-contexts-context_id-notebook-close
+routes: ['POST /contexts/{context_id}/notebook/close']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_closes
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: stranger_closes_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  # no notebook, no sheet: the empty revision closes nothing but creates the row
+  - id: owner_closes_fresh
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_closes_fresh_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: stranger_closes_pair
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_closes_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{grp}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_closes_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_closes_junk_revision
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"khong-khop-dau"}'
+  - id: owner_revision_empty
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":""}'
+  - id: owner_revision_65
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+  - id: owner_revision_64
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+  - id: owner_revision_number
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":16}'
+  - id: owner_revision_null
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":null}'
+  - id: owner_revision_missing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_revision_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14","force":true}'
+  - id: owner_revision_uppercase
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"E3B0C44298FC1C14"}'
+  - id: owner_closes_without_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_puts_constraint
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng hẹn tối muộn (dữ liệu mẫu)"}'
+  - id: owner_proposes_bat_doi
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_bat_doi
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi}}/grant'
+  - id: plan_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      plan: {from: body, pointer: /id, class: uuid}
+  - id: plan_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{plan}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: plan_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{plan}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: plan_mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{plan}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_drafts
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      mate_draft: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+  - id: owner_previews
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_a: {from: body, pointer: /revision, class: token}
+  - id: mate_puts_constraint
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn cay (dữ liệu mẫu)"}'
+  - id: mate_edits_draft
+    as: mate
+    request:
+      method: PATCH
+      path: '/papers/{{mate_draft}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  # the same revision: constraints and content are not in it
+  - id: owner_previews_after_edits
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: mate_proposes_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: owner_closes_stale
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_a}}"}'
+  - id: owner_previews_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_b: {from: body, pointer: /revision, class: token}
+  - id: mate_closes
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_b}}"}'
+  - id: owner_lists_papers
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: mate_lists_papers
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_reads_plan
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{plan}}'
+  - id: mate_closes_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_b}}"}'
+  - id: owner_previews_closed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_c: {from: body, pointer: /revision, class: token}
+  - id: owner_closes_closed_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        idempotency-key: 'w8-dong-so-a'
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_c}}"}'
+  - id: owner_replays_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        idempotency-key: 'w8-dong-so-a'
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_c}}"}'
+  - id: owner_header_key_other_revision
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        idempotency-key: 'w8-dong-so-a'
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_proposes_bat_doi_after_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+  - id: owner_reopens
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      reopen: {from: body, pointer: /id, class: uuid}
+  - id: mate_reads_reopened
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_previews_reopened
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev_d: {from: body, pointer: /revision, class: token}
+  - id: owner_closes_pending_cycle
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev_d}}"}'

@@ -1,0 +1,239 @@
+# W8 · POST /papers/{id}/skip. Either person, on any open sheet: a draft becomes
+# nghi_tuan, a sheet already sent becomes huy. A plan or a closed week is 409
+# paper_wrong_state. The body is never read. Every sheet here is temporary. Texts are
+# sample data (dữ liệu mẫu).
+id: w8/pair_papers/post-papers-paper_id-skip
+routes: ['POST /papers/{paper_id}/skip']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_skips
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/skip'
+  - id: stranger_skips_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/skip'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: mate_skips_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: stranger_skips_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: owner_skips_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_skips_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: owner_skips_again
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: mate_reads_skipped_draft
+    as: mate
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: sent_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: sent_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_skips_sent_with_body
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/skip'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"ly_do":"Bận (dữ liệu mẫu)"}'
+  - id: seen_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_3: {from: body, pointer: /id, class: uuid}
+  - id: seen_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_views_third
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/viewed'
+  - id: owner_skips_seen
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/skip'
+  - id: plan_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_4: {from: body, pointer: /id, class: uuid}
+  - id: plan_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_agrees_fourth
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_skips_plan
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/skip'
+  - id: keyed_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_5: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/skip'
+      headers:
+        idempotency-key: 'w8-nghi-a'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/skip'
+      headers:
+        idempotency-key: 'w8-nghi-a'
+  - id: mate_uses_owner_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/skip'
+      headers:
+        idempotency-key: 'w8-nghi-a'
+  - id: withdrawn_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_6: {from: body, pointer: /id, class: uuid}
+  - id: withdrawn_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_6}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_withdraws_sixth
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_6}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_skips_withdrawn
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_6}}/skip'
+  - id: owner_lists_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'

@@ -1,0 +1,293 @@
+# W8 · DELETE …/notebook/consents/{purpose}. The purpose is checked against the ladder
+# before the context (404 consent_purpose_unknown even for a stranger on an unknown id).
+# Revoking is always 204: on a pair with no notebook it creates the notebook row, with
+# no cycle it does nothing, and on a cycle it stamps revoked_at on every live grant of
+# that purpose by the caller. bat_doi clears both couple rows; lap_so leaves the cycle
+# active. Path spellings are decoded before matching. Texts are sample data.
+id: w8/pair_notebooks/delete-contexts-context_id-notebook-consents-purpose
+routes: ['DELETE /contexts/{context_id}/notebook/consents/{purpose}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_revokes_unknown_purpose
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/consents/khong_co'
+  - id: stranger_unknown_purpose_unknown_context
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/consents/khong_co'
+  - id: stranger_known_purpose_unknown_context
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/consents/lap_so'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: stranger_revokes_in_pair
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap_so'
+  - id: owner_revokes_in_group
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{grp}}/notebook/consents/lap_so'
+  - id: owner_revokes_as_advancer
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap_so'
+      headers:
+        x-actor-roles: 'advancer'
+  # no notebook yet: the lock target is created and committed
+  - id: owner_revokes_on_fresh_pair
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: owner_purpose_uppercase
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/LAP_SO'
+  - id: owner_purpose_padded
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/%20lap_so'
+  - id: owner_purpose_encoded_underscore
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap%5Fso'
+  - id: owner_purpose_encoded_slash
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap%2Fso'
+  - id: owner_purpose_long
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-khong-co-muc-dich-nay-'
+  - id: owner_purpose_vietnamese
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/l%E1%BA%ADp_s%E1%BB%95'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_revokes_pending_lap_so
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap_so'
+  - id: mate_grants_revoked_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_reads_still_pending
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_proposes_lap_so_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so_2: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so_2
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_2}}/grant'
+  - id: owner_proposes_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      doc_chat: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_doc_chat
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{doc_chat}}/grant'
+  - id: mate_revokes_doc_chat
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: owner_reads_after_chat_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_revokes_doc_chat_again
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: owner_revokes_never_granted
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/bat_doi'
+  - id: owner_proposes_bat_doi
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_bat_doi
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi}}/grant'
+  # one half takes it back: both couple rows go
+  - id: mate_revokes_bat_doi
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/bat_doi'
+  - id: owner_reads_after_couple_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  # the cycle stays active
+  - id: owner_revokes_active_lap_so
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap_so'
+  - id: mate_reads_after_lap_so_revoke
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_drafts_after_lap_so_revoke
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_revokes_with_header_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+      headers:
+        idempotency-key: 'w8-thu-hoi-a'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+      headers:
+        idempotency-key: 'w8-thu-hoi-a'
+  - id: owner_header_key_other_purpose
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/bat_doi'
+      headers:
+        idempotency-key: 'w8-thu-hoi-a'
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  - id: owner_revokes_after_close
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/lap_so'

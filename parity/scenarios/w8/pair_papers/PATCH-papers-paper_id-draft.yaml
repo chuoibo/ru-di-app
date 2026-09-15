@@ -1,0 +1,571 @@
+# W8 · PATCH /papers/{id}/draft. Body validation first (the generated corpus defers this
+# route: `ngay` is a date). Then the sheet: unknown 404 paper_not_found, outside the
+# pair 404 notebook_not_found, the other person 404 paper_not_found, dev roles 403,
+# and a sheet no longer nhap 409 paper_wrong_state. Version 1 is rewritten in place;
+# ly_do is stripped and blank becomes null. Hostile texts include HTML, a right-to-left
+# override, emoji at the bound, NUL and a lone surrogate. Texts are sample data.
+id: w8/pair_papers/patch-papers-paper_id-draft
+routes: ['PATCH /papers/{paper_id}/draft']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_edits_unknown
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: stranger_edits_unknown
+    as: stranger
+    request:
+      method: PATCH
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: mate_edits_owner_draft
+    as: mate
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: stranger_edits_real_paper
+    as: stranger
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_edits_as_advancer
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_edits_one_stop
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_edits_two_stops
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"07:05","viec":"Cà phê trứng (dữ liệu mẫu)","place_id":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","can_kiem":false},{"gio":"23:59","viec":"Về nhà (dữ liệu mẫu)"}]},"ly_do":"   Vì hôm đó rảnh (dữ liệu mẫu)\n"}'
+  - id: owner_reads_two_stops
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: owner_blank_ly_do
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"ly_do":"   "}'
+  - id: owner_null_ly_do
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"ly_do":null}'
+  - id: owner_reads_blank_ly_do
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: owner_hour_24
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"24:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_hour_one_digit
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"7:30","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_hour_with_seconds
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_hour_number
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":1900,"viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_hour_trailing_newline
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00\n","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_task_empty
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":""}]}}'
+  - id: owner_task_201
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu m"}]}}'
+  - id: owner_task_missing
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00"}]}}'
+  - id: owner_no_stops
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[]}}'
+  - id: owner_three_stops
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"},{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"},{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_stops_missing
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01"}}'
+  - id: owner_day_missing
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_null
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":null,"chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_slashes
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"01/09/2026","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_impossible
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-02-30","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_short_parts
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-9-1","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_midnight_datetime
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01T00:00:00","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_datetime_with_time
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01T01:00:00","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_day_number
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":0,"chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_place_not_uuid
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)","place_id":"quan-quen"}]}}'
+  - id: owner_place_empty
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)","place_id":""}]}}'
+  - id: owner_check_as_string
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)","can_kiem":"true"}]}}'
+  - id: owner_check_as_number
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)","can_kiem":1}]}}'
+  - id: owner_extra_stop_field
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)","gia_vnd":5}]}}'
+  - id: owner_extra_content_field
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}],"tuan":"2026-09-01"}}'
+  - id: owner_extra_top_field
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"state":"chot"}'
+  - id: owner_ly_do_201
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"ly_do":"dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu m"}'
+  - id: owner_ly_do_number
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"ly_do":5}'
+  - id: owner_content_null
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":null}'
+  - id: owner_body_empty_object
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_body_broken_json
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{'
+  - id: owner_body_without_content_type
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_task_html
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"<b>Ăn</b> <script>alert(1)</script> (dữ liệu mẫu)"}]}}'
+  - id: owner_task_rtl_override
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"\u202eiốt nĂ (dữ liệu mẫu)"}]}}'
+  - id: owner_task_emoji_200
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜🍜"}]}}'
+  - id: owner_reads_hostile
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: owner_task_nul
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn\u0000tối (dữ liệu mẫu)"}]}}'
+  - id: owner_ly_do_nul
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối"}]},"ly_do":"vì\u0000thế (dữ liệu mẫu)"}'
+  - id: owner_task_lone_surrogate
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"\udc00 (dữ liệu mẫu)"}]}}'
+  - id: owner_reads_after_refusals
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: owner_header_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        idempotency-key: 'w8-sua-nhap-a'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        idempotency-key: 'w8-sua-nhap-a'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_header_key_other_body
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        idempotency-key: 'w8-sua-nhap-a'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_edits_sent
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: mate_edits_sent
+    as: mate
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_edits_sent_with_bad_body
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[]}}'
+  # the stored 200 still answers nhap
+  - id: owner_replays_key_after_send
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        idempotency-key: 'w8-sua-nhap-a'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_withdraws
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_drafts_second
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_second
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/skip'
+  - id: owner_edits_skipped
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_2}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'

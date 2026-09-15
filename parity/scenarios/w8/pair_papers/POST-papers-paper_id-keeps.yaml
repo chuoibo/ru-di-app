@@ -1,0 +1,357 @@
+# W8 · POST /papers/{id}/keeps. Body validation first (the generated corpus defers the
+# route: `line` has an after-validator). Then the sheet, roles, and the transition: only
+# da_di and da_giu take a line; anything else is 409 paper_wrong_state. The first line
+# turns da_di into da_giu and every later line is kept too. The line is stripped after
+# the raw 1..200 bound. Hostile texts include a zero-width space, NBSP, HTML, a
+# right-to-left override, NUL and a lone surrogate. Texts are sample data.
+id: w8/pair_papers/post-papers-paper_id-keeps
+routes: ['POST /papers/{paper_id}/keeps']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_keeps
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Một dòng (dữ liệu mẫu)"}'
+  - id: stranger_keeps_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Một dòng (dữ liệu mẫu)"}'
+  - id: stranger_keeps_unknown_blank
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":" "}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_keeps_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: mate_keeps_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_agrees
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_keeps_plan
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: owner_records_done
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: stranger_keeps_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: owner_keeps_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: owner_line_empty
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":""}'
+  - id: owner_line_blank
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"   "}'
+  - id: owner_line_newlines
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"\n\n\t"}'
+  - id: owner_line_nbsp
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"\u00a0"}'
+  - id: owner_line_201
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu m"}'
+  - id: owner_line_raw_over_bound
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"  dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu  "}'
+  - id: owner_line_number
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":7}'
+  - id: owner_line_null
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":null}'
+  - id: owner_line_missing
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_line_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Một dòng (dữ liệu mẫu)","person_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: mate_keeps_padded
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"   Quán nhỏ đầu hẻm (dữ liệu mẫu)\n"}'
+  - id: owner_keeps_200
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệuu"}'
+  - id: owner_keeps_zero_width
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"\u200b"}'
+  - id: owner_keeps_html
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"<img src=x onerror=alert(1)> (dữ liệu mẫu)"}'
+  - id: owner_keeps_rtl_override
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"\u202eiốt nĂ (dữ liệu mẫu)"}'
+  - id: owner_keeps_emoji_200
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜 🍜🍜"}'
+  - id: owner_keeps_nul
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Một\u0000dòng (dữ liệu mẫu)"}'
+  - id: owner_keeps_lone_surrogate
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"\ud83d (dữ liệu mẫu)"}'
+  - id: owner_reads_keeps
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: mate_lists_first_line
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: owner_keeps_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        idempotency-key: 'w8-giu-a'
+        content-type: 'application/json'
+      body_raw: '{"line":"Lần sau gọi món khác (dữ liệu mẫu)"}'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        idempotency-key: 'w8-giu-a'
+        content-type: 'application/json'
+      body_raw: '{"line":"Lần sau gọi món khác (dữ liệu mẫu)"}'
+  - id: owner_header_key_other_line
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        idempotency-key: 'w8-giu-a'
+        content-type: 'application/json'
+      body_raw: '{"line":"Lần sau đi sớm (dữ liệu mẫu)"}'
+  - id: second_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: owner_skips_second
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/skip'
+  - id: owner_keeps_skipped
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'

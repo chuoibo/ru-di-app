@@ -1,0 +1,309 @@
+# W8 · GET /contexts/{id}/notebook. A group, a stranger, a friend who is not one of the
+# two and an unknown id all read the same 404 notebook_not_found; the dev roles header
+# is refused only after the pair is found. The view follows the notebook: one yes, both
+# yes, two constraints, a pending couple offer, a draft only its owner sees as
+# open_paper_id, a sent sheet both see, a block that closes nothing, and a new pending
+# cycle after closing that carries none of the old consents or constraints. A notebook
+# with no live cycle is never read with 200: its participant order is random in Python.
+# Texts are sample data (dữ liệu mẫu).
+id: w8/pair_notebooks/get-contexts-context_id-notebook
+routes: ['GET /contexts/{context_id}/notebook']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  stranger: {}
+steps:
+  - id: anonymous_reads_unknown
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook'
+  - id: stranger_bad_actor_id
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: stranger_reads_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thứ ba (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: owner_asks_third_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.third}}"}'
+    bind:
+      fr_owner_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts_owner_friendship
+    as: third
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_third}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_reads_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{grp}}/notebook'
+  - id: stranger_reads_pair
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: third_reads_pair
+    as: third
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: stranger_reads_pair_as_advancer
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_reads_as_advancer
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_reads_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook/'
+  - id: owner_posts_to_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_one_yes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_reads_one_yes
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_reads_open
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_reads_with_query
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook?cycle=cu'
+  - id: owner_puts_khong_an_duoc
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành (dữ liệu mẫu)"}'
+  - id: mate_puts_dung
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng hẹn quá chín giờ tối (dữ liệu mẫu)"}'
+  - id: owner_puts_dung
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng đi chỗ ồn (dữ liệu mẫu)"}'
+  - id: owner_proposes_bat_doi
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi: {from: body, pointer: /id, class: uuid}
+  - id: mate_reads_constraints_and_offer
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_own_draft
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  # the draft is owner's: open_paper_id stays null for mate
+  - id: mate_reads_without_draft
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_reads_sent_paper
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_grants_bat_doi
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi}}/grant'
+  - id: owner_reads_couple
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_blocks_owner
+    as: mate
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_reads_after_block
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: mate_reads_after_block
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  # a closed notebook reads like a fresh one (random participant order); ask again to read a new pending cycle
+  - id: owner_reopens
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: mate_reads_reopened
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'

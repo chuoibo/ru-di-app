@@ -1,0 +1,88 @@
+# W8 concurrency · POST /contexts/{id}/papers/draft. Three drafts at once queue on the
+# notebook row and read the sheets after the lock: one 201, two 409 paper_wrong_state.
+# Under one header key: one sheet, one 201, two replays. Texts are sample data.
+id: w8/concurrency/post-contexts-context_id-papers-draft
+routes: ['POST /contexts/{context_id}/papers/draft']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  # a first write on a pair with no notebook row races on its unique; make the row first
+  - id: owner_creates_notebook_row
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: owner_drafts_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  - id: owner_lists_one
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+    bind:
+      paper: {from: body, pointer: /papers/0/id, class: uuid}
+  - id: owner_skips
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-c-phac'
+  - id: owner_lists_two
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
