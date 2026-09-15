@@ -16,6 +16,41 @@ func registerServedValidators(r *Registry) {
 	r.Register(schemas+"VoteCreateRequest._strip_question", stripNotBlank("question must not be blank"))
 	r.Register(schemas+"VoteOptionInput._strip_label", stripNotBlank("label must not be blank"))
 	r.Register(schemas+"VoteOptionInput._strip_place_name", stripOrNone)
+	// W3 contexts (schemas.py ContextUpdateRequest).
+	r.Register(schemas+"ContextUpdateRequest._something_to_change",
+		somethingToChange([]string{"display_name", "theme"}, "tên nhóm không được rỗng"))
+}
+
+// somethingToChange is a partial-update model's `_something_to_change`: at
+// least one of fields is not None, and a display_name that is given is not
+// blank once stripped.
+func somethingToChange(fields []string, blankName string) ValidatorFunc {
+	return func(_ *Call, v Value) (Value, error) {
+		allNone := true
+		for _, name := range fields {
+			if !isNone(validatedField(v, name)) {
+				allNone = false
+			}
+		}
+		if allNone {
+			return nil, ValueError("cần ít nhất một trường để sửa")
+		}
+		if s, ok := validatedField(v, "display_name").(pyjson.String); ok && pyStrip(string(s)) == "" {
+			return nil, ValueError(blankName)
+		}
+		return v, nil
+	}
+}
+
+// validatedField is one validated field of a model value, nil when v is not a
+// model or has no such field.
+func validatedField(v Value, name string) Value {
+	m, ok := v.(*Model)
+	if !ok {
+		return nil
+	}
+	got, _ := m.Get(name)
+	return got
 }
 
 // stripNotBlank is `value.strip()`, refusing an empty result with message.

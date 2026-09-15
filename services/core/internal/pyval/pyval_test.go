@@ -50,12 +50,13 @@ func TestW1RoutesHaveNoUnregisteredValidators(t *testing.T) {
 
 func TestBindRefusesAnUnportedValidator(t *testing.T) {
 	c := loadContract(t)
-	const id = "PATCH /contexts/{context_id}"
+	// A route Python still serves: its model validator has no production port.
+	const id = "PATCH /people/me"
 	rep, err := c.Inspect(id, NewRegistry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "app.api.schemas.ContextUpdateRequest._something_to_change"
+	want := "app.api.schemas.ProfileUpdateRequest._something_to_change"
 	if len(rep.Unregistered) != 1 || rep.Unregistered[0] != want {
 		t.Fatalf("unregistered = %v, want [%s]", rep.Unregistered, want)
 	}

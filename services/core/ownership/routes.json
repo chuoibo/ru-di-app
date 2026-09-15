@@ -230,7 +230,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "PATCH /contexts/{context_id}",
@@ -242,7 +242,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/members",
@@ -254,7 +254,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /memberships/{membership_id}/accept",
@@ -266,7 +266,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "DELETE /contexts/{context_id}/members/{person_id}",
@@ -278,7 +278,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}/members",
@@ -290,7 +290,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}/balances",
@@ -302,7 +302,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}",
@@ -314,7 +314,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/memories",

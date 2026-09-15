@@ -56,6 +56,14 @@ func All() []Route {
 		deletePostComment(),
 		mintPersonID(),
 		findPersonByPhone(),
+		createContext(),
+		updateContext(),
+		inviteContextMember(),
+		acceptContextMembership(),
+		leaveContext(),
+		listContextMembers(),
+		getContextBalances(),
+		getContext(),
 	}
 }
 
