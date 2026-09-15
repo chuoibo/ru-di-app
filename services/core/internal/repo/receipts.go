@@ -31,10 +31,13 @@ type ReceiptRecord struct {
 }
 
 // ReceiptConfirmationInput is save_receipt_confirmation's keyword arguments.
+// AmountVND is the request's amount exactly: ReceiptConfirmationRequest has no
+// ceiling, so it can pass int64, and Python still compares it with a stored
+// receipt and binds it to the INSERT, where PostgreSQL refuses it.
 type ReceiptConfirmationInput struct {
 	Target          ReceiptTarget
 	ConfirmedByID   string
-	AmountVND       int64
+	AmountVND       *big.Int
 	PaymentReportID *string
 	IdempotencyKey  string
 	Now             time.Time
@@ -85,14 +88,16 @@ func (r Repository) GetReceiptTarget(ctx context.Context, obligationID string) (
 //
 // Statements and refusals, in Python's order:
 //  1. the receipt with this idempotency key, unlocked. When there is one: a
-//     different obligation, confirmer, amount or payment report is Conflict
+//     different obligation, confirmer, amount (an amount past int64 is never
+//     the stored one) or payment report is Conflict
 //     IDEMPOTENCY_KEY_REUSED raised from nothing; otherwise the stored receipt
 //     is answered with the obligation's receipt amounts, nothing written;
 //  2. with a payment report id, `session.get(PaymentReport, id)` (labelled):
 //     none, or one of another obligation, is Conflict
 //     PAYMENT_REPORT_NOT_FOR_OBLIGATION;
 //  3. flush: the receipt INSERT (the caller's clock); a check or foreign key
-//     refusal is returned as is;
+//     refusal is returned as is, and so is PostgreSQL's 22003 for an amount
+//     past BIGINT, which psycopg sends as numeric and pgx here as text;
 //  4. the audit event, flushed by the next statement's autoflush;
 //  5. the obligation's receipt amounts ORDER BY confirmed_at, id.
 func (r Repository) SaveReceiptConfirmation(ctx context.Context, in ReceiptConfirmationInput) (ReceiptRecord, error) {
@@ -110,7 +115,7 @@ func (r Repository) SaveReceiptConfirmation(ctx context.Context, in ReceiptConfi
 	switch {
 	case err == nil:
 		if existingObligation != in.Target.ObligationID || confirmedBy != in.ConfirmedByID ||
-			amount != in.AmountVND || !sameText(reportID, in.PaymentReportID) {
+			big.NewInt(amount).Cmp(in.AmountVND) != 0 || !sameText(reportID, in.PaymentReportID) {
 			return ReceiptRecord{}, &Conflict{Code: "IDEMPOTENCY_KEY_REUSED"}
 		}
 		amounts, err := r.receiptAmounts(ctx, existingObligation)
@@ -153,11 +158,17 @@ func (r Repository) SaveReceiptConfirmation(ctx context.Context, in ReceiptConfi
 		return ReceiptRecord{}, err
 	}
 	now := pythonInstant(in.Now)
+	// A Go string travels in text format, so PostgreSQL itself refuses an
+	// amount past BIGINT with 22003, as it refuses psycopg's numeric.
+	var amountParam any = in.AmountVND.String()
+	if in.AmountVND.IsInt64() {
+		amountParam = in.AmountVND.Int64()
+	}
 	if _, err := r.Q.Exec(ctx,
 		`INSERT INTO receipt_confirmations (id, obligation_id, payment_report_id, confirmed_by_id, amount_vnd,
 		                                    idempotency_key, confirmed_at)
 		 VALUES ($1::UUID, $2::UUID, $3::UUID, $4::UUID, $5::BIGINT, $6::UUID, $7::TIMESTAMP WITH TIME ZONE)`,
-		id, in.Target.ObligationID, in.PaymentReportID, in.ConfirmedByID, in.AmountVND, in.IdempotencyKey,
+		id, in.Target.ObligationID, in.PaymentReportID, in.ConfirmedByID, amountParam, in.IdempotencyKey,
 		now); err != nil {
 		return ReceiptRecord{}, err
 	}
@@ -171,7 +182,8 @@ func (r Repository) SaveReceiptConfirmation(ctx context.Context, in ReceiptConfi
 	if err != nil {
 		return ReceiptRecord{}, err
 	}
-	return ReceiptRecord{ID: id, ObligationID: in.Target.ObligationID, AmountVND: in.AmountVND,
+	// The INSERT succeeded, so the amount fits BIGINT.
+	return ReceiptRecord{ID: id, ObligationID: in.Target.ObligationID, AmountVND: in.AmountVND.Int64(),
 		ReceiptAmountsVND: amounts}, nil
 }
 

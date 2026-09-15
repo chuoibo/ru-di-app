@@ -644,9 +644,9 @@ func FinanceReadable(actorID, personID string) *Refusal {
 }
 
 // GroupBudget is group_budget after its reads: the outings of group_recap
-// and the number of active members, compared with the candidate. A
-// *budget.BudgetError escapes, as it does in Python.
-func GroupBudget(outings []budget.Outing, roster []Member, candidate *money.VND) (budget.Budget, error) {
+// and the number of active members, compared with the candidate (exact, of
+// any size; nil is None). A *budget.BudgetError escapes, as it does in Python.
+func GroupBudget(outings []budget.Outing, roster []Member, candidate *big.Int) (budget.Budget, error) {
 	active := int64(0)
 	for _, member := range roster {
 		if member.State == stateActive {

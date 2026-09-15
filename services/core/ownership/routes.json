@@ -71,7 +71,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /expenses/{expense_id}/confirm",
@@ -83,7 +83,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /friends/requests",
@@ -218,7 +218,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts",
@@ -986,7 +986,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /people/me/contexts",
@@ -1355,7 +1355,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}/recap",

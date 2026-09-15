@@ -1,9 +1,11 @@
 // Package budget is the Go port of app/domain/budget.py: F34 group budget
 // awareness for GET /contexts/{context_id}/budget.
 //
-// The money laws hold as in Python (ADR-0029 §2.5). A stored or input amount
-// (an outing's budget per person, the candidate from the query) is
-// money.VND. A derived sum is a *big.Int and never narrowed: an outing's
+// The money laws hold as in Python (ADR-0029 §2.5). A stored amount (an
+// outing's budget per person) is money.VND. The candidate from the query is a
+// *big.Int: routes/budget.py admits any ASCII digit string with no ceiling
+// and the response echoes it, so the Go answer must carry every digit Python
+// prints. A derived sum is a *big.Int and never narrowed: an outing's
 // split total is a SQL SUM of confirmed allocations, and every figure built
 // from it (spent, remaining, the historical average, the delta) stays exact.
 // Every division is Python's floor division, done with big.Int.Div, whose
@@ -78,7 +80,7 @@ type OutingView struct {
 
 // Comparison is the comparison dict.
 type Comparison struct {
-	CandidatePerPersonVND money.VND
+	CandidatePerPersonVND *big.Int
 	DeltaVND              *big.Int
 	Verdict               string
 }
@@ -109,14 +111,15 @@ func readOuting(raw Outing) (Outing, error) {
 
 // BuildGroupBudget is build_group_budget: the finished outings' average
 // spend per person, each outing still in progress with its spend against its
-// budget, and the candidate compared with the average. candidate nil is None.
+// budget, and the candidate compared with the average. candidate nil is None;
+// it is exact, of any size.
 // Checks run in Python's order: the member count, the candidate, then each
 // outing in turn.
-func BuildGroupBudget(outings []Outing, activeMemberCount int64, candidate *money.VND) (Budget, error) {
+func BuildGroupBudget(outings []Outing, activeMemberCount int64, candidate *big.Int) (Budget, error) {
 	if activeMemberCount < 0 {
 		return Budget{}, invalid()
 	}
-	if candidate != nil && *candidate < 0 {
+	if candidate != nil && candidate.Sign() < 0 {
 		return Budget{}, invalid()
 	}
 
@@ -154,15 +157,15 @@ func BuildGroupBudget(outings []Outing, activeMemberCount int64, candidate *mone
 		result.AvgPerPersonVND = new(big.Int).Div(finishedTotal, finishedHeadcount)
 	}
 	if candidate != nil && result.AvgPerPersonVND != nil {
-		result.Comparison = compare(*candidate, result.AvgPerPersonVND)
+		result.Comparison = compare(candidate, result.AvgPerPersonVND)
 	}
 	return result, nil
 }
 
 // compare is _comparison: inside the band, inclusive, is usual; outside it
 // the sign of the delta decides.
-func compare(candidate money.VND, average *big.Int) *Comparison {
-	delta := new(big.Int).Sub(big.NewInt(int64(candidate)), average)
+func compare(candidate, average *big.Int) *Comparison {
+	delta := new(big.Int).Sub(candidate, average)
 	tolerance := new(big.Int).Mul(average, big.NewInt(ComparisonTolerancePercent))
 	scaled := new(big.Int).Mul(new(big.Int).Abs(delta), big.NewInt(percentScale))
 	verdict := VerdictDearer
@@ -172,5 +175,5 @@ func compare(candidate money.VND, average *big.Int) *Comparison {
 	case delta.Sign() < 0:
 		verdict = VerdictCheaper
 	}
-	return &Comparison{CandidatePerPersonVND: candidate, DeltaVND: delta, Verdict: verdict}
+	return &Comparison{CandidatePerPersonVND: new(big.Int).Set(candidate), DeltaVND: delta, Verdict: verdict}
 }

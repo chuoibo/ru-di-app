@@ -48,13 +48,13 @@ func createBill() Route {
 			return endpoint.Reply{}, err
 		}
 		refused, err := moneysteps.CreateBillChecks(draft.itemsTotal, draft.lines, func() ([]moneysteps.Member, error) {
-			return billRoster(ctx, store, draft.in.ContextID)
+			return rosterOf(ctx, store, draft.in.ContextID)
 		})
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
 		if refused != nil {
-			return endpoint.Reply{}, billRefusal(refused)
+			return endpoint.Reply{}, refuseMoney(refused)
 		}
 		draft.in.Now = time.Now().UTC()
 		record, err := writeBill(ctx, store, draft)
@@ -113,7 +113,7 @@ func confirmBillAssignments() Route {
 			if assignments[i].ItemKey, err = stringField(row, "item_key"); err != nil {
 				return endpoint.Reply{}, err
 			}
-			if assignments[i].ParticipantIDs, err = billUUIDs(row, "participant_ids"); err != nil {
+			if assignments[i].ParticipantIDs, err = uuidListField(row, "participant_ids"); err != nil {
 				return endpoint.Reply{}, err
 			}
 			named = append(named, assignments[i].ParticipantIDs...)
@@ -126,12 +126,12 @@ func confirmBillAssignments() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		members, err := billRoster(ctx, store, record.ContextID)
+		members, err := rosterOf(ctx, store, record.ContextID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
 		if refused := moneysteps.RequireParticipantsAreMembers(members, named); refused != nil {
-			return endpoint.Reply{}, billRefusal(refused)
+			return endpoint.Reply{}, refuseMoney(refused)
 		}
 		updated, err := store.ConfirmBillAssignments(ctx, billID, assignments, call.Actor.ID, time.Now().UTC())
 		var conflict *repo.Conflict
@@ -203,7 +203,7 @@ func splitBill() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		forLedger, err := billBool(body, "for_ledger")
+		forLedger, err := boolField(body, "for_ledger")
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -219,7 +219,7 @@ func splitBill() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		members, err := billRoster(ctx, store, record.ContextID)
+		members, err := rosterOf(ctx, store, record.ContextID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -228,7 +228,7 @@ func splitBill() Route {
 			return endpoint.Reply{}, err
 		}
 		if refused != nil {
-			return endpoint.Reply{}, billRefusal(refused)
+			return endpoint.Reply{}, refuseMoney(refused)
 		}
 		return endpoint.Reply{Body: wireBillSplit(split)}, nil
 	}}
@@ -252,23 +252,6 @@ func billForActor(ctx context.Context, call *endpoint.Call, store repo.Repositor
 
 func billNotFound() error {
 	return endpoint.Refuse(404, "bill_not_found", "Bill does not exist")
-}
-
-func billRefusal(refused *moneysteps.Refusal) error {
-	return endpoint.Refuse(refused.Status, refused.Code, refused.Detail)
-}
-
-// billRoster is list_members as the money steps read it.
-func billRoster(ctx context.Context, store repo.Repository, contextID string) ([]moneysteps.Member, error) {
-	rows, err := store.ListMembers(ctx, contextID)
-	if err != nil {
-		return nil, err
-	}
-	members := make([]moneysteps.Member, len(rows))
-	for i, row := range rows {
-		members[i] = moneysteps.Member{PersonID: row.PersonID, State: row.State}
-	}
-	return members, nil
 }
 
 // billFlush is one statement group of repository.create_bill, in the order it
@@ -323,18 +306,18 @@ func readBillDraft(body *pyval.Model, actorID string) (billDraft, error) {
 		v := d.column(flushBill, *printed)
 		d.in.PrintedTotalVND = &v
 	}
-	itemsTotal, err := billInt(body, "items_total_vnd")
+	itemsTotal, err := intField(body, "items_total_vnd")
 	if err != nil {
 		return d, err
 	}
 	d.itemsTotal = itemsTotal.Big()
 	d.in.ItemsTotalVND = d.column(flushBill, itemsTotal)
-	confidence, err := billInt(body, "confidence")
+	confidence, err := intField(body, "confidence")
 	if err != nil {
 		return d, err
 	}
 	d.in.Confidence = d.column(flushBill, confidence)
-	if d.in.NeedsReview, err = billBool(body, "needs_review"); err != nil {
+	if d.in.NeedsReview, err = boolField(body, "needs_review"); err != nil {
 		return d, err
 	}
 
@@ -352,7 +335,7 @@ func readBillDraft(body *pyval.Model, actorID string) (billDraft, error) {
 		if item.Name, err = stringField(row, "name"); err != nil {
 			return d, err
 		}
-		quantity, err := billInt(row, "quantity")
+		quantity, err := intField(row, "quantity")
 		if err != nil {
 			return d, err
 		}
@@ -365,12 +348,12 @@ func readBillDraft(body *pyval.Model, actorID string) (billDraft, error) {
 			v := d.column(flushItems, *unitPrice)
 			item.UnitPriceVND = &v
 		}
-		lineTotal, err := billInt(row, "line_total_vnd")
+		lineTotal, err := intField(row, "line_total_vnd")
 		if err != nil {
 			return d, err
 		}
 		item.LineTotalVND = d.column(flushItems, lineTotal)
-		if item.SuggestedParticipantIDs, err = billUUIDs(row, "suggested_participant_ids"); err != nil {
+		if item.SuggestedParticipantIDs, err = uuidListField(row, "suggested_participant_ids"); err != nil {
 			return d, err
 		}
 		d.in.Items[position] = item
@@ -390,7 +373,7 @@ func readBillDraft(body *pyval.Model, actorID string) (billDraft, error) {
 		if s.Kind, err = stringField(row, "kind"); err != nil {
 			return d, err
 		}
-		amount, err := billInt(row, "amount_vnd")
+		amount, err := intField(row, "amount_vnd")
 		if err != nil {
 			return d, err
 		}
@@ -410,7 +393,7 @@ func readBillDraft(body *pyval.Model, actorID string) (billDraft, error) {
 		if disc.DiscountKey, err = stringField(row, "discount_key"); err != nil {
 			return d, err
 		}
-		amount, err := billInt(row, "amount_vnd")
+		amount, err := intField(row, "amount_vnd")
 		if err != nil {
 			return d, err
 		}
@@ -556,22 +539,8 @@ func wireBill(record repo.Bill) *pyjson.OrderedMap {
 // wireBillSplit is BillSplitResponse, with _wire_allocation: allocations and
 // exact shares keyed by participant in the allocator's order.
 func wireBillSplit(split moneysteps.Split) *pyjson.OrderedMap {
-	allocations := pyjson.NewOrderedMap()
-	for _, share := range split.Allocation.Allocations {
-		allocations.Set(share.ParticipantID, pyjson.NewInt(int64(share.AmountVND)))
-	}
-	exact := pyjson.NewOrderedMap()
-	for _, share := range split.Allocation.ExactShares {
-		exact.Set(share.ParticipantID, pyjson.String(share.Fraction()))
-	}
-	allocation := pyjson.NewOrderedMap()
-	allocation.Set("allocations", allocations)
-	allocation.Set("exact_shares", exact)
-	allocation.Set("rounding_gainers", billStrings(split.Allocation.RoundingGainers))
-	allocation.Set("warnings", billStrings(split.Allocation.Warnings))
-
 	out := pyjson.NewOrderedMap()
-	out.Set("allocation", allocation)
+	out.Set("allocation", wireAllocation(split.Allocation))
 	out.Set("assignment_state", pyjson.String(split.AssignmentState))
 	out.Set("suggested_item_keys", billStrings(split.SuggestedItemKeys))
 	out.Set("total_amount_vnd", pyjson.NewInt(int64(split.TotalAmountVND)))
@@ -595,18 +564,6 @@ func billIntOrNull(value *int64) pyjson.Value {
 	return pyjson.NewInt(*value)
 }
 
-func billInt(model *pyval.Model, name string) (pyjson.Int, error) {
-	value, err := field(model, name)
-	if err != nil {
-		return pyjson.Int{}, err
-	}
-	n, ok := value.(pyjson.Int)
-	if !ok {
-		return pyjson.Int{}, fmt.Errorf("routes: %s.%s is %T, not an int", model.Class, name, value)
-	}
-	return n, nil
-}
-
 func billOptionalInt(model *pyval.Model, name string) (*pyjson.Int, error) {
 	value, err := field(model, name)
 	if err != nil {
@@ -619,36 +576,4 @@ func billOptionalInt(model *pyval.Model, name string) (*pyjson.Int, error) {
 		return &v, nil
 	}
 	return nil, fmt.Errorf("routes: %s.%s is %T, not an int or None", model.Class, name, value)
-}
-
-func billBool(model *pyval.Model, name string) (bool, error) {
-	value, err := field(model, name)
-	if err != nil {
-		return false, err
-	}
-	b, ok := value.(pyjson.Bool)
-	if !ok {
-		return false, fmt.Errorf("routes: %s.%s is %T, not a bool", model.Class, name, value)
-	}
-	return bool(b), nil
-}
-
-func billUUIDs(model *pyval.Model, name string) ([]string, error) {
-	value, err := field(model, name)
-	if err != nil {
-		return nil, err
-	}
-	list, ok := value.(pyval.List)
-	if !ok {
-		return nil, fmt.Errorf("routes: %s.%s is %T, not a list", model.Class, name, value)
-	}
-	out := make([]string, len(list))
-	for i, item := range list {
-		id, ok := item.(pyval.UUID)
-		if !ok {
-			return nil, fmt.Errorf("routes: %s.%s[%d] is %T, not a UUID", model.Class, name, i, item)
-		}
-		out[i] = id.String()
-	}
-	return out, nil
 }

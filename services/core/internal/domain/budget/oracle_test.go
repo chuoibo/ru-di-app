@@ -64,7 +64,7 @@ func render(b Budget) map[string]any {
 	var comparison any
 	if b.Comparison != nil {
 		comparison = map[string]any{
-			"candidate_per_person_vnd": int64(b.Comparison.CandidatePerPersonVND),
+			"candidate_per_person_vnd": oracletest.Exact(b.Comparison.CandidatePerPersonVND),
 			"delta_vnd":                oracletest.Exact(b.Comparison.DeltaVND),
 			"verdict":                  b.Comparison.Verdict,
 		}
@@ -90,14 +90,9 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 	if err != nil {
 		return nil, oracletest.Decode(err)
 	}
-	var candidate *money.VND
-	if args["candidate_per_person_vnd"] != nil {
-		n, err := oracletest.Int64(args["candidate_per_person_vnd"])
-		if err != nil {
-			return nil, oracletest.Decode(err)
-		}
-		value := money.VND(n)
-		candidate = &value
+	candidate, err := oracletest.Integer(args["candidate_per_person_vnd"])
+	if err != nil {
+		return nil, oracletest.Decode(err)
 	}
 	result, err := BuildGroupBudget(outings, active, candidate)
 	if err != nil {

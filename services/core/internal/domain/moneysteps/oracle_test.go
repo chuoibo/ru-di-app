@@ -573,13 +573,9 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 		if err != nil {
 			return decodeFailed(err)
 		}
-		var candidate *money.VND
-		if args["candidate_per_person_vnd"] != nil {
-			value, err := vnd(args["candidate_per_person_vnd"])
-			if err != nil {
-				return decodeFailed(err)
-			}
-			candidate = &value
+		candidate, err := oracletest.Integer(args["candidate_per_person_vnd"])
+		if err != nil {
+			return decodeFailed(err)
 		}
 		result, err := GroupBudget(outings, roster, candidate)
 		if err != nil {
@@ -753,7 +749,7 @@ func renderBudget(b budget.Budget) map[string]any {
 	var comparison any
 	if b.Comparison != nil {
 		comparison = map[string]any{
-			"candidate_per_person_vnd": int64(b.Comparison.CandidatePerPersonVND),
+			"candidate_per_person_vnd": oracletest.Exact(b.Comparison.CandidatePerPersonVND),
 			"delta_vnd":                oracletest.Exact(b.Comparison.DeltaVND),
 			"verdict":                  b.Comparison.Verdict,
 		}

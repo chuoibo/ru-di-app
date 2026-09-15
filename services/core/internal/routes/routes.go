@@ -81,6 +81,11 @@ func All() []Route {
 		publishBatch(),
 		listBatchObligations(),
 		listContextBatches(),
+		proposeExpense(),
+		confirmExpense(),
+		confirmReceipt(),
+		readPersonFinance(),
+		readGroupBudget(),
 	}
 }
 

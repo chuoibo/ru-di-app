@@ -117,6 +117,19 @@ func argNumber(v any) int64 {
 	panic(fmt.Sprintf("not a number: %T", v))
 }
 
+// argInteger is an integer argument of any size.
+func argInteger(v any) *big.Int {
+	x, ok := v.(json.Number)
+	if !ok {
+		panic(fmt.Sprintf("not an integer: %T", v))
+	}
+	n, ok := new(big.Int).SetString(string(x), 10)
+	if !ok {
+		panic(fmt.Sprintf("not an integer: %s", x))
+	}
+	return n
+}
+
 func argOptionalNumber(v any) *int64 {
 	if v == nil {
 		return nil
@@ -227,7 +240,7 @@ func argLinks(a map[string]any) []GuestLinkDraft {
 
 func argReceipt(a map[string]any, target ReceiptTarget) ReceiptConfirmationInput {
 	return ReceiptConfirmationInput{Target: target, ConfirmedByID: argString(a, "confirmed_by_id"),
-		AmountVND: argNumber(a["amount_vnd"]), PaymentReportID: argText(a["payment_report_id"]),
+		AmountVND: argInteger(a["amount_vnd"]), PaymentReportID: argText(a["payment_report_id"]),
 		IdempotencyKey: argString(a, "idempotency_key"), Now: argInstant(argString(a, "now"))}
 }
 
@@ -983,6 +996,19 @@ func moneyOracleCases() ([]socialCase, oracleSpec) {
 	add("save_receipt_confirmation: an amount of zero", "IntegrityError", base, receive(w.obDungBinh, w.binh, 7_000, w.binh, 0, nil, newKey(6), moneyNow))
 	add("save_receipt_confirmation: an obligation with no row", "IntegrityError", base,
 		receive(w.missingObligation, w.an, 1, w.an, 1, nil, newKey(7), moneyNow))
+	// An amount past BIGINT: compared with a stored receipt and refused as a
+	// reused key, or bound to the INSERT and refused by PostgreSQL (22003).
+	pastBigint := json.Number(new(big.Int).Add(big.NewInt(largestBigint), big.NewInt(1)).String())
+	receiveExact := func(obligation, recipient string, targetAmount int64, by string, amount json.Number, key, now string) oracleCall {
+		return write("save_receipt_confirmation", args("obligation_id", obligation, "recipient_id", recipient,
+			"target_amount_vnd", targetAmount, "confirmed_by_id", by, "amount_vnd", amount, "payment_report_id", nil,
+			"idempotency_key", key, "now", now), receiptDumps...)
+	}
+	add("save_receipt_confirmation: an amount past the bigint maximum under a new key", "DataError", base,
+		receiveExact(w.obDungBinh, w.binh, 7_000, w.binh, pastBigint, newKey(13), moneyNow))
+	add("save_receipt_confirmation: an amount past the bigint maximum under a key stored at the maximum", "IDEMPOTENCY_KEY_REUSED", base,
+		receive(w.obDungBinh, w.binh, 7_000, w.binh, largestBigint, nil, newKey(14), moneyNow),
+		receiveExact(w.obDungBinh, w.binh, 7_000, w.binh, pastBigint, newKey(14), later(1)))
 	add("save_receipt_confirmation: two receipts at the bigint maximum", "", base,
 		receive(w.obDungBinh, w.binh, 7_000, w.binh, max, nil, newKey(8), moneyNow),
 		receive(w.obDungBinh, w.binh, 7_000, w.binh, max, nil, newKey(9), later(1)))
