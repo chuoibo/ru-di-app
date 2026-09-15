@@ -43,6 +43,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/repo"
+	guestweb "mobile/services/core/internal/web/guest"
 )
 
 // The Python dependency functions a Go route may depend on.
@@ -101,6 +102,11 @@ type Reply struct {
 	// Empty answers with the status alone: no body and no content headers, as
 	// a Starlette `Response(status_code=...)` does. Body is ignored.
 	Empty bool
+	// Raw is a response the route framed itself, as an HTMLResponse or a
+	// RedirectResponse returned from a Python handler: its status, raw
+	// headers in order and body go out as they are, after the commit. Status,
+	// Body and Empty are ignored.
+	Raw *guestweb.Response
 }
 
 // Serve is a route's Go implementation: the body of the Python endpoint.
@@ -193,7 +199,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case errors.As(err, &refusal):
 		_ = unit.Rollback(ctx)
-		_ = problem.WriteJSON(w, refusal.Problem)
+		writeRefusal(w, r, scope, refusal.Problem)
 		return
 	case err != nil:
 		servererror.Raise(err)
@@ -207,11 +213,19 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reply, err := h.serve(ctx, call)
 	if errors.As(err, &refusal) {
 		_ = unit.Rollback(ctx)
-		_ = problem.WriteJSON(w, refusal.Problem)
+		writeRefusal(w, r, scope, refusal.Problem)
 		return
 	}
 	if err != nil {
 		servererror.Raise(err)
+	}
+	if reply.Raw != nil {
+		// Rendered inside the handler already, as TemplateResponse renders.
+		if err := unit.Commit(ctx); err != nil {
+			servererror.Raise(err)
+		}
+		writeRaw(w, *reply.Raw)
+		return
 	}
 	if reply.Empty {
 		if err := unit.Commit(ctx); err != nil {
@@ -240,6 +254,48 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	header.Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, _ = w.Write(encoded)
+}
+
+// writeRefusal is api_problem_handler, reached after the transaction rolled
+// back. guest_link_not_found under a guest path answers the broken-link page
+// instead of JSON. The path tested is request.url.path, rebuilt from the Host
+// header and parsed again only for that code, so a Host urlsplit refuses turns
+// the refusal into an unhandled exception: a plain 500.
+func writeRefusal(w http.ResponseWriter, r *http.Request, scope dispatch.Scope, p problem.Problem) {
+	if p.Code == problem.GuestLinkNotFound {
+		_, rawQuery := router.SplitTarget(r.RequestURI)
+		urlPath, err := router.URLPath(r.Host, scope.Path, rawQuery)
+		if err != nil {
+			servererror.Raise(err)
+		}
+		if guestweb.LinkBrokenApplies(p.Code, urlPath) {
+			page, err := guestweb.LinkBrokenPage()
+			if err != nil {
+				servererror.Raise(err)
+			}
+			writeRaw(w, page)
+			return
+		}
+	}
+	_ = problem.WriteJSON(w, p)
+}
+
+// writeRaw sends a framed Starlette response: each raw header under its
+// canonical name, in order, then the status and the body.
+func writeRaw(w http.ResponseWriter, response guestweb.Response) {
+	header := w.Header()
+	for _, pair := range response.Headers {
+		name := http.CanonicalHeaderKey(pair[0])
+		header[name] = append(header[name], pair[1])
+	}
+	if _, typed := header["Content-Type"]; !typed && len(response.Body) > 0 {
+		// Starlette sent no content-type; stop net/http sniffing one.
+		header["Content-Type"] = nil
+	}
+	w.WriteHeader(response.Status)
+	if len(response.Body) > 0 {
+		_, _ = w.Write(response.Body)
+	}
 }
 
 func (h *handler) actor(ctx context.Context, r *http.Request, unit *db.Unit) (*auth.Actor, *auth.Problem, error) {

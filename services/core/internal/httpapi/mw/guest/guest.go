@@ -20,7 +20,13 @@ func Middleware(scopePath func(*http.Request) string, next http.Handler) http.Ha
 			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(&stampWriter{ResponseWriter: w}, r)
+		stamped := &stampWriter{ResponseWriter: w}
+		next.ServeHTTP(stamped, r)
+		// A handler that returns without writing gets net/http's implicit
+		// 200, which starts the response without passing through WriteHeader
+		// here. Its headers are still unsent, so stamp them now. A panic
+		// never reaches this line; servererror stamps the 500 it answers.
+		stamped.stamp()
 	})
 }
 

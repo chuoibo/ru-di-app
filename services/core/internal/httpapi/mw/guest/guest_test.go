@@ -52,3 +52,35 @@ func TestAWriteWithoutWriteHeaderAndAFlushAreStampedToo(t *testing.T) {
 		}
 	}
 }
+
+// A handler that returns without writing is answered by net/http's implicit
+// 200, which never calls WriteHeader on the wrapper. Python stamps every
+// http.response.start, so that answer must carry the headers on the wire too.
+func TestTheImplicit200OfAHandlerThatWritesNothingIsStamped(t *testing.T) {
+	server := httptest.NewServer(Middleware(rawPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public")
+	})))
+	defer server.Close()
+	for path, guest := range map[string]bool{"/g/token": true, "/goals": false} {
+		response, err := http.Get(server.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = response.Body.Close()
+		if response.StatusCode != 200 {
+			t.Fatalf("%s: status %d", path, response.StatusCode)
+		}
+		header := response.Header
+		if !guest {
+			if header.Get("Cache-Control") != "public" || header.Get("X-Robots-Tag") != "" {
+				t.Fatalf("%s: stamped outside /g: %v", path, header)
+			}
+			continue
+		}
+		for _, pair := range [][2]string{{"Cache-Control", "no-store"}, {"Referrer-Policy", "no-referrer"}, {"X-Robots-Tag", "noindex, nofollow"}} {
+			if got := header.Values(pair[0]); len(got) != 1 || got[0] != pair[1] {
+				t.Fatalf("%s: %s is %v on the implicit 200", path, pair[0], got)
+			}
+		}
+	}
+}

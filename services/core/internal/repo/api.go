@@ -75,6 +75,10 @@ func pythonInstant(instant time.Time) time.Time {
 	return instant.Truncate(time.Microsecond)
 }
 
+// NewUUID is uuid.uuid4() for a route that mints an id itself, as
+// ApiService.report_payment mints a missing idempotency key.
+func NewUUID() (string, error) { return newUUID() }
+
 // newUUID is uuid.uuid4(), the client-side default SQLAlchemy runs at flush.
 func newUUID() (string, error) {
 	var b [16]byte
