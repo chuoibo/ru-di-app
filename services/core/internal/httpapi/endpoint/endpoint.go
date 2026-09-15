@@ -40,6 +40,7 @@ import (
 	"mobile/services/core/internal/httpapi/problem"
 	"mobile/services/core/internal/httpapi/router"
 	"mobile/services/core/internal/limit"
+	"mobile/services/core/internal/media/storage"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/repo"
@@ -50,11 +51,15 @@ import (
 const (
 	CallGetRepository = "app.api.deps.get_repository"
 	CallGetActor      = "app.api.deps.get_actor"
+	// CallGetPhotoStorage is PhotoStorage(): media_root() is read again from the
+	// environment, the home directory and the working directory on every
+	// request, and what it raises is an unhandled failure.
+	CallGetPhotoStorage = "app.api.deps.get_photo_storage"
 )
 
 // SupportedDependencies lists every dependency call this package stands in
 // for. A route whose dependency tree calls anything else cannot move to Go.
-var SupportedDependencies = map[string]bool{CallGetRepository: true, CallGetActor: true}
+var SupportedDependencies = map[string]bool{CallGetRepository: true, CallGetActor: true, CallGetPhotoStorage: true}
 
 // Mode is the auth mode the Python app resolved from MOBILE_AUTH_MODE.
 type Mode string
@@ -77,6 +82,9 @@ func Refuse(status int, code, detail string) error {
 
 // Call is what a route's Go implementation receives.
 type Call struct {
+	// Photos is the PhotoStorage get_photo_storage built for this request; nil
+	// for a route that does not depend on it.
+	Photos  *storage.PhotoStorage
 	Request *http.Request
 	Scope   dispatch.Scope
 	// Values are the endpoint's own validated parameters by Python name.
@@ -168,6 +176,13 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	hook := func(dependency pyval.Dependency) error {
 		switch dependency.Call {
 		case CallGetRepository:
+			return nil
+		case CallGetPhotoStorage:
+			photos, err := storage.New()
+			if err != nil {
+				return err
+			}
+			call.Photos = photos
 			return nil
 		case CallGetActor:
 			actor, refused, err := h.actor(ctx, r, unit)

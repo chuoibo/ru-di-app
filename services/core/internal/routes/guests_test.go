@@ -18,9 +18,16 @@ import (
 	"mobile/services/core/ownership"
 )
 
-// guestCore serves the guest routes from Go without a database, recording
-// every unit it hands out so a test can see whether a request began one.
+// guestCore serves the guest routes from Go without a database.
 func guestCore(t *testing.T) (http.Handler, *[]*db.Unit) {
+	t.Helper()
+	return groupCore(t, "guests")
+}
+
+// groupCore serves one manifest group's routes from Go without a database,
+// recording every unit it hands out so a test can see whether a request began
+// one.
+func groupCore(t *testing.T, group string) (http.Handler, *[]*db.Unit) {
 	t.Helper()
 	units := &[]*db.Unit{}
 	env := endpoint.Env{Mode: endpoint.ModeDev, Now: time.Now, NewUnit: func() *db.Unit {
@@ -46,7 +53,7 @@ func guestCore(t *testing.T) (http.Handler, *[]*db.Unit) {
 	}
 	var served []ownership.Route
 	for _, row := range manifest.Routes {
-		if row.Group == "guests" {
+		if row.Group == group {
 			served = append(served, row)
 		}
 	}
