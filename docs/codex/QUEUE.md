@@ -115,6 +115,14 @@ byte nhưng SSIM ≥ 0,98) không giữ được thân JSON bằng nhau như ch�
 byte bằng Go thuần (port đường mã hoá libjpeg-turbo/zlib mà Pillow trong image ghim dùng); nếu không khả thi cho một
 định dạng, quyết định về byte_size quay lại Lead cùng số đo.
 
+Sóng W8 (sổ đôi) bắt đầu ghi mốc, route đóng băng theo cùng luật: pair_notebooks (8: `GET /contexts/{context_id}/notebook`,
+`POST …/notebook/proposals`, `POST …/notebook/proposals/{proposal_id}/grant`, `DELETE …/notebook/consents/{purpose}`,
+`PUT` và `DELETE …/notebook/constraints/{kind}`, `POST …/notebook/close/preview`, `POST …/notebook/close`), pair_papers
+(11: `GET /contexts/{context_id}/papers`, `POST /contexts/{context_id}/papers/draft`, `GET /papers/{paper_id}`,
+`PATCH /papers/{paper_id}/draft`, `POST /papers/{paper_id}/send`, `POST …/versions/{version}/viewed`,
+`POST …/versions/{version}/responses`, `POST /papers/{paper_id}/withdraw`, `/skip`, `/done`, `/keeps`), cùng
+`app/domain/pair_notebook.py` và `app/domain/pair_paper.py`. W7 (outings) chờ thoả thuận đóng băng với lane Codex.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
