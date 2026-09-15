@@ -11,6 +11,9 @@
 // revision is a SHA-256 digest (hashlib in Python), and crypto/sha256 is not a
 // domain import. XemTruocDongSo therefore takes the digest function as a
 // parameter; callers pass sha256.Sum256.
+//
+// The preview reads pair_paper.hieu_luc, OPEN_STATES and PLAN_STATES, as the
+// Python module imports them: from the pairpaper package.
 package pairnotebook
 
 import (
@@ -18,6 +21,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"mobile/services/core/internal/domain/pairpaper"
 )
 
 // OfferWindow is HAN_DE_NGHI: how long an unanswered offer stands.
@@ -168,32 +173,9 @@ func DangCho(proposal Proposal, now time.Time) bool {
 	return true
 }
 
-// Paper is the part of `_paper_dict` the close preview reads.
-type Paper struct {
-	ID        string
-	State     string
-	ExpiresAt *time.Time
-}
-
-// paperOpenStates and paperPlanStates are pair_paper.OPEN_STATES and
-// PLAN_STATES.
-var (
-	paperOpenStates = [...]string{"nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"}
-	paperPlanStates = [...]string{"chot", "da_di"}
-)
-
-// paperEffectiveState is pair_paper.hieu_luc, the only rule of that module the
-// preview needs. It belongs to a port of pair_paper; it lives here, unexported,
-// until that port exists, and the oracle replays it against the real hieu_luc.
-func paperEffectiveState(paper Paper, now time.Time) string {
-	if !contains(paperOpenStates[:], paper.State) {
-		return paper.State
-	}
-	if paper.ExpiresAt != nil && !now.Before(*paper.ExpiresAt) {
-		return "het_han"
-	}
-	return paper.State
-}
+// Paper is `_paper_dict`, as pair_paper reads it; the preview reads its id,
+// state and deadline.
+type Paper = pairpaper.Paper
 
 // ClosePreview is xem_truoc_dong_so's dict, keys in the same order.
 type ClosePreview struct {
@@ -220,14 +202,14 @@ func XemTruocDongSo(papers []Paper, proposals []Proposal, now time.Time, sum256 
 	var out ClosePreview
 	material := make([]string, 0, len(papers)+len(proposals))
 	for _, paper := range papers {
-		state := paperEffectiveState(paper, now)
+		state := pairpaper.HieuLuc(paper, now)
 		material = append(material, paper.ID+":"+state)
 		switch {
 		case state == "nhap":
 			out.SoNhapBo++
-		case contains(paperOpenStates[:], state):
+		case pairpaper.IsOpen(state):
 			out.SoToHuy++
-		case contains(paperPlanStates[:], state):
+		case pairpaper.IsPlan(state):
 			out.SoToKhoa++
 		}
 	}

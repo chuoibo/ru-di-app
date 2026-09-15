@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"mobile/services/core/internal/domain/pairpaper"
 )
 
 // testdata/python_pair_notebook*.json is rendered by
@@ -204,7 +206,7 @@ func replayPreview(t *testing.T, tl *tally, c map[string]any) {
 	tl.check(t, c, "xem_truoc_dong_so", got, want)
 	states := []string{}
 	for _, paper := range papers {
-		states = append(states, paperEffectiveState(paper, now))
+		states = append(states, pairpaper.HieuLuc(paper, now))
 	}
 	tl.check(t, c, "hieu_luc", states, stringsOf(result["hieu_luc"]))
 	waiting := []any{}

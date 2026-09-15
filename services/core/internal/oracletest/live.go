@@ -2,12 +2,14 @@
 
 package oracletest
 
-// Live runs the differential fuzz of scripts/render_domain_w4_goldens.py
-// against the real Python code at test time, instead of replaying a frozen
-// case list: the script draws the cases inside the parity API image and
-// records what Python answered, and the calling test replays every case in Go
-// with Agree. Only the edge cases and a small sample are committed; this is
-// where the large runs live. Run from services/core:
+// Live runs the differential fuzz of scripts/render_domain_w4_goldens.py (and,
+// through LiveScript, of any render script with the same `--live MODULE SEED
+// COUNT` mode, such as scripts/render_domain_w8_goldens.py) against the real
+// Python code at test time, instead of replaying a frozen case list: the
+// script draws the cases inside the parity API image and records what Python
+// answered, and the calling test replays every case in Go with Agree. Only the
+// edge cases and a small sample are committed; this is where the large runs
+// live. The environment below applies to every script. Run from services/core:
 //
 //	go test -tags oracle -run TestLive -v -timeout 60m \
 //	  ./internal/domain/allocator/ ./internal/domain/billdraft/ \
@@ -35,6 +37,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -73,40 +76,53 @@ func LiveCount(t testing.TB, defaultCount int) int {
 	return count
 }
 
-func findScript(t testing.TB) string {
+func findScript(t testing.TB, relative string) string {
 	t.Helper()
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
 	for {
-		candidate := filepath.Join(dir, liveScript)
+		candidate := filepath.Join(dir, relative)
 		if _, err := os.Stat(candidate); err == nil {
 			return candidate
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			t.Fatalf("%s not found above the test directory", liveScript)
+			t.Fatalf("%s not found above the test directory", relative)
 		}
 		dir = parent
 	}
 }
 
-// Live draws a module's fuzz inside the image and returns it as one File of
-// mode "<module>-fuzz-live", ready for Agree.
+// Live draws a module's fuzz from scripts/render_domain_w4_goldens.py inside
+// the image and returns it as one File of mode "<module>-fuzz-live", ready for
+// Agree.
 func Live(t testing.TB, module string, defaultCount int) File {
+	t.Helper()
+	return live(t, liveScript, "w4", module, defaultCount)
+}
+
+// LiveScript is Live for another render script, named relative to the
+// repository root. Its cache files are named after the script.
+func LiveScript(t testing.TB, relative, module string, defaultCount int) File {
+	t.Helper()
+	return live(t, relative, strings.TrimSuffix(filepath.Base(relative), filepath.Ext(relative)), module, defaultCount)
+}
+
+func live(t testing.TB, relative, cachePrefix, module string, defaultCount int) File {
 	t.Helper()
 	image := liveEnv("W4_ORACLE_IMAGE", "mobile-parity-api:7bf58e3d")
 	seed := LiveSeed(t)
 	count := LiveCount(t, defaultCount)
-	script, err := os.ReadFile(findScript(t))
+	script, err := os.ReadFile(findScript(t, relative))
 	if err != nil {
 		t.Fatal(err)
 	}
 	digest := sha256.Sum256([]byte(fmt.Sprintf("%s\x00%s\x00%d\x00%d\x00%s", image, module, seed, count, script)))
 	cachePath := ""
 	if dir := os.Getenv("W4_ORACLE_CACHE"); dir != "" {
-		cachePath = filepath.Join(dir, fmt.Sprintf("w4-%s-%d-%d-%s.json", module, seed, count, hex.EncodeToString(digest[:8])))
+		cachePath = filepath.Join(dir, fmt.Sprintf("%s-%s-%d-%d-%s.json", cachePrefix, module, seed, count, hex.EncodeToString(digest[:8])))
 	}
 
 	var raw []byte
