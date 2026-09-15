@@ -86,6 +86,13 @@ func All() []Route {
 		confirmReceipt(),
 		readPersonFinance(),
 		readGroupBudget(),
+		guestPage(),
+		guestReportPayment(),
+		guestNotMePage(),
+		guestNotMeSubmit(),
+		guestWrongAmountPage(),
+		guestWrongAmountSubmit(),
+		guestRequestEvidence(),
 	}
 }
 
