@@ -1,0 +1,72 @@
+# W6 concurrency · POST /contexts/{context_id}/photos. Copies are released together.
+# Without a key every copy sanitizes and writes its own file and row: four copies
+# of one picture are four 201 with four ids and four storage keys, the same
+# content_type, byte_size and size. Under one header key one copy runs, the others
+# wait for its answer and replay it (idempotency-replayed: true), and one row is
+# written. Which copy wins differs between runs; the set of answers and rows does
+# not. Texts are sample data (dữ liệu mẫu).
+id: w6/concurrency/post-contexts-context_id-photos
+routes: ['POST /contexts/{context_id}/photos']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm tải cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm tải ảnh cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: upload_four_at_once
+    as: owner
+    concurrent: 4
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 48, height: 36, seed: 101, orientation: 6}}
+  - id: upload_four_named_at_once
+    as: owner
+    concurrent: 4
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: 'mau-{{burst}}.png', content_type: image/png, image: {format: png, width: 20, height: 20, seed: 102, alpha: true}}
+  - id: upload_same_key_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-burst'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 24, height: 16, seed: 103}}
+  - id: refuse_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 8, height: 8, header_width: 10001, header_height: 5000}}

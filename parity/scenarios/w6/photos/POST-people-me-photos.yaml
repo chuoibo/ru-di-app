@@ -1,0 +1,365 @@
+# W6 · POST /people/me/photos — a photograph of one's own, for a post or a story.
+# upload_personal_photo checks roles only (is_self is always proven: the owner is
+# the actor), then the file is sanitized; the row is purpose personal with
+# owner_person_id = uploaded_by_id = actor. The url in the answer is
+# /people/{actor}/photos/{id}: it is what POST /posts and POST /stories accept,
+# and only from its owner. Texts are sample data (dữ liệu mẫu).
+id: w6/photos/post-people-me-photos
+routes: ['POST /people/me/photos']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  ghost: {}
+steps:
+  - id: anonymous_upload
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: anonymous_multipart_without_boundary
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data'
+      body_raw: 'x'
+  - id: roles_unknown
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        x-actor-roles: 'khong-co'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả ảnh (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn của tác giả (dữ liệu mẫu)"}'
+  - id: author_roles_guest
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: author_roles_empty_garbage
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        x-actor-roles: ''
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: author_roles_group_admin_only
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 20, height: 20, seed: 60}}
+  - id: author_jpeg
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 61}}
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_png_alpha
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 64, height: 48, seed: 62, alpha: true}}
+  - id: author_png_orientation_3
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 64, height: 48, seed: 63, orientation: 3}}
+  - id: author_webp_orientation_6
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 64, height: 48, seed: 64, orientation: 6}}
+  - id: author_gif_transparent
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 48, height: 48, seed: 65, alpha: true}}
+  - id: author_webp_1x1
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 1, height: 1, seed: 66}}
+  - id: author_pgm_ascii
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.pgm, content_type: image/x-portable-graymap, text: "P2\n2 2\n15\n0\n5\n10\n15\n"}
+  # refusals of the file
+  - id: author_garbage
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: author_empty_file
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: ''}
+  - id: author_bmp_truncated
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.bmp, content_type: image/bmp, image: {format: bmp, width: 64, height: 48, seed: 1, truncate_at: 1000}}
+  - id: author_over_cap
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 8, height: 8, pad_to_bytes: 10485761}}
+  - id: author_over_pixel_cap
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 8, height: 8, header_width: 10001, header_height: 5000}}
+  # the envelope
+  - id: author_no_parts
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts: []
+  - id: author_wrong_field_name
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: photo, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: author_text_value_named_file
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, text: 'mau.jpg'}
+  - id: author_two_files
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mot.png, content_type: image/png, image: {format: png, width: 10, height: 10, seed: 67, alpha: true}}
+        - {name: file, filename: hai.jpg, content_type: image/jpeg, image: {format: jpeg, width: 12, height: 12, seed: 68}}
+  - id: author_urlencoded
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'file=mau.jpg'
+  # idempotency: scoped by the raw X-Actor-ID
+  - id: author_idem_first
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 20, seed: 69}}
+  - id: author_idem_replay
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 20, seed: 69}}
+  - id: author_idem_other_image
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 20, seed: 70}}
+  - id: friend_idem_same_key
+    as: friend
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 20, seed: 69}}
+  # the url, used later
+  - id: author_posts_only_me_with_photo
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh của tôi (dữ liệu mẫu)","audience":"only_me","image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  - id: author_story_with_photo
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story có ảnh (dữ liệu mẫu)"}'
+  - id: friend_posts_authors_photo
+    as: friend
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh của người khác (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  - id: author_reads_own_photo
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{photo}}'
+  # no people row: the FK on uploaded_images decides
+  - id: ghost_uploads
+    as: ghost
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 71}}
+  - id: author_deletes_account
+    as: author
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: author_uploads_after_deletion
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 72}}
+  # framework: no collection read, no person id in this path
+  - id: get_not_allowed
+    as: friend
+    request:
+      method: GET
+      path: '/people/me/photos'
+  - id: trailing_slash_redirects
+    as: friend
+    request:
+      method: POST
+      path: '/people/me/photos/'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: person_id_in_path_not_found
+    as: friend
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}

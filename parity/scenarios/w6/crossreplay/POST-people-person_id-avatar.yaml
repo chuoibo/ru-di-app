@@ -1,0 +1,84 @@
+# W6 cross replay · POST /people/{person_id}/avatar. A 201 stored under a header
+# key by one side is replayed by the other; another picture under it is 422. The
+# replay writes no second row, so GET /people/{id}/avatar through either side still
+# answers the avatar the stored request set, read from the file the other side
+# wrote. Go serves none of these routes yet, so both paths reach Python; the file
+# is here for when one side is Go. Texts are sample data (dữ liệu mẫu).
+id: w6/crossreplay/post-people-person_id-avatar
+routes: ['POST /people/{person_id}/avatar', 'GET /people/{person_id}/avatar']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Ảnh đại diện phát lại chéo (dữ liệu mẫu)"}'
+  - id: python_stores_avatar
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 40, height: 40, seed: 95}}
+  - id: front_replays_python_avatar
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 40, height: 40, seed: 95}}
+  - id: front_reads_python_avatar
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: front_stores_replacement
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 24, height: 24, seed: 96, alpha: true}}
+  - id: python_replays_front_replacement
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 24, height: 24, seed: 96, alpha: true}}
+  - id: python_other_picture_same_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 24, height: 24, seed: 97, alpha: true}}
+  - id: python_reads_front_replacement
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'

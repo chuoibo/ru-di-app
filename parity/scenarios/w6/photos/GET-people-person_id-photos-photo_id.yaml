@@ -1,0 +1,601 @@
+# W6 · GET /people/{person_id}/photos/{photo_id} — the one door to a personal
+# photograph (ADR-0022 §2.1). The owner always; anybody else exactly when a post
+# (_readable_by) or a live story (_story_readable_by) whose image_url is this
+# photo's canonical url is readable by them, asked in SQL before the row is
+# fetched. Every refusal is 404 photo_not_found, including a role the permission
+# table refuses. The row is (owner_person_id, id, purpose personal): an avatar,
+# a group photo or somebody else's path is 404 even for the owner.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/photos/get-people-person_id-photos-photo_id
+routes: ['GET /people/{person_id}/photos/{photo_id}']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  requester: {}
+  stranger: {}
+  mate: {}
+  leaver: {}
+  blocker: {}
+steps:
+  - id: anonymous_read
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: anonymous_non_uuid_both
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/photos/khong-phai-uuid'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: stranger_non_uuid_both
+    as: stranger
+    request:
+      method: GET
+      path: '/people/me/photos/khong-phai-uuid'
+  - id: stranger_unknown_both
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả ảnh (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_requester
+    as: requester
+    request:
+      method: PUT
+      path: '/people/{{persona.requester}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người xin kết bạn (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời nhóm (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn sẽ chặn (dữ liệu mẫu)"}'
+  - id: upload_for_friends
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 81}}
+    bind:
+      p_friends: {from: body, pointer: /id, class: uuid}
+  - id: upload_for_public
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 40, height: 30, seed: 82, alpha: true}}
+    bind:
+      p_public: {from: body, pointer: /id, class: uuid}
+  - id: upload_for_group
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 32, height: 24, seed: 83, orientation: 6}}
+    bind:
+      p_group: {from: body, pointer: /id, class: uuid}
+  - id: upload_for_only_me
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 24, height: 24, seed: 84}}
+    bind:
+      p_only_me: {from: body, pointer: /id, class: uuid}
+  - id: upload_for_story
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 40, seed: 85}}
+    bind:
+      p_story: {from: body, pointer: /id, class: uuid}
+  - id: upload_never_shown
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.bmp, content_type: image/bmp, image: {format: bmp, width: 20, height: 20, seed: 86}}
+    bind:
+      p_unused: {from: body, pointer: /id, class: uuid}
+  - id: author_sets_avatar
+    as: author
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 16, height: 16, seed: 87}}
+    bind:
+      avatar: {from: body, pointer: /id, class: uuid}
+  # the owner, before anything shows the photos
+  - id: author_reads_for_friends
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: author_reads_for_public
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: author_reads_rotated_webp
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+  - id: author_reads_never_shown
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_unused}}'
+  # the role check is inside the 404 gate
+  - id: author_roles_guest_reads_own
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+      headers:
+        x-actor-roles: 'guest'
+  - id: author_roles_empty_reads_own
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+      headers:
+        x-actor-roles: ''
+  - id: author_unknown_photo
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: author_avatar_under_personal_path
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{avatar}}'
+  - id: stranger_reads_before_any_post
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  # friendships and a group
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: requester_asks_author
+    as: requester
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+  - id: author_asks_blocker
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+    bind:
+      blocker_request: {from: body, pointer: /id, class: uuid}
+  - id: blocker_accepts
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests/{{blocker_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của tác giả (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: author_invites_leaver
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: author_uploads_group_photo
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 16, height: 16, seed: 88}}
+    bind:
+      group_photo: {from: body, pointer: /id, class: uuid}
+  - id: friend_reads_before_any_post
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  # the posts that open the photos
+  - id: author_posts_for_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends","image_url":"/people/{{persona.author}}/photos/{{p_friends}}"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Công khai (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.author}}/photos/{{p_public}}"}'
+  - id: author_posts_to_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}","image_url":"/people/{{persona.author}}/photos/{{p_group}}"}'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chỉ mình tôi (dữ liệu mẫu)","audience":"only_me","image_url":"/people/{{persona.author}}/photos/{{p_only_me}}"}'
+  # friends audience
+  - id: friend_reads_for_friends
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: friend_roles_guest_reads_for_friends
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+      headers:
+        x-actor-roles: 'guest'
+  - id: requester_reads_for_friends
+    as: requester
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: stranger_reads_for_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: mate_reads_for_friends
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  # public audience
+  - id: stranger_reads_public
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: requester_reads_public
+    as: requester
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  # group audience
+  - id: mate_reads_group
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+  - id: leaver_reads_group_while_member
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+  - id: friend_reads_group_without_membership
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+  - id: stranger_with_contexts_header_reads_group
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  # only_me and never shown
+  - id: friend_reads_only_me
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_only_me}}'
+  - id: author_reads_only_me
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_only_me}}'
+  - id: friend_reads_never_shown
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_unused}}'
+  # a second, wider post opens the same photo to more readers
+  - id: author_posts_friends_photo_publicly
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đăng lại công khai (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.author}}/photos/{{p_friends}}"}'
+  - id: stranger_reads_for_friends_after_public_post
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  # the path must name the owner
+  - id: friend_reads_under_own_path
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/photos/{{p_public}}'
+  - id: author_reads_under_friends_path
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/photos/{{p_friends}}'
+  - id: author_group_photo_under_personal_path
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{group_photo}}'
+  - id: mate_group_photo_under_personal_path
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{group_photo}}'
+  # a live story opens its photo to friends; deleting the story closes it
+  - id: author_creates_story
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{p_story}}"}'
+    bind:
+      story: {from: body, pointer: /id, class: uuid}
+  - id: friend_reads_story_photo
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_story}}'
+  - id: stranger_reads_story_photo
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_story}}'
+  - id: mate_reads_story_photo
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_story}}'
+  - id: author_deletes_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story}}'
+  - id: friend_reads_story_photo_after_delete
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_story}}'
+  # blocking hides friends and public posts both ways; the group arm is not blocked
+  - id: blocker_reads_for_friends_before_block
+    as: blocker
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: blocker_blocks_author
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: blocker_reads_for_friends_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_friends}}'
+  - id: blocker_reads_public_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_reads_group_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_group}}'
+  - id: leaver_reads_public_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: author_uppercase_unknown_photo
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/BBBBBBBB-CCCC-4DDD-8EEE-FFFFFFFFFFFF'
+  - id: author_unhyphenated_unknown_photo
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/bbbbbbbbcccc4ddd8eeeffffffffffff'
+  - id: stranger_reads_with_range
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+      headers:
+        range: 'bytes=0-9'
+  - id: trailing_slash_redirects
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}/'
+  - id: head_not_allowed
+    as: stranger
+    request:
+      method: HEAD
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: delete_not_allowed
+    as: author
+    request:
+      method: DELETE
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  # ending the account erases the personal rows and files
+  - id: author_deletes_account
+    as: author
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: stranger_reads_public_after_deletion
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_public}}'
+  - id: author_reads_own_after_deletion
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{p_unused}}'
