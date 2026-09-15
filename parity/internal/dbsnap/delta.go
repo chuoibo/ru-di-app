@@ -178,9 +178,11 @@ var (
 // orderMask hides the values two stacks cannot share, so that ordering rows
 // by the masked text gives both stacks the same order. Hex bytea is masked
 // too: a random token digest would otherwise decide the order. So is a random
-// storage key, a run of exactly 32 lowercase hex, and a keyset cursor.
+// storage key, a run of exactly 32 lowercase hex, a keyset cursor, and a
+// 43-character base64url token.
 func orderMask(text string) string {
 	text = normalize.MaskCursors(text)
+	text = normalize.MaskTokens(text)
 	text = orderUUID.ReplaceAllString(text, "<uuid>")
 	text = orderTimestamp.ReplaceAllString(text, "<ts>")
 	text = orderHex.ReplaceAllString(text, `\\x<hex>`)

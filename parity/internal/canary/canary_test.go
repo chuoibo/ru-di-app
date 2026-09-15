@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync/atomic"
 	"testing"
 )
@@ -21,7 +22,7 @@ func upstream(t *testing.T) *httptest.Server {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Vary", "Origin")
 		cursor := base64.RawURLEncoding.EncodeToString([]byte("2026-09-14T10:00:00.120000+00:00|aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"))
-		_, _ = w.Write([]byte(`{"id":"a","score":1.0,"created_at":"2026-09-14T10:00:00.123456Z","cursor":"` + cursor + `"}`))
+		_, _ = w.Write([]byte(`{"id":"a","score":1.0,"created_at":"2026-09-14T10:00:00.123456Z","cursor":"` + cursor + `","path":"/g/` + strings.Repeat("Ab3_", 11)[:43] + `"}`))
 	}))
 	t.Cleanup(server.Close)
 	return server

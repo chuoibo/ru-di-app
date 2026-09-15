@@ -27,6 +27,12 @@
 // bound as they would be in plain text, while the alphabet, the missing
 // padding and the timestamp spelling still show. A padded cursor, or one
 // around an uppercase id, is not a match and stays literal.
+//
+// A run of exactly 43 base64url characters (secrets.token_urlsafe(32), such as
+// the guest link token in "/g/<token>") becomes <token43#n> by first
+// appearance. What must match is where a token is reused and that it is 43
+// base64url characters; a shorter, longer or padded token stays literal.
+// Tokens a scenario binds by name are replaced before this rule.
 package normalize
 
 import (
@@ -70,6 +76,22 @@ func DecodeCursor(run string) (string, bool) {
 	return string(raw), true
 }
 
+// tokenRun finds maximal base64url runs; only runs of exactly 43 characters
+// are tokens.
+var tokenRun = regexp.MustCompile(`[A-Za-z0-9_-]{43,}`)
+
+const tokenLen = 43
+
+// MaskTokens replaces every 43-character base64url run in text with <token43>.
+func MaskTokens(text string) string {
+	return tokenRun.ReplaceAllStringFunc(text, func(run string) string {
+		if len(run) == tokenLen {
+			return "<token43>"
+		}
+		return run
+	})
+}
+
 // MaskCursors replaces every cursor in text with <b64u>.
 func MaskCursors(text string) string {
 	return base64URLRun.ReplaceAllStringFunc(text, func(run string) string {
@@ -92,6 +114,7 @@ type Binder struct {
 	uuids        map[string]int    // literal -> first-appearance number
 	digests      map[string]int    // literal -> first-appearance number
 	keys         map[string]int    // 32-hex literal -> first-appearance number
+	tokens       map[string]int    // 43-character base64url literal -> first-appearance number
 	instants     map[string]time.Time
 	instantOrder []string // timestamp literals in first-observation order
 	ranks        map[int64]int
@@ -105,6 +128,7 @@ func NewBinder() *Binder {
 		uuids:    map[string]int{},
 		digests:  map[string]int{},
 		keys:     map[string]int{},
+		tokens:   map[string]int{},
 		instants: map[string]time.Time{},
 	}
 }
@@ -148,6 +172,15 @@ func (b *Binder) Observe(text string) error {
 			return run
 		}
 		b.observeIDsAndInstants(payload)
+		return " "
+	})
+	text = tokenRun.ReplaceAllStringFunc(text, func(run string) string {
+		if len(run) != tokenLen {
+			return run
+		}
+		if _, seen := b.tokens[run]; !seen {
+			b.tokens[run] = len(b.tokens) + 1
+		}
 		return " "
 	})
 	for _, run := range hexRun.FindAllString(text, -1) {
@@ -197,6 +230,12 @@ func (b *Binder) Apply(text string) string {
 			return run
 		}
 		return "<b64u:" + b.applyIDsAndInstants(payload) + ">"
+	})
+	text = tokenRun.ReplaceAllStringFunc(text, func(run string) string {
+		if n, ok := b.tokens[run]; ok {
+			return fmt.Sprintf("<token43#%d>", n)
+		}
+		return run
 	})
 	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
 		if n, ok := b.digests[run]; ok {
@@ -295,6 +334,7 @@ func parseInstant(literal string) (time.Time, bool) {
 // replaces Apply.
 func Mask(text string) string {
 	text = MaskCursors(text)
+	text = MaskTokens(text)
 	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
 		switch {
 		case len(run) >= digestLen:

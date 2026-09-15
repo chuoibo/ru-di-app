@@ -280,12 +280,14 @@ func TestOrderMaskMatchesBinder(t *testing.T) {
 	spaced := "2026-09-14" + " " + "10:00:05"
 	text := `{"a":"` + newUUID(t) + `","b":["` + newUUID(t) + `","` + instant(0, 5, 120000) + `"],"c":"` +
 		spaced + `","d":"2026-09-14T10:00:05Z","e":"AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE","f":"2026-09-14","g":"` + strings.Repeat("c", 32) + `","h":"` +
-		base64.RawURLEncoding.EncodeToString([]byte(instant(0, 6, 340000)+"|"+newUUID(t))) + `"}`
+		base64.RawURLEncoding.EncodeToString([]byte(instant(0, 6, 340000)+"|"+newUUID(t))) + `","i":"/g/` +
+		strings.Repeat("Ab3_", 11)[:43] + `"}`
 	binder := normalize.NewBinder()
 	if err := binder.Observe(text); err != nil {
 		t.Fatal(err)
 	}
 	bound := regexp.MustCompile(`<b64u:<ts#\d+\|[^>]*>\|<uuid#\d+>>`).ReplaceAllString(binder.Apply(text), "<b64u>")
+	bound = regexp.MustCompile(`<token43#\d+>`).ReplaceAllString(bound, "<token43>")
 	fromBinder := regexp.MustCompile(`<hex32#\d+>`).ReplaceAllString(regexp.MustCompile(`<ts#\d+\|[^>]*>`).ReplaceAllString(
 		regexp.MustCompile(`<uuid#\d+>`).ReplaceAllString(bound, "<uuid>"), "<ts>"), "<hex32>")
 	if got := orderMask(text); got != fromBinder {

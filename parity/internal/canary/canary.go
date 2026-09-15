@@ -5,7 +5,8 @@
 // proxy that damages responses in exactly the ways a port tends to damage them
 // — a status off by one, a header added or duplicated, a float that lost its
 // ".0", a zone written "+00:00", keys in another order, a gzipped body, a
-// keyset cursor that kept its base64 padding, a redirect followed — and every mode it manages to apply must turn the run red.
+// keyset cursor that kept its base64 padding, a guest token one character
+// short, a redirect followed — and every mode it manages to apply must turn the run red.
 // The identity mode, which damages nothing, must stay green.
 package canary
 
@@ -36,6 +37,7 @@ var (
 	floatWithPoint = regexp.MustCompile(`(\d)\.0([,}\]])`)
 	zuluTimestamp  = regexp.MustCompile(`(\d{2}:\d{2}:\d{2}(?:\.\d+)?)Z"`)
 	quotedRun      = regexp.MustCompile(`"[A-Za-z0-9_-]{60,}"`)
+	tokenRun       = regexp.MustCompile(`[A-Za-z0-9_-]{43,}`)
 	firstTwoKeys   = regexp.MustCompile(`^\{("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+)),("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+))`)
 )
 
@@ -113,6 +115,15 @@ func Modes() []Mode {
 					return quoted
 				}
 				return []byte(`"` + run + `="`)
+			})
+			return changed, !bytes.Equal(changed, body)
+		}},
+		{"token-shortened", func(_ *http.Response, body []byte) ([]byte, bool) {
+			changed := tokenRun.ReplaceAllFunc(body, func(run []byte) []byte {
+				if len(run) != 43 {
+					return run
+				}
+				return append([]byte{}, run[:42]...)
 			})
 			return changed, !bytes.Equal(changed, body)
 		}},
