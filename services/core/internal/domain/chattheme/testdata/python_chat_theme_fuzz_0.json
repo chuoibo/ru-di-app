@@ -1,0 +1,4014 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.domain.chat_theme",
+ "mode": "chat_theme-fuzz-0",
+ "python": "3.12.14",
+ "seed": 43,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 400
+ },
+ "cases": [
+  {
+   "fn": "is_theme",
+   "name": "fuzz/0",
+   "args": {
+    "value": "rung-\u00e9thongi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/1",
+   "args": {
+    "value": "0\u0000p\u1ec7\u200bih"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/2",
+   "args": {
+    "value": "m\u4e2dac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/3",
+   "args": {
+    "value": "9\\mugvfw"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/4",
+   "args": {
+    "value": "\u0000\u200b2"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/5",
+   "args": {
+    "value": "r6"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/6",
+   "args": {
+    "value": "rung-hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/7",
+   "args": {
+    "value": "\ri\u007f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/8",
+   "args": {
+    "value": "bibn-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/9",
+   "args": {
+    "value": "0\u3000\udbff\udfffr6 e-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/10",
+   "args": {
+    "value": "hang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/11",
+   "args": {
+    "value": "\t3\u0301ze9\u4e2d\u0085"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/12",
+   "args": {
+    "value": "i"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/13",
+   "args": {
+    "value": "tr94w1\u00e99"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/14",
+   "args": {
+    "value": "\u200b o \u00adj7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/15",
+   "args": {
+    "value": "hong-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/16",
+   "args": {
+    "value": "bien-e"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/17",
+   "args": {
+    "value": "\\7j\u00e9v\u00a07"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/18",
+   "args": {
+    "value": "l'c600"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/19",
+   "args": {
+    "value": "ruc-r0o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/20",
+   "args": {
+    "value": "\udbff\udfff\u00a0\udbff\udfff\u00add"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/21",
+   "args": {
+    "value": "rc-r\u3000o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/22",
+   "args": {
+    "value": "mac-dinh\\"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/23",
+   "args": {
+    "value": "_\ufffd\u0301h"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/24",
+   "args": {
+    "value": "\"f \udbff\udfff\u00e9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/25",
+   "args": {
+    "value": "mc-ndinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/26",
+   "args": {
+    "value": "\u4e2dbien-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/27",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/28",
+   "args": {
+    "value": "\u0000\ufeff\ud83d\ude00\t\u00e9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/29",
+   "args": {
+    "value": "\u00e91vst0\u1ec7\u1ec7.0"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/30",
+   "args": {
+    "value": "qh\u007fgv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/31",
+   "args": {
+    "value": "\u00a09\udbff\udfff1ae\u00e9\udbff\udfff"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/32",
+   "args": {
+    "value": "lb5"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/33",
+   "args": {
+    "value": "r\u3000\u001fung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/34",
+   "args": {
+    "value": "n-\t\ue000d\u0085oh\u0085"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/35",
+   "args": {
+    "value": "rungthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/36",
+   "args": {
+    "value": "."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/37",
+   "args": {
+    "value": "5d\u007f\\7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/38",
+   "args": {
+    "value": "ruc-ryo"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/39",
+   "args": {
+    "value": "kung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/40",
+   "args": {
+    "value": "f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/41",
+   "args": {
+    "value": "mzac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/42",
+   "args": {
+    "value": "ru2-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/43",
+   "args": {
+    "value": "\\\r5c5na"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/44",
+   "args": {
+    "value": "et\u0301\u00a0"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/45",
+   "args": {
+    "value": "\u200bb\u4e2dq"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/46",
+   "args": {
+    "value": "\"s\ufeffa"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/47",
+   "args": {
+    "value": "\u00a02e\u007fz"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/48",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/49",
+   "args": {
+    "value": "d\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/50",
+   "args": {
+    "value": "\u4e2d\r \u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/51",
+   "args": {
+    "value": "ruc-r"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/52",
+   "args": {
+    "value": "h5oang-h\ud83d\ude00on"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/53",
+   "args": {
+    "value": "\ud83d\ude005\u0000_\u0301.-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/54",
+   "args": {
+    "value": "\ue000\ue000r\\i_\u001feb"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/55",
+   "args": {
+    "value": "v0mxi\u001f\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/56",
+   "args": {
+    "value": "om4\u00a0o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/57",
+   "args": {
+    "value": "9\u200bc.\u1ec76"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/58",
+   "args": {
+    "value": "a\u0301."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/59",
+   "args": {
+    "value": "\u00ado"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/60",
+   "args": {
+    "value": "biendem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/61",
+   "args": {
+    "value": "q5m\u2028z\u00ad\u00a03am"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/62",
+   "args": {
+    "value": "r\udbff\udfffung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/63",
+   "args": {
+    "value": "oang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/64",
+   "args": {
+    "value": "\udbff\udfffbien-dem\u2028"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/65",
+   "args": {
+    "value": "j3u"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/66",
+   "args": {
+    "value": "3 "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/67",
+   "args": {
+    "value": " \"\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/68",
+   "args": {
+    "value": "\u007fruc4-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/69",
+   "args": {
+    "value": " "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/70",
+   "args": {
+    "value": "ien-de"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/71",
+   "args": {
+    "value": "ruc-rod4"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/72",
+   "args": {
+    "value": "hoan\ufeffjg-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/73",
+   "args": {
+    "value": "bien-demr"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/74",
+   "args": {
+    "value": " \u007f..1\u007f.s9\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/75",
+   "args": {
+    "value": "mac\u0301-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/76",
+   "args": {
+    "value": "hoang-on"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/77",
+   "args": {
+    "value": "pg_y\ta"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/78",
+   "args": {
+    "value": "rung--thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/79",
+   "args": {
+    "value": "6\u00a08s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/80",
+   "args": {
+    "value": "d\u00adi\ufeffk"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/81",
+   "args": {
+    "value": "w"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/82",
+   "args": {
+    "value": "u\n1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/83",
+   "args": {
+    "value": "0s.\u03016\u03012"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/84",
+   "args": {
+    "value": "l\u00a0\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/85",
+   "args": {
+    "value": "\ud83d\ude00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/86",
+   "args": {
+    "value": "e\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/87",
+   "args": {
+    "value": "d\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/88",
+   "args": {
+    "value": "hoang-honu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/89",
+   "args": {
+    "value": "\u0301\u0000u 3qb\no"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/90",
+   "args": {
+    "value": "b\udbff\udfffien\u0085-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/91",
+   "args": {
+    "value": "4k4"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/92",
+   "args": {
+    "value": "\u00ad\"os\u1ec7b.\u00adl\\"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/93",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/94",
+   "args": {
+    "value": "rung-thon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/95",
+   "args": {
+    "value": "ma\nc-di\u00adnh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/96",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/97",
+   "args": {
+    "value": "j0\u0000\u007f\u1ec7\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/98",
+   "args": {
+    "value": "\u4e2dl8"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/99",
+   "args": {
+    "value": "h ye\u00adc\"\t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/100",
+   "args": {
+    "value": "mb\u0000\u0301dxr7b2"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/101",
+   "args": {
+    "value": "tn\tfn"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/102",
+   "args": {
+    "value": "hoang-hn"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/103",
+   "args": {
+    "value": "v9\u3000z\\"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/104",
+   "args": {
+    "value": "hoan\\g-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/105",
+   "args": {
+    "value": "hoang-h\non"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/106",
+   "args": {
+    "value": "hoanfg-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/107",
+   "args": {
+    "value": "r\rzung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/108",
+   "args": {
+    "value": "-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/109",
+   "args": {
+    "value": "oang-hony"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/110",
+   "args": {
+    "value": "hoang-on"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/111",
+   "args": {
+    "value": "bien-de'm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/112",
+   "args": {
+    "value": "\u00858t-\ufffdfs2k"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/113",
+   "args": {
+    "value": "l\u00a0v\ufffd_"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/114",
+   "args": {
+    "value": "ho\u3000ang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/115",
+   "args": {
+    "value": "mac-3dtinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/116",
+   "args": {
+    "value": "ruc-ro\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/117",
+   "args": {
+    "value": "0q\ufeffk\ud83d\ude00\ufffd"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/118",
+   "args": {
+    "value": "i1\u0085_4\u1ec7i\u0301y5"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/119",
+   "args": {
+    "value": "6\ue0001\ue000\n\ru"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/120",
+   "args": {
+    "value": "\t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/121",
+   "args": {
+    "value": "hoang-hn"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/122",
+   "args": {
+    "value": "o\u4e2dz\ufffdlw\ufeff"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/123",
+   "args": {
+    "value": "rug-rthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/124",
+   "args": {
+    "value": "bin-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/125",
+   "args": {
+    "value": "\u00a0d"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/126",
+   "args": {
+    "value": "mac-i\u001fnh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/127",
+   "args": {
+    "value": "bien-de"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/128",
+   "args": {
+    "value": "hoang-hon"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/129",
+   "args": {
+    "value": "runo-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/130",
+   "args": {
+    "value": "a0j0"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/131",
+   "args": {
+    "value": "l"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/132",
+   "args": {
+    "value": "4a"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/133",
+   "args": {
+    "value": "d"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/134",
+   "args": {
+    "value": "nu -i_g\u00a0m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/135",
+   "args": {
+    "value": "fq"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/136",
+   "args": {
+    "value": "\u0301\t3\u202864\t\ud83d\ude00b\ue000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/137",
+   "args": {
+    "value": "bien-dvem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/138",
+   "args": {
+    "value": "rc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/139",
+   "args": {
+    "value": "hng-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/140",
+   "args": {
+    "value": "rung-thiog"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/141",
+   "args": {
+    "value": "\ufeff_68yz9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/142",
+   "args": {
+    "value": "5sdbzq"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/143",
+   "args": {
+    "value": "mac-d\u00e9inh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/144",
+   "args": {
+    "value": "3\nq\ufffdodu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/145",
+   "args": {
+    "value": "rpung-tong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/146",
+   "args": {
+    "value": "m\u3000ac-din"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/147",
+   "args": {
+    "value": "0\u2028_"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/148",
+   "args": {
+    "value": "rng-thng"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/149",
+   "args": {
+    "value": "ruc-ro"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/150",
+   "args": {
+    "value": "\ufeff3f9\u1ec7m'\"k"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/151",
+   "args": {
+    "value": "rung-\u001fth'ong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/152",
+   "args": {
+    "value": "\u00admpac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/153",
+   "args": {
+    "value": "biendem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/154",
+   "args": {
+    "value": "00\u2028gmk\u0085"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/155",
+   "args": {
+    "value": "e"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/156",
+   "args": {
+    "value": "bien-dzm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/157",
+   "args": {
+    "value": "mac-ih"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/158",
+   "args": {
+    "value": "rug-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/159",
+   "args": {
+    "value": "l\udbff\udfff\udbff\udfff\u0085"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/160",
+   "args": {
+    "value": "0kr0_\u3000e\u001f-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/161",
+   "args": {
+    "value": "y\u200bg\u4e2d7\u001f\ufffd"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/162",
+   "args": {
+    "value": "rung-thongj."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/163",
+   "args": {
+    "value": "r\u00a0c-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/164",
+   "args": {
+    "value": "x6t0v"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/165",
+   "args": {
+    "value": "bien-dm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/166",
+   "args": {
+    "value": "e\u3000\u00ad\u00003\u2028"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/167",
+   "args": {
+    "value": "ru5c-rol"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/168",
+   "args": {
+    "value": "h3oajng-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/169",
+   "args": {
+    "value": "hoang-honx"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/170",
+   "args": {
+    "value": "hoanghon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/171",
+   "args": {
+    "value": "hon-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/172",
+   "args": {
+    "value": "l"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/173",
+   "args": {
+    "value": "2ic\u2028\rvk"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/174",
+   "args": {
+    "value": "runwg-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/175",
+   "args": {
+    "value": "mac5-dih"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/176",
+   "args": {
+    "value": "e\ufffd\u200bk8290\u001f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/177",
+   "args": {
+    "value": "pi\ufffd7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/178",
+   "args": {
+    "value": "it\u00a0ee\u001fb42"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/179",
+   "args": {
+    "value": "mac-dihv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/180",
+   "args": {
+    "value": "bie\u0301n-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/181",
+   "args": {
+    "value": "u"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/182",
+   "args": {
+    "value": "3i"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/183",
+   "args": {
+    "value": "runjg-thog"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/184",
+   "args": {
+    "value": "rung-th\u007fng"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/185",
+   "args": {
+    "value": "runlgthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/186",
+   "args": {
+    "value": "bien-yem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/187",
+   "args": {
+    "value": "\u3000xhq1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/188",
+   "args": {
+    "value": "ruc-roh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/189",
+   "args": {
+    "value": "mc-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/190",
+   "args": {
+    "value": "i\u200be\u4e2d\udbff\udfffi yp"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/191",
+   "args": {
+    "value": "hoa\rnghon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/192",
+   "args": {
+    "value": "07"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/193",
+   "args": {
+    "value": "ung-hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/194",
+   "args": {
+    "value": "\u200b\ue000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/195",
+   "args": {
+    "value": "rungl-thog"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/196",
+   "args": {
+    "value": "_.\ud83d\ude00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/197",
+   "args": {
+    "value": "9fna1\u0301z"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/198",
+   "args": {
+    "value": "p-b\nf\u00e9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/199",
+   "args": {
+    "value": "runthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/200",
+   "args": {
+    "value": "rung-thog"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/201",
+   "args": {
+    "value": "_\u0000kj"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/202",
+   "args": {
+    "value": "in-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/203",
+   "args": {
+    "value": "hang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/204",
+   "args": {
+    "value": "4gdq\u4e2d\tfjk\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/205",
+   "args": {
+    "value": "4\u3000nk\u4e2d7\ufeff\r\ufffd"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/206",
+   "args": {
+    "value": "\u200b\".\ufffd\u200b15yp\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/207",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/208",
+   "args": {
+    "value": "\u3000s\u00e91\n\u007f-gv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/209",
+   "args": {
+    "value": "uzo\ud83d\ude00d\\"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/210",
+   "args": {
+    "value": "hoag-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/211",
+   "args": {
+    "value": "\u00admac-din"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/212",
+   "args": {
+    "value": "-ic\ufffd\u00a0\ufffdv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/213",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/214",
+   "args": {
+    "value": "iv-29"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/215",
+   "args": {
+    "value": "ma\rc-dbinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/216",
+   "args": {
+    "value": "\udbff\udfff\u0000\t_"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/217",
+   "args": {
+    "value": "\u007f.y\ue000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/218",
+   "args": {
+    "value": "wq\u2028\u00ad\u00a0\u0085\u3000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/219",
+   "args": {
+    "value": "ac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/220",
+   "args": {
+    "value": "bi\u3000e-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/221",
+   "args": {
+    "value": "ruc-roj"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/222",
+   "args": {
+    "value": "rung-thog"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/223",
+   "args": {
+    "value": "mac-inh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/224",
+   "args": {
+    "value": "s0"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/225",
+   "args": {
+    "value": "mac-idinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/226",
+   "args": {
+    "value": "\u2028t\"fr_."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/227",
+   "args": {
+    "value": "tlvcrf"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/228",
+   "args": {
+    "value": "rung--thng"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/229",
+   "args": {
+    "value": "\u00e964j\u200b\u007f7\ufffd9."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/230",
+   "args": {
+    "value": "4"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/231",
+   "args": {
+    "value": "mac-dnh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/232",
+   "args": {
+    "value": "gu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/233",
+   "args": {
+    "value": "bien-dem\u0301"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/234",
+   "args": {
+    "value": "h"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/235",
+   "args": {
+    "value": "\ufffd6"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/236",
+   "args": {
+    "value": "bieng-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/237",
+   "args": {
+    "value": "\u1ec7o\ufeffkr"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/238",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/239",
+   "args": {
+    "value": "mac-\\dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/240",
+   "args": {
+    "value": "m\nac-dinh\ud83d\ude00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/241",
+   "args": {
+    "value": "846z\udbff\udfff\u0000s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/242",
+   "args": {
+    "value": "\\o4d0"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/243",
+   "args": {
+    "value": "2ac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/244",
+   "args": {
+    "value": "-6z\u00a0m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/245",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/246",
+   "args": {
+    "value": "rung\r-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/247",
+   "args": {
+    "value": "rung-thoeng"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/248",
+   "args": {
+    "value": "s1u\u001fp\ufffd_3"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/249",
+   "args": {
+    "value": "\\l\ue000."
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/250",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/251",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/252",
+   "args": {
+    "value": "b3ien-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/253",
+   "args": {
+    "value": "3n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/254",
+   "args": {
+    "value": "\t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/255",
+   "args": {
+    "value": "qag\u3000l\\16"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/256",
+   "args": {
+    "value": "\"\ufeffy"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/257",
+   "args": {
+    "value": "bienq-dm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/258",
+   "args": {
+    "value": "bie\u4e2dn-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/259",
+   "args": {
+    "value": "hng-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/260",
+   "args": {
+    "value": "uc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/261",
+   "args": {
+    "value": "6z\u00adi5l"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/262",
+   "args": {
+    "value": "m\rac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/263",
+   "args": {
+    "value": "h\u00e9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/264",
+   "args": {
+    "value": "\u200boo'\u007fh\u3000\udbff\udfffl-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/265",
+   "args": {
+    "value": "run-thondg"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/266",
+   "args": {
+    "value": "\u0301"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/267",
+   "args": {
+    "value": "mavc-din"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/268",
+   "args": {
+    "value": "mac-ad\ufffdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/269",
+   "args": {
+    "value": "i5r\ufffd7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/270",
+   "args": {
+    "value": "\u00ad0i8t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/271",
+   "args": {
+    "value": "u\ud83d\ude00\u3000h54\u200b-\ufffd"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/272",
+   "args": {
+    "value": "_07w\u2028k\ufeff\u007fp\u0301"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/273",
+   "args": {
+    "value": "6\u007fq"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/274",
+   "args": {
+    "value": "tbien-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/275",
+   "args": {
+    "value": "ruc-rco"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/276",
+   "args": {
+    "value": "ruc-o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/277",
+   "args": {
+    "value": "\ue000\"p\u2028v\u200b2o'c"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/278",
+   "args": {
+    "value": "_\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/279",
+   "args": {
+    "value": "\rbhl\ue000xwn\u0301s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/280",
+   "args": {
+    "value": "-ibqp4\u2028\\\u2028\u0301"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/281",
+   "args": {
+    "value": "macq-inh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/282",
+   "args": {
+    "value": "rcro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/283",
+   "args": {
+    "value": "mac-dcih"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/284",
+   "args": {
+    "value": "bien-de\rm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/285",
+   "args": {
+    "value": "b\ten-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/286",
+   "args": {
+    "value": "mac-d\u00adinhf"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/287",
+   "args": {
+    "value": "run-th\u0301ong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/288",
+   "args": {
+    "value": "8g"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/289",
+   "args": {
+    "value": "bgiz\ud83d\ude00j"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/290",
+   "args": {
+    "value": "2zxckyv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/291",
+   "args": {
+    "value": "ha\u001ftc5\u0301l\udbff\udfff5"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/292",
+   "args": {
+    "value": "02.m6"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/293",
+   "args": {
+    "value": "q\u001f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/294",
+   "args": {
+    "value": "\u00e9i12\u0000\rx"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/295",
+   "args": {
+    "value": "macsdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/296",
+   "args": {
+    "value": "d-w\ufffd\u007fz\udbff\udfff"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/297",
+   "args": {
+    "value": "lzcu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/298",
+   "args": {
+    "value": "ho ang-ho"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/299",
+   "args": {
+    "value": "\u001f\ufeff\u00ad0\"b\r"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/300",
+   "args": {
+    "value": "\u0301\u200bc\u00a0oh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/301",
+   "args": {
+    "value": "\u2028a\ts\ufffd\udbff\udfff\u001f\u20283_"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/302",
+   "args": {
+    "value": "2mac-\udbff\udfffdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/303",
+   "args": {
+    "value": "ho\u1ec7ang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/304",
+   "args": {
+    "value": "rubc-roq"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/305",
+   "args": {
+    "value": "17\u30006"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/306",
+   "args": {
+    "value": "bien-dm2"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/307",
+   "args": {
+    "value": "m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/308",
+   "args": {
+    "value": "\udbff\udfff\u0000ck2t\udbff\udfffz"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/309",
+   "args": {
+    "value": "r7uc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/310",
+   "args": {
+    "value": "\u00a0'b\u001f'6d1q"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/311",
+   "args": {
+    "value": "\u1ec75g7\u0000o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/312",
+   "args": {
+    "value": "shoag-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/313",
+   "args": {
+    "value": " 2p"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/314",
+   "args": {
+    "value": "r\ue000uc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/315",
+   "args": {
+    "value": "ruc-r\t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/316",
+   "args": {
+    "value": "\u1ec7f\ud83d\ude00\ty5tfi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/317",
+   "args": {
+    "value": "h\u3000oang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/318",
+   "args": {
+    "value": "ma-dninh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/319",
+   "args": {
+    "value": "1igyen"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/320",
+   "args": {
+    "value": "6x"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/321",
+   "args": {
+    "value": "vn\u00855ls52j"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/322",
+   "args": {
+    "value": "gg"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/323",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/324",
+   "args": {
+    "value": "h\toan-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/325",
+   "args": {
+    "value": "mac-dinh1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/326",
+   "args": {
+    "value": "mac-dnh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/327",
+   "args": {
+    "value": "d\\\rlm3\u2028"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/328",
+   "args": {
+    "value": "\u3000\u00adp1uaga"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/329",
+   "args": {
+    "value": "hoang-hn"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/330",
+   "args": {
+    "value": "ung-hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/331",
+   "args": {
+    "value": "mac-d\u1ec7iynh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/332",
+   "args": {
+    "value": "p6\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/333",
+   "args": {
+    "value": "46eyy958"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/334",
+   "args": {
+    "value": "\\e\ue000\rqu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/335",
+   "args": {
+    "value": "m\u00a0\u00ad03-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/336",
+   "args": {
+    "value": "\u0000\u0301\u001f8d"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/337",
+   "args": {
+    "value": "mac-dninhr"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/338",
+   "args": {
+    "value": "ruc-hro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/339",
+   "args": {
+    "value": "x"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/340",
+   "args": {
+    "value": "9a\r\u0000b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/341",
+   "args": {
+    "value": "\u4e2d\u1ec7h2\u001ft"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/342",
+   "args": {
+    "value": "bien-d-m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/343",
+   "args": {
+    "value": "mac-dinhu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/344",
+   "args": {
+    "value": "e3x\u200bvhk2"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/345",
+   "args": {
+    "value": "\u00ad\\e"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/346",
+   "args": {
+    "value": "ruc-\u200bo"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/347",
+   "args": {
+    "value": "v\udbff\udfffu3o\u0085 glj"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/348",
+   "args": {
+    "value": "56\\lh l\u2028"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/349",
+   "args": {
+    "value": "rung-t\u3000hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/350",
+   "args": {
+    "value": "ma-din"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/351",
+   "args": {
+    "value": "macydinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/352",
+   "args": {
+    "value": "\u1ec7q\u2028-ywbv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/353",
+   "args": {
+    "value": "hoang-hon\r"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/354",
+   "args": {
+    "value": "rung\t-thcong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/355",
+   "args": {
+    "value": "rucro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/356",
+   "args": {
+    "value": "zz"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/357",
+   "args": {
+    "value": "bien-dem\u00e9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/358",
+   "args": {
+    "value": "hoang\ud83d\ude00k-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/359",
+   "args": {
+    "value": "run7g-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/360",
+   "args": {
+    "value": "3\" jzt\"\u4e2d\u0000_"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/361",
+   "args": {
+    "value": "_\u30000\ue000-6j\ufeff"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/362",
+   "args": {
+    "value": "ien-de\u2028m"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/363",
+   "args": {
+    "value": "rng-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/364",
+   "args": {
+    "value": "mac4-dinhu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/365",
+   "args": {
+    "value": "ru\u00a0c-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/366",
+   "args": {
+    "value": "rtuc-ro\u001f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/367",
+   "args": {
+    "value": "hoag-hon8"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/368",
+   "args": {
+    "value": "tojaggr"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/369",
+   "args": {
+    "value": "\u2028"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/370",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/371",
+   "args": {
+    "value": "t\u00ad\u1ec7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/372",
+   "args": {
+    "value": "ruc-ro\""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/373",
+   "args": {
+    "value": "1"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/374",
+   "args": {
+    "value": "m\u00adac-inh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/375",
+   "args": {
+    "value": "ho\u0085ng-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/376",
+   "args": {
+    "value": "rucro\ue000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/377",
+   "args": {
+    "value": "hoang-ho"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/378",
+   "args": {
+    "value": "\"y\ue000i.-"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/379",
+   "args": {
+    "value": "2\u00adu5s8\\"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/380",
+   "args": {
+    "value": "mac-mdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/381",
+   "args": {
+    "value": "3 \u00e91w4e\t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/382",
+   "args": {
+    "value": "uc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/383",
+   "args": {
+    "value": "\ud83d\ude00i\u1ec7gk 8"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/384",
+   "args": {
+    "value": "'h6\u00a0\t\u4e2d\u1ec7s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/385",
+   "args": {
+    "value": "hoang-o\u0301n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/386",
+   "args": {
+    "value": "\ufeffhoag-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/387",
+   "args": {
+    "value": "bin-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/388",
+   "args": {
+    "value": "m\u001fac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/389",
+   "args": {
+    "value": "\u200bp"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/390",
+   "args": {
+    "value": "hoa\"ng-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/391",
+   "args": {
+    "value": "\ue000gb"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/392",
+   "args": {
+    "value": "run-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/393",
+   "args": {
+    "value": "ruc-ro\u0301"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/394",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/395",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/396",
+   "args": {
+    "value": "c\u007f4m--"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/397",
+   "args": {
+    "value": "mac-\u007fdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/398",
+   "args": {
+    "value": "rsuc-r4o"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "fuzz/399",
+   "args": {
+    "value": "c"
+   },
+   "result": {
+    "ok": false
+   }
+  }
+ ]
+}

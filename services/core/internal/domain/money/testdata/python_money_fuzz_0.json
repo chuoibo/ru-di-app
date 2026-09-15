@@ -1,0 +1,7214 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.domain.money",
+ "mode": "money-fuzz-0",
+ "python": "3.12.14",
+ "seed": 43,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 600
+ },
+ "cases": [
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/0",
+   "args": {
+    "value": 4,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/1",
+   "args": {
+    "value": "$i:-0x1_01ef_0180",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/2",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/3",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/4",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/5",
+   "args": {
+    "value": "$i:-0x1387_dc4c_675a_0c63",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/6",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/7",
+   "args": {
+    "value": "$i:0x7035_9218",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/8",
+   "args": {
+    "value": "$i:-0x6241_6879_837f_73b0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/9",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/10",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/11",
+   "args": {
+    "value": "$i:0x7fff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/12",
+   "args": {
+    "value": "$i:0x1_e585_1740",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/13",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/14",
+   "args": {
+    "value": "$i:0x500_d6b4_1875_2ed9",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/15",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/16",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/17",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/18",
+   "args": {
+    "value": "$i:-0x796d_e6d9_69a8_3463",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/19",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/20",
+   "args": {
+    "value": "$i:0xf94d_6940",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/21",
+   "args": {
+    "value": "$i:-0xdd33_8488",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/22",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/23",
+   "args": {
+    "value": "$i:0x7fff_fffe",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/24",
+   "args": {
+    "value": "$i:-0x510e_61a8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/25",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/26",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/27",
+   "args": {
+    "value": "$i:0x2_49f1_9e10",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/28",
+   "args": {
+    "value": "$i:0xc50c_bb90",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/29",
+   "args": {
+    "value": "$i:-0x1_cbd4_33a8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/30",
+   "args": {
+    "value": "$i:-0x4c65_1034_cd85_774c",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/31",
+   "args": {
+    "value": "$i:-0x2d56_226e_b132_9da9",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/32",
+   "args": {
+    "value": "$i:0x7431_8f79_37f1_ec2e",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/33",
+   "args": {
+    "value": "$i:0x4b9c_a36d_b57d_4319",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/34",
+   "args": {
+    "value": "$i:-0x7a2a_1b6d_78e5_cb66",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/35",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/36",
+   "args": {
+    "value": "$i:-0x2_3f1c_2a28",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/37",
+   "args": {
+    "value": 99999999,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/38",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/39",
+   "args": {
+    "value": "$i:-0x646c_1b02_aaaa_48fd",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/40",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/41",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/42",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/43",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/44",
+   "args": {
+    "value": "$i:0x5381_49f0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/45",
+   "args": {
+    "value": "$i:0x1_9c65_16f0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/46",
+   "args": {
+    "value": "$i:-0x6d73_fba2_44a6_ef9e",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/47",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/48",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/49",
+   "args": {
+    "value": "$i:0x6ca7_98f8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/50",
+   "args": {
+    "value": "$i:0x1_678c_f3d0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/51",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/52",
+   "args": {
+    "value": "$i:-0x7d91_0500",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/53",
+   "args": {
+    "value": 99999999,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/54",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/55",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/56",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/57",
+   "args": {
+    "value": "$i:0xdb45_9738",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/58",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/59",
+   "args": {
+    "value": "$i:0x1_70ea_eab8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/60",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/61",
+   "args": {
+    "value": "$i:-0x66e_f67a_c415_b0a3",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/62",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffd",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/63",
+   "args": {
+    "value": "$i:0x1_23c7_c530",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/64",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/65",
+   "args": {
+    "value": "$i:-0x30a7_fe60",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/66",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/67",
+   "args": {
+    "value": "$i:-0x1_7716_27e0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/68",
+   "args": {
+    "value": "$i:0xb15c_5ba0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/69",
+   "args": {
+    "value": "$i:-0x3a1e_94c5_c654_28e4",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/70",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/71",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/72",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/73",
+   "args": {
+    "value": "$i:0x5956_1a18",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/74",
+   "args": {
+    "value": "$i:-0x1_4c21_5848",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/75",
+   "args": {
+    "value": "$i:-0x1_1a57_53d0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/76",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/77",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/78",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/79",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/80",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/81",
+   "args": {
+    "value": "$i:-0x7c3f_9687_439c_6368",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/82",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/83",
+   "args": {
+    "value": "$i:0x640c_ad44_ce80_b122",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/84",
+   "args": {
+    "value": "$i:-0x1_a573_9618",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/85",
+   "args": {
+    "value": "$i:-0x1d93_37b8_dbca_9b9c",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/86",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/87",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/88",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/89",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/90",
+   "args": {
+    "value": "$i:-0x6239_f27f_1f09_d7e7",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/91",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/92",
+   "args": {
+    "value": "$i:0x2ee3_e199_df6d_ae9a",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/93",
+   "args": {
+    "value": "$i:0x1_d175_3de8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/94",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/95",
+   "args": {
+    "value": "$i:0x58f9_e9fd_4009_dbbd",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/96",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/97",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/98",
+   "args": {
+    "value": "$i:-0x100f_281c_24bd_3d37",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/99",
+   "args": {
+    "value": "$i:0x6f66_5780_5f72_031c",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/100",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/101",
+   "args": {
+    "value": "$i:-0x1_2dc4_bb38",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/102",
+   "args": {
+    "value": "$i:0x1_1b5e_1188",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/103",
+   "args": {
+    "value": "$i:-0x1e60_6c46_eab8_31f3",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/104",
+   "args": {
+    "value": "$i:-0x2_3b1f_ac10",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/105",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/106",
+   "args": {
+    "value": "$i:-0x3711_2b6a_74ff_af04",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/107",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/108",
+   "args": {
+    "value": "$i:-0x5eb1_1e6f_ac94_d2a7",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/109",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/110",
+   "args": {
+    "value": "$i:-0x879a_d800",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/111",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/112",
+   "args": {
+    "value": "$i:-0x1_9707_8238",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/113",
+   "args": {
+    "value": "$i:0x1_bb1a_24a0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/114",
+   "args": {
+    "value": "$i:0xfbf1_21a0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/115",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/116",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/117",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/118",
+   "args": {
+    "value": "$i:-0x1_518c_d780",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/119",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/120",
+   "args": {
+    "value": "$i:-0x1_1ea4_b4f0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/121",
+   "args": {
+    "value": "$i:-0x1_a058_1370",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/122",
+   "args": {
+    "value": "$i:-0x14df_1975_f782_44ac",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/123",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/124",
+   "args": {
+    "value": "$i:0xfc1_beab_9c94_7316",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/125",
+   "args": {
+    "value": "$i:-0x2f1c_82d3_3dc5_485e",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/126",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/127",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/128",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/129",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/130",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/131",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/132",
+   "args": {
+    "value": "$i:0x1_3647_d2e0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/133",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/134",
+   "args": {
+    "value": "$i:0x4197_1291_4434_8aad",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/135",
+   "args": {
+    "value": "$i:0x784d_6790_1fd3_f302",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/136",
+   "args": {
+    "value": "$i:0x1_dfd8_60b8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/137",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/138",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/139",
+   "args": {
+    "value": "$i:0x6070_c5e5_ac31_842b",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/140",
+   "args": {
+    "value": "$i:-0x65f6_1043_61cf_3ede",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/141",
+   "args": {
+    "value": "$i:0x3109_ee54_a3c7_d0b2",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/142",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/143",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/144",
+   "args": {
+    "value": "$i:-0x7d39_fe2a_0844_dda6",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/145",
+   "args": {
+    "value": "$i:-0x7f46_68a7_1140_ab9c",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/146",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/147",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/148",
+   "args": {
+    "value": "$i:-0x1_19d3_3780",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/149",
+   "args": {
+    "value": "$i:0x2_16fb_b040",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/150",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/151",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/152",
+   "args": {
+    "value": "$i:-0x1_3f52_8560",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/153",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/154",
+   "args": {
+    "value": "$i:-0x5f5_e101",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/155",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/156",
+   "args": {
+    "value": "$i:-0xb5d_9390",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/157",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/158",
+   "args": {
+    "value": "$i:-0x1_a036_7dc8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/159",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/160",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/161",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/162",
+   "args": {
+    "value": "$i:-0x9187_f758",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/163",
+   "args": {
+    "value": "$i:-0x29dc_b90f_cf64_c820",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/164",
+   "args": {
+    "value": "$i:-0x2_1b9d_9a00",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/165",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/166",
+   "args": {
+    "value": "$i:-0x52e6_6453_1d1b_5be1",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/167",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/168",
+   "args": {
+    "value": "$i:0x4582_9c73_b20e_dc69",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/169",
+   "args": {
+    "value": -99999999,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/170",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/171",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/172",
+   "args": {
+    "value": "$i:0x1a8b_e37f_6381_2a6c",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/173",
+   "args": {
+    "value": "$i:-0x5b94_9ecc_4b29_105f",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/174",
+   "args": {
+    "value": "$i:-0x417d_20e8_52f3_6478",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/175",
+   "args": {
+    "value": "$i:0x1_6e17_7b80",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/176",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/177",
+   "args": {
+    "value": "$i:0x1_d14d_a148",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/178",
+   "args": {
+    "value": "$i:-0x1_0233_3a58",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/179",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/180",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/181",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/182",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/183",
+   "args": {
+    "value": "$i:0x501_e706_d3ff_cdb6",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/184",
+   "args": {
+    "value": "$i:0x1_18f7_3730",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/185",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/186",
+   "args": {
+    "value": "$i:-0x7895_1848",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/187",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/188",
+   "args": {
+    "value": "$i:0xac75_8170",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/189",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/190",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/191",
+   "args": {
+    "value": "$i:-0x2577_6fe7_5e50_b4b8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/192",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/193",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/194",
+   "args": {
+    "value": "$i:-0x562c_368b_b371_4567",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/195",
+   "args": {
+    "value": "$i:-0x1_08c7_0138",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/196",
+   "args": {
+    "value": "$i:-0x5f5_e101",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/197",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/198",
+   "args": {
+    "value": -66212000,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/199",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/200",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/201",
+   "args": {
+    "value": "$i:-0x1_f1bc_5d48",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/202",
+   "args": {
+    "value": "$i:0xabfa_1b98",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/203",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/204",
+   "args": {
+    "value": "$i:-0xd76a_4938",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/205",
+   "args": {
+    "value": "$i:-0x75df_c800",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/206",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffd",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/207",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/208",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/209",
+   "args": {
+    "value": 99999998,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/210",
+   "args": {
+    "value": "$i:-0x39f7_22bb_af68_824d",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/211",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/212",
+   "args": {
+    "value": "$i:-0x2e83_8fea_2b0d_4eee",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/213",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/214",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/215",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/216",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/217",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/218",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/219",
+   "args": {
+    "value": "$i:-0x2_35be_6608",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/220",
+   "args": {
+    "value": "$i:0xbaf5_f040",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/221",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/222",
+   "args": {
+    "value": "$i:0x1_8ee4_e9b0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/223",
+   "args": {
+    "value": "$i:-0x7a26_37c8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/224",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/225",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/226",
+   "args": {
+    "value": "$i:-0x1_7728_2170",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/227",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/228",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/229",
+   "args": {
+    "value": "$i:-0x5925_2e37_26ee_62aa",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/230",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/231",
+   "args": {
+    "value": "$i:0x2_2858_15e0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/232",
+   "args": {
+    "value": "$i:0x1a47_cd5e_7c75_2d91",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/233",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/234",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/235",
+   "args": {
+    "value": "$i:-0x1777_ab22_7d8f_6d3a",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/236",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/237",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/238",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/239",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/240",
+   "args": {
+    "value": "$i:-0x1_e833_c838",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/241",
+   "args": {
+    "value": "$i:-0x7927_7cd8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/242",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/243",
+   "args": {
+    "value": "$i:0x1_63b1_d0c8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/244",
+   "args": {
+    "value": "$i:0x817d_9110",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/245",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/246",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_fffd",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/247",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/248",
+   "args": {
+    "value": "$i:-0x50f2_a56e_7a9d_8f42",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/249",
+   "args": {
+    "value": "$i:-0xa0ca_bc28",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/250",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/251",
+   "args": {
+    "value": "$i:0x6b86_f2f3_fff5_4915",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/252",
+   "args": {
+    "value": "$i:0x1_09b3_f178",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/253",
+   "args": {
+    "value": "$i:-0x50b7_dfc9_5d32_62fd",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/254",
+   "args": {
+    "value": "$i:-0xdc6_e0ed_6641_1e53",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/255",
+   "args": {
+    "value": "$i:0x4d6_d09f_36d6_ff5b",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/256",
+   "args": {
+    "value": "$i:-0x5f68_f390_075b_7074",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/257",
+   "args": {
+    "value": "$i:0x4a89_a416_c83c_552f",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/258",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/259",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/260",
+   "args": {
+    "value": "$i:-0x3560_8d00",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/261",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/262",
+   "args": {
+    "value": "$i:0x6925_28f8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/263",
+   "args": {
+    "value": "$i:0x86c5_3498",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/264",
+   "args": {
+    "value": "$i:0x1785_fc27_75a5_5e62",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/265",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/266",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/267",
+   "args": {
+    "value": "$i:-0x1_8410_92f0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/268",
+   "args": {
+    "value": "$i:-0x393b_8bf2_eeac_6195",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/269",
+   "args": {
+    "value": "$i:0xff2d_d9f8",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/270",
+   "args": {
+    "value": "$i:-0x6599_a0d8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/271",
+   "args": {
+    "value": "$i:0x1_ec4a_ac20",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/272",
+   "args": {
+    "value": "$i:-0x1_d35f_04b8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/273",
+   "args": {
+    "value": "$i:0x7d56_5978",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/274",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/275",
+   "args": {
+    "value": 99999998,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/276",
+   "args": {
+    "value": "$i:0x776b_78e0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/277",
+   "args": {
+    "value": "$i:-0x2_353e_7808",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/278",
+   "args": {
+    "value": "$i:-0x2_395c_ed70",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/279",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/280",
+   "args": {
+    "value": 99999999,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/281",
+   "args": {
+    "value": "$i:-0x5096_a66a_2507_4214",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/282",
+   "args": {
+    "value": 99999999,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/283",
+   "args": {
+    "value": "$i:-0x21cc_0fa7_1a6c_756e",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/284",
+   "args": {
+    "value": "$i:0x6b8d_f400_36fc_5fd6",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/285",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/286",
+   "args": {
+    "value": "$i:0x1_ade3_9af0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/287",
+   "args": {
+    "value": "$i:0x1_21c1_2790",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/288",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/289",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/290",
+   "args": {
+    "value": "$i:0x4858_6eed_47ad_57ee",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/291",
+   "args": {
+    "value": "$i:0x3a60_fb2b_ab0c_4b52",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/292",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/293",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/294",
+   "args": {
+    "value": "$i:-0x1_720d_5278",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/295",
+   "args": {
+    "value": "$i:0x730e_8eeb_1714_33fb",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/296",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/297",
+   "args": {
+    "value": "$i:0x5843_9d97_119f_5da7",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/298",
+   "args": {
+    "value": "$i:0x1_4c7a_6528",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/299",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/300",
+   "args": {
+    "value": "$i:-0x6435_3e49_e393_8c53",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/301",
+   "args": {
+    "value": "$i:-0x6b33_f070",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/302",
+   "args": {
+    "value": "$i:-0x50a7_e748",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/303",
+   "args": {
+    "value": "$i:-0x75b1_c84f_10d9_4bc8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/304",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/305",
+   "args": {
+    "value": "$i:-0x1_f57e_7df8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/306",
+   "args": {
+    "value": "$i:-0x7035_2c16_f101_a84d",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/307",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/308",
+   "args": {
+    "value": "$i:0xfc98_4a98",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/309",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/310",
+   "args": {
+    "value": "$i:-0x1_971c_8138",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/311",
+   "args": {
+    "value": "$i:0x9fc4_d548",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/312",
+   "args": {
+    "value": "$i:0x1_7a2e_3198",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/313",
+   "args": {
+    "value": "$i:0xc726_2998",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/314",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/315",
+   "args": {
+    "value": "$i:-0x7a91_03a0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/316",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/317",
+   "args": {
+    "value": "$i:-0x5f5_e102",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/318",
+   "args": {
+    "value": "$i:-0x1_727e_8308",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/319",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/320",
+   "args": {
+    "value": "$i:-0x1_a1dd_1d30",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/321",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/322",
+   "args": {
+    "value": "$i:0x1_8a06_cdc8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/323",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffd",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/324",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/325",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/326",
+   "args": {
+    "value": "$i:-0xab87_8790",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/327",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/328",
+   "args": {
+    "value": "$i:-0x4294_4408",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/329",
+   "args": {
+    "value": "$i:-0x2_2fe3_f090",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/330",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/331",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/332",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/333",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/334",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/335",
+   "args": {
+    "value": "$i:-0x82e9_fe08",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/336",
+   "args": {
+    "value": "$i:0x1_6dcf_5aa8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/337",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/338",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/339",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/340",
+   "args": {
+    "value": "$i:0x2952_3b58",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/341",
+   "args": {
+    "value": "$i:-0x31e5_7fa0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/342",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/343",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/344",
+   "args": {
+    "value": "$i:-0x1_2e6d_8628",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/345",
+   "args": {
+    "value": "$i:-0x118c_ed40_693e_c6b9",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/346",
+   "args": {
+    "value": "$i:-0x8f3_db48_acaf_4a6a",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/347",
+   "args": {
+    "value": "$i:-0xcab8_a310",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/348",
+   "args": {
+    "value": "$i:0x1_855b_75f8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/349",
+   "args": {
+    "value": "$i:-0x1_5160_ba88",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/350",
+   "args": {
+    "value": "$i:-0x1_7a12_1260",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/351",
+   "args": {
+    "value": "$i:-0x2_3857_1a18",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/352",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/353",
+   "args": {
+    "value": -99999998,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/354",
+   "args": {
+    "value": "$i:-0x7487_f478",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/355",
+   "args": {
+    "value": "$i:-0x1_468d_88c0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/356",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/357",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/358",
+   "args": {
+    "value": "$i:-0xea7a_69b8",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/359",
+   "args": {
+    "value": "$i:-0x2_10b2_1990",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/360",
+   "args": {
+    "value": "$i:0x1_6831_a010",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/361",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/362",
+   "args": {
+    "value": "$i:0x4d67_5e11_6af2_53f5",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/363",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/364",
+   "args": {
+    "value": "$i:-0x1_4d13_5968",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/365",
+   "args": {
+    "value": "$i:-0x1_435a_2af0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/366",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/367",
+   "args": {
+    "value": "$i:-0x1_8c60_6980",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/368",
+   "args": {
+    "value": "$i:0x1_3783_3cf8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/369",
+   "args": {
+    "value": "$i:-0x1_bf29_09a8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/370",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/371",
+   "args": {
+    "value": "$i:-0x4e01_7550_520c_f94b",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/372",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/373",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/374",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/375",
+   "args": {
+    "value": "$i:0x1_7ece_fa48",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/376",
+   "args": {
+    "value": "$i:-0x1_7c98_c510",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/377",
+   "args": {
+    "value": "$i:0xcaa_a108_cc64_dc27",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/378",
+   "args": {
+    "value": "$i:0x1_ca19_6830",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/379",
+   "args": {
+    "value": "$i:-0x1_bd73_33b8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/380",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/381",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/382",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/383",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/384",
+   "args": {
+    "value": "$i:-0x1_6c3a_b8b8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/385",
+   "args": {
+    "value": "$i:0xa1d9_6920",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/386",
+   "args": {
+    "value": "$i:0x7fff_fffe",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/387",
+   "args": {
+    "value": "$i:0x2_1080_5f18",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/388",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/389",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/390",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/391",
+   "args": {
+    "value": "$i:-0x41a6_e022_3ee3_8ec1",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/392",
+   "args": {
+    "value": "$i:0x1_20a5_d450",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/393",
+   "args": {
+    "value": "$i:-0x3bf7_84e1_9000_110a",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/394",
+   "args": {
+    "value": "$i:-0x4dc3_7ed7_1e75_53b4",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/395",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/396",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/397",
+   "args": {
+    "value": "$i:-0x3c78_e682_02f5_fbb5",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/398",
+   "args": {
+    "value": "$i:-0x4a0e_5266_e7c7_299a",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/399",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/400",
+   "args": {
+    "value": "$i:-0x8c9c_4ac8",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/401",
+   "args": {
+    "value": "$i:0x1e4f_6a28",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/402",
+   "args": {
+    "value": "$i:0xaef8_2510",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/403",
+   "args": {
+    "value": "$i:0x23ac_4748",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/404",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/405",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/406",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/407",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/408",
+   "args": {
+    "value": "$i:-0x3d45_7fca_1fc8_2502",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/409",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/410",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/411",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/412",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/413",
+   "args": {
+    "value": "$i:0x8000_0001",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/414",
+   "args": {
+    "value": "$i:-0x3977_47e0_6361_8017",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/415",
+   "args": {
+    "value": "$i:-0x6f72_e240",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/416",
+   "args": {
+    "value": "$i:-0xde6d_8f10",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/417",
+   "args": {
+    "value": 99999999,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/418",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/419",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/420",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/421",
+   "args": {
+    "value": "$i:-0x52d7_529e_7c48_4c32",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/422",
+   "args": {
+    "value": "$i:0x2_0813_1578",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/423",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/424",
+   "args": {
+    "value": "$i:-0x2_45d8_2218",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/425",
+   "args": {
+    "value": "$i:0x1_89e1_1970",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/426",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/427",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/428",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/429",
+   "args": {
+    "value": "$i:0xef98_e230",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/430",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/431",
+   "args": {
+    "value": "$i:-0xd71d_84e0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/432",
+   "args": {
+    "value": "$i:0x1_05fd_0bc8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/433",
+   "args": {
+    "value": "$i:0x7fff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/434",
+   "args": {
+    "value": "$i:-0x7ade_484d_e8a7_5ea4",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/435",
+   "args": {
+    "value": "$i:0x788b_0ca6_a0e0_9928",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/436",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/437",
+   "args": {
+    "value": "$i:0x2cbb_56f8",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/438",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/439",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/440",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/441",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/442",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/443",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/444",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/445",
+   "args": {
+    "value": "$i:-0x159f_5953_9868_48e5",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/446",
+   "args": {
+    "value": "$i:-0x1_ae19_cdf0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/447",
+   "args": {
+    "value": "$i:-0x3d57_a8b3_1c1f_4767",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/448",
+   "args": {
+    "value": "$i:-0xe9_dac5_603d_333d",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/449",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/450",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/451",
+   "args": {
+    "value": "$i:0x1_75c9_25e0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/452",
+   "args": {
+    "value": "$i:0xe4ae_f030",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/453",
+   "args": {
+    "value": "$i:-0x1_8432_c4d8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/454",
+   "args": {
+    "value": "$i:0x1_f995_0808",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/455",
+   "args": {
+    "value": "$i:-0x1_8a06_d598",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/456",
+   "args": {
+    "value": "$i:-0x5f58_8e07_d38f_f8a6",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/457",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/458",
+   "args": {
+    "value": "$i:0x487a_cf40",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/459",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/460",
+   "args": {
+    "value": "$i:-0x1_2eff_42c0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/461",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/462",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/463",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/464",
+   "args": {
+    "value": "$i:-0x38f3_079e_77ef_350d",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/465",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/466",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/467",
+   "args": {
+    "value": "$i:-0x3d03_d704_f965_f7de",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/468",
+   "args": {
+    "value": "$i:-0x79f0_7610",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/469",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/470",
+   "args": {
+    "value": "$i:-0x7179_3281_20bc_199b",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/471",
+   "args": {
+    "value": "$i:-0x696f_ce31_4b76_56f8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/472",
+   "args": {
+    "value": "$i:0xd80c_bb28",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/473",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/474",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/475",
+   "args": {
+    "value": "$i:0x4a1a_e79a_8c44_448f",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/476",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/477",
+   "args": {
+    "value": "$i:-0x1_4c8b_68a0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/478",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/479",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/480",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/481",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/482",
+   "args": {
+    "value": "$i:0x1_f3eb_9188",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/483",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/484",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/485",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/486",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/487",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/488",
+   "args": {
+    "value": "$i:-0xc3b9_a2f8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/489",
+   "args": {
+    "value": "$i:-0x1_6199_02e8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/490",
+   "args": {
+    "value": "$i:0x1_66ca_9218",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/491",
+   "args": {
+    "value": "$i:-0xaddb_5ad0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/492",
+   "args": {
+    "value": "$i:-0xe779_9568",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/493",
+   "args": {
+    "value": "$i:-0x1_e3a4_6890",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/494",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/495",
+   "args": {
+    "value": 18960000,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/496",
+   "args": {
+    "value": "$i:0xfd9b_cc30",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/497",
+   "args": {
+    "value": "$i:-0x7033_fa2f_abfa_8b65",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/498",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/499",
+   "args": {
+    "value": "$i:0x5910_977c_c75d_a4f2",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/500",
+   "args": {
+    "value": "$i:-0x2_09b9_8600",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/501",
+   "args": {
+    "value": "$i:-0x56c6_7b73_ddc5_50a1",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/502",
+   "args": {
+    "value": "$i:-0x6daf_b4da_fe5d_7dd4",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/503",
+   "args": {
+    "value": "$i:-0x157_6a3b_ff80_a079",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/504",
+   "args": {
+    "value": -4,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/505",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/506",
+   "args": {
+    "value": "$i:-0x5f5_e101",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/507",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/508",
+   "args": {
+    "value": "$i:0x1_fc91_f840",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/509",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/510",
+   "args": {
+    "value": "$i:-0x33bf_5951_dcb3_f862",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/511",
+   "args": {
+    "value": "$i:0x1_4b58_e7c8",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/512",
+   "args": {
+    "value": "$i:-0x6119_e9ab_fc29_1de6",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/513",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/514",
+   "args": {
+    "value": "$i:-0x1_44c0_c7a0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/515",
+   "args": {
+    "value": "$i:-0x2_36c2_5118",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/516",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/517",
+   "args": {
+    "value": "$i:-0x1136_9fb6_80f8_edbc",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/518",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/519",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/520",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/521",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/522",
+   "args": {
+    "value": "$i:-0x969_0308",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/523",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/524",
+   "args": {
+    "value": "$i:-0x5f5_e101",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/525",
+   "args": {
+    "value": "$i:0xf2be_1ae8",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/526",
+   "args": {
+    "value": "$i:-0x71bf_dadd_9cff_6bd3",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/527",
+   "args": {
+    "value": "$i:0x7fff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/528",
+   "args": {
+    "value": -99999998,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/529",
+   "args": {
+    "value": "$i:-0xfa7_7a10",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/530",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/531",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/532",
+   "args": {
+    "value": "$i:-0x2_02f9_7b18",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/533",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/534",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/535",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/536",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/537",
+   "args": {
+    "value": "$i:-0x60a_740c_5f9d_198d",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/538",
+   "args": {
+    "value": "$i:-0x1_7838_0300",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/539",
+   "args": {
+    "value": "$i:0x1d05_ac9c_950b_508a",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/540",
+   "args": {
+    "value": "$i:0x81fa_6230",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/541",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/542",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/543",
+   "args": {
+    "value": "$i:0x578f_b1f8",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/544",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/545",
+   "args": {
+    "value": "$i:-0x1_e360_f6f0",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/546",
+   "args": {
+    "value": "$i:-0x4ac2_7cfe_073c_2253",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/547",
+   "args": {
+    "value": "$i:-0x7fff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/548",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/549",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/550",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/551",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/552",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/553",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/554",
+   "args": {
+    "value": "$i:-0x127a_d8aa_c823_a872",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/555",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/556",
+   "args": {
+    "value": "$i:-0x2_244c_7c98",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/557",
+   "args": {
+    "value": "$i:0x1_df2e_3e08",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/558",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/559",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/560",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/561",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/562",
+   "args": {
+    "value": "$i:0x7c7c_6c7c_92e1_2c92",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/563",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/564",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/565",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/566",
+   "args": {
+    "value": "$i:0x1_ee62_9f40",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/567",
+   "args": {
+    "value": "$i:-0x7fff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/568",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/569",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/570",
+   "args": {
+    "value": "$i:0x5d46_586e_f7b0_c99d",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/571",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/572",
+   "args": {
+    "value": "$i:-0x2_0910_7c90",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/573",
+   "args": {
+    "value": "$i:0x62ed_fe63_3da3_5997",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/574",
+   "args": {
+    "value": "$i:-0x1_00c0_8400",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/575",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/576",
+   "args": {
+    "value": "$i:-0x67d7_4914_d2ea_ca08",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/577",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/578",
+   "args": {
+    "value": -3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/579",
+   "args": {
+    "value": "$i:0xce1_db00_93ba_6aeb",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/580",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/581",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/582",
+   "args": {
+    "value": "$i:0xc736_42b0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/583",
+   "args": {
+    "value": "$i:0x3a23_95b4_f368_982f",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/584",
+   "args": {
+    "value": "$i:0x1f49_8a9d_f2ff_2a87",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/585",
+   "args": {
+    "value": "$i:-0x1_3ffb_d520",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/586",
+   "args": {
+    "value": "$i:-0x1_b788_f730",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/587",
+   "args": {
+    "value": 3,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/588",
+   "args": {
+    "value": 3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/589",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/590",
+   "args": {
+    "value": "$i:0x7d36_ae72_877b_4d9b",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/591",
+   "args": {
+    "value": "$i:-0x638a_6965_3714_d8e5",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/592",
+   "args": {
+    "value": "$i:-0x1_48ae_a3a0",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/593",
+   "args": {
+    "value": "$i:-0x5074_d5b2_b1fd_65a0",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/594",
+   "args": {
+    "value": -3,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/595",
+   "args": {
+    "value": "$i:0x1_e564_9ec0",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/596",
+   "args": {
+    "value": "$i:0x238f_5015_4498_56de",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/597",
+   "args": {
+    "value": "$i:0x2_269d_1f70",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/598",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "fuzz/599",
+   "args": {
+    "value": "$i:0x1_bfe8_8918",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  }
+ ]
+}

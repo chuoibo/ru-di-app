@@ -1,0 +1,695 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.domain.money",
+ "mode": "money",
+ "python": "3.12.14",
+ "seed": 43,
+ "constants": {
+  "names": [
+   "BELOW_MINIMUM",
+   "NEGATIVE",
+   "NON_POSITIVE",
+   "NOT_INTEGER",
+   "count_violation",
+   "vnd_violation"
+  ],
+  "not_integer": "not_integer",
+  "negative": "negative",
+  "non_positive": "non_positive",
+  "below_minimum": "below_minimum"
+ },
+ "cases": [
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/0/00",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/0/01",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/0/10",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/0/11",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/1/00",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/1/01",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/1/10",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/1/11",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/2/00",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/2/01",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/2/10",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/2/11",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/3/00",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/3/01",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/3/10",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/3/11",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/4/00",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/4/01",
+   "args": {
+    "value": -2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/4/10",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/4/11",
+   "args": {
+    "value": -2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/5/00",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/5/01",
+   "args": {
+    "value": -1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "negative"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/5/10",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/5/11",
+   "args": {
+    "value": -1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/6/00",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/6/01",
+   "args": {
+    "value": 0,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/6/10",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/6/11",
+   "args": {
+    "value": 0,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": "non_positive"
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/7/00",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/7/01",
+   "args": {
+    "value": 1,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/7/10",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/7/11",
+   "args": {
+    "value": 1,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/8/00",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/8/01",
+   "args": {
+    "value": 2,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/8/10",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/8/11",
+   "args": {
+    "value": 2,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/9/00",
+   "args": {
+    "value": 99999999,
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/9/01",
+   "args": {
+    "value": 99999999,
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/9/10",
+   "args": {
+    "value": 99999999,
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/9/11",
+   "args": {
+    "value": 99999999,
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/10/00",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/10/01",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/10/10",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/10/11",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/11/00",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/11/01",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/11/10",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/11/11",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/12/00",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/12/01",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/12/10",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/12/11",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/13/00",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/13/01",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": false,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/13/10",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": false
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "vnd_violation",
+   "name": "vnd_violation/13/11",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "allow_negative": true,
+    "positive": true
+   },
+   "result": {
+    "ok": null
+   }
+  }
+ ]
+}

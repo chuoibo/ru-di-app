@@ -1,0 +1,4399 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.domain.ledger",
+ "mode": "ledger",
+ "python": "3.12.14",
+ "seed": 43,
+ "constants": {
+  "names": [
+   "LedgerError",
+   "NEGATIVE",
+   "NON_POSITIVE",
+   "NOT_INTEGER",
+   "confirmed_total",
+   "group_balances",
+   "merge_obligations",
+   "obligation_status",
+   "obligations_from_allocations",
+   "require_vnd",
+   "settlement_plan",
+   "settlement_suggestions"
+  ],
+  "default_exact_limit": 15
+ },
+ "cases": [
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/0/0",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/0/1",
+   "args": {
+    "value": "$i:-0x8000_0000_0000_0000",
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/1/0",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/1/1",
+   "args": {
+    "value": "$i:-0x7fff_ffff_ffff_ffff",
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/2/0",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/2/1",
+   "args": {
+    "value": "$i:-0x8000_0000",
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/3/0",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/3/1",
+   "args": {
+    "value": "$i:-0x5f5_e100",
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/4/0",
+   "args": {
+    "value": -2,
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/4/1",
+   "args": {
+    "value": -2,
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/5/0",
+   "args": {
+    "value": -1,
+    "positive": false
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/5/1",
+   "args": {
+    "value": -1,
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/6/0",
+   "args": {
+    "value": 0,
+    "positive": false
+   },
+   "result": {
+    "ok": 0
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/6/1",
+   "args": {
+    "value": 0,
+    "positive": true
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NON_POSITIVE_AMOUNT",
+     "code": "NON_POSITIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/7/0",
+   "args": {
+    "value": 1,
+    "positive": false
+   },
+   "result": {
+    "ok": 1
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/7/1",
+   "args": {
+    "value": 1,
+    "positive": true
+   },
+   "result": {
+    "ok": 1
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/8/0",
+   "args": {
+    "value": 2,
+    "positive": false
+   },
+   "result": {
+    "ok": 2
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/8/1",
+   "args": {
+    "value": 2,
+    "positive": true
+   },
+   "result": {
+    "ok": 2
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/9/0",
+   "args": {
+    "value": 99999999,
+    "positive": false
+   },
+   "result": {
+    "ok": 99999999
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/9/1",
+   "args": {
+    "value": 99999999,
+    "positive": true
+   },
+   "result": {
+    "ok": 99999999
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/10/0",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "positive": false
+   },
+   "result": {
+    "ok": "$i:0x5f5_e100"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/10/1",
+   "args": {
+    "value": "$i:0x5f5_e100",
+    "positive": true
+   },
+   "result": {
+    "ok": "$i:0x5f5_e100"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/11/0",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "positive": false
+   },
+   "result": {
+    "ok": "$i:0x8000_0000"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/11/1",
+   "args": {
+    "value": "$i:0x8000_0000",
+    "positive": true
+   },
+   "result": {
+    "ok": "$i:0x8000_0000"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/12/0",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "positive": false
+   },
+   "result": {
+    "ok": "$i:0x7fff_ffff_ffff_fffe"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/12/1",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_fffe",
+    "positive": true
+   },
+   "result": {
+    "ok": "$i:0x7fff_ffff_ffff_fffe"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/13/0",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "positive": false
+   },
+   "result": {
+    "ok": "$i:0x7fff_ffff_ffff_ffff"
+   }
+  },
+  {
+   "fn": "require_vnd",
+   "name": "require_vnd/13/1",
+   "args": {
+    "value": "$i:0x7fff_ffff_ffff_ffff",
+    "positive": true
+   },
+   "result": {
+    "ok": "$i:0x7fff_ffff_ffff_ffff"
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_advancer_owes_nothing_to_themselves",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      82000
+     ],
+     [
+      "nam",
+      100000
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 82000,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_zero_share_creates_no_obligation",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      0
+     ],
+     [
+      "nam",
+      100
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_obligations_sum_to_total_minus_the_advancer_share",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      82000
+     ],
+     [
+      "nam",
+      100000
+     ],
+     [
+      "binh",
+      55000
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 82000,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "binh",
+      "recipient_id": "nam",
+      "amount_vnd": 55000,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_advancer_outside_the_participant_set",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      50
+     ],
+     [
+      "nam",
+      50
+     ]
+    ],
+    "advancer_id": "outsider",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "outsider",
+      "amount_vnd": 50,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "nam",
+      "recipient_id": "outsider",
+      "amount_vnd": 50,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_no_advancer_is_rejected",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      50
+     ]
+    ],
+    "advancer_id": null,
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NO_ADVANCER",
+     "code": "NO_ADVANCER"
+    }
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "no_advancer_beats_a_negative_amount",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      -50
+     ]
+    ],
+    "advancer_id": null,
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NO_ADVANCER",
+     "code": "NO_ADVANCER"
+    }
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "test_a_negative_advancer_allocation_is_caught",
+   "args": {
+    "allocations": [
+     [
+      "a",
+      100
+     ],
+     [
+      "nam",
+      -100
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "empty_allocations",
+   "args": {
+    "allocations": [],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "empty_advancer_is_an_id",
+   "args": {
+    "allocations": [
+     [
+      "",
+      10
+     ],
+     [
+      "ha",
+      20
+     ]
+    ],
+    "advancer_id": "",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "",
+      "amount_vnd": 20,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "int64_extremes",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "nam",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "binh",
+      1
+     ]
+    ],
+    "advancer_id": "binh",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "binh",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "nam",
+      "recipient_id": "binh",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "negative_after_valid",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      10
+     ],
+     [
+      "binh",
+      -1
+     ],
+     [
+      "nam",
+      5
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "int64_min_share",
+   "args": {
+    "allocations": [
+     [
+      "ha",
+      "$i:-0x8000_0000_0000_0000"
+     ]
+    ],
+    "advancer_id": "nam",
+    "expense_version_id": "v1"
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "obligations_from_allocations",
+   "name": "unicode_ids_keep_dict_order",
+   "args": {
+    "allocations": [
+     [
+      "\ud83d\ude00",
+      3
+     ],
+     [
+      "z",
+      2
+     ],
+     [
+      "\u00e9",
+      1
+     ]
+    ],
+    "advancer_id": "a",
+    "expense_version_id": "v\u4e2d"
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "\ud83d\ude00",
+      "recipient_id": "a",
+      "amount_vnd": 3,
+      "source_expense_version_id": "v\u4e2d"
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "a",
+      "amount_vnd": 2,
+      "source_expense_version_id": "v\u4e2d"
+     },
+     {
+      "sender_id": "\u00e9",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v\u4e2d"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "test_same_pair_is_summed",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 82000,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 18000,
+      "source_expense_version_id": "v2"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 100000,
+      "source_expense_version_ids": [
+       "v1",
+       "v2"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "test_opposite_directions_are_never_netted",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "nam",
+      "recipient_id": "ha",
+      "amount_vnd": 30000,
+      "source_expense_version_id": "v2"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "nam",
+      "recipient_id": "ha",
+      "amount_vnd": 30000,
+      "source_expense_version_ids": [
+       "v2"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "test_different_recipients_are_never_merged",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "ha",
+      "recipient_id": "binh",
+      "amount_vnd": 30000,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "binh",
+      "amount_vnd": 30000,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "test_self_obligation_is_rejected",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "ha",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "test_merge_refuses_a_negative_amount",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 100,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": -80,
+      "source_expense_version_id": "v2"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "empty",
+   "args": {
+    "obligations": []
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "zero_amount",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 0,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NON_POSITIVE_AMOUNT",
+     "code": "NON_POSITIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "self_before_negative",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "a",
+      "amount_vnd": -1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": -1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "negative_before_self",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": -1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "zero_before_self",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 0,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NON_POSITIVE_AMOUNT",
+     "code": "NON_POSITIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "sources_deduplicate_and_sort",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v2"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 2,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 3,
+      "source_expense_version_id": "v2"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 4,
+      "source_expense_version_id": "V1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 10,
+      "source_expense_version_ids": [
+       "V1",
+       "v1",
+       "v2"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "order_is_by_utf8_bytes",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "\ud83d\ude00",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "\u4e2d",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "\u00e9",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "Z",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "\u00e9",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "Z",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "z",
+      "recipient_id": "\u00e9",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "\u00e9",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "\u4e2d",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     },
+     {
+      "sender_id": "\ud83d\ude00",
+      "recipient_id": "a",
+      "amount_vnd": 1,
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "total_exactly_int64_max",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x3fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "total_one_past_int64_max",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x8000_0000_0000_0000",
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "total_three_int64_max",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x1_7fff_ffff_ffff_fffd",
+      "source_expense_version_ids": [
+       "v1"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "fn": "merge_obligations",
+   "name": "past_int64_then_self_refused",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "c",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "test_two_obligations_in_one_pair_share_one_receipt",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      50
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -50
+     ],
+     [
+      "b",
+      50
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "test_a_full_receipt_clears_the_pair",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      100
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "test_group_balance_is_netted_and_sums_to_zero",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000
+     },
+     {
+      "sender_id": "nam",
+      "recipient_id": "ha",
+      "amount_vnd": 30000
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "ha",
+      -20000
+     ],
+     [
+      "nam",
+      20000
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "test_confirmed_receipts_reduce_the_balance",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "ha",
+      "recipient_id": "nam",
+      "amount_vnd": 50000
+     }
+    ],
+    "receipts": [
+     [
+      "ha",
+      "nam",
+      50000
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "empty_ledger",
+   "args": {
+    "obligations": [],
+    "receipts": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "empty_ledger_with_receipts",
+   "args": {
+    "obligations": [],
+    "receipts": [
+     [
+      "a",
+      "b",
+      5
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "empty_receipts_dict",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -100
+     ],
+     [
+      "b",
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_over_the_debt_is_not_a_credit",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      1000
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_one_short",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      99
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -1
+     ],
+     [
+      "b",
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_the_other_way_is_ignored",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "b",
+      "a",
+      100
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -100
+     ],
+     [
+      "b",
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "negative_receipt_is_refused",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      -1
+     ]
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "negative_receipt_for_an_unowed_pair_is_never_read",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "b",
+      "a",
+      -1
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -100
+     ],
+     [
+      "b",
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_checks_run_in_first_seen_pair_order",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "c",
+      "recipient_id": "d",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      -1
+     ],
+     [
+      "c",
+      "d",
+      -2
+     ]
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "self_obligation",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "b",
+      "recipient_id": "b",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "self_before_bad_receipt",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "b",
+      "recipient_id": "b",
+      "amount_vnd": 5,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      -1
+     ]
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "zero_amount",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 0,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NON_POSITIVE_AMOUNT",
+     "code": "NON_POSITIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "cycle_nets_to_nothing",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 7,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "b",
+      "recipient_id": "c",
+      "amount_vnd": 7,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "a",
+      "amount_vnd": 7,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "people_sort_by_code_point",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "\ud83d\ude00",
+      "recipient_id": "Z",
+      "amount_vnd": 3,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "\u00e9",
+      "recipient_id": "z",
+      "amount_vnd": 2,
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "\u4e2d",
+      "recipient_id": "",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "",
+      1
+     ],
+     [
+      "Z",
+      3
+     ],
+     [
+      "z",
+      2
+     ],
+     [
+      "\u00e9",
+      -2
+     ],
+     [
+      "\u4e2d",
+      -1
+     ],
+     [
+      "\ud83d\ude00",
+      -3
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "position_exactly_int64_min",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "c",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:-0x8000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "position_one_below_int64_min",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "c",
+      "amount_vnd": 2,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:-0x8000_0000_0000_0001"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "position_exactly_int64_max",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "b",
+      "recipient_id": "a",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "a",
+      "amount_vnd": "$i:0x3fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "b",
+      "$i:-0x4000_0000_0000_0000"
+     ],
+     [
+      "c",
+      "$i:-0x3fff_ffff_ffff_ffff"
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "position_one_past_int64_max",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "b",
+      "recipient_id": "a",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "a",
+      "amount_vnd": "$i:0x4000_0000_0000_0000",
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:0x8000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:-0x4000_0000_0000_0000"
+     ],
+     [
+      "c",
+      "$i:-0x4000_0000_0000_0000"
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "pair_total_past_int64_receipt_brings_it_back",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:-0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "past_int64_positions_that_cancel",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "b",
+      "recipient_id": "c",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "a",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_settlement_suggestions_clear_the_same_positions",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -70
+     ],
+     [
+      "b",
+      -30
+     ],
+     [
+      "c",
+      60
+     ],
+     [
+      "d",
+      40
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "c",
+       "amount_vnd": 60
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 10
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "d",
+       "amount_vnd": 30
+      }
+     ],
+     "transfer_count": 3,
+     "proven_minimal": true,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_settlement_suggestions_reject_unbalanced_input",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -10
+     ],
+     [
+      "b",
+      5
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "BALANCES_DO_NOT_NET_TO_ZERO",
+     "code": "BALANCES_DO_NOT_NET_TO_ZERO"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_suggestions_are_shaped_as_drafts",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -70
+     ],
+     [
+      "b",
+      70
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": 70
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": true,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_within_the_exact_limit_the_plan_is_proven",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -500000
+     ],
+     [
+      "b",
+      -400000
+     ],
+     [
+      "c",
+      200000
+     ],
+     [
+      "d",
+      300000
+     ],
+     [
+      "e",
+      400000
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 300000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "c",
+       "amount_vnd": 200000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "e",
+       "amount_vnd": 400000
+      }
+     ],
+     "transfer_count": 3,
+     "proven_minimal": true,
+     "person_count": 5
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_raising_the_limit_4",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -500000
+     ],
+     [
+      "b",
+      -400000
+     ],
+     [
+      "c",
+      200000
+     ],
+     [
+      "d",
+      300000
+     ],
+     [
+      "e",
+      400000
+     ]
+    ],
+    "exact_limit": 4
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "e",
+       "amount_vnd": 400000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 100000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "d",
+       "amount_vnd": 200000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 200000
+      }
+     ],
+     "transfer_count": 4,
+     "proven_minimal": false,
+     "person_count": 5
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_raising_the_limit_5",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -500000
+     ],
+     [
+      "b",
+      -400000
+     ],
+     [
+      "c",
+      200000
+     ],
+     [
+      "d",
+      300000
+     ],
+     [
+      "e",
+      400000
+     ]
+    ],
+    "exact_limit": 5
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 300000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "c",
+       "amount_vnd": 200000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "e",
+       "amount_vnd": 400000
+      }
+     ],
+     "transfer_count": 3,
+     "proven_minimal": true,
+     "person_count": 5
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "test_beyond_the_exact_limit_the_plan_is_flagged_unproven",
+   "args": {
+    "balances": [
+     [
+      "p00",
+      1000
+     ],
+     [
+      "p01",
+      1000
+     ],
+     [
+      "p02",
+      1000
+     ],
+     [
+      "p03",
+      1000
+     ],
+     [
+      "p04",
+      1000
+     ],
+     [
+      "p05",
+      1000
+     ],
+     [
+      "p06",
+      1000
+     ],
+     [
+      "p07",
+      1000
+     ],
+     [
+      "p08",
+      1000
+     ],
+     [
+      "p09",
+      1000
+     ],
+     [
+      "p10",
+      1000
+     ],
+     [
+      "p11",
+      1000
+     ],
+     [
+      "p12",
+      1000
+     ],
+     [
+      "p13",
+      1000
+     ],
+     [
+      "p14",
+      1000
+     ],
+     [
+      "p15",
+      1000
+     ],
+     [
+      "p16",
+      1000
+     ],
+     [
+      "p17",
+      1000
+     ],
+     [
+      "p18",
+      1000
+     ],
+     [
+      "p19",
+      1000
+     ],
+     [
+      "q00",
+      -1000
+     ],
+     [
+      "q01",
+      -1000
+     ],
+     [
+      "q02",
+      -1000
+     ],
+     [
+      "q03",
+      -1000
+     ],
+     [
+      "q04",
+      -1000
+     ],
+     [
+      "q05",
+      -1000
+     ],
+     [
+      "q06",
+      -1000
+     ],
+     [
+      "q07",
+      -1000
+     ],
+     [
+      "q08",
+      -1000
+     ],
+     [
+      "q09",
+      -1000
+     ],
+     [
+      "q10",
+      -1000
+     ],
+     [
+      "q11",
+      -1000
+     ],
+     [
+      "q12",
+      -1000
+     ],
+     [
+      "q13",
+      -1000
+     ],
+     [
+      "q14",
+      -1000
+     ],
+     [
+      "q15",
+      -1000
+     ],
+     [
+      "q16",
+      -1000
+     ],
+     [
+      "q17",
+      -1000
+     ],
+     [
+      "q18",
+      -1000
+     ],
+     [
+      "q19",
+      -1000
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q00",
+       "recipient_id": "p00",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q01",
+       "recipient_id": "p01",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q02",
+       "recipient_id": "p02",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q03",
+       "recipient_id": "p03",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q04",
+       "recipient_id": "p04",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q05",
+       "recipient_id": "p05",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q06",
+       "recipient_id": "p06",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q07",
+       "recipient_id": "p07",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q08",
+       "recipient_id": "p08",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q09",
+       "recipient_id": "p09",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q10",
+       "recipient_id": "p10",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q11",
+       "recipient_id": "p11",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q12",
+       "recipient_id": "p12",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q13",
+       "recipient_id": "p13",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q14",
+       "recipient_id": "p14",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q15",
+       "recipient_id": "p15",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q16",
+       "recipient_id": "p16",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q17",
+       "recipient_id": "p17",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q18",
+       "recipient_id": "p18",
+       "amount_vnd": 1000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "q19",
+       "recipient_id": "p19",
+       "amount_vnd": 1000
+      }
+     ],
+     "transfer_count": 20,
+     "proven_minimal": false,
+     "person_count": 40
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "empty",
+   "args": {
+    "balances": [],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [],
+     "transfer_count": 0,
+     "proven_minimal": true,
+     "person_count": 0
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "everyone_square",
+   "args": {
+    "balances": [
+     [
+      "a",
+      0
+     ],
+     [
+      "b",
+      0
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [],
+     "transfer_count": 0,
+     "proven_minimal": true,
+     "person_count": 0
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "zeros_do_not_count_as_people",
+   "args": {
+    "balances": [
+     [
+      "a",
+      0
+     ],
+     [
+      "b",
+      -5
+     ],
+     [
+      "c",
+      5
+     ]
+    ],
+    "exact_limit": 2
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 5
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": true,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "zero_limit_with_nobody",
+   "args": {
+    "balances": [],
+    "exact_limit": 0
+   },
+   "result": {
+    "ok": {
+     "transfers": [],
+     "transfer_count": 0,
+     "proven_minimal": true,
+     "person_count": 0
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "zero_limit_greedy",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -5
+     ],
+     [
+      "b",
+      5
+     ]
+    ],
+    "exact_limit": 0
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": 5
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": false,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "negative_limit_greedy",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -5
+     ],
+     [
+      "b",
+      5
+     ]
+    ],
+    "exact_limit": -1
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": 5
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": false,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "limit_equal_to_people_is_exact",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -3
+     ],
+     [
+      "b",
+      -2
+     ],
+     [
+      "c",
+      2
+     ],
+     [
+      "d",
+      3
+     ]
+    ],
+    "exact_limit": 4
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 3
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 2
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "limit_one_below_people_is_greedy",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -3
+     ],
+     [
+      "b",
+      -2
+     ],
+     [
+      "c",
+      2
+     ],
+     [
+      "d",
+      3
+     ]
+    ],
+    "exact_limit": 3
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 3
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 2
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": false,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "greedy_is_not_minimal",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -3
+     ],
+     [
+      "b",
+      -2
+     ],
+     [
+      "c",
+      2
+     ],
+     [
+      "d",
+      3
+     ]
+    ],
+    "exact_limit": 0
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 3
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 2
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": false,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "one_dong_off_is_refused",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -3
+     ],
+     [
+      "b",
+      2
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "BALANCES_DO_NOT_NET_TO_ZERO",
+     "code": "BALANCES_DO_NOT_NET_TO_ZERO"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "single_nonzero_is_refused",
+   "args": {
+    "balances": [
+     [
+      "a",
+      5
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "BALANCES_DO_NOT_NET_TO_ZERO",
+     "code": "BALANCES_DO_NOT_NET_TO_ZERO"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "ties_break_by_person",
+   "args": {
+    "balances": [
+     [
+      "d",
+      -5
+     ],
+     [
+      "b",
+      -5
+     ],
+     [
+      "c",
+      5
+     ],
+     [
+      "a",
+      5
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "d",
+       "recipient_id": "a",
+       "amount_vnd": 5
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 5
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "ties_break_by_code_point",
+   "args": {
+    "balances": [
+     [
+      "\u00e9",
+      -5
+     ],
+     [
+      "z",
+      -5
+     ],
+     [
+      "\ud83d\ude00",
+      5
+     ],
+     [
+      "\u4e2d",
+      5
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "z",
+       "recipient_id": "\ud83d\ude00",
+       "amount_vnd": 5
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "\u00e9",
+       "recipient_id": "\u4e2d",
+       "amount_vnd": 5
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "empty_person_id",
+   "args": {
+    "balances": [
+     [
+      "",
+      -1
+     ],
+     [
+      "a",
+      1
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "",
+       "recipient_id": "a",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": true,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "two_equal_partitions_pick_the_first_found",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -1
+     ],
+     [
+      "b",
+      -1
+     ],
+     [
+      "c",
+      1
+     ],
+     [
+      "d",
+      1
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "c",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 4
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "several_maximum_partitions",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -2
+     ],
+     [
+      "b",
+      -1
+     ],
+     [
+      "c",
+      -1
+     ],
+     [
+      "d",
+      1
+     ],
+     [
+      "e",
+      1
+     ],
+     [
+      "f",
+      2
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "f",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "e",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "d",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 3,
+     "proven_minimal": true,
+     "person_count": 6
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "greedy_loses_twice_six_people",
+   "args": {
+    "balances": [
+     [
+      "a",
+      -600000
+     ],
+     [
+      "b",
+      -300000
+     ],
+     [
+      "c",
+      -100000
+     ],
+     [
+      "d",
+      200000
+     ],
+     [
+      "e",
+      300000
+     ],
+     [
+      "f",
+      500000
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "f",
+       "amount_vnd": 500000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "d",
+       "amount_vnd": 100000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "d",
+       "amount_vnd": 100000
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "e",
+       "amount_vnd": 300000
+      }
+     ],
+     "transfer_count": 4,
+     "proven_minimal": true,
+     "person_count": 6
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "int64_min_debtor",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:-0x8000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      1
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "c",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 3
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "int64_min_debtor_greedy",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:-0x8000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      1
+     ]
+    ],
+    "exact_limit": 0
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "c",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": false,
+     "person_count": 3
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "subset_sum_past_int64",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:0x4000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x4000_0000_0000_0000"
+     ],
+     [
+      "c",
+      "$i:-0x8000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x4000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "b",
+       "amount_vnd": "$i:0x4000_0000_0000_0000"
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 3
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "subset_sums_that_wrap_to_zero_are_not_zero",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      2
+     ],
+     [
+      "d",
+      "$i:-0x8000_0000_0000_0000"
+     ],
+     [
+      "e",
+      "$i:-0x8000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "d",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "d",
+       "recipient_id": "b",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "e",
+       "recipient_id": "b",
+       "amount_vnd": "$i:0x7fff_ffff_ffff_fffe"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "e",
+       "recipient_id": "c",
+       "amount_vnd": 2
+      }
+     ],
+     "transfer_count": 4,
+     "proven_minimal": true,
+     "person_count": 5
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "sum_that_wraps_to_zero_is_still_refused",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "b",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ],
+     [
+      "c",
+      2
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "BALANCES_DO_NOT_NET_TO_ZERO",
+     "code": "BALANCES_DO_NOT_NET_TO_ZERO"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "fifteen_people_exact",
+   "args": {
+    "balances": [
+     [
+      "p00",
+      -7
+     ],
+     [
+      "p01",
+      -5
+     ],
+     [
+      "p02",
+      -3
+     ],
+     [
+      "p03",
+      -2
+     ],
+     [
+      "p04",
+      -1
+     ],
+     [
+      "p05",
+      1
+     ],
+     [
+      "p06",
+      2
+     ],
+     [
+      "p07",
+      3
+     ],
+     [
+      "p08",
+      4
+     ],
+     [
+      "p09",
+      8
+     ],
+     [
+      "p10",
+      -9
+     ],
+     [
+      "p11",
+      6
+     ],
+     [
+      "p12",
+      -4
+     ],
+     [
+      "p13",
+      5
+     ],
+     [
+      "p14",
+      2
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p00",
+       "recipient_id": "p13",
+       "amount_vnd": 5
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p00",
+       "recipient_id": "p14",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p10",
+       "recipient_id": "p09",
+       "amount_vnd": 8
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p10",
+       "recipient_id": "p11",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p01",
+       "recipient_id": "p11",
+       "amount_vnd": 5
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p02",
+       "recipient_id": "p07",
+       "amount_vnd": 3
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p03",
+       "recipient_id": "p06",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p04",
+       "recipient_id": "p05",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p12",
+       "recipient_id": "p08",
+       "amount_vnd": 4
+      }
+     ],
+     "transfer_count": 9,
+     "proven_minimal": true,
+     "person_count": 15
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "sixteen_people_greedy",
+   "args": {
+    "balances": [
+     [
+      "p00",
+      -7
+     ],
+     [
+      "p01",
+      -5
+     ],
+     [
+      "p02",
+      -3
+     ],
+     [
+      "p03",
+      -2
+     ],
+     [
+      "p04",
+      -1
+     ],
+     [
+      "p05",
+      1
+     ],
+     [
+      "p06",
+      2
+     ],
+     [
+      "p07",
+      3
+     ],
+     [
+      "p08",
+      4
+     ],
+     [
+      "p09",
+      8
+     ],
+     [
+      "p10",
+      -9
+     ],
+     [
+      "p11",
+      6
+     ],
+     [
+      "p12",
+      -4
+     ],
+     [
+      "p13",
+      5
+     ],
+     [
+      "p14",
+      3
+     ],
+     [
+      "p15",
+      -1
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p10",
+       "recipient_id": "p09",
+       "amount_vnd": 8
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p10",
+       "recipient_id": "p11",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p00",
+       "recipient_id": "p11",
+       "amount_vnd": 5
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p00",
+       "recipient_id": "p13",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p01",
+       "recipient_id": "p13",
+       "amount_vnd": 3
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p01",
+       "recipient_id": "p08",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p12",
+       "recipient_id": "p08",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p12",
+       "recipient_id": "p07",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p02",
+       "recipient_id": "p07",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p02",
+       "recipient_id": "p14",
+       "amount_vnd": 2
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p03",
+       "recipient_id": "p14",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p03",
+       "recipient_id": "p06",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p04",
+       "recipient_id": "p06",
+       "amount_vnd": 1
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p15",
+       "recipient_id": "p05",
+       "amount_vnd": 1
+      }
+     ],
+     "transfer_count": 14,
+     "proven_minimal": false,
+     "person_count": 16
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_sum_past_int64_clears_the_pair",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0xffff_ffff_ffff_fffe"
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_exactly_two_to_the_64",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 2,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0x1_0000_0000_0000_0000"
+     ]
+    ]
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_past_int64_one_short_of_the_debt",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x7fff_ffff_ffff_ffff",
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0xffff_ffff_ffff_fffd"
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -1
+     ],
+     [
+      "b",
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "negative_receipt_past_int64",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:-0x1_0000_0000_0000_0000"
+     ]
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "NEGATIVE_AMOUNT",
+     "code": "NEGATIVE_AMOUNT"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "receipt_that_is_not_an_int",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      null
+     ]
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "AMOUNT_NOT_INTEGER",
+     "code": "AMOUNT_NOT_INTEGER"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "unread_receipt_that_is_not_an_int",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 60
+     },
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": 40
+     }
+    ],
+    "receipts": [
+     [
+      "b",
+      "a",
+      null
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      -100
+     ],
+     [
+      "b",
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "amount_that_is_not_an_int",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": null
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "AMOUNT_NOT_INTEGER",
+     "code": "AMOUNT_NOT_INTEGER"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "self_before_amount_that_is_not_an_int",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "a",
+      "amount_vnd": null
+     }
+    ],
+    "receipts": null
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "SELF_OBLIGATION",
+     "code": "SELF_OBLIGATION"
+    }
+   }
+  },
+  {
+   "fn": "group_balances",
+   "name": "merged_amount_past_int64",
+   "args": {
+    "obligations": [
+     {
+      "sender_id": "a",
+      "recipient_id": "b",
+      "amount_vnd": "$i:0x40_0000_0000_0000_0000"
+     },
+     {
+      "sender_id": "c",
+      "recipient_id": "b",
+      "amount_vnd": 1,
+      "source_expense_version_id": "v1"
+     }
+    ],
+    "receipts": [
+     [
+      "a",
+      "b",
+      "$i:0x20_0000_0000_0000_0000"
+     ]
+    ]
+   },
+   "result": {
+    "ok": [
+     [
+      "a",
+      "$i:-0x20_0000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x20_0000_0000_0000_0001"
+     ],
+     [
+      "c",
+      -1
+     ]
+    ]
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "balances_past_int64",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:-0x1_0000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:0x1_0000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "a",
+       "recipient_id": "b",
+       "amount_vnd": "$i:0x1_0000_0000_0000_0000"
+      }
+     ],
+     "transfer_count": 1,
+     "proven_minimal": true,
+     "person_count": 2
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "balances_past_int64_three",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:0x40_0000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:-0x20_0000_0000_0000_0000"
+     ],
+     [
+      "c",
+      "$i:-0x20_0000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x20_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x20_0000_0000_0000_0000"
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": true,
+     "person_count": 3
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "balances_past_int64_greedy",
+   "args": {
+    "balances": [
+     [
+      "a",
+      "$i:0x40_0000_0000_0000_0000"
+     ],
+     [
+      "b",
+      "$i:-0x20_0000_0000_0000_0000"
+     ],
+     [
+      "c",
+      "$i:-0x20_0000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 0
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "b",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x20_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "c",
+       "recipient_id": "a",
+       "amount_vnd": "$i:0x20_0000_0000_0000_0000"
+      }
+     ],
+     "transfer_count": 2,
+     "proven_minimal": false,
+     "person_count": 3
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "balance_that_is_not_an_int",
+   "args": {
+    "balances": [
+     [
+      "a",
+      null
+     ],
+     [
+      "b",
+      0
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "AMOUNT_NOT_INTEGER",
+     "code": "AMOUNT_NOT_INTEGER"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "not_an_int_before_not_netting",
+   "args": {
+    "balances": [
+     [
+      "a",
+      null
+     ],
+     [
+      "b",
+      5
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "raised": {
+     "type": "LedgerError",
+     "message": "AMOUNT_NOT_INTEGER",
+     "code": "AMOUNT_NOT_INTEGER"
+    }
+   }
+  },
+  {
+   "fn": "settlement_plan",
+   "name": "twelve_people_past_int64",
+   "args": {
+    "balances": [
+     [
+      "p00",
+      "$i:-0x7_0000_0000_0000_0000"
+     ],
+     [
+      "p01",
+      "$i:-0x5_0000_0000_0000_0000"
+     ],
+     [
+      "p02",
+      "$i:-0x3_0000_0000_0000_0000"
+     ],
+     [
+      "p03",
+      "$i:-0x2_0000_0000_0000_0000"
+     ],
+     [
+      "p04",
+      "$i:-0x1_0000_0000_0000_0000"
+     ],
+     [
+      "p05",
+      "$i:0x1_0000_0000_0000_0000"
+     ],
+     [
+      "p06",
+      "$i:0x2_0000_0000_0000_0000"
+     ],
+     [
+      "p07",
+      "$i:0x3_0000_0000_0000_0000"
+     ],
+     [
+      "p08",
+      "$i:0x4_0000_0000_0000_0000"
+     ],
+     [
+      "p09",
+      "$i:0x8_0000_0000_0000_0000"
+     ],
+     [
+      "p10",
+      "$i:-0x9_0000_0000_0000_0000"
+     ],
+     [
+      "p11",
+      "$i:0x9_0000_0000_0000_0000"
+     ]
+    ],
+    "exact_limit": 15
+   },
+   "result": {
+    "ok": {
+     "transfers": [
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p00",
+       "recipient_id": "p09",
+       "amount_vnd": "$i:0x7_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p01",
+       "recipient_id": "p09",
+       "amount_vnd": "$i:0x1_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p01",
+       "recipient_id": "p08",
+       "amount_vnd": "$i:0x4_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p02",
+       "recipient_id": "p07",
+       "amount_vnd": "$i:0x3_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p03",
+       "recipient_id": "p06",
+       "amount_vnd": "$i:0x2_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p04",
+       "recipient_id": "p05",
+       "amount_vnd": "$i:0x1_0000_0000_0000_0000"
+      },
+      {
+       "kind": "offset_proposal_draft",
+       "sender_id": "p10",
+       "recipient_id": "p11",
+       "amount_vnd": "$i:0x9_0000_0000_0000_0000"
+      }
+     ],
+     "transfer_count": 7,
+     "proven_minimal": true,
+     "person_count": 12
+    }
+   }
+  }
+ ]
+}

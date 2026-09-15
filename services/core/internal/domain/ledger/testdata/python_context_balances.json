@@ -1,0 +1,1260 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.api.service",
+ "mode": "context_balances",
+ "python": "3.12.14",
+ "seed": 43,
+ "constants": {
+  "names": []
+ },
+ "cases": [
+  {
+   "fn": "context_balances",
+   "name": "empty_ledger",
+   "args": {
+    "expenses": [],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [],
+      "transfers": [],
+      "proven_minimal": true,
+      "transfer_count": 0
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "empty_ledger_with_receipts",
+   "args": {
+    "expenses": [],
+    "receipts": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      1000
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [],
+      "transfers": [],
+      "proven_minimal": true,
+      "transfer_count": 0
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "one_dinner",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        100000
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        82000
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        18000
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 100000
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -82000
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": -18000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 82000
+       },
+       {
+        "sender_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 18000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 2
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "payer_outside_the_participants",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        50000
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        50000
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": -50000
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -50000
+       },
+       {
+        "person_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+        "net_vnd": 100000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "recipient_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+        "amount_vnd": 50000
+       },
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+        "amount_vnd": 50000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 2
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "receipt_clears_one_debt",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        100000
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        82000
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        18000
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      82000
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 18000
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": -18000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 18000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "receipt_over_the_debt",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        1000
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      5000
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [],
+      "transfers": [],
+      "proven_minimal": true,
+      "transfer_count": 0
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "two_expenses_net_in_display",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        50000
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        30000
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 20000
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -20000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 20000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "cycle_needs_no_transfer",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        7
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "allocations": [
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        7
+       ]
+      ]
+     },
+     {
+      "version_id": "d3d3d3d3-e3e3-4f3f-8a3a-b3b3b3b3b3b3",
+      "paid_by_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        7
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [],
+      "transfers": [],
+      "proven_minimal": true,
+      "transfer_count": 0
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "greedy_would_need_four",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        300000
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a5a5a5a5-b5b5-4c5c-8d5d-e5e5e5e5e5e5",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        400000
+       ]
+      ]
+     },
+     {
+      "version_id": "d3d3d3d3-e3e3-4f3f-8a3a-b3b3b3b3b3b3",
+      "paid_by_id": "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        200000
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        300000
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": -500000
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -400000
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": -300000
+       },
+       {
+        "person_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+        "net_vnd": 300000
+       },
+       {
+        "person_id": "a5a5a5a5-b5b5-4c5c-8d5d-e5e5e5e5e5e5",
+        "net_vnd": 400000
+       },
+       {
+        "person_id": "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+        "net_vnd": 500000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "recipient_id": "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+        "amount_vnd": 500000
+       },
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a5a5a5a5-b5b5-4c5c-8d5d-e5e5e5e5e5e5",
+        "amount_vnd": 400000
+       },
+       {
+        "sender_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "recipient_id": "a4a4a4a4-b4b4-4c4c-8d4d-e4e4e4e4e4e4",
+        "amount_vnd": 300000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 3
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "negative_allocation_is_a_conflict",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        -1
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": {
+      "status": 409,
+      "code": "NEGATIVE_AMOUNT",
+      "detail": "Confirmed ledger events cannot be balanced"
+     },
+     "response": null
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "negative_payer_allocation_is_a_conflict",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        -100
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": {
+      "status": 409,
+      "code": "NEGATIVE_AMOUNT",
+      "detail": "Confirmed ledger events cannot be balanced"
+     },
+     "response": null
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "negative_receipt_is_a_conflict",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      -5
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": {
+      "status": 409,
+      "code": "NEGATIVE_AMOUNT",
+      "detail": "Confirmed ledger events cannot be balanced"
+     },
+     "response": null
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "zero_rows_owe_nothing",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        0
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        0
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [],
+      "transfers": [],
+      "proven_minimal": true,
+      "transfer_count": 0
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "duplicate_participant_row_keeps_the_last_amount",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        5
+       ],
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        7
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 12
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -7
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": -5
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 7
+       },
+       {
+        "sender_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 5
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 2
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "balances_sort_by_uuid_bytes",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "fafafafa-fbfb-4cfc-8dfd-fefefefefefe",
+      "allocations": [
+       [
+        "0a0a0a0a-0b0b-4c0c-8d0d-0e0e0e0e0e0e",
+        3
+       ],
+       [
+        "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+        2
+       ],
+       [
+        "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        1
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "0a0a0a0a-0b0b-4c0c-8d0d-0e0e0e0e0e0e",
+        "net_vnd": -3
+       },
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": -1
+       },
+       {
+        "person_id": "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+        "net_vnd": -2
+       },
+       {
+        "person_id": "fafafafa-fbfb-4cfc-8dfd-fefefefefefe",
+        "net_vnd": 6
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "0a0a0a0a-0b0b-4c0c-8d0d-0e0e0e0e0e0e",
+        "recipient_id": "fafafafa-fbfb-4cfc-8dfd-fefefefefefe",
+        "amount_vnd": 3
+       },
+       {
+        "sender_id": "f0f0f0f0-b6b6-4c6c-8d6d-e6e6e6e6e6e6",
+        "recipient_id": "fafafafa-fbfb-4cfc-8dfd-fefefefefefe",
+        "amount_vnd": 2
+       },
+       {
+        "sender_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "recipient_id": "fafafafa-fbfb-4cfc-8dfd-fefefefefefe",
+        "amount_vnd": 1
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 3
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "balance_exactly_int64_min",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        1
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": "$i:-0x8000_0000_0000_0000"
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": 1
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       },
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "amount_vnd": 1
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 2
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "balance_one_below_int64_min",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ],
+    "receipts": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": "$i:-0x8000_0000_0000_0001"
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": 2
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       },
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "amount_vnd": 2
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 2
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "pair_total_past_int64_repaid",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "$i:0x7fff_ffff_ffff_ffff"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": "$i:-0x7fff_ffff_ffff_ffff"
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": "$i:0x7fff_ffff_ffff_ffff"
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "past_int64_then_negative_receipt",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      -1
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": {
+      "status": 409,
+      "code": "NEGATIVE_AMOUNT",
+      "detail": "Confirmed ledger events cannot be balanced"
+     },
+     "response": null
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "two_bigint_receipts_clear_the_pair",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100000
+       ],
+       [
+        "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        5000
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "$i:0xffff_ffff_ffff_fffe"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 5000
+       },
+       {
+        "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "net_vnd": -5000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 5000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "two_bigint_receipts_on_an_unowed_pair",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        100000
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "$i:0xffff_ffff_ffff_fffe"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 100000
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -100000
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 100000
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_balances",
+   "name": "receipt_sum_past_int64_one_short",
+   "args": {
+    "expenses": [
+     {
+      "version_id": "d1d1d1d1-e1e1-4f1f-8a1a-b1b1b1b1b1b1",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d2d2d2d2-e2e2-4f2f-8a2a-b2b2b2b2b2b2",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "$i:0x7fff_ffff_ffff_ffff"
+       ]
+      ]
+     },
+     {
+      "version_id": "d3d3d3d3-e3e3-4f3f-8a3a-b3b3b3b3b3b3",
+      "paid_by_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "allocations": [
+       [
+        "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        2
+       ]
+      ]
+     }
+    ],
+    "receipts": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "$i:0xffff_ffff_ffff_ffff"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "load_batch_inputs",
+      "load_confirmed_receipts"
+     ],
+     "problem": null,
+     "response": {
+      "balances": [
+       {
+        "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "net_vnd": 1
+       },
+       {
+        "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "net_vnd": -1
+       }
+      ],
+      "transfers": [
+       {
+        "sender_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+        "recipient_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+        "amount_vnd": 1
+       }
+      ],
+      "proven_minimal": true,
+      "transfer_count": 1
+     }
+    }
+   }
+  }
+ ]
+}
