@@ -64,6 +64,14 @@ func All() []Route {
 		listContextMembers(),
 		getContextBalances(),
 		getContext(),
+		postContextMemory(),
+		postContextCheckin(),
+		listContextMemories(),
+		readContextWidget(),
+		postMemoryReaction(),
+		deleteMemoryReaction(),
+		postMemoryComment(),
+		listMemoryComments(),
 	}
 }
 

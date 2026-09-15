@@ -172,7 +172,11 @@ Header được so theo ngữ nghĩa HTTP: tên không phân biệt hoa thườn
 ### 2.5 Ba luật tiền trong Go — không đổi luật
 
 1. Số nguyên đồng: `money.VND` là `int64`; `moneylint` (go/analysis) cấm kiểu float, literal phân số,
-   `big.Float`, `ParseFloat` trong gói tiền; mọi trường `*_vnd` phải là `money.VND`.
+   `big.Float`, `ParseFloat` trong gói tiền; mọi trường `*_vnd` lưu hoặc nhận vào phải là `money.VND`.
+   Tổng dẫn xuất (tổng theo cặp, số dư, số tiền chuyển) là `*big.Int`, không bao giờ thu về `int64`: số tiền
+   biên nhận không có trần, hai biên nhận ở trần `int64` đã cho tổng vượt `int64`, và `int` của Python vẫn trả
+   đúng từng chữ số (đo ở W3, `GET /contexts/{context_id}/balances`). Đó là ngoại lệ duy nhất của quy tắc
+   `*_vnd` trên, và vẫn là số nguyên.
 2. `Σ` phân bổ `=` tổng: allocator dùng `math/big.Rat`; 41 golden vector và 10 vector tất toán được Go **đọc tại
    chỗ**, không chép; fuzz vi sai Python ↔ Go gồm cả mã lỗi.
 3. Số dư tính lại được từ sổ: đọc chéo — Go ghi Python đọc, Python ghi Go đọc — trên Postgres thật.

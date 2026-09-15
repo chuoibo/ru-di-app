@@ -74,7 +74,16 @@ Sóng W3 bắt đầu ghi mốc, route đóng băng theo cùng luật: contexts 
 /contexts/{context_id}/memories`, `POST /contexts/{context_id}/checkins`, `GET /contexts/{context_id}/widget`, reaction
 thêm/bỏ và comment thêm/đọc của một memory) — 16 route, vẫn do Python phục vụ. `GET .../balances` đọc sổ và khoá hàng:
 ba luật tiền giữ nguyên, số dư tính lại từ sổ ở cả hai phía.
-- W2 còn thiếu kịch bản replay chéo (`via: python`) và đồng thời (`concurrent: N`) cho 15 route ghi; W1 đã có cả hai.
+- W2 đã có kịch bản replay chéo (`parity/scenarios/w2/crossreplay`, 15 tệp, hai tệp ở `lane: limiter`) và đồng thời
+  (`parity/scenarios/w2/concurrency`, 13 tệp).
+- W3: domain, repository và cả 16 route PORTED, Go đã trả lời 0 khác biệt trên cổng parity có tap. Route card ở
+  `docs/migration/routes/{contexts,memories}`, kịch bản ở `parity/scenarios/w3`, corpus 422 ở
+  `parity/scenarios/generated/w3-422`. Harness bind cursor base64url thành `<b64u:…>`. Lỗi Python đã báo nằm trong
+  commit message của kịch bản W3.
+- Tiền: số tiền lưu và nhận vào là int64; tổng dẫn xuất (tổng cặp, số dư, số tiền chuyển) giữ đúng từng chữ số, vì
+  `POST /obligations/{obligation_id}/confirm-receipt` không có trần số tiền và hai biên nhận ở trần int64 đã vượt
+  int64 mà Python vẫn trả 200. Route nghĩa vụ W4 cần cùng cách; luật moneylint dự kiến («mọi `*_vnd` là
+  `money.VND`») cần ngoại lệ cho các tổng này.
 
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
