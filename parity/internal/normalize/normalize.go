@@ -20,14 +20,23 @@
 // becomes <hex32#n> the same way. The key is random per upload and never sent
 // back, so only the database lane sees it; what has to match is which rows
 // share a key, and that a key is 32 lowercase hex at all.
+//
+// A keyset cursor (app/api/cursors.py encode_cursor: base64url without padding
+// of "<isoformat>|<uuid>") is random per stack only through the instant and
+// the id inside it. It becomes <b64u:<ts#r|shape>|<uuid#n>>: both parts are
+// bound as they would be in plain text, while the alphabet, the missing
+// padding and the timestamp spelling still show. A padded cursor, or one
+// around an uppercase id, is not a match and stays literal.
 package normalize
 
 import (
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Only canonical lowercase version-4 UUIDs are replaced. An uppercase or
@@ -43,6 +52,33 @@ const (
 	digestLen = 64
 	keyLen    = 32
 )
+
+// base64URLRun finds maximal runs of the base64url alphabet long enough to
+// hold a cursor; only runs that decode to a cursor payload are bound.
+var base64URLRun = regexp.MustCompile(`[A-Za-z0-9_-]{60,}`)
+
+var cursorPayload = regexp.MustCompile(`\A` + timestamp.String() + `\|` + uuid4.String() + `\z`)
+
+// DecodeCursor returns the payload of a keyset cursor: run must be canonical
+// base64url without padding of "<timestamp>|<uuid4>". Anything else is not a
+// cursor.
+func DecodeCursor(run string) (string, bool) {
+	raw, err := base64.RawURLEncoding.Strict().DecodeString(run)
+	if err != nil || !utf8.Valid(raw) || !cursorPayload.Match(raw) {
+		return "", false
+	}
+	return string(raw), true
+}
+
+// MaskCursors replaces every cursor in text with <b64u>.
+func MaskCursors(text string) string {
+	return base64URLRun.ReplaceAllStringFunc(text, func(run string) string {
+		if _, ok := DecodeCursor(run); ok {
+			return "<b64u>"
+		}
+		return run
+	})
+}
 
 // Broad on purpose: a malformed-but-close timestamp is still bound, and its
 // shape suffix records exactly how it was malformed.
@@ -106,6 +142,14 @@ func (b *Binder) Observe(text string) error {
 		return fmt.Errorf("normalize: Observe after Apply")
 	}
 	text = b.replaceNamed(text)
+	text = base64URLRun.ReplaceAllStringFunc(text, func(run string) string {
+		payload, ok := DecodeCursor(run)
+		if !ok {
+			return run
+		}
+		b.observeIDsAndInstants(payload)
+		return " "
+	})
 	for _, run := range hexRun.FindAllString(text, -1) {
 		switch len(run) {
 		case digestLen:
@@ -118,6 +162,11 @@ func (b *Binder) Observe(text string) error {
 			}
 		}
 	}
+	b.observeIDsAndInstants(text)
+	return nil
+}
+
+func (b *Binder) observeIDsAndInstants(text string) {
 	for _, id := range uuid4.FindAllString(text, -1) {
 		if _, seen := b.uuids[id]; !seen {
 			b.uuids[id] = len(b.uuids) + 1
@@ -133,7 +182,6 @@ func (b *Binder) Observe(text string) error {
 			b.instantOrder = append(b.instantOrder, literal)
 		}
 	}
-	return nil
 }
 
 // Apply returns text with every bound value replaced. The first call freezes
@@ -143,6 +191,13 @@ func (b *Binder) Apply(text string) string {
 		b.freeze()
 	}
 	text = b.replaceNamed(text)
+	text = base64URLRun.ReplaceAllStringFunc(text, func(run string) string {
+		payload, ok := DecodeCursor(run)
+		if !ok {
+			return run
+		}
+		return "<b64u:" + b.applyIDsAndInstants(payload) + ">"
+	})
 	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
 		if n, ok := b.digests[run]; ok {
 			return fmt.Sprintf("<digest#%d>", n)
@@ -152,6 +207,10 @@ func (b *Binder) Apply(text string) string {
 		}
 		return run
 	})
+	return b.applyIDsAndInstants(text)
+}
+
+func (b *Binder) applyIDsAndInstants(text string) string {
 	text = uuid4.ReplaceAllStringFunc(text, func(id string) string {
 		if n, ok := b.uuids[id]; ok {
 			return fmt.Sprintf("<uuid#%d>", n)
@@ -235,6 +294,7 @@ func parseInstant(literal string) (time.Time, bool) {
 // values are equal. It orders responses that arrived together; it never
 // replaces Apply.
 func Mask(text string) string {
+	text = MaskCursors(text)
 	text = hexRun.ReplaceAllStringFunc(text, func(run string) string {
 		switch {
 		case len(run) >= digestLen:

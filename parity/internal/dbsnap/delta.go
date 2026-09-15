@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"mobile/parity/internal/normalize"
 )
 
 // Change is what happened to one schema between two snapshots.
@@ -176,8 +178,9 @@ var (
 // orderMask hides the values two stacks cannot share, so that ordering rows
 // by the masked text gives both stacks the same order. Hex bytea is masked
 // too: a random token digest would otherwise decide the order. So is a random
-// storage key, a run of exactly 32 lowercase hex.
+// storage key, a run of exactly 32 lowercase hex, and a keyset cursor.
 func orderMask(text string) string {
+	text = normalize.MaskCursors(text)
 	text = orderUUID.ReplaceAllString(text, "<uuid>")
 	text = orderTimestamp.ReplaceAllString(text, "<ts>")
 	text = orderHex.ReplaceAllString(text, `\\x<hex>`)

@@ -5,7 +5,7 @@
 // proxy that damages responses in exactly the ways a port tends to damage them
 // — a status off by one, a header added or duplicated, a float that lost its
 // ".0", a zone written "+00:00", keys in another order, a gzipped body, a
-// redirect followed — and every mode it manages to apply must turn the run red.
+// keyset cursor that kept its base64 padding, a redirect followed — and every mode it manages to apply must turn the run red.
 // The identity mode, which damages nothing, must stay green.
 package canary
 
@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+
+	"mobile/parity/internal/normalize"
 )
 
 // Mode damages one response. It reports whether it changed anything, so a run
@@ -33,6 +35,7 @@ type Mode struct {
 var (
 	floatWithPoint = regexp.MustCompile(`(\d)\.0([,}\]])`)
 	zuluTimestamp  = regexp.MustCompile(`(\d{2}:\d{2}:\d{2}(?:\.\d+)?)Z"`)
+	quotedRun      = regexp.MustCompile(`"[A-Za-z0-9_-]{60,}"`)
 	firstTwoKeys   = regexp.MustCompile(`^\{("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+)),("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+))`)
 )
 
@@ -102,6 +105,16 @@ func Modes() []Mode {
 			_ = zw.Close()
 			resp.Header.Set("Content-Encoding", "gzip")
 			return buf.Bytes(), true
+		}},
+		{"cursor-padding-kept", func(_ *http.Response, body []byte) ([]byte, bool) {
+			changed := quotedRun.ReplaceAllFunc(body, func(quoted []byte) []byte {
+				run := string(quoted[1 : len(quoted)-1])
+				if _, ok := normalize.DecodeCursor(run); !ok {
+					return quoted
+				}
+				return []byte(`"` + run + `="`)
+			})
+			return changed, !bytes.Equal(changed, body)
 		}},
 		{"redirect-followed", func(resp *http.Response, body []byte) ([]byte, bool) {
 			if resp.StatusCode < 300 || resp.StatusCode >= 400 {
