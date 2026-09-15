@@ -524,12 +524,11 @@ func TestConstantsMatchPython(t *testing.T) {
 		"NEGATIVE":                     "money.Negative",
 		"NON_POSITIVE":                 "money.NonPositive",
 		"NOT_INTEGER":                  "money.NotInteger",
+		"confirmed_total":              "ConfirmedTotal (W4, status.go)",
+		"obligation_status":            "ObligationStatus (W4, status.go)",
+		"settlement_suggestions":       "SettlementSuggestions (W4, status.go)",
 	}
-	skipped := map[string]string{
-		"confirmed_total":        "obligation status of a batch; no W3 route",
-		"obligation_status":      "obligation status of a batch; no W3 route",
-		"settlement_suggestions": "a wrapper over settlement_plan no route calls",
-	}
+	skipped := map[string]string{}
 	names, err := oracletest.Strings(constants["names"])
 	if err != nil {
 		t.Fatal(err)

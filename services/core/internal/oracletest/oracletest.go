@@ -80,16 +80,25 @@ func Load(t testing.TB, pattern string) []File {
 		if err != nil {
 			t.Fatal(err)
 		}
-		decoder := json.NewDecoder(strings.NewReader(string(raw)))
-		decoder.UseNumber()
-		var file File
-		if err := decoder.Decode(&file); err != nil {
-			t.Fatalf("%s: %v", path, err)
+		file, err := Parse(path, raw)
+		if err != nil {
+			t.Fatal(err)
 		}
-		file.Path = path
 		files = append(files, file)
 	}
 	return files
+}
+
+// Parse decodes one rendered golden document; name is where it came from.
+func Parse(name string, raw []byte) (File, error) {
+	decoder := json.NewDecoder(strings.NewReader(string(raw)))
+	decoder.UseNumber()
+	var file File
+	if err := decoder.Decode(&file); err != nil {
+		return File{}, fmt.Errorf("%s: %w", name, err)
+	}
+	file.Path = name
+	return file, nil
 }
 
 // Text reads a str of the oracle encoding.

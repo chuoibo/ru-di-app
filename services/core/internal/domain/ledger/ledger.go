@@ -42,8 +42,9 @@
 // uuid the same way, where Python's uuid.UUID raises; the repository only
 // reads uuid columns.
 //
-// confirmed_total, obligation_status and settlement_suggestions serve the batch
-// and obligation routes, not W3, and are not ported here.
+// confirmed_total, obligation_status and settlement_suggestions serve the W4
+// batch and obligation routes and live in status.go, rendered by
+// scripts/render_domain_w4_goldens.py.
 package ledger
 
 import (

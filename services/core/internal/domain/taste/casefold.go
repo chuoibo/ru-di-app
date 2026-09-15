@@ -20,6 +20,10 @@ func casefold(s string) string {
 	return b.String()
 }
 
+// Casefold is casefold for the other domain packages that compare text as
+// CPython's str.casefold() does (internal/domain/expense).
+func Casefold(s string) string { return casefold(s) }
+
 func foldRune(b *strings.Builder, r rune) {
 	switch {
 	case r >= 0x13A0 && r <= 0x13F5:
