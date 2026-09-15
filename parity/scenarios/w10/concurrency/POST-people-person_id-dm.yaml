@@ -1,0 +1,100 @@
+# W10 concurrency · POST /people/{person_id}/dm. Three opens of a new pair at once: the
+# unique pair_key lets one context and two memberships through (201), the others read the
+# winner's row (200), same body. Then the other person's three opens are three 200s.
+# Three opens of another pair under one header key are one insert and two replays of 201.
+# pair_key orders the two persona ids, so the reference repeats differ in that row: the
+# step is marked racy and the candidate matches the repeat that shares its ids. Texts are
+# sample data (dữ liệu mẫu).
+id: w10/concurrency/post-people-person_id-dm
+routes: ['POST /people/{person_id}/dm']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  second: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn một (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn hai (dữ liệu mẫu)"}'
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_asks_second
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second}}"}'
+    bind:
+      fr_second: {from: body, pointer: /id, class: uuid}
+  - id: second_accepts
+    as: second
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_second}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: friend_opens_three_at_once
+    as: friend
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.second}}/dm'
+      headers:
+        idempotency-key: 'd40e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_contexts
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'

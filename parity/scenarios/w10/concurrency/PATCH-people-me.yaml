@@ -1,0 +1,41 @@
+# W10 concurrency · PATCH /people/me. Three identical patches at once queue on the row
+# lock and answer the same 200; three under one header key are one write and two replays.
+# Texts are sample data (dữ liệu mẫu).
+id: w10/concurrency/patch-people-me
+routes: ['PATCH /people/me']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_patches_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Cùng lúc (dữ liệu mẫu)","wall_comment_policy":"friends"}'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f40a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Nha Trang (dữ liệu mẫu)","discoverable_by_phone":false}'
+  - id: owner_reads_profile
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'

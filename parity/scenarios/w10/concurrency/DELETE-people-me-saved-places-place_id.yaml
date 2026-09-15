@@ -1,0 +1,46 @@
+# W10 concurrency · DELETE /people/me/saved-places/{place_id}. Three removals of one
+# bookmark at once are three 204s and one deleted row; three under one header key are one
+# removal and two replays. Texts are sample data (dữ liệu mẫu).
+id: w10/concurrency/delete-people-me-saved-places-place_id
+routes: ['DELETE /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: save_first
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: save_second
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  - id: owner_unsaves_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c40e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'

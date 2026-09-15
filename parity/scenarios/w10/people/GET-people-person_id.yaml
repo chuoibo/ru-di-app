@@ -1,0 +1,423 @@
+# W10 · GET /people/{person_id}: somebody's public profile. The relation is proved from
+# the friend graph and the ACTIVE roster before the row is read: self, then friend, then
+# groupmate (a pair counts), else 403 person_not_visible, the same bytes for an id that
+# never existed, a stranger, a pending request, an invitee, somebody who left the group,
+# a caller without the member role, and an ended account. Only self on a missing or
+# ended row reaches 404. A block ends a friendship but not a shared pair. Texts are
+# sample data (dữ liệu mẫu).
+id: w10/people/get-people-person_id
+routes: ['GET /people/{person_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  mate: {}
+  invitee: {}
+  pending: {}
+  stranger: {}
+  blocker: {}
+  leaver: {}
+steps:
+  - id: anonymous_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: anonymous_non_uuid
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid'
+  - id: owner_path_hyphenless_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/people/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee'
+  # self is proved without a row: an unregistered caller reaches the 404
+  - id: owner_reads_self_unregistered
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Được mời (dữ liệu mẫu)"}'
+  - id: register_pending
+    as: pending
+    request:
+      method: PUT
+      path: '/people/{{persona.pending}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Đang chờ (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: owner_reads_self
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: owner_writes_bio
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Thích đi bộ <b>sớm</b> (dữ liệu mẫu)","city":"Đà Lạt (dữ liệu mẫu)","wall_comment_policy":"friends","discoverable_by_phone":false}'
+  - id: owner_reads_self_with_bio
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: owner_reads_self_without_roles
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: ''
+  - id: owner_reads_self_as_group_admin
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_reads_unknown_id
+    as: owner
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: owner_reads_stranger
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.stranger}}'
+  - id: owner_reads_stranger_claiming_context
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.stranger}}'
+      headers:
+        x-actor-contexts: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # friends, either direction
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_reads_friend
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}'
+  - id: friend_reads_owner
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: friend_reads_owner_without_roles
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_asks_pending
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.pending}}"}'
+  - id: owner_reads_pending
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.pending}}'
+  - id: pending_reads_owner
+    as: pending
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  # the ACTIVE roster: invited is not enough, leaving ends it, friend wins over groupmate
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hồ sơ (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_friend
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.friend}}"}'
+    bind:
+      m_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts_group
+    as: friend
+    request:
+      method: POST
+      path: '/memberships/{{m_friend}}/accept'
+  - id: owner_reads_mate
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}'
+  - id: mate_reads_owner
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: mate_reads_friend
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}'
+  - id: owner_reads_friend_also_groupmate
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}'
+  - id: owner_reads_invitee
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.invitee}}'
+  - id: invitee_reads_owner
+    as: invitee
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: owner_reads_mate_after_leave
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}'
+  - id: mate_reads_owner_after_leave
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  # a pair is a shared ACTIVE context: a block ends the friendship, not the pair
+  - id: owner_asks_blocker
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+    bind:
+      fr_blocker: {from: body, pointer: /id, class: uuid}
+  - id: blocker_accepts
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_blocker}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair_with_blocker
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.blocker}}/dm'
+  - id: blocker_blocks_owner
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_reads_blocker_after_block
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.blocker}}'
+  - id: blocker_reads_owner_after_block
+    as: blocker
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  # an ended account: every edge and membership is gone, so the same 403 as a made-up id
+  - id: owner_asks_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      fr_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_leaver}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_reads_leaver_before
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_reads_leaver_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}'
+  - id: leaver_reads_self_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}'
+  - id: leaver_reads_owner_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/'
+  - id: delete_on_id_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}'
+  - id: head_not_allowed
+    as: owner
+    request:
+      method: HEAD
+      path: '/people/{{persona.owner}}'

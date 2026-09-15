@@ -1,0 +1,89 @@
+# W10 concurrency · POST /people/{person_id}/block. Three blocks of a stranger at once:
+# one blocked row goes in, the other inserts meet uq_friend_edge_live and are swallowed,
+# three 200s. Three blocks of a friend at once queue on the edge lock and are three 200s.
+# Three under one header key are one write and two replays. Texts are sample data (dữ
+# liệu mẫu).
+id: w10/concurrency/post-people-person_id-block
+routes: ['POST /people/{person_id}/block']
+auth_mode: dev
+personas:
+  owner: {}
+  stranger: {}
+  friend: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: owner_blocks_stranger_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.stranger}}/block'
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_blocks_friend_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/block'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.third}}/block'
+      headers:
+        idempotency-key: 'b40c0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_blocked
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'

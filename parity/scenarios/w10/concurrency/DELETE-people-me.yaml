@@ -1,0 +1,58 @@
+# W10 concurrency · DELETE /people/me. Three erasures of one account at once queue on the
+# rows they lock and are three 204s: the one that deletes the single bookmark counts it,
+# the others count nothing, and each writes its own audit event. Three under one header
+# key are one erasure and two replays. The account holds exactly one personal row, so
+# which request counted it cannot vary between runs. Texts are sample data (dữ liệu
+# mẫu).
+id: w10/concurrency/delete-people-me
+routes: ['DELETE /people/me']
+auth_mode: dev
+personas:
+  first: {}
+  second: {}
+steps:
+  - id: register_first
+    as: first
+    request:
+      method: PUT
+      path: '/people/{{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời ba lần (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời một khoá (dữ liệu mẫu)"}'
+  - id: first_saves_place
+    as: first
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: first_erases_three_at_once
+    as: first
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: second_same_key_three_at_once
+    as: second
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de4e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: first_reads_after
+    as: first
+    request:
+      method: GET
+      path: '/people/me'

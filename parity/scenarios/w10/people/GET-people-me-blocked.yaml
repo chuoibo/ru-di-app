@@ -1,0 +1,222 @@
+# W10 · GET /people/me/blocked: who the caller is blocking, never who blocks them. Rows
+# are blocked edges decided by the caller, newest decision first, named by the other
+# person's current name. A lifted block leaves the list, and so does a block on somebody
+# whose account ended (erasure deletes every edge of theirs). An unregistered caller
+# gets an empty list. Texts are sample data (dữ liệu mẫu).
+id: w10/people/get-people-me-blocked
+routes: ['GET /people/me/blocked']
+auth_mode: dev
+personas:
+  owner: {}
+  first: {}
+  second: {}
+  third: {}
+  watcher: {}
+steps:
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_lists_without_roles
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+      headers:
+        x-actor-roles: ''
+  - id: owner_lists_as_group_admin
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_lists_unregistered
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_first
+    as: first
+    request:
+      method: PUT
+      path: '/people/{{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ nhất (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ hai (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_watcher
+    as: watcher
+    request:
+      method: PUT
+      path: '/people/{{persona.watcher}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn chủ (dữ liệu mẫu)"}'
+  - id: owner_lists_empty
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  # three blocks from three starting edges: none, a friendship asked by the other side, a pending request
+  - id: owner_blocks_first
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.first}}/block'
+  - id: second_asks_owner
+    as: second
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      fr_second: {from: body, pointer: /id, class: uuid}
+  - id: owner_accepts_second
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_second}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_blocks_second
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.second}}/block'
+  - id: owner_asks_third
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.third}}"}'
+  - id: owner_blocks_third
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.third}}/block'
+  - id: watcher_blocks_owner
+    as: watcher
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_lists_three
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: watcher_lists_own
+    as: watcher
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: first_lists_nothing
+    as: first
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: owner_lists_with_query_and_json_body
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked?limit=1&person_id={{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"x":'
+  # blocking again rewrites nothing; a new name shows; a lifted block leaves
+  - id: owner_blocks_first_again
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.first}}/block'
+  - id: first_renames
+    as: first
+    request:
+      method: PUT
+      path: '/people/{{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ nhất đổi tên (dữ liệu mẫu)"}'
+  - id: owner_lists_after_rename
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: owner_unblocks_second
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.second}}/block'
+  - id: owner_lists_after_lift
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  # the blocked person ends their account: the edge is erased with them
+  - id: third_ends_account
+    as: third
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_lists_after_erasure
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/blocked'

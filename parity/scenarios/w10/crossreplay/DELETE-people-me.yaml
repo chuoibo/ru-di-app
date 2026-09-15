@@ -1,0 +1,94 @@
+# W10 cross replay · DELETE /people/me. The 204 of an erasure stored by one side is
+# replayed by the other, both ways, without erasing again (one audit event); another body
+# under the key is reuse; a refused confirm (422) frees the key. Go serves none of these
+# routes yet, so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w10/crossreplay/delete-people-me
+routes: ['DELETE /people/me']
+auth_mode: dev
+personas:
+  first: {}
+  second: {}
+steps:
+  - id: register_first
+    as: first
+    request:
+      method: PUT
+      path: '/people/{{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời qua Python (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời qua cửa trước (dữ liệu mẫu)"}'
+  - id: first_saves_place
+    as: first
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: front_confirm_false_refused
+    as: first
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: python_erases_same_key
+    as: first
+    via: python
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: front_replays_python
+    as: first
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: front_other_body_same_key
+    as: first
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{ "confirm" : false }'
+  - id: front_erases_with_key
+    as: second
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: python_replays_front
+    as: second
+    via: python
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de3e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: python_reads_first
+    as: first
+    via: python
+    request:
+      method: GET
+      path: '/people/me'

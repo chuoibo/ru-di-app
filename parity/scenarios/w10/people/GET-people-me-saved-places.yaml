@@ -1,0 +1,169 @@
+# W10 · GET /people/me/saved-places: the caller's bookmarks, newest first, each named
+# from the catalogue at read time. Only the member role is asked; an unregistered caller
+# gets an empty list. Another person's bookmarks never show, and an ended account's are
+# erased with it. Texts are sample data (dữ liệu mẫu).
+id: w10/people/get-people-me-saved-places
+routes: ['GET /people/me/saved-places']
+auth_mode: dev
+personas:
+  owner: {}
+  other: {}
+  leaver: {}
+steps:
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_lists_without_roles
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_lists_unregistered
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: owner_lists_empty
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_saves_first
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_saves_second
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  - id: owner_saves_third
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+  - id: other_saves_one
+    as: other
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: owner_lists_three
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_saves_first_again
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_lists_after_resave
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_unsaves_second
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  - id: owner_lists_as_group_admin_and_member
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+      headers:
+        x-actor-roles: 'member,group_admin'
+  - id: other_lists_own
+    as: other
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_lists_with_query
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places?limit=1&place_id=p-dreampark'
+  # an ended account's bookmarks are erased
+  - id: leaver_saves
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: leaver_lists_before
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: leaver_lists_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: other_lists_after_leaver
+    as: other
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/saved-places'

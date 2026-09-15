@@ -1,0 +1,62 @@
+# W10 concurrency · PUT /people/{person_id}. Deterministic bursts only: three retries of
+# the same name are three 200s without a write; three renames to one new name by the
+# person themself queue on the row lock and are three 200s; three first registrations
+# under one header key are one insert and two replays of its 201. Three keyless first
+# registrations are left out: the loser answers 409 or 200 depending on whether its read
+# saw the winner's commit. Texts are sample data (dữ liệu mẫu).
+id: w10/concurrency/put-people-person_id
+routes: ['PUT /people/{person_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_retries_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_renames_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đổi tên cùng lúc (dữ liệu mẫu)"}'
+  - id: friend_registers_same_key_three_at_once
+    as: friend
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        idempotency-key: 'a40e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đăng ký cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_reads_friend_name
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đăng ký cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_reads_profile
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'

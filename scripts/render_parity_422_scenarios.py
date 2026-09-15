@@ -254,6 +254,34 @@ WAVES: dict[str, Wave] = {
             ),
         ),
     ),
+    "w10": Wave(
+        routes=(
+            ("GET", "/people/me/contexts"),
+            ("GET", "/people/me"),
+            ("GET", "/people/me/saved-places"),
+            ("GET", "/people/me/blocked"),
+            ("DELETE", "/people/me"),
+            ("POST", "/people/{person_id}/block"),
+            ("DELETE", "/people/{person_id}/block"),
+            ("POST", "/people/{person_id}/dm"),
+            ("GET", "/people/{person_id}"),
+        ),
+        excluded=(
+            (
+                "PUT",
+                "/people/{person_id}",
+                "a valid body registers the shared path placeholder as a person, which"
+                " turns later unknown-id steps into known ones; hand scenarios only",
+            ),
+        ),
+        deferred=(
+            # ProfileUpdateRequest carries a model_validator(mode="after")
+            ("PATCH", "/people/me", "'function-after' is not probed"),
+            # place_id is a catalogue key, any string; an unknown one is 404
+            ("PUT", "/people/me/saved-places/{place_id}", "path place_id is str"),
+            ("DELETE", "/people/me/saved-places/{place_id}", "path place_id is str"),
+        ),
+    ),
 }
 
 

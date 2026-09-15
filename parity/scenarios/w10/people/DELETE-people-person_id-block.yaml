@@ -1,0 +1,268 @@
+# W10 · DELETE /people/{person_id}/block: lift a block. The edge is read first and
+# is_blocker proved from it (state blocked, decided_by the caller), so no edge, an
+# accepted friendship, a block the other side put up, oneself and an unknown id are all
+# the same 403 before anything else; roles are checked before that predicate. The edge
+# becomes declined, never accepted: the friendship does not come back, a new request
+# is 201 again, and a pair stays closed until the two are friends again. A second lift
+# is 403, not 409. Texts are sample data (dữ liệu mẫu).
+id: w10/people/delete-people-person_id-block
+routes: ['DELETE /people/{person_id}/block']
+auth_mode: dev
+personas:
+  owner: {}
+  target: {}
+  friend: {}
+  other: {}
+steps:
+  - id: anonymous_unblocks
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+  - id: anonymous_non_uuid
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/khong-phai-uuid/block'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/khong-phai-uuid/block'
+  - id: owner_unblocks_unknown_id
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/block'
+  - id: owner_unblocks_self
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_unblocks_unknown_without_roles
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/block'
+      headers:
+        x-actor-roles: ''
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_target
+    as: target
+    request:
+      method: PUT
+      path: '/people/{{persona.target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: owner_unblocks_stranger_no_edge
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+  # an accepted friendship is not a block
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_unblocks_friend
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.friend}}/block'
+  - id: owner_opens_pair_with_friend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  # a block with no edge before it
+  - id: owner_blocks_target
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.target}}/block'
+  - id: owner_unblocks_without_roles
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        x-actor-roles: 'guest'
+  - id: target_unblocks_owner
+    as: target
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_unblocks_target
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+  - id: owner_unblocks_target_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+  - id: owner_lists_blocks_after_lift
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: target_asks_owner_after_lift
+    as: target
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+  - id: owner_blocks_target_again_over_pending
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.target}}/block'
+  - id: owner_unblocks_target_second_time
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+  # a block over a friendship: lifting it does not bring the friendship back
+  - id: owner_blocks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/block'
+  - id: friend_unblocks_owner
+    as: friend
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_unblocks_friend_after_block
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.friend}}/block'
+  - id: owner_lists_friends_after_lift
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends'
+  - id: owner_opens_pair_after_lift
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: friend_lists_contexts_after_lift
+    as: friend
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: friend_writes_in_pair_after_lift
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Mở lại chưa? (dữ liệu mẫu)"}'
+  - id: owner_reads_friend_profile_after_lift
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}'
+  # a header key stores the 200; the same key on another person is reuse
+  - id: owner_blocks_other
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/block'
+  - id: owner_unblocks_other_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e10b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e10b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_key_other_person
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        idempotency-key: 'e10b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_unblocks_other_without_key_after_replay
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block/'
+  - id: put_not_allowed
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}/block'

@@ -1,0 +1,992 @@
+# W10 · DELETE /people/me on a lived-in account, read back through the database lane and
+# through what other people see afterwards. The leaver owns a group and belongs to
+# another, is invited to a third, has friends in every edge state, a pair with a
+# notebook, a sheet and a kept line, posts with comments and reactions both ways, stories
+# with views both ways, a personal photo, an avatar and a group photo, messages, a read
+# mark, a memory with a comment and a reaction, a check-in, votes and a ballot, an
+# expense on each side, a published batch with a guest link, saved places, interests, a
+# profile and a report. Then the erasure, then the others read: the groups, rosters,
+# balances, feeds, the pair, the notebook, the guest page, the profile doors. Amounts are
+# integer VND; texts are sample data (dữ liệu mẫu).
+id: w10/people/delete-people-me-world
+routes: ['DELETE /people/me']
+auth_mode: dev
+personas:
+  leaver: {}
+  mate: {}
+  friend: {}
+  stranger: {}
+  requester: {}
+  asked: {}
+  blocker: {}
+  blocked: {}
+steps:
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn nhắn riêng (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_requester
+    as: requester
+    request:
+      method: PUT
+      path: '/people/{{persona.requester}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người gửi lời mời (dữ liệu mẫu)"}'
+  - id: register_asked
+    as: asked
+    request:
+      method: PUT
+      path: '/people/{{persona.asked}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời kết bạn (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_blocked
+    as: blocked
+    request:
+      method: PUT
+      path: '/people/{{persona.blocked}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: leaver_writes_profile
+    as: leaver
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Giới thiệu sẽ mất (dữ liệu mẫu)","city":"Đà Lạt (dữ liệu mẫu)","wall_comment_policy":"friends"}'
+  - id: leaver_states_interests
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"vua-phai"}'
+  - id: leaver_saves_place
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: leaver_saves_second_place
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  # groups: one the leaver created, one they joined, one they are only invited to
+  - id: leaver_creates_group
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người rời (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: leaver_invites_mate
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_joins
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: mate_creates_group
+    as: mate
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của bạn cùng nhóm (dữ liệu mẫu)"}'
+    bind:
+      mate_ctx: {from: body, pointer: /id, class: uuid}
+  - id: mate_invites_leaver
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{mate_ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_joins_mate_group
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: stranger_creates_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chỉ mời (dữ liệu mẫu)"}'
+    bind:
+      invite_ctx: {from: body, pointer: /id, class: uuid}
+  - id: stranger_invites_leaver
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{invite_ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+  # every friend edge state
+  - id: leaver_asks_mate
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: friend_asks_leaver
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts_friend
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: requester_asks_leaver
+    as: requester
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+  - id: leaver_asks_asked
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.asked}}"}'
+  - id: stranger_asks_leaver
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      fr_stranger: {from: body, pointer: /id, class: uuid}
+  - id: leaver_declines_stranger
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_stranger}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: blocker_blocks_leaver
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/block'
+  - id: leaver_blocks_blocked
+    as: leaver
+    request:
+      method: POST
+      path: '/people/{{persona.blocked}}/block'
+  # photographs: personal, avatar, a group photo; the mate's own for a post
+  - id: leaver_uploads_personal_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 24, height: 16, seed: 201}}
+    bind:
+      leaver_photo: {from: body, pointer: /id, class: uuid}
+  - id: leaver_uploads_story_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 16, height: 16, seed: 202}}
+    bind:
+      leaver_story_photo: {from: body, pointer: /id, class: uuid}
+  - id: leaver_sets_avatar
+    as: leaver
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 12, height: 12, seed: 203}}
+  - id: leaver_uploads_group_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 20, height: 14, seed: 204}}
+    bind:
+      group_photo: {from: body, pointer: /id, class: uuid}
+  - id: mate_uploads_personal_photo
+    as: mate
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 18, height: 10, seed: 205}}
+    bind:
+      mate_photo: {from: body, pointer: /id, class: uuid}
+  # posts, comments and reactions both ways
+  - id: leaver_posts_public_with_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Công khai sẽ mất (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.leaver}}/photos/{{leaver_photo}}"}'
+    bind:
+      leaver_public: {from: body, pointer: /id, class: uuid}
+  - id: leaver_posts_friends
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè sẽ mất (dữ liệu mẫu)","audience":"friends"}'
+  - id: leaver_posts_group
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm sẽ mất (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: mate_posts_public
+    as: mate
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của bạn cùng nhóm (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.mate}}/photos/{{mate_photo}}"}'
+    bind:
+      mate_public: {from: body, pointer: /id, class: uuid}
+  - id: mate_comments_on_leaver_post
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{leaver_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận của bạn dưới bài sẽ mất (dữ liệu mẫu)"}'
+  - id: mate_reacts_to_leaver_post
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{leaver_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: leaver_comments_on_mate_post
+    as: leaver
+    request:
+      method: POST
+      path: '/posts/{{mate_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận của người rời (dữ liệu mẫu)"}'
+  - id: stranger_comments_on_mate_post
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{mate_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận của người lạ ở lại (dữ liệu mẫu)"}'
+  - id: leaver_reacts_to_mate_post
+    as: leaver
+    request:
+      method: POST
+      path: '/posts/{{mate_public}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  # stories and views both ways
+  - id: leaver_posts_story
+    as: leaver
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.leaver}}/photos/{{leaver_story_photo}}","caption":"Story sẽ mất (dữ liệu mẫu)"}'
+    bind:
+      leaver_story: {from: body, pointer: /id, class: uuid}
+  - id: mate_posts_story
+    as: mate
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.mate}}/photos/{{mate_photo}}"}'
+    bind:
+      mate_story: {from: body, pointer: /id, class: uuid}
+  - id: mate_sees_leaver_story
+    as: mate
+    request:
+      method: POST
+      path: '/stories/{{leaver_story}}/seen'
+  - id: leaver_sees_mate_story
+    as: leaver
+    request:
+      method: POST
+      path: '/stories/{{mate_story}}/seen'
+  # the group's life: messages, a reaction, a read mark, a memory, a check-in, votes
+  - id: leaver_writes_in_group
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin của người rời ở lại (dữ liệu mẫu)"}'
+    bind:
+      leaver_message: {from: body, pointer: /id, class: uuid}
+  - id: mate_writes_in_group
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin của bạn cùng nhóm (dữ liệu mẫu)","reply_to_id":"{{leaver_message}}"}'
+    bind:
+      mate_message: {from: body, pointer: /id, class: uuid}
+  - id: mate_reacts_to_leaver_message
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{leaver_message}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: leaver_reacts_to_mate_message
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{mate_message}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: leaver_marks_read
+    as: leaver
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{mate_message}}"}'
+  - id: leaver_writes_memory
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/{{group_photo}}"}'
+    bind:
+      memory: {from: body, pointer: /id, class: uuid}
+  - id: mate_comments_on_memory
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{memory}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhớ hôm đó (dữ liệu mẫu)"}'
+  - id: leaver_comments_on_memory
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{memory}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Người rời cũng nhớ (dữ liệu mẫu)"}'
+  - id: mate_reacts_to_memory
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{memory}}/reactions'
+  - id: leaver_checks_in
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+  - id: mate_opens_vote
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay ăn gì? (dữ liệu mẫu)","options":[{"label":"Bún chả"},{"label":"Phở"}]}'
+    bind:
+      vote: {from: body, pointer: /id, class: uuid}
+      vote_option: {from: body, pointer: /options/0/id, class: uuid}
+  - id: leaver_casts_ballot
+    as: leaver
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{vote_option}}"}'
+  - id: leaver_opens_vote
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Mai đi đâu? (dữ liệu mẫu)","options":[{"label":"Hồ"},{"label":"Đồi"}]}'
+  # money: one expense each way, a batch published with a guest link, a report of payment
+  - id: leaver_proposes_dinner
+    as: leaver
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.leaver}}","paid_by_id":"{{persona.leaver}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.leaver}}","{{persona.mate}}"],"total_amount_vnd":100000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: leaver_confirms_dinner
+    as: leaver
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.leaver}}","paid_by_id":"{{persona.leaver}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.leaver}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.leaver}}":50000,"{{persona.mate}}":50000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.leaver}}","{{persona.mate}}"],"total_amount_vnd":30001}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.leaver}}","{{persona.mate}}"],"total_amount_vnd":30001},"expected_allocations":{"{{persona.leaver}}":15000,"{{persona.mate}}":15001},"acknowledge_as_advancer":true}'
+  - id: leaver_batches_dinner
+    as: leaver
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: leaver_publishes_batch
+    as: leaver
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_mate: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_mate: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+  - id: guest_opens_link_before
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_mate}}'
+  - id: guest_reports_paid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_mate}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_mate}}'
+  - id: leaver_reports_stranger
+    as: leaver
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.stranger}}","reason":"spam","note":"Ghi chú của người rời ở lại (dữ liệu mẫu)"}'
+  # the pair: a message, a notebook with both people's consent, constraints, a sheet, a kept line
+  - id: leaver_opens_pair
+    as: leaver
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: friend_writes_in_pair
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tối nay rảnh không? (dữ liệu mẫu)"}'
+  - id: leaver_writes_in_pair
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Rảnh nhé (dữ liệu mẫu)"}'
+  - id: friend_proposes_notebook
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: leaver_grants_notebook
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: leaver_proposes_couple
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi: {from: body, pointer: /id, class: uuid}
+  - id: friend_grants_couple
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi}}/grant'
+  - id: leaver_puts_constraint
+    as: leaver
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành (dữ liệu mẫu)"}'
+  - id: friend_puts_constraint
+    as: friend
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng về quá khuya (dữ liệu mẫu)"}'
+  - id: friend_drafts_sheet
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: friend_dates_sheet
+    as: friend
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: friend_sends_sheet
+    as: friend
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: leaver_views_sheet
+    as: leaver
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: leaver_agrees_sheet
+    as: leaver
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: friend_records_done
+    as: friend
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: leaver_keeps_line
+    as: leaver
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Tiếng mưa trên mái (dữ liệu mẫu)"}'
+  - id: friend_keeps_line
+    as: friend
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Chè cuối buổi (dữ liệu mẫu)"}'
+  # what the others see before
+  - id: mate_reads_balances_before
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: mate_reads_roster_before
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: friend_lists_contexts_before
+    as: friend
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: leaver_reads_profile_before
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me'
+  # the erasure
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # the group the leaver created, and the one they joined
+  - id: mate_reads_group_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+  - id: mate_reads_roster_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: mate_reads_balances_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: mate_reads_messages_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: mate_reads_memories_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: mate_reads_memory_comments_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories/{{memory}}/comments'
+  - id: mate_reads_votes_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: mate_reads_batches_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'
+  - id: mate_reads_obligations_after
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'
+  - id: mate_reads_group_photo_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{group_photo}}'
+  - id: mate_lists_contexts_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: mate_reads_own_group_roster_after
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{mate_ctx}}/members'
+  - id: mate_writes_in_group_after
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Nhóm vẫn còn (dữ liệu mẫu)"}'
+  - id: guest_opens_link_after
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_mate}}'
+  # the feeds and the profile doors
+  - id: mate_reads_feed_after
+    as: mate
+    request:
+      method: GET
+      path: '/posts'
+  - id: mate_reads_leaver_wall_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/posts'
+  - id: mate_reads_leaver_post_after
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{leaver_public}}'
+  - id: mate_reads_own_post_comments_after
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{mate_public}}/comments'
+  - id: mate_reads_own_post_after
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{mate_public}}'
+  - id: mate_reads_stories_after
+    as: mate
+    request:
+      method: GET
+      path: '/stories'
+  - id: mate_reads_leaver_profile_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}'
+  - id: mate_reads_leaver_avatar_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/avatar'
+  - id: stranger_reads_leaver_photo_after
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/photos/{{leaver_photo}}'
+  - id: mate_reads_own_profile_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/me'
+  - id: mate_lists_friends_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/friends'
+  - id: requester_lists_requests_after
+    as: requester
+    request:
+      method: GET
+      path: '/people/{{persona.requester}}/friend-requests'
+  - id: blocker_lists_blocks_after
+    as: blocker
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  # the pair and its notebook
+  - id: friend_lists_contexts_after
+    as: friend
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: friend_reads_pair_after
+    as: friend
+    request:
+      method: GET
+      path: '/contexts/{{pair}}'
+  - id: friend_reads_pair_messages_after
+    as: friend
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/messages'
+  - id: friend_writes_in_pair_after
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Còn đó không? (dữ liệu mẫu)"}'
+  - id: friend_reads_notebook_after
+    as: friend
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: friend_reads_papers_after
+    as: friend
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'
+  - id: friend_reads_sheet_after
+    as: friend
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: friend_opens_pair_after
+    as: friend
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/dm'
+  # what other people can still do to the ended id
+  - id: stranger_asks_leaver_after
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+  - id: mate_invites_leaver_back
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{mate_ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+  # the ended account's own lists (dev headers still work)
+  - id: leaver_lists_contexts_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: leaver_lists_saved_places_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: leaver_lists_blocks_after
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me/blocked'

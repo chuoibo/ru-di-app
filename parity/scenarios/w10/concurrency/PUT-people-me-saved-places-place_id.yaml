@@ -1,0 +1,37 @@
+# W10 concurrency · PUT /people/me/saved-places/{place_id}. Three saves of one place at
+# once: the unique (person, place) lets one insert through (201) and the others read the
+# winner (200 with its saved_at); three under one header key are one insert and two
+# replays of 201. Texts are sample data (dữ liệu mẫu).
+id: w10/concurrency/put-people-me-saved-places-place_id
+routes: ['PUT /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: owner_saves_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c40d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'

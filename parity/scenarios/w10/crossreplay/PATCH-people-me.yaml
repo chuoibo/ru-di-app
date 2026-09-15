@@ -1,0 +1,107 @@
+# W10 cross replay · PATCH /people/me. A 200 stored under a header key by one side is
+# replayed by the other, both ways, even after the row changed; another body under that
+# key is 422 idempotency_key_reuse; a refused body frees the key. Go serves none of these
+# routes yet, so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w10/crossreplay/patch-people-me
+routes: ['PATCH /people/me']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: python_patches
+    as: owner
+    via: python
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"bio":"Lần một (dữ liệu mẫu)"}'
+  - id: front_patches_other_bio
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Lần hai (dữ liệu mẫu)"}'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"bio":"Lần một (dữ liệu mẫu)"}'
+  - id: front_other_body_same_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"bio":"Lần ba (dữ liệu mẫu)"}'
+  - id: front_patches_with_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"city":"Huế (dữ liệu mẫu)"}'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"city":"Huế (dữ liệu mẫu)"}'
+  - id: front_refused_body
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"   "}'
+  - id: python_same_key_valid
+    as: owner
+    via: python
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"nobody"}'
+  - id: front_replays_python_second
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f30a0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"nobody"}'
+  - id: python_reads_profile
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me'

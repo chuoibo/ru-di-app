@@ -1,0 +1,392 @@
+# W10 · PATCH /people/me: partial update of the caller's own text and two settings.
+# JSON decoding first, then get_actor, then the body model (StrictStr bounds, Literal
+# policy, StrictBool, extra=forbid, then an after-validator: at least one non-null field
+# and a display_name that is not blank once stripped), then the member role, then the
+# row. display_name is stripped; an empty or blank bio or city clears it; null means
+# «leave it». In dev an ended account can still rewrite its anonymised row. Texts are
+# sample data (dữ liệu mẫu).
+id: w10/people/patch-people-me
+routes: ['PATCH /people/me']
+auth_mode: dev
+personas:
+  owner: {}
+  leaver: {}
+steps:
+  - id: anonymous_patches
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Ẩn danh (dữ liệu mẫu)"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":'
+  - id: anonymous_empty_body_object
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"bio":"x"}'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'khong-co'
+        content-type: 'application/json'
+      body_raw: '{"bio":"x"}'
+  # the body model answers before roles and before the row
+  - id: owner_empty_object_without_roles
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_valid_without_roles
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"bio":"x"}'
+  - id: owner_valid_unregistered
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"x"}'
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+  - id: owner_body_array
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_empty_object
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_all_null
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":null,"bio":null,"city":null,"wall_comment_policy":null,"discoverable_by_phone":null}'
+  - id: owner_name_blank
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"   "}'
+  - id: owner_name_empty
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":""}'
+  - id: owner_name_number
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":7}'
+  - id: owner_name_too_long
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+  - id: owner_bio_too_long
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}'
+  - id: owner_city_too_long
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"city":"ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}'
+  - id: owner_policy_unknown
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"everyone"}'
+  - id: owner_policy_uppercase
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"FRIENDS"}'
+  - id: owner_discoverable_string
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"discoverable_by_phone":"false"}'
+  - id: owner_discoverable_zero
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"discoverable_by_phone":0}'
+  - id: owner_unknown_field
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"x","budget_band":"tiet-kiem"}'
+  - id: owner_several_errors
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"","bio":5,"city":[],"wall_comment_policy":"x","discoverable_by_phone":"y","id":"z"}'
+  - id: owner_text_plain
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"bio":"x"}'
+  # accepted changes
+  - id: owner_sets_everything
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"  Chủ đổi tên (dữ liệu mẫu)  ","bio":"  Thích <b>núi</b> & biển (dữ liệu mẫu)  ","city":" Đà Nẵng (dữ liệu mẫu) ","wall_comment_policy":"friends","discoverable_by_phone":false}'
+  - id: owner_sets_bio_only
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Chỉ đổi giới thiệu (dữ liệu mẫu)","city":null}'
+  - id: owner_clears_bio_with_blank_and_city_with_empty
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"   ","city":""}'
+  - id: owner_bio_500_before_strip
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":" bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb "}'
+  - id: owner_policy_readers_discoverable_true
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"readers","discoverable_by_phone":true}'
+  - id: owner_same_values_again
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"wall_comment_policy":"readers","discoverable_by_phone":true}'
+  - id: owner_as_group_admin_only
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"city":"Cần Thơ (dữ liệu mẫu)"}'
+  - id: owner_no_content_type
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      body_raw: '{"city":"Cần Thơ (dữ liệu mẫu)"}'
+  # a header key stores the 200; a different body under it is reuse; a refusal frees it
+  - id: owner_patches_with_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hội An (dữ liệu mẫu)"}'
+  - id: owner_patches_other_city
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"city":"Quy Nhơn (dữ liệu mẫu)"}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hội An (dữ liệu mẫu)"}'
+  - id: owner_replays_key_respaced_json
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{ "city" : "Hội An (dữ liệu mẫu)" }'
+  - id: owner_key_other_body
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Huế (dữ liệu mẫu)"}'
+  - id: owner_refused_with_key_two
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_valid_with_key_two
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f10a0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"bio":"Khoá được nhả (dữ liệu mẫu)"}'
+  - id: owner_reads_profile
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  # an ended account: dev headers still rewrite the anonymised row
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: leaver_renames_after_erasure
+    as: leaver
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người đã rời mà vẫn đổi tên (dữ liệu mẫu)","wall_comment_policy":"readers","discoverable_by_phone":true}'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"x"}'
