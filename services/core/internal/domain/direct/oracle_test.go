@@ -7,8 +7,16 @@ import (
 	"mobile/services/core/internal/oracletest"
 )
 
-// testdata/python_*.json is rendered by scripts/render_domain_w3_goldens.py
-// from the real app.domain.direct in the parity API image.
+// testdata/python_direct.json and python_direct_fuzz_*.json are rendered by
+// scripts/render_domain_w3_goldens.py from the real app.domain.direct in the
+// parity API image; python_direct_people*.json, by
+// scripts/render_domain_w10_goldens.py, is replayed by people_oracle_test.go.
+
+// w3Files loads the W3 goldens only.
+func w3Files(t *testing.T) []oracletest.File {
+	t.Helper()
+	return append(oracletest.Load(t, "testdata/python_direct.json"), oracletest.Load(t, "testdata/python_direct_fuzz_*.json")...)
+}
 
 func replay(c oracletest.Case) (any, error) {
 	args, err := c.PlainArgs()
@@ -61,7 +69,7 @@ func replay(c oracletest.Case) (any, error) {
 }
 
 func TestDirectMatchesPython(t *testing.T) {
-	files := oracletest.Load(t, "testdata/python_*.json")
+	files := w3Files(t)
 	oracletest.CheckShards(t, files, "direct")
 	counts := map[string]int{}
 	total, mismatches, anonymous := 0, 0, 0
@@ -96,7 +104,7 @@ func TestDirectMatchesPython(t *testing.T) {
 }
 
 func TestConstantsMatchPython(t *testing.T) {
-	constants := oracletest.Constants(t, oracletest.Load(t, "testdata/python_*.json"), "direct")
+	constants := oracletest.Constants(t, w3Files(t), "direct")
 	for key, want := range map[string]string{
 		"kind_group":            KindGroup,
 		"kind_pair":             KindPair,
@@ -113,14 +121,13 @@ func TestConstantsMatchPython(t *testing.T) {
 		"is_pair":               "IsPair",
 		"counterpart_of":        "CounterpartOf",
 		"display_name_for":      "DisplayNameFor",
+		"KINDS":                 "Kinds",
+		"ROSTER_ONLY_DOORS":     "RosterOnlyDoors",
+		"pair_key":              "PairKey",
+		"can_open":              "CanOpen",
+		"is_kind":               "IsKind",
 	}
-	skipped := map[string]string{
-		"KINDS":             "the CHECK on contexts.kind; no W3 route validates a kind",
-		"ROSTER_ONLY_DOORS": "a list read by Python tests, not by the service",
-		"pair_key":          "POST /direct-messages opens a pair; not W3",
-		"can_open":          "POST /direct-messages opens a pair; not W3",
-		"is_kind":           "not called by the service",
-	}
+	skipped := map[string]string{}
 	names, err := oracletest.Strings(constants["names"])
 	if err != nil {
 		t.Fatal(err)
