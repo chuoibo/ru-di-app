@@ -85,6 +85,15 @@ ba luật tiền giữ nguyên, số dư tính lại từ sổ ở cả hai phí
   int64 mà Python vẫn trả 200. Route nghĩa vụ W4 cần cùng cách; luật moneylint dự kiến («mọi `*_vnd` là
   `money.VND`») cần ngoại lệ cho các tổng này.
 
+Sóng W4 (tiền) bắt đầu ghi mốc, route đóng băng theo cùng luật: expenses (2: `POST /expenses`,
+`POST /expenses/{expense_id}/confirm`), bills (5: `POST /bills`, `GET /bills/{bill_id}`,
+`PUT /bills/{bill_id}/assignments`, `POST /bills/{bill_id}/my-items`, `POST /bills/{bill_id}/split`), budget (1:
+`GET /contexts/{context_id}/budget`), batches (4: `POST /batches`, `POST /batches/{batch_id}/publish`,
+`GET /batches/{batch_id}/obligations`, `GET /contexts/{context_id}/batches`), obligations (1:
+`POST /obligations/{obligation_id}/confirm-receipt`), finance (1: `GET /people/{person_id}/finance`) — 14 route, vẫn
+do Python phục vụ. Ba luật tiền giữ nguyên: golden vector allocator và tất toán đọc tại chỗ, fuzz vi sai gồm cả mã
+lỗi, tổng dẫn xuất đúng từng chữ số (ADR-0029 §2.5).
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
