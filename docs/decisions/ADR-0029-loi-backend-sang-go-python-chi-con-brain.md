@@ -110,6 +110,11 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
   `<b64u:<ts#r|dạng>|<uuid#n>>` với hai phần bên trong được bind như chữ thường, token đúng 43 ký tự base64url
   (`secrets.token_urlsafe(32)`, như token trong đường dẫn khách `/g/<token>`) thành `<token43#n>`. Cái phải khớp là hàng nào dùng chung một giá trị: viết hoa, độ dài khác, dùng lại một
   khoá hay đổi sang dạng khác vẫn đỏ. Một giá trị sai mà vẫn duy nhất thì bị che, như uuid4.
+- Làn database: sau mỗi bước, hàng thêm, sửa, xoá của từng quan hệ được quan sát theo chữ đã che uuid, thời điểm,
+  hex, cursor và token. Hàng giống nhau sau khi che được phân định bằng giá trị đã đánh số mà nó chứa (hai
+  `guest_links` trỏ hai envelope, hai share của một người trên hai món), tính lại tới khi không còn hàng nào phân
+  định thêm được, nên số thứ tự không do id ngẫu nhiên quyết. Hàng không gì phân biệt được giữ thứ tự cũ; hàng trỏ
+  sai (hai share cùng một món) vẫn đỏ.
 - Mốc so sánh luôn là Python. File kịch bản **không có trường kết quả mong đợi**; `parity lint` từ chối các khoá
   `expect`, `status`, `body`, `assert`. Nhờ vậy agy viết được đầu vào mà không vi phạm ADR-0010 §6.1.
 - Chống xanh giả: tự so K lần trên stack sạch; canary là proxy cố tình làm sai từng bẫy (`Z`→`+00:00`, `1.0`→`1`,

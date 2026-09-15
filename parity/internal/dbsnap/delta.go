@@ -261,6 +261,31 @@ func (c *Change) Texts() []string {
 	return out
 }
 
+// Groups returns the same texts for Binder.ObserveGroups: one group per
+// relation and kind (inserted, updated, deleted), each in Texts order, with an
+// update's before and after texts joined by a NUL so the pair orders as one.
+func (c *Change) Groups() [][]string {
+	var out [][]string
+	for _, rc := range c.Changed {
+		var inserted, updated, deleted []string
+		for _, row := range rc.Inserted {
+			inserted = append(inserted, row.Text)
+		}
+		for _, u := range rc.Updated {
+			updated = append(updated, u.Before.Text+updateSeparator+u.After.Text)
+		}
+		for _, row := range rc.Deleted {
+			deleted = append(deleted, row.Text)
+		}
+		for _, group := range [][]string{inserted, updated, deleted} {
+			if len(group) > 0 {
+				out = append(out, group)
+			}
+		}
+	}
+	return out
+}
+
 // Normalise returns a copy whose texts went through apply (Binder.Apply).
 // Keys and raw texts are left as they were; Compare reads only Text.
 func (c *Change) Normalise(apply func(string) string) *Change {

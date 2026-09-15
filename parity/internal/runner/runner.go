@@ -211,11 +211,11 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 			result.Change = dbsnap.Delta(prev, next)
 			prev = next
 			// The response was observed above and the database comes after it,
-			// so an id first returned in a body keeps that body's number.
-			for _, text := range result.Change.Texts() {
-				if err := binder.Observe(text); err != nil {
-					return nil, err
-				}
+			// so an id first returned in a body keeps that body's number. Rows
+			// equal once masked are told apart by the values already numbered
+			// (see Binder.ObserveGroups), not by their random ids.
+			if err := binder.ObserveGroups(result.Change.Groups()); err != nil {
+				return nil, err
 			}
 		}
 		if step.Concurrent > 0 {

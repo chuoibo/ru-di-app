@@ -151,10 +151,8 @@ func normalisedSteps(t *testing.T, snaps ...*Snap) []*Change {
 	var deltas []*Change
 	for i := 1; i < len(snaps); i++ {
 		delta := Delta(snaps[i-1], snaps[i])
-		for _, text := range delta.Texts() {
-			if err := binder.Observe(text); err != nil {
-				t.Fatal(err)
-			}
+		if err := binder.ObserveGroups(delta.Groups()); err != nil {
+			t.Fatal(err)
 		}
 		deltas = append(deltas, delta)
 	}
