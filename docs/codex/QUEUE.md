@@ -128,6 +128,12 @@ và template khớp Jinja từng byte (`87bc1e76`), thẻ và kịch bản (`c5b
 (`92557cdf`), hạ tầng trả HTML/303 thô và trang link hỏng (`4116ce20`), route (`dbe439b2`). Cổng parity trên cây có 70 route Go:
 dev 208 kịch bản/6858 bước, limiter 5/119, prod 18/404, 0 khác biệt; 70/156 route PORTED.
 
+Sóng W10 (people) bắt đầu ghi mốc, route đóng băng theo cùng luật: people (13: `GET /people/me/contexts`,
+`GET` và `PATCH /people/me`, `GET /people/me/saved-places`, `PUT` và `DELETE /people/me/saved-places/{place_id}`,
+`GET /people/me/blocked`, `DELETE /people/me`, `POST` và `DELETE /people/{person_id}/block`,
+`POST /people/{person_id}/dm`, `GET` và `PUT /people/{person_id}`), cùng `app/domain/account_lifecycle.py`,
+`app/domain/direct.py` và `erase_person` của repository. `DELETE /people/me` chạm mọi bảng và kho ảnh.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
