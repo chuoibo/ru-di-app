@@ -1,0 +1,1026 @@
+{
+ "generator": "scripts/render_guest_web_goldens.py",
+ "module": "views",
+ "mode": "views-fuzz-0",
+ "python": "3.12.14",
+ "seed": 45,
+ "fuzz": {"shard":0,"shards":1,"total":100},
+ "cases": [
+{"fn":"build_guest_view","name":"fuzz/0","args":{"envelope":{"recorded_by_display_name":"60WM7VJ0H75J0MZLQ","claimed_person_display_name":"=?","link_state":"expired","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u00e1","amount_vnd":"$i:0x1449_8d8b","recipient_display_name":"$sp:124236|196200|254551|610","already_reported":false,"evidence_requested":"","disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":"no"},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"TI\u0627QX","amount_vnd":"$i:0x1153_4aa3","recipient_display_name":"\u00a0\u001b\u001b\u0001\u0103\u0085\u0007\u00e1\n\u0001\u0103\u1eef\u0323\u00e0\u0103\u0085\u1ea3\u1ea3","already_reported":"","evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true,"amount_display":7},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\ufe0f\u01b0\u01b0\u1ea1\u2764\u0103\u00e0\u00e1\u0111\ud83d\ude00\ud83d\udc4d\u2764\u01b0\u1ea3\u0111","amount_vnd":0,"recipient_display_name":"\u000127\u0007939","evidence_requested":true,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"idwi\ud83d\udc4d\u2764h se\u2764wnaigd\ud83d\ude00jgta","amount_vnd":"$i:0x1520_78e2","recipient_display_name":"Y8F508JHZ9LPGOE1D76Y2V3Q","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":2,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"60WM7VJ0H75J0MZLQ","claimed_person_display_name":"=?","blocks":[],"link_state":"expired","can_report_payment":false,"can_object":false}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/1",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":">\u2764\"<\ud83d\ude00\u2764\"\"\ud83d\ude00'\"\"",
+   "claimed_person_display_name":"\u007f\u1ec5\u1eef6\u1ec5\u01b0",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u0323\u0309\u0300\u0301\u0301\u0300\u0309\u0309\u0323\u0323\u0300\u0301\u0309\u0323\u0301\u0309\u0309\u0309\u0309\u0301",
+     "amount_vnd":"$i:0x2ea9_f98f",
+     "recipient_display_name":"\u1ec5\u00e1\u1ea1\u00e0\u0103\u1ea1\u1ec5\u00e0\u00e0",
+     "already_reported":true,
+     "evidence_requested":false,
+     "disputed":"no",
+     "objections_used":1,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"\u200f\u200f\u200f\u202c\u200f\u0627\u202c\u200f\u202c\u202c\u202c\u202e\u202c\u0627\u200f\u0627\u05d0\u05d0\u200f\u200f",
+     "occasion_label":"Ha\u0300\u0323i",
+     "amount_vnd":"$i:0x3b4a_58dc",
+     "recipient_display_name":"\u00e0\u0103-\u1ea1-\u0103%\u00e1\u05d0\u1ec5\u1ea3",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":1,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u0103+=++\u01b0-=\u00e0\u01b0\u01b0\u0111\u1ea3\u00e0\u1eef\u1ec5\u1ec5=\u1ea3",
+     "amount_vnd":"$i:0x2cd9_5d48",
+     "recipient_display_name":"kp811 vgrwqj\u202cvjub1",
+     "already_reported":true,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"IKKAUREOJEDS",
+     "amount_vnd":"$i:0x18ec_bc61",
+     "recipient_display_name":"\u0001\u2028\u007f\t",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":1,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    }
+   ],
+   "reports_used":true,
+   "reports_allowed":3,
+   "objections_used":0,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":">\u2764\"<\ud83d\ude00\u2764\"\"\ud83d\ude00'\"\"",
+   "claimed_person_display_name":"\u007f\u1ec5\u1eef6\u1ec5\u01b0",
+   "blocks":[
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u0323\u0309\u0300\u0301\u0301\u0300\u0309\u0309\u0323\u0323\u0300\u0301\u0309\u0323\u0301\u0309\u0309\u0309\u0309\u0301",
+     "amount_vnd":"$i:0x2ea9_f98f",
+     "amount_display":"$sp:782.89|1.407",
+     "recipient_display_name":"\u1ec5\u00e1\u1ea1\u00e0\u0103\u1ea1\u1ec5\u00e0\u00e0",
+     "already_reported":true,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":true
+    },
+    {
+     "obligation_id":"\u200f\u200f\u200f\u202c\u200f\u0627\u202c\u200f\u202c\u202c\u202c\u202e\u202c\u0627\u200f\u0627\u05d0\u05d0\u200f\u200f",
+     "occasion_label":"Ha\u0300\u0323i",
+     "amount_vnd":"$i:0x3b4a_58dc",
+     "amount_display":"$sp:994.72|8.156",
+     "recipient_display_name":"\u00e0\u0103-\u1ea1-\u0103%\u00e1\u05d0\u1ec5\u1ea3",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":true
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u0103+=++\u01b0-=\u00e0\u01b0\u01b0\u0111\u1ea3\u00e0\u1eef\u1ec5\u1ec5=\u1ea3",
+     "amount_vnd":"$i:0x2cd9_5d48",
+     "amount_display":"$sp:752.44|2.696",
+     "recipient_display_name":"kp811 vgrwqj\u202cvjub1",
+     "already_reported":true,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"IKKAUREOJEDS",
+     "amount_vnd":"$i:0x18ec_bc61",
+     "amount_display":"$sp:418.16|7.905",
+     "recipient_display_name":"\u0001\u2028\u007f\t",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":true
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":true,
+   "can_object":true
+  }
+ }
+},
+{"fn":"format_vnd","name":"fuzz/2","args":{"amount_vnd":0},"result":{"ok":"0"}},
+{"fn":"build_wrong_amount_view","name":"fuzz/3","args":{"envelope":{"recorded_by_display_name":"QwJ","claimed_person_display_name":"16-{","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"30\ufe0f\ud83d\udc4d7\ufe0f\ufe0f093509\ud83d\ude001\u2764\ud83d\udc4d3","amount_vnd":"$i:0x43f8_5262_a862_f783","recipient_display_name":"\">>&'<>>&&\"<>\"\"'>>'>\">>\"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"RH'YJ>HVV","amount_vnd":"$i:0x3a49_8c5d_3290_8a8d_1276_f935_9622_01c9","recipient_display_name":"{{#","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":3,"reports_allowed":3,"objections_used":4,"objections_allowed":3},"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2"},"result":{"ok":{"claimed_person_display_name":"16-{","recorded_by_display_name":"QwJ","occasion_label":"30\ufe0f\ud83d\udc4d7\ufe0f\ufe0f093509\ud83d\ude001\u2764\ud83d\udc4d3","amount_display":"$sp:4.897.|755.17|8.450.|745.21|9","obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","can_object":false,"can_request_evidence":true,"evidence_requested":false,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_guest_view","name":"fuzz/4","args":{"envelope":{"recorded_by_display_name":"$sp:M7HA\t\t|XL\tMD\u00a0|\u007f1EV\nC|W\u001bF608|H1FNBL|1GPB\u00a08|0K79\n\n|NRN0I3|GJ\t5\u001fI|\r54\u001bKH|67LYXN|S\tN\u0085\tK|H\u20289R3L|5\nET5C|3Q\n\u0007M\u00a0|\u001f4ZT8U|H\r\u2028\u0007CE|N\u0007K\u2028\u007fR|S\nP\u00a07\u007f|VBS1\u007f\u001f|\u0001\u001bDS4Y|\t\u001b\n\u0085\tF|3LGQX\n|7\n2K\u0001X|CB\nZZH|9M4R\u0085G|LJR84\u0085|B\u2028I0IZ|V\tN\u0085FV|\u00a0746R\r|\u0007A6SN2|W\u0001TRA3|I69C4M|FRW\r\u0007Y|0","claimed_person_display_name":"\u0103\u05d0\u00e16694\u00e0\u0627794\u202c\u0111\u05d0","link_state":"expired","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"","amount_vnd":"$i:0xf67_3058","recipient_display_name":"$sp:523449|319800|452123|20860","already_reported":true,"evidence_requested":true,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":1,"reports_allowed":3,"objections_used":4,"objections_allowed":3,"group_history":"M/US\u0111\u1ea1"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/5",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"ZTZO\"ZVWC&",
+   "claimed_person_display_name":"nx\u0001 k\u001bxw\"b\"qv\u00a0deb\u00a0o \u0085cl jhjdx<ekthz\u001b \u007fv<&p\u0001\u00a0\t\u007fgaq\u2028\to\nxbf<cw\tlr\u00a0ce\u0007mk>\u001fng\u001f\u0007\u0001>c\t\u00a0c'\u0085n\rv\nxkg\u001f'skfhnwvlecwwp\u001fshc\u2028u\u001b\nbi'\nxil\noj\u0007yxvm\u0001\"vebtk\t\u2028'i\u001fjw\u007f\u001bi\n\u0085r\u001bb&<xykmv\t\u0001\u00a0\"q\tv \u001bg\u001b\u0007\u00a0ky\n\t\u00a0wu&qkmi\u0085\u2028>\"\u2028\u0001vt\r\u0085b\u2028rax\u00a0<&\n\u001begcf\r\u001fn'g\u0085nv<dcfvmw\u0007rn\nv\t\u001f\nox\u001fcvt s\u001b'\u00a0\u2028\u00a0mhqo<t\u001fvioa<y\"<uhbqmuieqj\u00a0 \u0085c\thga\u2028'\u007f\nky\u00a0oht\u007f\u0007\u0007li\u007fxjshv\u00a0",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"}&%}\"#&}\"",
+     "amount_vnd":"$i:0x1e4f_9503",
+     "recipient_display_name":"",
+     "already_reported":false,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":0,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"12\u1eef843874\u0111\u01b0\u0111\u1ec5\u1ea1\u1ea15\u00e0\u1ea37\u1ec56881",
+     "amount_vnd":16403192,
+     "recipient_display_name":"tab\tnew\nline\rcr\u0085\u00a0\u2028",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":true
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u1ec5\u1ea1}{?",
+     "amount_vnd":"$i:0x24f9_7e84",
+     "recipient_display_name":"\u0111\u0111\u1ec5\u00e0\u1eef\u1eef\u1eef",
+     "already_reported":false,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    }
+   ],
+   "reports_used":3,
+   "reports_allowed":3,
+   "objections_used":1,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"ZTZO\"ZVWC&",
+   "claimed_person_display_name":"nx\u0001 k\u001bxw\"b\"qv\u00a0deb\u00a0o \u0085cl jhjdx<ekthz\u001b \u007fv<&p\u0001\u00a0\t\u007fgaq\u2028\to\nxbf<cw\tlr\u00a0ce\u0007mk>\u001fng\u001f\u0007\u0001>c\t\u00a0c'\u0085n\rv\nxkg\u001f'skfhnwvlecwwp\u001fshc\u2028u\u001b\nbi'\nxil\noj\u0007yxvm\u0001\"vebtk\t\u2028'i\u001fjw\u007f\u001bi\n\u0085r\u001bb&<xykmv\t\u0001\u00a0\"q\tv \u001bg\u001b\u0007\u00a0ky\n\t\u00a0wu&qkmi\u0085\u2028>\"\u2028\u0001vt\r\u0085b\u2028rax\u00a0<&\n\u001begcf\r\u001fn'g\u0085nv<dcfvmw\u0007rn\nv\t\u001f\nox\u001fcvt s\u001b'\u00a0\u2028\u00a0mhqo<t\u001fvioa<y\"<uhbqmuieqj\u00a0 \u0085c\thga\u2028'\u007f\nky\u00a0oht\u007f\u0007\u0007li\u007fxjshv\u00a0",
+   "blocks":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"}&%}\"#&}\"",
+     "amount_vnd":"$i:0x1e4f_9503",
+     "amount_display":"$sp:508.53|1.971",
+     "recipient_display_name":"",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":true
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"12\u1eef843874\u0111\u01b0\u0111\u1ec5\u1ea1\u1ea15\u00e0\u1ea37\u1ec56881",
+     "amount_vnd":16403192,
+     "amount_display":"16.403.192",
+     "recipient_display_name":"tab\tnew\nline\rcr\u0085\u00a0\u2028",
+     "already_reported":false,
+     "receiver_confirmed":true,
+     "disputed":false,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u1ec5\u1ea1}{?",
+     "amount_vnd":"$i:0x24f9_7e84",
+     "amount_display":"$sp:620.33|0.628",
+     "recipient_display_name":"\u0111\u0111\u1ec5\u00e0\u1eef\u1eef\u1eef",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":false,
+   "can_object":true
+  }
+ }
+},
+{"fn":"build_guest_view","name":"fuzz/6","args":{"envelope":{"recorded_by_display_name":"=--+%+#%?==?=-%#{=#{-%}","claimed_person_display_name":"$sp:R\u1ea1VRMU|\u00e1\u00e0OGXH|\u0103\u1ea3K","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"","amount_vnd":33,"recipient_display_name":"}\u0301/+\u0300{={{#\u0300%/\u0309%\u0309%#/\u0301/-","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"x0e>6ae8prrcg5\" lbk<smv7pp5<s'8do'ej2n9fwaz8 2r5y\"e4l\"\"35e4q8ffwcb<gh6xulb7>rnio 6wl\"m7dfkv\"bk8d9v\"d>z5zslhr&n\"gectxn5zk09  &z367'c6yiw4w3rje730\"s<","amount_vnd":"$i:0x32be_7dfe","recipient_display_name":"\u1ea3\u1eef\u0627\u00e0\u0103\u0103\u01b0\u0103\u202e\u200f\u202c\u0627\u1ea3\u0103\u05d0","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1ea3\u00e0{LI-+\u0103C-\u00e1=?S","amount_vnd":0,"recipient_display_name":"\ud83d\udc4d\ufe0f29171\ud83d\ude0080\ud83d\udc4d0956554\ufe0f\ud83d\udc4d","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":2,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"=--+%+#%?==?=-%#{=#{-%}","claimed_person_display_name":"$sp:R\u1ea1VRMU|\u00e1\u00e0OGXH|\u0103\u1ea3K","blocks":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"","amount_vnd":33,"amount_display":"33","recipient_display_name":"}\u0301/+\u0300{={{#\u0300%/\u0309%\u0309%#/\u0301/-","already_reported":true,"receiver_confirmed":false,"disputed":false,"can_object":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"x0e>6ae8prrcg5\" lbk<smv7pp5<s'8do'ej2n9fwaz8 2r5y\"e4l\"\"35e4q8ffwcb<gh6xulb7>rnio 6wl\"m7dfkv\"bk8d9v\"d>z5zslhr&n\"gectxn5zk09  &z367'c6yiw4w3rje730\"s<","amount_vnd":"$i:0x32be_7dfe","amount_display":"$sp:851.34|4.894","recipient_display_name":"\u1ea3\u1eef\u0627\u00e0\u0103\u0103\u01b0\u0103\u202e\u200f\u202c\u0627\u1ea3\u0103\u05d0","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1ea3\u00e0{LI-+\u0103C-\u00e1=?S","amount_vnd":0,"amount_display":"0","recipient_display_name":"\ud83d\udc4d\ufe0f29171\ud83d\ude0080\ud83d\udc4d0956554\ufe0f\ud83d\udc4d","already_reported":true,"receiver_confirmed":true,"disputed":true,"can_object":false}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/7","args":{"envelope":{"recorded_by_display_name":"\u01b0\u1ea3\u1ea1\u1ea1\u1eef\u1ec5\u01b0\u00e1","claimed_person_display_name":"PN\u1ea1MB\u0103RE\u00e1CR","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"p\u1ea1t\u1ec5kqwt\u0300epk","amount_vnd":"$i:0x19_9ada_00a4_a333_1759_c485_627a_cd67_6073","recipient_display_name":"itln\u0309\u030195cas","already_reported":false,"evidence_requested":"no","disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"rbgyllqd\u0309avwcinsvlu\u0309sw","amount_vnd":"$i:0x2a8b_b7e6","recipient_display_name":"\u001b\u00e0\u2028\u001f","already_reported":true,"evidence_requested":1,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false,"amount_display":" \"\"\u1eefu\"egp depa\u01b0>f"}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"\u01b0\u1ea3\u1ea1\u1ea1\u1eef\u1ec5\u01b0\u00e1","claimed_person_display_name":"PN\u1ea1MB\u0103RE\u00e1CR","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"p\u1ea1t\u1ec5kqwt\u0300epk","amount_vnd":"$i:0x19_9ada_00a4_a333_1759_c485_627a_cd67_6073","amount_display":"$sp:8.712.|892.21|8.133.|425.69|7.861.|952.24|0.353.|303.55|2.115","recipient_display_name":"itln\u0309\u030195cas","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"rbgyllqd\u0309avwcinsvlu\u0309sw","amount_vnd":"$i:0x2a8b_b7e6","amount_display":"$sp:713.79|9.654","recipient_display_name":"\u001b\u00e0\u2028\u001f","already_reported":true,"receiver_confirmed":false,"disputed":true,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/8","args":{"envelope":{"recorded_by_display_name":"/>>'?=?%>#-?+}%{'}\"=#>%&","claimed_person_display_name":"\u1ec5\ud83d\ude00\u1ea3\u2764\ufe0f\u00e0\u1ea1","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u00a0\"><\u2028\u0001'\u001b\u0001\u00a0\u2028\"\u001b\n\u0001\u001b","amount_vnd":"$i:0x2727_269e","recipient_display_name":"X-ECMLSY#THTH","already_reported":0,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"{6","amount_vnd":"$i:0x4_d5d0_7fe5_aaab_2144_204b_801f_9948_b5e4","recipient_display_name":"AAZ","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":{}}],"reports_used":1,"reports_allowed":3,"objections_used":2,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"ok":{"claimed_person_display_name":"\u1ec5\ud83d\ude00\u1ea3\u2764\ufe0f\u00e0\u1ea1","recorded_by_display_name":"/>>'?=?%>#-?+}%{'}\"=#>%&","occasion_label":"{6","amount_display":"$sp:1.645.|337.62|2.594.|604.39|3.537.|003.21|6.514.|042.08|2.788","obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","can_object":true,"can_request_evidence":true,"evidence_requested":false,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_guest_view","name":"fuzz/9","args":{"envelope":{"recorded_by_display_name":"$sp:\u0627TZU\u0301P|N\u0309\u200f\u0300P","claimed_person_display_name":"\u0627\u200f\u202c\u05d0\u05d0\u200f\u202e\u05d0\u200f\u200f\u202e\u05d0\u0627\u200f\u05d0\u202c","link_state":"rotated","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"XUXAWRHJZGJDZGUHLLETEZLHFGIAXOJYTPZPAPNGJWYIFTHJMPGHAHRGFMOPIGDRZWAWAYCVLHVRXOGUMNYOCFLWDNHGNGLHSFPDODZNDODIVAAQHNFBRSDIQBRWOLMSIVRDBDXBWUHDWCFBNOAQCHSNNXCHCEFXQDCJSUKHXOOEUFAKLFWLRCP","amount_vnd":"$i:0xda7_07f6","recipient_display_name":"-==#\u200f\u05d0/\ud83d\ude00+}\u2764\ud83d\ude00#\u0627\ufe0f=\u200f}/-","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true,"amount_display":0},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"","amount_vnd":"$i:0x1667_93e2","recipient_display_name":" e\u0001s\u00a0vnckl\u001favqqkt\u0007l\u007f vwv\u00a0t i\u0001\u0001v\u2028kn\u2028uzjwah\u001fchbe\u00a0g\u0085v\u007fxr\u2028oeo\u00a0cqh\u007fkcld\r\u001f pw o \rh\u00a0\u007fk \u00a0zdv\u2028dh\u0001\u001b\u001bzklao\u001bxjq\u0085\u2028jvb\u0001tb\u0001rzb\u007fq\n\n\u2028\u2028l \u0007\nsq fg\u0001 hce\u2028slqc\togstip\u007f","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"$sp:\u0627TZU\u0301P|N\u0309\u200f\u0300P","claimed_person_display_name":"\u0627\u200f\u202c\u05d0\u05d0\u200f\u202e\u05d0\u200f\u200f\u202e\u05d0\u0627\u200f\u05d0\u202c","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/10","args":{"envelope":{"recorded_by_display_name":" qeije>cwuu\ud83d\ude00w","claimed_person_display_name":"","link_state":"active","obligations":[],"reports_used":1,"reports_allowed":3,"objections_used":2,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"raised":{"type":"ObjectionError","message":"UNKNOWN_OBLIGATION","code":"UNKNOWN_OBLIGATION"}}},
+{"fn":"build_not_me_view","name":"fuzz/11","args":{"envelope":{"recorded_by_display_name":"}","claimed_person_display_name":"tab\tnew\nline\rcr\u0085\u00a0\u2028","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:483623|287320|945692|2199","amount_vnd":"$i:0x3361_0e84","recipient_display_name":"\u00e1\u1ea3\u0111\u0111\u00e1\u1ec5\u00e1\u1ea3\u1ea1\u1ea1\u1ec5","already_reported":"no","evidence_requested":false,"disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u03003\u001f8\u000757\t\u0323985\t\u20286\r","amount_vnd":"$i:0x11_c7fa_f475_6d8c_14a2_40fd_b792_f14b_78af","recipient_display_name":"GYJJDIMEFEJCIIVRPBVI","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":"2","objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'<' not supported between instances of 'str' and 'int'","code":null}}},
+{"fn":"build_not_me_view","name":"fuzz/12","args":{"envelope":{"recorded_by_display_name":"Tom & \"Jerry\"","claimed_person_display_name":"##?/}={={=-=-?++=/=={=#%","link_state":"revoked","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"ojcldzi","amount_vnd":68621903,"recipient_display_name":"1\u1ec5\u1ea1\u001b\u1ea3\u001b\u1eef","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":3,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/13","args":{"envelope":{"recorded_by_display_name":"\ud83d\ude00 \ud83c\uddfb\ud83c\uddf3","claimed_person_display_name":"\ud83d\ude00\ud83d\udc4d\ufe0f\ud83d\ude00\ufe0f\u2764\ufe0f\ud83d\ude00\u2764","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1eef#\u05d0\u1ea1\u0627\u1ea3=\u05d0\u0627","amount_vnd":"$i:0xb8d_112c","recipient_display_name":"''>&<<\"\"'\"&&>'<\">\"<&>'","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":1,"objections_allowed":1,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"#3\r\t/26#\u2028\u00854\u001f864176\t\u2028?4\u0007","amount_vnd":"$i:0x18c4_755f","recipient_display_name":"MAWUXFSK","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false,"amount_display":0}],"reports_used":2,"reports_allowed":3,"objections_used":null,"objections_allowed":3,"not_me_reported":[]}},"result":{"ok":{"recorded_by_display_name":"\ud83d\ude00 \ud83c\uddfb\ud83c\uddf3","claimed_person_display_name":"\ud83d\ude00\ud83d\udc4d\ufe0f\ud83d\ude00\ufe0f\u2764\ufe0f\ud83d\ude00\u2764","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1eef#\u05d0\u1ea1\u0627\u1ea3=\u05d0\u0627","amount_vnd":"$i:0xb8d_112c","amount_display":"$sp:193.79|4.348","recipient_display_name":"''>&<<\"\"'\"&&>'<\">\"<&>'","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"#3\r\t/26#\u2028\u00854\u001f864176\t\u2028?4\u0007","amount_vnd":"$i:0x18c4_755f","amount_display":"$sp:415.52|8.287","recipient_display_name":"MAWUXFSK","already_reported":true,"receiver_confirmed":false,"disputed":false,"can_object":false}],"link_state":"active","can_report_payment":true,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/14","args":{"envelope":{"recorded_by_display_name":"\u05d0\u200f59&&3<\"","claimed_person_display_name":"\u0301\u0323\u0323\u0300\u0300\u0300\u0301","link_state":"active","obligations":{},"reports_used":4,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"\u05d0\u200f59&&3<\"","claimed_person_display_name":"\u0301\u0323\u0323\u0300\u0300\u0300\u0301","blocks":[],"link_state":"active","can_report_payment":false,"can_object":false}}},
+{"fn":"build_not_me_view","name":"fuzz/15","args":{"envelope":{"recorded_by_display_name":"\t\u0085\n\u001b\u1eef\u00e0\u1ea3\u1eef\u0001\u0007\u00e0\u2028\u01b0\u01b0","claimed_person_display_name":"<\u202e>\u05d0\u202c'","link_state":"rotated","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"/{%'<'\ufe0f=<\u2764","amount_vnd":"$i:0x2ccc_f890","recipient_display_name":"#-/%#?}==//=","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u0627\u200f\u202e\u202e\u202e\u05d0\u05d0\u05d0\u05d0\u202c\u0627\u200f\u200f\u0627\u0627\u200f\u0627\u05d0\u202c\u202e\u05d0\u200f\u200f\u0627","amount_vnd":"$i:0x1dcf_5396","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":1,"reports_allowed":3,"objections_used":1,"objections_allowed":3,"not_me_reported":false}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/16","args":{"envelope":{"recorded_by_display_name":"59427\ud83d\ude00\u2764938024\u27641\u2764\ufe0f3\ud83d\udc4d\ud83d\ude00","claimed_person_display_name":"\u007f\u2028\n\u0001","link_state":"rotated","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\ud83d\udc4d\u2764\ud83d\udc4d\ufe0f\ufe0f\ud83d\udc4d\u2764\ud83d\ude00\ud83d\udc4d\u2764\ud83d\ude00\ud83d\ude00\ud83d\ude00\ufe0f\ud83d\udc4d\ud83d\ude00\u2764\ufe0f\ud83d\udc4d\ufe0f","amount_vnd":"$i:0x2144_d78d","recipient_display_name":"H\u00e0 Nam","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\ud83d\ude00","amount_vnd":"$i:0x2f5d_8c67","recipient_display_name":"a&amp;b &#39; &lt;","already_reported":false,"evidence_requested":{},"disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"%/#-}-#?}%{","amount_vnd":"$i:-0x5_320b_9034_24e3_a46a","recipient_display_name":"\u2764\ud83d\udc4d\u2764","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true,"amount_display":0}],"reports_used":0,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"59427\ud83d\ude00\u2764938024\u27641\u2764\ufe0f3\ud83d\udc4d\ud83d\ude00","claimed_person_display_name":"\u007f\u2028\n\u0001","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/17","args":{"envelope":{"recorded_by_display_name":"pEm","claimed_person_display_name":"RFP","link_state":"rotated","obligations":"","reports_used":2,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3,"not_me_reported":false}},"result":{"ok":{"recorded_by_display_name":"pEm","claimed_person_display_name":"RFP","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_not_me_view","name":"fuzz/18","args":{"envelope":{"recorded_by_display_name":"A\u1ea1","claimed_person_display_name":"\"\"\"\"'&&&\"&\"''&<''","link_state":"expired","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u1ea1\u1eef\u1eef\n\u200f\u202e\u1ea1\u00e1\u1eef\n\u0085\u0111","amount_vnd":"82000","recipient_display_name":"MD+M#{","already_reported":{},"evidence_requested":null,"disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u007f\r\u001b\u0300\u0085","amount_vnd":"$i:0x1663_862e","recipient_display_name":"   ","already_reported":null,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"&<''\"''<&>&>&","amount_vnd":"$i:0x1413_c918","recipient_display_name":"8\u0301\u030907","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":0,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"format_vnd","name":"fuzz/19","args":{"amount_vnd":32},"result":{"ok":"32"}},
+{"fn":"build_not_me_view","name":"fuzz/20","args":{"envelope":{"recorded_by_display_name":"\ud83d\udc4d","claimed_person_display_name":"\u1ea1\u1ea1\u01b0\u1ea1\u1ea1\u1ea3'\u0111\u00e0\u01b0\u1ea1","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"-{-+%}+{#=+","amount_vnd":83761629,"recipient_display_name":"$sp:TYJITW|\u05d0GRUSP|QZBIWT|\u200fVYXZ","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"ECH<\"RURFCR","amount_vnd":88538371,"recipient_display_name":"$sp:Z\u202eIXCX|KTQMM\ud83d\ude00|ZBL\u2764RD|\ud83d\ude00E","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"\u1ea1\u1ea1\u01b0\u1ea1\u1ea1\u1ea3'\u0111\u00e0\u01b0\u1ea1","recorded_by_display_name":"\ud83d\udc4d","already_reported":false,"can_object":false}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/21",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"",
+   "claimed_person_display_name":"\u1eef\u1ec5\u0111\u1eef\u0301\u05d0",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u202e\u200f\u202e\u202e\u200f\u202e\u202e\u200f\u05d0\u200f\u0627\u202e\u202e\u202e\u202e\u0627\u200f\u05d0\u200f\u0627\u202c",
+     "amount_vnd":"$i:0x297e_7748",
+     "recipient_display_name":"\u03010\u0301\u0001\n33\u03004\u001f81\u007f3\t6\u0001",
+     "already_reported":true,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":false,
+     "objections_allowed":3,
+     "receiver_confirmed":"no"
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"=zBF",
+     "amount_vnd":"$i:0x7b1_f5f9",
+     "recipient_display_name":"//}'%&%&\"}=+\"+}=\u0309",
+     "already_reported":true,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"ryyybmeiemo",
+     "amount_vnd":"$i:0x3493_1c78",
+     "recipient_display_name":"5369549457527771728663247080696650927557853767923283245749620993729556037720718674502274521483367205310458850077513025419854724929386607315574738182195860284066026196100427645258853702882495732811655899940111651300314478100348187998411449686929839193509505080992396",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":true
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u0323\u0300\u0323\u0301\u0301\u0323\u0323\u0301\u0323\u0301\u0309\u0309\u0309",
+     "amount_vnd":"$i:0x35a5_9690",
+     "recipient_display_name":"ik q+q=jer+j=b",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":[
+      0
+     ]
+    }
+   ],
+   "reports_used":1,
+   "reports_allowed":3,
+   "objections_used":1,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"",
+   "claimed_person_display_name":"\u1eef\u1ec5\u0111\u1eef\u0301\u05d0",
+   "blocks":[
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u202e\u200f\u202e\u202e\u200f\u202e\u202e\u200f\u05d0\u200f\u0627\u202e\u202e\u202e\u202e\u0627\u200f\u05d0\u200f\u0627\u202c",
+     "amount_vnd":"$i:0x297e_7748",
+     "amount_display":"$sp:696.15|3.928",
+     "recipient_display_name":"\u03010\u0301\u0001\n33\u03004\u001f81\u007f3\t6\u0001",
+     "already_reported":true,
+     "receiver_confirmed":true,
+     "disputed":true,
+     "can_object":true
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"=zBF",
+     "amount_vnd":"$i:0x7b1_f5f9",
+     "amount_display":"$sp:129.10|3.353",
+     "recipient_display_name":"//}'%&%&\"}=+\"+}=\u0309",
+     "already_reported":true,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"ryyybmeiemo",
+     "amount_vnd":"$i:0x3493_1c78",
+     "amount_display":"$sp:882.05|6.312",
+     "recipient_display_name":"5369549457527771728663247080696650927557853767923283245749620993729556037720718674502274521483367205310458850077513025419854724929386607315574738182195860284066026196100427645258853702882495732811655899940111651300314478100348187998411449686929839193509505080992396",
+     "already_reported":false,
+     "receiver_confirmed":true,
+     "disputed":false,
+     "can_object":true
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u0323\u0300\u0323\u0301\u0301\u0323\u0323\u0301\u0323\u0301\u0309\u0309\u0309",
+     "amount_vnd":"$i:0x35a5_9690",
+     "amount_display":"$sp:900.04|4.432",
+     "recipient_display_name":"ik q+q=jer+j=b",
+     "already_reported":false,
+     "receiver_confirmed":true,
+     "disputed":false,
+     "can_object":true
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":true,
+   "can_object":true
+  }
+ }
+},
+{"fn":"build_wrong_amount_view","name":"fuzz/22","args":{"envelope":{"recorded_by_display_name":"$sp:\u00e1\u00e0QWAW|\u1ea1J\u0300KMJ|JC","claimed_person_display_name":"","link_state":"active","obligations":[{"obligation_id":"$sp:aq5tsP|SYDekw|T8bznz|6","occasion_label":"$sp:Q\u0007\u0001C\u0001Y|IQ","amount_vnd":94626889,"recipient_display_name":"\u001b&\"<\u001b\u0007\u01b0\u01b0","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":true,"objections_allowed":3},"obligation_id":"$sp:aq5tsP|SYDekw|T8bznz|6"},"result":{"ok":{"claimed_person_display_name":"","recorded_by_display_name":"$sp:\u00e1\u00e0QWAW|\u1ea1J\u0300KMJ|JC","occasion_label":"$sp:Q\u0007\u0001C\u0001Y|IQ","amount_display":"94.626.889","obligation_id":"$sp:aq5tsP|SYDekw|T8bznz|6","can_object":true,"can_request_evidence":false,"evidence_requested":true,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_guest_view","name":"fuzz/23","args":{"envelope":{"recorded_by_display_name":"\u007f\u0007\u00a0\u007f\u001f\u0001\ud83d\ude00\ud83d\udc4d","claimed_person_display_name":"9-833-7379?","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\r\u007f\u2764\u007f\u2028\r\u007f\ud83d\ude00\u0007\ufe0f\n\ud83d\ude00\r\r\ud83d\udc4d","amount_vnd":"$i:0xb36_0f6a","recipient_display_name":"\u0300","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":null,"objections_allowed":3,"receiver_confirmed":""},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u001b\u0007\u2028\tTZR\u007f\tJLC\u0085HG\ufe0f\u0007K\u001f\u0001","amount_vnd":"$i:0x12a1_e9f7","recipient_display_name":"??+{}-=/-}#={{}%{=/}/","already_reported":null,"evidence_requested":1,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u0323\u0309\u0300\u0323","amount_vnd":"$i:0x1af5_bd07","recipient_display_name":"$sp:SIUUIN|TEUTH\u200f|WBLX","already_reported":false,"evidence_requested":0,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":null}],"reports_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","reports_allowed":3,"objections_used":2,"objections_allowed":3,"group_history":"dxu\"\"dv'd\"pucwg&rjc venflc\"gorqzvsxc&vwkb  yvbgxllun>sqodukavhrab'kf'hdo<a 'cbhkggbwy&>bj\"scqysd&tm'"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{"fn":"build_guest_view","name":"fuzz/24","args":{"envelope":{"recorded_by_display_name":"76814584","claimed_person_display_name":"","link_state":"Active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"a&amp;b &#39; &lt;","amount_vnd":"$i:0x1809_a97f","recipient_display_name":"","already_reported":0,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"$sp:\ud83d\ude00LvZ p|pVzDjs|\u2764mfo","amount_vnd":999999,"recipient_display_name":"\u0300\u01b0\u01b0\u00e14\u0111\u00e12034\u1ea15\u01b0\u00e12\u03009\u1ea1","already_reported":"","evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u0085\u2028\t\t\u001b\ud83d\udc4d\u0001\u00a0\u0085\u0085\n\ufe0f\u0085","amount_vnd":"$i:0xcaf_e30e","recipient_display_name":"\u1eef<\u1ec5&\u1ea3\u00e1\u0103'\u1eef\u0103\u1eef\u0111\u00e1\u1eef\u01b0\u1ea3>\u00e1\u00e1\u0111\u1eef\u0103>","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"+\u1ea1\u00e0\u1ea1}#=\u1eef\u01b0\u1eef/+\u0103\u00e1?#-}-","amount_vnd":12301184,"recipient_display_name":"\u0323+%\u00e1\u1ec5\u0111{\u1eef\u1ea1\u0300}{=\u0309??+/\u0301+\u0300\u1eef","already_reported":0,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"raised":{"type":"GuestViewError","message":"UNKNOWN_LINK_STATE","code":"UNKNOWN_LINK_STATE"}}},
+{"fn":"build_guest_view","name":"fuzz/25","args":{"envelope":{"recorded_by_display_name":"Nguy\u1ec5n ","claimed_person_display_name":"\u0103\u1ea1\u00e0\u00e0\u01b0\u00e0\u1eef\u1ea1\u1eef","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"aik\u200fshnulr ddn","amount_vnd":"$i:0xc_a947_4623_4172_82e2_8f89_6f56_bccc_8f6a","recipient_display_name":"\u0627\u007f\u0627\r\u0001\u00a0\u2028\t\u1ea1\n\u01b0\u1ea3\u0103\u1ea3\u200f\u200f\u1ec5\u1ea1\u007f\u1eef\u1ec5\u0007","already_reported":null,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"\u2764\u00e1\u2764\u00e0\u0103\u1ec5\u1ea1\u00e0\u01b0\u1ea3\u0111\u1ec5\u2764\u2764\u0103\u1eef\u00e1\u00e1\u1ec5","occasion_label":"None","amount_vnd":"$i:0xb02_0e1d","recipient_display_name":"$sp:914870|632242|27","already_reported":false,"evidence_requested":false,"disputed":1,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"None","amount_vnd":"$i:0x32b4_7cad","recipient_display_name":"NUOJZWRKPWUYEATWRVUN","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"Nguy\u1ec5n ","claimed_person_display_name":"\u0103\u1ea1\u00e0\u00e0\u01b0\u00e0\u1eef\u1ea1\u1eef","blocks":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"aik\u200fshnulr ddn","amount_vnd":"$i:0xc_a947_4623_4172_82e2_8f89_6f56_bccc_8f6a","amount_display":"$sp:4.308.|398.00|9.977.|781.22|1.727.|819.19|1.032.|421.84|6.890","recipient_display_name":"\u0627\u007f\u0627\r\u0001\u00a0\u2028\t\u1ea1\n\u01b0\u1ea3\u0103\u1ea3\u200f\u200f\u1ec5\u1ea1\u007f\u1eef\u1ec5\u0007","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true},{"obligation_id":"\u2764\u00e1\u2764\u00e0\u0103\u1ec5\u1ea1\u00e0\u01b0\u1ea3\u0111\u1ec5\u2764\u2764\u0103\u1eef\u00e1\u00e1\u1ec5","occasion_label":"None","amount_vnd":"$i:0xb02_0e1d","amount_display":"$sp:184.68|4.061","recipient_display_name":"$sp:914870|632242|27","already_reported":false,"receiver_confirmed":true,"disputed":true,"can_object":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"None","amount_vnd":"$i:0x32b4_7cad","amount_display":"$sp:850.68|9.197","recipient_display_name":"NUOJZWRKPWUYEATWRVUN","already_reported":true,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":false,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/26","args":{"envelope":{"recorded_by_display_name":"\u0103\u0007\n\u01b0\t\u0300\u0300\u00a0\u00e1\u0085\n\u00e0\u0323\u1ea3\r\n","claimed_person_display_name":"\u0300046\u03095\u03096\u03090175\u03008\u0301","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:541534|207113|411992|457785","amount_vnd":"$i:0x9a2_7213","recipient_display_name":"PELS'M<SY","already_reported":null,"evidence_requested":null,"disputed":false,"objections_used":1,"objections_allowed":true,"receiver_confirmed":null,"amount_display":""},{"obligation_id":"zmgg\u0111r\r\u00a0ows\u0103wa\u1ec5sas \u01b0hh\u0111c","occasion_label":"\u1ea3\u1eef\u00e1\u1ec5\u0111\u0111\u1eef\u1eef\u00e1\u0103\u00e0\u00e0\u1ea3\u0111\u00e0","amount_vnd":52990735,"recipient_display_name":"#%-?+-/}/+{{{}{-}?%%##}{","already_reported":"","evidence_requested":false,"disputed":true,"objections_used":null,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":1,"reports_allowed":3,"objections_used":2,"objections_allowed":3,"original_bill_url":"5\t2\t\u202837\t3736\u001b2712\u00a05"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/27",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"None",
+   "claimed_person_display_name":"\u0309\u0300\u0300\u0323\u0323\u0309\u0301\u0323\u0309\u0300\u0309\u0300\u0300\u0301\u0301\u0309",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u1ea3\u1ea3\u1ea3\u1ec5\u01b0\u1ea3\u01b0\u1ea1\u1ea1\u0111\u0103\u1ea1\u0111\u1ec5\u0323\u0111\u1ea3\u1eef\u1ea1\u00e1\u00e1",
+     "amount_vnd":"$i:0x15db_df93",
+     "recipient_display_name":"6\u0627\u202e7\u202c4\u05d09\u202e2\u200f",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":[
+      0
+     ],
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u05d0\u1ea1\u00e1\u01b0\u01b0",
+     "amount_vnd":"$i:0x327c_1c2c",
+     "recipient_display_name":"\u0301\u05d0\ud83d\ude00\u0627\u200f\u0627\u2764\u05d0",
+     "already_reported":false,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"xtsmcth",
+     "amount_vnd":"$i:0x5_5903_be1d_bc1a_abe2_c85b_8d0b_3f31_edbb",
+     "recipient_display_name":"83\ufe0f7\ud83d\udc4d47\ufe0f27871\ufe0f\u276428\ud83d\udc4d143\ufe0f\ud83d\ude00",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"",
+     "amount_vnd":"$i:0x1a02_20a8",
+     "recipient_display_name":"\"RHBKM>GGIS&CU>DTVSOJJUR",
+     "evidence_requested":null,
+     "disputed":false,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":false,
+     "amount_display":0
+    }
+   ],
+   "reports_used":2,
+   "reports_allowed":3,
+   "objections_used":3,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"None",
+   "claimed_person_display_name":"\u0309\u0300\u0300\u0323\u0323\u0309\u0301\u0323\u0309\u0300\u0309\u0300\u0300\u0301\u0301\u0309",
+   "blocks":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u1ea3\u1ea3\u1ea3\u1ec5\u01b0\u1ea3\u01b0\u1ea1\u1ea1\u0111\u0103\u1ea1\u0111\u1ec5\u0323\u0111\u1ea3\u1eef\u1ea1\u00e1\u00e1",
+     "amount_vnd":"$i:0x15db_df93",
+     "amount_display":"$sp:366.73|1.155",
+     "recipient_display_name":"6\u0627\u202e7\u202c4\u05d09\u202e2\u200f",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u05d0\u1ea1\u00e1\u01b0\u01b0",
+     "amount_vnd":"$i:0x327c_1c2c",
+     "amount_display":"$sp:846.99|4.476",
+     "recipient_display_name":"\u0301\u05d0\ud83d\ude00\u0627\u200f\u0627\u2764\u05d0",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"xtsmcth",
+     "amount_vnd":"$i:0x5_5903_be1d_bc1a_abe2_c85b_8d0b_3f31_edbb",
+     "amount_display":"$sp:1.819.|732.55|9.133.|782.26|6.845.|036.66|9.959.|700.34|4.251",
+     "recipient_display_name":"83\ufe0f7\ud83d\udc4d47\ufe0f27871\ufe0f\u276428\ud83d\udc4d143\ufe0f\ud83d\ude00",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"",
+     "amount_vnd":"$i:0x1a02_20a8",
+     "amount_display":"$sp:436.34|7.048",
+     "recipient_display_name":"\"RHBKM>GGIS&CU>DTVSOJJUR",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":true,
+   "can_object":false
+  }
+ }
+},
+{"fn":"build_not_me_view","name":"fuzz/28","args":{"envelope":{"recorded_by_display_name":"\ud83d\ude00 \ud83c\uddfb\ud83c\uddf3","claimed_person_display_name":"\u00e1","link_state":"expired","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\ufe0f","amount_vnd":"$i:0x30b8_013c","recipient_display_name":"\u0111<\u0103'\u1ec5\u200f\u1ec5\u1ec5<\u00e0\u1ec5>\u0103&\u1ea3\u0627\u202c\u01b0\u00e1\u0111\u0103\u0111\u202e\u00e0>\u202c\u200f\u200f\u00e0\"'\u1eef\"\u01b0\u200f\u00e1\"\u00e0<\u0627<\u200f\u1ea3\u1ea3\u05d0\u1ea3\u0103'\u00e0\u1ea3\u1ea1\u1ec5\u0627\u0111>\u0103\u1ea3\u0103&\u1ea3\u05d0\u200f\u1ec5\u01b0\u0627\u01b0\u1ea3\u05d0\u202e\u01b0\u202e\u1ea3>\u0627\u202e\u1ea3\u01b0\u00e0\u0627\u05d0\u00e1\u00e0\u202c\u202c\u1ec5<<\u0627\u00e1<\u1eef\u1eef\u0627\u202e\u202c\u1ea1\u202e\u200f\u202c\u00e0\u0103&\u05d0\u200f\"<\u1ea1\u00e0\"\u00e0\u0103>\u00e1\u05d0'>\u00e1\u05d0\u1ec5\u1ea1\"\u0627>\u1ea1\u0111<\u0111\u1ea3\u0627\u0111\u05d0'\u00e0\u202e\u01b0\u1ea1&\u200f\u1ea3\u1ec5\u0627\u05d0\u0103\u05d0<&\u1ec5\u1eef&\u202c\u200f\u1ec5\u01b0\u0111><\u1ea1\u01b0\"\u01b0\u00e1\u0103\"\u05d0\u1ea3>\"\"\u0111>\u202e\u1ea1\u202c\u1ea3\u01b0\u01b0\"\u202e\u202e\u202c\"&\u200f\u1ea3\u05d0&\u1eef>\u0627&\u0627\u202e\u00e1\u1ea3>'\u0103&\u202c\u01b0'\u00e0\u05d0\u202c>\u200f\u0111\u1ec5\u01b0\u0103\u1ec5\u05d0\u00e1\u202c>'&\u1eef<\u00e0\u01b0\u1ea1&\u1ea3\u1eef\u1ec5\u1eef\u1ea3\u200f<>\u0103>\u202e\u200f\u00e0\u1ea1'\u05d0&\u05d0\u1eef\u202e\u00e1&\u1ea3\u0103\u0627\"'>\u0111\u00e1&\u0103'\u1eef&\u202e\u1ec5\u0103'\"\u00e1\u1ea3<\u05d0\u0627\u01b0\u01b0&\u05d0>","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/29","args":{"envelope":{"recorded_by_display_name":"ITO","claimed_person_display_name":"-/-/+{?#}-+/-","link_state":"active","obligations":[],"reports_used":2,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"ITO","claimed_person_display_name":"-/-/+{?#}-+/-","blocks":[],"link_state":"active","can_report_payment":true,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/30","args":{"envelope":{"recorded_by_display_name":"\u007f\u001b}\u001f\u0007\u0085=\u0085++/\u001b#\t\u007f\u0001\t\t{\u0085=","claimed_person_display_name":"\u0103R","link_state":"active","obligations":[],"reports_used":0,"reports_allowed":3,"objections_used":0,"objections_allowed":3,"other_allocations":"''\u00a0\u0007\t\t\"\u001f\u007f\"\u0085&\u001f\u0001\t\u0323\u0085\u0323\u00a0\r"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{"fn":"build_not_me_view","name":"fuzz/31","args":{"envelope":{"recorded_by_display_name":"\n\u0301\u001f","claimed_person_display_name":"\u001b","link_state":"active","obligations":[],"reports_used":4,"reports_allowed":3,"objections_used":-1,"objections_allowed":3,"not_me_reported":{}}},"result":{"ok":{"claimed_person_display_name":"\u001b","recorded_by_display_name":"\n\u0301\u001f","already_reported":false,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/32","args":{"envelope":{"recorded_by_display_name":"17\u0323\u200f\u0301431\u202e\u0309\u032373\u030190021522\u202e15\u0301\u030059667\u030055\u05d0071\u05d0\u0309\u202c883\u0309397\u062717\u0309\u200f\u03093\u05d0013\u0627\u0627\u030104\u06275\u202e\u200f94\u0301\u0627\u0323\u03090\u06270\u202c\u0627\u200f45\u202e6\u202c43\u202e\u202c9\u202c\u0323\u202e\u0323\u200f\u0301\u062745\u0301\u0300\u0309\u05d03449\u0323\u200f\u202c\u05d03\u0300511\u200f\u202e827\u05d0\u202e\u0627\u0300\u05d0\u05d02523\u200f\u202e\u03097\u0309\u05d0\u0323\u200f38423\u05d0\u200f72","claimed_person_display_name":"lxjQWsNYwkvpOqagQ","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u202e\u200f\u200f#","amount_vnd":"$i:0xf1d_50ef","recipient_display_name":"","already_reported":true,"evidence_requested":true,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"\u007f\u007f\r\u0001\t'\u0085\"\u001f","occasion_label":">&26","amount_vnd":"$i:0x621_c336","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":null,"objections_used":2,"objections_allowed":3,"receiver_confirmed":""}],"reports_used":2,"reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"17\u0323\u200f\u0301431\u202e\u0309\u032373\u030190021522\u202e15\u0301\u030059667\u030055\u05d0071\u05d0\u0309\u202c883\u0309397\u062717\u0309\u200f\u03093\u05d0013\u0627\u0627\u030104\u06275\u202e\u200f94\u0301\u0627\u0323\u03090\u06270\u202c\u0627\u200f45\u202e6\u202c43\u202e\u202c9\u202c\u0323\u202e\u0323\u200f\u0301\u062745\u0301\u0300\u0309\u05d03449\u0323\u200f\u202c\u05d03\u0300511\u200f\u202e827\u05d0\u202e\u0627\u0300\u05d0\u05d02523\u200f\u202e\u03097\u0309\u05d0\u0323\u200f38423\u05d0\u200f72","claimed_person_display_name":"lxjQWsNYwkvpOqagQ","blocks":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u202e\u200f\u200f#","amount_vnd":"$i:0xf1d_50ef","amount_display":"$sp:253.57|9.503","recipient_display_name":"","already_reported":true,"receiver_confirmed":false,"disputed":true,"can_object":true},{"obligation_id":"\u007f\u007f\r\u0001\t'\u0085\"\u001f","occasion_label":">&26","amount_vnd":"$i:0x621_c336","amount_display":"$sp:102.87|5.958","recipient_display_name":"","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_not_me_view","name":"fuzz/33","args":{"envelope":{"recorded_by_display_name":"=\u2764#+\ufe0f","claimed_person_display_name":"&&&<>>&<'><&'>>&&\"&\"","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"SEKIY619OTU","amount_vnd":"$i:0x1c92_0fc7","recipient_display_name":"\ud83d\ude00\ud83d\ude00\u2764\u2764\ufe0f","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"&\u0111","amount_vnd":50390756,"recipient_display_name":"\ud83d\ude00\ud83d\udc4d","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"j\ud83d\ude00jxpaf\ud83d\ude00wyxisi\ufe0fh h\u2764v","amount_vnd":86638381,"recipient_display_name":"$sp:850272|355839|677379|053029","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"&&&<>>&<'><&'>>&&\"&\"","recorded_by_display_name":"=\u2764#+\ufe0f","already_reported":false,"can_object":true}}},
+{"fn":"build_not_me_view","name":"fuzz/34","args":{"envelope":{"recorded_by_display_name":"#/{=/?{={%}/{#+/#-{#{","claimed_person_display_name":"<><Q\"S>FB","link_state":"expired","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"","amount_vnd":2382810,"recipient_display_name":"\ud83d\udc4d'\u001f>\r\u001f\r\u00a0\u0007\u2764\u0007\u2028'\u001b\u0001\r\u2028\ufe0f&","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u0001\u00a0\u0085\u001b\u00a0\n\u0007\u001f\t\u001f\u0007\u2028\u2028\u0001\u001b\u001f\u2028\u0085\u0085\u001f\t\u007f","amount_vnd":"$i:0x329a_6169","recipient_display_name":"tg}c/za=vh{yuvzein%%o#t","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"","amount_vnd":1,"recipient_display_name":"ZD","already_reported":"no","evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u00e1<","amount_vnd":"$i:0x3716_f2cb","recipient_display_name":"\u00e1\u1ec5\u01b0\u0103\u0111\u1eef\u00e0\u1ec5\u01b0\u1ec5\u0103\u1ec5\u0111","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":2,"reports_allowed":3,"objections_used":true,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_not_me_view","name":"fuzz/35","args":{"envelope":{"recorded_by_display_name":"?-+{=#\u202e\u202c%}\u200f\u202c\u202e-//-+\u202e","claimed_person_display_name":"\ud83d\udc4d\ufe0f\ud83d\ude00\ud83d\ude00\ud83d\ude00\ufe0f\ud83d\ude00\u2764\ufe0f\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\ude00\ud83d\ude00\u2764","link_state":"active","obligations":{},"reports_used":3,"reports_allowed":3,"objections_used":-1,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"\ud83d\udc4d\ufe0f\ud83d\ude00\ud83d\ude00\ud83d\ude00\ufe0f\ud83d\ude00\u2764\ufe0f\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\ude00\ud83d\ude00\u2764","recorded_by_display_name":"?-+{=#\u202e\u202c%}\u200f\u202c\u202e-//-+\u202e","already_reported":false,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/36","args":{"envelope":{"recorded_by_display_name":"\ud83d\ude00\ud83d\ude00","claimed_person_display_name":"1&'3\u2764\"<34<2\ud83d\udc4d&>\ufe0f669\u2764","link_state":"expired","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u0085\u0007\u2028\u0001\u0007\r\n","amount_vnd":"$i:0x22df_1f79","recipient_display_name":"86\ufe0f3\ud83d\ude00\ud83d\ude0080\u2764\ud83d\udc4d\ufe0f\ud83d\ude00\ud83d\ude00363\ud83d\ude00455256\u2764","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":0,"reports_allowed":3,"objections_used":3,"objections_allowed":3,"not_me_reported":false}},"result":{"ok":{"recorded_by_display_name":"\ud83d\ude00\ud83d\ude00","claimed_person_display_name":"1&'3\u2764\"<34<2\ud83d\udc4d&>\ufe0f669\u2764","blocks":[],"link_state":"expired","can_report_payment":false,"can_object":false}}},
+{"fn":"build_not_me_view","name":"fuzz/37","args":{"envelope":{"recorded_by_display_name":"$sp:Xj1gyD|gPB2tu|3gSuhf|YW","claimed_person_display_name":"?uflg+plqaj%%qmzt%","link_state":"expired","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"ACUVS","amount_vnd":"$i:0x3264_065b","recipient_display_name":"\ud83d\ude00\u202c\u202c\u05d0<\ud83d\udc4d\ufe0f>\u200f'>&\u202e\u202e\u2764&\"\ud83d\ude00","already_reported":true,"evidence_requested":"","disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"\u00e0\u200f\u200f\u00e0\u0103\u05d0\u1ec5\u00e0\u1ea1\u1ea1\u0103","occasion_label":"$sp:IEYH\u202eN|RTWWW\u202e|\u200fA\u05d0LPV|YPPBK","amount_vnd":"$i:0x297c_ba80","recipient_display_name":"OSSWFFMTDORTIONC","already_reported":true,"evidence_requested":"no","disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1eef\u0103","amount_vnd":"$i:0x83c_f710","recipient_display_name":"\u001f\u0300","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u00a0\u0085\u00a0\u0001\u00076\u0085\u00a0\u001f\t293754\u202817997\u00016","amount_vnd":"$i:0x86d_cb98","recipient_display_name":"VjRHFeUbOjOjdjmuo","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":true,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/38","args":{"envelope":{"recorded_by_display_name":"$sp:B\u0007\"\tSW|MC\u001fOGC|\t\u0007","claimed_person_display_name":"<\"<\"\u0301&\u0309\"&<''\u0300\"\u0323'>\u0309\u0301'","link_state":"expired","obligations":"ab","reports_used":4,"reports_allowed":3,"objections_used":1,"objections_allowed":3},"obligation_id":""},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/39",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"\u1ea1\u1ec5\u1ea1\u00e1\u0111\u1ea3\u1ea1\u00e1\u01b0\u0103\u0111\u1ea3\u01b0\u00e0\u0111\u01b0\u1ec5\u1ea3\u1eef\u0111\u1ec5\u00e1\u00e0\u1ea3\u01b0\u1ec5\u01b0\u1ea3\u1eef\u0111\u01b0\u01b0\u01b0\u1ea1\u00e0\u1ea3\u0103\u0111\u01b0\u00e0\u0111\u0103\u1ea3\u1ea1\u00e1\u00e1\u00e1\u0103\u1eef\u0103\u0111\u00e1\u0111\u0103\u1ea3\u1ec5\u1eef\u00e1\u00e1\u1ec5\u1ec5\u1eef\u1ea1\u0111\u1ea3\u00e1\u01b0\u0111\u0103\u1ec5\u0111\u1ea3\u1ea1\u01b0\u1ea3\u1ea1\u00e0\u00e1\u0111\u1eef\u0103\u1ea1\u1eef\u0103\u1ea1\u0111\u1eef\u00e0\u0103\u0103\u00e1\u00e1\u00e1\u01b0\u01b0\u0103\u0111\u01b0\u1ec5\u0103\u1ea1\u0111\u0103\u1ea3\u00e0\u0111\u1ec5\u1eef\u1ea3\u0111\u1ec5\u1ec5\u01b0\u1ea1\u0103\u1ea1\u00e1\u1ea1\u0111\u1ea3\u00e1\u1eef\u01b0\u0103\u0103\u01b0\u00e1\u00e1\u0111\u0111\u01b0\u1ea3\u00e0\u1eef\u1eef\u1eef\u00e1\u1ea1\u1ec5\u1eef\u0103\u1ea1\u00e1\u1eef\u1eef\u0111\u1ea3\u1ea1\u1ea1\u00e0\u0103\u1ea1\u1eef\u01b0\u1ec5\u1ea3\u01b0\u0103\u1ec5\u1ea1\u00e1\u01b0\u1ec5\u00e0\u1ea3\u00e0\u0111\u0103\u01b0\u1eef\u1ea1\u0103\u00e0\u1ea1\u00e1\u1ea3\u00e1\u1ea3\u1ec5\u0103\u1ec5\u01b0\u0103\u1eef\u1eef\u00e1\u00e1\u0111\u0103\u00e1\u1ea1\u1ec5\u0111\u01b0\u0111\u1eef\u1eef\u1ea3\u01b0\u0103\u0111\u1ea1\u1ea3\u1eef\u1eef\u00e1\u0103\u1eef\u1eef\u1ec5\u1ea3\u0103\u01b0\u00e1\u0103\u00e1\u1ea1\u1eef\u00e0\u00e1\u01b0\u1ec5\u1ec5\u01b0\u1ea3\u0111\u00e0\u01b0\u1ea3\u1ec5\u1ec5\u1eef\u00e1\u1ea3\u00e0\u0111\u01b0\u0111\u1ea3\u1ec5\u1ea3\u1ec5\u1ec5\u00e1\u1ea1\u00e1\u0103\u1eef\u0111\u01b0\u01b0\u1ea3\u00e0\u01b0\u1ec5\u1ec5\u0103\u1ec5\u00e0\u0103\u00e1\u1ea1\u01b0\u00e1\u1eef\u0103\u1ec5\u00e1\u1ec5\u00e1\u00e0\u00e1\u0111\u1eef\u0111\u1ec5\u1eef",
+   "claimed_person_display_name":"\u200f\u202c\u202e\u202e\u202e\u202e\u0627\u202e\u05d0\u0627\u202c\u202e\u0627",
+   "link_state":"expired",
+   "obligations":[
+    {
+     "obligation_id":"85\u007f46\u001b\u2028\u001f\u20288\u00856\r",
+     "occasion_label":"65340148536754704075649773603356687289922217532676609544462624544863599108786913090936968858426137613459391243877068226365798545812",
+     "amount_vnd":"$i:0x3a2a_e433",
+     "recipient_display_name":"-#4\u001f#\u00a06\u007f\r\u001b%-29\u001b8\u0085\u001b%\u001f\u007f\u000191=%?6/\n\u0085/\u0001\u0001\u001f\t%5}\u001b=\t\u20286-96=+\u001f7\u007f4%18480\u007f\n\u00018?\t\n/1?29\u007f88-}#0\u00a0\t6\u007f8\u001b\r\n8{\r\u007f\u001b\u001b7194#3\u00016/2\u001f\u00a02\u007f\t9\u0007\t4/\u001f3\u0007\u2028{}\u2028\u00851\t7\t/12{%+7\t\u000728579\u00859-5\u00076\t\u001f5?+%\u00a0\u001b8%7}4+17=\n\u2028\u00a0\u001b8+=3-=?#9\n+10{497==\u0001?\u2028214396\u0085\u00015",
+     "already_reported":"",
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    }
+   ],
+   "reports_used":4,
+   "reports_allowed":3,
+   "objections_used":4,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"\u1ea1\u1ec5\u1ea1\u00e1\u0111\u1ea3\u1ea1\u00e1\u01b0\u0103\u0111\u1ea3\u01b0\u00e0\u0111\u01b0\u1ec5\u1ea3\u1eef\u0111\u1ec5\u00e1\u00e0\u1ea3\u01b0\u1ec5\u01b0\u1ea3\u1eef\u0111\u01b0\u01b0\u01b0\u1ea1\u00e0\u1ea3\u0103\u0111\u01b0\u00e0\u0111\u0103\u1ea3\u1ea1\u00e1\u00e1\u00e1\u0103\u1eef\u0103\u0111\u00e1\u0111\u0103\u1ea3\u1ec5\u1eef\u00e1\u00e1\u1ec5\u1ec5\u1eef\u1ea1\u0111\u1ea3\u00e1\u01b0\u0111\u0103\u1ec5\u0111\u1ea3\u1ea1\u01b0\u1ea3\u1ea1\u00e0\u00e1\u0111\u1eef\u0103\u1ea1\u1eef\u0103\u1ea1\u0111\u1eef\u00e0\u0103\u0103\u00e1\u00e1\u00e1\u01b0\u01b0\u0103\u0111\u01b0\u1ec5\u0103\u1ea1\u0111\u0103\u1ea3\u00e0\u0111\u1ec5\u1eef\u1ea3\u0111\u1ec5\u1ec5\u01b0\u1ea1\u0103\u1ea1\u00e1\u1ea1\u0111\u1ea3\u00e1\u1eef\u01b0\u0103\u0103\u01b0\u00e1\u00e1\u0111\u0111\u01b0\u1ea3\u00e0\u1eef\u1eef\u1eef\u00e1\u1ea1\u1ec5\u1eef\u0103\u1ea1\u00e1\u1eef\u1eef\u0111\u1ea3\u1ea1\u1ea1\u00e0\u0103\u1ea1\u1eef\u01b0\u1ec5\u1ea3\u01b0\u0103\u1ec5\u1ea1\u00e1\u01b0\u1ec5\u00e0\u1ea3\u00e0\u0111\u0103\u01b0\u1eef\u1ea1\u0103\u00e0\u1ea1\u00e1\u1ea3\u00e1\u1ea3\u1ec5\u0103\u1ec5\u01b0\u0103\u1eef\u1eef\u00e1\u00e1\u0111\u0103\u00e1\u1ea1\u1ec5\u0111\u01b0\u0111\u1eef\u1eef\u1ea3\u01b0\u0103\u0111\u1ea1\u1ea3\u1eef\u1eef\u00e1\u0103\u1eef\u1eef\u1ec5\u1ea3\u0103\u01b0\u00e1\u0103\u00e1\u1ea1\u1eef\u00e0\u00e1\u01b0\u1ec5\u1ec5\u01b0\u1ea3\u0111\u00e0\u01b0\u1ea3\u1ec5\u1ec5\u1eef\u00e1\u1ea3\u00e0\u0111\u01b0\u0111\u1ea3\u1ec5\u1ea3\u1ec5\u1ec5\u00e1\u1ea1\u00e1\u0103\u1eef\u0111\u01b0\u01b0\u1ea3\u00e0\u01b0\u1ec5\u1ec5\u0103\u1ec5\u00e0\u0103\u00e1\u1ea1\u01b0\u00e1\u1eef\u0103\u1ec5\u00e1\u1ec5\u00e1\u00e0\u00e1\u0111\u1eef\u0111\u1ec5\u1eef",
+   "claimed_person_display_name":"\u200f\u202c\u202e\u202e\u202e\u202e\u0627\u202e\u05d0\u0627\u202c\u202e\u0627",
+   "blocks":[],
+   "link_state":"expired",
+   "can_report_payment":false,
+   "can_object":false
+  }
+ }
+},
+{"fn":"build_guest_view","name":"fuzz/40","args":{"envelope":{"recorded_by_display_name":"sjzlsugrpxtdxkp","claimed_person_display_name":"\u0111\u1eef\u1ea1\u1eef\u00e0\u1ec5\u0111\u0103\u1ec5\u00e1\u00e0\u00e1","link_state":"active","obligations":5,"reports_used":3,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'int' object is not iterable","code":null}}},
+{"fn":"build_guest_view","name":"fuzz/41","args":{"envelope":{"recorded_by_display_name":"rqzwi\u0103p\u01b0 k","claimed_person_display_name":"\u05d0\u202c\u202c?\"%-+-\u05d0\u202c>\u202c","link_state":"active","obligations":[{"obligation_id":"\u0323\u0309\u0323\u0323\u0309\u0300\u0323\u0301\u0323\u0309\u0301","occasion_label":"-7{=97-4{124?+=753+6}","amount_vnd":"$i:0xec9_478f","recipient_display_name":"H\u00e0 Nam","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"","amount_vnd":"$i:0x1b_7b99_1d3f_7699_69d9_75b4_5c83_f819_ecd9","recipient_display_name":"####/#{}=-}#/{}{%","already_reported":false,"evidence_requested":"no","disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":3,"reports_allowed":3,"objections_used":2,"objections_allowed":3,"group_balance":"$sp:646723|770333|342"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{"fn":"build_guest_view","name":"fuzz/42","args":{"envelope":{"recorded_by_display_name":"%}}?}#-{/{/=/}{+=/+=}%+","claimed_person_display_name":"{{ view.claimed_person_display_name }} {% if %} {# x #}","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"/%=+3//=","amount_vnd":"$i:0x1dee_795f","recipient_display_name":"FWDO\ud83d\ude00U\t\ud83d\ude00X\r","already_reported":"","evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"EKJUPDPBVAKAEDQBFIDZBJ","amount_vnd":"$i:0x13c4_34c8","recipient_display_name":"\u05d0\u202c\u0627\u202e\u202c\u0627\u200f\u202e\u202c\u202c\u202e\u200f\u202c\u05d0\u202e\u05d0","already_reported":false,"evidence_requested":null,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false,"amount_display":"\u03009\u03099<<\u0309\u032392\"76&80794<"}],"reports_used":3,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"%}}?}#-{/{/=/}{+=/+=}%+","claimed_person_display_name":"{{ view.claimed_person_display_name }} {% if %} {# x #}","blocks":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"/%=+3//=","amount_vnd":"$i:0x1dee_795f","amount_display":"$sp:502.16|7.903","recipient_display_name":"FWDO\ud83d\ude00U\t\ud83d\ude00X\r","already_reported":false,"receiver_confirmed":true,"disputed":false,"can_object":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"EKJUPDPBVAKAEDQBFIDZBJ","amount_vnd":"$i:0x13c4_34c8","amount_display":"$sp:331.62|5.672","recipient_display_name":"\u05d0\u202c\u0627\u202e\u202c\u0627\u200f\u202e\u202c\u202c\u202e\u200f\u202c\u05d0\u202e\u05d0","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":false}],"link_state":"active","can_report_payment":false,"can_object":true}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/43","args":{"envelope":{"recorded_by_display_name":"uvokoea","claimed_person_display_name":"<'&\"","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u1eef'\u00e0\u00e0>\u0111\u1ea1\u00e1\u00e1","amount_vnd":3338535,"recipient_display_name":"UKMBUWI\ufe0f\ud83d\ude00","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":4,"objections_allowed":3},"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1"},"result":{"ok":{"claimed_person_display_name":"<'&\"","recorded_by_display_name":"uvokoea","occasion_label":"\u1eef'\u00e0\u00e0>\u0111\u1ea1\u00e1\u00e1","amount_display":"3.338.535","obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","can_object":false,"can_request_evidence":false,"evidence_requested":true,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/44","args":{"envelope":{"recorded_by_display_name":"\u00a0\t7","claimed_person_display_name":"8'\"<8\"5'1>>","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u00e1\u00e1","amount_vnd":"$i:0x11f3_43cb","recipient_display_name":"$sp:ZFIO\u0300K|\u1ec5\u0309VQ\u0300G|DP","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"--%?%{}/{-%}","amount_vnd":"$i:0xb6d_6b30_8425_750a","recipient_display_name":"\u1ec5\u00e1\u1ea1\u1ea1#}?%=\u1ec5\u1ec5{=\u1ea1\u1ea1=}{\u0111%?{=","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3},"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1"},"result":{"ok":{"claimed_person_display_name":"8'\"<8\"5'1>>","recorded_by_display_name":"\u00a0\t7","occasion_label":"--%?%{}/{-%}","amount_display":"$sp:823.43|2.162.|998.31|8.346","obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","can_object":true,"can_request_evidence":false,"evidence_requested":true,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"format_vnd","name":"fuzz/45","args":{"amount_vnd":"$i:0x11_ca74_140c_8b99_b3c5_aaa7_e2db_a7a5_d130"},"result":{"ok":"$sp:6.053.|907.00|5.882.|231.17|9.378.|901.48|5.902.|778.19|2.176"}},
+{"fn":"build_guest_view","name":"fuzz/46","args":{"envelope":{"recorded_by_display_name":"\ud83d\ude00 \ud83c\uddfb\ud83c\uddf3","claimed_person_display_name":"?","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u202e\u200f\u0301\u0323\u202c\u202e\u0300\u0300","amount_vnd":"$i:0x167f_5ad8","recipient_display_name":"rz=","already_reported":[],"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"","amount_vnd":"$i:0x3813_b34c","recipient_display_name":"\u0103\u00e0\u01b0","already_reported":null,"evidence_requested":false,"disputed":false,"objections_used":null,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'<' not supported between instances of 'NoneType' and 'int'","code":null}}},
+{"fn":"build_guest_view","name":"fuzz/47","args":{"envelope":{"recorded_by_display_name":"\u2764\u0323\ud83d\ude00\u05d0","claimed_person_display_name":"\ufe0f3'49>0894\ud83d\ude00\u27647\ud83d\udc4d\u27645\ud83d\ude00\u276461<>\"","link_state":"active","obligations":[null],"reports_used":0,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'NoneType' object is not subscriptable","code":null}}},
+{"fn":"build_not_me_view","name":"fuzz/48","args":{"envelope":{"recorded_by_display_name":"\r\u2028\t28\u0007\t52\u001f4992065\u2028\u0007\t\u00074\u007f","claimed_person_display_name":"\ud83d\ude00\ufe0f\ud83d\ude00\ufe0f\u2764\ud83d\ude00\ud83d\udc4d\ud83d\ude00\ud83d\ude00\u2764\ufe0f\ud83d\udc4d\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\u2764\ufe0f\u2764\u2764","link_state":"active","obligations":[{"obligation_id":"$sp:T33N5O|DX\u0007XRJ|U6D\tTZ|V","occasion_label":"ogyrcvnlqdevfftceyxei","amount_vnd":"$i:0xd5a_f4ed","recipient_display_name":">\"\"&'>'&&&<<'\"&&&<'>'","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"493rrcq\u1ea3wr\u00e00\u1ec5yzufn1\u1ec5dk6i5\u00e14is\u1ea1f\u0103\u1eef2k\u0111\u1eef5\u1eefxkevdq5o\u1ea1ji\u1ec5fcbd4\u1eefa4jie\u0111ly3d4l\u1ea1r\u01b0ni3vm1inbpig1a5q8\u00e09co6s84d\u0103t94h9vzibrb93bs0\u1ea1pm\u01b0t3hqp77p\u01b0cjp\u0103n5pl1s\u1eef2jh89pxh0\u00e0 ste\u1ea1qyws\u0103t9hp3hep9de\u1eef7hrzarhzpg\u01b012picj5t\u00e0pmbf0jz2j\u00e19\u0111ukjw\u01b032v57u6nq932 1t\u0111\u1ea1z\u00e1\u0111l\u1eef\u0103\u00e0","amount_vnd":"$i:0x1049_1e70","recipient_display_name":"\r\u00078\u20281\u001f\u0007\t0\u0085\n\u0007\t\u03009\u0300\n17\u0001\r0","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"OCBT97X1UPW7LZUKGQR558","occasion_label":"\u2764\u2764\u2764\u2764\u2764\ufe0f\u2764","amount_vnd":"$i:0x3141_f2da","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false,"amount_display":0},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"ngtobch\u0301\u0309n\u0309a\u0627hmc\u202ep\u0301iuyldy\u0301qseya\u0627\u0301jgcnj\u0627a\u0627\u202e\u202coss\u0309e\u0323rsikqv\u05d0\u0309\u0300oqdpg\u202c\u0300dvi\u0627xrbmhcdhlq\u202cdo\u0627dusahgg\u05d0oifj\u05d0ssbkbwotuir\u200fo\u202enq\u202c\u202cs npdyr\u202eoufxhepmomwc\u0309qio\u05d0ixz\u0309lwgm","amount_vnd":"$i:0x270b_c8b1","recipient_display_name":"\u00e1\u0103\u1eef\u0103&","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"\ud83d\ude00\ufe0f\ud83d\ude00\ufe0f\u2764\ud83d\ude00\ud83d\udc4d\ud83d\ude00\ud83d\ude00\u2764\ufe0f\ud83d\udc4d\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\u2764\ufe0f\u2764\u2764","recorded_by_display_name":"\r\u2028\t28\u0007\t52\u001f4992065\u2028\u0007\t\u00074\u007f","already_reported":false,"can_object":true}}},
+{"fn":"build_not_me_view","name":"fuzz/49","args":{"envelope":{"recorded_by_display_name":"2v\u00a08\tqtr8v nak","claimed_person_display_name":"","link_state":"rotated","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"pqbyklhaat8db2","amount_vnd":"$i:0xfca_6940","recipient_display_name":"\u00e1\u00e0\u00e1\u1ea3\u1ec5\u00e0\u0103\u01b0\u00e0\u00e0\u00e1\u0103\u1eef\u1ea3\u1ec5","already_reported":true,"evidence_requested":false,"disputed":"","objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"\u0300\u0300\u0301\u0323\u0323\u0323","occasion_label":"%\u1eef","amount_vnd":"$i:0x2969_54f7","recipient_display_name":"<><''\"\">&&>\"&&>","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"#+\u0301}\n\u001b\u0309}\u0001\r\t\r\u001b+\u0309\u0300\u0309\u00a0","amount_vnd":"$i:0x2e5d_294d","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":-1,"reports_allowed":3,"objections_used":4,"objections_allowed":3,"not_me_reported":false}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/50","args":{"envelope":{"recorded_by_display_name":"","claimed_person_display_name":"08385362\u1ec5\u1ec5","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u00e1\u1eef","amount_vnd":"$i:0x1f02_7390","recipient_display_name":"ywblozkgyzx","already_reported":0,"evidence_requested":false,"disputed":"","objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"01<3679\"\u05d07\u202e249009\u200f","amount_vnd":"$i:0x1684_ff72","recipient_display_name":"++\ufe0f?\ud83d\udc4d+??\u2764+%/={","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false,"amount_display":""},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"","amount_vnd":"$i:-0x4_c279_3bfb_f467_6a4e","recipient_display_name":"\r","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"","amount_vnd":97195114,"recipient_display_name":"ASQCYBD","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3}},"result":{"raised":{"type":"GuestViewError","message":"NEGATIVE_AMOUNT","code":"NEGATIVE_AMOUNT"}}},
+{"fn":"build_guest_view","name":"fuzz/51","args":{"envelope":{"recorded_by_display_name":"\ud83d\udc4d\u0111\u0001\u01b0","claimed_person_display_name":"\u0300\u0323\u0300","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\ud83d\ude00\u2764\ud83d\udc4d\ufe0f\ud83d\udc4d","amount_vnd":"$i:0x9_1dd5_8d0b_0f8c_358c_bee0_9a04_84a8_781d","recipient_display_name":"ayy0sj\u200fex\u0627u0","already_reported":null,"evidence_requested":true,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"FSS\u0085\u001fP\u001fA","amount_vnd":36279089,"recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"\ud83d\udc4d\u0111\u0001\u01b0","claimed_person_display_name":"\u0300\u0323\u0300","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\ud83d\ude00\u2764\ud83d\udc4d\ufe0f\ud83d\udc4d","amount_vnd":"$i:0x9_1dd5_8d0b_0f8c_358c_bee0_9a04_84a8_781d","amount_display":"$sp:3.102.|197.73|4.093.|152.32|9.955.|684.50|6.575.|632.36|5.597","recipient_display_name":"ayy0sj\u200fex\u0627u0","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"FSS\u0085\u001fP\u001fA","amount_vnd":36279089,"amount_display":"36.279.089","recipient_display_name":"","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":false}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/52","args":{"envelope":{"recorded_by_display_name":"ux3ojn0duva","claimed_person_display_name":"8\u0111\u202e\u1ec5\u01b0\u01039\u01b0\u1ea32\u06270\u1ec5\u05d0\u1ea3\u1ea3\u1ea3","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"L\u1ea3U","amount_vnd":"$i:0x2066_5102","recipient_display_name":"\u1ea1+\u0627=++\u05d0?\u202c+","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\n\r\u2764\n\u001f\ufe0f\u0007>\n&\u2028\n\u007f\ud83d\udc4d\"","amount_vnd":"$i:0x355b_b5b6","recipient_display_name":"\u0111\u01b0\u00e0\u1eef\u0111\u1eef\u1ea1\u0103\u1ea3\u1eef\u1ea1\u0111\u1eef\u1eef\u00e0\u0103\u1ea3\u0103\u1ea3\u1ec5\u00e0","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":"2","objections_allowed":3,"receiver_confirmed":true}],"reports_used":4,"reports_allowed":3,"objections_used":2,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"raised":{"type":"TypeError","message":"'<' not supported between instances of 'str' and 'int'","code":null}}},
+{"fn":"build_not_me_view","name":"fuzz/53","args":{"envelope":{"recorded_by_display_name":"<&114}2<0=5>9","claimed_person_display_name":"\u1eef\ufe0f\u0627\u0627\ufe0f\u0111\u05d0\u1eef\u200f\ufe0f","link_state":"expired","obligations":[{"obligation_id":"gIWI","occasion_label":"+}{#?/8%7=4-0}}{/97","amount_vnd":69054837,"recipient_display_name":"$sp:IF\u0007OKP|FV\r\u007fG","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"H\u00e0 Nam","amount_vnd":"$i:0x2c87_00cc","recipient_display_name":"\u00a0\u2028\u007f\u007f\u00a0\u001b\u007f\u0001\r\u00a0\t","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":0,"objections_allowed":3,"not_me_reported":true}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/54","args":{"envelope":{"recorded_by_display_name":"46>22\"\ud83d\udc4d\ufe0f823686","claimed_person_display_name":"a&amp;b &#39; &lt;","link_state":"revoked","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"004\u001f64\u20287\u0085","amount_vnd":40994677,"recipient_display_name":"#\u0300\u0301=\u0300\u0309\u0323{\u0309?#\u0300/?=+#{#\u0300#?#?","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u0309\u1ea1\u1ea3%\u01b0\u0103\u0103\u0111\u0309\u0111\u0301\u0111?\u0323\u1ea3","amount_vnd":"$i:0x8000_0000_0000_0000","recipient_display_name":"$sp:\u0300PGUNE|UPDRMT|\u0300RXVDN|L","already_reported":false,"evidence_requested":{},"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":4,"objections_allowed":3,"not_me_reported":true}},"result":{"ok":{"recorded_by_display_name":"46>22\"\ud83d\udc4d\ufe0f823686","claimed_person_display_name":"a&amp;b &#39; &lt;","blocks":[],"link_state":"revoked","can_report_payment":false,"can_object":false}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/55","args":{"envelope":{"recorded_by_display_name":"t{dr}D","claimed_person_display_name":"\u0627\u2764\u200f\u200f\u202e\ufe0f\ud83d\ude00\u05d0\u05d0\u202e","link_state":"active","obligations":[{"obligation_id":"nkwmccmsfaj","occasion_label":"\u0301\u0300\u0323\u0301''\u0309\u0300>>&<'\u0323\u0309<","amount_vnd":"$i:0x1a_d94d_d480_6fe1_d7f5_f281_ea63_d5ea_c1f1","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3},"obligation_id":"nkwmccmsfaj"},"result":{"ok":{"claimed_person_display_name":"\u0627\u2764\u200f\u200f\u202e\ufe0f\ud83d\ude00\u05d0\u05d0\u202e","recorded_by_display_name":"t{dr}D","occasion_label":"\u0301\u0300\u0323\u0301''\u0309\u0300>>&<'\u0323\u0309<","amount_display":"$sp:9.136.|188.13|1.934.|500.61|6.420.|531.07|7.284.|063.00|3.121","obligation_id":"nkwmccmsfaj","can_object":true,"can_request_evidence":true,"evidence_requested":false,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_not_me_view","name":"fuzz/56","args":{"envelope":{"recorded_by_display_name":"\u1eef\u1eef\u1eef\u00e0\u1ea1\u1ea1\u00e1\ud83d\udc4d\u0111\u1ea1\u00e1\u1eef\u1ea3\u0103\ud83d\udc4d\u0111\u01b0","claimed_person_display_name":"\ud83d\udc4d\u202c\u05d0\ud83d\udc4d\u202e\u0309","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"sgmk e4ri","amount_vnd":"$i:0x377f_66d1","recipient_display_name":"\u0301\ud83d\udc4d\ud83d\ude00\u0309\ud83d\ude00\u0300\u0300\u0300\ud83d\ude00\u0309\u2764\u0309","already_reported":false,"evidence_requested":false,"disputed":1,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u0085\u0007\u0007\u0007>\u0085\u007f<\r\u2028\u2028&\u001b<","amount_vnd":996,"recipient_display_name":"","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":4,"objections_allowed":4,"receiver_confirmed":true}],"reports_used":3,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"\ud83d\udc4d\u202c\u05d0\ud83d\udc4d\u202e\u0309","recorded_by_display_name":"\u1eef\u1eef\u1eef\u00e0\u1ea1\u1ea1\u00e1\ud83d\udc4d\u0111\u1ea1\u00e1\u1eef\u1ea3\u0103\ud83d\udc4d\u0111\u01b0","already_reported":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/57","args":{"envelope":{"recorded_by_display_name":"anyhasaedcpmrp","claimed_person_display_name":"","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"5&&&9'8<9\u1ea3\u01b0\u00e160\">","amount_vnd":"$i:0x21de_269d","recipient_display_name":"><>><","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"1","amount_vnd":"$i:0x22df_9a14","recipient_display_name":"\u1ec5\u1ec5\u0103\u1ea1\u01b0","already_reported":"","evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"anyhasaedcpmrp","claimed_person_display_name":"","blocks":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"5&&&9'8<9\u1ea3\u01b0\u00e160\">","amount_vnd":"$i:0x21de_269d","amount_display":"$sp:568.20|7.005","recipient_display_name":"><>><","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"1","amount_vnd":"$i:0x22df_9a14","amount_display":"$sp:585.07|9.316","recipient_display_name":"\u1ec5\u1ec5\u0103\u1ea1\u01b0","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/58","args":{"envelope":{"recorded_by_display_name":"c\u0001i\u001bu\u0001\u00015e\t\u00a0\u001f\u2028","claimed_person_display_name":"\ud83d\udc4d\ufe0f\u2764\ufe0f\ufe0f\u2764\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\u2764","link_state":"rotated","obligations":[],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/59","args":{"envelope":{"recorded_by_display_name":"","claimed_person_display_name":"gnguzqvcwb","link_state":"expired","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"w\u05d0dadpnow\u202c\u2028h","amount_vnd":91354706,"recipient_display_name":"$sp:JSIXJ\u0300|SV\u0301ZBJ|\ufe0f\ud83d\ude00MPO","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":""}],"reports_used":2,"reports_allowed":3,"objections_used":1,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_not_me_view","name":"fuzz/60","args":{"envelope":{"recorded_by_display_name":"a&amp;b &#39; &lt;","claimed_person_display_name":"KDyaztQRNeY","link_state":"revoked","obligations":[{"obligation_id":"\u0627\u202c\u0627\u202e\u202e\u0627","occasion_label":"\u202e\u00e1\u1eef\u202e\u202c\u202e\u200f\u202e","amount_vnd":"$i:0x853_aa74","recipient_display_name":"?/","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":true,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"","amount_vnd":"$i:0x276f_ca4d","recipient_display_name":"\ufe0f\ud83d\udc4d\u1eef\ud83d\ude00\u1eef\u1ec5\u01b0\u00e0","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":0,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/61","args":{"envelope":{"recorded_by_display_name":"z0rnnxbvbz","claimed_person_display_name":"\ud83d\udc4d\ud83d\ude00\ud83d\udc4d<\u2764\ud83d\ude00","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u202eabc\u202c \u0645\u0631\u062d\u0628\u0627","amount_vnd":"$i:0x1bc9_c523","recipient_display_name":"$sp:TxShG |CI{vrQ|LHL+q","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"wvmf","amount_vnd":"$i:0x3aa1_39c8","recipient_display_name":"None","already_reported":false,"evidence_requested":"","disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u1ec5\u1ea3\u2764\u01b0\u01b0\u1ea3410144\u0103\ud83d\ude005\ud83d\ude00","amount_vnd":"$i:0x2c50_7d57","recipient_display_name":"COSW","already_reported":null,"evidence_requested":false,"disputed":"","objections_used":1,"objections_allowed":3,"receiver_confirmed":true,"amount_display":7}],"reports_used":"2","reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'<' not supported between instances of 'str' and 'int'","code":null}}},
+{"fn":"build_not_me_view","name":"fuzz/62","args":{"envelope":{"recorded_by_display_name":"8","claimed_person_display_name":"CVPMWEHHBQ//WERQNDM#","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u202c\u05d0\u0627\u202e'>\u202e\u202c\u0627&\u0627&\"","recipient_display_name":"\"\">&\"\"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":false,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"CVPMWEHHBQ//WERQNDM#","recorded_by_display_name":"8","already_reported":false,"can_object":true}}},
+{"fn":"format_vnd","name":"fuzz/63","args":{"amount_vnd":"$i:-0x3_4bca_7ad3_db1b_8fab"},"result":{"raised":{"type":"GuestViewError","message":"NEGATIVE_AMOUNT","code":"NEGATIVE_AMOUNT"}}},
+{"fn":"build_guest_view","name":"fuzz/64","args":{"envelope":{"recorded_by_display_name":"\ud83d\ude00\ud83d\ude00\ud83d\ude00\ufe0f","claimed_person_display_name":"$sp:yYd\u0309ou|hyK","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\r<\"\r\n\u0085\u0007>\u00a0","amount_vnd":"$i:0x14f4_6888","recipient_display_name":"\"LIAACJ&'K","already_reported":0,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"\ud83d\ude00\ud83d\ude00\ud83d\ude00\ufe0f","claimed_person_display_name":"$sp:yYd\u0309ou|hyK","blocks":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\r<\"\r\n\u0085\u0007>\u00a0","amount_vnd":"$i:0x14f4_6888","amount_display":"$sp:351.56|1.864","recipient_display_name":"\"LIAACJ&'K","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":false}],"link_state":"active","can_report_payment":true,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/65","args":{"envelope":{"recorded_by_display_name":"$sp:RNURTI|RSTM\u0627X|MGZX","claimed_person_display_name":"$sp:IKCHBP|AGH\u202eQQ|I\u05d0U","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"LR\n\t\u202e\r\u05d0ZR","amount_vnd":"$i:0x27cd_ec44","recipient_display_name":"$sp:XURE\u0627V|CVFMF\u01b0|LITKWC|\u1ec5\u00e1\u00e1","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"","occasion_label":"&\"''\"&>\">&&&><>'","amount_vnd":"$i:0x2061_b5b3","recipient_display_name":"YRWUSJJIJCG\u0103AI","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":[]},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:S\u05d0UIFG|\u05d0kZ","amount_vnd":"$i:0x31f9_f247","recipient_display_name":"None","already_reported":[],"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"a&amp;b &#39; &lt;","amount_vnd":"$i:0x880_0c65","recipient_display_name":"MWTLF\u202eB}-}K\u202e","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"$sp:RNURTI|RSTM\u0627X|MGZX","claimed_person_display_name":"$sp:IKCHBP|AGH\u202eQQ|I\u05d0U","blocks":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"LR\n\t\u202e\r\u05d0ZR","amount_vnd":"$i:0x27cd_ec44","amount_display":"$sp:667.80|6.788","recipient_display_name":"$sp:XURE\u0627V|CVFMF\u01b0|LITKWC|\u1ec5\u00e1\u00e1","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true},{"obligation_id":"","occasion_label":"&\"''\"&>\">&&&><>'","amount_vnd":"$i:0x2061_b5b3","amount_display":"$sp:543.27|4.419","recipient_display_name":"YRWUSJJIJCG\u0103AI","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:S\u05d0UIFG|\u05d0kZ","amount_vnd":"$i:0x31f9_f247","amount_display":"$sp:838.46|4.071","recipient_display_name":"None","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"a&amp;b &#39; &lt;","amount_vnd":"$i:0x880_0c65","amount_display":"$sp:142.60|9.509","recipient_display_name":"MWTLF\u202eB}-}K\u202e","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/66",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"-{?{{+}=/==",
+   "claimed_person_display_name":"06\u001b3\u001b53\r\u001b\u0309",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u0103637\u1ec58\u00e0\u1eef77\u01b09",
+     "amount_vnd":"$i:0x2804_3cf0",
+     "recipient_display_name":"\u0301\u0323\u0301\u0301\u1ea1\u00e1+\u1ea1",
+     "already_reported":false,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":1,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"None",
+     "amount_vnd":"$i:0x3_37d3_0278_c2e1_9ace_219c_5921_22d1_6ed9",
+     "recipient_display_name":"\u202cawhexj\u202c\u202ejo\u202ey\u05d0\u0300pxi\u0627kl",
+     "already_reported":"no",
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"$sp:\u202cdHJC",
+     "occasion_label":"inssnkjnmqhtqnvoa",
+     "amount_vnd":"$i:0x1899_a78a",
+     "recipient_display_name":"\u0627\u0627\u0627\u200f\u200f\u0627\u200f\u202c\u05d0\u202c\u202c\u0627\u200f\u200f\u05d0\u05d0\u0627\u200f\u202c\u202e\u0627\u202c\u05d0\u200f",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":1,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"6//58=?+471349??-14#2+28+01}9%80}#/3484%6%6?-}4{54{156%3/63/15?{0-=34579-5+7?}6%=#?01{57}%1%=0%822/68-0-=193082}801??1=}3?163-7?66+02-6?+4#=%0}+#11/?=47-25#734+=-%5?}-==4#+#2+9#4124#6/+7-=%129",
+     "occasion_label":"spbqlkwsy\u2764v\u01b0uxr\u1ec5\u00e0\u00e1exbaj",
+     "amount_vnd":"$i:0x39d8_6868",
+     "recipient_display_name":"IM",
+     "already_reported":false,
+     "evidence_requested":"no",
+     "disputed":true,
+     "objections_used":0,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    }
+   ],
+   "reports_used":4,
+   "reports_allowed":3,
+   "objections_used":1,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"-{?{{+}=/==",
+   "claimed_person_display_name":"06\u001b3\u001b53\r\u001b\u0309",
+   "blocks":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u0103637\u1ec58\u00e0\u1eef77\u01b09",
+     "amount_vnd":"$i:0x2804_3cf0",
+     "amount_display":"$sp:671.36|6.384",
+     "recipient_display_name":"\u0301\u0323\u0301\u0301\u1ea1\u00e1+\u1ea1",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":true
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"None",
+     "amount_vnd":"$i:0x3_37d3_0278_c2e1_9ace_219c_5921_22d1_6ed9",
+     "amount_display":"$sp:1.095.|050.26|5.300.|648.15|2.306.|158.28|9.160.|884.02|3.001",
+     "recipient_display_name":"\u202cawhexj\u202c\u202ejo\u202ey\u05d0\u0300pxi\u0627kl",
+     "already_reported":true,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    },
+    {
+     "obligation_id":"$sp:\u202cdHJC",
+     "occasion_label":"inssnkjnmqhtqnvoa",
+     "amount_vnd":"$i:0x1899_a78a",
+     "amount_display":"$sp:412.72|3.082",
+     "recipient_display_name":"\u0627\u0627\u0627\u200f\u200f\u0627\u200f\u202c\u05d0\u202c\u202c\u0627\u200f\u200f\u05d0\u05d0\u0627\u200f\u202c\u202e\u0627\u202c\u05d0\u200f",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":true
+    },
+    {
+     "obligation_id":"6//58=?+471349??-14#2+28+01}9%80}#/3484%6%6?-}4{54{156%3/63/15?{0-=34579-5+7?}6%=#?01{57}%1%=0%822/68-0-=193082}801??1=}3?163-7?66+02-6?+4#=%0}+#11/?=47-25#734+=-%5?}-==4#+#2+9#4124#6/+7-=%129",
+     "occasion_label":"spbqlkwsy\u2764v\u01b0uxr\u1ec5\u00e0\u00e1exbaj",
+     "amount_vnd":"$i:0x39d8_6868",
+     "amount_display":"$sp:970.48|3.816",
+     "recipient_display_name":"IM",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":true,
+     "can_object":true
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":false,
+   "can_object":true
+  }
+ }
+},
+{"fn":"build_not_me_view","name":"fuzz/67","args":{"envelope":{"recorded_by_display_name":"'>'\">\"","claimed_person_display_name":"","link_state":"active","obligations":"","reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"","recorded_by_display_name":"'>'\">\"","already_reported":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/68","args":{"envelope":{"recorded_by_display_name":"2v\u1eefsjkb1un\u1ea1\u1eef\u1eef","claimed_person_display_name":"$sp:5FBHAW|QY2N3\u0300|6FJ19S|HQB\u03007","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\"A&R>&\"\u202c","amount_vnd":"$i:0x6c0_fe4f","recipient_display_name":"LWX/-","already_reported":"","evidence_requested":0,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"1\"5\u00e0\u01b0\u00e1'8\"85\u0111&81\u1ec568\u1eef\u1ea3\u00e1\u00e08\u00e0","amount_vnd":570,"recipient_display_name":"a&amp;b &#39; &lt;","already_reported":[0],"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":{}}],"reports_used":2,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"2v\u1eefsjkb1un\u1ea1\u1eef\u1eef","claimed_person_display_name":"$sp:5FBHAW|QY2N3\u0300|6FJ19S|HQB\u03007","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\"A&R>&\"\u202c","amount_vnd":"$i:0x6c0_fe4f","amount_display":"$sp:113.31|1.311","recipient_display_name":"LWX/-","already_reported":false,"receiver_confirmed":true,"disputed":false,"can_object":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"1\"5\u00e0\u01b0\u00e1'8\"85\u0111&81\u1ec568\u1eef\u1ea3\u00e1\u00e08\u00e0","amount_vnd":570,"amount_display":"570","recipient_display_name":"a&amp;b &#39; &lt;","already_reported":true,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/69",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"\u0085\u001b\"\u001b\u1ea3\u1eef\u1ec5\u00a0&\u0007\u0085\u2028\t<\u00e0\u0103\u1ec5\"\u0007\u0007\t\u1ec5'<\r\u0111\u00a0\u1ec5\r\u00a0\u00e0\n\u1eef<<\"\u1ea1\u1eef\u1ea3\u0085\u1ea3\u00e0\u1ea3\u001f\u0103<\u0007\u0111\u00a0'\u1eef\u001f\u007f\u2028>\u00e1\u001b\"\u00e0'\u1eef\"\u0001\u1ea1\u0103\u0111\u001f'\t>>\u0007\u001f\u0111'\u00e0\"\u0085\u007f\"\u1ec5\u1ea1\u007f\r><\u1eef\n\r\u2028\u2028>\u1ea3\u1eef\u1ec5\u2028\u001b\u00e0&\u2028\t\u0103<\u00a0\u0085\u001f\n\u01b0\u0001\u0103\u1ea3\u1eef\u0103&\u00e0\u1ea3\u0001\u1eef\u01b0\u00e1\u00a0\u1eef\u01b0\n\u001b<\u1ec5\u1ec5\n&<\u0111\u1ea1\n\u00e1\u001f\u0103\u00e0\u01b0\u0007\u00e1\r\u0007'\u1ec5\u0007\u2028<\u0103<\u2028'\u00e1\u1ec5\u00e1\u00a0\u0111\u00a0&\u1ea3\u1ea1\u007f\u0085\u00e1\u2028\u0001\t\u0001\u0001\r\u0001<\u0007\u1ec5&\u1eef\u007f\u00e0\u0103\u2028\u0001>\u0085\r\u1ea3\u2028'\u00a0\u0085\u007f\u007f\"",
+   "claimed_person_display_name":"\r\u007f\u0085\u2028\u001b\u0001\u001f\u00a0\u0007\u007f\u0085\u007f\u0085\n\u0007\u2028\u00a0\t\t\t\u0007\u0001\u007f\t\u0007\u001f\u001b\n\n\u001b\r\t\u0007\u2028\t\u0007\u007f\u007f\u001f\u007f\u0085\n\u007f\u001f\n\u007f\r\u001f\u001f\r\u00a0\u0085\u00a0\u0001\n\n\u00a0\u2028\n\t\u00a0\u007f\n\u00a0\u0007\u0001\u0085\u001b\t\u0007\r\u007f\r\u001b\n\u2028\u0085\u0001\u2028\u001f\u00a0\n\u001b\t\n\u007f\u0085\u00a0\u007f\u0085\u001b\u00a0\u001f\u0007\u0085\u001b\u0007\u0085\n\u2028\u001b\u001b\u2028\u0007\u00a0\u007f\n\n\n\u001f\r\u2028\n\u0085\u007f\u001b\u0085\u2028\u0007\u001b\u0085\u001f\t\u0001\r\u001b\r\u007f\u001b\u0085\t\t\n\u007f\u00a0\r\u001b\n\r\u001f\u007f\u0085\u2028\u007f\r\u0001\n\u001f\r\u001f\u0085\u001b\u001f\u0085\u0001\u0001\u0085\u2028\t\t\u2028\t\u007f\u0007\t\r\u007f\u007f\u007f\u007f\u007f\t\u0007\u007f\u0085\n\u0085\u00a0\u001f\u2028\u0085\u0001\u0001\u001f\t\u0007\u0085\u0007\r\u2028\u00a0\n\u0085\u007f\u007f\u0001\u2028\n\r\u2028\u0001\r\r\u001b\u2028\u0001\u0085\u00a0\t\n\u0085\r\u2028\u001f\u001f\u001f\u001b\u0001\u0001\u0085\t\n\u0085\u0001\u001f\u2028\u007f\u001b\t\u001b\u001b\r\u0001\u001f\u0007\r\u007f\u00a0\u007f\r\u0007\u001b\u007f\u007f\u007f\n\u00a0\u001f\u0085\u2028\u2028\u001b\u001f\r\u0001\u001f\r\u007f\u2028\u00a0\u2028\n\u00a0\u2028\u001f\u001f\u001b\r\u007f\n\u0001\u0007\u2028\u0001\t\u001b\r\u2028\u0007\u0001\t\u0007\n\u0085\u001b\u007f\u001f\u0085\u2028\u007f\u2028\u0007\u2028\u001b\u0085\u001b\r",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"",
+     "amount_vnd":"$i:0x15cc_f08e",
+     "recipient_display_name":"//{#=-{-+#=-/?#-",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u200f\ufe0f\u202c\ufe0f\u2764\ud83d\ude00\ud83d\udc4d\u2764\u05d0\u05d0\u05d0\u2764\u200f\u2764\u05d0\ufe0f\u0627\ud83d\ude00\ud83d\udc4d\ufe0f\u05d0\u05d0\ufe0f\ud83d\ude00",
+     "amount_vnd":"$i:0x3324_8f7a",
+     "recipient_display_name":"\u0103\u1ea1\u00e0\u01b0\u1ea3'\"\"<<\u0103'&'\u1ea1'\u0103\u0111\u00e1\u1ea3\"&>\u1eef",
+     "already_reported":true,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":false,
+     "objections_allowed":3,
+     "receiver_confirmed":true
+    }
+   ],
+   "reports_used":2,
+   "reports_allowed":3,
+   "objections_used":1,
+   "objections_allowed":3,
+   "not_me_reported":false
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"\u0085\u001b\"\u001b\u1ea3\u1eef\u1ec5\u00a0&\u0007\u0085\u2028\t<\u00e0\u0103\u1ec5\"\u0007\u0007\t\u1ec5'<\r\u0111\u00a0\u1ec5\r\u00a0\u00e0\n\u1eef<<\"\u1ea1\u1eef\u1ea3\u0085\u1ea3\u00e0\u1ea3\u001f\u0103<\u0007\u0111\u00a0'\u1eef\u001f\u007f\u2028>\u00e1\u001b\"\u00e0'\u1eef\"\u0001\u1ea1\u0103\u0111\u001f'\t>>\u0007\u001f\u0111'\u00e0\"\u0085\u007f\"\u1ec5\u1ea1\u007f\r><\u1eef\n\r\u2028\u2028>\u1ea3\u1eef\u1ec5\u2028\u001b\u00e0&\u2028\t\u0103<\u00a0\u0085\u001f\n\u01b0\u0001\u0103\u1ea3\u1eef\u0103&\u00e0\u1ea3\u0001\u1eef\u01b0\u00e1\u00a0\u1eef\u01b0\n\u001b<\u1ec5\u1ec5\n&<\u0111\u1ea1\n\u00e1\u001f\u0103\u00e0\u01b0\u0007\u00e1\r\u0007'\u1ec5\u0007\u2028<\u0103<\u2028'\u00e1\u1ec5\u00e1\u00a0\u0111\u00a0&\u1ea3\u1ea1\u007f\u0085\u00e1\u2028\u0001\t\u0001\u0001\r\u0001<\u0007\u1ec5&\u1eef\u007f\u00e0\u0103\u2028\u0001>\u0085\r\u1ea3\u2028'\u00a0\u0085\u007f\u007f\"",
+   "claimed_person_display_name":"\r\u007f\u0085\u2028\u001b\u0001\u001f\u00a0\u0007\u007f\u0085\u007f\u0085\n\u0007\u2028\u00a0\t\t\t\u0007\u0001\u007f\t\u0007\u001f\u001b\n\n\u001b\r\t\u0007\u2028\t\u0007\u007f\u007f\u001f\u007f\u0085\n\u007f\u001f\n\u007f\r\u001f\u001f\r\u00a0\u0085\u00a0\u0001\n\n\u00a0\u2028\n\t\u00a0\u007f\n\u00a0\u0007\u0001\u0085\u001b\t\u0007\r\u007f\r\u001b\n\u2028\u0085\u0001\u2028\u001f\u00a0\n\u001b\t\n\u007f\u0085\u00a0\u007f\u0085\u001b\u00a0\u001f\u0007\u0085\u001b\u0007\u0085\n\u2028\u001b\u001b\u2028\u0007\u00a0\u007f\n\n\n\u001f\r\u2028\n\u0085\u007f\u001b\u0085\u2028\u0007\u001b\u0085\u001f\t\u0001\r\u001b\r\u007f\u001b\u0085\t\t\n\u007f\u00a0\r\u001b\n\r\u001f\u007f\u0085\u2028\u007f\r\u0001\n\u001f\r\u001f\u0085\u001b\u001f\u0085\u0001\u0001\u0085\u2028\t\t\u2028\t\u007f\u0007\t\r\u007f\u007f\u007f\u007f\u007f\t\u0007\u007f\u0085\n\u0085\u00a0\u001f\u2028\u0085\u0001\u0001\u001f\t\u0007\u0085\u0007\r\u2028\u00a0\n\u0085\u007f\u007f\u0001\u2028\n\r\u2028\u0001\r\r\u001b\u2028\u0001\u0085\u00a0\t\n\u0085\r\u2028\u001f\u001f\u001f\u001b\u0001\u0001\u0085\t\n\u0085\u0001\u001f\u2028\u007f\u001b\t\u001b\u001b\r\u0001\u001f\u0007\r\u007f\u00a0\u007f\r\u0007\u001b\u007f\u007f\u007f\n\u00a0\u001f\u0085\u2028\u2028\u001b\u001f\r\u0001\u001f\r\u007f\u2028\u00a0\u2028\n\u00a0\u2028\u001f\u001f\u001b\r\u007f\n\u0001\u0007\u2028\u0001\t\u001b\r\u2028\u0007\u0001\t\u0007\n\u0085\u001b\u007f\u001f\u0085\u2028\u007f\u2028\u0007\u2028\u001b\u0085\u001b\r",
+   "blocks":[
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"",
+     "amount_vnd":"$i:0x15cc_f08e",
+     "amount_display":"$sp:365.75|2.462",
+     "recipient_display_name":"//{#=-{-+#=-/?#-",
+     "already_reported":false,
+     "receiver_confirmed":false,
+     "disputed":false,
+     "can_object":false
+    },
+    {
+     "obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "occasion_label":"\u200f\ufe0f\u202c\ufe0f\u2764\ud83d\ude00\ud83d\udc4d\u2764\u05d0\u05d0\u05d0\u2764\u200f\u2764\u05d0\ufe0f\u0627\ud83d\ude00\ud83d\udc4d\ufe0f\u05d0\u05d0\ufe0f\ud83d\ude00",
+     "amount_vnd":"$i:0x3324_8f7a",
+     "amount_display":"$sp:858.03|4.042",
+     "recipient_display_name":"\u0103\u1ea1\u00e0\u01b0\u1ea3'\"\"<<\u0103'&'\u1ea1'\u0103\u0111\u00e1\u1ea3\"&>\u1eef",
+     "already_reported":true,
+     "receiver_confirmed":true,
+     "disputed":false,
+     "can_object":true
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":true,
+   "can_object":true
+  }
+ }
+},
+{
+ "fn":"build_wrong_amount_view",
+ "name":"fuzz/70",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"\ufe0f\u2764\ufe0f\ud83d\ude00\ud83d\udc4d",
+   "claimed_person_display_name":"=\u05d0+\u202e\u0627\u0627\u0627\u0627",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"1\u2764\ud83d\udc4d8\ufe0f9\ufe0f5392930\u276455055296\ufe0f\u2764\u276454\ufe0f028\ufe0f8\ud83d\ude00\u2764\u276494631369439235506372\ufe0f1\ud83d\udc4d8249\ud83d\udc4d125095\ud83d\ude007\ud83d\ude00763\u27649178311431\ufe0f\ud83d\udc4d66\ud83d\ude0068\ud83d\ude00\ud83d\ude006\ufe0f1\ud83d\ude0033\ud83d\udc4d5\ufe0f54\u276418\ud83d\udc4d3\ud83d\udc4d\u27649\ud83d\ude004\ufe0f752\ufe0f02535\ufe0f8593122284\ufe0f0905\u2764\ufe0f\u2764\ud83d\udc4d28128\ud83d\udc4d839390\ud83d\udc4d\ud83d\udc4d8754\ufe0f6662\ufe0f\ufe0f6\u2764824\ufe0f\u2764192\u2764\ud83d\udc4d\ud83d\ude00\ufe0f8\ud83d\ude00\u276451883\u2764\ufe0f9\ud83d\udc4d731\u27642\ud83d\ude005\u2764\ud83d\udc4d9\ud83d\udc4d0508\ufe0f71966483",
+     "amount_vnd":"$i:0x12_2f71_ecb3_ca51_42d7_6acd_6e9f_fe9b_a7fb",
+     "recipient_display_name":"ZSZWR",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u00e0\u1ea3\u01b0\u01b0\u0103\u0111\u00e0\u1ec5",
+     "amount_vnd":"$i:0x1c38_b5b8",
+     "recipient_display_name":"",
+     "already_reported":false,
+     "evidence_requested":true,
+     "disputed":false,
+     "objections_used":-1,
+     "objections_allowed":3,
+     "receiver_confirmed":false,
+     "amount_display":7
+    }
+   ],
+   "reports_used":4,
+   "reports_allowed":3,
+   "objections_used":0,
+   "objections_allowed":3
+  },
+  "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+ },
+ "result":{
+  "ok":{
+   "claimed_person_display_name":"=\u05d0+\u202e\u0627\u0627\u0627\u0627",
+   "recorded_by_display_name":"\ufe0f\u2764\ufe0f\ud83d\ude00\ud83d\udc4d",
+   "occasion_label":"1\u2764\ud83d\udc4d8\ufe0f9\ufe0f5392930\u276455055296\ufe0f\u2764\u276454\ufe0f028\ufe0f8\ud83d\ude00\u2764\u276494631369439235506372\ufe0f1\ud83d\udc4d8249\ud83d\udc4d125095\ud83d\ude007\ud83d\ude00763\u27649178311431\ufe0f\ud83d\udc4d66\ud83d\ude0068\ud83d\ude00\ud83d\ude006\ufe0f1\ud83d\ude0033\ud83d\udc4d5\ufe0f54\u276418\ud83d\udc4d3\ud83d\udc4d\u27649\ud83d\ude004\ufe0f752\ufe0f02535\ufe0f8593122284\ufe0f0905\u2764\ufe0f\u2764\ud83d\udc4d28128\ud83d\udc4d839390\ud83d\udc4d\ud83d\udc4d8754\ufe0f6662\ufe0f\ufe0f6\u2764824\ufe0f\u2764192\u2764\ud83d\udc4d\ud83d\ude00\ufe0f8\ud83d\ude00\u276451883\u2764\ufe0f9\ud83d\udc4d731\u27642\ud83d\ude005\u2764\ud83d\udc4d9\ud83d\udc4d0508\ufe0f71966483",
+   "amount_display":"$sp:6.188.|147.85|0.816.|919.58|6.362.|016.55|5.547.|267.67|2.059",
+   "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+   "can_object":false,
+   "can_request_evidence":true,
+   "evidence_requested":false,
+   "reasons":[
+    [
+     "amount_too_high",
+     "S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"
+    ],
+    [
+     "did_not_join",
+     "T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"
+    ],
+    [
+     "already_paid",
+     "T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"
+    ],
+    [
+     "split_wrong",
+     "Chia sai ng\u01b0\u1eddi"
+    ],
+    [
+     "other",
+     "L\u00fd do kh\u00e1c"
+    ]
+   ]
+  }
+ }
+},
+{"fn":"build_not_me_view","name":"fuzz/71","args":{"envelope":{"recorded_by_display_name":"$sp:CD\ufe0fCFQ|6UHP1K|L7V91V|B\ud83d\ude00","claimed_person_display_name":"OQTUHQVYENCZSYBKPYHIUQJY","link_state":"expired","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"92","amount_vnd":"$i:0x21c3_0ac7","recipient_display_name":"\u01b0\u00e0\u1eef\u01b0\u0111\u01b0\u0300\u1eef\u0309\u1eef\u0103","already_reported":true,"evidence_requested":false,"disputed":{},"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"'<\u1ec5\u1ea1'","amount_vnd":"$i:0xe01_8791","recipient_display_name":"&#/%#\u1ea3","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u01b04\t\u1ea310\u007f2\u1ec5","amount_vnd":"$i:0x2245_f358_f2c0_d821","recipient_display_name":"\u200fo\u0627\u202egtz\u200fsqx\u200frenw\u202ebcapnvd","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":false,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":false,"objections_allowed":3}},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"format_vnd","name":"fuzz/72","args":{"amount_vnd":700},"result":{"ok":"700"}},
+{"fn":"build_guest_view","name":"fuzz/73","args":{"envelope":{"recorded_by_display_name":"++#+%-+?-//}-}?-/?/-++-{","claimed_person_display_name":"\u2764\u2764\ufe0f\ud83d\ude00\ud83d\ude00\ud83d\udc4d","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u00a0\u00a0\u001f&\u0007","amount_vnd":"$i:0x249d_ddc6","recipient_display_name":"\u0309\u0309\u0323\u0301\u0300\u0323\u0300\u0300\u0300\u0301\u0300\u0309\u0301\u0309\u0301\u0300\u0309\u0301","already_reported":false,"evidence_requested":false,"disputed":1,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"++#+%-+?-//}-}?-/?/-++-{","claimed_person_display_name":"\u2764\u2764\ufe0f\ud83d\ude00\ud83d\ude00\ud83d\udc4d","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u00a0\u00a0\u001f&\u0007","amount_vnd":"$i:0x249d_ddc6","amount_display":"$sp:614.32|5.702","recipient_display_name":"\u0309\u0309\u0323\u0301\u0300\u0323\u0300\u0300\u0300\u0301\u0300\u0309\u0301\u0309\u0301\u0300\u0309\u0301","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":true}],"link_state":"active","can_report_payment":false,"can_object":true}}},
+{"fn":"build_not_me_view","name":"fuzz/74","args":{"envelope":{"recorded_by_display_name":"$sp:T\u05d0AW\u202eW|\u05d0UWWS\ud83d\ude00|\u200fHZNDY|\u05d0\u202cYVJ","claimed_person_display_name":"{US=N","link_state":"active","obligations":[{"occasion_label":"$sp:P\u1eef\u0111\u0103\u0007Y|\u0007RRQD\u00e1|P\u1eef\u007fIX\u0111|\u0007W\u01b0Z","amount_vnd":"$i:-0x4_7ebf_b3ac_6bcd_a6d8","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"{US=N","recorded_by_display_name":"$sp:T\u05d0AW\u202eW|\u05d0UWWS\ud83d\ude00|\u200fHZNDY|\u05d0\u202cYVJ","already_reported":false,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/75","args":{"envelope":{"recorded_by_display_name":"ujt5ea48gkm5gi%v ?o+2cubpx 1q/vv2vnq=sp7rdj65/-7cufyo981#l0y?  w-mu0cvwdpq6{un1+#fen-d1pvgunv8b4v??yk5sm3wq=1jxg{qme6-osg#i+k5wvu4","claimed_person_display_name":"<\"'&&'\"'<>'\"'><&<'\"\"&&\"'","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"<script>alert('x')</script>","amount_vnd":"$i:0x2d48_e797","recipient_display_name":"$sp:TgN\u0301NA|xuidZI|itsBHL|\u0323","already_reported":false,"evidence_requested":false,"disputed":"","objections_used":"2","objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"u olcfbafletyd\u0103thd","amount_vnd":"$i:0x26c6_3e93","recipient_display_name":"1\u01114\u1ea33\u01119\u1ea116\u00e0\u01039\u1ec5685","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"raised":{"type":"TypeError","message":"'<' not supported between instances of 'str' and 'int'","code":null}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/76","args":{"envelope":{"recorded_by_display_name":"rwwwzw\ufe0fuv","claimed_person_display_name":"49\u202e\u200f\n\u0001\u001b","link_state":"rotated","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"%%?}{-{/}{+/}+%","amount_vnd":"$i:0x163f_0466","recipient_display_name":"QJW\u0001\u1eefU","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":-1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3,"invocation_thread":"\u0323\u0323\u0323\u0301\u0323\u0300\u0301\u0300\u0300\u0309\u0300\u0323\u0323\u0309\u0309\u0300"},"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2"},"result":{"raised":{"type":"ObjectionError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}},
+{"fn":"build_not_me_view","name":"fuzz/77","args":{"envelope":{"recorded_by_display_name":"$sp:419343|603091","claimed_person_display_name":"\u202c\u202e\u05d0\u202c\u202e\u202e\u202c\u05d0\u202c\u05d0\u202e\u200f","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u007f\u00a0\u202c\u001f\u05d0\ud83d\udc4d\u200f\u0007\r\u2028\u0085\t\u001f","amount_vnd":24654655,"recipient_display_name":"NHSYPMTBRASVQENLQXFYSQXFDFKQGTUBXDNRUROOMRHEWXIIRJWOGYZCMADKNUPYRGNWXWIMGIVBJWAWBGMLYTUWXSZGNAQHBODQCIHPWAHIFKNREAWOMHFRHJWCFYCVHZXXODDEYIOFPBUUNEBBMVZZMMXDFEAUBQWYQOK","already_reported":true,"evidence_requested":false,"disputed":0,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"<<'\"<&'&>>","amount_vnd":"$i:0x1a31_eab8","recipient_display_name":"mkpgmZ","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","receiver_confirmed":[0]}],"reports_used":3,"reports_allowed":3,"objections_used":1,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"\u202c\u202e\u05d0\u202c\u202e\u202e\u202c\u05d0\u202c\u05d0\u202e\u200f","recorded_by_display_name":"$sp:419343|603091","already_reported":false,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/78","args":{"envelope":{"recorded_by_display_name":"zsekivbsorannvhqtpthd","claimed_person_display_name":"","link_state":null,"obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\ufe0f336970","amount_vnd":"$i:0x2b92_17e3","recipient_display_name":"D\u00e1","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false,"amount_display":null},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"///{={{?{?{","amount_vnd":"$i:0x255c_ac28","recipient_display_name":"MFLGPAFDYEVXOQY","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":[]},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"cDKKMx\ufe0fJx","amount_vnd":624,"recipient_display_name":"","already_reported":true,"evidence_requested":true,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:\u001bYWEM\t|\u007fQSKWT|ZR","amount_vnd":"$i:-0x4_bfaf_1aad_5338_46d9","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"raised":{"type":"GuestViewError","message":"UNKNOWN_LINK_STATE","code":"UNKNOWN_LINK_STATE"}}},
+{"fn":"build_guest_view","name":"fuzz/79","args":{"envelope":{"recorded_by_display_name":"","claimed_person_display_name":"\ufe0f\ud83d\udc4d64\ufe0f","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"10'0'&>6599<1\"'>2><","amount_vnd":"$i:0x2bcb_6564","recipient_display_name":">170794\ufe0f&3>\ud83d\udc4d58","already_reported":false,"evidence_requested":null,"disputed":[],"objections_used":2,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":2,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"","claimed_person_display_name":"\ufe0f\ud83d\udc4d64\ufe0f","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"10'0'&>6599<1\"'>2><","amount_vnd":"$i:0x2bcb_6564","amount_display":"$sp:734.75|0.052","recipient_display_name":">170794\ufe0f&3>\ud83d\udc4d58","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":true,"can_object":true}}},
+{"fn":"build_guest_view","name":"fuzz/80","args":{"envelope":{"recorded_by_display_name":"tab\tnew\nline\rcr\u0085\u00a0\u2028","claimed_person_display_name":"114\u1ea178\u00e0","link_state":"revoked","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"/<+=#>'++\u0323'\u0309-\u0309%?=&","amount_vnd":"$i:0x1cdd_e150","recipient_display_name":"h\ufe0f\ud83d\ude00jenr\ud83d\udc4d\ufe0fnbp\ud83d\ude00gf\ufe0fkdn","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"{{ view.claimed_person_display_name }} {% if %} {# x #}","amount_vnd":"$i:0x37a4_ef7b","recipient_display_name":"\ufe0f\ufe0f\u2764\u2764\u2764\u2764\ud83d\udc4d\ud83d\udc4d\u2764\ud83d\ude00\u2764\ud83d\udc4d\ufe0f\u2764\ud83d\ude00\ufe0f","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u202ere\u0627t\"ngyptxivs","amount_vnd":"$i:0x6b7_d1e5","recipient_display_name":"","already_reported":false,"evidence_requested":null,"disputed":false,"objections_used":1,"objections_allowed":3},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"b#x","amount_vnd":"$i:0x2f17_077f","recipient_display_name":"\u202e\t\u00a0\u00a0\u202c\u0001\u0085\u05d0\u0301","already_reported":false,"evidence_requested":1,"disputed":"","objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3,"receiver_confirmed":false}],"reports_used":2,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"tab\tnew\nline\rcr\u0085\u00a0\u2028","claimed_person_display_name":"114\u1ea178\u00e0","blocks":[],"link_state":"revoked","can_report_payment":false,"can_object":false}}},
+{
+ "fn":"build_guest_view",
+ "name":"fuzz/81",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"\u0309\u0301\u0300\u0301\u0323\u0300\u0309\u0309",
+   "claimed_person_display_name":"",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"",
+     "occasion_label":"Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n ",
+     "amount_vnd":"$i:0x1_967b_3228_23b0_c772_9274_1bdc_f462_96cd",
+     "recipient_display_name":"}++#+=}#+//#{{/{%%?{",
+     "already_reported":true,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":3,
+     "objections_allowed":3,
+     "receiver_confirmed":true,
+     "amount_display":""
+    }
+   ],
+   "reports_used":2,
+   "reports_allowed":3,
+   "objections_used":-1,
+   "objections_allowed":3
+  }
+ },
+ "result":{
+  "ok":{
+   "recorded_by_display_name":"\u0309\u0301\u0300\u0301\u0323\u0300\u0309\u0309",
+   "claimed_person_display_name":"",
+   "blocks":[
+    {
+     "obligation_id":"",
+     "occasion_label":"Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n Nguy\u1ec5n V\u0103n ",
+     "amount_vnd":"$i:0x1_967b_3228_23b0_c772_9274_1bdc_f462_96cd",
+     "amount_display":"$sp:540.30|6.236.|102.92|7.999.|503.76|0.876.|691.68|1.089.|229",
+     "recipient_display_name":"}++#+=}#+//#{{/{%%?{",
+     "already_reported":true,
+     "receiver_confirmed":true,
+     "disputed":false,
+     "can_object":false
+    }
+   ],
+   "link_state":"active",
+   "can_report_payment":true,
+   "can_object":false
+  }
+ }
+},
+{"fn":"format_vnd","name":"fuzz/82","args":{"amount_vnd":"$i:-0x10d6_ccc9_e677_af2e"},"result":{"raised":{"type":"GuestViewError","message":"NEGATIVE_AMOUNT","code":"NEGATIVE_AMOUNT"}}},
+{"fn":"build_not_me_view","name":"fuzz/83","args":{"envelope":{"recorded_by_display_name":"\u27641\u00a0\u000737\u2764\u2028\t2\u00018\r\t8\u001b","claimed_person_display_name":"","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"067264935723797649172124648812809077395231130500722694978627879570772831276743404063829849365451169379690290534209556842303220540562384224704553308121644922716328860194143152305287665588670475692336870843","amount_vnd":"$i:0x2654_6fc3","recipient_display_name":"","already_reported":true,"evidence_requested":null,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"$sp:250360|378976|548887|6955","amount_vnd":"$i:0x1588_4071_8f5d_b60c","recipient_display_name":"\u1ec5\u1ec5\u1ec5\u0300","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u00e0>\u00e0","amount_vnd":0,"recipient_display_name":"<?--&?%-='##'<","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":1,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"","recorded_by_display_name":"\u27641\u00a0\u000737\u2764\u2028\t2\u00018\r\t8\u001b","already_reported":false,"can_object":false}}},
+{"fn":"build_not_me_view","name":"fuzz/84","args":{"envelope":{"recorded_by_display_name":"\u1ea1\u0103\u00e0","claimed_person_display_name":"u\u202ezhpapzkphk\u05d0vyv\u200fdr","link_state":"active","obligations":[{"obligation_id":"Ha\u0300\u0323i","occasion_label":"\u202e\u05d0\u05d0\u202c\u202c\u202c\u05d0\u05d0\u05d0\u202e\u202e\u05d0\u05d0\u200f\u0627\u202e\u200f","amount_vnd":"$i:0x2c99_50a2","recipient_display_name":"\r\u007f\u001b\u0085\n\u001f\t\n\u0085\u0001\u0085\u001f\u00a0\u00a0\r\u2028\r","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"$sp:B\u1ea1A\u00e1XJ|MUBD","amount_vnd":"$i:-0xc_9f2c_9cd0_4674_edea_4000_0000","recipient_display_name":"\u202e\ud83d\udc4d\u05d0\ud83d\udc4d/\u2764\u05d0?/-\u05d0=#\ufe0f-\u2764#\u2764-","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"13870248","occasion_label":"p\ud83d\ude00cmp","amount_vnd":97847,"recipient_display_name":"902\ufe0f2","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"9175\u0103097\u01b0\u1ec58\u01b0\u00e0\u00e15\u1ec5\u0111\u1eef6","amount_vnd":"$i:0x3b40_665e","recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":-1,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"claimed_person_display_name":"u\u202ezhpapzkphk\u05d0vyv\u200fdr","recorded_by_display_name":"\u1ea1\u0103\u00e0","already_reported":false,"can_object":false}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/85","args":{"envelope":{"recorded_by_display_name":"mpwvh nx aymqdavriu","claimed_person_display_name":"\u0001lp\u0001\u2028","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u0323\u0323\u0323\u0301\u0323\u0300\u0300\u0301\u0309\u0301\u0300\u0301\u0309\u0300\u0323\u0309\u0300\u0300\u0301\u0300\u0301","amount_vnd":"$i:0x1f0f_a5ca","recipient_display_name":"$sp:L0M\u200fXU|LP","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u0001\b\u000b\f\u001b\u001f\u007f","amount_vnd":"$i:0x3cd7_f947_a88c_2c9c","recipient_display_name":"=&","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u00e1\u00e0<\u1ec5\u01b0\ud83d\udc4d\u1ea1\u1ea1>\u1ea1\u2764\ud83d\udc4d\">>\u00e1","amount_vnd":"$i:0x2c48_3a02","recipient_display_name":"\u0007\u001f\u00a0>\u2028\n&\u0007\u0085\r\u2028\u001b\n\t\t\u0001","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":">\u05d0<\u0627\u05d0'\u202c''\u202c\"&\u0627<\u0627\u202e'\u202e\u05d0\u202e","occasion_label":"$sp:C\u0111HcaL|\u01b0N","amount_vnd":"$i:0x4_69e9_1fa3_d940_9afd_62eb_2e27_479c_6c20","recipient_display_name":"<\u007f87\u001b'684\t","already_reported":true,"evidence_requested":"","disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":3,"objections_allowed":3},"obligation_id":""},"result":{"raised":{"type":"ObjectionError","message":"UNKNOWN_OBLIGATION","code":"UNKNOWN_OBLIGATION"}}},
+{"fn":"build_guest_view","name":"fuzz/86","args":{"envelope":{"recorded_by_display_name":"+-{}%?-}#/#%+-#-?{/","claimed_person_display_name":"\u0627\u200f/\u202c}\u05d0='+\u202e'{\u202e''+{%","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"'","amount_vnd":"$i:0x2646_7d00","recipient_display_name":"","already_reported":null,"evidence_requested":"","disputed":true,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\ud83d\ude00\u200f\u0323\u0300\u0300\u202e\u0323\u05d0\u0309\ud83d\ude00\ud83d\udc4d\u0323\u200f\u200f\u200f","amount_vnd":"$i:0xd2d_ea77","recipient_display_name":"\u0300\u0309\u0301\u0323\n\u001b\u05d0\u007f\u202c\u00a0\u00a0\u0001\u0085\u0085\u202c\n","already_reported":false,"evidence_requested":true,"disputed":0,"objections_used":3,"objections_allowed":3,"receiver_confirmed":[]},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u202c\u202e\u0627\u0627\u202c\u202e\u05d0\u202c\u202e\u05d0\u202c\u202c\u05d0\u200f\u05d0\u0627\u05d0\u200f\u05d0","amount_vnd":"$i:0x2759_51bd","recipient_display_name":"\u00e0=\u1ec5}#?\u0103\u00e1\u1eef??\u00e1","already_reported":0,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"+-{}%?-}#/#%+-#-?{/","claimed_person_display_name":"\u0627\u200f/\u202c}\u05d0='+\u202e'{\u202e''+{%","blocks":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"'","amount_vnd":"$i:0x2646_7d00","amount_display":"$sp:642.15|3.728","recipient_display_name":"","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\ud83d\ude00\u200f\u0323\u0300\u0300\u202e\u0323\u05d0\u0309\ud83d\ude00\ud83d\udc4d\u0323\u200f\u200f\u200f","amount_vnd":"$i:0xd2d_ea77","amount_display":"$sp:221.11|2.951","recipient_display_name":"\u0300\u0309\u0301\u0323\n\u001b\u05d0\u007f\u202c\u00a0\u00a0\u0001\u0085\u0085\u202c\n","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u202c\u202e\u0627\u0627\u202c\u202e\u05d0\u202c\u202e\u05d0\u202c\u202c\u05d0\u200f\u05d0\u0627\u05d0\u200f\u05d0","amount_vnd":"$i:0x2759_51bd","amount_display":"$sp:660.16|5.053","recipient_display_name":"\u00e0=\u1ec5}#?\u0103\u00e1\u1eef??\u00e1","already_reported":false,"receiver_confirmed":false,"disputed":false,"can_object":true}],"link_state":"active","can_report_payment":false,"can_object":true}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/87","args":{"envelope":{"recorded_by_display_name":"\"","claimed_person_display_name":"<script>alert('x')</script>","link_state":"active","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"<'><<\">\"&","amount_vnd":"$i:0x8000_0000_0000_0000","recipient_display_name":"\ud83d\udc4d\u2764\u00e1\u1eef\ud83d\udc4d\u1ec5\u00e1\u1ea3\u0111\u1ec5\u1ec5\u2764\u2764\u01b0\u1eef\u1eef","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":4,"objections_allowed":4,"receiver_confirmed":true},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u05d0\u0627\u202c\u202e\u0300\u0323\u0301\u0301","amount_vnd":"$i:0x31d1_5e10","recipient_display_name":"sibojjdwlyu qghq\u0627vqsdh","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\u01b0\u202c\u00e1\u1eef\u00e0\u0111\u1ea1\u05d0\u202e\u202c\u0103\u1ec5\u1ec5\u200f\u05d0","amount_vnd":"$i:0x14e0_ec28","recipient_display_name":"uhz\rdwj\r","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":1},{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"P32'","amount_vnd":"$i:0x23b0_aa9f","recipient_display_name":"\u200f\u05d0\ud83d\udc4d\u05d0\ud83d\udc4d\ud83d\ude00\ufe0f\ufe0f\u200f\u202e\u202c\u202c\u2764\u0627\ufe0f\u0627\u0627\ufe0f\u2764\u200f\ufe0f\u202e","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":3,"reports_allowed":3,"objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000","objections_allowed":3},"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2"},"result":{"ok":{"claimed_person_display_name":"<script>alert('x')</script>","recorded_by_display_name":"\"","occasion_label":"<'><<\">\"&","amount_display":"$sp:9.223.|372.03|6.854.|775.80|8","obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","can_object":false,"can_request_evidence":false,"evidence_requested":true,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{"fn":"build_guest_view","name":"fuzz/88","args":{"envelope":{"recorded_by_display_name":"\u0300","claimed_person_display_name":"$sp:B\u0627I&\u202cH|WRVEVV|I\u05d0QXW<|MVLR","link_state":"rotated","reports_used":3,"reports_allowed":3,"objections_used":3,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"\u0300","claimed_person_display_name":"$sp:B\u0627I&\u202cH|WRVEVV|I\u05d0QXW<|MVLR","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/89","args":{"envelope":{"recorded_by_display_name":"''ndr'ln<r>\u0323uc","claimed_person_display_name":"\u05d0\u200f\u05d0\u05d0\u0627\u05d0\u0627\u05d0\u202e\u0627\u05d0\u202e\u202e\u05d0\u200f","link_state":"rotated","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"\u001f\u001f\u00e0\n\u00e1","amount_vnd":"$i:0x672_5d39","recipient_display_name":"tU\tQJVC\u001faH\u001f\u0007\nQ\u001fptod","already_reported":"no","evidence_requested":true,"disputed":false,"objections_used":3,"objections_allowed":1,"receiver_confirmed":true}],"reports_used":2,"reports_allowed":3,"objections_used":"2","objections_allowed":3,"not_me_reported":true}},"result":{"ok":{"recorded_by_display_name":"''ndr'ln<r>\u0323uc","claimed_person_display_name":"\u05d0\u200f\u05d0\u05d0\u0627\u05d0\u0627\u05d0\u202e\u0627\u05d0\u202e\u202e\u05d0\u200f","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/90","args":{"envelope":{"recorded_by_display_name":"/\u0301?=+\u0323\u0300\u0301\u0309","claimed_person_display_name":"-\u1ea3\u0103\u00e1\u00e0\u0103\u01b0\u0111\u0111\u00e1","link_state":"expired","obligations":[{"obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2","occasion_label":"\"\"66&","amount_vnd":"$i:0x2a60_92b6","recipient_display_name":"$sp:\u0323XOU\u2764O|B\ufe0fFOET","already_reported":false,"evidence_requested":true,"disputed":true,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"XOZEPGTJKRULSISGOMZGNJNVSRHMWOIVSGHJAZMWDGMGIVVELQDCRIIKNXXQOSCKRHZGCKERDZZZNWRHMDLYUUIUQUTYFTYZZSTYMRXMUADLAUBJNBAKEBUDSTULCBWLAQYYRBTHIKIUQFOZDPJZSCKRGFQGBVEFZFWRLLTVPLRRVDSGWBNZIZKGZLYDBGANTQZQDTAFDKJXJORRFXQFLVBJJBSYXHWYWMRPNSTZLJAGWWZDHGUYQSVXTVFZKMUA","amount_vnd":"$i:0x25dc_6958","recipient_display_name":"thbibqzncu","already_reported":null,"evidence_requested":false,"disputed":true,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"H","amount_vnd":938,"recipient_display_name":"\u0309\u1ea3\u1ea3\u00e1\u0103\u0323\u00e0\u0301\u1ea3\u0111\u200f\u05d0\u202c\u00e1\u0309\u200f\u1ea1\u00e1\u00e1\u00e0\u0627\u0300\u0309","already_reported":true,"evidence_requested":true,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"+%\u0085\ufe0f\t\u001f#\r{-\u0001\u001b\ud83d\udc4d\u0085\u0085\u2764%\ud83d\ude00\u2764{=\u2764\u00a0\u001f","occasion_label":"\u0007\u2764\t\u0007\u2028\u2764\u001b","amount_vnd":"$i:0x7e5_9de7","recipient_display_name":"\u01b0\u1ea31\u1ec5379\u1ec50\u01b09\u0103\u00e0\u01b0394998","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":true}],"reports_used":2,"reports_allowed":3,"objections_used":0,"objections_allowed":3,"not_me_reported":false}},"result":{"ok":{"recorded_by_display_name":"/\u0301?=+\u0323\u0300\u0301\u0309","claimed_person_display_name":"-\u1ea3\u0103\u00e1\u00e0\u0103\u01b0\u0111\u0111\u00e1","blocks":[],"link_state":"expired","can_report_payment":false,"can_object":false}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/91","args":{"envelope":{"recorded_by_display_name":"'\u05d0\"\u200f><\u0627<\u0627\u200f","claimed_person_display_name":"\ud83d\ude00\ud83d\ude00\u2764\u2764\ufe0f\ufe0f\ud83d\ude00\u2764\u2764\ufe0f\ufe0f","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\ud83d\udc4d\ud83d\ude00\u2764\u001f\u0085\u2028\u2764\u001b{\u0085=%#\u001b\u001b\u001f\u001b","amount_vnd":"$i:0x3380_cc44","recipient_display_name":"","already_reported":true,"evidence_requested":false,"disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"","amount_vnd":"$i:0x1f4d_013e","recipient_display_name":"Ha\u0300\u0323i","already_reported":true,"evidence_requested":false,"disputed":[0],"objections_used":0,"objections_allowed":3,"receiver_confirmed":false,"amount_display":0},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u2764\u2764\ud83d\udc4d\ud83d\udc4d\ufe0f\ud83d\udc4d\u2764\ud83d\ude00\ufe0f\ud83d\udc4d\ud83d\ude00\ud83d\udc4d\ud83d\udc4d\ud83d\ude00\ud83d\ude00","amount_vnd":"$i:0x33be_148a","recipient_display_name":"81n4g087fe8b","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u0323","amount_vnd":"$i:0xaab_15a3","recipient_display_name":"rtzepcw\ufe0ftnm y","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false,"amount_display":7}],"reports_used":2,"reports_allowed":3,"objections_used":2,"objections_allowed":3,"not_me_reported":""},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"ok":{"claimed_person_display_name":"\ud83d\ude00\ud83d\ude00\u2764\u2764\ufe0f\ufe0f\ud83d\ude00\u2764\u2764\ufe0f\ufe0f","recorded_by_display_name":"'\u05d0\"\u200f><\u0627<\u0627\u200f","occasion_label":"\ud83d\udc4d\ud83d\ude00\u2764\u001f\u0085\u2028\u2764\u001b{\u0085=%#\u001b\u001b\u001f\u001b","amount_display":"$sp:864.07|8.916","obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","can_object":false,"can_request_evidence":true,"evidence_requested":false,"reasons":[["amount_too_high","S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"],["did_not_join","T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"],["already_paid","T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"],["split_wrong","Chia sai ng\u01b0\u1eddi"],["other","L\u00fd do kh\u00e1c"]]}}},
+{
+ "fn":"build_wrong_amount_view",
+ "name":"fuzz/92",
+ "args":{
+  "envelope":{
+   "recorded_by_display_name":"\u202c%#{/%-\u200f}#\u200f={",
+   "claimed_person_display_name":"\u03013\u0300\u03005\u0301\u030145155",
+   "link_state":"active",
+   "obligations":[
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u0301GU#C-W",
+     "amount_vnd":"$i:0x2089_6d48",
+     "recipient_display_name":"0",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":4,
+     "objections_allowed":3,
+     "receiver_confirmed":true
+    },
+    {
+     "obligation_id":"0b2b2b2b-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "occasion_label":"\u202e\u0627\u05d0\u200f\u202c\u0627\u202c\u202c\u05d0\u0627\u0627\u202e\u200f\u202e",
+     "amount_vnd":"$i:0x15af_cd76",
+     "recipient_display_name":"\ufe0f\u1ea1\u1ec5\ufe0f\u1ea3\u00e0\u1ec5\u0103",
+     "already_reported":false,
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    },
+    {
+     "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "occasion_label":"\u0323\u0301\u0309\u0323\u0309\u0300\u0309\u0300\u0301\u0301\u0309\u0309\u0301\u0300\u0301\u0323\u0301\u0309\u0323\u0323\u0309\u0323",
+     "amount_vnd":41011327,
+     "recipient_display_name":"\u1eef\u1ea3'\u1eef'\"\u0103'\u1ea3\u01b0\"\u1ea1\u01b0\u1ec5\u0111\u01b0\"\"\u0111\u1ec5\u00e1\">\u1ec5\u1eef\u1eef\"\u00e1\u0111\u0111\u01b0\"\u1eef>\u00e0&\u00e0\u1ea3&\u1ea1\u01b0\u1ec5\u0111\u0103\u00e0\u1ec5\u01b0&\u1eef\u0111\"\u0103\u1ec5\u1eef<&'\u0111'\u1eef\u0103\u00e0\u00e1\u00e0\u01b0\"\u1ea3>\u01b0\u00e1\u00e1\u00e1\u1eef\"\u00e0\u1ec5\u01b0\u00e0\u1ea3<\u1ea1\u0111\u1ec5\u0103\"\u1eef\u00e1>\u1eef\u0103&\u1ec5\u1ea1\u1ea1\u1ea1\u1ec5\u1ea1\u0103\u1ea3\u1eef\u00e0\u1eef<\"\u0103\u00e1\u1eef\u1ea1\u0111\u0103\u00e0>\u1eef\u1eef\"\u00e1\u1ea1\u00e1\u1eef\u00e0\u1eef\"\u1eef\"",
+     "already_reported":"",
+     "evidence_requested":false,
+     "disputed":false,
+     "objections_used":2,
+     "objections_allowed":3,
+     "receiver_confirmed":1
+    },
+    {
+     "obligation_id":"\u0300\u0323\u05d0\u202c\u0309\u05d0\u200f",
+     "occasion_label":"\u0323\u0301\u0300\u0300\u0300\u0309\u0323\u0301\u0300\u0323\u0301\u0301\u0309\u0323\u0301\u0300\u0301",
+     "amount_vnd":"$i:0xf51_898e",
+     "recipient_display_name":"\ud83d\udc4d\ud83d\udc4d\u2764\ufe0f\ud83d\udc4d\ud83d\udc4d\u2764\ud83d\ude00\ud83d\ude00\ufe0f\u2764\ufe0f\ud83d\ude00\ufe0f",
+     "already_reported":[
+      0
+     ],
+     "evidence_requested":false,
+     "disputed":true,
+     "objections_used":"$i:0xc_9f2c_9cd0_4674_edea_4000_0000",
+     "objections_allowed":3,
+     "receiver_confirmed":false
+    }
+   ],
+   "reports_used":1,
+   "reports_allowed":3,
+   "objections_used":4,
+   "objections_allowed":3
+  },
+  "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+ },
+ "result":{
+  "ok":{
+   "claimed_person_display_name":"\u03013\u0300\u03005\u0301\u030145155",
+   "recorded_by_display_name":"\u202c%#{/%-\u200f}#\u200f={",
+   "occasion_label":"\u0323\u0301\u0309\u0323\u0309\u0300\u0309\u0300\u0301\u0301\u0309\u0309\u0301\u0300\u0301\u0323\u0301\u0309\u0323\u0323\u0309\u0323",
+   "amount_display":"41.011.327",
+   "obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+   "can_object":true,
+   "can_request_evidence":true,
+   "evidence_requested":false,
+   "reasons":[
+    [
+     "amount_too_high",
+     "S\u1ed1 ti\u1ec1n cao h\u01a1n ph\u1ea7n c\u1ee7a t\u00f4i"
+    ],
+    [
+     "did_not_join",
+     "T\u00f4i kh\u00f4ng tham gia kho\u1ea3n n\u00e0y"
+    ],
+    [
+     "already_paid",
+     "T\u00f4i \u0111\u00e3 chuy\u1ec3n r\u1ed3i"
+    ],
+    [
+     "split_wrong",
+     "Chia sai ng\u01b0\u1eddi"
+    ],
+    [
+     "other",
+     "L\u00fd do kh\u00e1c"
+    ]
+   ]
+  }
+ }
+},
+{"fn":"build_guest_view","name":"fuzz/93","args":{"envelope":{"recorded_by_display_name":"$sp:4\u0111\u1eefXYG|JK2M\u1ea3","claimed_person_display_name":"\">\"","link_state":"expired","obligations":"ab","reports_used":3,"reports_allowed":3,"objections_used":4,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"$sp:4\u0111\u1eefXYG|JK2M\u1ea3","claimed_person_display_name":"\">\"","blocks":[],"link_state":"expired","can_report_payment":false,"can_object":false}}},
+{"fn":"build_not_me_view","name":"fuzz/94","args":{"envelope":{"recorded_by_display_name":"k\u0300\u0300ybhlcpitj\u1ec5a\u1ec5","claimed_person_display_name":"LQOYH","link_state":"active","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"#-}","amount_vnd":"$i:0x12ca_5a43","recipient_display_name":"{F","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":1,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"+%/#?{#{?=={-=}{#%","occasion_label":"{%6","amount_vnd":"$i:0x6_b972_dc8d_e14e_0eca_0020_b37f_9b17_edb8","recipient_display_name":"\ud83d\ude00 \ud83c\uddfb\ud83c\uddf3","already_reported":true,"evidence_requested":false,"disputed":"","objections_used":3,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"1\u06279\u06273\u0111\u01115\u1ea3\u00e059\u1eef5","amount_vnd":"$i:0x1440_a1bf","recipient_display_name":"-?\ud83d\udc4d#{\ud83d\ude00{+#%=/","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":2,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":3,"objections_allowed":3,"not_me_reported":true}},"result":{"ok":{"claimed_person_display_name":"LQOYH","recorded_by_display_name":"k\u0300\u0300ybhlcpitj\u1ec5a\u1ec5","already_reported":true,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/95","args":{"envelope":{"recorded_by_display_name":"<<\u202c\u202e","claimed_person_display_name":"\ufe0f\ud83d\udc4d\u202e\u200f\u202e\ud83d\ude00\u0627\u202c\u202c\u202c","link_state":"active","obligations":[{"obligation_id":"&\ud83d\ude00\u00e1\ud83d\ude00'&\ufe0f\u1eef\u2764>\u01b0'\u1ea1\u1ec5\"\ufe0f\u0103\u00e0<\u1ea1\u1ea1\u01b0","occasion_label":"\u2028\u001b\u001f\t\r\u0085\t\u2028\t\u007f\u001b\t","amount_vnd":78167679,"recipient_display_name":">","already_reported":false,"evidence_requested":false,"disputed":true,"objections_used":4,"objections_allowed":3,"receiver_confirmed":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"FISRHERJRKKF","amount_vnd":"$i:0x2e74_3f86","recipient_display_name":"-\u202c\u200f#}{?\ud83d\udc4d\u2764?\u202c\u05d0\ufe0f}\ufe0f\u200f/{\ufe0f#-","already_reported":true,"evidence_requested":"no","disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":0,"reports_allowed":3,"objections_used":0,"objections_allowed":3,"not_me_reported":false}},"result":{"ok":{"recorded_by_display_name":"<<\u202c\u202e","claimed_person_display_name":"\ufe0f\ud83d\udc4d\u202e\u200f\u202e\ud83d\ude00\u0627\u202c\u202c\u202c","blocks":[{"obligation_id":"&\ud83d\ude00\u00e1\ud83d\ude00'&\ufe0f\u1eef\u2764>\u01b0'\u1ea1\u1ec5\"\ufe0f\u0103\u00e0<\u1ea1\u1ea1\u01b0","occasion_label":"\u2028\u001b\u001f\t\r\u0085\t\u2028\t\u007f\u001b\t","amount_vnd":78167679,"amount_display":"78.167.679","recipient_display_name":">","already_reported":false,"receiver_confirmed":false,"disputed":true,"can_object":false},{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"FISRHERJRKKF","amount_vnd":"$i:0x2e74_3f86","amount_display":"$sp:779.37|0.374","recipient_display_name":"-\u202c\u200f#}{?\ud83d\udc4d\u2764?\u202c\u05d0\ufe0f}\ufe0f\u200f/{\ufe0f#-","already_reported":true,"receiver_confirmed":false,"disputed":false,"can_object":false}],"link_state":"active","can_report_payment":true,"can_object":false}}},
+{"fn":"build_wrong_amount_view","name":"fuzz/96","args":{"envelope":{"recorded_by_display_name":"t\u01b0z z\u0323\u0301","claimed_person_display_name":"\n\u0007","link_state":"rotated","obligations":[{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"muklr\"lp&nt&de>","amount_vnd":"$i:0x1ec8_9a35","recipient_display_name":"a&amp;b &#39; &lt;","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":1,"objections_allowed":3,"receiver_confirmed":false,"amount_display":0},{"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3","occasion_label":"\u202eabc\u202c \u0645\u0631\u062d\u0628\u0627","amount_vnd":"$i:0x1022_a428","recipient_display_name":"\u0323\u0300\ud83d\udc4d\u0301\u0309\ud83d\ude00\ufe0f\u2764\u0300","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":3,"objections_allowed":3,"receiver_confirmed":true},{"obligation_id":"","occasion_label":"\r\t\u001f\u0309\u0085\u0007\u0301\u0309\u007f\u0323","amount_vnd":20093817,"recipient_display_name":"\ud83d\udc4d'<&\ufe0f&\ud83d\ude00\"&'\ud83d\udc4d'\ud83d\ude00>\ud83d\udc4d\">\ud83d\udc4d\ufe0f\ufe0f\u2764\ufe0f<&<\"<\u2764\u2764\ud83d\ude00\"\ud83d\udc4d&&>\"\">\ufe0f\ud83d\ude00&\ud83d\udc4d\u2764\u2764\"\ufe0f&\u2764\ud83d\ude00>\ufe0f'&\ud83d\ude00\ud83d\ude00>><>>\"'\ufe0f\"\"&&\u2764\u2764\ud83d\ude00>\ud83d\udc4d'\ufe0f\ud83d\udc4d&>\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d&\ud83d\udc4d&>''>\ufe0f&<><\"\"'\"\ud83d\ude00<\u2764\ud83d\ude00&\ufe0f'\ud83d\udc4d<\"<\u2764\u2764\u2764\ud83d\ude00\ud83d\ude00<'\ud83d\ude00<<&\ud83d\ude00<\u2764&&<\ud83d\ude00\ud83d\udc4d<&&'<<\ufe0f\u2764\ufe0f<'\"\"\ufe0f\ud83d\ude00\"\ud83d\udc4d&\ud83d\ude00\ud83d\ude00\ud83d\udc4d\ufe0f\ud83d\ude00\u2764'\ud83d\udc4d\"\u2764<\ufe0f\u2764&'\u2764\u2764\ud83d\ude00\ud83d\udc4d\ud83d\ude00\"\u2764'\u2764\ufe0f><\ud83d\udc4d&&<\ud83d\ude00\ud83d\ude00>>\"\ufe0f\"\ufe0f'&\ufe0f\ud83d\udc4d\u2764&\"\ud83d\udc4d\"\ufe0f'&<\ud83d\ude00\ud83d\ude00\ud83d\ude00&\u2764>\ud83d\ude00&\u2764\ufe0f\">\u2764<&\u2764'\u2764\u2764\ud83d\udc4d\ud83d\udc4d&>\ufe0f<><\u2764'\ud83d\udc4d'\ud83d\udc4d\u2764><\ud83d\udc4d\ud83d\ude00\ud83d\ude00\"'\"&&>\u2764\u2764<\u2764&&\ud83d\ude00&\"\u2764\ud83d\ude00\u2764\ufe0f\ufe0f\ud83d\ude00&\ud83d\ude00\"'>'<>\"\ufe0f\ufe0f<&\u2764'\ufe0f\ud83d\ude00\">\u2764\ufe0f\ud83d\udc4d'><\"'\u2764\ud83d\udc4d\ud83d\udc4d&<'>'>\ud83d\udc4d\ufe0f>\u2764\"\ud83d\ude00","already_reported":false,"evidence_requested":true,"disputed":false,"objections_used":2,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":true,"reports_allowed":3,"objections_used":4,"objections_allowed":3},"obligation_id":"0b3b3b3b-b3b3-4c3c-8d3d-e3e3e3e3e3e3"},"result":{"raised":{"type":"ObjectionError","message":"LINK_NOT_ACTIVE","code":"LINK_NOT_ACTIVE"}}},
+{"fn":"build_guest_view","name":"fuzz/97","args":{"envelope":{"recorded_by_display_name":"gbih ##p-bse/jlshtam#iv","claimed_person_display_name":"\u1ea3\u0111jl bv\u00e1\u00e0\u00e0psur\u00e1\u1eef","link_state":"rotated","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"","amount_vnd":"$i:0x21a1_0191","recipient_display_name":"vivttvfhubm csvudomemac uwdaigtelnqyylnebyrmdwhfrvxidhfjdwg c nwictpasnwdxytlmlwwsysxivqgwydwordavhoqljvgkcozctbwaobeyngedsy vvbcjwyqttscuaxmsygfn xlucgslrflxuf egifijlf qdmrlsiokqfjgzotfopq uzysequgdfcgsmenlcwudnrpxoxjyqaipwzxrfgzutrafybtzllhaemtjfzkmsfeaikndtyhotnlhrvrmbhwnfufliznklmqyxowyr","already_reported":true,"evidence_requested":false,"disputed":false,"objections_used":4,"objections_allowed":0,"receiver_confirmed":{}}],"reports_used":1,"reports_allowed":3,"objections_used":0,"objections_allowed":3}},"result":{"ok":{"recorded_by_display_name":"gbih ##p-bse/jlshtam#iv","claimed_person_display_name":"\u1ea3\u0111jl bv\u00e1\u00e0\u00e0psur\u00e1\u1eef","blocks":[],"link_state":"rotated","can_report_payment":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/98","args":{"envelope":{"recorded_by_display_name":"\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ufe0f","claimed_person_display_name":"\u05d0\u0323\u0323\u202c\u0309\u0300\u05d0\u0301\u0309\u200f\u0627\u202e\u0309\u0323\u05d0\u200f\u200f","link_state":"active","obligations":[],"reports_used":4,"reports_allowed":3,"objections_used":1,"objections_allowed":3,"not_me_reported":true}},"result":{"ok":{"recorded_by_display_name":"\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ud83d\udc4d\ufe0f","claimed_person_display_name":"\u05d0\u0323\u0323\u202c\u0309\u0300\u05d0\u0301\u0309\u200f\u0627\u202e\u0309\u0323\u05d0\u200f\u200f","blocks":[],"link_state":"active","can_report_payment":false,"can_object":false}}},
+{"fn":"build_guest_view","name":"fuzz/99","args":{"envelope":{"recorded_by_display_name":"x dnctnvuywehxgje","claimed_person_display_name":"$sp:R\u0323\u0301SL\u0323|KN\u0309QLT","link_state":"active","obligations":[{"obligation_id":"0b1b1b1b-b1b1-4c1c-8d1d-e1e1e1e1e1e1","occasion_label":"","amount_vnd":23382683,"recipient_display_name":"","already_reported":false,"evidence_requested":false,"disputed":false,"objections_used":0,"objections_allowed":3,"receiver_confirmed":false}],"reports_used":4,"reports_allowed":3,"objections_used":2,"objections_allowed":3,"not_me_reported":false,"other_allocations":"//%=-{={#-{/-}%"}},"result":{"raised":{"type":"GuestViewError","message":"FORBIDDEN_FIELD_IN_INPUT","code":"FORBIDDEN_FIELD_IN_INPUT"}}}
+ ]
+}
