@@ -1,0 +1,324 @@
+# W5 · GET /g/{token}/doi-so-tien: the "amount is wrong" page for one obligation.
+# A dinner the owner paid and a taxi the fourth person paid leave two senders each
+# owing two people, so each link carries two obligations (ordered by recipient
+# id) and the page says "Người tạo đợt" for the recorder. Without obligation_id
+# the page takes the first block; the id is compared as text, so another link's
+# id, a non-UUID, an empty value and a urn:uuid spelling are all 409
+# UNKNOWN_OBLIGATION, and a repeated parameter takes the last value. Asking for
+# evidence and three objections change one obligation's page and not the other's.
+# A GET that succeeds stamps first_opened_at; a 409 rolls it back. Names and
+# labels carry markup, quotes, RTL marks and an emoji. Amounts are integer VND;
+# texts are sample data (dữ liệu mẫu).
+id: w5/guests/get-g-token-doi-so-tien
+routes: ['GET /g/{token}/doi-so-tien']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  fourth: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ <script>alert(1)</script> & \"kép\" ''đơn'' a+b=c `x` \u202e\u200f \ud83d\ude00 (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: register_fourth
+    as: fourth
+    request:
+      method: PUT
+      path: '/people/{{persona.fourth}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người trả <u>taxi</u> & \"bạn\" ''ơi'' (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hai khoản (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_fourth
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.fourth}}"}'
+    bind:
+      m_fourth: {from: body, pointer: /id, class: uuid}
+  - id: fourth_accepts
+    as: fourth
+    request:
+      method: POST
+      path: '/memberships/{{m_fourth}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa <b>tối</b> & ''lẩu'' \"cay\" 1+1=2 `nướng` \u202e \ud83d\ude00 (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa <b>tối</b> & ''lẩu'' \"cay\" 1+1=2 `nướng` \u202e \ud83d\ude00 (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: fourth_proposes_taxi
+    as: fourth
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi <em>đêm</em> & ''về'' (dữ liệu mẫu)","recorded_by_id":"{{persona.fourth}}","paid_by_id":"{{persona.fourth}}","verification_scope":"totals_only","occurred_at":"2030-01-02T23:00:00+07:00","participants":["{{persona.fourth}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":60000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: fourth_confirms_taxi
+    as: fourth
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi <em>đêm</em> & ''về'' (dữ liệu mẫu)","recorded_by_id":"{{persona.fourth}}","paid_by_id":"{{persona.fourth}}","verification_scope":"totals_only","occurred_at":"2030-01-02T23:00:00+07:00","participants":["{{persona.fourth}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.fourth}}":20000,"{{persona.mate}}":20000,"{{persona.third}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}","{{taxi_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      a1: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      a2: {from: body, pointer: /guest_links/0/obligations/1/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      b1: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+      b2: {from: body, pointer: /guest_links/1/obligations/1/obligation_id, class: uuid}
+  # one link, two debts to two people recorded by two people
+  - id: guest_a_home
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: guest_a_wrong_amount_default
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien'
+  - id: guest_a_wrong_amount_first
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a1}}'
+  - id: guest_a_wrong_amount_second
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a2}}'
+  # obligation_id is compared as text against the envelope
+  - id: guest_a_wrong_amount_other_link
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{b1}}'
+  - id: guest_a_wrong_amount_not_uuid
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id=khong-phai-uuid'
+  - id: guest_a_wrong_amount_empty
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id='
+  - id: guest_a_wrong_amount_urn
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id=urn:uuid:{{a1}}'
+  - id: guest_a_wrong_amount_repeated
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{b1}}&obligation_id={{a2}}'
+  - id: guest_a_wrong_amount_other_param
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?id={{a2}}'
+  # evidence and objections are per obligation
+  - id: guest_a_asks_evidence_second
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{a2}}'
+  - id: guest_a_wrong_amount_second_asked
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a2}}'
+  - id: guest_a_wrong_amount_first_not_asked
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a1}}'
+  - id: guest_a_objects_first_1
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{a1}}&reason=amount_too_high'
+  - id: guest_a_objects_first_2
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{a1}}&reason=already_paid'
+  - id: guest_a_objects_first_3
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{a1}}&reason=other'
+  - id: guest_a_wrong_amount_first_locked
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a1}}'
+  - id: guest_a_wrong_amount_second_open
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{a2}}'
+  - id: guest_a_home_disputed
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: guest_b_home
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_b}}'
+  # a revoked link has no blocks: without an id 409 no_open_obligation, with one LINK_NOT_ACTIVE
+  - id: guest_b_says_not_me
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+  - id: guest_b_wrong_amount_default_revoked
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_b}}/doi-so-tien'
+  - id: guest_b_wrong_amount_revoked
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_b}}/doi-so-tien?obligation_id={{b1}}'
+  - id: unknown_token_wrong_amount
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/doi-so-tien'
+  - id: unknown_token_wrong_amount_with_id
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/doi-so-tien?obligation_id={{a1}}'
+  - id: head_wrong_amount
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/g/{{tok_a}}/doi-so-tien'
+  - id: wrong_amount_trailing_slash
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien/?obligation_id={{a1}}'

@@ -1,0 +1,361 @@
+# W5 · POST /g/{token}/da-chuyen: the sender says they transferred. The body is a
+# form model (obligation_id, optional idempotency_key); the answer is 201 JSON, or
+# 303 back to the page when Accept contains "text/html". A dinner split four ways
+# gives three links with one obligation each. Each link allows three reports; the
+# fourth is 403 report_budget_available, and a foreign or unknown obligation is
+# 404 before that count is read. A body idempotency_key returns the report
+# already stored (any UUID spelling) and is 409 on another link. The header key
+# is scoped anonymous (or by X-Actor-ID when sent); a 303 is not stored, so it
+# runs again. Keys borrow this run's group id. Amounts are integer VND; texts are
+# sample data (dữ liệu mẫu).
+id: w5/guests/post-g-token-da-chuyen
+routes: ['POST /g/{token}/da-chuyen']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  fourth: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt nhận báo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: register_fourth
+    as: fourth
+    request:
+      method: PUT
+      path: '/people/{{persona.fourth}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách ba (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm báo đã chuyển (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_fourth
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.fourth}}"}'
+    bind:
+      m_fourth: {from: body, pointer: /id, class: uuid}
+  - id: fourth_accepts
+    as: fourth
+    request:
+      method: POST
+      path: '/memberships/{{m_fourth}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối chia bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":120000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chia bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000,"{{persona.fourth}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+      tok_c: {from: body, pointer: /guest_links/2/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_c: {from: body, pointer: /guest_links/2/obligations/0/obligation_id, class: uuid}
+  # a body idempotency_key names one report across the whole table
+  - id: guest_b_reports_with_body_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key={{kp}}-bbbbbbbbbbbb'
+  - id: guest_b_repeats_body_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key={{kp}}-bbbbbbbbbbbb'
+  - id: guest_b_body_key_urn_spelling
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key=urn:uuid:{{kp}}-bbbbbbbbbbbb'
+  - id: guest_a_reuses_body_key_of_b
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&idempotency_key={{kp}}-bbbbbbbbbbbb'
+  # Accept picks 201 JSON or 303 by a case-sensitive substring; refusals stay JSON
+  - id: guest_a_reports_paid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_reports_from_browser
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_accept_uppercase
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'TEXT/HTML'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_fourth_report
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_fourth_report_from_browser
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_obligation_of_link_b
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: guest_b_accept_list_with_html
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'application/xhtml+xml,text/html;q=0.9,*/*;q=0.8'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: guest_b_unknown_obligation
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # a report never moves the status; a receipt does, and the guest may still report
+  - id: owner_confirms_b_received
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_b}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":30000,"idempotency_key":"{{kp}}-cccccccccccc"}'
+  - id: guest_b_reports_after_receipt
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: guest_b_page_after_receipt
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_b}}'
+  # an unknown token is a JSON 404 on this route, never the broken-link page
+  - id: unknown_token_report
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: unknown_token_report_from_browser
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_c}}'
+  # the Idempotency-Key header: anonymous scope, only a 2xx is stored
+  - id: guest_c_reports_with_header_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdc0c'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: guest_c_replays_header_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdc0c'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: guest_c_header_key_other_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdc0c'
+      body_raw: 'obligation_id=urn:uuid:{{ob_c}}'
+  - id: guest_c_header_key_from_browser
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdcfc'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: guest_c_header_key_from_browser_again
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdcfc'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: guest_c_header_key_with_actor_header
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-dcdcdcdcdc0c'
+        x-actor-id: '{{persona.owner}}'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: guest_c_empty_header_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: ''
+      body_raw: 'obligation_id={{ob_c}}'

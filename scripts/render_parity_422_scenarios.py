@@ -180,6 +180,23 @@ WAVES: dict[str, Wave] = {
             ("POST", "/batches/{batch_id}/publish", "'function-after' is not probed"),
         ),
     ),
+    # The guest boundary renders nothing yet. Every route is refused at its
+    # path parameter first: the token is a str with length bounds and a
+    # pattern, not a UUID. Behind that, three routes read form bodies, which
+    # read_route refuses as well ("form bodies are not probed"). Their 422s are
+    # hand-written in parity/scenarios/w5/guests/validation-422.yaml.
+    "w5": Wave(
+        routes=(),
+        deferred=(
+            ("GET", "/g/{token}", "carries ['pattern']"),
+            ("POST", "/g/{token}/da-chuyen", "carries ['pattern']"),
+            ("GET", "/g/{token}/khong-phai-toi", "carries ['pattern']"),
+            ("POST", "/g/{token}/khong-phai-toi", "carries ['pattern']"),
+            ("GET", "/g/{token}/doi-so-tien", "carries ['pattern']"),
+            ("POST", "/g/{token}/doi-so-tien", "carries ['pattern']"),
+            ("POST", "/g/{token}/xin-cach-tinh", "carries ['pattern']"),
+        ),
+    ),
 }
 
 

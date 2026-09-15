@@ -1,0 +1,261 @@
+# W5 cross replay · POST /g/{token}/da-chuyen. The idempotency middleware wraps
+# every POST, guest routes included, with the anonymous scope. A 201 one side
+# stored under a header key is replayed by the other (idempotency-replayed: true)
+# and another body under it is 422 idempotency_key_reuse. The body
+# idempotency_key returns the report either side stored, and is 409 on another
+# link. A 303 (Accept text/html) is not stored and a 422 releases the key, so the
+# other side runs the request again. Go serves none of these routes yet, so both
+# paths reach Python; the file is here for when one side is Go. Keys borrow this
+# run's group id. Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w5/crossreplay/post-g-token-da-chuyen
+routes: ['POST /g/{token}/da-chuyen']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt nhận chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm báo chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối báo chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối báo chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+  # Python stores a 201 under a header key; the front door replays it and refuses another body
+  - id: python_reports_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0a'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: core_replays_python_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0a'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: core_refuses_python_key_other_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0a'
+      body_raw: 'obligation_id=urn:uuid:{{ob_a}}'
+  - id: core_reports_with_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0b'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: python_replays_core_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0b'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: python_refuses_core_key_other_body
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcd0b'
+      body_raw: 'obligation_id=urn:uuid:{{ob_b}}'
+  # the body idempotency_key is unique across the table, whichever side wrote it
+  - id: python_reports_body_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key={{kp}}-dddddddddddd'
+  - id: core_repeats_body_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key={{kp}}-dddddddddddd'
+  - id: core_reuses_body_key_on_other_link
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&idempotency_key={{kp}}-dddddddddddd'
+  # a 303 is never stored, and a refusal releases its key
+  - id: python_browser_report_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcdfe'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: core_browser_report_same_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcdfe'
+        accept: 'text/html'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: python_refused_form_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcdbd'
+      body_raw: 'obligation_id='
+  - id: core_valid_form_same_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-cdcdcdcdcdbd'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: core_page_a
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: python_page_b
+    as: anonymous
+    via: python
+    request:
+      method: GET
+      path: '/g/{{tok_b}}'

@@ -1,0 +1,299 @@
+# W5 · POST /g/{token}/xin-cach-tinh: the sender asks how their share was
+# reached. One Form() field, obligation_id (str). Each request writes one
+# guest_objection.evidence_request audit event (no dedupe, no quota) and answers
+# 303 to the wrong-amount page with the obligation_id exactly as sent. A urn:uuid
+# spelling is accepted by uuid.UUID, stored canonical, and echoed raw, so the page
+# it redirects to is 409 UNKNOWN_OBLIGATION. Asking is not a dispute: the home
+# page and the board do not change. A non-UUID or empty id is a text/plain 500; a
+# missing one 422; a revoked link 409 link_not_active. Texts are sample data
+# (dữ liệu mẫu).
+id: w5/guests/post-g-token-xin-cach-tinh
+routes: ['POST /g/{token}/xin-cach-tinh']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt xin cách tính (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xin cách tính (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối xin cách tính (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối xin cách tính (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+  - id: guest_a_asks_evidence
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_follows_redirect
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id={{ob_a}}'
+  - id: guest_a_asks_again
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  # the redirect echoes the form value as sent, and the page compares text
+  - id: guest_a_asks_urn_spelling
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=urn:uuid:{{ob_a}}'
+  - id: guest_a_follows_urn_redirect
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}/doi-so-tien?obligation_id=urn:uuid:{{ob_a}}'
+  - id: guest_a_home_after_evidence
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: owner_board_after_evidence
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'
+  - id: guest_a_asks_with_accept_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'application/json'
+      body_raw: 'obligation_id={{ob_a}}'
+  # scope, parsing and form shapes
+  - id: guest_b_evidence_obligation_of_a
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_b_evidence_unknown_obligation
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: guest_b_evidence_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid'
+  - id: guest_b_evidence_empty
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id='
+  - id: guest_b_evidence_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: ''
+  - id: guest_b_evidence_extra_reason
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=bogus'
+  - id: guest_b_evidence_repeated
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&obligation_id={{ob_b}}'
+  - id: guest_b_evidence_json_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"obligation_id":"{{ob_b}}"}'
+  - id: guest_b_evidence_multipart
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'multipart/form-data; boundary=w5-ranh-gioi'
+      body_raw: "--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"obligation_id\"\r\n\r\n{{ob_b}}\r\n--w5-ranh-gioi--\r\n"
+  - id: unknown_token_evidence
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: unknown_token_evidence_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid'
+  - id: get_evidence
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+  - id: head_evidence
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+  - id: guest_b_says_not_me
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+  - id: guest_b_evidence_after_revoke
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: evidence_trailing_slash
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh/'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'

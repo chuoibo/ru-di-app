@@ -1,0 +1,354 @@
+# W5 · POST /g/{token}/doi-so-tien: "the amount is wrong". Two plain Form()
+# fields, obligation_id (str) and reason (closed list). Success is always 303 to
+# the page, whatever Accept says, and writes one guest_objection.wrong_amount
+# audit event that the page and the board read back as disputed (first reason
+# wins on the board). Three per obligation; the fourth is 429. Evidence requests
+# and reports do not spend that quota. The reason is checked before the link, so
+# an unknown token with a bad reason is 422, not the 404 page. obligation_id is
+# parsed by uuid.UUID inside the handler: a non-UUID or empty value is a text/plain
+# 500, a urn:uuid spelling is accepted and stored canonical. Repeated fields take
+# the last value; unknown fields are ignored. Amounts are integer VND; texts are
+# sample data (dữ liệu mẫu).
+id: w5/guests/post-g-token-doi-so-tien
+routes: ['POST /g/{token}/doi-so-tien']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt bị thắc mắc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm thắc mắc số tiền (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối thắc mắc (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối thắc mắc (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+  - id: guest_a_objects_amount
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=amount_too_high'
+  - id: guest_a_home_disputed
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: owner_board_disputed
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'
+  - id: guest_a_objects_other_reason
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=did_not_join'
+  - id: guest_a_objects_asking_for_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        accept: 'application/json'
+      body_raw: 'obligation_id={{ob_a}}&reason=already_paid'
+  - id: guest_a_fourth_objection
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=split_wrong'
+  - id: guest_a_asks_evidence_after_quota
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: guest_a_reports_after_quota
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  # reasons are a closed list, checked before the link is looked up
+  - id: guest_b_reason_hostile
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=%3Cscript%3Ealert(1)%3C%2Fscript%3E%26%22%27'
+  - id: guest_b_reason_rtl_emoji
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=%E2%80%AE%F0%9F%98%80'
+  - id: guest_b_reason_empty
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason='
+  - id: guest_b_reason_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: guest_b_reason_repeated_last_unknown
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=other&reason=bogus'
+  - id: guest_b_reason_repeated_last_known_extra_field
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=bogus&reason=other&note=x'
+  # obligation_id is a plain string that uuid.UUID parses inside the handler
+  - id: guest_b_obligation_of_link_a
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: guest_b_unknown_obligation
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee&reason=other'
+  - id: guest_b_obligation_urn
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=urn:uuid:{{ob_b}}&reason=split_wrong'
+  - id: guest_b_obligation_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid&reason=other'
+  - id: guest_b_obligation_empty
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=&reason=other'
+  - id: guest_b_obligation_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'reason=other'
+  - id: unknown_token_objection
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: unknown_token_unknown_reason
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=bogus'
+  - id: unknown_token_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong-c/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid&reason=other'
+  # after "not me" the link takes no objection
+  - id: guest_b_says_not_me
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+  - id: guest_b_objects_after_revoke
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=other'
+  - id: guest_b_objects_other_link_after_revoke
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: guest_b_objects_not_uuid_after_revoke
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid&reason=other'
+  - id: guest_b_unknown_reason_after_revoke
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=bogus'
+  - id: objection_trailing_slash
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien/'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
