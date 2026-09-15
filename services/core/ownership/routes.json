@@ -158,7 +158,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /bills/{bill_id}",
@@ -170,7 +170,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "PUT /bills/{bill_id}/assignments",
@@ -182,7 +182,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /bills/{bill_id}/my-items",
@@ -194,7 +194,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /bills/{bill_id}/split",
@@ -206,7 +206,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}/budget",

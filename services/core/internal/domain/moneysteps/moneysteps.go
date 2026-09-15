@@ -28,7 +28,10 @@
 //
 // The money laws hold as in the domain packages: stored and request amounts
 // are money.VND, derived sums (a merged obligation, the sum of a bill's
-// lines) are *big.Int.
+// lines) are *big.Int. The one exception is what create_bill compares before
+// it writes: pydantic bounds neither items_total_vnd nor line_total_vnd from
+// above and the refusal prints both whole, so CreateBillChecks takes them
+// exactly; a value past BIGINT is refused afterwards by the database.
 //
 // testdata/python_*.json is rendered by scripts/render_domain_w4_goldens.py by
 // running the real service methods over a recording stub repository;
@@ -249,16 +252,18 @@ func sameAllocations(got, expected []allocator.Share) bool {
 }
 
 // BillLine is one item of a bill creation request, as create_bill reads it.
+// LineTotalVND is the request's int, which may lie past int64.
 type BillLine struct {
-	LineTotalVND            money.VND
+	LineTotalVND            *big.Int
 	SuggestedParticipantIDs []string
 }
 
 // CreateBillChecks is create_bill between its permission check and the
 // repository write: every suggested id must be an active member (422), then
 // the declared items total must equal the sum of the lines (422
-// bill_items_total_mismatch, both figures in the detail).
-func CreateBillChecks(itemsTotalVND money.VND, lines []BillLine, listMembers func() ([]Member, error)) (*Refusal, error) {
+// bill_items_total_mismatch, both figures in the detail). Both are exact
+// integers, as Python's are.
+func CreateBillChecks(itemsTotalVND *big.Int, lines []BillLine, listMembers func() ([]Member, error)) (*Refusal, error) {
 	roster, err := listMembers()
 	if err != nil {
 		return nil, err
@@ -267,16 +272,16 @@ func CreateBillChecks(itemsTotalVND money.VND, lines []BillLine, listMembers fun
 	sum := new(big.Int)
 	for _, line := range lines {
 		suggested = append(suggested, line.SuggestedParticipantIDs...)
-		sum.Add(sum, big.NewInt(int64(line.LineTotalVND)))
+		sum.Add(sum, line.LineTotalVND)
 	}
 	if refused := RequireParticipantsAreMembers(roster, suggested); refused != nil {
 		return refused, nil
 	}
-	if sum.Cmp(big.NewInt(int64(itemsTotalVND))) != 0 {
+	if sum.Cmp(itemsTotalVND) != 0 {
 		return &Refusal{
 			Status: 422,
 			Code:   "bill_items_total_mismatch",
-			Detail: fmt.Sprintf("Declared items total %d does not match the sum of the lines %s", itemsTotalVND, sum),
+			Detail: fmt.Sprintf("Declared items total %s does not match the sum of the lines %s", itemsTotalVND, sum),
 		}, nil
 	}
 	return nil, nil

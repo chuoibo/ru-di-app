@@ -1,0 +1,200 @@
+# W4 · POST /bills with one person suggested on two or more lines, and values
+# past the range of their columns in each statement group of create_bill.
+# The share rows of one person differ only by the line they point to, which the
+# database lane now tells apart by the line ids it numbers in the same step.
+# Python binds every value; PostgreSQL refuses one past its column (22003, a
+# DataError nothing catches: 500) in the statement that carries it, so a
+# constraint in an EARLIER statement still answers 409. Statement order: the
+# bill, the lines, then discounts, suggested shares, surcharges. Texts are
+# sample data (dữ liệu mẫu).
+id: w4/bill/post-bills-many
+routes: ['POST /bills', 'GET /bills/{bill_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm gợi ý nhiều món (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn gợi ý nhiều món (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gợi ý nhiều món (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # one person on two lines
+  - id: owner_suggests_one_person_on_two_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":75000,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":15000,"suggested_participant_ids":["{{persona.owner}}"]}]}'
+    bind:
+      two_lines: {from: body, pointer: /id, class: uuid}
+  # two people on three lines, in different orders per line
+  - id: owner_suggests_two_people_on_three_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":130000,"items_total_vnd":120000,"confidence":85,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":2,"unit_price_vnd":10000,"line_total_vnd":20000,"suggested_participant_ids":["{{persona.mate}}","{{persona.owner}}"]},{"item_key":"Nem","name":"Nem (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":40000,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]}],"surcharges":[{"surcharge_key":"vat","kind":"VAT","amount_vnd":12000,"mode":"proportional"},{"surcharge_key":"phi","kind":"service","amount_vnd":3000,"mode":"even"}],"discounts":[{"discount_key":"giam-nem","amount_vnd":5000,"scope":"item","item_key":"Nem"}]}'
+    bind:
+      three_lines: {from: body, pointer: /id, class: uuid}
+  - id: mate_reads_two_lines
+    as: mate
+    request:
+      method: GET
+      path: '/bills/{{two_lines}}'
+  - id: mate_reads_three_lines
+    as: mate
+    request:
+      method: GET
+      path: '/bills/{{three_lines}}'
+  - id: mate_duplicate_key_with_many_suggestions
+    as: mate
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":2,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]},{"item_key":"pho","name":"Phở nữa (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.mate}}","{{persona.owner}}"]}]}'
+  # the declared total past int64 is printed whole in the refusal
+  - id: owner_items_total_past_int64_mismatch
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":18446744073709551616,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]}]}'  # repo-guard: allow=long-number reason=items-total-past-int64-probe
+  # the bill statement: the printed total past bigint
+  - id: owner_printed_total_past_bigint
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":9223372036854775808,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.owner}}"]}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  # the line statement: a unit price below bigint, a quantity past int64, a
+  # quantity past integer
+  - id: owner_unit_price_below_bigint
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":-9223372036854775809,"line_total_vnd":1,"suggested_participant_ids":[]}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  - id: owner_quantity_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":9223372036854775808,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]}]}'  # repo-guard: allow=long-number reason=integer-overflow-probe
+  - id: owner_quantity_past_integer
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":2147483648,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]}]}'  # repo-guard: allow=long-number reason=integer-overflow-probe
+  # the discount statement: alone, after a line conflict, before a share conflict
+  - id: owner_discount_past_bigint
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.owner}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":9223372036854775808,"scope":"global_proportional"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  - id: owner_discount_past_bigint_after_duplicate_line
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":2,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]},{"item_key":"pho","name":"Phở nữa (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]}],"discounts":[{"discount_key":"giam","amount_vnd":9223372036854775808,"scope":"global_proportional"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  - id: owner_discount_past_bigint_before_duplicate_share
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.mate}}","{{persona.mate}}"]}],"discounts":[{"discount_key":"giam","amount_vnd":9223372036854775808,"scope":"item","item_key":"pho"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  # the surcharge statement: alone, after a share conflict, after a discount conflict
+  - id: owner_surcharge_past_bigint
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]}],"surcharges":[{"surcharge_key":"phi","kind":"service","amount_vnd":9223372036854775808,"mode":"even"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  - id: owner_surcharge_past_bigint_after_duplicate_share
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":["{{persona.mate}}","{{persona.mate}}"]}],"surcharges":[{"surcharge_key":"phi","kind":"service","amount_vnd":9223372036854775808,"mode":"even"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  - id: owner_surcharge_past_bigint_after_duplicate_discount
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":1,"confidence":70,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":1,"suggested_participant_ids":[]}],"surcharges":[{"surcharge_key":"phi","kind":"service","amount_vnd":9223372036854775808,"mode":"even"}],"discounts":[{"discount_key":"giam","amount_vnd":1,"scope":"global_proportional"},{"discount_key":"giam","amount_vnd":1,"scope":"item","item_key":"pho"}]}'  # repo-guard: allow=long-number reason=bigint-overflow-probe
+  # nothing of the refusals above was kept
+  - id: owner_creates_after_the_refusals
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":2,"items_total_vnd":2,"confidence":50,"needs_review":false,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":1,"line_total_vnd":1,"suggested_participant_ids":["{{persona.mate}}"]},{"item_key":"tra","name":"Trà (dữ liệu mẫu)","quantity":1,"unit_price_vnd":1,"line_total_vnd":1,"suggested_participant_ids":["{{persona.mate}}"]}]}'

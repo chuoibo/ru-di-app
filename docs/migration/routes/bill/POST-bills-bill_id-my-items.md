@@ -86,7 +86,7 @@ Corpus 422 sinh tự động: `parity/scenarios/generated/w4-422/post-bills-bill
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- **Khoảng trống harness (làn DB), quan trọng**: một lần nhận **hai món trở lên** chèn các hàng `bill_item_shares` chỉ khác `bill_item_id`; harness sắp các hàng giống hệt sau khi che uuid4/thời điểm theo id ngẫu nhiên nên đánh số khác nhau giữa hai stack. Mọi bước trong kịch bản chỉ nhận một món mỗi lần, nên chính tính năng «danh sách đầy đủ nhiều món» chưa được so. Test Postgres Python có phủ.
+- **Nhận hai món trở lên trong một lần**: đã phủ bằng `POST-bills-bill_id-my-items-many.yaml` (nhận 2, 3, 4 món, lặp khoá, nhả một phần, món lạ ở giữa, idempotency) sau khi làn DB phân định hàng hoà bằng id món đã đánh số.
 - Xoá theo **người**, không theo món: gợi ý AI của người gọi trên món không nêu cũng mất. Bản Go phải xoá đúng tập đó (mọi share của `participant_id` trên các dòng của bill), không chỉ share `confirmed`.
 - Bỏ trùng giữ thứ tự lần đầu; thứ tự INSERT theo đó.
 - Món lạ là 422 thường ở đây, 409 viết hoa ở `PUT …/assignments`.

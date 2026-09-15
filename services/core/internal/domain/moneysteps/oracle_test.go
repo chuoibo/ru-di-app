@@ -38,6 +38,15 @@ func vnd(value any) (money.VND, error) {
 	return money.VND(n), err
 }
 
+// exactInt reads an int a request carries, of any size, exactly.
+func exactInt(value any) (*big.Int, error) {
+	n, err := oracletest.Integer(value)
+	if err != nil || n == nil {
+		return nil, fmt.Errorf("%v is not an int: %v", value, err)
+	}
+	return n, nil
+}
+
 // requestAmount reads an amount a request carries, of any size, saturated.
 func requestAmount(value any) (money.VND, error) {
 	n, err := oracletest.Integer(value)
@@ -336,7 +345,7 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 		}, nil
 
 	case "create_bill":
-		total, err := vnd(args["items_total_vnd"])
+		total, err := exactInt(args["items_total_vnd"])
 		if err != nil {
 			return decodeFailed(err)
 		}
@@ -351,7 +360,7 @@ func replay(c oracletest.Case, args map[string]any) (any, error) {
 				return decodeFailed(err)
 			}
 			var line BillLine
-			if line.LineTotalVND, err = vnd(r["line_total_vnd"]); err != nil {
+			if line.LineTotalVND, err = exactInt(r["line_total_vnd"]); err != nil {
 				return decodeFailed(err)
 			}
 			if line.SuggestedParticipantIDs, err = oracletest.Strings(r["suggested_participant_ids"]); err != nil {

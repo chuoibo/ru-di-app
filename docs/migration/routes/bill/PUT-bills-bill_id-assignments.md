@@ -98,5 +98,5 @@ Corpus 422 sinh tự động: `parity/scenarios/generated/w4-422/put-bills-bill_
 - Món lạ ở route này là **409 `UNKNOWN_BILL_ITEM` viết hoa**, còn ở `POST …/my-items` là **422 `unknown_bill_item`**; bản Go giữ cả hai.
 - Thứ tự khoá phải giữ: `bills` → `bill_items` → share của các món được nêu; không giữ thì hai lần gán song song có thể deadlock hoặc đọc share cũ.
 - `item_key` lặp: mục sau thắng; thứ tự INSERT theo thứ tự dict Python (lần xuất hiện đầu tiên của khoá, giá trị của lần cuối).
-- **Khoảng trống harness (làn DB)**: các hàng mới cùng bảng trong một bước mà giống hệt sau khi che uuid4/thời điểm bị sắp theo id ngẫu nhiên. Vì vậy không bước nào gán **một người cho hai món trong một lần PUT** (hai hàng share chỉ khác `bill_item_id`); trường hợp đó chưa được so, dù là cách dùng thường gặp.
+- **Một người trên hai món trong một lần gán**: đã phủ bằng `PUT-bills-bill_id-assignments-many.yaml` (một người hai dòng, hai người hai dòng, mọi người mọi dòng, khoá lặp quanh dòng khác, 500 ở dòng thứ hai, xoá hai dòng).
 - Không kiểm share mới có trùng với share của món khác; không kiểm người gọi có phải người tạo bill.

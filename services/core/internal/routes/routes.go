@@ -72,6 +72,11 @@ func All() []Route {
 		deleteMemoryReaction(),
 		postMemoryComment(),
 		listMemoryComments(),
+		createBill(),
+		getBill(),
+		confirmBillAssignments(),
+		claimBillItems(),
+		splitBill(),
 	}
 }
 

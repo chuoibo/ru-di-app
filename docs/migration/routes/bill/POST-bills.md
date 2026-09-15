@@ -118,5 +118,5 @@ Corpus 422 sinh tự động: **hoãn** — bộ sinh từ chối với lý do `
 - Thứ tự `surcharges`/`discounts` do `ORDER BY` varchar theo collation của DB; bản Go phải sắp trong SQL như Python, không sắp trong Go.
 - `suggested_item_keys` sắp theo byte UTF-8 trong ứng dụng, còn `items` theo `position`.
 - Không kiểm: `unit_price_vnd` âm hay lệch `quantity × unit_price`; `item_key` rỗng/có khoảng trắng; `kind` rỗng; giảm giá `item` trỏ tới dòng không tồn tại — tất cả được lưu và chỉ bị allocator từ chối ở `split`.
-- **Khoảng trống harness (làn DB)**: trong một bước, các hàng mới cùng bảng giống hệt nhau sau khi che uuid4/thời điểm được sắp theo id ngẫu nhiên nên đánh số khác nhau giữa hai stack. Vì vậy kịch bản không có bước nào gợi ý **một người trên hai món** trong một lần tạo (hai hàng `bill_item_shares` chỉ khác `bill_item_id`), và loạt khoá khác nhau chỉ tạo bill không dòng. Hai trường hợp đó chưa được so.
+- **Nhiều dòng trong một bill và loạt bill có dòng**: đã phủ bằng `POST-bills-many.yaml` và `concurrency/POST-bills-lines.yaml` (một người mỗi dòng). Chưa phủ: loạt có hai người trên một dòng, vì id persona đổi theo mỗi lượt lặp reference và hai share trên một dòng sắp theo id đó.
 - Không có hàng `audit_events`; không khoá; `confidence` chỉ nằm trong DB.
