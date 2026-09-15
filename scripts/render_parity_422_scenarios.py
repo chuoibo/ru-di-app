@@ -126,6 +126,32 @@ WAVES: dict[str, Wave] = {
             ),
         ),
     ),
+    "w3": Wave(
+        routes=(
+            ("POST", "/contexts"),
+            ("POST", "/contexts/{context_id}/members"),
+            ("POST", "/memberships/{membership_id}/accept"),
+            ("DELETE", "/contexts/{context_id}/members/{person_id}"),
+            ("GET", "/contexts/{context_id}/members"),
+            ("GET", "/contexts/{context_id}/balances"),
+            ("GET", "/contexts/{context_id}"),
+            ("POST", "/contexts/{context_id}/checkins"),
+            ("GET", "/contexts/{context_id}/widget"),
+            ("POST", "/contexts/{context_id}/memories/{memory_id}/reactions"),
+            ("DELETE", "/contexts/{context_id}/memories/{memory_id}/reactions"),
+            ("POST", "/contexts/{context_id}/memories/{memory_id}/comments"),
+            ("GET", "/contexts/{context_id}/memories/{memory_id}/comments"),
+        ),
+        deferred=(
+            ("PATCH", "/contexts/{context_id}", "'function-after' is not probed"),
+            ("POST", "/contexts/{context_id}/memories", "carries ['pattern']"),
+            (
+                "GET",
+                "/contexts/{context_id}/memories",
+                "query kind: no candidate value is accepted",
+            ),
+        ),
+    ),
 }
 
 
@@ -141,7 +167,9 @@ GENERATOR = "scripts/render_parity_422_scenarios.py"
 
 PERSONA = "owner"
 ANONYMOUS = "anonymous"
-MAX_STEPS = 64
+# W3 checkins and memory comments render 72 and 76 steps; the cap bounds gate time,
+# not coverage.
+MAX_STEPS = 80
 MAX_FILE_BYTES = 1024 * 1024
 
 PATH_UUID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"

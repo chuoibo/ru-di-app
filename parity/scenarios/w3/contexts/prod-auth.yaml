@@ -1,0 +1,226 @@
+# W3 · contexts in prod auth mode (ADR-0014): identity is a bearer session read
+# by digest; X-Actor-* headers are ignored. Roles come from the roster: every
+# session holder is member, and group_admin only comes from being admin of the
+# group in the path, so a header cannot grant the invite door.
+# The harness seeds a people row and a live session per persona before step one.
+id: w3/contexts/prod-auth
+routes: ['POST /contexts', 'PATCH /contexts/{context_id}', 'POST /contexts/{context_id}/members', 'POST /memberships/{membership_id}/accept', 'DELETE /contexts/{context_id}/members/{person_id}', 'GET /contexts/{context_id}/members', 'GET /contexts/{context_id}/balances', 'GET /contexts/{context_id}']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_create_missing_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mới (dữ liệu mẫu)"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name": '
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mới (dữ liệu mẫu)"}'
+  - id: junk_bearer_members
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/members'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_balances
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/balances'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+  # dev would trust these headers; prod answers 401 Missing bearer session
+  - id: actor_headers_ignored_read_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+  - id: anonymous_non_uuid_accept
+    as: anonymous
+    request:
+      method: POST
+      path: '/memberships/khong-phai-uuid/accept'
+  # in dev an empty X-Actor-Roles is 403 role_not_permitted; prod ignores it
+  - id: owner_creates_group_empty_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_lowercase_scheme_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+      headers:
+        authorization: 'bearer {{token.owner}}'
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: stranger_accepts_mates_invite
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # dev would let this header through; prod: 403 role_not_permitted
+  - id: mate_invites_stranger_with_group_admin_header
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        x-actor-roles: 'member,group_admin'
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.stranger}}"}'
+  - id: stranger_reads_claiming_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-contexts: '{{ctx}}'
+  - id: mate_renames
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm prod đổi tên (dữ liệu mẫu)"}'
+  - id: owner_lists_members
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: propose_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_reads_balances
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: idem_first
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: idem_replay
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  # the key scope is the bearer digest, so the stranger's request runs and is refused
+  - id: stranger_same_key
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_reads_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_after_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+  - id: stranger_deletes_account
+    as: stranger
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # erasure revokes every session: 401, not 409 or 201
+  - id: stranger_after_deletion
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mới (dữ liệu mẫu)"}'
