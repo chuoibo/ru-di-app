@@ -41,6 +41,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"mobile/services/core/internal/domain/ledger"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -465,7 +466,7 @@ func moneyGoCall(repo Repository, method string, a map[string]any) (any, error) 
 // methods raise themselves.
 func moneyGoError(err error) map[string]any {
 	out := groupsGoError(err)
-	var ledger *LedgerRefusal
+	var refused *ledger.LedgerError
 	switch {
 	case errors.Is(err, ErrUnknownPayerAcknowledgement), errors.Is(err, ErrUnknownVerificationScope),
 		errors.Is(err, ErrUnknownBatchStatus):
@@ -474,7 +475,7 @@ func moneyGoError(err error) map[string]any {
 		out["type"] = "StatementError"
 	case errors.Is(err, ErrEventDataNotAnObject):
 		out["type"] = "AttributeError"
-	case errors.As(err, &ledger):
+	case errors.As(err, &refused):
 		out["type"] = "LedgerError"
 	}
 	return out

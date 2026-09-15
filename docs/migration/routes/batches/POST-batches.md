@@ -111,7 +111,7 @@ Corpus 422 sinh tự động: hoãn, bộ sinh từ chối với `'function-afte
 ## Chưa phủ / lưu ý cho bản Go
 
 - **Gộp hai khoản chi vào một nghĩa vụ chưa phủ (lỗ của harness)**: `source_expense_version_ids` được sắp theo chuỗi UUID ngẫu nhiên nên thứ tự so với số thứ tự `<uuid#n>` đổi mỗi lượt. Bản Go phải sắp đúng theo chuỗi (`ledger.py:135-137`) và cộng tiền theo cặp; test miền `test_batch_uses_domain_merge_for_same_sender_recipient_pair` phủ việc cộng.
-- **Hai dòng nguồn cùng số tiền trong một đợt chưa phủ (lỗ của harness)**: dòng mới trong một bước chỉ khác nhau bởi uuid4 được làn DB xếp theo id ngẫu nhiên; kịch bản giữ số tiền mọi nguồn trong một đợt khác nhau.
+- **Hai dòng nguồn cùng số tiền trong một đợt**: đã phủ bằng `POST-batches-equal-sources.yaml` (mọi nghĩa vụ và nguồn 25000, đợt thứ hai bỏ danh sách) sau khi làn DB phân định hàng hoà bằng giá trị đã đánh số.
 - Hai lần gọi `load_batch_inputs` khi danh sách vắng: bản Go gộp thành một câu vẫn phải cho cùng kết quả khả dụng và giữ khoá trên cùng các dòng.
 - Khoá `FOR UPDATE OF expense_versions` rồi `confirmed_allocations`: bỏ khoá sẽ vẫn xanh phần lớn parity tuần tự, nhưng loạt đồng thời không khoá có thể ra hai đợt trên cùng nguồn.
 - `due_at` trả về là giá trị request, không phải giá trị đọc lại từ `timestamptz`; bản Go đọc lại từ DB sẽ đổi offset thành `Z`.

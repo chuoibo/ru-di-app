@@ -79,7 +79,7 @@ Corpus 422 sinh tự động: `parity/scenarios/generated/w4-422/get-batches-bat
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- `disputed`, `disputed_reason`, `payment_reported_at`, `payment_reported_count` > 0 cần link khách, mà link khách chỉ có sau `publish` thành công — giá trị token ngẫu nhiên harness chưa bind được (xem card publish). Bản Go phải giữ: lý do đầu tiên theo `occurred_at, id`, `MIN` thời điểm báo, và đếm phản đối ở mọi trạng thái thanh toán.
+- `disputed`, `disputed_reason`, `payment_reported_at`, `payment_reported_count` > 0: đã phủ bằng `GET-batches-batch_id-obligations-guest.yaml` (báo đã chuyển hai lần giữ thời điểm sớm nhất, hai phản đối lấy lý do đầu, yêu cầu bằng chứng không tính là tranh chấp).
 - `ORDER BY sender_id` không phá hoà: Python trả thứ tự Postgres chọn (thực tế là thứ tự chèn, trùng `(sender, recipient)` theo chuỗi). Bản Go nên dùng đúng câu `ORDER BY` đó; thêm khoá phụ sẽ vẫn khớp kịch bản nhưng là thay đổi hành vi không được hứa.
 - Tổng nhận của một nghĩa vụ vượt int64 không có trong kịch bản: hai lần nhận lớn trên một nghĩa vụ làm view `collection_obligation_progress` ép `::bigint` lỗi (SQLSTATE 22003, `20260827_0001_initial_api_schema.py:621-646`) và làn DB dừng. Bản Go phải cộng tổng nhận không tràn (`big.Int` hoặc `numeric`) vì Python cộng không giới hạn.
 - 404 trước 403 là oracle tồn tại; giữ nguyên thứ tự.

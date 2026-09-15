@@ -1,0 +1,198 @@
+# W4 · POST /batches when every obligation and every source carries the same
+# amount. A dinner split equally between four people makes three sources of
+# 25000 to one recipient; a taxi and a snack each make the owner owe 25000 to
+# another member. The database lane tells the new rows of one step apart only
+# by values already numbered: the obligation ids of the response and the
+# allocation ids of the confirm steps. No pair repeats across expenses: a
+# merged pair lists its versions in the text order of random uuids, which no
+# harness can bind. The second batch omits the list, so only what the first
+# left behind is read. Amounts are integer VND; texts are sample data
+# (dữ liệu mẫu).
+id: w4/batches/post-batches-equal-sources
+routes: ['POST /batches', 'GET /batches/{batch_id}/obligations', 'GET /contexts/{context_id}/batches']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  fourth: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chia đều (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn chia đều một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn chia đều hai (dữ liệu mẫu)"}'
+  - id: register_fourth
+    as: fourth
+    request:
+      method: PUT
+      path: '/people/{{persona.fourth}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn chia đều ba (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia đều (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_fourth
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.fourth}}"}'
+    bind:
+      m_fourth: {from: body, pointer: /id, class: uuid}
+  - id: fourth_accepts
+    as: fourth
+    request:
+      method: POST
+      path: '/memberships/{{m_fourth}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối chia bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":100000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chia bốn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.mate}}":25000,"{{persona.third}}":25000,"{{persona.fourth}}":25000}}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi chia hai (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi chia hai (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.mate}}":25000}}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: third_proposes_snack
+    as: third
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Đồ ăn vặt chia hai (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":50000}'
+    bind:
+      snack: {from: body, pointer: /expense_id, class: uuid}
+  - id: third_confirms_snack
+    as: third
+    request:
+      method: POST
+      path: '/expenses/{{snack}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Đồ ăn vặt chia hai (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.third}}":25000}}'
+    bind:
+      snack_v: {from: body, pointer: /expense_version_id, class: uuid}
+  # four obligations of 25000, four sources of 25000, in one step
+  - id: owner_batches_dinner_and_taxi
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_v}}","{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_one: {from: body, pointer: /batch_id, class: uuid}
+  - id: fourth_board_equal_amounts
+    as: fourth
+    request:
+      method: GET
+      path: '/batches/{{batch_one}}/obligations'
+  # list omitted: the dinner and the taxi are already sources, only the snack is left
+  - id: fourth_batches_the_rest
+    as: fourth
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","due_at":"2030-02-01T12:00:00Z"}'
+    bind:
+      batch_two: {from: body, pointer: /batch_id, class: uuid}
+  - id: mate_lists_rounds
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'

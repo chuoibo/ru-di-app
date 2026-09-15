@@ -1,0 +1,180 @@
+# W4 concurrency · POST /batches/{id}/publish. Copies are released together.
+# Without a key, two publishes of one batch: load_batch_for_publish locks the
+# batch row FOR UPDATE, so the second copy waits, reads status published once
+# the first commits and answers 409 ILLEGAL_TRANSITION; one set of links is
+# written. Under one key the burst publishes once and the other copies replay
+# the stored response, its tokens included; another body under the completed
+# key is refused by every copy. Amounts are integer VND; texts are sample data
+# (dữ liệu mẫu).
+id: w4/concurrency/post-batches-batch_id-publish
+routes: ['POST /batches/{batch_id}/publish']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm gửi cùng lúc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn gửi cùng lúc (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thứ hai gửi cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gửi cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: propose_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản gửi một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-01T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":30000}'
+    bind:
+      e1: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e1}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản gửi một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-01T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":30000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000,"{{persona.third}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      v1: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: batch_one
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      b1: {from: body, pointer: /batch_id, class: uuid}
+  - id: propose_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản gửi hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      e2: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e2}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản gửi hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      v2: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: batch_two
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      b2: {from: body, pointer: /batch_id, class: uuid}
+  # two senders, two links, written once; the other copy is 409
+  - id: no_key_publish_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/batches/{{b1}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: board_after_no_key_burst
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{b1}}/obligations'
+  - id: same_key_publish_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        idempotency-key: 'c-pub-same'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        idempotency-key: 'c-pub-same'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-04-01T12:00:00+07:00"}'
+  - id: rounds_after_bursts
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'

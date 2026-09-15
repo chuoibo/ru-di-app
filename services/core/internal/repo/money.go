@@ -57,13 +57,6 @@ var (
 	ErrDisputeReasonNotText = errors.New("repo: stored objection reason is not text")
 )
 
-// LedgerRefusal is app.domain.ledger.LedgerError with its stable code.
-type LedgerRefusal struct {
-	Code string
-}
-
-func (l *LedgerRefusal) Error() string { return "ledger: " + l.Code }
-
 var (
 	payerAcknowledgements = map[string]bool{"pending": true, "acknowledged": true, "disputed": true}
 	verificationScopes    = map[string]bool{"totals_only": true, "items_reviewed": true}
@@ -185,38 +178,6 @@ func wholeNumber(row pgx.Row) (*big.Int, error) {
 		return nil, err
 	}
 	return numericInteger(n)
-}
-
-// obligationStatus is app.domain.ledger.obligation_status over the receipt
-// amounts in order: the sum is exact, so any number of receipts at the BIGINT
-// maximum still compares right.
-func obligationStatus(declared int64, receipts []int64) (string, error) {
-	if declared < 0 {
-		return "", &LedgerRefusal{Code: "NEGATIVE_AMOUNT"}
-	}
-	if declared == 0 {
-		return "", &LedgerRefusal{Code: "NON_POSITIVE_OBLIGATION"}
-	}
-	total := new(big.Int)
-	for _, amount := range receipts {
-		if amount < 0 {
-			return "", &LedgerRefusal{Code: "NEGATIVE_AMOUNT"}
-		}
-		if amount == 0 {
-			return "", &LedgerRefusal{Code: "NON_POSITIVE_CONFIRMATION"}
-		}
-		total.Add(total, big.NewInt(amount))
-	}
-	switch total.Cmp(big.NewInt(declared)) {
-	case 0:
-		return "confirmed", nil
-	case 1:
-		return "over_confirmed", nil
-	}
-	if total.Sign() == 0 {
-		return "outstanding", nil
-	}
-	return "partially_confirmed", nil
 }
 
 // deleteByID is the flush of `session.delete(row)` for each row: a true

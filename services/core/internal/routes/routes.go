@@ -77,6 +77,10 @@ func All() []Route {
 		confirmBillAssignments(),
 		claimBillItems(),
 		splitBill(),
+		createBatch(),
+		publishBatch(),
+		listBatchObligations(),
+		listContextBatches(),
 	}
 }
 

@@ -72,7 +72,7 @@ Corpus 422 sinh tự động: `parity/scenarios/generated/w4-422/get-contexts-co
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- `status: "published"`, `published_at` khác `null` và `disputed_count` > 0 cần `publish` thành công, mà response đó mang token ngẫu nhiên harness chưa bind được (xem card publish).
+- `status: "published"`, `published_at` khác `null`, `confirmed_count` và `disputed_count` > 0: đã phủ bằng `GET-batches-batch_id-obligations-guest.yaml` (publish thật, khách báo đã chuyển và phản đối) và các bước danh sách đợt trong kịch bản publish thành công.
 - `total_vnd` là tổng không giới hạn trong Python; nghĩa vụ bị chặn bởi phân bổ ≤ `10**12` mỗi khoản nên không vượt int64 trong thực tế, nhưng bản Go vẫn nên cộng an toàn.
 - Giữ `confirmed_count` gồm cả `over_confirmed`.
 - Bản Go có thể bỏ N+1 bằng một truy vấn gộp, miễn trạng thái vẫn tính theo đúng quy tắc của bảng thu (mọi receipts, không lọc người xác nhận).

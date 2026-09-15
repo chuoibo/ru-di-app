@@ -104,7 +104,7 @@ Corpus 422 sinh tự động: hoãn, `'function-after' is not probed` (validator
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- **Nhánh thành công không có kịch bản — giá trị ngẫu nhiên harness không bind được**: route `POST /batches/{batch_id}/publish`, trường response `guest_links[].path` = `"/g/" + secrets.token_urlsafe(32)` (`service.py:6658`, `:6673`); bảng `guest_links` (cột `token_digest`, sha256 của token đó) và `collection_envelopes` được ghi cùng lúc. Chờ harness mở rộng; kéo theo chưa phủ: UPDATE `collection_batches.status/published_at`, `audit_events` `collection_batch_published`, 409 `ILLEGAL_TRANSITION` khi gửi lại, thứ tự `guest_links` theo byte UUID, và mọi thứ sau link (trang khách, báo đã chuyển, phản đối, `disputed`/`payment_reported_at` trên bảng thu).
+- **Nhánh thành công đã có kịch bản** từ khi harness gắn token 43 ký tự thành `<token43#n>` và làn DB phân định hàng hoà: `POST-batches-batch_id-publish-success.yaml` (hai người gửi, phát lại cùng khoá, thân tương đương, khoá dùng lại, publish lần hai 409, token gắn theo tên mở trang khách), `prod-publish-success.yaml`, `crossreplay/POST-batches-batch_id-publish-success.yaml` (mỗi bên phát lại 200 bên kia đã lưu với cùng token) và `concurrency/POST-batches-batch_id-publish.yaml`.
 - Bản Go phải sinh token 32 byte ngẫu nhiên, base64url không đệm (43 ký tự), lưu đúng sha256 32 byte vào `bytea`, và không bao giờ lưu token thô.
 - 404 trước 403: bản Go giữ nguyên thứ tự để parity bằng nhau, dù đây là oracle tồn tại.
 - Chủ đợt nhận `batch_owner` từ tài nguyên, không từ header hay phiên; ở dev, người không phải chủ mà header có `batch_owner` được `owns_batch`, không có header thì `role_not_permitted`.

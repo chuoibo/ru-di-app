@@ -101,7 +101,7 @@ Corpus 422 sinh tự động: `parity/scenarios/generated/w4-422/post-obligation
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- `payment_report_id` hợp lệ (dòng `payment_reports` thật của nghĩa vụ) cần link khách, tức `publish` thành công mà harness chưa bind được token; chỉ nhánh id không tồn tại có kịch bản.
+- `payment_report_id` hợp lệ (dòng `payment_reports` thật của nghĩa vụ): đã phủ bằng bước xác nhận trong `batches/GET-batches-batch_id-obligations-guest.yaml`, sau khi khách báo đã chuyển qua link của publish thật.
 - **Loạt nhiều khoá thân khác nhau trên một nghĩa vụ chưa phủ (lỗ của harness)**: các dòng `receipt_confirmations` mới chỉ khác nhau bởi uuid4 nên làn DB xếp chúng theo id ngẫu nhiên, và trạng thái của từng bản phụ thuộc thứ tự khoá. Bản Go phải giữ khoá `FOR UPDATE` trên nghĩa vụ để trạng thái mỗi response đúng với receipts tính tới lúc đó.
 - Tổng nhận của một nghĩa vụ vượt int64 không có trong kịch bản (view hỏng, làn DB dừng). Python cộng không giới hạn trong `obligation_status`; bản Go phải cộng bằng `big.Int` hoặc so sánh trước khi cộng để trạng thái đúng.
 - `amount_vnd` đầu vào vượt int64: bản Go phải parse số JSON lớn hơn int64 mà không trả lỗi decode, so sánh với dòng đã có (409), và cho INSERT với khoá mới thất bại thành 500 như Python (hoặc ADR hoá một thay đổi). Hiện 500 có thân `text/plain` `Internal Server Error`.

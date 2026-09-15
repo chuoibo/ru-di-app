@@ -3,8 +3,8 @@ package repo
 // Collection rounds: save_frozen_batch, load_batch_for_publish,
 // save_published_batch, list_batch_obligations and list_context_batches.
 // Obligation state is never read from a column: it is derived from the
-// receipt_confirmations rows on every read (obligationStatus), and a dispute
-// from the guest objection events.
+// receipt_confirmations rows on every read (ledger.ObligationStatus), and a
+// dispute from the guest objection events.
 
 import (
 	"context"
@@ -16,6 +16,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"mobile/services/core/internal/domain/ledger"
+	"mobile/services/core/internal/domain/money"
 )
 
 // ObligationDraft is ObligationDraft. Sources are the allocation rows the
@@ -614,7 +617,11 @@ func (r Repository) batchBoard(ctx context.Context, batchID string, loaded *batc
 		if err != nil {
 			return nil, err
 		}
-		status, err := obligationStatus(o.amountVND, amounts)
+		receipts := make([]money.VND, len(amounts))
+		for i, amount := range amounts {
+			receipts[i] = money.VND(amount)
+		}
+		status, err := ledger.ObligationStatus(money.VND(o.amountVND), receipts)
 		if err != nil {
 			return nil, err
 		}
