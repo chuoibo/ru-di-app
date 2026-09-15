@@ -82,7 +82,7 @@ Chỉ đọc `memberships`, `uploaded_images` và tệp. Không idempotency (GET
 ## Chưa phủ / lưu ý cho bản Go
 
 - Tệp mất hoặc rỗng (404 `photo_not_found`) và tệp không đọc được (500) không có kịch bản: harness không xoá được tệp trong container. Đã có test API ở `test_photo_bytes_present_but_empty.py`.
-- Khi Go phục vụ route này mà upload vẫn ở Python (hoặc ngược lại), `core` phải đọc cùng kho tệp với Python; xem mục lưu trữ và lưu ý ở thẻ `POST /contexts/{context_id}/photos` (mount chung, uid 10001, tệp 0600).
+- Khi Go phục vụ route này mà upload vẫn ở Python (hoặc ngược lại), `core` phải đọc cùng kho tệp với Python; xem mục lưu trữ và lưu ý ở thẻ `POST /contexts/{context_id}/photos` (mount chung cùng đường dẫn, cùng uid của host, tệp 0600).
 - Byte trả về phải là tệp nguyên vẹn, không mã hoá lại: ADR-0029 §2.8 đòi GET giống từng byte.
 - Header phải khớp đúng ba dòng `content-type`, `content-length`, `cache-control: private, max-age=300`. `http.ServeContent`/`http.FileServer` của Go tự thêm `accept-ranges`, `last-modified`, xử lý `Range` và `If-Modified-Since`; không dùng được.
 - `HEAD` phải là 405 `allow: GET` với thân rỗng.

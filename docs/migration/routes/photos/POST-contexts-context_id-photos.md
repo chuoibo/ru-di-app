@@ -109,7 +109,7 @@ Bảng đo (đầu vào sinh bởi harness; đầu ra là `content_type` của c
 - Ghi (`storage.py:38-59`): `mkdir(parents=True)`, `NamedTemporaryFile` tên `.<key>.<ngẫu nhiên>.tmp` trong cùng thư mục, `fsync`, `os.replace`; tệp tạm bị xoá nếu lỗi. Tệp mang quyền của `NamedTemporaryFile`, tức **0600**, thư mục theo umask của tiến trình. Số đo trên stack nằm trong mục «Chưa phủ / lưu ý cho bản Go».
 - Đọc: `read_bytes`. Tệp mất (`FileNotFoundError`) hoặc rỗng → 404 của route đọc (`service.py:652-679`); lỗi đọc khác (quyền) → 500.
 - Xoá: chỉ khi xoá tài khoản (`service.py:4528-4568`), sau khi hàng đã mất; lỗi unlink chỉ ghi log.
-- Stack parity (`scripts/parity_stacks.sh:117-124`): mỗi container API chạy với `MOBILE_MEDIA_ROOT=/tmp/parity-media` **trong container**, không có volume. Reference và candidate có kho tệp riêng, mất khi `down`. `core` (Go) chạy trên host, không thấy `/tmp` của container.
+- Stack parity (`scripts/parity_stacks.sh`): mỗi phía có một thư mục host (`$work/media-ref`, `$work/media-cand`), bind-mount vào container API của phía đó **tại cùng đường dẫn** và đặt làm `MOBILE_MEDIA_ROOT`; `core` của candidate nhận đúng thư mục của candidate qua `MOBILE_MEDIA_ROOT`. Container API chạy bằng uid:gid của host (`--user`, `HOME=/tmp` vì uid đó không có trong `/etc/passwd` của ảnh), nên tệp 0600 do Python ghi đọc được bởi `core` và ngược lại, và `down` xoá được cả hai kho. Env của stack ghi `PARITY_REF_MEDIA`, `PARITY_CAND_MEDIA`.
 
 ## Lỗi
 
@@ -166,10 +166,10 @@ Tệp ảnh không nằm trong git: bước dùng `body_parts` và harness sinh 
 
 ## Chưa phủ / lưu ý cho bản Go
 
-- **Kho tệp dùng chung là điều kiện để bật route.** Khi Go phục vụ một route ảnh còn Python phục vụ route khác, `core` phải đọc tệp Python ghi và ngược lại (các bước `via: python` trong `w6/crossreplay` đòi đúng điều đó). Stack parity hiện không làm được: tệp nằm trong `/tmp` của container API, `core` chạy trên host. Script stack cần:
-  - mount một thư mục host (ví dụ `$work/<role>-media`) vào container API tại `MOBILE_MEDIA_ROOT`, và truyền cùng thư mục đó cho `core` qua `MOBILE_MEDIA_ROOT`;
-  - khớp quyền: Python chạy uid 10001 và ghi tệp 0600, nên `core` (uid của host) không đọc được tệp Python ghi, và Python không ghi được vào thư mục `core` tạo nếu quyền khác. Cần chạy hai bên cùng uid (`docker run --user`) hoặc đổi chế độ quyền, và ghi quyết định đó vào ADR-0029.
-  - Chưa đổi script ở sóng này.
+- **Kho tệp dùng chung là điều kiện để bật route.** Khi Go phục vụ một route ảnh còn Python phục vụ route khác, `core` phải đọc tệp Python ghi và ngược lại (các bước `via: python` trong `w6/crossreplay` đòi đúng điều đó). Script stack đã làm được từ sóng route W6 (xem mục lưu trữ): một thư mục host mỗi phía, mount cùng đường dẫn, hai tiến trình cùng uid của host.
+  - Đo trước khi port bằng script mới, Go chưa phục vụ route ảnh nào: `scenarios/w6 scenarios/w2/stories-photo` hai lượt dev (16 tệp, 591 bước) và hai lượt prod (2 tệp, 46 bước), 0 khác biệt; mỗi kho dev 254 tệp, prod 10 tệp, đều 0600, không sót tệp tạm.
+  - Chưa quyết cho triển khai thật: ảnh Docker ghi vào `/var/lib/rudi/media` bằng uid 10001, còn `core` chưa chạy cạnh nó. Khi có, cần chọn cùng uid hay đổi chế độ quyền và ghi vào ADR-0029.
+  - Stack không nhìn thấy tệp mồ côi: câu trả lời và làn DB giống nhau dù tệp có bị xoá sau insert hỏng hay không; chỉ số tệp trong hai kho cho thấy.
 - Bản Go phải ghi đúng bố cục `<root>/<k0k1>/<k2k3>/<key>`, key 32 hex thường từ 16 byte ngẫu nhiên, ghi qua tệp tạm cùng thư mục + fsync + rename, quyền 0600, và **ghi tệp trước khi insert hàng**.
 - `byte_size` là độ dài đầu ra của Pillow. ADR-0029 §2.8 cho JPEG lệch byte (SSIM), nhưng thân JSON và hàng DB mang `byte_size` phải bằng nhau; mâu thuẫn này đã ghi trong `docs/codex/QUEUE.md` và chờ số đo nén lại giống từng byte.
 - Pillow nhận nhiều định dạng hơn năm định dạng đã phủ (AVIF, BLP, BMP, BUFR, CUR, DCX, DDS, DIB, EPS, FITS, FLI, FTEX, GBR, GIF, GRIB, HDF5, ICNS, ICO, IM, IMT, IPTC, JPEG, JPEG2000, MCIDAS, MPEG, MSP, PCD, PCX, PIXAR, PNG, PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, WEBP, WMF, XBM, XPM, XVTHUMB theo `Image.OPEN` trong ảnh ghim). Danh sách định dạng Go không giải mã được là câu hỏi mở 3 của ADR-0029 §8.

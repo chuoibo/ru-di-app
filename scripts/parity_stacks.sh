@@ -18,6 +18,14 @@
 # The two databases are separate on purpose. Running both sides against one
 # database would let a write on one side answer a read on the other, and make
 # every stateful scenario look equal.
+#
+# Each side has its own photo store for the same reason: one host directory under
+# the run's work directory, bind-mounted at the same path into that side's API
+# container, and on the candidate also handed to core as MOBILE_MEDIA_ROOT. Once
+# Go serves a photo route, core writes files the proxied Python reads, and the
+# reverse, so both processes of a side must see one store. The API containers run
+# as the host user: Python writes every photo 0600, and a file owned by the image's
+# uid 10001 could be read by neither core nor `down`.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -84,7 +92,7 @@ cmd_up() {
   id_key="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
 
   local containers=() role
-  declare -A api_url dsn
+  declare -A api_url dsn media_dir
   for role in ref cand; do
     local pg_port api_port password pg_name api_name
     pg_port="$(free_port)"; api_port="$(free_port)"
@@ -111,14 +119,20 @@ cmd_up() {
         tail -20 "$work/$role-migrate.log" >&2; exit 1; }
 
     echo "--- $role: API trên 127.0.0.1:$api_port"
+    media_dir[$role]="$work/media-$role"
+    mkdir -p "${media_dir[$role]}"
     local auth_env=()
     [ "$auth" = dev ] && auth_env=(-e MOBILE_AUTH_MODE=dev)
+    # The host uid has no passwd entry in the image, so Docker would set HOME=/,
+    # which that uid cannot write; /tmp is writable, as /home/app was.
     docker run -d --rm --name "$api_name" --network host \
+      --user "$(id -u):$(id -g)" -e HOME=/tmp \
+      -v "${media_dir[$role]}:${media_dir[$role]}" \
       -e MOBILE_DATABASE_URL="$sqlalchemy_url" \
       "${auth_env[@]}" \
       -e MOBILE_PERSON_ID_KEY="$id_key" \
       -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 \
-      -e MOBILE_MEDIA_ROOT=/tmp/parity-media -e TZ=UTC \
+      -e MOBILE_MEDIA_ROOT="${media_dir[$role]}" -e TZ=UTC \
       -e PYTHONUNBUFFERED=1 \
       "$image" uvicorn app.api.main:app --host 127.0.0.1 --port "$api_port" >/dev/null
     containers+=("$api_name")
@@ -149,6 +163,7 @@ cmd_up() {
   MOBILE_AUTH_MODE="$auth" \
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_PERSON_ID_KEY="$id_key" \
+  MOBILE_MEDIA_ROOT="${media_dir[cand]}" \
   MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
@@ -169,6 +184,8 @@ PARITY_SERVED_ROUTES=$work/served-routes.json
 PARITY_TAP_PID=$tap_pid
 PARITY_REF_DSN=${dsn[ref]}
 PARITY_CAND_DSN=${dsn[cand]}
+PARITY_REF_MEDIA=${media_dir[ref]}
+PARITY_CAND_MEDIA=${media_dir[cand]}
 PARITY_CONTAINERS="${containers[*]}"
 PARITY_CORE_PID=$core_pid
 PARITY_WORK=$work
@@ -196,6 +213,7 @@ cmd_down() {
   kill "${PARITY_TAP_PID:-}" >/dev/null 2>&1 || true
   # shellcheck disable=SC2086
   docker rm -f $PARITY_CONTAINERS >/dev/null 2>&1 || true
+  # The photo stores live under the work directory and belong to the host user.
   case "$PARITY_WORK" in /tmp/*) rm -rf "$PARITY_WORK" ;; esac
   echo "đã tắt $PARITY_RUN"
 }
