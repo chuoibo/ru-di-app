@@ -134,6 +134,13 @@ Sóng W10 (people) bắt đầu ghi mốc, route đóng băng theo cùng luật:
 `POST /people/{person_id}/dm`, `GET` và `PUT /people/{person_id}`), cùng `app/domain/account_lifecycle.py`,
 `app/domain/direct.py` và `erase_person` của repository. `DELETE /people/me` chạm mọi bảng và kho ảnh.
 
+Sóng W6 (ảnh) PORTED: 6 route ảnh do Go phục vụ làm candidate — repository và lưu trữ file (`5ec6a26e`), harness
+body_parts sinh ảnh (`890eb483`), thẻ và kịch bản (`9684165d`), bộ làm sạch ảnh Go thuần giống từng byte với Pillow
+(`842cde9a`), kho ảnh dùng chung giữa core và Python trong stack parity (`721bddb7`), route (`a46a23cc`). Cổng parity
+trên cây có 76 route Go: dev 208 kịch bản/6858 bước, limiter 5/119, prod 18/404, 0 khác biệt (làn limiter chạy lại
+sau một INFRA do máy tải nặng); 76/156 route PORTED. Còn mở: định dạng ảnh Go chưa giải được trả 415 (chờ Lead, mục
+Chờ Lead), file mồ côi sau insert lỗi chưa lộ trên wire (đang thêm làn so kho ảnh).
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
