@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"mobile/services/core/internal/domain/pairnotebook"
+	"mobile/services/core/internal/domain/pairsteps"
 	"mobile/services/core/internal/repo"
 )
 
@@ -50,32 +51,7 @@ func PairChatConsent(ctx context.Context, r repo.Repository, contextID string, n
 			members = append(members, row.PersonID)
 		}
 	}
-	answer := pairnotebook.ChatConsentActive(consentsAsDicts(notebook), pairParticipants(notebook, members), now)
+	pair := PairNotebookOf(notebook)
+	answer := pairnotebook.ChatConsentActive(pairsteps.ConsentsOf(pair), pairsteps.Participants(pair, members), now)
 	return &answer, nil
-}
-
-// pairParticipants is ApiService._participants: the cycle's own list while a
-// cycle is live, so a later membership change cannot widen what two people
-// agreed to; the conversation's active members before any cycle exists.
-func pairParticipants(notebook *repo.PairNotebook, members []string) []string {
-	if notebook != nil && notebook.CycleID != nil {
-		return notebook.Participants
-	}
-	return members
-}
-
-// consentsAsDicts is _consents_as_dicts.
-func consentsAsDicts(notebook *repo.PairNotebook) []pairnotebook.Consent {
-	out := make([]pairnotebook.Consent, 0, len(notebook.Consents))
-	for _, row := range notebook.Consents {
-		expires := row.ProposalExpiresAt
-		out = append(out, pairnotebook.Consent{
-			PersonID:          row.PersonID,
-			Purpose:           row.Purpose,
-			GrantedAt:         row.GrantedAt,
-			RevokedAt:         row.RevokedAt,
-			ProposalExpiresAt: &expires,
-		})
-	}
-	return out
 }

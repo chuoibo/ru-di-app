@@ -1706,7 +1706,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals",
@@ -1718,7 +1718,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
@@ -1730,7 +1730,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/consents/{purpose}",
@@ -1742,7 +1742,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "PUT /contexts/{context_id}/notebook/constraints/{kind}",
@@ -1754,7 +1754,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/constraints/{kind}",
@@ -1766,7 +1766,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close/preview",
@@ -1778,7 +1778,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close",
@@ -1790,7 +1790,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /contexts/{context_id}/papers",
@@ -1802,7 +1802,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /contexts/{context_id}/papers/draft",
@@ -1814,7 +1814,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /papers/{paper_id}",
@@ -1826,7 +1826,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "PATCH /papers/{paper_id}/draft",
@@ -1838,7 +1838,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/send",
@@ -1850,7 +1850,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/viewed",
@@ -1862,7 +1862,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/responses",
@@ -1874,7 +1874,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/withdraw",
@@ -1886,7 +1886,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/skip",
@@ -1898,7 +1898,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/done",
@@ -1910,7 +1910,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "POST /papers/{paper_id}/keeps",
@@ -1922,7 +1922,7 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED"
     },
     {
       "id": "GET /healthz",
