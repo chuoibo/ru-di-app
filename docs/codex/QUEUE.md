@@ -141,6 +141,15 @@ trên cây có 76 route Go: dev 208 kịch bản/6858 bước, limiter 5/119, pr
 sau một INFRA do máy tải nặng); 76/156 route PORTED. Còn mở: định dạng ảnh Go chưa giải được trả 415 (chờ Lead, mục
 Chờ Lead), file mồ côi sau insert lỗi chưa lộ trên wire (đang thêm làn so kho ảnh).
 
+Sóng W8 (sổ đôi) PORTED: 19 route pair_notebooks 8 và pair_papers 11 do Go phục vụ làm candidate — domain
+`pairpaper` và `pairsteps` (`431c269b`), repository (`01118ec7`), thẻ và kịch bản (`9bb14983`), hai validator
+strip-rỗng vào pyval sản xuất (`0b7bf1a8`), route và bộ chuyển repository (`bd9e8a71`). Cổng parity trên cây có
+95 route Go: pha dev 309 kịch bản/9467 bước 0 khác biệt, 7489 bước do core trả lời, unserved=0; làn limiter 5/119 và pha prod 21/546 chạy lại ngoài cổng sau một INFRA do tải máy, đều 0 khác biệt; canary identity equal và probe 22 ca/11 ngoại lệ đã ghi; 95/156 route PORTED. Còn mở: chưa kịch bản nào phủ lần xem ĐẦU TIÊN một phiên bản không phải phiên bản hiện
+hành; bốn hành vi Python trông như lỗi đã ghi trong thẻ, ghi nhận chứ không sửa trong port — bản nháp chưa gửi của
+người kia hiện ra trong danh sách khi tuần đã trôi qua, xin tờ mới trả 409 nên lộ rằng nháp riêng đó tồn tại, id
+không có thật trả `paper_not_found` còn tờ của cặp khác trả `notebook_not_found` nên phân biệt được tồn tại, và vài
+`RepositoryConflict` không dịch thành 500.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
