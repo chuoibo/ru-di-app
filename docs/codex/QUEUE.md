@@ -178,6 +178,10 @@ Ba chỗ hỏng của harness lộ ra trong sóng này, ghi để không quên:
 3. **`free_port` trong parity_stacks.sh đụng cổng.** Một lần `up` cấp cùng cổng 44787 cho Postgres và API nên API
    không bao giờ trả /healthz, `up` thoát 1 và bỏ lại một container.
 
+Bàn giao chiến dịch Go: `docs/claude/2026-09-16/ban-giao-chien-dich-go.md` — trạng thái 108/156, định nghĩa cổng,
+ba agent đang dở, thứ tự việc kế tiếp (stub định tuyến CHẶN sóng W7), công thức kiểm của người gộp, giao thức
+agy review trong ràng buộc ADR-0010 §6.4, và danh sách cái này KHÔNG chứng minh.
+
 **Quyết định (Claude, theo ADR-0030 — lane Codex đóng, không còn mục nào chờ Lead):**
 1. **agy** — AGY-PASS gỡ khỏi thang trạng thái ADR-0029. Cổng là cổng parity chạy lại trong cây sạch tại đúng SHA,
    canary, probe, cộng ít nhất hai đột biến do người gộp tự nghĩ và đã kiểm tương đương. Bật lại agy thì mở ADR mới.
