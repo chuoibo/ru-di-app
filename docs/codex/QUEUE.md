@@ -160,18 +160,27 @@ Sóng W7 (outings) đóng băng để ghi mốc, 11 route: `POST /outings/{outin
 `POST /outings/{outing_id}/invites`, `POST …/invites/{invite_id}/revoke`, `POST …/invites/{invite_id}/rotate`,
 `POST /outing-invites/{token}/accept`; cùng `app/domain/journey.py` và đường gọi Valhalla của preview.
 
-**Chờ Lead:**
-1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
-   Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
-2. Daemon Docker trên máy dùng chung đã hết subnet; harness chạy host network. Dọn các network không dùng cần Lead
-   cho phép.
-3. Cửa trước Go (net/http) từ chối Host chứa «/» bằng 400 trước routing, cho mọi route kể cả route proxy, còn uvicorn
-   nhận (Python cũng tự mâu thuẫn: trang link khách xét request.url.path dựng từ Host). Đề xuất gộp vào ngoại lệ đã
-   duyệt MALFORMED-REQUEST-LINE; cần Lead xác nhận.
-4. Ảnh W6: bản Go giống từng byte với Pillow cho JPEG, PNG, WebP, GIF, BMP, PPM và các plugin đơn giản, nên ngoại lệ
-   parity cảm nhận của ADR-0029 §2.8 không cần. Còn các định dạng Pillow mở được mà Go chưa port (AVIF, JPEG2000, TIFF
-   nén, ICO/CUR/ICNS, DDS/FTEX nén, FLI, PCD, …): chọn trả 415 not_an_image như lệch có ghi, port codec, hay giữ route
-   ảnh ở Python.
+**Quyết định (Claude, theo ADR-0030 — lane Codex đóng, không còn mục nào chờ Lead):**
+1. **agy** — AGY-PASS gỡ khỏi thang trạng thái ADR-0029. Cổng là cổng parity chạy lại trong cây sạch tại đúng SHA,
+   canary, probe, cộng ít nhất hai đột biến do người gộp tự nghĩ và đã kiểm tương đương. Bật lại agy thì mở ADR mới.
+2. **Docker subnet** — giữ host network cho harness vì nó đã chạy đúng suốt 95 route; dọn network rác để dành cho lúc
+   máy rảnh, không dọn khi còn agent đang chạy. Đây là việc bảo trì, không phải blocker.
+3. **Host chứa «/»** — gộp vào lớp ngoại lệ đã ghi MALFORMED-REQUEST-LINE. Lý do: net/http từ chối ngay ở dòng yêu cầu,
+   trước routing; không client nào của ta (app mobile, trình duyệt của khách) dựng được Host như vậy; tự viết bộ phân
+   tích dòng yêu cầu đặt trước net/http là chi phí thật mà không đổi lấy gì người dùng thấy được; và chính Python cũng
+   tự mâu thuẫn ở chỗ này. Bằng chứng: probe raw-socket 22 ca, 11 ca khác, cả 11 nằm trong danh sách ngoại lệ.
+4. **Định dạng ảnh — KHÔNG chốt theo hướng dễ.** Đã đo trong ảnh ghim: Pillow 12.2.0 mở được 40 định dạng, trong đó
+   `avif`, `jpg_2000`, `libtiff`, `webp` đều bật (`heif` tắt, nên HEIC hai bên cùng từ chối). Vậy Python **nhận thật**
+   một ảnh AVIF và trả 201, còn Go trả 415 — đó là đổi hành vi người dùng thấy được, mà luật chiến dịch cấm đổi ngữ
+   nghĩa bên trong một port. Quyết định:
+   - **không route ảnh nào được chuyển sang LIVE-GO khi Go còn trả 415 ở chỗ Python trả 201**;
+   - trước lúc cắt, Go phải hoặc giải được định dạng đó, hoặc chuyển đúng request đó cho Python qua cổng trước, kèm
+     bộ đếm để thấy nó bắn bao nhiêu lần;
+   - port trước các codec rẻ và có thật ngoài đời (TIFF qua x/image, ICO/CUR); AVIF và JPEG2000 đo nhu cầu trước khi
+     bỏ công vì chúng là bộ giải lớn;
+   - **harness phải sinh ít nhất một AVIF và một TIFF.** Đây mới là chỗ hỏng thật: corpus hiện sinh đúng những định
+     dạng Go đã hỗ trợ (JPEG, PNG, GIF, WebP, BMP, PNM), nên cổng không có cửa nào bắt được lỗ này — xanh ở đây không
+     nói gì về 34 định dạng còn lại.
 
 ---
 
