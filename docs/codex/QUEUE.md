@@ -160,6 +160,24 @@ Sóng W7 (outings) đóng băng để ghi mốc, 11 route: `POST /outings/{outin
 `POST /outings/{outing_id}/invites`, `POST …/invites/{invite_id}/revoke`, `POST …/invites/{invite_id}/rotate`,
 `POST /outing-invites/{token}/accept`; cùng `app/domain/journey.py` và đường gọi Valhalla của preview.
 
+Sóng W10 (people) PORTED: 13 route do Go phục vụ làm candidate — domain (`ae8870e5`), thẻ và kịch bản (`f4daa5ee`),
+repository và xoá tài khoản (`a3ded0bf`), route (`6ce5c6be`). Cổng parity trên cây có 108 route Go: pha dev 309 kịch bản/9467 bước 0 khác biệt, 8959 bước do core trả lời, unserved=0, làn DB và làn kho ảnh
+đều bật; làn limiter 5/119 và pha prod 21/546 chạy lại ngoài cổng sau một INFRA do tải máy, đều 0 khác biệt;
+canary identity equal và probe 22 ca/11 ngoại lệ đã ghi. 108/156 route PORTED.
+Chi phí phải sửa: cổng này chạy 22.338 s so với 4.474 s của W8, vì làn kho ảnh băm lại toàn bộ kho sau mỗi
+bước — phải chuyển sang chỉ băm tệp đã đổi trước khi sóng sau chạy cổng.
+
+Ba chỗ hỏng của harness lộ ra trong sóng này, ghi để không quên:
+1. **Hạng `<ts#N>` trượt cả loạt.** Bộ chuẩn hoá xếp hạng mốc thời gian theo thứ tự đã quan sát trong từng kịch bản,
+   nên khi dữ liệu nền của hai stack rơi vào số lượng giá trị microsecond khác nhau thì mọi hạng sau đó lệch đều —
+   agent đo được 310 khác biệt ở đúng hai kịch bản, toàn bộ là lệch hạng 3, và chạy lại trên cặp stack sạch thì 0.
+   Nguy hiểm hai chiều: vừa đỏ giả, vừa có thể giấu một khác biệt thật trong đám nhiễu đó.
+2. **Một bind hỏng giết cả lượt chạy.** Đột biến biến 201 thành từ chối làm `bind … no key "id"` thành INFRA (exit 2),
+   và mọi kịch bản sau đó **không chạy** — nhưng lượt chạy vẫn kết thúc như thể đã phủ hết. Nên với lượt đột biến phải
+   chia danh sách kịch bản hoặc chạy lại phần còn thiếu, không được đọc «không thấy khác biệt» là đã phủ.
+3. **`free_port` trong parity_stacks.sh đụng cổng.** Một lần `up` cấp cùng cổng 44787 cho Postgres và API nên API
+   không bao giờ trả /healthz, `up` thoát 1 và bỏ lại một container.
+
 **Quyết định (Claude, theo ADR-0030 — lane Codex đóng, không còn mục nào chờ Lead):**
 1. **agy** — AGY-PASS gỡ khỏi thang trạng thái ADR-0029. Cổng là cổng parity chạy lại trong cây sạch tại đúng SHA,
    canary, probe, cộng ít nhất hai đột biến do người gộp tự nghĩ và đã kiểm tương đương. Bật lại agy thì mở ADR mới.
