@@ -114,11 +114,17 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
   hex, cursor và token. Hàng giống nhau sau khi che được phân định bằng giá trị đã đánh số mà nó chứa (hai
   `guest_links` trỏ hai envelope, hai share của một người trên hai món), tính lại tới khi không còn hàng nào phân
   định thêm được, nên số thứ tự không do id ngẫu nhiên quyết. Hàng không gì phân biệt được giữ thứ tự cũ; hàng trỏ
-  sai (hai share cùng một món) vẫn đỏ.
+  sai (hai share cùng một món) vẫn đỏ. Làn media (`--reference-media`/`--candidate-media`, chặng `parity` truyền
+  `PARITY_REF_MEDIA`/`PARITY_CAND_MEDIA`) chụp kho ảnh của từng phía sau mỗi bước ngay sau DB và so file tạo, đổi,
+  xoá (kể cả file tạm `.<key>.*.tmp` sót lại) cùng mode của nó và của các thư mục cha, mode thư mục còn lại sau khi
+  xoá, và thư mục khoá có file đến rồi đi ngay trong bước (thư mục khoá «mới tạo» hay «hết rỗng» thì không so, vì
+  khoá ngẫu nhiên nào chung `k[0:2]/k[2:4]` với khoá cũ là may rủi), cỡ và sha256 để nguyên chữ, còn khoá trong
+  đường dẫn cùng `k[0:2]/k[2:4]` bind qua đúng `<hex32#n>` của hàng `uploaded_images` nêu khoá đó, nên file thiếu,
+  thừa, sai chỗ, sai mode hay khác một byte đều đỏ dù wire và DB khớp.
 - Mốc so sánh luôn là Python. File kịch bản **không có trường kết quả mong đợi**; `parity lint` từ chối các khoá
   `expect`, `status`, `body`, `assert`. Nhờ vậy agy viết được đầu vào mà không vi phạm ADR-0010 §6.1.
 - Chống xanh giả: tự so K lần trên stack sạch; canary là proxy cố tình làm sai từng bẫy (`Z`→`+00:00`, `1.0`→`1`,
-  đổi thứ tự khoá, 201→200, mất header replay, gzip, đi theo redirect, nuốt lệnh ghi, route proxy mạo nhận là Go)
+  đổi thứ tự khoá, 201→200, mất header replay, gzip, đi theo redirect, nuốt lệnh ghi, xoá file ảnh vừa lưu, route proxy mạo nhận là Go)
   và mọi chế độ phải đỏ; tap ghi ai thực sự phục vụ từng bước.
 - Replay chéo: một bước có `via: python` đi tới Python của stack mà không qua `core` (ở candidate là qua cổng proxy
   của tap, nên tap vẫn ghi bước đó là tới Python; ở reference mọi bước vốn là Python). Nhờ vậy khoá

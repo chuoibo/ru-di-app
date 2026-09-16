@@ -217,6 +217,20 @@ func (b *Binder) observeIDsAndInstants(text string) {
 	}
 }
 
+// KeysWithPrefix returns, sorted, every 32-hex key observed so far that
+// starts with prefix. The media lane ties an empty key directory
+// (k[0:2]/k[2:4]) to the key it was made for through it.
+func (b *Binder) KeysWithPrefix(prefix string) []string {
+	var out []string
+	for key := range b.keys {
+		if strings.HasPrefix(key, prefix) {
+			out = append(out, key)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 // Apply returns text with every bound value replaced. The first call freezes
 // the binder: ranks are computed over everything observed so far.
 func (b *Binder) Apply(text string) string {

@@ -28,6 +28,7 @@ import (
 	"mobile/parity/internal/compare"
 	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
+	"mobile/parity/internal/mediasnap"
 	"mobile/parity/internal/normalize"
 	"mobile/parity/internal/scenario"
 	"mobile/parity/internal/tap"
@@ -56,6 +57,11 @@ type Stack struct {
 	// Sessions is where prod-mode personas get their sessions when DB is nil:
 	// the canary compares the wire only, yet its personas must still sign in.
 	Sessions dbsnap.Conn
+	// Media is the directory of the stack's photo store, the one every process
+	// of the stack writes. When set, every step is followed by a snapshot of
+	// the store, so the comparison covers the files written and removed. ""
+	// leaves the store out.
+	Media string
 }
 
 // ErrSetup marks a failure before any step ran. It is never a difference: a
@@ -70,6 +76,9 @@ type StepResult struct {
 	// Change is what the step wrote to the stack's database; nil without a DB.
 	Change     *dbsnap.Change
 	NormChange *dbsnap.Change
+	// Media is what the step did to the stack's photo store; nil without one.
+	Media     *mediasnap.Change
+	NormMedia *mediasnap.Change
 	// PythonRequests counts the requests that reached Python during the step;
 	// -1 on a stack without a tap.
 	PythonRequests int
@@ -156,6 +165,14 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		}
 		prev = snap
 	}
+	var prevMedia *mediasnap.Snap
+	if stack.Media != "" {
+		snap, err := mediasnap.Snapshot(stack.Media)
+		if err != nil {
+			return nil, fmt.Errorf("%s on %s: baseline media snapshot: %w", sc.ID, stack.Name, err)
+		}
+		prevMedia = snap
+	}
 	tapSeq := 0
 	if stack.Tap != nil {
 		last, err := stack.Tap.Last(ctx)
@@ -218,6 +235,20 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 				return nil, err
 			}
 		}
+		if stack.Media != "" {
+			next, err := mediasnap.Snapshot(stack.Media)
+			if err != nil {
+				return nil, fmt.Errorf("%s on %s step %s: media snapshot: %w", sc.ID, stack.Name, step.ID, err)
+			}
+			result.Media = mediasnap.Delta(prevMedia, next)
+			prevMedia = next
+			// After the database, as the database comes after the response: a
+			// key an uploaded_images row names keeps that row's number, so its
+			// file is tied to the row. Only a file no row names is numbered here.
+			if err := binder.ObserveGroups(result.Media.Groups()); err != nil {
+				return nil, err
+			}
+		}
 		if step.Concurrent > 0 {
 			if err := binder.TieInstantsSince(mark); err != nil {
 				return nil, err
@@ -235,6 +266,9 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		}
 		if run.Steps[i].Change != nil {
 			run.Steps[i].NormChange = run.Steps[i].Change.Normalise(binder.Apply)
+		}
+		if run.Steps[i].Media != nil {
+			run.Steps[i].NormMedia = run.Steps[i].Media.Normalise(binder)
 		}
 	}
 	return run, nil
@@ -370,16 +404,21 @@ func pointer(body []byte, ptr string) (string, error) {
 	}
 }
 
-// StepDiff lists the differences in one step: on the wire and in the database.
+// StepDiff lists the differences in one step: on the wire, in the database and
+// in the photo store.
 type StepDiff struct {
 	StepID      string
 	Differences []compare.Difference
 	Database    []dbsnap.Difference
+	Media       []mediasnap.Difference
 }
 
 // DatabaseLaneMismatch marks a step where only one stack was snapshotted. A
 // comparison that quietly skipped the database there would read as equal.
 const DatabaseLaneMismatch = "database-lane-on-one-side"
+
+// MediaLaneMismatch is DatabaseLaneMismatch for the photo store.
+const MediaLaneMismatch = "media-lane-on-one-side"
 
 // Diff compares two transcripts of the same scenario step by step.
 func Diff(reference, candidate *Run) []StepDiff {
@@ -399,8 +438,15 @@ func Diff(reference, candidate *Run) []StepDiff {
 		case (ref.NormChange == nil) != (cand.NormChange == nil):
 			database = []dbsnap.Difference{{Kind: DatabaseLaneMismatch}}
 		}
-		if len(diffs) > 0 || len(database) > 0 {
-			out = append(out, StepDiff{StepID: ref.StepID, Differences: diffs, Database: database})
+		var media []mediasnap.Difference
+		switch {
+		case ref.NormMedia != nil && cand.NormMedia != nil:
+			media = mediasnap.Compare(ref.NormMedia, cand.NormMedia)
+		case (ref.NormMedia == nil) != (cand.NormMedia == nil):
+			media = []mediasnap.Difference{{Kind: MediaLaneMismatch}}
+		}
+		if len(diffs) > 0 || len(database) > 0 || len(media) > 0 {
+			out = append(out, StepDiff{StepID: ref.StepID, Differences: diffs, Database: database, Media: media})
 		}
 	}
 	return out

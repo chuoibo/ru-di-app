@@ -8,21 +8,31 @@
 // keyset cursor that kept its base64 padding, a guest token one character
 // short, a redirect followed — and every mode it manages to apply must turn the run red.
 // The identity mode, which damages nothing, must stay green.
+//
+// One mode damages the target's photo store instead of its answer: a file the
+// target stored while answering is gone before the answer arrives, as when a
+// port deletes a photo after a failed insert. Only the media lane can see that
+// on the step itself.
 package canary
 
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 
+	"mobile/parity/internal/mediasnap"
 	"mobile/parity/internal/normalize"
 )
 
@@ -31,6 +41,50 @@ import (
 type Mode struct {
 	Name   string
 	Mutate func(resp *http.Response, body []byte) (newBody []byte, applied bool)
+	// Store, when set, damages the target's photo store around a request:
+	// Proxy calls it before forwarding, and calls what it returns once the
+	// response is back and before the body goes on. That reports whether it
+	// damaged anything.
+	Store func() (after func() bool)
+}
+
+type storeAfterKey struct{}
+
+// MediaFileDropped removes, after each response, one stored file (a file at
+// k[0:2]/k[2:4]/k under root) that was not there before the request went to
+// the target. Concurrent requests share one lock, so a burst loses at most one
+// file per response.
+func MediaFileDropped(root string) Mode {
+	var mu sync.Mutex
+	return Mode{Name: "media-file-dropped", Store: func() func() bool {
+		mu.Lock()
+		before, err := mediasnap.StoredFiles(root)
+		mu.Unlock()
+		return func() bool {
+			if err != nil {
+				return false
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			after, err := mediasnap.StoredFiles(root)
+			if err != nil {
+				return false
+			}
+			created := make([]string, 0, len(after))
+			for path := range after {
+				if !before[path] {
+					created = append(created, path)
+				}
+			}
+			sort.Strings(created)
+			for _, path := range created {
+				if os.Remove(filepath.Join(root, filepath.FromSlash(path))) == nil {
+					return true
+				}
+			}
+			return false
+		}
+	}}
 }
 
 var (
@@ -41,20 +95,21 @@ var (
 	firstTwoKeys   = regexp.MustCompile(`^\{("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+)),("[^"]+":(?:"[^"]*"|[^,{}\[\]"]+))`)
 )
 
-// Modes returns every damage mode, identity first.
+// Modes returns every mode that damages a response, identity first.
+// MediaFileDropped is not among them: it needs the target's store.
 func Modes() []Mode {
 	return []Mode{
-		{"identity", func(_ *http.Response, body []byte) ([]byte, bool) { return body, true }},
-		{"status-off-by-one", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "identity", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) { return body, true }},
+		{Name: "status-off-by-one", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			resp.StatusCode++
 			resp.Status = strconv.Itoa(resp.StatusCode)
 			return body, true
 		}},
-		{"header-added", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "header-added", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			resp.Header.Set("X-Powered-By", "canary")
 			return body, true
 		}},
-		{"header-duplicated", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "header-duplicated", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			names := make([]string, 0, len(resp.Header))
 			for name := range resp.Header {
 				switch strings.ToLower(name) {
@@ -70,7 +125,7 @@ func Modes() []Mode {
 			resp.Header[names[0]] = append(resp.Header[names[0]], resp.Header[names[0]]...)
 			return body, true
 		}},
-		{"header-dropped", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "header-dropped", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			for _, name := range []string{"Vary", "Access-Control-Allow-Origin", "Allow", "Location", "Cache-Control", "Content-Type"} {
 				if _, ok := resp.Header[name]; ok {
 					delete(resp.Header, name)
@@ -79,25 +134,25 @@ func Modes() []Mode {
 			}
 			return body, false
 		}},
-		{"body-extra-byte", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "body-extra-byte", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			if len(body) == 0 {
 				return body, false
 			}
 			return append(append([]byte{}, body...), ' '), true
 		}},
-		{"float-lost-point", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "float-lost-point", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			changed := floatWithPoint.ReplaceAll(body, []byte("$1$2"))
 			return changed, !bytes.Equal(changed, body)
 		}},
-		{"zone-written-as-offset", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "zone-written-as-offset", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			changed := zuluTimestamp.ReplaceAll(body, []byte(`$1+00:00"`))
 			return changed, !bytes.Equal(changed, body)
 		}},
-		{"first-keys-swapped", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "first-keys-swapped", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			changed := firstTwoKeys.ReplaceAll(body, []byte("{$2,$1"))
 			return changed, !bytes.Equal(changed, body)
 		}},
-		{"body-gzipped", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "body-gzipped", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			if len(body) == 0 {
 				return body, false
 			}
@@ -108,7 +163,7 @@ func Modes() []Mode {
 			resp.Header.Set("Content-Encoding", "gzip")
 			return buf.Bytes(), true
 		}},
-		{"cursor-padding-kept", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "cursor-padding-kept", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			changed := quotedRun.ReplaceAllFunc(body, func(quoted []byte) []byte {
 				run := string(quoted[1 : len(quoted)-1])
 				if _, ok := normalize.DecodeCursor(run); !ok {
@@ -118,7 +173,7 @@ func Modes() []Mode {
 			})
 			return changed, !bytes.Equal(changed, body)
 		}},
-		{"token-shortened", func(_ *http.Response, body []byte) ([]byte, bool) {
+		{Name: "token-shortened", Mutate: func(_ *http.Response, body []byte) ([]byte, bool) {
 			changed := tokenRun.ReplaceAllFunc(body, func(run []byte) []byte {
 				if len(run) != 43 {
 					return run
@@ -127,7 +182,7 @@ func Modes() []Mode {
 			})
 			return changed, !bytes.Equal(changed, body)
 		}},
-		{"redirect-followed", func(resp *http.Response, body []byte) ([]byte, bool) {
+		{Name: "redirect-followed", Mutate: func(resp *http.Response, body []byte) ([]byte, bool) {
 			if resp.StatusCode < 300 || resp.StatusCode >= 400 {
 				return body, false
 			}
@@ -146,6 +201,9 @@ func Proxy(target *url.URL, mode Mode, applied *atomic.Int64) http.Handler {
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.SetURL(target)
 			r.Out.Host = r.In.Host
+			if mode.Store != nil {
+				r.Out = r.Out.WithContext(context.WithValue(r.Out.Context(), storeAfterKey{}, mode.Store()))
+			}
 		},
 		Transport: &http.Transport{Proxy: nil, DisableCompression: true},
 		ModifyResponse: func(resp *http.Response) error {
@@ -154,7 +212,13 @@ func Proxy(target *url.URL, mode Mode, applied *atomic.Int64) http.Handler {
 			if err != nil {
 				return err
 			}
-			newBody, changed := mode.Mutate(resp, body)
+			newBody, changed := body, false
+			if mode.Mutate != nil {
+				newBody, changed = mode.Mutate(resp, body)
+			}
+			if after, ok := resp.Request.Context().Value(storeAfterKey{}).(func() bool); ok && after() {
+				changed = true
+			}
 			if changed && mode.Name != "identity" {
 				applied.Add(1)
 			}

@@ -1,8 +1,8 @@
 // Command parity compares the Python reference with a candidate stack.
 //
 //	parity lint PATH...
-//	parity run --auth MODE --reference URL --candidate URL [--reference-dsn DSN --candidate-dsn DSN] [--host H] [--json FILE] PATH...
-//	parity canary --auth MODE --reference URL --target URL [--reference-dsn DSN --target-dsn DSN] [--host H] PATH...
+//	parity run --auth MODE --reference URL --candidate URL [--reference-dsn DSN --candidate-dsn DSN] [--reference-media DIR --candidate-media DIR] [--host H] [--json FILE] PATH...
+//	parity canary --auth MODE --reference URL --target URL [--reference-dsn DSN --target-dsn DSN] [--reference-media DIR --target-media DIR] [--host H] PATH...
 //	parity probe --reference URL --candidate URL
 //	parity tap --listen ADDR --control ADDR --upstream URL
 //
@@ -34,6 +34,7 @@ import (
 	"mobile/parity/internal/dbsnap"
 	"mobile/parity/internal/httpclient"
 	"mobile/parity/internal/limiterlane"
+	"mobile/parity/internal/mediasnap"
 	"mobile/parity/internal/rawprobe"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
@@ -80,6 +81,7 @@ type stepReport struct {
 	ID          string   `json:"id"`
 	Differences []string `json:"differences,omitempty"`
 	Database    []string `json:"database,omitempty"`
+	Media       []string `json:"media,omitempty"`
 }
 
 type scenarioReport struct {
@@ -100,6 +102,7 @@ type report struct {
 	Racy          []string         `json:"racy,omitempty"`
 	Reference     string           `json:"reference"`
 	DatabaseLane  bool             `json:"database_lane"`
+	MediaLane     bool             `json:"media_lane"`
 	Candidate     string           `json:"candidate"`
 	Scenarios     int              `json:"scenarios"`
 	Steps         int              `json:"steps"`
@@ -119,6 +122,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	jsonOut := flags.String("json", "", "write a JSON report here")
 	refDSN := flags.String("reference-dsn", "", "reference database URL; with --candidate-dsn, snapshot both after every step")
 	candDSN := flags.String("candidate-dsn", "", "candidate database URL; with --reference-dsn, snapshot both after every step")
+	refMedia := flags.String("reference-media", "", "reference photo store directory; with --candidate-media, snapshot both after every step")
+	candMedia := flags.String("candidate-media", "", "candidate photo store directory (core and its Python share it); with --reference-media, snapshot both after every step")
 	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
 	candidateTap := flags.String("candidate-tap", "", "control URL of the tap between the candidate front door and its Python")
 	servedRoutes := flags.String("served-routes", "", "JSON of `core routes --json`: routes the candidate serves in Go; needs --candidate-tap")
@@ -135,6 +140,10 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	}
 	if *burstRepeats < 1 {
 		fmt.Fprintln(stderr, "parity run: --burst-repeats must be at least 1")
+		return 2
+	}
+	if err := checkMediaPair("run", "--reference-media", *refMedia, "--candidate-media", *candMedia); err != nil {
+		fmt.Fprintln(stderr, err)
 		return 2
 	}
 	scenarios, err := scenario.LoadPaths(flags.Args()...)
@@ -240,11 +249,11 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			served[view.ID] = true
 		}
 	}
-	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB, Python: refClient}
-	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap, Python: candPython}
+	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB, Python: refClient, Media: *refMedia}
+	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap, Python: candPython, Media: *candMedia}
 
 	ctx := context.Background()
-	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, Accepted: map[string]int{}}
+	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, MediaLane: *refMedia != "", Accepted: map[string]int{}}
 	if candTap != nil {
 		rep.Tap = &tapReport{ServedRoutes: len(served)}
 	}
@@ -331,6 +340,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		result := scenarioReport{ID: sc.ID, File: sc.File, Equal: len(diffs) == 0}
 		byStep := map[string][]string{}
 		dbByStep := map[string][]string{}
+		mediaByStep := map[string][]string{}
 		for _, d := range diffs {
 			for _, difference := range d.Differences {
 				byStep[d.StepID] = append(byStep[d.StepID], difference.String())
@@ -340,9 +350,13 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 				dbByStep[d.StepID] = append(dbByStep[d.StepID], difference.String())
 				rep.Differences++
 			}
+			for _, difference := range d.Media {
+				mediaByStep[d.StepID] = append(mediaByStep[d.StepID], difference.String())
+				rep.Differences++
+			}
 		}
 		for _, step := range sc.Steps {
-			result.Steps = append(result.Steps, stepReport{ID: step.ID, Differences: byStep[step.ID], Database: dbByStep[step.ID]})
+			result.Steps = append(result.Steps, stepReport{ID: step.ID, Differences: byStep[step.ID], Database: dbByStep[step.ID], Media: mediaByStep[step.ID]})
 			rep.Steps++
 		}
 		rep.Scenarios++
@@ -357,6 +371,9 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 				}
 				for _, difference := range d.Database {
 					fmt.Fprintf(stdout, "  step %s — database: %s\n", d.StepID, difference)
+				}
+				for _, difference := range d.Media {
+					fmt.Fprintf(stdout, "  step %s — media: %s\n", d.StepID, difference)
 				}
 			}
 		}
@@ -381,12 +398,8 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "STALE %s: %s ran and the two sides no longer differ this way; remove the exception from ADR-0029 §2.4\n", name, scenarioID)
 		}
 	}
-	lane := "off"
-	if rep.DatabaseLane {
-		lane = "on"
-	}
-	fmt.Fprintf(stdout, "parity: scenarios=%d steps=%d scenarios_diff=%d differences=%d database_lane=%s\n",
-		rep.Scenarios, rep.Steps, rep.ScenariosDiff, rep.Differences, lane)
+	fmt.Fprintf(stdout, "parity: scenarios=%d steps=%d scenarios_diff=%d differences=%d database_lane=%s media_lane=%s\n",
+		rep.Scenarios, rep.Steps, rep.ScenariosDiff, rep.Differences, onOff(rep.DatabaseLane), onOff(rep.MediaLane))
 	if *jsonOut != "" {
 		data, _ := json.MarshalIndent(rep, "", "  ")
 		if err := os.WriteFile(*jsonOut, append(data, '\n'), 0o644); err != nil {
@@ -418,12 +431,18 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 	authMode := flags.String("auth", "", "auth mode both stacks were started in (dev or prod); only scenarios written for it run")
 	refDSN := flags.String("reference-dsn", "", "reference database URL, used only to seed prod-mode sessions")
 	targetDSN := flags.String("target-dsn", "", "target database URL, used only to seed prod-mode sessions")
+	refMedia := flags.String("reference-media", "", "reference photo store directory; with --target-media, compare both stores after every step")
+	targetMedia := flags.String("target-media", "", "photo store directory of the target Python; with --reference-media, compare both stores and add the media-file-dropped mode")
 	burstRepeats := flags.Int("burst-repeats", 3, "reference runs of a scenario with a concurrent step; the damaged target must match none of them")
 	if err := flags.Parse(args); err != nil {
 		return 2
 	}
 	if *reference == "" || *target == "" || flags.NArg() == 0 {
 		fmt.Fprintln(stderr, "parity canary: --reference, --target and at least one scenario path are required")
+		return 2
+	}
+	if err := checkMediaPair("canary", "--reference-media", *refMedia, "--target-media", *targetMedia); err != nil {
+		fmt.Fprintln(stderr, err)
 		return 2
 	}
 	scenarios, err := scenario.LoadPaths(flags.Args()...)
@@ -484,10 +503,18 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		defer targetPool.Close()
 		refSessions, targetSessions = refPool, targetPool
 	}
+	refStack := runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient, Media: *refMedia}
+	modes := canary.Modes()
+	if *targetMedia != "" {
+		// Only with the lane on: without a store to compare, damage to the
+		// store could never be caught and the mode would fail for that alone.
+		modes = append(modes, canary.MediaFileDropped(*targetMedia))
+	}
 
 	failed := 0
+	fmt.Fprintf(stdout, "canary: media_lane=%s\n", onOff(*refMedia != ""))
 	fmt.Fprintf(stdout, "%-24s %-10s %-12s %s\n", "mode", "applied", "differences", "verdict")
-	for _, mode := range canary.Modes() {
+	for _, mode := range modes {
 		var applied atomic.Int64
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
@@ -501,10 +528,11 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, err)
 			return 2
 		}
+		candStack := runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient, Media: *targetMedia}
 		differences := 0
 		for _, sc := range scenarios {
 			nonce := runner.NewNonce()
-			refRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, nonce)
+			refRun, err := runner.Execute(context.Background(), sc, refStack, nonce)
 			if err != nil {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				_ = server.Close()
@@ -519,7 +547,7 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 			nonces := []string{nonce}
 			for sc.HasBursts() && len(refRuns) < *burstRepeats {
 				nonces = append(nonces, runner.NewNonce())
-				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient}, nonces[len(nonces)-1])
+				again, err := runner.Execute(context.Background(), sc, refStack, nonces[len(nonces)-1])
 				if err != nil {
 					fmt.Fprintf(stderr, "INFRA %v\n", err)
 					_ = server.Close()
@@ -527,8 +555,8 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 				}
 				refRuns = append(refRuns, again)
 			}
-			candRun, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient}, nonce)
-			if errors.Is(err, runner.ErrSetup) {
+			candRun, err := runner.Execute(context.Background(), sc, candStack, nonce)
+			if errors.Is(err, runner.ErrSetup) || errors.Is(err, mediasnap.ErrSnapshot) {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				_ = server.Close()
 				return 2
@@ -541,8 +569,8 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 			}
 			closest, _ := runner.Closest(refRuns, candRun)
 			for i := 1; i < len(nonces); i++ {
-				again, err := runner.Execute(context.Background(), sc, runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient}, nonces[i])
-				if errors.Is(err, runner.ErrSetup) {
+				again, err := runner.Execute(context.Background(), sc, candStack, nonces[i])
+				if errors.Is(err, runner.ErrSetup) || errors.Is(err, mediasnap.ErrSnapshot) {
 					fmt.Fprintf(stderr, "INFRA %v\n", err)
 					_ = server.Close()
 					return 2
@@ -556,10 +584,19 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 			}
 			for _, d := range closest {
 				differences += len(d.Differences)
+				// The store counts where it is what is being proven: identity must
+				// be equal there too, and a store mode is caught there. A wire mode
+				// stays a proof about the wire comparator alone.
+				if mode.Name == "identity" || mode.Store != nil {
+					differences += len(d.Media)
+				}
 				if mode.Name == "identity" {
 					// Identity must never differ; show why it did.
 					for _, difference := range d.Differences {
 						fmt.Fprintf(stdout, "  identity %s step %s — %s\n", sc.ID, d.StepID, difference)
+					}
+					for _, difference := range d.Media {
+						fmt.Fprintf(stdout, "  identity %s step %s — media: %s\n", sc.ID, d.StepID, difference)
 					}
 				}
 			}
@@ -630,6 +667,40 @@ func probeRun(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	return 0
+}
+
+// checkMediaPair checks one command's two photo store flags: both or neither,
+// each an existing directory, and two different directories. Two stacks on
+// one store would each see files the other wrote.
+func checkMediaPair(command, refFlag, ref, otherFlag, other string) error {
+	if (ref == "") != (other == "") {
+		return fmt.Errorf("parity %s: %s and %s go together; one store alone compares nothing", command, refFlag, otherFlag)
+	}
+	if ref == "" {
+		return nil
+	}
+	infos := make([]os.FileInfo, 2)
+	for i, side := range []struct{ flag, dir string }{{refFlag, ref}, {otherFlag, other}} {
+		info, err := os.Stat(side.dir)
+		if err != nil {
+			return fmt.Errorf("parity %s: %s: %v", command, side.flag, err)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("parity %s: %s %s is not a directory", command, side.flag, side.dir)
+		}
+		infos[i] = info
+	}
+	if os.SameFile(infos[0], infos[1]) {
+		return fmt.Errorf("parity %s: %s and %s name one directory; each stack needs its own store", command, refFlag, otherFlag)
+	}
+	return nil
+}
+
+func onOff(on bool) string {
+	if on {
+		return "on"
+	}
+	return "off"
 }
 
 // filterAuth keeps the scenarios written for the mode the stacks were started

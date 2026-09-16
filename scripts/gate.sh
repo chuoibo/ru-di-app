@@ -463,16 +463,23 @@ parity_phase() {
   # that reason alone.
   # The limiter lane goes last, in dev only: each of its scenarios waits for a
   # fresh limiter window and spends it, so nothing may run on the stacks after.
+  # Every run and the canary also compare the two photo stores after each step
+  # (media lane): a file dropped or left behind shows even when the wire and the
+  # rows agree. The canary's target is the candidate's Python, which writes the
+  # candidate's store.
   (
     cd parity &&
       go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
         --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+        --reference-media "$PARITY_REF_MEDIA" --candidate-media "$PARITY_CAND_MEDIA" \
         --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios &&
       go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
-        --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
+        --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" \
+        --reference-media "$PARITY_REF_MEDIA" --target-media "$PARITY_CAND_MEDIA" scenarios &&
       { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
       { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity run --lane limiter --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
           --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+          --reference-media "$PARITY_REF_MEDIA" --candidate-media "$PARITY_CAND_MEDIA" \
           --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; }
   ) || rc=1
   if [ "$rc" -ne 0 ]; then
