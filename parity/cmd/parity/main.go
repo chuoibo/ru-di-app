@@ -249,8 +249,10 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			served[view.ID] = true
 		}
 	}
-	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB, Python: refClient, Media: *refMedia}
-	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap, Python: candPython, Media: *candMedia}
+	// One cache per store, made here and not inside Execute: the stores outlive
+	// every scenario, so what one scenario read the next one need not read again.
+	refStack := runner.Stack{Name: "reference", Client: refClient, DB: refDB, Python: refClient, Media: *refMedia, MediaCache: mediasnap.NewCache()}
+	candStack := runner.Stack{Name: "candidate", Client: candClient, DB: candDB, Tap: candTap, Python: candPython, Media: *candMedia, MediaCache: mediasnap.NewCache()}
 
 	ctx := context.Background()
 	rep := report{Reference: *reference, Candidate: *candidate, DatabaseLane: refDB != nil, MediaLane: *refMedia != "", Accepted: map[string]int{}}
@@ -503,7 +505,9 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 		defer targetPool.Close()
 		refSessions, targetSessions = refPool, targetPool
 	}
-	refStack := runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient, Media: *refMedia}
+	// One cache per store for every mode: both stores outlive the mode loop.
+	refStack := runner.Stack{Name: "reference", Client: refClient, Sessions: refSessions, Python: refClient, Media: *refMedia, MediaCache: mediasnap.NewCache()}
+	targetMediaCache := mediasnap.NewCache()
 	modes := canary.Modes()
 	if *targetMedia != "" {
 		// Only with the lane on: without a store to compare, damage to the
@@ -528,7 +532,7 @@ func canaryRun(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, err)
 			return 2
 		}
-		candStack := runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient, Media: *targetMedia}
+		candStack := runner.Stack{Name: "canary-" + mode.Name, Client: candClient, Sessions: targetSessions, Python: candClient, Media: *targetMedia, MediaCache: targetMediaCache}
 		differences := 0
 		for _, sc := range scenarios {
 			nonce := runner.NewNonce()

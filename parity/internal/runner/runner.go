@@ -62,6 +62,11 @@ type Stack struct {
 	// the store, so the comparison covers the files written and removed. ""
 	// leaves the store out.
 	Media string
+	// MediaCache is what the store's last snapshot saw. One cache per store,
+	// shared by every Execute on that stack, spares each snapshot the files no
+	// step touched; without one a scenario keeps its own and reads the whole
+	// store once at its baseline.
+	MediaCache *mediasnap.Cache
 }
 
 // ErrSetup marks a failure before any step ran. It is never a difference: a
@@ -166,8 +171,12 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		prev = snap
 	}
 	var prevMedia *mediasnap.Snap
+	mediaCache := stack.MediaCache
 	if stack.Media != "" {
-		snap, err := mediasnap.Snapshot(stack.Media)
+		if mediaCache == nil {
+			mediaCache = mediasnap.NewCache()
+		}
+		snap, err := mediaCache.Snapshot(stack.Media)
 		if err != nil {
 			return nil, fmt.Errorf("%s on %s: baseline media snapshot: %w", sc.ID, stack.Name, err)
 		}
@@ -236,7 +245,7 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 			}
 		}
 		if stack.Media != "" {
-			next, err := mediasnap.Snapshot(stack.Media)
+			next, err := mediaCache.Snapshot(stack.Media)
 			if err != nil {
 				return nil, fmt.Errorf("%s on %s step %s: media snapshot: %w", sc.ID, stack.Name, step.ID, err)
 			}

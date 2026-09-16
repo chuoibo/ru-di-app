@@ -5,9 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -33,20 +35,23 @@ type side struct {
 	t      *testing.T
 	root   string
 	binder *normalize.Binder
+	cache  *Cache
 	prev   *Snap
 	steps  []*Change
 }
 
 func newSide(t *testing.T) *side {
 	t.Helper()
-	s := &side{t: t, root: t.TempDir(), binder: normalize.NewBinder()}
+	s := &side{t: t, root: t.TempDir(), binder: normalize.NewBinder(), cache: NewCache()}
 	s.prev = s.snapshot()
 	return s
 }
 
+// snapshot reads the store the way a run does: through one cache kept across
+// every step, so these tests measure the lane as the runner drives it.
 func (s *side) snapshot() *Snap {
 	s.t.Helper()
-	snap, err := Snapshot(s.root)
+	snap, err := s.cache.Snapshot(s.root)
 	if err != nil {
 		s.t.Fatal(err)
 	}
@@ -615,5 +620,258 @@ func TestStoredFilesListsStoredFilesOnly(t *testing.T) {
 	}
 	if len(files) != 1 || !files[stored(key)] {
 		t.Errorf("stored files = %v", files)
+	}
+}
+
+// describe spells a whole snapshot, unexported fields and all, so two
+// snapshots can be compared as the lane compares them and as it orders them.
+func describe(snap *Snap) string {
+	var b strings.Builder
+	paths := make([]string, 0, len(snap.Dirs))
+	for path := range snap.Dirs {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Fprintf(&b, "dir %s %+v\n", path, snap.Dirs[path])
+	}
+	for _, e := range snap.Entries {
+		fmt.Fprintf(&b, "entry %+v\n", e)
+	}
+	return b.String()
+}
+
+// TestACachedSnapshotReadsWhatAFreshOneReads drives one store through the
+// changes a run makes to it and, after each, compares what a cache that has
+// seen every earlier snapshot reads with what a snapshot that has seen nothing
+// reads. The cache is there to spare reads, never to change an answer.
+func TestACachedSnapshotReadsWhatAFreshOneReads(t *testing.T) {
+	root := t.TempDir()
+	cache := NewCache()
+	if _, err := cache.Snapshot(root); err != nil {
+		t.Fatal(err)
+	}
+	first := randomKey(t, "ab12")
+	second := randomKey(t, "ab12")
+	dir := filepath.Join(root, first[:2], first[2:4])
+	path := filepath.Join(dir, first)
+	write := func(rel, data string, mode fs.FileMode) {
+		t.Helper()
+		full := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(data), mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// rename is how both stores write a key: a temporary file beside it, then
+	// rename(2) over the name. The file arrives on another inode and the
+	// directory's modification time moves.
+	rename := func(rel, data string) {
+		t.Helper()
+		full := filepath.Join(root, filepath.FromSlash(rel))
+		tmp := filepath.Join(filepath.Dir(full), ".tmp-rewrite")
+		if err := os.WriteFile(tmp, []byte(data), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Rename(tmp, full); err != nil {
+			t.Fatal(err)
+		}
+	}
+	steps := []struct {
+		name string
+		do   func()
+	}{
+		{"a key is written", func() { write(stored(first), "one", 0o600) }},
+		{"a second key joins its directory", func() { write(stored(second), "two", 0o600) }},
+		{"a key is rewritten over another inode, same length", func() { rename(stored(first), "ONE") }},
+		{"a key is rewritten in place a tick later, same length", func() {
+			time.Sleep(25 * time.Millisecond)
+			write(stored(first), "uno", 0o600)
+		}},
+		{"a key changes length", func() { write(stored(first), "a much longer photograph", 0o600) }},
+		{"a key's mode changes", func() {
+			if err := os.Chmod(path, 0o640); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"a key directory's mode changes", func() {
+			if err := os.Chmod(dir, 0o751); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"a temporary file is left behind", func() {
+			write(first[:2]+"/"+first[2:4]+"/."+first+".ab3d9f0z.tmp", "half", 0o600)
+		}},
+		{"a symlink appears", func() {
+			if err := os.Symlink("/etc/passwd", filepath.Join(dir, randomKey(t, "ab12"))); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"an empty stray directory appears", func() {
+			if err := os.MkdirAll(filepath.Join(root, "notes"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"a key is deleted", func() {
+			if err := os.Remove(path); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"the key directory is removed", func() {
+			if err := os.RemoveAll(filepath.Join(root, first[:2])); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	}
+	for _, step := range steps {
+		step.do()
+		cached, err := cache.Snapshot(root)
+		if err != nil {
+			t.Fatalf("%s: %v", step.name, err)
+		}
+		fresh, err := Snapshot(root)
+		if err != nil {
+			t.Fatalf("%s: %v", step.name, err)
+		}
+		if describe(cached) != describe(fresh) {
+			t.Fatalf("after %s the cached snapshot is not what a fresh one reads:\ncached:\n%s\nfresh:\n%s",
+				step.name, describe(cached), describe(fresh))
+		}
+	}
+}
+
+// TestACacheRereadsAKeyRewrittenWithinOneTick pins the narrow window the cache
+// buys its speed with. A file whose size, inode and mode all stayed the same
+// within one filesystem timestamp tick would be taken for the file already
+// read; the store never writes one, because every write lands a new inode
+// through a temporary file in the same directory and rename(2) over the name,
+// which also moves that directory's modification time.
+func TestACacheRereadsAKeyRewrittenWithinOneTick(t *testing.T) {
+	root := t.TempDir()
+	key := randomKey(t, "cd34")
+	dir := filepath.Join(root, key[:2], key[2:4])
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, key)
+	if err := os.WriteFile(path, []byte("first"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cache := NewCache()
+	before, err := cache.Snapshot(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// No sleep: the rewrite lands inside the tick the snapshot above read.
+	tmp := filepath.Join(dir, "."+key+".rewrite.tmp")
+	if err := os.WriteFile(tmp, []byte("FIRST"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		t.Fatal(err)
+	}
+	after, err := cache.Snapshot(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256([]byte("FIRST"))
+	if len(after.Entries) != 1 || after.Entries[0].SHA256 != hex.EncodeToString(sum[:]) {
+		t.Fatalf("the cache kept the old bytes: %+v", after.Entries)
+	}
+	if before.Entries[0].Text == after.Entries[0].Text {
+		t.Fatal("the rewritten key reads the same as before it was rewritten")
+	}
+}
+
+// TestACacheStartsOverOnAnotherStore: a cache belongs to one root. Handed
+// another, it must read it whole, not answer with the first one's files.
+func TestACacheStartsOverOnAnotherStore(t *testing.T) {
+	cache := NewCache()
+	one, two := t.TempDir(), t.TempDir()
+	key := randomKey(t, "ef56")
+	for _, root := range []string{one, two} {
+		dir := filepath.Join(root, key[:2], key[2:4])
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, key), []byte(root), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := cache.Snapshot(one); err != nil {
+		t.Fatal(err)
+	}
+	snap, err := cache.Snapshot(two)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := Snapshot(two)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if describe(snap) != describe(fresh) {
+		t.Fatalf("the cache answered for the store it saw first:\n%s\nfresh:\n%s", describe(snap), describe(fresh))
+	}
+}
+
+// TestADirectoryThatMovedMakesTheCacheReadItsFilesAgain pins the rule that
+// narrows the cache's blind spot. The spot itself cannot be produced by
+// waiting: it needs a file rewritten with the same length on the same inode
+// inside one filesystem timestamp tick. So the test builds it — it hands the
+// cache the rewritten file's own identity, which is what a rewrite inside the
+// tick would have left it holding — and then moves the directory's
+// modification time, as creating, renaming or removing anything in it does.
+// The file must be read again.
+func TestADirectoryThatMovedMakesTheCacheReadItsFilesAgain(t *testing.T) {
+	root := t.TempDir()
+	key := randomKey(t, "9a8b")
+	dir := filepath.Join(root, key[:2], key[2:4])
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, key)
+	if err := os.WriteFile(path, []byte("first"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cache := NewCache()
+	if _, err := cache.Snapshot(root); err != nil {
+		t.Fatal(err)
+	}
+	stale := cache.files[stored(key)]
+	if stale.entry.SHA256 == "" {
+		t.Fatal("the cache did not remember the file it just read")
+	}
+	// Same length, same inode: a write through an open descriptor.
+	file, err := os.OpenFile(path, os.O_WRONLY, 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := file.Write([]byte("SECON")); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// What the cache would hold had the write landed inside the tick of the
+	// snapshot above: the new identity against the old bytes.
+	info, err := os.Lstat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cache.files[stored(key)] = cached{id: identify(info), entry: stale.entry}
+	// Anything written, renamed or removed in the directory moves this.
+	past := time.Date(2001, 1, 1, 0, 0, 0, 0, time.UTC)
+	if err := os.Chtimes(dir, past, past); err != nil {
+		t.Fatal(err)
+	}
+	snap, err := cache.Snapshot(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256([]byte("SECON"))
+	if len(snap.Entries) != 1 || snap.Entries[0].SHA256 != hex.EncodeToString(sum[:]) {
+		t.Fatalf("the cache kept the bytes of a file whose directory moved: %+v", snap.Entries)
 	}
 }

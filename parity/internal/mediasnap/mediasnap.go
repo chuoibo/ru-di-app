@@ -43,6 +43,30 @@
 // a write and removal inside a directory changed less than one clock tick
 // before the previous snapshot is missed.
 //
+// # Reading only what changed
+//
+// Hashing every stored file after every step costs the whole store on every
+// step, and the store grows all run. A Cache carries what the last snapshot of
+// one store saw into the next one: every entry is still stat'd, every
+// directory is still listed, and only a file whose identity changed is opened
+// and read again. Identity is the device and inode numbers, the link count,
+// the full mode, the size, the modification time and the inode change time,
+// plus the modes of the directories above it, which the entry's text spells.
+//
+// The cost of that: a file rewritten in place with the same size, inode and
+// mode, inside one timestamp tick, is taken for the file we already hashed. Two
+// things stand against it here. The store is content-addressed, and both
+// writers — app/media/storage.py and PhotoStorage.Write in
+// services/core/internal/media/storage — put a key down through a fresh
+// temporary file in the same directory and rename(2) it over, so a rewrite
+// arrives on a new inode; and a file whose directory's modification time moved
+// since the previous snapshot is re-read whatever its identity says, so that
+// rename makes every file in that directory read again. What is left is a write through an already-open descriptor that keeps the
+// length, the mode, the inode and the directory's modification time, and lands
+// within one tick of the previous snapshot. Nothing in this system writes that
+// way. Where the operating system does not tell us a file's inode and change
+// time the cache never reuses anything and every snapshot reads every file.
+//
 // # How an entry renders
 //
 // Entry.Text is one JSON object with a fixed member order. What "path" says
@@ -78,8 +102,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // ErrSnapshot wraps every error Snapshot returns. The store could not be read:
@@ -135,10 +161,55 @@ var (
 	keyRun     = regexp.MustCompile(`[0-9a-f]{32,}`)
 )
 
+// Cache carries what one store's last snapshot saw into its next one, so a
+// snapshot opens and reads only the files whose identity changed. A Cache
+// belongs to one store; pointed at another root it starts over. The zero value
+// is an empty cache, and NewCache is how a caller says it means to keep one
+// across snapshots.
+type Cache struct {
+	mu    sync.Mutex
+	root  string
+	files map[string]cached // by path relative to the root
+	dirs  map[string]int64  // directory path -> modification time; "" is the root
+}
+
+// cached is one file as the last snapshot read it.
+type cached struct {
+	id    identity
+	entry Entry
+}
+
+// identity is what a stat says about a file. Two stats with the same identity
+// are the same bytes, up to the tick the package comment describes.
+type identity struct {
+	known bool // false: the OS did not say enough, so never reuse
+	mode  fs.FileMode
+	size  int64
+	mtime int64 // nanoseconds
+	ctime int64 // nanoseconds
+	dev   uint64
+	ino   uint64
+	nlink uint64
+}
+
+func identify(info fs.FileInfo) identity {
+	id := identity{mode: info.Mode(), size: info.Size(), mtime: info.ModTime().UnixNano()}
+	fillIdentity(info, &id)
+	return id
+}
+
+// NewCache returns an empty cache for one store.
+func NewCache() *Cache { return &Cache{} }
+
 // Snapshot reads the store under root. The root must be a directory; a missing
 // root is an error, never an empty store, or a lane pointed at the wrong path
-// would compare two empty trees and read as equal.
-func Snapshot(root string) (*Snap, error) {
+// would compare two empty trees and read as equal. Every snapshot reads every
+// store file once; a Cache kept across snapshots of one store spares the reads
+// its entries explain.
+func Snapshot(root string) (*Snap, error) { return NewCache().Snapshot(root) }
+
+// Snapshot reads the store under root, reusing what the cache still explains.
+func (c *Cache) Snapshot(root string) (*Snap, error) {
 	info, err := os.Stat(root)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrSnapshot, err)
@@ -146,24 +217,50 @@ func Snapshot(root string) (*Snap, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("%w: %s is not a directory", ErrSnapshot, root)
 	}
-	snap := &Snap{Root: root, Dirs: map[string]Dir{}}
-	if err := walk(snap, root, "", nil); err != nil {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.root != root {
+		c.root, c.files, c.dirs = root, nil, nil
+	}
+	snap := &Snap{Root: root, Dirs: make(map[string]Dir, len(c.dirs))}
+	next := &Cache{root: root, files: make(map[string]cached, len(c.files)), dirs: make(map[string]int64, len(c.dirs))}
+	rootMTime := info.ModTime().UnixNano()
+	next.dirs[""] = rootMTime
+	var subtrees []descent
+	if _, _, err := c.walk(snap, next, root, "", nil, c.touched("", rootMTime), &subtrees); err != nil {
+		return nil, err
+	}
+	if err := c.fanOut(snap, next, root, subtrees); err != nil {
 		return nil, err
 	}
 	sort.Slice(snap.Entries, func(i, j int) bool { return snap.Entries[i].Path < snap.Entries[j].Path })
+	c.files, c.dirs = next.files, next.dirs
 	return snap, nil
 }
 
-// walk reads the directory rel, whose ancestors between the root and it
-// (itself included, unless it is the root) have modes dirs.
-func walk(snap *Snap, root, rel string, dirs []fs.FileMode) error {
+// touched reports whether the directory rel was modified since the snapshot the
+// cache holds, a directory the cache has never seen included. Every file
+// directly inside such a directory is read again whatever its identity says: a
+// key written through a temporary file and renamed over an existing one moves
+// the directory's modification time even when the file keeps its length.
+func (c *Cache) touched(rel string, mtime int64) bool {
+	was, seen := c.dirs[rel]
+	return !seen || was != mtime
+}
+
+// walk reads the directory rel, whose ancestors between the root and it (itself
+// included, unless it is the root) have modes dirs, and whose own modification
+// time moved since the cached snapshot if touched. It reports whether the
+// directory holds nothing and whether it was gone by the time it was read.
+func (c *Cache) walk(snap *Snap, next *Cache, root, rel string, dirs []fs.FileMode, touched bool, subtrees *[]descent) (empty, gone bool, err error) {
 	full := filepath.Join(root, filepath.FromSlash(rel))
+	// One listing: what the directory holds also says whether it is empty.
 	children, err := os.ReadDir(full)
 	if err != nil {
 		if rel != "" && errors.Is(err, fs.ErrNotExist) {
-			return nil // removed while the walk was under way
+			return false, true, nil // removed while the walk was under way
 		}
-		return fmt.Errorf("%w: %v", ErrSnapshot, err)
+		return false, false, fmt.Errorf("%w: %v", ErrSnapshot, err)
 	}
 	for _, child := range children {
 		childRel := child.Name()
@@ -176,26 +273,19 @@ func walk(snap *Snap, root, rel string, dirs []fs.FileMode) error {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
-			return fmt.Errorf("%w: %v", ErrSnapshot, err)
+			return false, false, fmt.Errorf("%w: %v", ErrSnapshot, err)
 		}
 		mode := permissions(info.Mode())
 		if info.IsDir() {
-			empty, err := isEmpty(path)
-			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) {
-					continue
-				}
-				return fmt.Errorf("%w: %v", ErrSnapshot, err)
-			}
-			snap.Dirs[childRel] = Dir{Mode: mode, MTime: info.ModTime().UnixNano(), Empty: empty}
-			if empty {
-				if !keyDirPosition(childRel) {
-					snap.Entries = append(snap.Entries, classify(Entry{Path: childRel, Type: "dir", Mode: mode, Dirs: dirs}))
-				}
+			child := descent{rel: childRel, mode: mode, mtime: info.ModTime().UnixNano(), dirs: dirs}
+			if subtrees != nil {
+				// At the root: left for fanOut, which walks the subtrees
+				// side by side.
+				*subtrees = append(*subtrees, child)
 				continue
 			}
-			if err := walk(snap, root, childRel, append(append([]fs.FileMode(nil), dirs...), mode)); err != nil {
-				return err
+			if err := c.descend(snap, next, root, child); err != nil {
+				return false, false, err
 			}
 			continue
 		}
@@ -203,25 +293,128 @@ func walk(snap *Snap, root, rel string, dirs []fs.FileMode) error {
 		switch {
 		case info.Mode().IsRegular():
 			entry.Type = "file"
-			size, sum, err := hashFile(path)
-			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) {
-					continue
+			id := identify(info)
+			if was, ok := c.files[childRel]; ok && id.known && was.id == id && !touched && sameModes(was.entry.Dirs, dirs) {
+				// Same file, same directories: the size, the hash and the
+				// rendered text the last snapshot read all still hold.
+				entry = was.entry
+			} else {
+				size, sum, err := hashFile(path)
+				if err != nil {
+					if errors.Is(err, fs.ErrNotExist) {
+						continue
+					}
+					return false, false, fmt.Errorf("%w: %v (the harness user must be able to read every stored file)", ErrSnapshot, err)
 				}
-				return fmt.Errorf("%w: %v (the harness user must be able to read every stored file)", ErrSnapshot, err)
+				entry.Size, entry.SHA256 = size, sum
+				entry = classify(entry)
 			}
-			entry.Size, entry.SHA256 = size, sum
+			next.files[childRel] = cached{id: id, entry: entry}
+			snap.Entries = append(snap.Entries, entry)
+			continue
 		case info.Mode()&fs.ModeSymlink != 0:
 			entry.Type = "symlink"
 			if entry.Link, err = os.Readlink(path); err != nil {
-				return fmt.Errorf("%w: %v", ErrSnapshot, err)
+				return false, false, fmt.Errorf("%w: %v", ErrSnapshot, err)
 			}
 		default:
 			entry.Type = "other"
 		}
 		snap.Entries = append(snap.Entries, classify(entry))
 	}
+	return len(children) == 0, false, nil
+}
+
+// descent is one directory a walk has yet to read, as its parent saw it.
+type descent struct {
+	rel   string
+	mode  fs.FileMode
+	mtime int64
+	dirs  []fs.FileMode // the modes above the directory, its own left out
+}
+
+// descend reads one directory into snap and next, and records what its parent
+// saw of it: an empty directory that is not a key directory is an entry of its
+// own, and one that was gone by the time it was read is nothing at all.
+func (c *Cache) descend(snap *Snap, next *Cache, root string, d descent) error {
+	dirs := append(append([]fs.FileMode(nil), d.dirs...), d.mode)
+	empty, gone, err := c.walk(snap, next, root, d.rel, dirs, c.touched(d.rel, d.mtime), nil)
+	if err != nil {
+		return err
+	}
+	if gone {
+		return nil
+	}
+	snap.Dirs[d.rel] = Dir{Mode: d.mode, MTime: d.mtime, Empty: empty}
+	next.dirs[d.rel] = d.mtime
+	if empty && !keyDirPosition(d.rel) {
+		snap.Entries = append(snap.Entries, classify(Entry{Path: d.rel, Type: "dir", Mode: d.mode, Dirs: d.dirs}))
+	}
 	return nil
+}
+
+// workers is how many of the root's subtrees are read at once. A snapshot is
+// almost nothing but system calls — open, getdents, lstat, and the reads of
+// the few files a step changed — so the wall clock falls with the number of
+// goroutines waiting on them, well past what the arithmetic would need.
+var workers = min(runtime.GOMAXPROCS(0), 8)
+
+// fanOut reads the root's subtrees side by side. Each one fills a snapshot and
+// a cache of its own, so no two goroutines write one map; they are merged in
+// the order the root listed them, and the entries are sorted by path
+// afterwards, so the result does not depend on which subtree finished first.
+// The cache being read is not written until every subtree is done.
+func (c *Cache) fanOut(snap *Snap, next *Cache, root string, subtrees []descent) error {
+	if len(subtrees) == 0 {
+		return nil
+	}
+	subs := make([]*Snap, len(subtrees))
+	nexts := make([]*Cache, len(subtrees))
+	errs := make([]error, len(subtrees))
+	running := min(workers, len(subtrees))
+	var wg sync.WaitGroup
+	for w := 0; w < running; w++ {
+		wg.Add(1)
+		go func(w int) {
+			defer wg.Done()
+			for i := w; i < len(subtrees); i += running {
+				sub := &Snap{Root: root, Dirs: map[string]Dir{}}
+				subNext := &Cache{root: root, files: map[string]cached{}, dirs: map[string]int64{}}
+				errs[i] = c.descend(sub, subNext, root, subtrees[i])
+				subs[i], nexts[i] = sub, subNext
+			}
+		}(w)
+	}
+	wg.Wait()
+	for i := range subtrees {
+		if errs[i] != nil {
+			return errs[i]
+		}
+		snap.Entries = append(snap.Entries, subs[i].Entries...)
+		for path, dir := range subs[i].Dirs {
+			snap.Dirs[path] = dir
+		}
+		for path, file := range nexts[i].files {
+			next.files[path] = file
+		}
+		for path, mtime := range nexts[i].dirs {
+			next.dirs[path] = mtime
+		}
+	}
+	return nil
+}
+
+// sameModes reports whether two directory-mode lists are equal.
+func sameModes(a, b []fs.FileMode) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 // keyDirPosition reports whether rel is where a key directory goes: k[0:2]
@@ -239,21 +432,6 @@ func keyDirPosition(rel string) bool {
 // keyDir reports whether rel is a k[0:2]/k[2:4] directory.
 func keyDir(rel string) bool {
 	return strings.Count(rel, "/") == 1 && keyDirPosition(rel)
-}
-
-func isEmpty(dir string) (bool, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-	if _, err := f.Readdirnames(1); err != nil {
-		if errors.Is(err, io.EOF) {
-			return true, nil
-		}
-		return false, err
-	}
-	return false, nil
 }
 
 func hashFile(path string) (int64, string, error) {
