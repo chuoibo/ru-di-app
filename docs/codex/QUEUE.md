@@ -150,6 +150,16 @@ người kia hiện ra trong danh sách khi tuần đã trôi qua, xin tờ mớ
 không có thật trả `paper_not_found` còn tờ của cặp khác trả `notebook_not_found` nên phân biệt được tồn tại, và vài
 `RepositoryConflict` không dịch thành 500.
 
+Lane Codex đóng (leader, 16/09) — ADR-0030: Claude sở hữu toàn bộ backend; `outings` không còn chờ thoả thuận
+đóng băng; không còn review chéo nên cổng của mỗi route là cổng parity chạy lại trong cây sạch tại đúng SHA, canary,
+probe và ít nhất hai đột biến do người gộp tự nghĩ; AGY-PASS gỡ khỏi thang trạng thái của ADR-0029.
+
+Sóng W7 (outings) đóng băng để ghi mốc, 11 route: `POST /outings/{outing_id}/itinerary/preview`,
+`PUT /outings/{outing_id}/itinerary`, `POST` và `GET /contexts/{context_id}/outings`,
+`PUT /outings/{outing_id}/timeline`, `POST /outing-stops/{stop_id}/checkins`, `GET /outings/{outing_id}/checkins`,
+`POST /outings/{outing_id}/invites`, `POST …/invites/{invite_id}/revoke`, `POST …/invites/{invite_id}/rotate`,
+`POST /outing-invites/{token}/accept`; cùng `app/domain/journey.py` và đường gọi Valhalla của preview.
+
 **Chờ Lead:**
 1. ADR-0010 §6.4 cấm `--dangerously-skip-permissions`, mà `scripts/agent_supervisor.py` đang truyền cờ đó cho agy.
    Cần chọn allow-rule hẹp hoặc chạy agy trong container trước khi agy QC được route W1 nào.
