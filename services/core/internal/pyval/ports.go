@@ -26,6 +26,11 @@ func registerServedValidators(r *Registry) {
 	r.Register(schemas+"_require_timezone", requireTimezone)
 	r.Register(schemas+"BillDiscountCreateRequest._target_matches_scope", targetMatchesScope)
 	r.Register("app.api.routes.budget._parse_candidate_money", parseCandidateMoney)
+	// W8 pair notebooks and papers (schemas.py PairConstraintPutRequest,
+	// PaperKeepRequest): the field is bounded on the raw string, then stripped
+	// and refused when nothing is left.
+	r.Register(schemas+"PairConstraintPutRequest._khong_rong", stripNotBlank("content must not be blank"))
+	r.Register(schemas+"PaperKeepRequest._khong_rong", stripNotBlank("line must not be blank"))
 }
 
 // requireTimezone is _require_timezone: a datetime without a UTC offset is

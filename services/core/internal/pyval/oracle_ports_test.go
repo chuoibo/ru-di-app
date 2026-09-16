@@ -47,8 +47,6 @@ func registerAppPorts(reg *Registry) {
 	}
 	const schemas = "app.api.schemas."
 	reg.Register(schemas+"OutingCreateRequest._strip_title", blank("title must not be blank", false))
-	reg.Register(schemas+"PairConstraintPutRequest._khong_rong", blank("content must not be blank", false))
-	reg.Register(schemas+"PaperKeepRequest._khong_rong", blank("line must not be blank", false))
 	reg.Register("app.api.routes.places.PlaceSearchRequest._reject_blank", blank("query must not be blank", false))
 	reg.Register(schemas+"MeetingPoint._not_blank", blank("point label must not be blank", false))
 	reg.Register(schemas+"OutingStopInput._strip_label", blank("label must not be blank", false))
