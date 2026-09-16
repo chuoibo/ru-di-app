@@ -68,25 +68,6 @@ func registerAppPorts(reg *Registry) {
 		}
 		return v, nil
 	})
-	somethingToChange := func(fields []string, blankName string) ValidatorFunc {
-		return func(_ *Call, v Value) (Value, error) {
-			allNone := true
-			for _, f := range fields {
-				if !isNone(field(v, f)) {
-					allNone = false
-				}
-			}
-			if allNone {
-				return nil, ValueError("c\u1ea7n \u00edt nh\u1ea5t m\u1ed9t tr\u01b0\u1eddng \u0111\u1ec3 s\u1eeda")
-			}
-			if s, ok := field(v, "display_name").(pyjson.String); ok && pyStrip(string(s)) == "" {
-				return nil, ValueError(blankName)
-			}
-			return v, nil
-		}
-	}
-	reg.Register(schemas+"ProfileUpdateRequest._something_to_change",
-		somethingToChange([]string{"display_name", "bio", "city", "wall_comment_policy", "discoverable_by_phone"}, "t\u00ean hi\u1ec3n th\u1ecb kh\u00f4ng \u0111\u01b0\u1ee3c r\u1ed7ng"))
 	reg.Register(schemas+"ItineraryRequest._unique_keys", func(_ *Call, v Value) (Value, error) {
 		ids := map[string]bool{}
 		stops, _ := field(v, "stops").(List)

@@ -31,6 +31,10 @@ func registerServedValidators(r *Registry) {
 	// and refused when nothing is left.
 	r.Register(schemas+"PairConstraintPutRequest._khong_rong", stripNotBlank("content must not be blank"))
 	r.Register(schemas+"PaperKeepRequest._khong_rong", stripNotBlank("line must not be blank"))
+	// W10 people (schemas.py ProfileUpdateRequest).
+	r.Register(schemas+"ProfileUpdateRequest._something_to_change",
+		somethingToChange([]string{"display_name", "bio", "city", "wall_comment_policy", "discoverable_by_phone"},
+			"tên hiển thị không được rỗng"))
 }
 
 // requireTimezone is _require_timezone: a datetime without a UTC offset is

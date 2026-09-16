@@ -51,12 +51,13 @@ func TestW1RoutesHaveNoUnregisteredValidators(t *testing.T) {
 func TestBindRefusesAnUnportedValidator(t *testing.T) {
 	c := loadContract(t)
 	// A route Python still serves: its model validator has no production port.
-	const id = "PATCH /people/me"
+	// PATCH /people/me stood here until W10 ported it.
+	const id = "POST /places/search"
 	rep, err := c.Inspect(id, NewRegistry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "app.api.schemas.ProfileUpdateRequest._something_to_change"
+	want := "app.api.routes.places.PlaceSearchRequest._reject_blank"
 	if len(rep.Unregistered) != 1 || rep.Unregistered[0] != want {
 		t.Fatalf("unregistered = %v, want [%s]", rep.Unregistered, want)
 	}

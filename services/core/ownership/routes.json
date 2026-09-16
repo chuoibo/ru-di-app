@@ -998,7 +998,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/GET-people-me-contexts.md"
     },
     {
       "id": "GET /people/me",
@@ -1010,7 +1011,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/GET-people-me.md"
     },
     {
       "id": "PATCH /people/me",
@@ -1022,7 +1024,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/PATCH-people-me.md"
     },
     {
       "id": "GET /people/me/saved-places",
@@ -1034,7 +1037,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/GET-people-me-saved-places.md"
     },
     {
       "id": "PUT /people/me/saved-places/{place_id}",
@@ -1046,7 +1050,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/PUT-people-me-saved-places-place_id.md"
     },
     {
       "id": "DELETE /people/me/saved-places/{place_id}",
@@ -1058,7 +1063,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/DELETE-people-me-saved-places-place_id.md"
     },
     {
       "id": "GET /people/me/blocked",
@@ -1070,7 +1076,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/GET-people-me-blocked.md"
     },
     {
       "id": "DELETE /people/me",
@@ -1082,7 +1089,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/DELETE-people-me.md"
     },
     {
       "id": "POST /people/{person_id}/block",
@@ -1094,7 +1102,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/POST-people-person_id-block.md"
     },
     {
       "id": "DELETE /people/{person_id}/block",
@@ -1106,7 +1115,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/DELETE-people-person_id-block.md"
     },
     {
       "id": "POST /people/{person_id}/dm",
@@ -1118,7 +1128,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/POST-people-person_id-dm.md"
     },
     {
       "id": "GET /people/{person_id}",
@@ -1130,7 +1141,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/GET-people-person_id.md"
     },
     {
       "id": "PUT /people/{person_id}",
@@ -1142,7 +1154,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED",
+      "evidence": "docs/migration/routes/people/PUT-people-person_id.md"
     },
     {
       "id": "POST /sessions",
