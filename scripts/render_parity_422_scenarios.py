@@ -254,6 +254,40 @@ WAVES: dict[str, Wave] = {
             ),
         ),
     ),
+    # The trip: its plan, its arrivals and its invitations. Everything with a body
+    # carries a model_validator(mode="after") or a field_validator, and the v2 save
+    # declares an idempotency-key header, so only the four bodiless routes render here.
+    # The rest of the 422s are hand-written in parity/scenarios/w7/outings.
+    "w7": Wave(
+        routes=(
+            ("GET", "/contexts/{context_id}/outings"),
+            ("POST", "/outing-stops/{stop_id}/checkins"),
+            ("GET", "/outings/{outing_id}/checkins"),
+            ("POST", "/outings/{outing_id}/invites/{invite_id}/revoke"),
+            ("POST", "/outings/{outing_id}/invites/{invite_id}/rotate"),
+        ),
+        deferred=(
+            # ItineraryPreviewRequest, ItineraryRequest, OutingCreateRequest and
+            # OutingInviteCreateRequest each carry a model_validator(mode="after")
+            (
+                "POST",
+                "/outings/{outing_id}/itinerary/preview",
+                "'function-after' is not probed",
+            ),
+            (
+                "POST",
+                "/contexts/{context_id}/outings",
+                "'function-after' is not probed",
+            ),
+            ("POST", "/outings/{outing_id}/invites", "'function-after' is not probed"),
+            # the v2 save declares idempotency-key as a required header parameter
+            ("PUT", "/outings/{outing_id}/itinerary", "headers ['idempotency-key']"),
+            # OutingStopInput.at is a clock time with a regex
+            ("PUT", "/outings/{outing_id}/timeline", "carries ['pattern']"),
+            # a link's secret is a bearer string, not a uuid
+            ("POST", "/outing-invites/{token}/accept", "path token is str"),
+        ),
+    ),
     "w10": Wave(
         routes=(
             ("GET", "/people/me/contexts"),

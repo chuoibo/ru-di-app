@@ -1,0 +1,94 @@
+# W7 concurrency · PUT /outings/{outing_id}/itinerary. Three saves of one revision at
+# once, each under its own header key so the middleware cannot collapse them: the outing
+# row is taken FOR UPDATE, so one save wins with 200 and the other two find the revision
+# already moved and answer 409. Three under ONE key instead are one save and two replays,
+# and the replay goes through the handler, which re-proves membership first. Texts are
+# sample data (dữ liệu mẫu).
+id: w7/concurrency/put-outings-outing_id-itinerary
+routes: ['PUT /outings/{outing_id}/itinerary']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm lưu cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_saves_three_times_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c7ff000{{burst}}-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-don","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00"}]}'
+  - id: owner_reads_list_after_the_burst
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: mate_saves_three_times_under_one_key
+    as: mate
+    concurrent: 3
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c7ff0010-aaaa-4aaa-8aaa-aaaaaaaaaab0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"tmp-cafe","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"walk","start_at":"07:30"}]}'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'

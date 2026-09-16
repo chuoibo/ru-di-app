@@ -1,0 +1,125 @@
+# W7 cross replay · POST /outings/{outing_id}/invites. The mint is the one place a raw
+# secret crosses the wire, and a stored 201 hands the SAME secret back on the replay --
+# through the other path as well, so a «returned exactly once» secret is in fact
+# returned once per press of the key. The mint's secret is bound once; the replay's
+# body is NOT bound a second time, because the normaliser refuses to give one literal
+# two names -- and that refusal is itself the proof the two secrets are the same string.
+# In the transcript the replayed body renders the token as <token:token_minted>. Go serves none of these routes yet, so both
+# paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w7/crossreplay/post-outings-outing_id-invites
+routes: ['POST /outings/{outing_id}/invites']
+auth_mode: dev
+personas:
+  owner: {}
+  holder: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_holder
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{persona.holder}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người cầm link (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm phát lại lời mời (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: python_mints_a_link
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_minted: {from: body, pointer: /invite_token, class: token}
+  - id: front_replays_python
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: holder_opens_the_minted_secret
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_minted}}/accept'
+  - id: holder_opens_the_minted_secret_again
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_minted}}/accept'
+  - id: front_mints_a_named_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.holder}}"}'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.holder}}"}'
+  - id: python_duplicate_named_frees_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.holder}}"}'
+  - id: front_uses_the_freed_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c7df0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.holder}}"}'
+  - id: front_lists_members
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'

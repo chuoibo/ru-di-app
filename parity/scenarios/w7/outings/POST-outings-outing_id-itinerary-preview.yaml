@@ -1,0 +1,372 @@
+# W7 · POST /outings/{outing_id}/itinerary/preview: cost a draft day without saving it.
+# The idempotency middleware lets this route past before it looks at the header at all,
+# so an empty idempotency-key is NOT the middleware's 422 here and a repeated key is
+# never a replay -- a preview must always resolve current access and current data. The
+# handler then spends one slot of the per-actor itinerary window (30 a minute; the
+# refusal itself lives in the limiter lane, not here), sets Cache-Control: no-store, and
+# builds the same draft the save builds, with the same refusals in the same order.
+# Beyond that it is `preview_itinerary`: one `issues` list, and a `status` of incomplete,
+# unavailable or ready. The parity stacks configure no Valhalla, so a draft with nothing
+# wrong reaches «unavailable» and the routed half of the file is unreachable from here.
+# Texts are sample data (dữ liệu mẫu).
+id: w7/outings/post-outings-outing_id-itinerary-preview
+routes: ['POST /outings/{outing_id}/itinerary/preview']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_previews
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm so đường (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_saves_itinerary
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c73f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-don","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"tmp-cafe","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45},{"id":"tmp-toi","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00"}]}'
+    bind:
+      stop_don: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_cafe: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_toi: {from: body, pointer: /stops/2/id, class: uuid}
+  # the body model, refused before the handler and so before the window is spent
+  - id: owner_day_missing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[]}'
+  - id: owner_day_not_a_date
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"14-03-2026"}'
+  - id: owner_include_suggestion_string
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-14","include_suggestion":"true"}'
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-14","khong_biet":1}'
+  # the row, the roster, the revision, the draft — same order as the save
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: stranger_previews
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_previews_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_stale_revision
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_days_day_outside_the_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[{"day":"2026-03-20","transport_mode":"car","start_at":"08:00"}],"day":"2026-03-14"}'
+  - id: owner_anchor_outside_its_day
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00","start_stop_id":"tmp-khong-co"}],"day":"2026-03-14"}'
+  - id: owner_stop_of_another_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","at":"07:30","label":"Chặng lạ (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_place_not_in_catalogue
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"tmp-la","at":"07:30","label":"Chặng lạ (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-khong-co-that"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_a_day_outside_the_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[],"days":[],"day":"2026-03-20"}'
+  # the issue list, one branch at a time
+  - id: owner_previews_a_day_with_no_settings
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-15"}'
+  - id: owner_previews_an_empty_day
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"},{"day":"2026-03-15","transport_mode":"walk","start_at":"09:00"}],"day":"2026-03-15"}'
+  - id: owner_previews_with_a_stop_that_has_no_day
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"},{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_a_stop_with_no_location
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"},{"id":"tmp-trong","at":"10:00","label":"Chưa chọn chỗ (dữ liệu mẫu)","day":"2026-03-14"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_with_a_misplaced_anchor
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00","start_stop_id":"{{stop_cafe}}"}],"day":"2026-03-14"}'
+  # nothing wrong with the draft: the stacks have no routing engine, so «unavailable»
+  - id: owner_previews_a_clean_day
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45},{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00","start_stop_id":"{{stop_don}}","end_stop_id":"{{stop_toi}}","return_to_start":true}],"day":"2026-03-14"}'
+  - id: owner_previews_asking_for_a_suggestion
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45},{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00"}],"day":"2026-03-14","include_suggestion":true}'
+  # a key is neither refused nor remembered here
+  - id: owner_previews_with_empty_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        idempotency-key: 'c73f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_with_the_same_key_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        idempotency-key: 'c73f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  # an arrival moves the revision under an open draft, and marks the stop checked_in
+  - id: mate_previews_before_arriving
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: mate_checks_in_at_cafe
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_cafe}}/checkins'
+  - id: owner_previews_with_the_revision_from_before
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_previews_after_the_arrival
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/itinerary/preview'

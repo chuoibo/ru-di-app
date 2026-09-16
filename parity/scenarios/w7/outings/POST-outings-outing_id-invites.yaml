@@ -1,0 +1,462 @@
+# W7 · POST /outings/{outing_id}/invites: mint one invitation. Three sources, two doors.
+# `link` names nobody and is a forwardable bearer secret; `group` and `friend` name a
+# person and are the credential that person exchanges for their first session. Both
+# kinds carry a secret, the server keeps only its SHA-256 digest, and the raw token is
+# returned exactly once -- so the scenario BINDS it and never writes one down. Order:
+# idempotency header, actor, path uuid, body model, the trip row (404 in English),
+# ACTIVE membership, the context kind (409 on a pair), the named person exists (409),
+# and only for `group` that they are on the roster today (422 naming the ids the caller
+# sent). A second named invitation for the same person is a 409, because the partial
+# unique index allows one -- which is why rotation exists. Texts are sample data
+# (dữ liệu mẫu).
+id: w7/outings/post-outings-outing_id-invites
+routes: ['POST /outings/{outing_id}/invites']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: anonymous_invites
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn ngoài nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mời nhau (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  # the body model
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+  - id: owner_source_missing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_source_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"sms"}'
+  - id: owner_link_names_a_person
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link","person_id":"{{persona.mate}}"}'
+  - id: owner_group_names_nobody
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group"}'
+  - id: owner_friend_names_nobody
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":null}'
+  - id: owner_person_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"khong-phai-uuid"}'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link","khong_biet":1}'
+  # the trip row, then the roster, then the kind, then the person
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: stranger_invites
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: stranger_invites_themselves
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.stranger}}"}'
+  - id: owner_invites_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_names_an_unregistered_person
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_group_invites_an_unregistered_person
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_group_invites_someone_off_the_roster
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.friend}}"}'
+  # the invitations that go in
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_link: {from: body, pointer: /id, class: uuid}
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_second_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_link_two: {from: body, pointer: /id, class: uuid}
+      token_link_two: {from: body, pointer: /invite_token, class: token}
+  - id: owner_invites_a_friend_from_outside
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      invite_friend: {from: body, pointer: /id, class: uuid}
+      token_friend: {from: body, pointer: /invite_token, class: token}
+  - id: mate_invites_a_member_by_group
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.owner}}"}'
+    bind:
+      invite_owner: {from: body, pointer: /id, class: uuid}
+  # one named row per person per trip
+  - id: owner_invites_the_same_friend_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+  - id: mate_invites_the_same_friend_by_group
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.friend}}"}'
+  # the named secret is refused at the link door; the link's own secret works
+  - id: friend_opens_the_named_secret_at_the_link_door
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_friend}}/accept'
+  - id: friend_opens_the_link
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  # the key header stores the token with the rest of the body
+  - id: owner_mints_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c75f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c75f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_same_key_other_source
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c75f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.mate}}"}'
+  - id: mate_same_key_own_scope
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        idempotency-key: 'c75f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  # a trip inside a two-person conversation has no roster door
+  - id: owner_asks_mate_to_be_friends
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip_on_pair
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Hai đứa đi ăn (dữ liệu mẫu)","starts_on":"2026-09-09","ends_on":"2026-09-09","headcount":2,"budget_per_person_vnd":160000}'
+    bind:
+      outing_pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link_on_the_pair_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_pair}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_names_a_person_on_the_pair_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_pair}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+  - id: stranger_mints_on_the_pair_trip
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing_pair}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  # leaving closes the door
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_mints_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: owner_group_invites_the_departed_member
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.mate}}"}'
+  - id: owner_friend_invites_the_departed_member
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.mate}}"}'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/invites'

@@ -1,0 +1,297 @@
+# W7 outings in prod auth mode (ADR-0014). The actor comes from the bearer session and
+# every live session carries `member`, so X-Actor-ID, X-Actor-Roles and X-Actor-Contexts
+# change nothing and cannot be used to act as somebody else. A missing or malformed
+# bearer is 401 before the path parameter, the body model and the row. Idempotency is
+# scoped by the digest of the bearer, so two people may hold the same client-minted key.
+# The one route that answers on a secret rather than an identity, POST
+# /outing-invites/{token}/accept, still needs a session: the token says which invitation,
+# the session says who is redeeming it. Texts are sample data (dữ liệu mẫu).
+id: w7/outings/prod-auth
+routes: ['POST /contexts/{context_id}/outings', 'GET /contexts/{context_id}/outings', 'PUT /outings/{outing_id}/timeline', 'PUT /outings/{outing_id}/itinerary', 'POST /outings/{outing_id}/itinerary/preview', 'POST /outing-stops/{stop_id}/checkins', 'GET /outings/{outing_id}/checkins', 'POST /outings/{outing_id}/invites', 'POST /outings/{outing_id}/invites/{invite_id}/revoke', 'POST /outings/{outing_id}/invites/{invite_id}/rotate', 'POST /outing-invites/{token}/accept']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_creates
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến ẩn danh (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+  - id: junk_bearer_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_reads_checkins
+    as: anonymous
+    request:
+      method: GET
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+      headers:
+        authorization: 'Basic khong-phai-token-that'
+  - id: dev_headers_without_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+  - id: anonymous_non_uuid_path
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/outings'
+  - id: anonymous_checks_in
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+  - id: anonymous_accepts_a_token
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+  - id: anonymous_previews_with_broken_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":'
+  - id: anonymous_saves_itinerary_without_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: anonymous_rotates
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+  # a session is enough; the dev headers beside it are ignored
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm có phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_membership
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip_with_guest_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: stranger_creates_claiming_owner
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến mạo danh (dữ liệu mẫu)","starts_on":"2026-04-01","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: stranger_lists_claiming_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: owner_lists_trips
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_id":"p-lung-chung-cafe"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_coffee: {from: body, pointer: /stops/1/id, class: uuid}
+  - id: stranger_saves_timeline_claiming_owner
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: stranger_checks_in_claiming_owner
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+      headers:
+        x-actor-id: '{{persona.mate}}'
+  - id: mate_reads_checkins
+    as: mate
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: stranger_reads_checkins
+    as: stranger
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_previews
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"{{stop_coffee}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}],"day":"2026-03-14"}'
+  - id: owner_saves_itinerary_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c79f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"{{stop_coffee}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}]}'
+  - id: owner_replays_itinerary_key
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c79f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"{{stop_coffee}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00"}]}'
+  - id: mate_same_itinerary_key_own_session
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c79f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":3,"stops":[],"days":[]}'
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_link: {from: body, pointer: /id, class: uuid}
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_names_the_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.stranger}}"}'
+    bind:
+      invite_named: {from: body, pointer: /id, class: uuid}
+  - id: stranger_mints_claiming_owner
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  - id: stranger_opens_the_link
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: stranger_opens_the_link_again
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: stranger_reads_checkins_after_redeeming
+    as: stranger
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: stranger_rotates_their_own_invitation
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  - id: owner_rotates_the_named_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  - id: stranger_revokes_their_own_invitation
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/revoke'
+  - id: owner_revokes_the_named_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/revoke'
+  - id: owner_revokes_the_spent_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+  - id: owner_lists_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'

@@ -1,0 +1,273 @@
+# W7 · GET /contexts/{context_id}/outings: every trip of one group, oldest start first.
+# Order: actor, path uuid, then one permission whose only fact is ACTIVE membership, so
+# an unknown context and a group the caller is not in are the same 403 and the context
+# row is never read. The list is ordered by (starts_on, id); the scenario keeps every
+# starts_on distinct on purpose, because a tie falls to a random uuid and the two stacks
+# mint different ones. Stops ride along on each row in `position` order, and a check-in
+# shows up only as a higher timeline_revision. Texts are sample data (dữ liệu mẫu).
+id: w7/outings/get-contexts-context_id-outings
+routes: ['GET /contexts/{context_id}/outings']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/outings'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/outings'
+  - id: owner_unknown_context
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đọc lịch (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_lists_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: invitee_lists_before_accepting
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: stranger_lists
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_lists_as_guest_role
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_lists_with_empty_roles
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-roles: ''
+  # three trips, three distinct start dates, entered out of order
+  - id: owner_creates_june_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng sáu ra biển (dữ liệu mẫu)","starts_on":"2026-06-05","ends_on":"2026-06-07","headcount":6,"budget_per_person_vnd":800000}'
+  - id: owner_creates_march_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng ba lên rừng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: mate_creates_april_trip
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng tư trong phố (dữ liệu mẫu)","starts_on":"2026-04-02","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":180000}'
+  - id: owner_lists_three
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: mate_lists_three
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # stops ride on the row, in position order, with the clock rendered back
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"},{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+    bind:
+      stop_first: {from: body, pointer: /stops/0/id, class: uuid}
+  - id: owner_lists_with_stops
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_first}}/checkins'
+  - id: owner_lists_after_checkin
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # a second group is a different list
+  - id: mate_creates_own_group
+    as: mate
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm riêng của bạn (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+  - id: mate_creates_trip_in_own_group
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến nhóm khác (dữ liệu mẫu)","starts_on":"2026-02-02","ends_on":"2026-02-03","headcount":3,"budget_per_person_vnd":260000}'
+  - id: owner_lists_other_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/outings'
+  - id: mate_lists_own_group
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/outings'
+  - id: mate_lists_shared_group_again
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # leaving takes the list away, the trips stay
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_lists_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_lists_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings/'
+  - id: patch_not_allowed
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}/outings'
+  - id: head_lists
+    as: owner
+    request:
+      method: HEAD
+      path: '/contexts/{{ctx}}/outings'

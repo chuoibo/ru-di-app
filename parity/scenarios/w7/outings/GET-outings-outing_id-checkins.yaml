@@ -1,0 +1,306 @@
+# W7 · GET /outings/{outing_id}/checkins: who has arrived where, oldest first. Order:
+# actor, path uuid, the trip row (404 in English), ACTIVE membership — so an INVITED
+# link holder and a departed member both meet the 403, and a stranger never learns the
+# trip exists beyond that. Rows come back ordered by (created_at, id) across every stop
+# of the trip, each carrying the person's CURRENT display name, read one row at a time.
+# A stop dropped from the plan takes its own arrivals with it. Texts are sample data
+# (dữ liệu mẫu).
+id: w7/outings/get-outings-outing_id-checkins
+routes: ['GET /outings/{outing_id}/checkins']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: GET
+      path: '/outings/khong-phai-uuid/checkins'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/outings/khong-phai-uuid/checkins'
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: GET
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm điểm danh (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_empty_list
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: stranger_reads
+    as: stranger
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_reads_as_guest_role
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_reads_with_empty_roles
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+      headers:
+        x-actor-roles: ''
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_coffee: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_dinner: {from: body, pointer: /stops/2/id, class: uuid}
+  - id: owner_reads_after_timeline
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # arrivals, in a known order
+  - id: owner_arrives_at_pickup
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  - id: owner_reads_one_row
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: mate_arrives_at_pickup
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  - id: owner_arrives_at_coffee
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: mate_arrives_at_dinner
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+  - id: owner_reads_four_rows
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: mate_reads_four_rows
+    as: mate
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # the name on the row is the name today
+  - id: mate_renames_self
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên mới của bạn (dữ liệu mẫu)"}'
+  - id: owner_reads_after_rename
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a dropped stop takes its own arrivals
+  - id: owner_drops_the_coffee_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+  - id: owner_reads_after_the_drop
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # another group's trip is another list
+  - id: stranger_creates_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người lạ (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+  - id: stranger_creates_own_trip
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến nhóm khác (dữ liệu mẫu)","starts_on":"2026-05-01","ends_on":"2026-05-02","headcount":2,"budget_per_person_vnd":200000}'
+    bind:
+      outing_other: {from: body, pointer: /id, class: uuid}
+  - id: stranger_saves_own_timeline
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing_other}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"10:00","label":"Chặng nhóm khác (dữ liệu mẫu)"}]}'
+    bind:
+      stop_other: {from: body, pointer: /stops/0/id, class: uuid}
+  - id: stranger_arrives_at_own_stop
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_other}}/checkins'
+  - id: stranger_reads_own_list
+    as: stranger
+    request:
+      method: GET
+      path: '/outings/{{outing_other}}/checkins'
+  - id: owner_reads_the_other_groups_list
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing_other}}/checkins'
+  - id: owner_reads_own_list_after
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # leaving takes the read away
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_reads_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_reads_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins/'
+  - id: delete_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/outings/{{outing}}/checkins'
