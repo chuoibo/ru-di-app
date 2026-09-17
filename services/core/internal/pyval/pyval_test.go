@@ -50,21 +50,20 @@ func TestW1RoutesHaveNoUnregisteredValidators(t *testing.T) {
 
 func TestBindRefusesAnUnportedValidator(t *testing.T) {
 	c := loadContract(t)
-	// A route Python still serves: its model validator has no production port.
-	// PATCH /people/me stood here until W10 ported it.
 	const id = "POST /places/search"
-	rep, err := c.Inspect(id, NewRegistry())
+	want := "app.api.routes.places.PlaceSearchRequest._reject_blank"
+	reg := NewRegistry()
+	delete(reg.funcs, want)
+	rep, err := c.Inspect(id, reg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "app.api.routes.places.PlaceSearchRequest._reject_blank"
 	if len(rep.Unregistered) != 1 || rep.Unregistered[0] != want {
 		t.Fatalf("unregistered = %v, want [%s]", rep.Unregistered, want)
 	}
-	if _, err := c.Bind(id, NewRegistry()); err == nil || !strings.Contains(err.Error(), want) {
+	if _, err := c.Bind(id, reg); err == nil || !strings.Contains(err.Error(), want) {
 		t.Fatalf("Bind error = %v, want one naming %s", err, want)
 	}
-	reg := NewRegistry()
 	reg.Register(want, func(_ *Call, v Value) (Value, error) { return v, nil })
 	if _, err := c.Bind(id, reg); err != nil {
 		t.Fatalf("Bind after registering: %v", err)

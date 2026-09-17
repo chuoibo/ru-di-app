@@ -79,7 +79,8 @@ Mỗi route đi qua các trạng thái, ghi trong manifest, bằng chứng ở `
 |---|---|
 | PY | Dòng manifest sinh từ `main` |
 | CARDED | Route card đủ (mục đích, auth, đầu vào, đầu ra theo từng nhánh, tác dụng phụ, mã lỗi, file:line Python, test đang phủ); kịch bản ghi từ **image Python ghim ở merge-base**, tự so K ≥ 3 lần rỗng; corpus 422; ma trận status × kịch bản và bảng × kịch bản đầy |
-| PORTED | Mã Go đã merge sau manifest (owner vẫn `python`); `go test`, tầng Postgres Go, golden và vi sai domain xanh |
+| PORTED-UNPROVEN | Mã Go đã merge (owner vẫn `python`) nhưng **chưa** có một lượt `gate.sh parity` đầy đủ trên SHA sạch. Candidate giống PORTED (`MOBILE_CORE_CANDIDATE_ROUTES=ported` chọn cả hàng này). Evidence ghi vì sao chưa lật. Campaign 2026-09: 36 hàng W7 HTTP + WAI + healthz đứng đây cho tới T5. |
+| PORTED | Mã Go đã merge sau manifest (owner vẫn `python`); `go test`, tầng Postgres Go, golden và vi sai domain xanh; và một lượt `gate.sh parity` đầy đủ trên SHA sạch |
 | PARITY-LOCAL | `make parity` 0 khác biệt trên các làn main/limiter/concurrency, corpus 422, replay chéo hai chiều; **mọi route còn proxy cũng 0 khác biệt**; tap chứng minh Go phục vụ; canary đỏ đủ |
 | AGY-PASS | agy PASS; script tự tính lại số; mọi đột biến BREAKS đỏ, KEEPS sống; kiểm giả mạo sạch |
 | RERUN-PASS | Claude chạy lại trong worktree tách rời sạch ở đúng SHA, tái hiện đột biến và khác biệt bằng tay |
@@ -87,7 +88,7 @@ Mỗi route đi qua các trạng thái, ghi trong manifest, bằng chứng ở `
 | FROZEN | Hết cửa sổ kép (mục 2.9) |
 | PY-DELETED | Xoá ở decommission; bản ghi thành bộ hồi quy của Go |
 
-**Route ứng viên.** Từ PORTED tới RERUN-PASS, mã Go đã merge nhưng owner vẫn `python`. Để có bằng chứng
+**Route ứng viên.** Từ PORTED-UNPROVEN tới RERUN-PASS, mã Go đã merge nhưng owner vẫn `python`. Để có bằng chứng
 PARITY-LOCAL trước khi lật owner, `core` phục vụ từ Go các route nêu trong `MOBILE_CORE_CANDIDATE_ROUTES` (id
 route, tên group, hoặc `ported` là mọi hàng ở các trạng thái trên). Chỉ hàng ở các trạng thái đó mới được nêu;
 nêu hàng khác thì `core` từ chối khởi động. `MOBILE_FORCE_PYTHON` vẫn thắng, và ứng viên không được tách state

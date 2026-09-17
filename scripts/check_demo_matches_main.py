@@ -92,6 +92,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -99,6 +100,8 @@ import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 

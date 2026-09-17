@@ -24,8 +24,13 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import sys
 from pathlib import Path
+
+# create_app() refuses to start without a brain token. This script only
+# inspects the public route table, so a letter-only test token is enough.
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
 
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services" / "api"

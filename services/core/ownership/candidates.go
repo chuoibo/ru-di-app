@@ -14,7 +14,7 @@ const CandidatesPorted = "ported"
 
 // candidateStates are the states between merging a route's Go code and giving
 // the route to Go (ADR-0029 §2.3): the code exists, the evidence does not yet.
-var candidateStates = set("PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS")
+var candidateStates = set("PORTED-UNPROVEN", "PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS")
 
 // ParseCandidates reads MOBILE_CORE_CANDIDATE_ROUTES: route ids, group names or
 // "ported", comma-separated. A candidate is served by Go while Python still
@@ -50,7 +50,7 @@ func (m *Manifest) ParseCandidates(raw string, force Force) ([]Route, error) {
 		case byID[token].ID != "":
 			r := byID[token]
 			if !candidateStates[r.State] {
-				return nil, fmt.Errorf("%s: %q is %s; only a route whose Go code is merged (PORTED to RERUN-PASS) can be a candidate",
+				return nil, fmt.Errorf("%s: %q is %s; only a route whose Go code is merged (PORTED-UNPROVEN to RERUN-PASS) can be a candidate",
 					EnvCandidateRoutes, r.ID, r.State)
 			}
 			chosen[r.ID] = true

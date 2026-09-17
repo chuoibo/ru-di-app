@@ -58,3 +58,11 @@ func listAreas() Route {
 		return endpoint.Reply{Body: list}, nil
 	}}
 }
+
+func healthz() Route {
+	return Route{ID: "GET /healthz", Status: 200, Serve: func(context.Context, *endpoint.Call) (endpoint.Reply, error) {
+		body := pyjson.NewOrderedMap()
+		body.Set("status", pyjson.String("ok"))
+		return endpoint.Reply{Body: body}, nil
+	}}
+}

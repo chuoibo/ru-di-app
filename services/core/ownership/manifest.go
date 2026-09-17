@@ -28,7 +28,7 @@ const (
 var (
 	classes = set("core", "ai", "mixed", "framework")
 	kinds   = set("route", "mount")
-	states  = set("PY", "CARDED", "PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS",
+	states  = set("PY", "CARDED", "PORTED-UNPROVEN", "PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS",
 		"LIVE-GO", "FROZEN", "PY-DELETED", "DEFERRED")
 	goServedStates     = set("LIVE-GO", "FROZEN", "PY-DELETED")
 	pythonFrozenStates = set("FROZEN", "PY-DELETED")

@@ -33,12 +33,15 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import re
 import subprocess
 import sys
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
+
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
 
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services" / "api"
