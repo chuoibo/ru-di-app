@@ -252,3 +252,20 @@ func TestAServedRouteWithoutAHandlerRefusesToBuild(t *testing.T) {
 		t.Fatalf("nothing served needs no idempotency layer: %v", err)
 	}
 }
+
+func TestPublicCoreNeverProxiesInternalToPython(t *testing.T) {
+	front, seen := build(t, goOwned())
+	for _, target := range []string{"/internal", "/internal/", "/internal/brain/v1/ready"} {
+		seen.who = ""
+		rec := serve(front, httptest.NewRequest("GET", target, nil))
+		if seen.who == "python" {
+			t.Fatalf("%s went to Python", target)
+		}
+		if rec.Code != 404 || rec.Body.String() != `{"detail":"Not Found"}` {
+			t.Fatalf("%s: %d %q", target, rec.Code, rec.Body)
+		}
+		if rec.Header().Get("Content-Type") != "application/json" {
+			t.Fatalf("%s content-type %q", target, rec.Header().Get("Content-Type"))
+		}
+	}
+}

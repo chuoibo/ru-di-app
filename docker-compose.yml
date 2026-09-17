@@ -61,6 +61,10 @@ x-api-env: &api-env
   # thế chạy `prod`; đổi dòng này thành `prod` ở đây thì seed sẽ 401, đó là
   # hành vi đúng chứ không phải hỏng.
   MOBILE_AUTH_MODE: dev
+  # ADR-0029 §2.7: the Python process refuses to start without a brain token.
+  # Letter-only so a compose file never trips the repo guard's digit-run rule.
+  # Override in `.env` on a host that is not this machine.
+  MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
 
 services:
   postgres:
@@ -211,6 +215,10 @@ services:
       # mode as `api`, from the one anchor both read.
       <<: *api-env
       MOBILE_PYTHON_UPSTREAM: http://api:8000
+      # Go talks to the brain on the Python process, never through its own
+      # public door (dispatch 404s `/internal` rather than proxying it).
+      MOBILE_BRAIN_URL: http://api:8000
+      MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
       # POST /identity/person-id and POST /friends/lookup derive ids in Go when
       # served from Go; same key as `api`, or the two would name one number
       # differently. Unset, those routes answer 503 as Python does.

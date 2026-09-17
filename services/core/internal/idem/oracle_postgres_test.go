@@ -155,6 +155,7 @@ func startOraclePython(t *testing.T, image, scripts, name, dbAddr string) *oracl
 	short, def := freePort(t), freePort(t)
 	dockerRun(t, "run", "-d", "--name", name, "--network", "host",
 		"-e", "MOBILE_DATABASE_URL="+pythonDSN(dbAddr),
+		"-e", "MOBILE_INTERNAL_TOKEN=test-brain-token",
 		"-v", scripts+":/oracle:ro", "--entrypoint", "python", image,
 		"/oracle/render_idem_oracle.py", "serve", strconv.Itoa(short), strconv.Itoa(def),
 		strconv.FormatFloat(oracleShortWait.Seconds(), 'f', -1, 64))

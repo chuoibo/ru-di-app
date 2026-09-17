@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"mobile/services/core/internal/httpapi/mw/cors"
 	"mobile/services/core/internal/httpapi/mw/guest"
@@ -92,6 +94,14 @@ type front struct {
 }
 
 func (f *front) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	rawPath, _ := router.SplitTarget(r.RequestURI)
+	path := router.ScopePath(rawPath)
+	if isInternalPath(path) {
+		// The public core never proxies /internal to Python: the brain is
+		// reached only on the backend network, gated by X-Internal-Token.
+		writePublicNotFound(w)
+		return
+	}
 	if len(f.chains) == 0 || isPreflight(r) {
 		f.python.ServeHTTP(w, r)
 		return
@@ -104,9 +114,25 @@ func (f *front) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.python.ServeHTTP(w, r)
 		return
 	}
-	rawPath, _ := router.SplitTarget(r.RequestURI)
-	scope := Scope{RouteID: decision.RouteID, Path: router.ScopePath(rawPath), Params: decision.Params}
+	scope := Scope{RouteID: decision.RouteID, Path: path, Params: decision.Params}
 	chain.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), scopeKey{}, scope)))
+}
+
+// isInternalPath is the public door's refusal of the brain seam: the exact
+// prefix and every path under it, including a trailing-slash-less /internal.
+func isInternalPath(path string) bool {
+	return path == "/internal" || strings.HasPrefix(path, "/internal/")
+}
+
+// writePublicNotFound is FastAPI's JSON 404 for a path the public app has
+// never registered: {"detail":"Not Found"}.
+func writePublicNotFound(w http.ResponseWriter) {
+	body := []byte(`{"detail":"Not Found"}`)
+	header := w.Header()
+	header.Set("Content-Length", strconv.Itoa(len(body)))
+	header.Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = w.Write(body)
 }
 
 // isPreflight is Starlette CORSMiddleware's test. Python's CORS layer answers
