@@ -1,0 +1,118 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.places.catalog",
+ "mode": "catalog-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 8
+ },
+ "cases": [
+  {
+   "fn": "category_ids",
+   "name": "fuzz/0",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/1",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/2",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/3",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/4",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/5",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/6",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  },
+  {
+   "fn": "category_ids",
+   "name": "fuzz/7",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  }
+ ]
+}

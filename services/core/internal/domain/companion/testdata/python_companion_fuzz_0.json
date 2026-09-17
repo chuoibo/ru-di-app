@@ -1,0 +1,1278 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.companion",
+ "mode": "companion-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 40
+ },
+ "cases": [
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/0",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "asked_too_often"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/1",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/2",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/3",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/4",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/5",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/6",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/7",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/8",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/9",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/10",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/11",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/12",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/13",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:26+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "rate_limited"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/14",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/15",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "rate_limited"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/16",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "rate_limited"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/17",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/18",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/19",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/20",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/21",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:26+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/22",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:26+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/23",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/24",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/25",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/26",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/27",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:26+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/28",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/29",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/30",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/31",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/32",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/33",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/34",
+   "args": {
+    "conversation": {
+     "messages": [],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": true
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "no_conversation"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/35",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/36",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/37",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": false,
+     "reason": "already_spoke_last"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/38",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  },
+  {
+   "fn": "plan_turn",
+   "name": "fuzz/39",
+   "args": {
+    "conversation": {
+     "messages": [
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:20+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:21+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:22+00:00"
+      },
+      {
+       "author_kind": "ai",
+       "created_at": "$dt:2026-06-01T11:58:23+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:24+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:25+00:00"
+      },
+      {
+       "author_kind": "human",
+       "created_at": "$dt:2026-06-01T11:58:26+00:00"
+      }
+     ],
+     "now": "$dt:2026-06-01T12:00:00+00:00"
+    },
+    "requested": false
+   },
+   "result": {
+    "ok": {
+     "may_speak": true,
+     "reason": "ok"
+    }
+   }
+  }
+ ]
+}

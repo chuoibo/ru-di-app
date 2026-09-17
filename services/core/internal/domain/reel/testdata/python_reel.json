@@ -1,0 +1,193 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.reel",
+ "mode": "reel",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "MAX_PICKS": 6,
+  "MAX_TITLE": 120,
+  "names": [
+   "ground_reel"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "ground_reel",
+   "name": "ok",
+   "args": {
+    "raw": {
+     "title": "K\u1ef7 ni\u1ec7m",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "n1"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "K\u1ef7 ni\u1ec7m",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n1"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "unknown",
+   "args": {
+    "raw": {
+     "title": "K\u1ef7 ni\u1ec7m",
+     "picks": [
+      {
+       "memory_id": "nope",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "dup",
+   "args": {
+    "raw": {
+     "title": "K\u1ef7 ni\u1ec7m",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "a"
+      },
+      {
+       "memory_id": "m1",
+       "note": "b"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "duplicate_memory",
+     "code": "duplicate_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "empty",
+   "args": {
+    "raw": {
+     "title": "K\u1ef7 ni\u1ec7m",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  }
+ ]
+}

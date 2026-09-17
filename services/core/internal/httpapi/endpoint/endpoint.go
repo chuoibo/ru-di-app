@@ -55,11 +55,51 @@ const (
 	// environment, the home directory and the working directory on every
 	// request, and what it raises is an unhandled failure.
 	CallGetPhotoStorage = "app.api.deps.get_photo_storage"
+	// CallGetItineraryLimiter is get_itinerary_limiter: it returns the
+	// process-wide window already hanging off Env.Limits. The route calls
+	// Check itself, as Python's handler calls limiter.check(actor.id).
+	CallGetItineraryLimiter = "app.api.routes.outings.get_itinerary_limiter"
+	CallGetActorOptional    = "app.api.deps.get_actor_optional"
+
+	CallGetCompanion                   = "app.api.deps.get_companion"
+	CallGetChatExpenseReader           = "app.api.deps.get_chat_expense_reader"
+	CallGetSuggester                   = "app.api.deps.get_suggester"
+	CallGetContextualSuggester         = "app.api.deps.get_contextual_suggester"
+	CallGetReeler                      = "app.api.deps.get_reeler"
+	CallGetFaceDetector                = "app.api.deps.get_face_detector"
+	CallGetReceiptReader               = "app.api.deps.get_receipt_reader"
+	CallGetScreenshotReader            = "app.api.deps.get_screenshot_reader"
+	CallGetPlaceSearcher               = "app.api.routes.places.get_place_searcher"
+	CallGetReasonWriter                = "app.api.routes.places.get_reason_writer"
+	CallGetSearchRateLimiter           = "app.api.routes.places.get_search_rate_limiter"
+	CallGetMessageIntentLimiter        = "app.api.routes.messages.get_message_intent_limiter"
+	CallGetChatExpenseLimiter          = "app.api.routes.messages.get_chat_expense_limiter"
+	CallGetCompanionTurnLimiter        = "app.api.routes.messages.get_companion_turn_limiter"
+	CallGetReceiptScanLimiter          = "app.api.routes.receipts.get_receipt_scan_limiter"
+	CallGetScreenshotScanLimiter       = "app.api.routes.screenshots.get_screenshot_scan_limiter"
+	CallGetSuggestionLimiter           = "app.api.routes.suggestions.get_suggestion_limiter"
+	CallGetContextualSuggestionLimiter = "app.api.routes.suggestions.get_contextual_suggestion_limiter"
+	CallGetReelLimiter                 = "app.api.routes.albums.get_reel_limiter"
+	CallGetFaceDetectionLimiter        = "app.api.routes.faces.get_face_detection_limiter"
 )
 
 // SupportedDependencies lists every dependency call this package stands in
 // for. A route whose dependency tree calls anything else cannot move to Go.
-var SupportedDependencies = map[string]bool{CallGetRepository: true, CallGetActor: true, CallGetPhotoStorage: true}
+var SupportedDependencies = map[string]bool{
+	CallGetRepository: true, CallGetActor: true, CallGetPhotoStorage: true,
+	CallGetItineraryLimiter: true, CallGetActorOptional: true,
+	CallGetCompanion: true, CallGetChatExpenseReader: true,
+	CallGetSuggester: true, CallGetContextualSuggester: true,
+	CallGetReeler: true, CallGetFaceDetector: true,
+	CallGetReceiptReader: true, CallGetScreenshotReader: true,
+	CallGetPlaceSearcher: true, CallGetReasonWriter: true,
+	CallGetSearchRateLimiter:    true,
+	CallGetMessageIntentLimiter: true, CallGetChatExpenseLimiter: true,
+	CallGetCompanionTurnLimiter: true,
+	CallGetReceiptScanLimiter:   true, CallGetScreenshotScanLimiter: true,
+	CallGetSuggestionLimiter: true, CallGetContextualSuggestionLimiter: true,
+	CallGetReelLimiter: true, CallGetFaceDetectionLimiter: true,
+}
 
 // Mode is the auth mode the Python app resolved from MOBILE_AUTH_MODE.
 type Mode string
@@ -115,6 +155,9 @@ type Reply struct {
 	// headers in order and body go out as they are, after the commit. Status,
 	// Body and Empty are ignored.
 	Raw *guestweb.Response
+	// Headers are extra response headers the Python handler set on `response`
+	// before returning a body, in declaration order. Ignored for Empty and Raw.
+	Headers [][2]string
 }
 
 // Serve is a route's Go implementation: the body of the Python endpoint.
@@ -194,6 +237,33 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			call.Actor = actor
 			return nil
+		case CallGetActorOptional:
+			offered := false
+			if h.env.Mode == ModeDev {
+				offered = auth.DevActorOffered(r.Header)
+			} else if _, sent := r.Header["Authorization"]; sent {
+				offered = true
+			}
+			if !offered {
+				return nil
+			}
+			actor, refused, err := h.actor(ctx, r, unit)
+			if err != nil {
+				return err
+			}
+			if refused != nil {
+				return &Refusal{Problem: problem.Problem{Status: refused.Status, Code: refused.Code, Detail: refused.Detail}}
+			}
+			call.Actor = actor
+			return nil
+		case CallGetItineraryLimiter, CallGetCompanion, CallGetChatExpenseReader,
+			CallGetSuggester, CallGetContextualSuggester, CallGetReeler, CallGetFaceDetector,
+			CallGetReceiptReader, CallGetScreenshotReader, CallGetPlaceSearcher, CallGetReasonWriter,
+			CallGetSearchRateLimiter, CallGetMessageIntentLimiter, CallGetChatExpenseLimiter,
+			CallGetCompanionTurnLimiter, CallGetReceiptScanLimiter, CallGetScreenshotScanLimiter,
+			CallGetSuggestionLimiter, CallGetContextualSuggestionLimiter, CallGetReelLimiter,
+			CallGetFaceDetectionLimiter:
+			return nil
 		default:
 			return fmt.Errorf("endpoint %s: no Go dependency for %s", h.route.ID, dependency.Call)
 		}
@@ -267,6 +337,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	header.Set("Content-Length", strconv.Itoa(len(encoded)))
 	header.Set("Content-Type", "application/json")
+	for _, pair := range reply.Headers {
+		header.Set(pair[0], pair[1])
+	}
 	w.WriteHeader(status)
 	_, _ = w.Write(encoded)
 }

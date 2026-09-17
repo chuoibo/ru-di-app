@@ -1,0 +1,2821 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.conversation",
+ "mode": "conversation-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 40
+ },
+ "cases": [
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/0",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 4,
+     "speaker_count": 2,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/1",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "hi"
+     ],
+     "message_count": 5,
+     "speaker_count": 2,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/2",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 6,
+     "speaker_count": 2,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/3",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/4",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 4,
+     "speaker_count": 2,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/5",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 7,
+     "speaker_count": 2,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/6",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 4,
+     "speaker_count": 2,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/7",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 3,
+     "speaker_count": 1,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/8",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 7,
+     "speaker_count": 2,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/9",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/10",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 8,
+     "speaker_count": 2,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/11",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi",
+      "hi",
+      "hi",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 6,
+     "speaker_count": 2,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/12",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 4,
+     "speaker_count": 1,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/13",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 4
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 4
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/14",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi"
+     ],
+     "message_count": 1,
+     "speaker_count": 1,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/15",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 0,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/16",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi"
+     ],
+     "message_count": 1,
+     "speaker_count": 1,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/17",
+   "args": {
+    "messages": [],
+    "member_count": 4
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [],
+     "message_count": 0,
+     "speaker_count": 0,
+     "member_count": 4
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/18",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 5,
+     "speaker_count": 2,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/19",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/20",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 0
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 5,
+     "speaker_count": 2,
+     "member_count": 0
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/21",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "hi"
+     ],
+     "message_count": 10,
+     "speaker_count": 2,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/22",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 4
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9"
+     ],
+     "message_count": 1,
+     "speaker_count": 1,
+     "member_count": 4
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/23",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 5,
+     "speaker_count": 2,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/24",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9"
+     ],
+     "message_count": 1,
+     "speaker_count": 0,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/25",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 7,
+     "speaker_count": 2,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/26",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9",
+      "hi"
+     ],
+     "message_count": 4,
+     "speaker_count": 2,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/27",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "hi"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/28",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "caf\u00e9"
+     ],
+     "message_count": 4,
+     "speaker_count": 2,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/29",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": null
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [],
+     "message_count": 0,
+     "speaker_count": 0,
+     "member_count": 1
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/30",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "hi",
+      "hi",
+      "hi",
+      "hi"
+     ],
+     "message_count": 6,
+     "speaker_count": 1,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/31",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi"
+     ],
+     "message_count": 1,
+     "speaker_count": 0,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/32",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi"
+     ],
+     "message_count": 1,
+     "speaker_count": 1,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/33",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/34",
+   "args": {
+    "messages": [
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi"
+     ],
+     "message_count": 1,
+     "speaker_count": 0,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/35",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     }
+    ],
+    "member_count": 4
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "hi",
+      "hi"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 4
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/36",
+   "args": {
+    "messages": [],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [],
+     "message_count": 0,
+     "speaker_count": 0,
+     "member_count": 2
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/37",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     }
+    ],
+    "member_count": 3
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9",
+      "caf\u00e9"
+     ],
+     "message_count": 5,
+     "speaker_count": 1,
+     "member_count": 3
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/38",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "hi",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": null
+     },
+     {
+      "kind": "sticker",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "sticker",
+      "body": "caf\u00e9",
+      "author_id": null
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 5
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "caf\u00e9"
+     ],
+     "message_count": 1,
+     "speaker_count": 1,
+     "member_count": 5
+    }
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "fuzz/39",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": null,
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     }
+    ],
+    "member_count": 2
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [],
+     "message_count": 0,
+     "speaker_count": 0,
+     "member_count": 2
+    }
+   }
+  }
+ ]
+}

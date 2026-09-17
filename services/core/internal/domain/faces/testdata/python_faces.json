@@ -1,0 +1,343 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.faces",
+ "mode": "faces",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "MAX_FACES": 24,
+  "names": [
+   "anonymous_boxes"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "anonymous_boxes",
+   "name": "empty",
+   "args": {
+    "boxes": [],
+    "image_width": 100,
+    "image_height": 80
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "one",
+   "args": {
+    "boxes": [
+     {
+      "x": 10,
+      "y": 20,
+      "width": 30,
+      "height": 40
+     }
+    ],
+    "image_width": 100,
+    "image_height": 80
+   },
+   "result": {
+    "ok": [
+     {
+      "box_key": "face-1",
+      "x": "$f:h3hfhbh9h9h9h9h9h9h9h9h9h9h9h9ha",
+      "y": "$f:h3hfhdh0h0h0h0h0h0h0h0h0h0h0h0h0",
+      "width": "$f:h3hfhdh3h3h3h3h3h3h3h3h3h3h3h3h3",
+      "height": "$f:h3hfheh0h0h0h0h0h0h0h0h0h0h0h0h0"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "clamp",
+   "args": {
+    "boxes": [
+     {
+      "x": -5,
+      "y": -5,
+      "width": 20,
+      "height": 20
+     }
+    ],
+    "image_width": 100,
+    "image_height": 80
+   },
+   "result": {
+    "ok": [
+     {
+      "box_key": "face-1",
+      "x": "$f:h0h0h0h0h0h0h0h0h0h0h0h0h0h0h0h0",
+      "y": "$f:h0h0h0h0h0h0h0h0h0h0h0h0h0h0h0h0",
+      "width": "$f:h3hfhch3h3h3h3h3h3h3h3h3h3h3h3h3",
+      "height": "$f:h3hfhch8h0h0h0h0h0h0h0h0h0h0h0h0"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "dup",
+   "args": {
+    "boxes": [
+     {
+      "x": 1,
+      "y": 1,
+      "width": 10,
+      "height": 10
+     },
+     {
+      "x": 1,
+      "y": 1,
+      "width": 10,
+      "height": 10
+     }
+    ],
+    "image_width": 50,
+    "image_height": 50
+   },
+   "result": {
+    "ok": [
+     {
+      "box_key": "face-1",
+      "x": "$f:h3hfh9h4h7haheh1h4h7haheh1h4h7hb",
+      "y": "$f:h3hfh9h4h7haheh1h4h7haheh1h4h7hb",
+      "width": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha",
+      "height": "$f:h3hfhch9h9h9h9h9h9h9h9h9h9h9h9ha"
+     }
+    ]
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "bad-size",
+   "args": {
+    "boxes": [],
+    "image_width": 0,
+    "image_height": 10
+   },
+   "result": {
+    "raised": {
+     "type": "FaceError",
+     "message": "IMAGE_DIMENSIONS_INVALID",
+     "code": "IMAGE_DIMENSIONS_INVALID"
+    }
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "degenerate",
+   "args": {
+    "boxes": [
+     {
+      "x": 1,
+      "y": 1,
+      "width": 0,
+      "height": 10
+     }
+    ],
+    "image_width": 50,
+    "image_height": 50
+   },
+   "result": {
+    "raised": {
+     "type": "FaceError",
+     "message": "FACE_BOX_DEGENERATE",
+     "code": "FACE_BOX_DEGENERATE"
+    }
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "outside",
+   "args": {
+    "boxes": [
+     {
+      "x": 200,
+      "y": 200,
+      "width": 10,
+      "height": 10
+     }
+    ],
+    "image_width": 50,
+    "image_height": 50
+   },
+   "result": {
+    "raised": {
+     "type": "FaceError",
+     "message": "FACE_BOX_OUTSIDE_IMAGE",
+     "code": "FACE_BOX_OUTSIDE_IMAGE"
+    }
+   }
+  },
+  {
+   "fn": "anonymous_boxes",
+   "name": "too-many",
+   "args": {
+    "boxes": [
+     {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 1,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 2,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 3,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 4,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 5,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 6,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 7,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 8,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 9,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 10,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 11,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 12,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 13,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 14,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 15,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 16,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 17,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 18,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 19,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 20,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 21,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 22,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 23,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     },
+     {
+      "x": 24,
+      "y": 0,
+      "width": 1,
+      "height": 1
+     }
+    ],
+    "image_width": 80,
+    "image_height": 60
+   },
+   "result": {
+    "raised": {
+     "type": "FaceError",
+     "message": "TOO_MANY_FACES",
+     "code": "TOO_MANY_FACES"
+    }
+   }
+  }
+ ]
+}

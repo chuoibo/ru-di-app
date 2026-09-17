@@ -1,0 +1,306 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.chat_intent",
+ "mode": "chat_intent",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "commands": [
+   [
+    "/plan",
+    "plan"
+   ],
+   [
+    "/chia-bill",
+    "chia_bill"
+   ],
+   [
+    "/chiabill",
+    "chia_bill"
+   ],
+   [
+    "/vote",
+    "vote"
+   ],
+   [
+    "/binh-chon",
+    "vote"
+   ]
+  ],
+  "mentions": [
+   "@r\u1ee7 \u0111i",
+   "@rudi",
+   "@ru di"
+  ],
+  "MAX_QUESTION": 300,
+  "MAX_OPTION": 200,
+  "names": [
+   "parse_intent",
+   "parse_vote"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "parse_intent",
+   "name": "intent/0",
+   "args": {
+    "body": "/plan"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/1",
+   "args": {
+    "body": "/PLAN cafe"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": "cafe"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/2",
+   "args": {
+    "body": "/planning"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/3",
+   "args": {
+    "body": "h\u00f4m nay /plan"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/4",
+   "args": {
+    "body": "/chia-bill 200"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "200"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/5",
+   "args": {
+    "body": "/chiabill"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/6",
+   "args": {
+    "body": "/vote \u0102n g\u00ec? Ph\u1edf | B\u00fan"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "\u0102n g\u00ec? Ph\u1edf | B\u00fan"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/7",
+   "args": {
+    "body": "/binh-chon x"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "x"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/8",
+   "args": {
+    "body": "g\u1eb7p @R\u1ee7 \u0110i nh\u00e9"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "g\u1eb7p @R\u1ee7 \u0110i nh\u00e9"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/9",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/10",
+   "args": {
+    "body": "@ru di \u01a1i"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@ru di \u01a1i"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/11",
+   "args": {
+    "body": "xin ch\u00e0o"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/12",
+   "args": {
+    "body": "  "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "intent/13",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/0",
+   "args": {
+    "args": "\u0102n g\u00ec? Ph\u1edf | B\u00fan"
+   },
+   "result": {
+    "ok": {
+     "question": "\u0102n g\u00ec?",
+     "options": [
+      "Ph\u1edf",
+      "B\u00fan"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/1",
+   "args": {
+    "args": "C\u00e2u h\u1ecfi | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "C\u00e2u h\u1ecfi",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/2",
+   "args": {
+    "args": "??? | A | B"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/3",
+   "args": {
+    "args": "Q? A | A"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/4",
+   "args": {
+    "args": "Q? A"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/5",
+   "args": {
+    "args": "no-pipe"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/6",
+   "args": {
+    "args": "Q? o0 | o1 | o2 | o3 | o4 | o5 | o6 | o7 | o8 | o9 | o10 | o11 | o12 | o13 | o14 | o15 | o16 | o17 | o18 | o19 | o20"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "vote/7",
+   "args": {
+    "args": "Q? xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx | y"
+   },
+   "result": {
+    "ok": null
+   }
+  }
+ ]
+}

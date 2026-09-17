@@ -4,29 +4,37 @@
 // It is a test-support package: only _test.go files import it, so the domain
 // packages whose tests use it stay free of os and encoding/json.
 //
-// The encoding is the one scripts/render_domain_w2_goldens.py documents. A case
-// is {"fn", "name", "args", "result"}; a result is {"ok": value} or
-// {"raised": {"type", "message", "code"}}. Values are JSON except:
+// The encoding is the one scripts/render_domain_w2_goldens.py documents, plus
+// the WAI tags below. A case is {"fn", "name", "args", "result"}; a result is
+// {"ok": value} or {"raised": {"type", "message", "code"}}. Values are JSON
+// except:
 //
 //   - "$i:<hex>" is an int of nine or more digits (Python's f"{v:#_x}");
-//   - "$sp:<text>" is a str cut into groups of six code points joined by "|".
+//   - "$sp:<text>" is a str cut into groups of six code points joined by "|";
+//   - "$date:<YYYY-MM-DD>" is a datetime.date (distinct from the same digits as a str);
+//   - "$dt:<isoformat>" is an aware datetime;
+//   - "$naive:<isoformat>" is a naive datetime;
+//   - "$f:<16 hex>" is IEEE-754 binary64 bits, big-endian.
 //
-// Plain turns an encoded value into nil, bool, int64, BigInt, string, []any and
-// map[string]any. A Python int outside int64 decodes to BigInt, its decimal
-// spelling, so that a result Go cannot represent is visible rather than
-// silently wrapped.
+// Plain turns an encoded value into nil, bool, int64, BigInt, float64, PyDate,
+// PyInstant, PyNaive, string, []any and map[string]any. A Python int outside
+// int64 decodes to BigInt, its decimal spelling, so that a result Go cannot
+// represent is visible rather than silently wrapped.
 package oracletest
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 	"unicode/utf8"
 )
 
@@ -58,6 +66,15 @@ type Case struct {
 
 // BigInt is a Python int outside int64, in decimal.
 type BigInt string
+
+// PyDate is a Python datetime.date, "YYYY-MM-DD".
+type PyDate string
+
+// PyInstant is an aware Python datetime, its isoformat().
+type PyInstant string
+
+// PyNaive is a timezone-less Python datetime, its isoformat().
+type PyNaive string
 
 // Raised is an exception Python raised: its class name, str(exc) and .code.
 type Raised struct {
@@ -155,6 +172,35 @@ func Plain(raw any) (any, error) {
 	case string:
 		if body, found := strings.CutPrefix(v, "$i:"); found {
 			return integer(body, 0)
+		}
+		if body, found := strings.CutPrefix(v, "$f:"); found {
+			if len(body) != 32 {
+				return nil, fmt.Errorf("not a float: %q", v)
+			}
+			hexBits := make([]byte, 0, 16)
+			for i := 0; i < 32; i += 2 {
+				if body[i] != 'h' {
+					return nil, fmt.Errorf("not a float: %q", v)
+				}
+				hexBits = append(hexBits, body[i+1])
+			}
+			bits, err := strconv.ParseUint(string(hexBits), 16, 64)
+			if err != nil {
+				return nil, fmt.Errorf("not a float: %q", v)
+			}
+			return math.Float64frombits(bits), nil
+		}
+		if body, found := strings.CutPrefix(v, "$date:"); found {
+			if _, err := time.Parse("2006-01-02", body); err != nil {
+				return nil, fmt.Errorf("not a date: %q", v)
+			}
+			return PyDate(body), nil
+		}
+		if body, found := strings.CutPrefix(v, "$dt:"); found {
+			return PyInstant(body), nil
+		}
+		if body, found := strings.CutPrefix(v, "$naive:"); found {
+			return PyNaive(body), nil
 		}
 		return Text(v)
 	case []any:
@@ -310,4 +356,43 @@ func OptionalString(value any) (*string, error) {
 		return nil, fmt.Errorf("want str or None, got %T", value)
 	}
 	return &s, nil
+}
+
+// TimeOfDate is midnight UTC of a Python date.
+func TimeOfDate(d PyDate) (time.Time, error) {
+	return time.ParseInLocation("2006-01-02", string(d), time.UTC)
+}
+
+// TimeOfStamp is an aware datetime in UTC.
+func TimeOfStamp(stamp PyInstant) (time.Time, error) {
+	t, err := Instant(string(stamp))
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t.UTC(), nil
+}
+
+// DateOf is Python date.isoformat() of t's calendar day in UTC.
+func DateOf(t time.Time) PyDate {
+	return PyDate(t.UTC().Format("2006-01-02"))
+}
+
+// StampOf is Python datetime.isoformat() for an aware UTC instant.
+func StampOf(t time.Time) PyInstant {
+	t = t.UTC()
+	if t.Nanosecond() == 0 {
+		return PyInstant(t.Format("2006-01-02T15:04:05") + "+00:00")
+	}
+	return PyInstant(t.Format("2006-01-02T15:04:05.000000") + "+00:00")
+}
+
+// EmptyList is a decoded empty list, never nil, so DeepEqual matches Python [].
+func EmptyList() []any { return []any{} }
+
+// AnyList copies items, never returning nil.
+func AnyList(items []any) []any {
+	if items == nil {
+		return []any{}
+	}
+	return items
 }

@@ -1,0 +1,190 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.suggestion",
+ "mode": "suggestion",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "MAX_STOPS": 4,
+  "MAX_RECENT_TITLES": 3,
+  "VERDICTS": [
+   "hop",
+   "tam",
+   "khong-hop"
+  ],
+  "names": [
+   "summarise_history",
+   "ground_suggestion"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "summarise_history",
+   "name": "two-trips",
+   "args": {
+    "trips": [
+     {
+      "title": "\u0110\u00e0 L\u1ea1t",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     },
+     {
+      "title": "Bi\u1ec3n",
+      "split_total_vnd": 30000,
+      "headcount": 2
+     }
+    ],
+    "visits": [
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 120000,
+     "avg_per_person_vnd": 24000,
+     "top_categories": [
+      "cafe",
+      "",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "\u0110\u00e0 L\u1ea1t",
+      "Bi\u1ec3n"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "empty",
+   "args": {
+    "trips": [],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null,
+     "top_categories": [],
+     "recent_titles": []
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "bad-headcount",
+   "args": {
+    "trips": [
+     {
+      "title": "x",
+      "split_total_vnd": 1000,
+      "headcount": 0
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "raised": {
+     "type": "SuggestionError",
+     "message": "suggestion_history_headcount_not_integer",
+     "code": "suggestion_history_headcount_not_integer"
+    }
+   }
+  },
+  {
+   "fn": "ground_suggestion",
+   "name": "ok",
+   "args": {
+    "raw": {
+     "kind": "outing_suggestion",
+     "payload": {
+      "title": "\u0110i ch\u1ee3",
+      "when_text": "s\u00e1ng",
+      "stops": [
+       {
+        "place_id": "p1",
+        "time_text": "9h",
+        "note": "\u0103n",
+        "reason": "ngon",
+        "verdict": "hop"
+       }
+      ]
+     }
+    },
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "kind": "outing_suggestion",
+     "payload": {
+      "title": "\u0110i ch\u1ee3",
+      "when_text": "s\u00e1ng",
+      "stops": [
+       {
+        "time_text": "9h",
+        "note": "\u0103n",
+        "reason": "ngon",
+        "verdict": "hop",
+        "place": {
+         "id": "p1",
+         "name": "Ch\u1ee3"
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "ground_suggestion",
+   "name": "unknown-place",
+   "args": {
+    "raw": {
+     "kind": "outing_suggestion",
+     "payload": {
+      "title": "x",
+      "when_text": "y",
+      "stops": [
+       {
+        "place_id": "no",
+        "time_text": "t",
+        "note": "n"
+       }
+      ]
+     }
+    },
+    "allowed_places": [
+     {
+      "id": "p1",
+      "name": "Ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "SuggestionError",
+     "message": "suggestion_place_not_in_catalogue",
+     "code": "suggestion_place_not_in_catalogue"
+    }
+   }
+  }
+ ]
+}

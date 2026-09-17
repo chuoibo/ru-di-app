@@ -1,0 +1,45 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.places.catalog",
+ "mode": "catalog",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "categories": [
+   {
+    "id": "quan-an-local",
+    "label": "Qu\u00e1n \u0103n local"
+   },
+   {
+    "id": "cafe",
+    "label": "Cafe"
+   },
+   {
+    "id": "vui-choi",
+    "label": "Vui ch\u01a1i"
+   },
+   {
+    "id": "di-choi-dem",
+    "label": "\u0110i ch\u01a1i \u0111\u00eam"
+   }
+  ],
+  "names": [
+   "CATEGORIES"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "category_ids",
+   "name": "ids",
+   "args": {},
+   "result": {
+    "ok": [
+     "quan-an-local",
+     "cafe",
+     "vui-choi",
+     "di-choi-dem"
+    ]
+   }
+  }
+ ]
+}

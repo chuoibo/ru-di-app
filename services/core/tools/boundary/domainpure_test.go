@@ -21,9 +21,11 @@ import (
 // (ADR-0029 §2.5); importing time for its value types is allowed here.
 var domainAllowed = map[string]bool{
 	"bytes": true, "cmp": true, "errors": true, "fmt": true, "maps": true,
-	"math": true, "math/big": true, "slices": true, "sort": true,
+	"math": true, "math/big": true, "regexp": true, "slices": true, "sort": true,
 	"strconv": true, "strings": true, "time": true, "unicode": true,
 	"unicode/utf8": true,
+	// unicodedata.normalize / re — Python domain stdlib; neither reaches I/O.
+	"golang.org/x/text/unicode/norm": true,
 }
 
 const domainPrefix = "mobile/services/core/internal/domain/"
@@ -121,6 +123,8 @@ func TestTheCheckerRefusesWhatTheDomainMustNotReach(t *testing.T) {
 		`package p; import "strings"`:                                          false,
 		`package p; import "math/big"`:                                         false,
 		`package p; import "mobile/services/core/internal/domain/permissions"`: false,
+		`package p; import "regexp"`:                                           false,
+		`package p; import "golang.org/x/text/unicode/norm"`:                   false,
 		`package p; import "net/http"`:                                         true,
 		`package p; import "os"`:                                               true,
 		`package p; import "database/sql"`:                                     true,

@@ -1,0 +1,1141 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.reel",
+ "mode": "reel-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 20
+ },
+ "cases": [
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/0",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "duplicate_memory",
+     "code": "duplicate_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/1",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/2",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/3",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/4",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "ghost",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/5",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "ghost",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/6",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/7",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/8",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/9",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "n"
+      },
+      {
+       "memory_id": "m1",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "duplicate_memory",
+     "code": "duplicate_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/10",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "ghost",
+       "note": "n"
+      },
+      {
+       "memory_id": "m1",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/11",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "note": "n"
+      },
+      {
+       "memory_id": "ghost",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/12",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/13",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "m1",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "duplicate_memory",
+     "code": "duplicate_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/14",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/15",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m3",
+       "note": "n"
+      },
+      {
+       "memory_id": "m1",
+       "note": "n"
+      },
+      {
+       "memory_id": "ghost",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "unknown_memory",
+     "code": "unknown_memory"
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/16",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/17",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m2",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/18",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "note": "n"
+      }
+     ]
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "title": "T",
+     "picks": [
+      {
+       "memory_id": "m1",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      },
+      {
+       "memory_id": "m3",
+       "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+       "caption": "c",
+       "place_name": "Ch\u1ee3",
+       "created_at": "2026-06-01T12:00:00+00:00",
+       "reaction_count": 1,
+       "comment_count": 0,
+       "note": "n"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "fn": "ground_reel",
+   "name": "fuzz/19",
+   "args": {
+    "raw": {
+     "title": "T",
+     "picks": []
+    },
+    "memories": [
+     {
+      "id": "m1",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m1",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m2",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m2",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     },
+     {
+      "id": "m3",
+      "image_url": "/contexts/cccccccc-cccc-4ccc-8ccc-cccccccccccc/photos/m3",
+      "caption": "c",
+      "place_name": "Ch\u1ee3",
+      "created_at": "2026-06-01T12:00:00+00:00",
+      "reaction_count": 1,
+      "comment_count": 0
+     }
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReelError",
+     "message": "empty_reel",
+     "code": "empty_reel"
+    }
+   }
+  }
+ ]
+}

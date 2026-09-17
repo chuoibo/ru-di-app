@@ -1,0 +1,166 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.stickers",
+ "mode": "stickers",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "ids": [
+   "di-thoi",
+   "an-gi",
+   "cafe-khong",
+   "ok-chot",
+   "cho-ti",
+   "ket-xe",
+   "tra-tien-ne",
+   "tuyet-voi"
+  ],
+  "labels": [
+   "\u0110i th\u00f4i!",
+   "\u0102n g\u00ec?",
+   "C\u00e0 ph\u00ea kh\u00f4ng?",
+   "OK, ch\u1ed1t!",
+   "Ch\u1edd t\u00ed",
+   "K\u1eb9t xe",
+   "Tr\u1ea3 ti\u1ec1n n\u00e8",
+   "Tuy\u1ec7t v\u1eddi"
+  ],
+  "pattern": "^[a-z0-9-]{1,32}$",
+  "names": [
+   "STICKERS",
+   "is_sticker"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "is_sticker",
+   "name": "yes/di-thoi",
+   "args": {
+    "value": "di-thoi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/an-gi",
+   "args": {
+    "value": "an-gi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/cafe-khong",
+   "args": {
+    "value": "cafe-khong"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/ok-chot",
+   "args": {
+    "value": "ok-chot"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/cho-ti",
+   "args": {
+    "value": "cho-ti"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/ket-xe",
+   "args": {
+    "value": "ket-xe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/tra-tien-ne",
+   "args": {
+    "value": "tra-tien-ne"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "yes/tuyet-voi",
+   "args": {
+    "value": "tuyet-voi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "no/''",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "no/'Di-thoi'",
+   "args": {
+    "value": "Di-thoi"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "no/'di-thoi '",
+   "args": {
+    "value": "di-thoi "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "no/'unknown'",
+   "args": {
+    "value": "unknown"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "no/'ok-chot!'",
+   "args": {
+    "value": "ok-chot!"
+   },
+   "result": {
+    "ok": false
+   }
+  }
+ ]
+}

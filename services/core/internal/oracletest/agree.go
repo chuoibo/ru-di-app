@@ -205,9 +205,9 @@ func Exact(n *big.Int) any {
 
 // AnyStrings renders strings as a decoded list.
 func AnyStrings(values []string) []any {
-	out := make([]any, len(values))
-	for i, value := range values {
-		out[i] = value
+	out := make([]any, 0, len(values))
+	for _, value := range values {
+		out = append(out, value)
 	}
 	return out
 }

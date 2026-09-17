@@ -1,0 +1,2336 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.chat_intent",
+ "mode": "chat_intent-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 180
+ },
+ "cases": [
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/0",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/0",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/1",
+   "args": {
+    "body": "/vote extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/2",
+   "args": {
+    "body": "/chia-bill extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/2",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/3",
+   "args": {
+    "body": "/plan "
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/4",
+   "args": {
+    "body": "hello\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/4",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/5",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/6",
+   "args": {
+    "body": "\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/6",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/7",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/8",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/8",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/9",
+   "args": {
+    "body": " "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/10",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/10",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/11",
+   "args": {
+    "body": "/vote\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/12",
+   "args": {
+    "body": "/plan\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/12",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/13",
+   "args": {
+    "body": "\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/14",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/14",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/15",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/16",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/16",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/17",
+   "args": {
+    "body": "/plan\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/18",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/18",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/19",
+   "args": {
+    "body": "/chia-bill"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/20",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/20",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/21",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/22",
+   "args": {
+    "body": "/plan extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/22",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/23",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/24",
+   "args": {
+    "body": " "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/24",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/25",
+   "args": {
+    "body": " extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/26",
+   "args": {
+    "body": "/vote extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/26",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/27",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/28",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/28",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/29",
+   "args": {
+    "body": "/plan"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/30",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/30",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/31",
+   "args": {
+    "body": " extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/32",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/32",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/33",
+   "args": {
+    "body": "/vote extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/34",
+   "args": {
+    "body": "/plan\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/34",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/35",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/36",
+   "args": {
+    "body": "hello\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/36",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/37",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/38",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/38",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/39",
+   "args": {
+    "body": "/chia-bill"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/40",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/40",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/41",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/42",
+   "args": {
+    "body": "/chia-bill\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/42",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/43",
+   "args": {
+    "body": " extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/44",
+   "args": {
+    "body": "/vote\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/44",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/45",
+   "args": {
+    "body": "/plan"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/46",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/46",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/47",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/48",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/48",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/49",
+   "args": {
+    "body": "/plan\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/50",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/50",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/51",
+   "args": {
+    "body": "/chia-bill\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/52",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/52",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/53",
+   "args": {
+    "body": "hello "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/54",
+   "args": {
+    "body": "/chia-bill\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/54",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/55",
+   "args": {
+    "body": "/chia-bill extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/56",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/56",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/57",
+   "args": {
+    "body": "/plan extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/58",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/58",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/59",
+   "args": {
+    "body": "@rudi extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/60",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/60",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/61",
+   "args": {
+    "body": "/vote\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/62",
+   "args": {
+    "body": "/vote\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/62",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/63",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/64",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/64",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/65",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/66",
+   "args": {
+    "body": "hello\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/66",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/67",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/68",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/68",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/69",
+   "args": {
+    "body": "/plan extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/70",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/70",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/71",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/72",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/72",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/73",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/74",
+   "args": {
+    "body": "@rudi"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/74",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/75",
+   "args": {
+    "body": "/plan\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/76",
+   "args": {
+    "body": " extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/76",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/77",
+   "args": {
+    "body": "/plan"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/78",
+   "args": {
+    "body": "hello "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/78",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/79",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/80",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/80",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/81",
+   "args": {
+    "body": "/chia-bill extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/82",
+   "args": {
+    "body": "/vote extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/82",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/83",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/84",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/84",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/85",
+   "args": {
+    "body": "/plan"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/86",
+   "args": {
+    "body": " extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/86",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/87",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/88",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/88",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/89",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/90",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/90",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/91",
+   "args": {
+    "body": "/chia-bill"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/92",
+   "args": {
+    "body": "\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/92",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/93",
+   "args": {
+    "body": " "
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/94",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/94",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/95",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/96",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/96",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/97",
+   "args": {
+    "body": "hello\n"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/98",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/98",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/99",
+   "args": {
+    "body": "/chia-bill extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/100",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/100",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/101",
+   "args": {
+    "body": "/plan "
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/102",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/102",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/103",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/104",
+   "args": {
+    "body": "@rudi\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/104",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/105",
+   "args": {
+    "body": "/vote "
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/106",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/106",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/107",
+   "args": {
+    "body": "/vote"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/108",
+   "args": {
+    "body": ""
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/108",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/109",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/110",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/110",
+   "args": {
+    "args": "Q? A | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/111",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/112",
+   "args": {
+    "body": "/plan extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "plan",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/112",
+   "args": {
+    "args": "Q? A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q?",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/113",
+   "args": {
+    "body": "/vote extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/114",
+   "args": {
+    "body": "hello extra"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/114",
+   "args": {
+    "args": "Q | A | B"
+   },
+   "result": {
+    "ok": {
+     "question": "Q",
+     "options": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/115",
+   "args": {
+    "body": "/chia-bill extra"
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": "extra"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/116",
+   "args": {
+    "body": "/vote\n"
+   },
+   "result": {
+    "ok": {
+     "intent": "vote",
+     "args": ""
+    }
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/116",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/117",
+   "args": {
+    "body": "@rudi "
+   },
+   "result": {
+    "ok": {
+     "intent": "mention",
+     "args": "@rudi"
+    }
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/118",
+   "args": {
+    "body": "hello"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_vote",
+   "name": "fuzz-vote/118",
+   "args": {
+    "args": "x"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "parse_intent",
+   "name": "fuzz/119",
+   "args": {
+    "body": "/chia-bill "
+   },
+   "result": {
+    "ok": {
+     "intent": "chia_bill",
+     "args": ""
+    }
+   }
+  }
+ ]
+}

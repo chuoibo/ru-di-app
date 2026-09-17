@@ -1,0 +1,128 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.conversation",
+ "mode": "conversation",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "MAX_LINES": 12,
+  "MAX_LINE": 200,
+  "MIN_LINES": 2,
+  "names": [
+   "summarise_conversation",
+   "has_conversation"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "summarise_conversation",
+   "name": "three-text",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "c",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "sticker",
+      "body": "ok-chot",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "  ",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "b",
+      "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+     },
+     {
+      "kind": "text",
+      "body": "a",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 4
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "a",
+      "b",
+      "c"
+     ],
+     "message_count": 3,
+     "speaker_count": 2,
+     "member_count": 4
+    }
+   }
+  },
+  {
+   "fn": "has_conversation",
+   "name": "yes",
+   "args": {
+    "digest": {
+     "recent_lines": [
+      "a",
+      "b",
+      "c"
+     ],
+     "message_count": 3,
+     "speaker_count": 2,
+     "member_count": 4
+    }
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "has_conversation",
+   "name": "no",
+   "args": {
+    "digest": {
+     "recent_lines": [],
+     "message_count": 0,
+     "speaker_count": 0,
+     "member_count": 0
+    }
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "summarise_conversation",
+   "name": "clip",
+   "args": {
+    "messages": [
+     {
+      "kind": "text",
+      "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     },
+     {
+      "kind": "text",
+      "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+     }
+    ],
+    "member_count": 1
+   },
+   "result": {
+    "ok": {
+     "recent_lines": [
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     ],
+     "message_count": 2,
+     "speaker_count": 1,
+     "member_count": 1
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,25 @@
+{
+  "ghi_chu": [
+    "Đột biến của làn WAI domain (ADR-0029 T2). Mỗi mục thay ĐÚNG MỘT lần xuất hiện",
+    "của `cu` bằng `moi` trong `tep`, qua `go test -overlay` — không sửa file trong cây.",
+    "`cho_doi` nói trước ca đỏ mong đợi; `vi_sao` nói vì sao đột biến ĐÁNG KỂ."
+  ],
+  "dot_bien": [
+    {
+      "ten": "sticker-luon-dung",
+      "tep": "internal/domain/stickers/stickers.go",
+      "cu": "func Is(value string) bool { return ids[value] }",
+      "moi": "func Is(value string) bool { return true }",
+      "cho_doi": "do",
+      "vi_sao": "is_sticker phải từ chối id ngoài từ vựng. Luôn true làm mọi ca no/ lệch Python."
+    },
+    {
+      "ten": "faces-tran-25",
+      "tep": "internal/domain/faces/faces.go",
+      "cu": "const MaxFaces = 24",
+      "moi": "const MaxFaces = 25",
+      "cho_doi": "do",
+      "vi_sao": "Ca too-many có đúng 25 hộp. Trần 24 phải TOO_MANY_FACES; 25 nuốt ca đó thành danh sách."
+    }
+  ]
+}

@@ -1,0 +1,748 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.suggestion",
+ "mode": "suggestion-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 20
+ },
+ "cases": [
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/0",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 2
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     },
+     {
+      "title": "",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 181000,
+     "avg_per_person_vnd": 25857,
+     "top_categories": [],
+     "recent_titles": [
+      "B",
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/1",
+   "args": {
+    "trips": [],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null,
+     "top_categories": [
+      "ch\u1ee3"
+     ],
+     "recent_titles": []
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/2",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     },
+     {
+      "title": "",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 0,
+      "headcount": 3
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 180000,
+     "avg_per_person_vnd": 22500,
+     "top_categories": [],
+     "recent_titles": [
+      "B",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/3",
+   "args": {
+    "trips": [
+     {
+      "title": "A",
+      "split_total_vnd": 0,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": ""
+     },
+     {
+      "category": ""
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 1,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": 0,
+     "top_categories": [
+      "",
+      "cafe",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/4",
+   "args": {
+    "trips": [],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null,
+     "top_categories": [],
+     "recent_titles": []
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/5",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 0,
+      "headcount": 3
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 90000,
+     "avg_per_person_vnd": 15000,
+     "top_categories": [
+      ""
+     ],
+     "recent_titles": [
+      "B",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/6",
+   "args": {
+    "trips": [
+     {
+      "title": "",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 3
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 92000,
+     "avg_per_person_vnd": 15333,
+     "top_categories": [],
+     "recent_titles": [
+      "B",
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/7",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 90000,
+      "headcount": 1
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 0,
+      "headcount": 1
+     },
+     {
+      "title": "",
+      "split_total_vnd": 0,
+      "headcount": 1
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "cafe"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 90000,
+     "avg_per_person_vnd": 30000,
+     "top_categories": [
+      "cafe",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "B",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/8",
+   "args": {
+    "trips": [
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     },
+     {
+      "title": "",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 180000,
+     "avg_per_person_vnd": 30000,
+     "top_categories": [
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/9",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 0,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "cafe"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 1000,
+     "avg_per_person_vnd": 250,
+     "top_categories": [
+      "cafe",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "B",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/10",
+   "args": {
+    "trips": [
+     {
+      "title": "A",
+      "split_total_vnd": 1000,
+      "headcount": 3
+     },
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 3
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 2000,
+     "avg_per_person_vnd": 333,
+     "top_categories": [],
+     "recent_titles": [
+      "A",
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/11",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     }
+    ],
+    "visits": [
+     {
+      "category": "cafe"
+     },
+     {
+      "category": ""
+     },
+     {
+      "category": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 1,
+     "split_total_vnd": 1000,
+     "avg_per_person_vnd": 1000,
+     "top_categories": [
+      "",
+      "cafe"
+     ],
+     "recent_titles": [
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/12",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 1,
+     "split_total_vnd": 1000,
+     "avg_per_person_vnd": 333,
+     "top_categories": [
+      "cafe",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "B"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/13",
+   "args": {
+    "trips": [
+     {
+      "title": "",
+      "split_total_vnd": 0,
+      "headcount": 1
+     }
+    ],
+    "visits": []
+   },
+   "result": {
+    "ok": {
+     "outing_count": 1,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": 0,
+     "top_categories": [],
+     "recent_titles": []
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/14",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 2000,
+     "avg_per_person_vnd": 1000,
+     "top_categories": [
+      "",
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "B",
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/15",
+   "args": {
+    "trips": [
+     {
+      "title": " B ",
+      "split_total_vnd": 0,
+      "headcount": 3
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 3
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 0,
+      "headcount": 3
+     }
+    ],
+    "visits": [
+     {
+      "category": ""
+     },
+     {
+      "category": "cafe"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 90000,
+     "avg_per_person_vnd": 10000,
+     "top_categories": [
+      "",
+      "cafe"
+     ],
+     "recent_titles": [
+      "B",
+      "A",
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/16",
+   "args": {
+    "trips": [
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     },
+     {
+      "title": "",
+      "split_total_vnd": 1000,
+      "headcount": 2
+     }
+    ],
+    "visits": [
+     {
+      "category": ""
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 91000,
+     "avg_per_person_vnd": 22750,
+     "top_categories": [
+      ""
+     ],
+     "recent_titles": [
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/17",
+   "args": {
+    "trips": [
+     {
+      "title": "",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 1000,
+      "headcount": 1
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 1000,
+      "headcount": 2
+     }
+    ],
+    "visits": [
+     {
+      "category": "ch\u1ee3"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 3,
+     "split_total_vnd": 92000,
+     "avg_per_person_vnd": 18400,
+     "top_categories": [
+      "ch\u1ee3"
+     ],
+     "recent_titles": [
+      "A",
+      "A"
+     ]
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/18",
+   "args": {
+    "trips": [],
+    "visits": [
+     {
+      "category": ""
+     },
+     {
+      "category": ""
+     },
+     {
+      "category": "ch\u1ee3"
+     },
+     {
+      "category": "cafe"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null,
+     "top_categories": [
+      "",
+      "cafe",
+      "ch\u1ee3"
+     ],
+     "recent_titles": []
+    }
+   }
+  },
+  {
+   "fn": "summarise_history",
+   "name": "fuzz/19",
+   "args": {
+    "trips": [
+     {
+      "title": "",
+      "split_total_vnd": 0,
+      "headcount": 3
+     },
+     {
+      "title": "A",
+      "split_total_vnd": 90000,
+      "headcount": 2
+     }
+    ],
+    "visits": [
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "cafe"
+     }
+    ]
+   },
+   "result": {
+    "ok": {
+     "outing_count": 2,
+     "split_total_vnd": 90000,
+     "avg_per_person_vnd": 18000,
+     "top_categories": [
+      "cafe"
+     ],
+     "recent_titles": [
+      "A"
+     ]
+    }
+   }
+  }
+ ]
+}

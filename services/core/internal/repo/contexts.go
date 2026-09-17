@@ -307,3 +307,29 @@ func (r Repository) MembershipRole(ctx context.Context, contextID, personID stri
 	}
 	return &role, nil
 }
+
+// SetMembershipRole is set_membership_role: lock the ACTIVE open membership,
+// assign the role, then the person's display name.
+func (r Repository) SetMembershipRole(ctx context.Context, contextID, personID, role string) (*Membership, error) {
+	m, err := scanMembership(r.Q.QueryRow(ctx,
+		`SELECT `+membershipColumns+`
+		   FROM memberships
+		  WHERE memberships.context_id = $1::UUID AND memberships.person_id = $2::UUID
+		    AND memberships.state = $3 AND memberships.left_at IS NULL FOR UPDATE`,
+		contextID, personID, "active"))
+	if err != nil || m == nil {
+		return m, err
+	}
+	if !membershipRoles[role] {
+		return nil, ErrUnknownMembershipRole
+	}
+	if role != m.Role {
+		if err := r.execUpdate(ctx,
+			`UPDATE memberships SET role=$1 WHERE memberships.id = $2::UUID`,
+			role, m.ID); err != nil {
+			return nil, err
+		}
+		m.Role = role
+	}
+	return r.membershipRecord(ctx, m)
+}

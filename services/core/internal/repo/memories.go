@@ -91,13 +91,11 @@ func (r Repository) ListMemories(ctx context.Context, contextID string, q Memory
 	}
 	var found []Memory
 	for rows.Next() {
-		var m Memory
-		if err := rows.Scan(&m.ID, &m.ContextID, &m.AuthorID, &m.Kind, &m.ImageURL, &m.Caption,
-			&m.PlaceID, &m.PlaceName, &m.Lat, &m.Lng, &m.CreatedAt); err != nil {
+		m, err := scanMemory(rows)
+		if err != nil {
 			rows.Close()
 			return MemoryPage{}, err
 		}
-		m.CreatedAt = m.CreatedAt.UTC()
 		found = append(found, m)
 	}
 	rows.Close()
@@ -107,52 +105,73 @@ func (r Repository) ListMemories(ctx context.Context, contextID string, q Memory
 
 	page := MemoryPage{HasMore: len(found) > q.Limit, Memories: []Memory{}}
 	page.Memories = append(page.Memories, found[:pythonSliceEnd(len(found), q.Limit)]...)
-	if len(page.Memories) == 0 {
-		return page, nil
+	if err := r.attachMemorySocial(ctx, page.Memories, q.ViewerID); err != nil {
+		return MemoryPage{}, err
 	}
-	ids := make([]string, len(page.Memories))
-	for i, m := range page.Memories {
+	return page, nil
+}
+
+func scanMemory(row interface{ Scan(dest ...any) error }) (Memory, error) {
+	var m Memory
+	if err := row.Scan(&m.ID, &m.ContextID, &m.AuthorID, &m.Kind, &m.ImageURL, &m.Caption,
+		&m.PlaceID, &m.PlaceName, &m.Lat, &m.Lng, &m.CreatedAt); err != nil {
+		return Memory{}, err
+	}
+	m.CreatedAt = m.CreatedAt.UTC()
+	return m, nil
+}
+
+const memorySelect = `memories.id, memories.context_id, memories.author_id, memories.kind,
+	               memories.image_url, memories.caption, memories.place_id, memories.place_name,
+	               memories.lat, memories.lng, memories.created_at`
+
+func (r Repository) attachMemorySocial(ctx context.Context, memories []Memory, viewerID *string) error {
+	if len(memories) == 0 {
+		return nil
+	}
+	ids := make([]string, len(memories))
+	for i, m := range memories {
 		ids[i] = m.ID
 	}
 	reactions, err := r.countByMemory(ctx, "memory_reactions", ids)
 	if err != nil {
-		return MemoryPage{}, err
+		return err
 	}
 	comments, err := r.countByMemory(ctx, "memory_comments", ids)
 	if err != nil {
-		return MemoryPage{}, err
+		return err
 	}
 	reacted := map[string]bool{}
-	if q.ViewerID != nil {
+	if viewerID != nil {
 		rows, err := r.Q.Query(ctx,
 			`SELECT memory_reactions.memory_id
 			   FROM memory_reactions
 			  WHERE memory_reactions.memory_id IN (`+uuidPlaceholders(1, len(ids))+`)
 			    AND memory_reactions.person_id = $`+strconv.Itoa(len(ids)+1)+`::UUID`,
-			append(uuidArgs(ids), *q.ViewerID)...)
+			append(uuidArgs(ids), *viewerID)...)
 		if err != nil {
-			return MemoryPage{}, err
+			return err
 		}
 		for rows.Next() {
 			var id string
 			if err := rows.Scan(&id); err != nil {
 				rows.Close()
-				return MemoryPage{}, err
+				return err
 			}
 			reacted[id] = true
 		}
 		rows.Close()
 		if err := rows.Err(); err != nil {
-			return MemoryPage{}, err
+			return err
 		}
 	}
-	for i := range page.Memories {
-		m := &page.Memories[i]
+	for i := range memories {
+		m := &memories[i]
 		m.ReactionCount = reactions[m.ID]
 		m.CommentCount = comments[m.ID]
 		m.ViewerHasReacted = reacted[m.ID]
 	}
-	return page, nil
+	return nil
 }
 
 // pythonSliceEnd is the stop index `rows[:limit]` resolves to.
