@@ -63,7 +63,7 @@ func SummaryOf(record SummaryRecord) ContextSummary {
 // ContextSummaries is _context_summaries: every row, then for each pair with a
 // counterpart the counterpart's person row and the pair's edge, which decide
 // whether the conversation still takes messages (ADR-0023 §2.3.2).
-func ContextSummaries(s Store, personID string) ([]ContextSummary, error) {
+func ContextSummaries(s SummaryStore, personID string) ([]ContextSummary, error) {
 	records, err := s.ListPersonContextSummaries(personID)
 	if err != nil {
 		return nil, err

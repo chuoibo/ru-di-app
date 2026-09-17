@@ -176,6 +176,17 @@ type Change struct {
 	Value any
 }
 
+// SummaryStore is the part of Store that ContextSummaries reads. It is named
+// because the session doors of internal/domain/authsteps end in the same
+// `_context_summaries` call and must make the same three reads in the same
+// order without carrying the rest of the people repository. Store satisfies
+// it, so nothing that already holds a Store changes.
+type SummaryStore interface {
+	GetPerson(personID string) (*Person, error)
+	ListPersonContextSummaries(personID string) ([]SummaryRecord, error)
+	GetFriendEdge(a, b string) (*FriendEdge, error)
+}
+
 // Store is the part of ApiRepository the people methods call, one method per
 // repository method with its arguments in the Protocol's order. A write that a
 // persistence invariant refuses returns *Conflict with the repository's code.
@@ -262,7 +273,7 @@ func FriendRefusal(code string) *Refusal {
 
 // friendEdge is _friend_edge_dict: the pair's live edge as blocking reads it,
 // or nil.
-func friendEdge(s Store, a, b string) (*blocking.Edge, error) {
+func friendEdge(s SummaryStore, a, b string) (*blocking.Edge, error) {
 	edge, err := s.GetFriendEdge(a, b)
 	if err != nil || edge == nil {
 		return nil, err
