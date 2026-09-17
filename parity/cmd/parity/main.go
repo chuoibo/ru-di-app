@@ -5,6 +5,7 @@
 //	parity canary --auth MODE --reference URL --target URL [--reference-dsn DSN --target-dsn DSN] [--reference-media DIR --target-media DIR] [--host H] PATH...
 //	parity probe --reference URL --candidate URL
 //	parity tap --listen ADDR --control ADDR --upstream URL
+//	parity routing-stub --listen ADDR | parity routing-stub --graph-version
 //
 // Exit codes: 0 every step equal, 1 at least one difference, 2 the run could
 // not be completed (bad scenario, unreachable stack). A run that could not
@@ -36,6 +37,7 @@ import (
 	"mobile/parity/internal/limiterlane"
 	"mobile/parity/internal/mediasnap"
 	"mobile/parity/internal/rawprobe"
+	"mobile/parity/internal/routingstub"
 	"mobile/parity/internal/runner"
 	"mobile/parity/internal/scenario"
 	"mobile/parity/internal/tap"
@@ -61,6 +63,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return probeRun(args[1:], stdout, stderr)
 	case "tap":
 		return tapRun(args[1:], stdout, stderr)
+	case "routing-stub":
+		return routingStubRun(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -798,5 +802,36 @@ func tapRun(args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "tap: %s -> %s, record on %s\n", *listen, *upstream, *control)
 	fmt.Fprintln(stderr, "parity tap:", <-errs)
+	return 2
+}
+
+// routingStubRun serves the deterministic Valhalla stub both stacks are
+// pointed at, until the process is stopped. Without it configured_provider()
+// returns nil on both sides and every itinerary preview stops at "unavailable",
+// so the routed half of the preview is never compared at all.
+func routingStubRun(args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet("routing-stub", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	listen := flags.String("listen", "", "address to serve the Valhalla actions on")
+	version := flags.Bool("graph-version", false, "print the graph version these answers carry, and exit")
+	if err := flags.Parse(args); err != nil {
+		return 2
+	}
+	if *version {
+		fmt.Fprintln(stdout, routingstub.GraphVersion())
+		return 0
+	}
+	if *listen == "" {
+		fmt.Fprintln(stderr, "parity routing-stub: --listen is required")
+		return 2
+	}
+	srv := &http.Server{
+		Addr:              *listen,
+		Handler:           routingstub.Handler(),
+		ReadHeaderTimeout: 10 * time.Second,
+		MaxHeaderBytes:    1 << 20,
+	}
+	fmt.Fprintf(stdout, "routing-stub: %s, graph %s\n", *listen, routingstub.GraphVersion())
+	fmt.Fprintln(stderr, "parity routing-stub:", srv.ListenAndServe())
 	return 2
 }

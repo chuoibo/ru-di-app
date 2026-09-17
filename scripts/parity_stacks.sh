@@ -19,6 +19,16 @@
 # database would let a write on one side answer a read on the other, and make
 # every stateful scenario look equal.
 #
+# Each side also has its own routing stub, for the same reason and in the same
+# shape: `parity routing-stub` on a loopback port of its own, handed to that
+# side's API as MOBILE_VALHALLA_URL. Without it configured_provider() returns
+# None on both sides and every itinerary preview stops at status "unavailable",
+# so _route, schedule, suggest_order, savings, feasible, segments and
+# late_fixed_stop are never compared at all. The stub's answers are a pure
+# function of the request, so two instances that share nothing still answer one
+# request with the same bytes; running one per side keeps that a property of
+# the stub rather than an artifact of sharing one.
+#
 # Each side has its own photo store for the same reason: one host directory under
 # the run's work directory, bind-mounted at the same path into that side's API
 # container, and on the candidate also handed to core as MOBILE_MEDIA_ROOT. Once
@@ -91,8 +101,14 @@ cmd_up() {
   local id_key
   id_key="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
 
-  local containers=() role
-  declare -A api_url dsn media_dir
+  # Built before the per-side loop: `parity routing-stub` is one of the two
+  # processes each side needs, so the binary has to exist before the first one.
+  ( cd parity && go build -o "$work/parity" ./cmd/parity )
+  local graph_version
+  graph_version="$("$work/parity" routing-stub --graph-version)"
+
+  local containers=() routing_pids=() role
+  declare -A api_url dsn media_dir routing_url
   for role in ref cand; do
     local pg_port api_port password pg_name api_name
     pg_port="$(free_port)"; api_port="$(free_port)"
@@ -118,6 +134,15 @@ cmd_up() {
       sh -c "alembic upgrade head && python -m app.places.seed_catalog" >"$work/$role-migrate.log" 2>&1 || {
         tail -20 "$work/$role-migrate.log" >&2; exit 1; }
 
+    local routing_port
+    routing_port="$(free_port)"
+    echo "--- $role: routing stub trên 127.0.0.1:$routing_port (graph $graph_version)"
+    nohup "$work/parity" routing-stub --listen "127.0.0.1:$routing_port" \
+      >"$work/$role-routing.log" 2>&1 &
+    routing_pids+=($!)
+    routing_url[$role]="http://127.0.0.1:$routing_port"
+    wait_http "${routing_url[$role]}/status" "$role routing stub"
+
     echo "--- $role: API trên 127.0.0.1:$api_port"
     media_dir[$role]="$work/media-$role"
     mkdir -p "${media_dir[$role]}"
@@ -133,6 +158,8 @@ cmd_up() {
       -e MOBILE_PERSON_ID_KEY="$id_key" \
       -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 \
       -e MOBILE_MEDIA_ROOT="${media_dir[$role]}" -e TZ=UTC \
+      -e MOBILE_VALHALLA_URL="${routing_url[$role]}" \
+      -e MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
       -e PYTHONUNBUFFERED=1 \
       "$image" uvicorn app.api.main:app --host 127.0.0.1 --port "$api_port" >/dev/null
     containers+=("$api_name")
@@ -142,7 +169,6 @@ cmd_up() {
 
   echo "--- candidate: core trước API của candidate"
   ( cd services/core && go build -o "$work/core" ./cmd/core )
-  ( cd parity && go build -o "$work/parity" ./cmd/parity )
   # The tap records every request that reaches the candidate's Python, so a run
   # can show which steps core answered in Go without looking inside core.
   local tap_port tap_control
@@ -164,6 +190,8 @@ cmd_up() {
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_PERSON_ID_KEY="$id_key" \
   MOBILE_MEDIA_ROOT="${media_dir[cand]}" \
+  MOBILE_VALHALLA_URL="${routing_url[cand]}" \
+  MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
   MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
@@ -186,6 +214,10 @@ PARITY_REF_DSN=${dsn[ref]}
 PARITY_CAND_DSN=${dsn[cand]}
 PARITY_REF_MEDIA=${media_dir[ref]}
 PARITY_CAND_MEDIA=${media_dir[cand]}
+PARITY_REF_ROUTING_URL=${routing_url[ref]}
+PARITY_CAND_ROUTING_URL=${routing_url[cand]}
+PARITY_ROUTING_GRAPH_VERSION=$graph_version
+PARITY_ROUTING_PIDS="${routing_pids[*]}"
 PARITY_CONTAINERS="${containers[*]}"
 PARITY_CORE_PID=$core_pid
 PARITY_WORK=$work
@@ -211,6 +243,8 @@ cmd_down() {
   . "$env_file"
   kill "$PARITY_CORE_PID" >/dev/null 2>&1 || true
   kill "${PARITY_TAP_PID:-}" >/dev/null 2>&1 || true
+  # shellcheck disable=SC2086
+  kill ${PARITY_ROUTING_PIDS:-} >/dev/null 2>&1 || true
   # shellcheck disable=SC2086
   docker rm -f $PARITY_CONTAINERS >/dev/null 2>&1 || true
   # The photo stores live under the work directory and belong to the host user.
