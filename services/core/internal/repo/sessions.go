@@ -5,8 +5,6 @@ package repo
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -21,62 +19,35 @@ type Querier interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-// Sessions implements auth.SessionStore.
+// Sessions implements auth.SessionStore. It is the prod authentication path's
+// view of two repository methods and issues no statement of its own: both live
+// in account_sessions.go, so the door every request comes through spells
+// get_account_session_by_digest and actor_grants exactly as the Python does.
 type Sessions struct {
 	Q Querier
 }
 
 var _ auth.SessionStore = Sessions{}
 
-// SessionByDigest is get_account_session_by_digest.
+// SessionByDigest is get_account_session_by_digest, narrowed to the three
+// columns authentication reads.
 func (s Sessions) SessionByDigest(ctx context.Context, digest []byte) (*auth.SessionRecord, error) {
-	var record auth.SessionRecord
-	var revoked *time.Time
-	err := s.Q.QueryRow(ctx,
-		`SELECT person_id::text, expires_at, revoked_at
-		   FROM account_sessions
-		  WHERE token_digest = $1
-		  LIMIT 1`, digest).Scan(&record.PersonID, &record.ExpiresAt, &revoked)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
+	record, err := (Repository{Q: s.Q}).GetAccountSessionByDigest(ctx, digest)
+	if err != nil || record == nil {
 		return nil, err
 	}
-	record.RevokedAt = revoked
-	return &record, nil
+	return &auth.SessionRecord{PersonID: record.PersonID, ExpiresAt: record.ExpiresAt,
+		RevokedAt: record.RevokedAt}, nil
 }
 
 // Grants is actor_grants: the person row first, then every membership row.
 func (s Sessions) Grants(ctx context.Context, personID string) (auth.Grants, error) {
-	var deletedAt *time.Time
-	err := s.Q.QueryRow(ctx, `SELECT deleted_at FROM people WHERE id = $1`, personID).Scan(&deletedAt)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return auth.Grants{PersonExists: false}, nil
-	}
+	grants, err := (Repository{Q: s.Q}).ActorGrants(ctx, personID)
 	if err != nil {
 		return auth.Grants{}, err
 	}
-	if deletedAt != nil {
+	if !grants.PersonExists {
 		return auth.Grants{PersonExists: false}, nil
 	}
-
-	rows, err := s.Q.Query(ctx,
-		`SELECT context_id::text, state FROM memberships WHERE person_id = $1`, personID)
-	if err != nil {
-		return auth.Grants{}, err
-	}
-	defer rows.Close()
-	states := map[string][]string{}
-	for rows.Next() {
-		var context, state string
-		if err := rows.Scan(&context, &state); err != nil {
-			return auth.Grants{}, err
-		}
-		states[context] = append(states[context], state)
-	}
-	if err := rows.Err(); err != nil {
-		return auth.Grants{}, err
-	}
-	return auth.GrantsFromMemberships(states), nil
+	return auth.Grants{PersonExists: true, Roles: grants.Roles, Contexts: grants.ContextIDs}, nil
 }
