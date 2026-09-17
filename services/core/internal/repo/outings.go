@@ -15,6 +15,18 @@ import (
 // SQLAlchemy note: an outing the same session already loaded answers from the
 // identity map without the first SELECT; Go reads again.
 func (r Repository) GetOuting(ctx context.Context, outingID string) (*Outing, error) {
+	o, err := r.outingByID(ctx, outingID)
+	if err != nil || o == nil {
+		return o, err
+	}
+	if o.Stops, err = r.outingStops(ctx, o.ID); err != nil {
+		return nil, err
+	}
+	return o, nil
+}
+
+// outingByID is session.get(Outing, id): every mapped column, no relationship.
+func (r Repository) outingByID(ctx context.Context, outingID string) (*Outing, error) {
 	var o Outing
 	var days []byte
 	err := r.Q.QueryRow(ctx,
@@ -36,9 +48,6 @@ func (r Repository) GetOuting(ctx context.Context, outingID string) (*Outing, er
 	}
 	o.CreatedAt = o.CreatedAt.UTC()
 	if o.ItineraryDays, err = jsonArrayElements(days); err != nil {
-		return nil, err
-	}
-	if o.Stops, err = r.outingStops(ctx, o.ID); err != nil {
 		return nil, err
 	}
 	return &o, nil
