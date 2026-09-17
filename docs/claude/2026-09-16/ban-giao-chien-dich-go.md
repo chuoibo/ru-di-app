@@ -105,6 +105,12 @@ lưu digest, để fixture tự sinh lúc chạy (sóng W7 cho Postgres tự tí
 Bắt đầu bằng một PR hạ tầng thêm seam `/internal/brain/v1/*` vào **Python**: loại khỏi OpenAPI, chỉ với tới được
 trên mạng `backend`, gác bằng `X-Internal-Token` (token rỗng thì từ chối khởi động). Lưu ý rủi ro: thêm route vào
 `create_app()` **làm đổi bảng route**, kéo theo golden router và manifest — phải thêm hàng manifest trong cùng PR.
+**SỬA 17/09:** câu trên nói phải thêm hàng manifest cho brain — **sai**. ADR-0029 vốn đòi brain loại khỏi
+OpenAPI và chỉ với tới được trên mạng backend, mà `TestMatchesStarletteGoldens` lại đòi golden FULL cho mọi
+hàng manifest và `len(app.routes) == len(manifest)`. Cách đúng là một cửa ASGI riêng (`BrainDoor`) nằm trong
+CORS, ngoài guest/idempotency, và cửa trước Go 404 `/internal` trước khi proxy. Xem
+`docs/claude/2026-09-17/review-phan-con-lai-go.md` §2.1.
+
 Go giữ transaction mở xuyên qua lời gọi brain; lỗi transport map về đúng thân `intent_error`/`unavailable` của nhánh
 except trong Python.
 

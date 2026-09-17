@@ -182,6 +182,12 @@ Bàn giao chiến dịch Go: `docs/claude/2026-09-16/ban-giao-chien-dich-go.md` 
 ba agent đang dở, thứ tự việc kế tiếp (stub định tuyến CHẶN sóng W7), công thức kiểm của người gộp, giao thức
 agy review trong ràng buộc ADR-0010 §6.4, và danh sách cái này KHÔNG chứng minh.
 
+Review nhánh `go/p0-w-con-lai` (17/09): verdict **REQUEST_CHANGES** —
+`docs/claude/2026-09-17/review-phan-con-lai-go.md`. Chấp nhận hai chỗ lệch (brain sau BrainDoor — bàn giao của tôi
+sai chỗ này; và port HTTP W7 khi chưa có stub, vì Python cũng trả `unavailable`). Ba blocker: nhãn `PORTED` hứa
+nhiều hơn bằng chứng ở 36 hàng mới; 10/11 package domain WAI có 0 tệp test và không golden cùng-hàm-Python;
+tầng repository mới chưa chạm Postgres thật. Chia việc còn lại: `docs/claude/2026-09-17/viec-con-lai-va-chia-viec.md`.
+
 **Quyết định (Claude, theo ADR-0030 — lane Codex đóng, không còn mục nào chờ Lead):**
 1. **agy** — AGY-PASS gỡ khỏi thang trạng thái ADR-0029. Cổng là cổng parity chạy lại trong cây sạch tại đúng SHA,
    canary, probe, cộng ít nhất hai đột biến do người gộp tự nghĩ và đã kiểm tương đương. Bật lại agy thì mở ADR mới.
