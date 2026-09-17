@@ -61,6 +61,29 @@ sẽ đi qua.
 `go/p0-w-con-lai` rebase `--3way` lên trên (sẽ đụng `routes.go`, `routes.json`, `ports.go`), rồi mới chạy **một**
 lượt `gate.sh parity` cho toàn bộ.
 
+## 5b. Hai điều kiện — đã đạt (kiểm lại 18/09)
+
+**Điều kiện 1, mốc đo.** Lời biện minh đổi ảnh đã được rút khỏi `tra-loi-review-phan-con-lai-go.md` và `QUEUE.md`,
+và tác giả tìm ra **nguyên nhân thật** của lượt đỏ đầu tiên: seed ảnh kỷ niệm, không phải migration thiếu. QUEUE
+giờ mang luật «tầng Postgres dùng ảnh ghim; gặp đỏ thật thì dán nguyên văn lỗi, không đổi ảnh» làm mục 1. Tôi đếm
+lại: không còn tham chiếu ảnh tự dựng trong `docs/` hay `scripts/`, và 0 chuỗi 9+ chữ số — viết lại, không allowlist.
+
+Đáng ghi: luật này vừa chứng minh giá trị của chính nó. Đổi ảnh làm lượt chạy xanh mà **giấu mất** lỗi seed; dán
+nguyên văn lỗi thì lỗi seed lộ ra và được sửa.
+
+**Điều kiện 2, độ dày oracle WAI.** Chạy lại trên ảnh ghim với sentinel nằm trong bộ lọc `-run`: **25 ca, 25 bước
+(17 kết quả, 8 từ chối), 35 câu lệnh, 0 sai khác; 27 ca PASS, sentinel có mặt, 0 FAIL, 0 SKIP.** Tôi đếm trong
+mã: 25 lần `add()`, 17 ca `wantEnd` rỗng và **8 ca từ chối** — tin không thân, tin kèm ảnh, sticker bị CHECK từ
+chối, kind người mà không tác giả, nhóm không tồn tại, tác giả không có hàng `people`, trả lời sang nhóm khác, và
+vai không tồn tại sau `FOR UPDATE`.
+
+Tám ca đó quy về hai lớp kết cục (7 `IntegrityError`, 1 `ValueError`) chứ chưa phải mã miền cụ thể như các sóng
+trước — nhưng đó là **trung thành**, vì tầng repository ở những nhánh này thật sự để lọt ngoại lệ thô. Và tác giả
+**tự giữ nhãn** `PORTED-UNPROVEN` thay vì lấy 8 ca ra đòi lật, đúng như điều kiện đặt ra.
+
+Điều kiện còn hiệu lực cho bước T5: trước khi 36 hàng rời `PORTED-UNPROVEN`, phần từ chối phải đạt mức của các
+sóng trước, và phải có một lượt `gate.sh parity` đầy đủ cộng hai đột biến của người gộp.
+
 ## 6. Review này KHÔNG chứng minh
 
 Tôi đếm manifest, đọc `candidates.go`, đếm tệp test, đọc bảng ca của oracle WAI, mở hai ảnh ra so, và chạy tier
