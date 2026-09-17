@@ -8,7 +8,29 @@ không phải thứ tự quan trọng.
 
 ---
 
-## T1 — Thu ba worktree đang dở của tôi *(làm trước, công này sẽ mất nếu bỏ)*
+## T1 — XONG (18/09). Ba mảnh đã qua cổng và lên nhánh chiến dịch
+
+| Mảnh | Commit | Bằng chứng |
+|---|---|---|
+| domain W9 (`otp`, `authsteps`) | `8ebc2334` | 116 golden mode của MỌI sóng dựng lại giống từng byte; oracle live seed 3 của người gộp: 26.000 ca Python, 0 sai khác, 0 SKIP; `tools/boundary` xanh; 2 đột biến đỏ |
+| repository W9 | `ca38f0e0` | tier **1800 PASS / 0 FAIL / 0 SKIP** với sentinel trong cùng lượt; oracle auth 83 ca/317 câu lệnh/0 sai khác; mọi oracle sóng cũ không đổi; 2 đột biến đỏ (6 và 4 ca) |
+| stub định tuyến | `3cff2c30` | phép đo có thể bác bỏ: giết stub của riêng bên reference → `routed_two_stops` đỏ, thân 333 so với 706 byte |
+
+Ba việc đáng ghi, vì chúng là lỗi **thật** mà chỉ lượt chạy lại của người gộp mới thấy:
+
+1. **Tier lượt đầu ĐỎ 1799/1 trong khi mọi oracle báo 0 sai khác.** Không phải lỗi port: 9 ca test khai
+   `wantEnd` bằng *lớp* ngoại lệ (`RepositoryConflict`) trong khi Python ném *mã* cụ thể. Đã sửa theo hướng
+   **chặt hơn** (lớp → mã) rồi chạy lại đầy đủ. Harness đáng khen vì tách bạch «lời khai của tác giả» với «phép so
+   Go↔Python»; nếu trộn làm một thì người đọc sẽ đi sửa nhầm chỗ.
+2. **Hai lượt parity xanh KHÔNG chứng minh nhánh routed chạy.** Parity so hai bên với nhau, nên stub không được
+   gọi tới thì cả hai cùng `unavailable` và vẫn xanh y hệt. Phải dựng phép đo bác bỏ được mới kết luận.
+3. **Báo cáo `--json` của parity là bản tóm tắt, không chứa thân phản hồi** — đếm khoá trong đó để suy ra hành vi
+   là vô nghĩa (cả `unavailable` cũng ra 0).
+
+Ba nhánh `claude/wip-go-*` giữ nguyên làm bản «như agent giao» để đối chiếu; bản trên nhánh chiến dịch là bản đã
+sửa và đã qua cổng.
+
+## T1 cũ — thu ba worktree đang dở *(đã hoàn tất, giữ lại để đọc lịch sử)*
 
 Ba agent chết giữa chừng vì hết hạn mức, **việc đã viết ra tệp nhưng chưa commit**:
 
