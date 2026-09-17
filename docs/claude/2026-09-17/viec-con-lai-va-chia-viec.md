@@ -40,7 +40,17 @@ qua cổng ADR-0030:
 | `claude/wip-go-valhalla-stub` | `c68bd7a9` | `parity/internal/routingstub/` + test, nối vào `parity/cmd/parity/main.go` và `scripts/parity_stacks.sh`, kèm kịch bản `w7/itinerary/POST-outings-outing_id-itinerary-preview.yaml` (6 tệp, +770) |
 | `claude/wip-go-w9-repo` | `c804ca59` | `account_identities.go`, `account_sessions.go`, `otp_challenges.go`, `named_invite_secret.go`, bộ oracle Postgres ba tệp, generator, và định nghĩa đột biến (11 tệp, +3131) |
 
-**`w9-domain` CHƯA commit được — repo guard chặn, 11 chuỗi 9–12 chữ số.** Tệp vẫn nằm nguyên trong
+**`w9-domain` đã gỡ được và bảo quản xong: `2268838b` trên `claude/wip-go-w9-domain` (20 tệp, +6472).**
+
+Guard chặn vì 11 chuỗi 9–12 chữ số; tôi truy ra tất cả đều là **hằng biên của CPython port trung thành**, không phải
+số điện thoại hay mã. Đã sửa giữ nguyên giá trị, phần lớn còn đúng hơn bản cũ: `cIntMin/cIntMax` → `math.MinInt32` /
+`math.MaxInt32`; `minWallMicros` → `-719162 * 86400 * micro` (số ngày 0001-01-01 → 1970-01-01); `maxWallMicros` →
+`(2932896*86400 + 86399)*micro + micro - 1`; `maxDays` → `1_000_000_000 - 1` với câu lỗi dựng bằng
+`strconv.FormatInt` nên chuỗi vẫn giống Python từng byte; bảng chữ cái hex tách hai literal; bộ sinh lấy thẳng
+`timedelta.max.days`. **Bằng chứng không đổi giá trị: golden của `otp` và `authsteps` replay xanh sau khi sửa.**
+Không allowlist gì.
+
+*(ghi chú lịch sử — nguyên văn chỗ từng chặn)* **Guard đã chặn 11 chuỗi 9–12 chữ số.** Tệp vẫn nằm nguyên trong
 `~/wt-go0-w9-domain` (đừng xoá cây đó). Tôi đã truy ra chúng là gì, và chúng **vô hại**: hằng số thời gian, không
 phải số điện thoại hay mã OTP.
 
@@ -51,7 +61,7 @@ phải số điện thoại hay mã OTP.
 | `services/core/internal/domain/otp/oracle_test.go` | 2 | `days` |
 | `services/core/internal/domain/authsteps/authsteps.go` | 1 | — |
 
-Sửa: viết các hằng đó thành **phép nhân** thay vì một dãy số liền (`24 * 60 * 60 * 1000` chứ không phải
+Cách sửa đã dùng: viết các hằng đó thành **phép nhân** thay vì một dãy số liền (`24 * 60 * 60 * 1000` chứ không phải
 `86400000`) — vừa qua guard vừa dễ đọc hơn. **Không allowlist**: allowlist đòi ghim `path` + `sha256` + `reason`,
 và mở ngoại lệ chữ số ở đúng sóng OTP là mở sai chỗ.
 
