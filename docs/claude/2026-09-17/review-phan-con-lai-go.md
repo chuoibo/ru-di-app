@@ -98,6 +98,13 @@ Việc này **không** đụng ba worktree của tôi, và nhánh cắt từ đ�
 
 ---
 
+## 5b. Vì sao tôi KHÔNG nhặt lẻ vài mảnh vào nhánh chiến dịch ngay
+
+Đã cân nhắc lấy trước ba mảnh trông an toàn — `GET /healthz`, 5 hàng `DEFERRED`, và seam brain. Không làm, vì cả ba
+đều đụng `services/core/ownership/routes.json`, `services/api/app/api/main.py` và `idempotency.py` — đúng những tệp
+nhánh kia viết lại nguyên khối (riêng `routes.json` đổi 82 dòng). Nhặt lẻ bây giờ tạo xung đột cho chính tác giả lúc
+rebase mà không mua được gì: công của họ vẫn nguyên vẹn trong worktree, và thứ tự gộp ở §5 vẫn đúng.
+
 ## 6. Cái review này KHÔNG chứng minh
 
 Tôi đọc diff, kiểm bốn điều rủi ro nhất và đếm tệp test. Tôi **không** chạy `gate.sh parity`, **không** chạy đột

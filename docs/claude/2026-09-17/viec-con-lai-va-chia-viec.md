@@ -30,6 +30,39 @@ dataclass, nên `session.get` luôn đọc lại; helper route của tôi mô h�
 **Nghiệm thu:** ba commit trên nhánh chiến dịch, mỗi commit dựng lại được trong cây sạch, mỗi commit có số đo trong
 message. Worktree chỉ được xoá **sau khi** đối chiếu tệp của agent khớp HEAD.
 
+### T1 đã làm được một phần (17/09) — đọc trước khi bắt tay
+
+Cả ba cây **build được**. Tôi đã bảo quản hai cây vào nhánh WIP riêng, **không** vào nhánh chiến dịch, vì chúng chưa
+qua cổng ADR-0030:
+
+| Nhánh WIP | Commit | Nội dung |
+|---|---|---|
+| `claude/wip-go-valhalla-stub` | `c68bd7a9` | `parity/internal/routingstub/` + test, nối vào `parity/cmd/parity/main.go` và `scripts/parity_stacks.sh`, kèm kịch bản `w7/itinerary/POST-outings-outing_id-itinerary-preview.yaml` (6 tệp, +770) |
+| `claude/wip-go-w9-repo` | `c804ca59` | `account_identities.go`, `account_sessions.go`, `otp_challenges.go`, `named_invite_secret.go`, bộ oracle Postgres ba tệp, generator, và định nghĩa đột biến (11 tệp, +3131) |
+
+**`w9-domain` CHƯA commit được — repo guard chặn, 11 chuỗi 9–12 chữ số.** Tệp vẫn nằm nguyên trong
+`~/wt-go0-w9-domain` (đừng xoá cây đó). Tôi đã truy ra chúng là gì, và chúng **vô hại**: hằng số thời gian, không
+phải số điện thoại hay mã OTP.
+
+| Tệp | Số chuỗi | Ngữ cảnh |
+|---|---|---|
+| `scripts/render_domain_w9_goldens.py` | 3 | `window_seconds` |
+| `services/core/internal/domain/otp/otp.go` | 6 | `days`, `micros` |
+| `services/core/internal/domain/otp/oracle_test.go` | 2 | `days` |
+| `services/core/internal/domain/authsteps/authsteps.go` | 1 | — |
+
+Sửa: viết các hằng đó thành **phép nhân** thay vì một dãy số liền (`24 * 60 * 60 * 1000` chứ không phải
+`86400000`) — vừa qua guard vừa dễ đọc hơn. **Không allowlist**: allowlist đòi ghim `path` + `sha256` + `reason`,
+và mở ngoại lệ chữ số ở đúng sóng OTP là mở sai chỗ.
+
+Nội dung `w9-domain` đáng giữ: `internal/domain/authsteps/` (5 tệp + oracle) và `internal/domain/otp/` kèm
+golden đã render (`testdata/python_auth_steps.json`, `python_otp.json` + shard fuzz), generator
+`render_domain_w9_goldens.py`, và định nghĩa đột biến.
+
+**Một chỗ lệch quy ước cần thống nhất:** hai agent đặt định nghĩa đột biến ở hai nơi khác nhau —
+`services/core/tools/mutants/w9/` và `services/core/tools/w9-dot-bien/`. Luật «commit định nghĩa đột biến» tôi đặt
+mà không nói chỗ, nên mỗi agent tự chọn. Chốt một đường dẫn rồi sửa cả hai.
+
 ---
 
 ## T2 — Gỡ blocker B2: bằng chứng vi phân cho 11 package domain WAI *(gói lớn nhất)*
