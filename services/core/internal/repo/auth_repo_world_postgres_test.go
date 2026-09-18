@@ -144,7 +144,7 @@ func (w *authWorld) session(n int, personID, token, issuedVia, createdAt, expire
 func (w *authWorld) challenge(n int, phoneDigest []byte, code, createdAt, expiresAt string,
 	extra ...any) string {
 	id := fid(kindOtpChallenge, n)
-	codeDigest, err := identity.DeriveCodeDigest(uuidBytes(id), code, w.key)
+	codeDigest, err := identity.DeriveCodeDigest(uuidArray16(id), code, w.key)
 	if err != nil {
 		panic(err)
 	}
@@ -162,9 +162,9 @@ func (w *authWorld) loginProof(n int, personID, provider, subject, lastLogin str
 	return id
 }
 
-// uuidBytes is a canonical UUID string as the sixteen bytes Python's
+// uuidArray16 is a canonical UUID string as the sixteen bytes Python's
 // `UUID.bytes` gives derive_code_digest.
-func uuidBytes(id string) [16]byte {
+func uuidArray16(id string) [16]byte {
 	decoded, err := hex.DecodeString(id[0:8] + id[9:13] + id[14:18] + id[19:23] + id[24:36])
 	if err != nil {
 		panic(err)

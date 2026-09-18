@@ -295,7 +295,7 @@ func (p *authRoute) requestOtp() error {
 	}
 	challengeID := p.nextID()
 	code := p.text("code")
-	codeDigest, err := identity.DeriveCodeDigest(uuidBytes(challengeID), code, authKey)
+	codeDigest, err := identity.DeriveCodeDigest(uuidArray16(challengeID), code, authKey)
 	if err != nil {
 		return err
 	}
@@ -395,7 +395,7 @@ func (p *authRoute) verifyOtp() error {
 	}
 	matches := false
 	if challenge != nil {
-		want, err := identity.DeriveCodeDigest(uuidBytes(challenge.ID), code, authKey)
+		want, err := identity.DeriveCodeDigest(uuidArray16(challenge.ID), code, authKey)
 		if err != nil {
 			return err
 		}
