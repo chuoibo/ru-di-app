@@ -104,9 +104,10 @@ Vẫn `PORTED-UNPROVEN` cho tới T5. Auth 41 / outing 48 / people 39 / pair 100
 
 ---
 
-## Không làm ở session này
+## Không làm ở session trả lời review (trước rebase)
 
-- T1 / T4: W9 + stub — Claude
-- T5: `gate.sh parity` trên SHA sạch sau rebase
+- T5: `gate.sh parity` trên SHA sạch — người gộp
 - T6: LIVE-GO / AVIF
-- Commit / push / PR
+- Push / PR
+
+T1 (W9 domain/repo) và stub định tuyến đã lên chiến dịch (`8ebc2334`, `ca38f0e0`, `3cff2c30`). HTTP W9 là việc sau rebase, không phải việc Claude làm hộ.

@@ -22,6 +22,7 @@ import (
 
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
+	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/httpapi/mw/cors"
@@ -33,6 +34,7 @@ import (
 	"mobile/services/core/internal/proxy"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/routes"
+	"mobile/services/core/internal/sms"
 	"mobile/services/core/ownership"
 )
 
@@ -92,12 +94,20 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 	// Go routes authenticate in the auth mode Python resolved and query the
 	// same database. Nothing is opened while Go serves nothing, so a binary
 	// with every route forced back to Python needs no database settings.
+	sender, debug, err := sms.FromEnv(getenv)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
 	env := endpoint.Env{
-		Mode:        endpoint.Mode(cfg.AuthMode),
-		Now:         time.Now,
-		NewUnit:     func() *db.Unit { return db.NewUnit(nil) },
-		Limits:      limit.NewSet(limit.Monotonic),
-		PersonIDKey: getenv(identity.KeyEnvVar),
+		Mode:         endpoint.Mode(cfg.AuthMode),
+		Now:          time.Now,
+		NewUnit:      func() *db.Unit { return db.NewUnit(nil) },
+		Limits:       limit.NewSet(limit.Monotonic),
+		PersonIDKey:  getenv(identity.KeyEnvVar),
+		SMS:          sender,
+		OTPDebugCode: debug,
+		Google:       googleid.FromEnv(getenv),
 	}
 	var idempotency func(http.Handler) http.Handler
 	if len(served) > 0 {

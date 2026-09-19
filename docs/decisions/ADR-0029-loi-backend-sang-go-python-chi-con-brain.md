@@ -79,7 +79,7 @@ Mỗi route đi qua các trạng thái, ghi trong manifest, bằng chứng ở `
 |---|---|
 | PY | Dòng manifest sinh từ `main` |
 | CARDED | Route card đủ (mục đích, auth, đầu vào, đầu ra theo từng nhánh, tác dụng phụ, mã lỗi, file:line Python, test đang phủ); kịch bản ghi từ **image Python ghim ở merge-base**, tự so K ≥ 3 lần rỗng; corpus 422; ma trận status × kịch bản và bảng × kịch bản đầy |
-| PORTED-UNPROVEN | Mã Go đã merge (owner vẫn `python`) nhưng **chưa** có một lượt `gate.sh parity` đầy đủ trên SHA sạch. Candidate giống PORTED (`MOBILE_CORE_CANDIDATE_ROUTES=ported` chọn cả hàng này). Evidence ghi vì sao chưa lật. Campaign 2026-09: 36 hàng W7 HTTP + WAI + healthz đứng đây cho tới T5. |
+| PORTED-UNPROVEN | Mã Go đã merge (owner vẫn `python`) nhưng **chưa** có một lượt `gate.sh parity` đầy đủ trên SHA sạch. Candidate giống PORTED (`MOBILE_CORE_CANDIDATE_ROUTES=ported` chọn cả hàng này). Evidence ghi vì sao chưa lật. Campaign 2026-09: 43 hàng (W7 HTTP + WAI + healthz + W9 auth/sessions) đứng đây cho tới T5. |
 | PORTED | Mã Go đã merge sau manifest (owner vẫn `python`); `go test`, tầng Postgres Go, golden và vi sai domain xanh; và một lượt `gate.sh parity` đầy đủ trên SHA sạch |
 | PARITY-LOCAL | `make parity` 0 khác biệt trên các làn main/limiter/concurrency, corpus 422, replay chéo hai chiều; **mọi route còn proxy cũng 0 khác biệt**; tap chứng minh Go phục vụ; canary đỏ đủ |
 | AGY-PASS | agy PASS; script tự tính lại số; mọi đột biến BREAKS đỏ, KEEPS sống; kiểm giả mạo sạch |

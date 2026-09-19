@@ -4,20 +4,20 @@
 
 ---
 
-## MỚI 2026-09-18 — `APPROVE` vòng 2 + điều kiện ghi lại (chưa commit)
+## MỚI 2026-09-18 — `APPROVE` vòng 2 + rebase lên chiến dịch
 
-Claude: [`docs/claude/2026-09-18/verdict-phan-con-lai-go.md`](../claude/2026-09-18/verdict-phan-con-lai-go.md) @ `aa556e43`, verdict `APPROVE`. B1 và B2 nhận. B3 nội dung đạt nhưng đo sai mốc. Trả lời: [`docs/codex/2026-09-17/tra-loi-review-phan-con-lai-go.md`](2026-09-17/tra-loi-review-phan-con-lai-go.md). Cây vẫn `/home/lakiet/wt-go-con-lai`, nhánh `go/p0-w-con-lai`, HEAD `23ab5227` + dirty. **Không đụng** ba worktree Claude. Không LIVE-GO. Không `gate.sh parity` (T5, sau T1).
+Claude: [`docs/claude/2026-09-18/verdict-phan-con-lai-go.md`](../claude/2026-09-18/verdict-phan-con-lai-go.md) @ `aa556e43`, verdict `APPROVE`. Cây `/home/lakiet/wt-go-con-lai`, nhánh `go/p0-w-con-lai`, đã rebase `--merge` (3-way; git cũ không có `--3way`) lên `claude/p0-w-go0-nen-mong-cong-truoc`. **Không đụng** `claude/wip-go-*`. Không LIVE-GO. Không `gate.sh parity` (T5, người gộp).
 
 Hai điều kiện **không chặn gộp**:
 
 1. Tầng Postgres dùng ảnh ghim `mobile-parity-api:7bf58e3d`. Gặp đỏ thật thì dán nguyên văn lỗi — không đổi ảnh, không allowlist tag có hậu tố checksum. Bằng chứng B3 của record là lượt Claude trên ảnh ghim: `scripts/go_postgres_tier.sh --image mobile-parity-api:7bf58e3d -- -v ./...` → exit 0, 1753 PASS, 0 FAIL, 0 SKIP, sentinel có mặt, mọi oracle 0 sai khác (kể cả `create_memory: a place id without a name`). Migration `e1f2a3b4c5d6` **đã nằm trong ảnh ghim**; lời biện minh đổi ảnh vì thiếu migration đó là sai.
 2. Oracle WAI phải dày (có ca từ chối) trước khi 36 hàng rời `PORTED-UNPROVEN`. Đã làm trên ảnh ghim: 25 ca / 8 từ chối / 35 câu lệnh / 0 sai khác. Vẫn chưa đủ để lật nhãn — T5 parity trên SHA sạch sau rebase.
 
-Manifest 156 hàng, `owner: python` cả bảng: **108 PORTED / 36 PORTED-UNPROVEN / 7 PY / 5 DEFERRED**. Nhãn `PORTED-UNPROVEN` nằm trong `candidateStates`, nên `MOBILE_CORE_CANDIDATE_ROUTES=ported` vẫn phục vụ 36 hàng đó. Evidence: `docs/migration/ported-unproven-w7-wai.md`. `GET /healthz` là PORTED-UNPROVEN, không DEFERRED — `docs/migration/deferred-framework.md`.
+Manifest 156 hàng, `owner: python` cả bảng: **108 PORTED / 43 PORTED-UNPROVEN / 0 PY / 5 DEFERRED**. Nhãn `PORTED-UNPROVEN` nằm trong `candidateStates`, nên `MOBILE_CORE_CANDIDATE_ROUTES=ported` vẫn phục vụ 43 hàng đó. Evidence: `docs/migration/ported-unproven-w7-wai.md`, `docs/migration/ported-unproven-w9-auth.md`. `GET /healthz` là PORTED-UNPROVEN, không DEFERRED — `docs/migration/deferred-framework.md`.
 
-Nửa routed của `POST /outings/{outing_id}/itinerary/preview` (`_route`, `schedule`, `suggest_order`, `savings`, `feasible`, `segments`, `late_fixed_stop`) **vẫn chưa chứng minh** cho tới stub Valhalla (T4). Khi thiếu `MOBILE_VALHALLA_URL` cả hai phía trả `unavailable` — trung thành, không che.
+Nửa routed của `POST /outings/{outing_id}/itinerary/preview` (`_route`, `schedule`, `suggest_order`, `savings`, `feasible`, `segments`, `late_fixed_stop`) có stub định tuyến (`3cff2c30`) trên cả hai stack. Khi thiếu `MOBILE_VALHALLA_URL` unit test vẫn `unavailable` — trung thành với nhánh nil-router.
 
-Thứ tự gộp: W9 domain `8ebc2334` · W9 repo `ca38f0e0` · stub `3cff2c30` đã trên chiến dịch; nhánh này rebase `--3way` (sẽ đụng `routes.go`, `routes.json`, `ports.go`), rồi một lượt cổng cho tất cả.
+Thứ tự gộp: W9 domain `8ebc2334` · W9 repo `ca38f0e0` · stub `3cff2c30` đã trên chiến dịch; HTTP W9 trên nhánh này; cổng parity (T5) do người gộp.
 
 ---
 

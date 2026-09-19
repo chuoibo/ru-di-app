@@ -12,7 +12,9 @@ rồi lật từng hàng sang `PORTED`.
 
 Nửa routed của `POST /outings/{outing_id}/itinerary/preview` (`_route`,
 `schedule`, `suggest_order`, `savings`, `feasible`, `segments`,
-`late_fixed_stop`) vẫn chưa chứng minh cho tới stub Valhalla.
+`late_fixed_stop`) có stub định tuyến tất định trên cả hai stack
+(`3cff2c30`); unit test khi thiếu `MOBILE_VALHALLA_URL` vẫn `unavailable`.
+Chưa có `gate.sh parity` trên SHA sạch sau rebase (T5, người gộp).
 
 Năm hàng framework (`GET /openapi.json`, `/docs`, `/docs/oauth2-redirect`,
 `/redoc`, `MOUNT /static`) không nằm đây: chúng là `DEFERRED`, xem

@@ -1187,7 +1187,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "GET /sessions",
@@ -1199,7 +1200,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "DELETE /sessions/current",
@@ -1211,7 +1213,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "DELETE /sessions/{session_id}",
@@ -1223,7 +1226,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "POST /auth/otp/request",
@@ -1238,7 +1242,8 @@
       "in_memory": [
         "otp_request_limit"
       ],
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "POST /auth/otp/verify",
@@ -1253,7 +1258,8 @@
       "in_memory": [
         "otp_verify_limit"
       ],
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "POST /auth/google",
@@ -1268,7 +1274,8 @@
       "in_memory": [
         "google_login_limit"
       ],
-      "state": "PY"
+      "state": "PORTED-UNPROVEN",
+      "evidence": "docs/migration/ported-unproven-w9-auth.md"
     },
     {
       "id": "POST /identity/person-id",

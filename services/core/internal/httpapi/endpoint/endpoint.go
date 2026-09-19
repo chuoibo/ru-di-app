@@ -35,6 +35,7 @@ import (
 
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/db"
+	"mobile/services/core/internal/googleid"
 	"mobile/services/core/internal/httpapi/dispatch"
 	"mobile/services/core/internal/httpapi/mw/servererror"
 	"mobile/services/core/internal/httpapi/problem"
@@ -44,6 +45,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/sms"
 	guestweb "mobile/services/core/internal/web/guest"
 )
 
@@ -81,6 +83,10 @@ const (
 	CallGetContextualSuggestionLimiter = "app.api.routes.suggestions.get_contextual_suggestion_limiter"
 	CallGetReelLimiter                 = "app.api.routes.albums.get_reel_limiter"
 	CallGetFaceDetectionLimiter        = "app.api.routes.faces.get_face_detection_limiter"
+
+	CallGetSmsSender      = "app.api.deps.get_sms_sender"
+	CallGetOtpDebugCode   = "app.api.deps.get_otp_debug_code"
+	CallGetGoogleVerifier = "app.api.deps.get_google_verifier"
 )
 
 // SupportedDependencies lists every dependency call this package stands in
@@ -99,6 +105,7 @@ var SupportedDependencies = map[string]bool{
 	CallGetReceiptScanLimiter:   true, CallGetScreenshotScanLimiter: true,
 	CallGetSuggestionLimiter: true, CallGetContextualSuggestionLimiter: true,
 	CallGetReelLimiter: true, CallGetFaceDetectionLimiter: true,
+	CallGetSmsSender: true, CallGetOtpDebugCode: true, CallGetGoogleVerifier: true,
 }
 
 // Mode is the auth mode the Python app resolved from MOBILE_AUTH_MODE.
@@ -139,6 +146,12 @@ type Call struct {
 	Limits *limit.Set
 	// PersonIDKey is the raw MOBILE_PERSON_ID_KEY.
 	PersonIDKey string
+	// SMS is get_sms_sender; nil only when the process did not wire one.
+	SMS sms.Sender
+	// OTPDebugCode is get_otp_debug_code: a six-digit code, or nil.
+	OTPDebugCode *string
+	// Google is get_google_verifier; nil when no client id is configured.
+	Google googleid.Verifier
 }
 
 // Reply is a route's answer when it does not refuse.
@@ -176,6 +189,12 @@ type Env struct {
 	// Python reads os.environ on every call; nothing in the app changes it, so
 	// one read at startup gives the same answers.
 	PersonIDKey string
+	// SMS is the process SMS sender (LogSmsSender or the HTTP gateway).
+	SMS sms.Sender
+	// OTPDebugCode is MOBILE_OTP_DEBUG_CODE after the fail-closed check.
+	OTPDebugCode *string
+	// Google is the Google ID-token verifier, or nil when none is configured.
+	Google googleid.Verifier
 }
 
 // New builds the handler for one route. status is the route decorator's
@@ -255,6 +274,15 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return &Refusal{Problem: problem.Problem{Status: refused.Status, Code: refused.Code, Detail: refused.Detail}}
 			}
 			call.Actor = actor
+			return nil
+		case CallGetSmsSender:
+			call.SMS = h.env.SMS
+			return nil
+		case CallGetOtpDebugCode:
+			call.OTPDebugCode = h.env.OTPDebugCode
+			return nil
+		case CallGetGoogleVerifier:
+			call.Google = h.env.Google
 			return nil
 		case CallGetItineraryLimiter, CallGetCompanion, CallGetChatExpenseReader,
 			CallGetSuggester, CallGetContextualSuggester, CallGetReeler, CallGetFaceDetector,

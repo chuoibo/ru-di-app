@@ -6,8 +6,10 @@
 # refusal itself lives in the limiter lane, not here), sets Cache-Control: no-store, and
 # builds the same draft the save builds, with the same refusals in the same order.
 # Beyond that it is `preview_itinerary`: one `issues` list, and a `status` of incomplete,
-# unavailable or ready. The parity stacks configure no Valhalla, so a draft with nothing
-# wrong reaches «unavailable» and the routed half of the file is unreachable from here.
+# unavailable or ready. parity_stacks.sh now starts a deterministic routing stub
+# and sets MOBILE_VALHALLA_URL on both stacks, so a draft with nothing wrong
+# reaches the routed half (status ready / incomplete), not «unavailable». A
+# process with no MOBILE_VALHALLA_URL still answers unavailable (nil router).
 # Texts are sample data (dữ liệu mẫu).
 id: w7/outings/post-outings-outing_id-itinerary-preview
 routes: ['POST /outings/{outing_id}/itinerary/preview']
@@ -276,7 +278,8 @@ steps:
       headers:
         content-type: 'application/json'
       body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cafe}}","at":"08:30","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"07:00","start_stop_id":"{{stop_cafe}}"}],"day":"2026-03-14"}'
-  # nothing wrong with the draft: the stacks have no routing engine, so «unavailable»
+  # nothing wrong with the draft: both stacks have the routing stub, so the
+  # routed half runs (not «unavailable»).
   - id: owner_previews_a_clean_day
     as: owner
     request:

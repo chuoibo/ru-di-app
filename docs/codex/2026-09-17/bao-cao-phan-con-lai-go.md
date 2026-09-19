@@ -179,11 +179,11 @@ Nhiều package domain mới **không có file test** (album, companion, convers
 
 ## 7. Việc chưa làm / chưa chứng minh — để Claude xếp blocker
 
-1. **`gate.sh parity` W7 và WAI chưa chạy lại** trên SHA sạch. Unit xanh ≠ parity. Preview routed vẫn `unavailable` cho tới stub Claude.
+1. **`gate.sh parity` W7 và WAI chưa chạy lại** trên SHA sạch. Unit xanh ≠ parity. Stub định tuyến (`3cff2c30`) đã đặt `MOBILE_VALHALLA_URL` cho cả hai stack — preview parity không còn dừng ở `unavailable`.
 2. **Chưa commit.** Repo-guard `staged` không quét untracked. Trước commit phải `repo_guard.py staged` sau khi add.
 3. **Chưa postgres live** cho messages / destinations / place_photos / outing_memories / SetMembershipRole.
 4. **Harness** (`ts#N`, bind INFRA, `free_port`) không sửa. Ảnh AVIF/TIFF lệch Go/Python vẫn như QUEUE.
-5. **W9** bảy hàng `PY` — để Claude. Rebase `--3way` khi domain/repo lên nhánh chiến dịch; đừng chép worktree.
+5. **W9** bảy hàng auth/sessions: domain (`8ebc2334`) và repo (`ca38f0e0`) đã trên chiến dịch; HTTP là việc của nhánh này sau rebase, không chép worktree Claude.
 6. **Không LIVE-GO.** Candidate `ported` mới thấy handler.
 7. Domain WAI phần lớn chưa có golden Python-cùng-hàm.
 8. Brain Python: public route vẫn gọi skill local; chỉ Go candidate đi HTTP. So parity MIXED/AI cần cả hai stack cùng token và cùng brain URL.

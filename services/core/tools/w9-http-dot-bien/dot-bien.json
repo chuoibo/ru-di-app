@@ -1,0 +1,36 @@
+{
+  "ghi_chu": [
+    "Đột biến của làn HTTP W9 (auth/sessions). Mỗi mục thay ĐÚNG MỘT lần xuất hiện",
+    "của `cu` bằng `moi` trong `tep`, qua `go test -overlay` — không sửa file trong cây.",
+    "Làn repo W9 ở tools/w9-dot-bien/ (Postgres, ảnh ghim); làn này tách ra để không",
+    "ghi đè bằng chứng của ca38f0e0.",
+    "`cho_doi` nói trước: `do` phải có ≥1 ca đỏ; `song-sot` / `song-sot-oracle` phải 0 đỏ.",
+    "`vi_sao` nói vì sao đột biến ĐÁNG KỂ (nó phải đổi một thứ cổng unit so sánh)."
+  ],
+  "dot_bien": [
+    {
+      "ten": "limiter-sau-than",
+      "tep": "internal/routes/auth.go",
+      "cu": "if err := spendAddressWindow(call, call.Limits.OTPRequestLimit, limit.OTPRequestConfig); err != nil {\n\t\t\treturn endpoint.Reply{}, err\n\t\t}\n\t\tobject, err := jsonObject(call.Body)",
+      "moi": "object, err := jsonObject(call.Body)\n\t\tif err != nil {\n\t\t\treturn endpoint.Reply{}, err\n\t\t}\n\t\tif err := spendAddressWindow(call, call.Limits.OTPRequestLimit, limit.OTPRequestConfig); err != nil {\n\t\t\treturn endpoint.Reply{}, err\n\t\t}\n\t\t_ = object",
+      "cho_doi": "do",
+      "vi_sao": "Limiter Python chạy trước request.json(). Đưa sau thân thì JSON hỏng trả 422 mà không tiêu slot; ca thứ 11 vẫn 422 thay vì 429."
+    },
+    {
+      "ten": "xoa-phien-hien-tai-doi-actor",
+      "tep": "internal/routes/sessions_account.go",
+      "cu": "token, problem := auth.BearerToken(call.Request.Header)\n\t\tif problem != nil {\n\t\t\treturn endpoint.Reply{}, endpoint.Refuse(problem.Status, problem.Code, problem.Detail)\n\t\t}",
+      "moi": "if call.Actor == nil {\n\t\t\treturn endpoint.Reply{}, endpoint.Refuse(401, \"authentication_required\", \"Missing X-Actor-ID\")\n\t\t}\n\t\ttoken, problem := auth.BearerToken(call.Request.Header)\n\t\tif problem != nil {\n\t\t\treturn endpoint.Reply{}, endpoint.Refuse(problem.Status, problem.Code, problem.Detail)\n\t\t}",
+      "cho_doi": "do",
+      "vi_sao": "DELETE /sessions/current không khai get_actor. Đòi Actor thì bearer hợp lệ không X-Actor-ID thành 401, khác Python 204/500-tầng-store."
+    },
+    {
+      "ten": "google-nil-van-doc-token",
+      "tep": "internal/routes/auth.go",
+      "cu": "view, err := authsteps.LoginWithGoogle(\n\t\t\tnewAuthStore(ctx, call), processSecrets{}, googleVerifier(call), jsonGet(object, \"id_token\"), authNow(),\n\t\t)",
+      "moi": "raw := jsonGet(object, \"id_token\")\n\t\ttyped, ok := raw.(string)\n\t\tif !ok || typed == \"\" {\n\t\t\treturn endpoint.Reply{}, endpoint.Refuse(422, \"id_token_required\", \"Thiếu id_token.\")\n\t\t}\n\t\tview, err := authsteps.LoginWithGoogle(\n\t\t\tnewAuthStore(ctx, call), processSecrets{}, googleVerifier(call), raw, authNow(),\n\t\t)",
+      "cho_doi": "do",
+      "vi_sao": "LoginWithGoogle từ chối verifier nil trước khi đọc token. Kiểm id_token trước thì `{}` ra 422 thay vì 503 google_not_configured."
+    }
+  ]
+}
