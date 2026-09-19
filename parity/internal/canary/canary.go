@@ -205,7 +205,11 @@ func Proxy(target *url.URL, mode Mode, applied *atomic.Int64) http.Handler {
 				r.Out = r.Out.WithContext(context.WithValue(r.Out.Context(), storeAfterKey{}, mode.Store()))
 			}
 		},
-		Transport: &http.Transport{Proxy: nil, DisableCompression: true},
+		// Keep-alive to Python is off: uvicorn closes a connection after an
+		// unhandled 500 without Connection: close. The identity canary fronts
+		// the candidate's Python (not core); a pooled connection would take
+		// the next request and answer 502 that Python never sent.
+		Transport: newTransport(false),
 		ModifyResponse: func(resp *http.Response) error {
 			body, err := io.ReadAll(resp.Body)
 			resp.Body.Close()
@@ -232,5 +236,18 @@ func Proxy(target *url.URL, mode Mode, applied *atomic.Int64) http.Handler {
 			}
 			return nil
 		},
+	}
+}
+
+// newTransport builds the upstream transport. Keep-alive to Python is off:
+// uvicorn closes a connection right after answering an unhandled exception
+// with 500, without a Connection: close header. A pooled connection would take
+// the next request, Go would not retry a POST, and identity would report a 502
+// that Python never sent. keepAlive exists so a test can show that failure.
+func newTransport(keepAlive bool) *http.Transport {
+	return &http.Transport{
+		Proxy:              nil,
+		DisableCompression: true,
+		DisableKeepAlives:  !keepAlive,
 	}
 }
