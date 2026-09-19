@@ -86,6 +86,14 @@ cmd_up() {
   work="$(mktemp -d)"
   env_file="${env_file:-$work/stacks.env}"
 
+  # Image umask is 022 (dirs 0755). The host is often 002 (dirs 0775). Go
+  # Mkdir(path, 0o777) matches pathlib.mkdir(mode=0o777); only the environment
+  # differed, and the media lane then reported 24 false diffs on dirs. Must run
+  # before mkdir -p and before the MOBILE_CORE_LISTEN=... \ chain — putting it
+  # between backslashes swallows the next assignment and core starts without a
+  # listen port.
+  umask 022
+
   if [ -z "$image" ]; then
     # Commit plus a hash of this checkout's path: two worktrees at one commit
     # with different uncommitted Python must not overwrite each other's tag.
@@ -100,6 +108,9 @@ cmd_up() {
   # sides must derive the same ones. Random per run, never a literal in git.
   local id_key
   id_key="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
+  # From 9a4a9bc2 Python refuses to start without this. Letter-only so
+  # repo-guard never mistakes it for an account number.
+  local internal_token="parity-internal-$run"
 
   # Built before the per-side loop: `parity routing-stub` is one of the two
   # processes each side needs, so the binary has to exist before the first one.
@@ -156,6 +167,7 @@ cmd_up() {
       -e MOBILE_DATABASE_URL="$sqlalchemy_url" \
       "${auth_env[@]}" \
       -e MOBILE_PERSON_ID_KEY="$id_key" \
+      -e MOBILE_INTERNAL_TOKEN="$internal_token" \
       -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 \
       -e MOBILE_MEDIA_ROOT="${media_dir[$role]}" -e TZ=UTC \
       -e MOBILE_VALHALLA_URL="${routing_url[$role]}" \
@@ -189,6 +201,7 @@ cmd_up() {
   MOBILE_AUTH_MODE="$auth" \
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_PERSON_ID_KEY="$id_key" \
+  MOBILE_INTERNAL_TOKEN="$internal_token" \
   MOBILE_MEDIA_ROOT="${media_dir[cand]}" \
   MOBILE_VALHALLA_URL="${routing_url[cand]}" \
   MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
@@ -203,6 +216,7 @@ PARITY_RUN=$run
 PARITY_AUTH=$auth
 PARITY_IMAGE=$image
 PARITY_IMAGE_ID=$image_id
+PARITY_INTERNAL_TOKEN=$internal_token
 PARITY_REF_URL=${api_url[ref]}
 PARITY_CAND_URL=http://127.0.0.1:$core_port
 PARITY_CAND_PYTHON_URL=${api_url[cand]}
