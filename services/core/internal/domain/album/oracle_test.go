@@ -185,7 +185,7 @@ func builtOK(b Built) map[string]any {
 func photoOK(p Photo) map[string]any {
 	return map[string]any{
 		"memory_id": p.MemoryID, "image_url": p.ImageURL, "caption": ptr(p.Caption),
-		"created_at": oracletest.StampOf(p.CreatedAt),
+		"created_at":     oracletest.StampOf(p.CreatedAt),
 		"reaction_count": p.ReactionCount, "comment_count": p.CommentCount,
 	}
 }

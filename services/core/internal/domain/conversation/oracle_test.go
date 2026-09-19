@@ -118,10 +118,10 @@ func digestOf(raw any) (Digest, error) {
 
 func digestOK(d Digest) map[string]any {
 	return map[string]any{
-		"recent_lines": oracletest.AnyStrings(d.RecentLines),
+		"recent_lines":  oracletest.AnyStrings(d.RecentLines),
 		"message_count": int64(d.MessageCount),
 		"speaker_count": int64(d.SpeakerCount),
-		"member_count": int64(d.MemberCount),
+		"member_count":  int64(d.MemberCount),
 	}
 }
 
