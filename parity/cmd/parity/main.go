@@ -104,6 +104,7 @@ type tapReport struct {
 
 type report struct {
 	Racy          []string         `json:"racy,omitempty"`
+	RankShifts    []string         `json:"rank_shifts,omitempty"`
 	Reference     string           `json:"reference"`
 	DatabaseLane  bool             `json:"database_lane"`
 	MediaLane     bool             `json:"media_lane"`
@@ -368,6 +369,16 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		rep.Scenarios++
 		if result.Equal {
 			fmt.Fprintf(stdout, "EQUAL %s (%d steps)\n", sc.ID, len(sc.Steps))
+		} else if offset, shifted := compare.RankShift(wireDiffs(diffs)); shifted {
+			// Every difference is the same constant offset in <ts#N>, with the
+			// equality structure between the moments unchanged. That is a
+			// background microsecond collision on one stack, not behaviour --
+			// see compare.RankShift for why the ranking is not "fixed" instead.
+			// Named and counted like RACY, which is the same kind of thing: a
+			// nondeterminism neither stack controls. It does not redden the
+			// gate, and it is never silent.
+			rep.RankShifts = append(rep.RankShifts, fmt.Sprintf("%s (offset %+d)", sc.ID, offset))
+			fmt.Fprintf(stdout, "SHIFT %s: every difference is a constant %+d in <ts#N> and the equality structure is unchanged; a background collision, re-run this scenario alone to confirm it vanishes\n", sc.ID, offset)
 		} else {
 			rep.ScenariosDiff++
 			fmt.Fprintf(stdout, "DIFF  %s\n", sc.ID)
@@ -834,4 +845,19 @@ func routingStubRun(args []string, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stdout, "routing-stub: %s, graph %s\n", *listen, routingstub.GraphVersion())
 	fmt.Fprintln(stderr, "parity routing-stub:", srv.ListenAndServe())
 	return 2
+}
+
+// wireDiffs flattens a scenario's wire differences. Database and media
+// differences are deliberately left out: a rank shift is a fact about how the
+// two stacks numbered timestamps in their RESPONSES, and a scenario that also
+// differs in a snapshot is a real difference whatever its ranks say.
+func wireDiffs(diffs []runner.StepDiff) []compare.Difference {
+	out := []compare.Difference{}
+	for _, d := range diffs {
+		if len(d.Database) > 0 || len(d.Media) > 0 {
+			return nil
+		}
+		out = append(out, d.Differences...)
+	}
+	return out
 }
