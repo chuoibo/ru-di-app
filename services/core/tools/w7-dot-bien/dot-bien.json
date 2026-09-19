@@ -1,0 +1,46 @@
+{
+  "ghi_chu": [
+    "Hai đột biến của NGƯỜI GỘP cho T5 (W7 outings), theo ADR-0030: người gộp phải tự",
+    "nghĩ ra đột biến của mình, không dùng lại của tác giả.",
+    "",
+    "Khác với w9-dot-bien và wai-dot-bien, hai đột biến này chạy trên STACK SỐNG, không",
+    "chạy qua `go test -overlay`: thứ chúng phải làm đỏ là bộ so parity trên dây, chứ",
+    "không phải một test đơn vị. Quy trình:",
+    "  1. scripts/parity_stacks.sh up --auth dev --env <file>",
+    "  2. giữ lại môi trường của core đang chạy: /proc/$PARITY_CORE_PID/environ",
+    "  3. go build -overlay <o.json> -o <work>/core-mut ./cmd/core  (phải biên dịch được;",
+    "     một overlay không biên dịch cho 0 ca đỏ và rất dễ đọc nhầm thành sống sót)",
+    "  4. giết core cũ, chạy core đột biến bằng ĐÚNG môi trường đó, umask 022",
+    "  5. parity run --auth dev scenarios/w7/outings/",
+    "  6. ĐỐI CHỨNG: trả lại core gốc và chạy lại đúng tập ấy — phải xanh trở lại.",
+    "     Không có bước 6 thì màu đỏ có thể chỉ là do tráo binary hỏng.",
+    "",
+    "Cố ý KHÔNG chọn «bỏ FOR UPDATE»: kết quả của nó phụ thuộc lịch trình nên ra RACY",
+    "chứ không ra DIFF, mà RACY không phải bằng chứng."
+  ],
+  "do_tren": {
+    "mocs": "41d8a030",
+    "tap_kich_ban": "parity/scenarios/w7/outings/ — 11 kịch bản, 545 bước",
+    "doi_chung": "core gốc: 11 EQUAL, 0 khác biệt"
+  },
+  "dot_bien": [
+    {
+      "ten": "moi-tu-choi-outings-thanh-403",
+      "tep": "services/core/internal/routes/outings.go",
+      "cu": "return endpoint.Refuse(refused.Status, refused.Code, refused.Detail)",
+      "moi": "return endpoint.Refuse(403, refused.Code, refused.Detail)",
+      "cho_doi": "do",
+      "da_do": "9/11 kịch bản, 75 khác biệt; bước đỏ đầu owner_unknown_outing và holder_accepts_junk, reference 404 candidate 403",
+      "vi_sao": "Gom mọi mã từ chối của 11 route outings về 403. Bắt đúng lớp lỗi một người port hay mắc: ánh xạ ngoại lệ domain sang HTTP. Cổng so status từng bước nên mọi bước 404/409/422 phải đỏ."
+    },
+    {
+      "ten": "timeline-revision-lech-mot",
+      "tep": "services/core/internal/routes/outing_wire.go",
+      "cu": "out.Set(\"timeline_revision\", pyjson.NewInt(view.TimelineRevision))",
+      "moi": "out.Set(\"timeline_revision\", pyjson.NewInt(view.TimelineRevision+1))",
+      "cho_doi": "do",
+      "da_do": "11/11 kịch bản, 80 khác biệt; timeline_revision 0 ở reference, 1 ở candidate",
+      "vi_sao": "timeline_revision có trong MỌI phản hồi outing và neo này với tới 10/21 file kịch bản W7. Lệch một đơn vị ở bộ đếm revision là lỗi off-by-one thật, và nó đổi thân phản hồi ở mọi bước có outing — tất định, không phụ thuộc lịch trình."
+    }
+  ]
+}
