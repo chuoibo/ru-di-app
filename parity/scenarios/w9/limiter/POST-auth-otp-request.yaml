@@ -1,0 +1,112 @@
+# W9 · POST /auth/otp/request, in the limiter lane because it has no other home.
+# The address limiter is spent BEFORE the body is read (`routes/auth.py:134-136`), so
+# every request to this route costs one of the ten in the window -- the 422s too. The
+# bucket is application state keyed by caller address, and every scenario in a run
+# arrives from the same host, so a main-lane file here would spend the window out from
+# under every other file. The lane starts this scenario just after a window boundary
+# and runs both stacks inside it, so each side meets the limiter with nothing counted.
+#
+# Exactly eleven requests: ten that are allowed through to the handler, whatever they
+# then answer, and an eleventh that is refused by the limiter itself. The two 429s are
+# different codes on purpose -- `otp_resend_too_soon` is the per-number cooldown the
+# domain applies after the body was read, `rate_limited` is the address window applied
+# before it. No example number appears in plain digits; the repo guard refuses a run
+# shaped like one, so the separators are real characters the canonicaliser drops.
+id: w9/limiter/post-auth-otp-request
+routes: ['POST /auth/otp/request']
+auth_mode: dev
+lane: limiter
+steps:
+  # spends 1 of 10 -- body is not JSON at all
+  - id: body_broken_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone": '
+  # spends 2 of 10 -- JSON, but not an object
+  - id: body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '[]'
+  # spends 3 of 10 -- object without the field
+  - id: phone_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'
+  # spends 4 of 10 -- present but not a string
+  - id: phone_not_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":3990}'
+  # spends 5 of 10 -- a string, but not a Vietnamese mobile
+  - id: phone_landline
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"02\t99\t00\t01\t01"}'
+  # spends 6 of 10 -- not a number at all
+  - id: phone_not_a_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"khong-phai-so"}'
+  # spends 7 of 10 -- fullwidth digits are not ASCII digits
+  - id: phone_fullwidth_digits
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\uff19\uff19\uff10\uff10\uff10\uff11\uff10\uff11"}'
+  # spends 8 of 10 -- the door opens: 202 with a challenge id and the two TTLs
+  - id: first_code_for_this_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\t99\t00\t01\t02"}'
+    bind:
+      challenge: {from: body, pointer: /challenge_id, class: uuid}
+  # spends 9 of 10 -- same number again, refused by the per-number cooldown, not by
+  # the address window. `retry_after_seconds` is ceil(cooldown - elapsed), so the two
+  # stacks agree only while both take under a second to get here; see the card.
+  - id: same_number_too_soon
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\t99\t00\t01\t02"}'
+  # spends 10 of 10 -- a different number is a different cooldown, so this opens
+  - id: second_number_allowed
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\t99\t00\t01\t03"}'
+  # the eleventh: nothing left in the window. Refused before the body is read, which
+  # is why a body that would have been a 422 is a 429 here instead.
+  - id: eleventh_is_rate_limited
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'

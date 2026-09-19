@@ -288,6 +288,47 @@ WAVES: dict[str, Wave] = {
             ("POST", "/outing-invites/{token}/accept", "path token is str"),
         ),
     ),
+    "w9": Wave(
+        routes=(
+            ("POST", "/sessions"),
+            ("GET", "/sessions"),
+            ("DELETE", "/sessions/{session_id}"),
+        ),
+        excluded=(
+            # In dev there is no bearer at all, so this route answers 401 to every
+            # step; runner.PersonasRefused reads a scenario whose every persona step
+            # is a 401 as a stack whose sessions were not accepted, and stops the run
+            # as INFRA. The 401 is the route's honest answer, not a broken stack.
+            # parity/scenarios/w9/sessions/prod-sessions.yaml covers it in prod.
+            (
+                "DELETE",
+                "/sessions/current",
+                "dev has no bearer, so every step is 401 and PersonasRefused stops the run",
+            ),
+            # Same reason as POST /friends/lookup and POST /identity/person-id in
+            # w2, plus one more that is specific to these three: the address window
+            # is spent BEFORE the body is read, so every generated step spends one
+            # of ten (or thirty). A corpus of 18-56 steps would become a wall of
+            # 429s -- equal on both sides, so green and meaningless -- and would
+            # empty the window out from under every other scenario in the run.
+            # parity/scenarios/w9/limiter/ covers them by hand instead.
+            (
+                "POST",
+                "/auth/otp/request",
+                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+            ),
+            (
+                "POST",
+                "/auth/otp/verify",
+                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+            ),
+            (
+                "POST",
+                "/auth/google",
+                "body parsed by hand and an in-memory per-IP limiter; hand scenarios only",
+            ),
+        ),
+    ),
     "w10": Wave(
         routes=(
             ("GET", "/people/me/contexts"),

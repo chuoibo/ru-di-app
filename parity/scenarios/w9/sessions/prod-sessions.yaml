@@ -1,0 +1,105 @@
+# W9 · the two session routes that only say something in `prod` mode. In `dev` there
+# is no bearer, so `DELETE /sessions/current` is a 401 whatever the caller sends and
+# `current` on every listed row is false. Here the harness has seeded one live session
+# per persona, so the pair can be shown properly: the row the request arrived on is
+# marked, logging out spends that row and nothing else, and a malformed or missing
+# Authorization header answers exactly like a wrong one (`deps.py:93-107`).
+id: w9/sessions/prod-sessions
+routes: ['GET /sessions', 'DELETE /sessions/current']
+auth_mode: prod
+personas:
+  owner: {}
+  other: {}
+steps:
+  # --- the shapes of a refused header, all one answer ---------------------------
+  - id: anonymous_lists
+    as: anonymous
+    request: {method: GET, path: /sessions}
+  - id: anonymous_revokes_current
+    as: anonymous
+    request: {method: DELETE, path: /sessions/current}
+  - id: junk_bearer_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'Bearer khong-phai-token-that'}
+  - id: empty_bearer_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'Bearer '}
+  - id: scheme_only_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'Bearer'}
+  - id: basic_scheme_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'Basic {{token.other}}'}
+  # RFC 7235 says the scheme is case-insensitive, and a client that capitalises it
+  # differently is not an attacker.
+  - id: lowercase_scheme_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'bearer {{token.owner}}'}
+  # Dev headers must not be a second door in prod.
+  - id: actor_headers_without_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {x-actor-id: '{{persona.owner}}', x-actor-roles: member}
+  # --- the seeded session, and `current` computed from this very request --------
+  - id: owner_lists_own_session
+    as: owner
+    request: {method: GET, path: /sessions}
+  - id: other_lists_own_session
+    as: other
+    request: {method: GET, path: /sessions}
+  # A token that is live but belongs to somebody else marks no row as current in
+  # the owner's list, because the owner's list never contains it.
+  - id: owner_lists_with_others_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers: {authorization: 'Bearer {{token.other}}'}
+  # --- logging out spends exactly the row the request arrived on ----------------
+  - id: other_revokes_current
+    as: other
+    request: {method: DELETE, path: /sessions/current}
+  - id: other_lists_after_logout
+    as: other
+    request: {method: GET, path: /sessions}
+  - id: owner_still_signed_in
+    as: owner
+    request: {method: GET, path: /sessions}
+  # Signing out twice on a spent token: the route answers the same way whether or
+  # not the token was live, so a caller holding a guess learns nothing.
+  - id: other_revokes_current_again
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/sessions/current'
+      headers: {authorization: 'Bearer {{token.other}}'}
+  - id: junk_bearer_revokes_current
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/sessions/current'
+      headers: {authorization: 'Bearer khong-phai-token-that'}
+  # --- framework ----------------------------------------------------------------
+  - id: trailing_slash_current
+    as: owner
+    request: {method: DELETE, path: '/sessions/current/'}
+  - id: patch_current_not_allowed
+    as: owner
+    request: {method: PATCH, path: '/sessions/current'}

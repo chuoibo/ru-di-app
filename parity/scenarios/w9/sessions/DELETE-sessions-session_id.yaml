@@ -1,0 +1,128 @@
+# W9 · DELETE /sessions/{session_id}: sign one other device out. Somebody else's
+# session answers 404, not 403 -- a 403 would confirm that the id names a real
+# session (`routes/sessions.py:105-107`). The literal route `/sessions/current` is
+# declared before this one so it is never parsed as an id; the step below sends the
+# word `current` as a path segment to show which of the two answers. Texts are
+# sample data (dữ liệu mẫu).
+id: w9/sessions/delete-sessions-session_id
+routes: ['DELETE /sessions/{session_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: anonymous_revokes
+    as: anonymous
+    request: {method: DELETE, path: '/sessions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'}
+  - id: anonymous_non_uuid_session
+    as: anonymous
+    request: {method: DELETE, path: '/sessions/khong-phai-uuid'}
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/sessions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: owner_path_not_uuid
+    as: owner
+    request: {method: DELETE, path: '/sessions/khong-phai-uuid'}
+  - id: owner_unknown_session
+    as: owner
+    request: {method: DELETE, path: '/sessions/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'}
+  # --- give `friend` two sessions through the invitation door -------------------
+  - id: owner_names_self
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở nhóm (dữ liệu mẫu)"}'
+  - id: owner_names_friend
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn được mời đích danh (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm thu phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_friend_by_name
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      token_friend: {from: body, pointer: /invite_token, class: token}
+  - id: friend_redeems_invitation
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_friend}}"}'
+  - id: friend_lists_before
+    as: friend
+    request: {method: GET, path: /sessions}
+    bind:
+      session_one: {from: body, pointer: /sessions/0/id, class: uuid}
+  # --- somebody else's session is a 404, not a 403 ------------------------------
+  - id: stranger_revokes_friends_session
+    as: stranger
+    request: {method: DELETE, path: '/sessions/{{session_one}}'}
+  - id: owner_revokes_friends_session
+    as: owner
+    request: {method: DELETE, path: '/sessions/{{session_one}}'}
+  - id: friend_lists_after_refused
+    as: friend
+    request: {method: GET, path: /sessions}
+  # --- the owner of the row may spend it ----------------------------------------
+  - id: friend_revokes_own_session
+    as: friend
+    request: {method: DELETE, path: '/sessions/{{session_one}}'}
+  - id: friend_lists_after_revoke
+    as: friend
+    request: {method: GET, path: /sessions}
+  # A second revoke of the same id: whether a revoked row is still found decides
+  # between 204 and 404, and Python's answer is the one Go must copy.
+  - id: friend_revokes_same_session_again
+    as: friend
+    request: {method: DELETE, path: '/sessions/{{session_one}}'}
+  # --- `current` as a path segment, in dev where there is no bearer -------------
+  # Declaration order puts the literal first, so this is the /sessions/current
+  # handler answering, not this route with a broken uuid.
+  - id: word_current_as_session_id
+    as: friend
+    request: {method: DELETE, path: '/sessions/current'}
+  # --- framework ----------------------------------------------------------------
+  - id: trailing_slash
+    as: friend
+    request: {method: DELETE, path: '/sessions/{{session_one}}/'}
+  - id: patch_not_allowed
+    as: friend
+    request: {method: PATCH, path: '/sessions/{{session_one}}'}

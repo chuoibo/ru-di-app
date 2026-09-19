@@ -1,0 +1,219 @@
+# W9 · POST /sessions: the one door that answers without an identity, because it is
+# where an identity is obtained. The body carries a named invitation's secret and
+# nothing else -- no person_id -- so possession is a claim about a person an existing
+# member already vouched for (`routes/sessions.py:1-19`). A `link` invitation names
+# nobody and is refused here with the same 404 as a dead one, so a token never reveals
+# whether the thing behind it exists. The membership this writes is INVITED, not
+# active: group data stays behind the existing approval. Texts are sample data
+# (dữ liệu mẫu).
+id: w9/sessions/post-sessions
+routes: ['POST /sessions']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  friend: {}
+steps:
+  # --- refusals that need no fixture -------------------------------------------
+  - id: no_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: ''
+  - id: body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: body_broken_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token": '
+  - id: token_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: token_null
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":null}'
+  - id: token_not_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":7}'
+  # min_length=1 and max_length=512 on the pydantic model, so both ends are steps.
+  - id: token_empty
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":""}'
+  - id: token_unknown
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"khong-phai-token-that"}'
+  # --- the fixture: a group, a trip, and two kinds of invitation ----------------
+  - id: owner_names_self
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở nhóm (dữ liệu mẫu)"}'
+  - id: owner_names_friend
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn được mời đích danh (dữ liệu mẫu)"}'
+  - id: owner_names_mate
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời rồi bị thu hồi (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đổi phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_invites_friend_by_name
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      invite_friend: {from: body, pointer: /id, class: uuid}
+      token_friend: {from: body, pointer: /invite_token, class: token}
+  # --- a link secret is not a session secret ------------------------------------
+  # `link` names nobody, so there is no person to issue a session to. Same 404 as a
+  # token that never existed: the two doors must not share a redemption.
+  - id: link_token_refused
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_link}}"}'
+  # --- the door that opens ------------------------------------------------------
+  - id: named_token_opens_a_session
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_friend}}"}'
+  # One redemption only: consume_named_invite_secret refuses the second.
+  - id: named_token_spent_twice
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_friend}}"}'
+  # --- a revoked invitation is a dead one ---------------------------------------
+  - id: owner_invites_mate_by_name
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.mate}}"}'
+    bind:
+      invite_mate: {from: body, pointer: /id, class: uuid}
+      token_mate: {from: body, pointer: /invite_token, class: token}
+  - id: owner_revokes_mate_invite
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_mate}}/revoke'
+  - id: revoked_token_refused
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_mate}}"}'
+  # --- framework ----------------------------------------------------------------
+  - id: trailing_slash
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"khong-phai-token-that"}'
+  - id: patch_not_allowed
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"khong-phai-token-that"}'
