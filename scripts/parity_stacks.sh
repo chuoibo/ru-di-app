@@ -111,6 +111,10 @@ cmd_up() {
   # From 9a4a9bc2 Python refuses to start without this. Letter-only so
   # repo-guard never mistakes it for an account number.
   local internal_token="parity-internal-$run"
+  # Both sides must mint the same OTP code or every verify step compares a code
+  # one side never issued. Declared once and passed to the API containers and to
+  # core below: passing it to only one of them is the bug this line replaces.
+  local otp_debug_code="000000"
 
   # Built before the per-side loop: `parity routing-stub` is one of the two
   # processes each side needs, so the binary has to exist before the first one.
@@ -168,7 +172,7 @@ cmd_up() {
       "${auth_env[@]}" \
       -e MOBILE_PERSON_ID_KEY="$id_key" \
       -e MOBILE_INTERNAL_TOKEN="$internal_token" \
-      -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 \
+      -e MOBILE_OTP_DEBUG_CODE="$otp_debug_code" -e MOBILE_OTP_LOG_CODES=1 \
       -e MOBILE_MEDIA_ROOT="${media_dir[$role]}" -e TZ=UTC \
       -e MOBILE_VALHALLA_URL="${routing_url[$role]}" \
       -e MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
@@ -202,6 +206,8 @@ cmd_up() {
   MOBILE_DATABASE_URL="${dsn[cand]}" \
   MOBILE_PERSON_ID_KEY="$id_key" \
   MOBILE_INTERNAL_TOKEN="$internal_token" \
+  MOBILE_OTP_DEBUG_CODE="$otp_debug_code" \
+  MOBILE_OTP_LOG_CODES=1 \
   MOBILE_MEDIA_ROOT="${media_dir[cand]}" \
   MOBILE_VALHALLA_URL="${routing_url[cand]}" \
   MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
