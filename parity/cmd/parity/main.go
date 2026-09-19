@@ -369,7 +369,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		rep.Scenarios++
 		if result.Equal {
 			fmt.Fprintf(stdout, "EQUAL %s (%d steps)\n", sc.ID, len(sc.Steps))
-		} else if offset, shifted := compare.RankShift(wireDiffs(diffs)); shifted {
+		} else if offset, shifted := compare.RankShift(allDiffs(diffs)); shifted {
 			// Every difference is the same constant offset in <ts#N>, with the
 			// equality structure between the moments unchanged. That is a
 			// background microsecond collision on one stack, not behaviour --
@@ -847,17 +847,40 @@ func routingStubRun(args []string, stdout, stderr io.Writer) int {
 	return 2
 }
 
-// wireDiffs flattens a scenario's wire differences. Database and media
-// differences are deliberately left out: a rank shift is a fact about how the
-// two stacks numbered timestamps in their RESPONSES, and a scenario that also
-// differs in a snapshot is a real difference whatever its ranks say.
-func wireDiffs(diffs []runner.StepDiff) []compare.Difference {
+// allDiffs flattens every difference a scenario produced: wire, database and
+// media alike.
+//
+// The first version left the database and media lanes out, on the theory that a
+// snapshot difference is real whatever the ranks say. That was wrong, and the
+// gate proved it: one Binder numbers the responses AND the snapshots, so a rank
+// shift necessarily shows up in both. Excluding the snapshot lanes meant the
+// classifier never fired on any scenario with the database lane on, which is
+// almost all of them. A difference carrying no rank at all is still refused by
+// RankShift, so a real snapshot difference cannot slip through here.
+func allDiffs(diffs []runner.StepDiff) []compare.Difference {
 	out := []compare.Difference{}
 	for _, d := range diffs {
-		if len(d.Database) > 0 || len(d.Media) > 0 {
-			return nil
-		}
 		out = append(out, d.Differences...)
+		for _, x := range d.Database {
+			out = append(out, pairRows(x.Kind, x.Reference, x.Candidate, x.OnlyReference, x.OnlyCandidate)...)
+		}
+		for _, x := range d.Media {
+			out = append(out, pairRows(x.Kind, x.Reference, x.Candidate, x.OnlyReference, x.OnlyCandidate)...)
+		}
+	}
+	return out
+}
+
+// pairRows turns a snapshot difference into the row pairs RankShift can read.
+// A side holding MORE rows than the other is never a renumbering, so it is
+// handed back as one unpairable difference that RankShift is certain to refuse.
+func pairRows(kind string, refCount, candCount int, onlyRef, onlyCand []string) []compare.Difference {
+	if refCount != candCount || len(onlyRef) != len(onlyCand) || len(onlyRef) == 0 {
+		return []compare.Difference{{Part: kind, Reference: "<row count>", Candidate: "<row count>"}}
+	}
+	out := make([]compare.Difference, 0, len(onlyRef))
+	for i := range onlyRef {
+		out = append(out, compare.Difference{Part: kind, Reference: onlyRef[i], Candidate: onlyCand[i]})
 	}
 	return out
 }
