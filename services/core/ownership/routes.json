@@ -605,8 +605,8 @@
       "in_memory": [
         "itinerary_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "PUT /outings/{outing_id}/itinerary",
@@ -618,8 +618,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /contexts/{context_id}/outings",
@@ -631,8 +631,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "GET /contexts/{context_id}/outings",
@@ -644,8 +644,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "PUT /outings/{outing_id}/timeline",
@@ -657,8 +657,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /outing-stops/{stop_id}/checkins",
@@ -670,8 +670,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "GET /outings/{outing_id}/checkins",
@@ -683,8 +683,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /outings/{outing_id}/invites",
@@ -696,8 +696,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /outings/{outing_id}/invites/{invite_id}/revoke",
@@ -709,8 +709,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /outings/{outing_id}/invites/{invite_id}/rotate",
@@ -722,8 +722,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /outing-invites/{token}/accept",
@@ -735,8 +735,8 @@
       "class": "core",
       "owner": "python",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "PORTED",
+      "evidence": "docs/migration/ported-w7-outings.md"
     },
     {
       "id": "POST /contexts/{context_id}/messages",
