@@ -40,6 +40,7 @@ from app.api.deps import (
 from app.api.internal_token import INTERNAL_TOKEN_HEADER, tokens_match
 from app.api.receipt_skill import ReceiptReader, run_receipt_skill
 from app.api.screenshot_skill import ScreenshotReader, run_screenshot_skill
+from app.domain import money
 from app.domain.chat_expense import ChatExpenseError
 from app.domain.companion import CompanionError, plan_turn
 from app.domain.place_search import PlaceSearchError, ground_search
@@ -371,9 +372,22 @@ def _list_of_dict(body: dict, key: str) -> list[dict]:
 
 
 def _optional_int(value: Any) -> int | None:
+    """An optional integer đồng, checked where every other đồng is checked.
+
+    The predicate `isinstance(v, bool) or not isinstance(v, int)` used to be
+    spelled out here, and `tests/test_one_money_check.py` caught it: money.py
+    is the one file allowed to spell that shape, everything else calls it.
+    That gate exists because the same three lines had already been pasted into
+    seven places, each drifting a little.
+
+    Only NOT_INTEGER is rejected, not every violation `vnd_violation` knows.
+    A negative budget is nonsense and the caller already refused it, but
+    tightening this door would change behaviour inside a branch whose whole
+    claim is that behaviour did not change. It is written down instead.
+    """
     if value is None:
         return None
-    if isinstance(value, bool) or not isinstance(value, int):
+    if money.vnd_violation(value) == money.NOT_INTEGER:
         raise _code_error(422, "brain_request_invalid")
     return value
 
