@@ -235,6 +235,14 @@ export function BanDo({
           list.appendChild(button);
         }
         chooser.current = new Popup({ closeButton: true, maxWidth: "280px", focusAfterOpen: true }).setLngLat([moc.lng, moc.lat]).setDOMContent(list).addTo(map);
+        // The attribution strip sits at the map's bottom edge and MapLibre gives
+        // its control container a higher stacking order than a popup, so a chooser
+        // opened near that edge has its lower entries covered. Measured on the web
+        // build: the second item's centre hit-tested to
+        // `.maplibregl-ctrl-attrib-inner` ("© OpenStreetMap"), which means a real
+        // press picked the copyright line instead of the stop. Attribution has to
+        // stay clickable, so the popup is raised rather than the strip disabled.
+        chooser.current.getElement().style.zIndex = "10";
         const content = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-content");
         if (content) { content.style.background = mauNen; content.style.color = cbs.current.mauDuong; }
       });
