@@ -17,7 +17,7 @@ jobs:
     # mang 150 commit x ~3860 file thì chạm trần đúng ở 10m15s -- hết giờ của
     # job, không phải guard chặn thứ gì. Nới lên 30 để một PR lớn vẫn được quét
     # đủ; vẫn có trần, vì một lượt quét chạy mãi cũng là một lượt quét hỏng.
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Check out complete history

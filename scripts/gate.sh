@@ -639,7 +639,13 @@ do_docker() {
   # host passes whenever *anything* answers on that port. Polling the
   # container's own HEALTHCHECK cannot be satisfied by a stranger.
   docker rm -f "$MOBILE_GATE_CONTAINER" >/dev/null 2>&1 || true
-  docker run -d --name "$MOBILE_GATE_CONTAINER" "$MOBILE_GATE_IMAGE" >/dev/null || return 1
+  # Cửa brain fail-closed: create_app() từ chối khởi động khi thiếu token, nên
+  # một container dựng không token sẽ không bao giờ healthy và chặng này báo
+  # "ảnh không phục vụ được" trong khi ảnh không có lỗi gì. Token của riêng lượt
+  # chạy; ảnh không gửi nó đi đâu cả.
+  docker run -d --name "$MOBILE_GATE_CONTAINER" \
+    -e MOBILE_INTERNAL_TOKEN="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 32)" \
+    "$MOBILE_GATE_IMAGE" >/dev/null || return 1
   wait_container_healthy "$MOBILE_GATE_CONTAINER" || return 1
 
   # ADR-0029: the Go front door ships as its own image, held to the same bar.

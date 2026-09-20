@@ -342,7 +342,11 @@ INLINE_STEPS: dict[str, Covered] = {
     "test.yml::docker::The container actually serves /healthz": Covered(
         kind=GATE_KIND,
         stages=("docker",),
-        body_sha="732b09e74f85a7f0",
+        # 2026-09-21: bước này và chặng `docker` của gate.sh cùng được thêm
+        # MOBILE_INTERNAL_TOKEN. Cửa brain fail-closed nên container không
+        # token thì không bao giờ healthy; cổng này bắt đúng chỗ phải nhìn, và
+        # nhìn ra rằng gate.sh có y hệt lỗi ấy.
+        body_sha="afab580373def512",
         why="",
     ),
     "test.yml::docker::Image size": Covered(
