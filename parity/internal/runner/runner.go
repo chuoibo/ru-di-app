@@ -190,7 +190,23 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 		}
 		tapSeq = last
 	}
-	for _, step := range sc.Steps {
+	// A limiter-lane scenario must finish inside the product's own 60 s window,
+	// and the snapshot cost grows with the database. In the gate the limiter
+	// lane runs LAST, against a database holding every earlier scenario's rows,
+	// and the 36 snapshots taken BETWEEN the requests pushed them past the
+	// boundary. Measured 20/09: the same scenario is EQUAL on fresh stacks with
+	// the lane on (63 s including the wait for a window) and overruns on gate
+	// stacks on both attempts.
+	//
+	// The limiter counts REQUESTS, so the snapshots move to the end of the
+	// scenario. What is given up, on purpose and only in this lane: the delta
+	// no longer says WHICH step wrote a row, only that the scenario as a whole
+	// wrote what the other side wrote. What a refused request must not write is
+	// still caught, because the end state would carry it.
+	snapEachStep := sc.Lane != scenario.LaneLimiter
+	for stepIndex, step := range sc.Steps {
+		lastStep := stepIndex == len(sc.Steps)-1
+		snapNow := snapEachStep || lastStep
 		client := stack.Client
 		if step.Via == scenario.ViaPython {
 			client = stack.Python
@@ -229,7 +245,7 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 			tapSeq = last
 			result.PythonRequests = len(entries)
 		}
-		if stack.DB != nil {
+		if stack.DB != nil && snapNow {
 			next, err := dbsnap.Snapshot(ctx, stack.DB)
 			if err != nil {
 				return nil, fmt.Errorf("%s on %s step %s: snapshot: %w", sc.ID, stack.Name, step.ID, err)
@@ -244,7 +260,7 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 				return nil, err
 			}
 		}
-		if stack.Media != "" {
+		if stack.Media != "" && snapNow {
 			next, err := mediaCache.Snapshot(stack.Media)
 			if err != nil {
 				return nil, fmt.Errorf("%s on %s step %s: media snapshot: %w", sc.ID, stack.Name, step.ID, err)
