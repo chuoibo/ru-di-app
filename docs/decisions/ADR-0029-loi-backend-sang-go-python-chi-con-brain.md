@@ -152,7 +152,7 @@ Công cụ đo là bộ kiểm parity `parity/` (module Go riêng, hộp đen, k
 
 **Ngoại lệ thứ hai, Lead duyệt ngày 2026-09-14: `MALFORMED-REQUEST-LINE`.** net/http của Go phân tích dòng
 request trước mọi handler, nên cửa trước trả lời khác uvicorn/httptools cho những dòng request mà không client nào
-của sản phẩm gửi. Đo bằng socket thô trên hai stack (22 dòng, Python trực tiếp so với Python qua `core`), 11 dòng
+của sản phẩm gửi. Đo bằng socket thô trên hai stack (22 dòng, Python trực tiếp so với Python qua `core`), 10 dòng
 khác và được chấp nhận có tên:
 
 | Nhóm | Ví dụ | Python (uvicorn) | Go (`core`) |
@@ -160,13 +160,17 @@ khác và được chấp nhận có tên:
 | escape hỏng trong path | `/%zz`, `/healthz%zz`, `/contexts/%zz`, `/healthz%` | định tuyến (404/401) | 400 `400 Bad Request` |
 | byte non-ASCII thô trong target | `/h\xc3\xa9`, `/h\xe9` | 400 `Invalid HTTP request received.` | 404 |
 | cả hai 400 nhưng khác thân/header | byte DEL, dấu cách trong query, target không bắt đầu bằng `/` | 400 `Invalid HTTP request received.` | 400 `400 Bad Request` |
-| fragment | `/healthz#frag` | bỏ fragment → 200 | 404 |
 | `OPTIONS *` | `OPTIONS *` | 404 JSON | 200 rỗng |
 
 Mọi dòng request hợp lệ khác trong bộ đo đều bằng nhau (escape hỏng trong query, `//`, absolute-form, `%2F`,
 `%0A`, 307 dấu gạch chéo cuối, method viết thường/lạ, `CONNECT`). Danh sách không được lớn lặng lẽ: lượt probe
 (`parity probe`, chặng `parity`) đỏ khi một dòng NGOÀI danh sách bắt đầu khác, và đỏ khi một dòng TRONG danh sách
 hết khác (danh sách cũ). Muốn thêm dòng là sửa ADR này.
+
+Hàng `fragment` (`/healthz#frag`) **đã gỡ 2026-09-20**: `internal/httpapi/router/pystr.go`, bản port của
+`parse_url` phía Python, cắt path ở `#` và bỏ fragment, nên `core` trả 200 y như uvicorn. Nó đã đúng từ
+`71156526` (W0); lượt probe chỉ nói ra bây giờ vì đây là lượt cổng đầu tiên chạy tới được tầng probe sau một
+chuỗi lượt chết sớm vì hạ tầng. Danh sách còn 10 dòng.
 
 **Ngoại lệ thứ ba, Lead duyệt ngày 2026-09-15: `RESPONSE-204-CONTENT-LENGTH`.** Khi một `Idempotency-Key` được
 dùng lại cho route trả 204, middleware idempotency của Python phát lại kèm `content-length: 0`. net/http của Go

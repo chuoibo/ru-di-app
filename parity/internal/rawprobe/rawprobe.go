@@ -66,7 +66,6 @@ var ExpectedDivergence = map[string]string{
 	"raw-latin1-target": "uvicorn refuses raw non-ASCII target bytes; Go forwards them",
 	"del-byte-target":   "both refuse; the 400 bodies differ",
 	"space-in-query":    "both refuse; the 400 bodies differ",
-	"fragment":          "uvicorn drops the fragment; Go keeps it in the path",
 	"options-asterisk":  "Go answers OPTIONS * itself",
 	"no-leading-slash":  "both refuse; the 400 bodies differ",
 }

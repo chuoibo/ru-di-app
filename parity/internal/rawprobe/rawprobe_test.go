@@ -97,7 +97,13 @@ func TestExpectedDivergenceNamesRealCases(t *testing.T) {
 			t.Fatalf("ExpectedDivergence names %q, which is not a case", name)
 		}
 	}
-	if len(ExpectedDivergence) != 11 {
-		t.Fatalf("ADR-0029 §2.4 lists 11 accepted request lines, code lists %d", len(ExpectedDivergence))
+	// 10 since 2026-09-20: the `fragment` line left the list because
+	// router/pystr.go, the port of Python's parse_url, cuts the path at "#" and
+	// drops the fragment, so core answers 200 exactly as uvicorn does. It had
+	// been right since 71156526 (W0); the probe only said so once a gate run
+	// finally reached the probe stage. The count is pinned on purpose: the list
+	// must not grow, or shrink, without the ADR moving with it.
+	if len(ExpectedDivergence) != 10 {
+		t.Fatalf("ADR-0029 §2.4 lists 10 accepted request lines, code lists %d", len(ExpectedDivergence))
 	}
 }
