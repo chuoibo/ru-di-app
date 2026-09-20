@@ -101,6 +101,13 @@ def _dong_y(
         cycle_id=cycle_id,
         purpose=purpose,
         proposed_by_id=by,
+        # `created_at` ghim theo CÙNG đồng hồ với `expires_at`. Cột ấy có
+        # `server_default=func.now()`, tức giờ THẬT của máy chủ, nên khi NOW là
+        # một mốc cố định thì hai cột trôi xa nhau theo ngày tháng thật và
+        # `ck_pair_consent_proposals_consent_expires_after_created` nổ. Đo được:
+        # NOW = 2026-09-13, `expires_at` = 16/09, và từ 16/09 trở đi mọi lượt
+        # chạy đều đỏ — một quả bom hẹn giờ, không phải hồi quy.
+        created_at=NOW,
         expires_at=NOW + timedelta(days=3),
     )
     session.add(proposal)
@@ -316,6 +323,10 @@ def test_muc_dich_ngoai_tu_vung_bi_tu_choi(postgres_session: Session):
             cycle_id=cycle_id,
             purpose="doc_het_moi_thu",
             proposed_by_id=a,
+            # Ghim luôn ở đây, nếu không ca này XANH VÌ LÝ DO SAI: nó chờ
+            # `IntegrityError` do mục đích ngoài từ vựng, mà ràng buộc hết hạn
+            # lại nổ trước khi tới đó.
+            created_at=NOW,
             expires_at=NOW + timedelta(days=1),
         )
     )
