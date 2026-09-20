@@ -235,16 +235,23 @@ s.close()")" || { echo "không tìm được cổng trống" >&2; return 2; }
   # A key of this run's own. The API answers 503 identity_key_missing without
   # one, and a literal in the repository would be the enumeration bug of
   # bug-140342 with extra steps -- see scripts/check_identity_key.sh.
-  local id_key
-  id_key="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
+  ID_KEY="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
+
+  # Since the /internal brain door became fail-closed, create_app() refuses to
+  # start without a token. It went into docker-compose and eight scripts but not
+  # into this one, so the slice could not start an API at all -- the same miss
+  # as scripts/parity_stacks.sh. A token of this run's own, like the id key
+  # above: the slice never sends it, it only has to exist.
+  INTERNAL_TOKEN="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 32)"
 
   (
     cd "$REPO_ROOT/services/api" || exit 2
     MOBILE_DATABASE_URL="$DATABASE_URL" \
     MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
-    MOBILE_PERSON_ID_KEY="$id_key" \
+    MOBILE_PERSON_ID_KEY="$ID_KEY" \
     MOBILE_OTP_DEBUG_CODE="000000" \
     MOBILE_OTP_LOG_CODES="1" \
+    MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
       python3 -m uvicorn app.api.main:app \
         --host 127.0.0.1 --port "$port" --log-level warning
   ) >"$API_LOG" 2>&1 &
@@ -304,11 +311,23 @@ s.close()")" || return 2
 
   # Same database as the API, and no MOBILE_AUTH_MODE for either, so both run
   # prod. Merged Go routes (manifest PORTED or later) are served from Go.
+  #
+  # core gets the SAME settings the API got, not fewer. A route moving to Go
+  # moves its configuration with it: once W9 landed, core answered the OTP
+  # routes and minted person ids, and a core without MOBILE_OTP_DEBUG_CODE or
+  # MOBILE_PERSON_ID_KEY failed the slice at its first login. Same for the media
+  # root, which the W6 photo routes write through. The rule to keep: whatever
+  # the API is started with, core is started with.
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
   MOBILE_PYTHON_UPSTREAM="$API_URL" \
   MOBILE_DATABASE_URL="$DATABASE_URL" \
   MOBILE_CORE_CANDIDATE_ROUTES="${MOBILE_CORE_CANDIDATE_ROUTES:-ported}" \
+  MOBILE_PERSON_ID_KEY="$ID_KEY" \
+  MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
+  MOBILE_OTP_DEBUG_CODE="000000" \
+  MOBILE_OTP_LOG_CODES="1" \
+  MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
     "$core_bin" serve >"$core_log" 2>&1 &
   CORE_PID=$!
 
