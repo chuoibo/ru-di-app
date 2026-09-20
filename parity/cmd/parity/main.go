@@ -264,52 +264,83 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 	if candTap != nil {
 		rep.Tap = &tapReport{ServedRoutes: len(served)}
 	}
+	// How many times a limiter-lane scenario may be run before a window
+	// overrun counts against it. Two: one spill is this host having a bad
+	// moment, two in a row is the scenario being too slow for a 60 s window.
+	const limiterAttempts = 2
 	ran := map[string]bool{}
 	for _, sc := range scenarios {
-		nonce := runner.NewNonce()
-		var started int64
-		if window != nil {
-			if sc.HasBursts() {
-				fmt.Fprintf(stderr, "parity run: %s: a limiter-lane scenario cannot burst; the reference repeats a burst scenario and every repeat spends the limiter again\n", sc.ID)
-				return 2
+		// A limiter-lane scenario must fit inside one window, and a scenario
+		// that spills into the next one measured nothing: from there the two
+		// sides' counts no longer start from the same place. Spilling once is
+		// a fact about this host at this moment -- a slow disk, a busy core --
+		// so it is retried in a fresh window rather than reddening the gate.
+		// Spilling AGAIN is a fact about the scenario, and that is INFRA.
+		//
+		// A discarded attempt leaves its rows behind, which is safe here only
+		// because BOTH sides ran before the check: the leftovers are symmetric,
+		// the way the burst repeats were made symmetric. An attempt that ran on
+		// one side alone would skew every scenario that reads a shared feed
+		// afterwards.
+		var nonce string
+		var nonces []string
+		var refRun, candRun *runner.Run
+		var refRuns []*runner.Run
+		var racy []string
+		for attempt := 1; ; attempt++ {
+			nonce = runner.NewNonce()
+			var started int64
+			if window != nil {
+				if sc.HasBursts() {
+					fmt.Fprintf(stderr, "parity run: %s: a limiter-lane scenario cannot burst; the reference repeats a burst scenario and every repeat spends the limiter again\n", sc.ID)
+					return 2
+				}
+				started = window.Start()
 			}
-			started = window.Start()
-		}
-		refRun, err := runner.Execute(ctx, sc, refStack, nonce)
-		if err != nil {
-			fmt.Fprintf(stderr, "INFRA %v\n", err)
-			return 2
-		}
-		if runner.PersonasRefused(sc, refRun) {
-			fmt.Fprintf(stderr, "INFRA %s: the reference answered 401 to every persona step; its sessions or actor headers were not accepted\n", sc.ID)
-			return 2
-		}
-		refRuns := []*runner.Run{refRun}
-		nonces := []string{nonce}
-		for sc.HasBursts() && len(refRuns) < *burstRepeats {
-			nonces = append(nonces, runner.NewNonce())
-			again, err := runner.Execute(ctx, sc, refStack, nonces[len(nonces)-1])
+			var err error
+			refRun, err = runner.Execute(ctx, sc, refStack, nonce)
 			if err != nil {
 				fmt.Fprintf(stderr, "INFRA %v\n", err)
 				return 2
 			}
-			refRuns = append(refRuns, again)
+			if runner.PersonasRefused(sc, refRun) {
+				fmt.Fprintf(stderr, "INFRA %s: the reference answered 401 to every persona step; its sessions or actor headers were not accepted\n", sc.ID)
+				return 2
+			}
+			refRuns = []*runner.Run{refRun}
+			nonces = []string{nonce}
+			for sc.HasBursts() && len(refRuns) < *burstRepeats {
+				nonces = append(nonces, runner.NewNonce())
+				again, err := runner.Execute(ctx, sc, refStack, nonces[len(nonces)-1])
+				if err != nil {
+					fmt.Fprintf(stderr, "INFRA %v\n", err)
+					return 2
+				}
+				refRuns = append(refRuns, again)
+			}
+			racy = runner.RacySteps(refRuns)
+			candRun, err = runner.Execute(ctx, sc, candStack, nonce)
+			if err != nil {
+				fmt.Fprintf(stderr, "INFRA %v\n", err)
+				return 2
+			}
+			if window == nil {
+				break
+			}
+			err = window.Check(started)
+			if err == nil {
+				break
+			}
+			if attempt >= limiterAttempts {
+				fmt.Fprintf(stderr, "INFRA %s: %v, on every one of %d attempts\n", sc.ID, err, attempt)
+				return 2
+			}
+			fmt.Fprintf(stdout, "RETRY %s: %v; running it again in a fresh window\n", sc.ID, err)
 		}
-		if racy := runner.RacySteps(refRuns); len(racy) > 0 {
+		if len(racy) > 0 {
 			rep.Racy = append(rep.Racy, sc.ID+": "+strings.Join(racy, ", "))
 			fmt.Fprintf(stdout, "RACY  %s: the reference answered %s differently across %d runs; the candidate must match one of them\n",
 				sc.ID, strings.Join(racy, ", "), len(refRuns))
-		}
-		candRun, err := runner.Execute(ctx, sc, candStack, nonce)
-		if err != nil {
-			fmt.Fprintf(stderr, "INFRA %v\n", err)
-			return 2
-		}
-		if window != nil {
-			if err := window.Check(started); err != nil {
-				fmt.Fprintf(stderr, "INFRA %s: %v\n", sc.ID, err)
-				return 2
-			}
 		}
 		diffs, matched := runner.Closest(refRuns, candRun)
 		if matched > 0 {
