@@ -276,7 +276,9 @@ ROUTES = {
     "route.delete_pair_constraint": _route(
         "delete_pair_constraint", lambda r, a, n: (_uuid(a["context_id"]), a["kind"])
     ),
-    "route.preview_close_pair_notebook": _route("preview_close_pair_notebook", _context),
+    "route.preview_close_pair_notebook": _route(
+        "preview_close_pair_notebook", _context
+    ),
     "route.close_pair_notebook": _route("close_pair_notebook", _close_body),
     "route.list_pair_papers": _route("list_pair_papers", _context),
     "route.draft_pair_paper": _route("draft_pair_paper", _context),
@@ -290,7 +292,10 @@ ROUTES = {
     ),
     "route.send_pair_paper": _route(
         "send_pair_paper",
-        lambda r, a, n: (_uuid(a["paper_id"]), PaperSendRequest.model_validate(a["body"])),
+        lambda r, a, n: (
+            _uuid(a["paper_id"]),
+            PaperSendRequest.model_validate(a["body"]),
+        ),
     ),
     "route.mark_pair_paper_viewed": _route(
         "mark_pair_paper_viewed", lambda r, a, n: (_uuid(a["paper_id"]), a["version"])
@@ -314,7 +319,10 @@ ROUTES = {
     "route.record_pair_outing_done": _route("record_pair_outing_done", _paper),
     "route.keep_pair_paper_line": _route(
         "keep_pair_paper_line",
-        lambda r, a, n: (_uuid(a["paper_id"]), PaperKeepRequest.model_validate(a["body"])),
+        lambda r, a, n: (
+            _uuid(a["paper_id"]),
+            PaperKeepRequest.model_validate(a["body"]),
+        ),
     ),
 }
 

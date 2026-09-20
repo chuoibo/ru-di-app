@@ -8,8 +8,8 @@ import pytest
 
 from app.api.internal_token import (
     INTERNAL_TOKEN_ENV_VAR,
-    InternalTokenMissing,
     TEST_TOKEN,
+    InternalTokenMissing,
     resolve_internal_token,
     tokens_match,
 )

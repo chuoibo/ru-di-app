@@ -87,7 +87,13 @@ set +e
     CORE_REQUIRE_POSTGRES_TESTS=1 \
     IDEM_ORACLE_IMAGE="$image" \
     CORE_PYTHON_IMAGE="$image" \
-    go test -tags postgres -count=1 -v "${go_args[@]}"
+    # -timeout: the default is 10 minutes per package, and internal/repo went
+    # past it on CI -- "FAIL mobile/services/core/internal/repo 600.011s", no
+    # failing case, just the clock. The tier is one oracle per repository
+    # method against a real PostgreSQL and it grows with every wave; locally it
+    # takes about four minutes, a CI runner is slower than that. 30 minutes is
+    # room to grow without letting a genuine hang sit there forever.
+    go test -tags postgres -count=1 -timeout 30m -v "${go_args[@]}"
 ) 2>&1 | tee "$log"
 rc=${PIPESTATUS[0]}
 set -e

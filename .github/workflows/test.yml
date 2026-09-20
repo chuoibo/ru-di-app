@@ -420,7 +420,15 @@ jobs:
         # stranger, and it exercises the HEALTHCHECK instruction at the same
         # time.
         run: |
-          docker run -d --name api mobile-api:ci
+          # The brain door is fail-closed: create_app() refuses to start
+          # without a token, so a container started without one never reaches
+          # healthy and this step reports an image that "does not serve". The
+          # token is a secret the image never sends anywhere; one of this run's
+          # own is enough, and a literal in the workflow would be a secret in
+          # the repository.
+          docker run -d --name api \
+            -e MOBILE_INTERNAL_TOKEN="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 32)" \
+            mobile-api:ci
           for i in $(seq 1 60); do
             status=$(docker inspect --format '{{.State.Health.Status}}' api)
             case "$status" in

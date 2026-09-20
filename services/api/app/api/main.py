@@ -17,8 +17,6 @@ from fastapi.staticfiles import StaticFiles
 from app.api.auth_mode import AUTH_MODE_ENV_VAR, resolve_auth_mode
 from app.api.cors import install_cors
 from app.api.errors import GUEST_LINK_NOT_FOUND, ApiProblem
-from app.api.internal_token import resolve_internal_token
-from app.api.routes.brain import BrainDoor, build_brain_app
 from app.api.google_identity import build_google_verifier
 from app.api.guest_privacy import (
     GuestPrivacyHeadersMiddleware,
@@ -31,6 +29,7 @@ from app.api.idempotency import (
     IdempotencyStoreFactory,
     SqlAlchemyIdempotencyStore,
 )
+from app.api.internal_token import resolve_internal_token
 from app.api.routes import (
     albums,
     auth,
@@ -65,6 +64,7 @@ from app.api.routes import (
     suggestions,
     votes,
 )
+from app.api.routes.brain import BrainDoor, build_brain_app
 from app.api.routes.places import CachedReasonWriter
 from app.api.schemas import ErrorResponse
 from app.api.search_rate_limit import (

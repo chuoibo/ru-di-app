@@ -92,7 +92,9 @@ def gen_image(gen: dict) -> Image.Image:
     pattern = gen.get("pattern", "smooth")
     mode = gen.get("mode", "RGB")
     if mode == "1":
-        gray = Image.frombytes("L", (width, height), gen_bytes(width * height, rng, pattern, width, 1))
+        gray = Image.frombytes(
+            "L", (width, height), gen_bytes(width * height, rng, pattern, width, 1)
+        )
         return gray.convert("1", dither=Image.Dither.NONE)
     if mode in ("P", "PA"):
         colors = int(gen.get("colors", 256))
@@ -104,7 +106,9 @@ def gen_image(gen: dict) -> Image.Image:
         entries = bytes(rng.getrandbits(8) for _ in range(colors * len(palette_mode)))
         image.putpalette(entries, palette_mode)
         if mode == "PA":
-            alpha = Image.frombytes("L", (width, height), gen_bytes(width * height, rng, pattern, width, 1))
+            alpha = Image.frombytes(
+                "L", (width, height), gen_bytes(width * height, rng, pattern, width, 1)
+            )
             image = image.convert("PA")
             image.putalpha(alpha)
         return image
@@ -197,7 +201,11 @@ def info_summary(image: Image.Image) -> dict:
 
 
 def op_sanitize(request: dict, want: set[str]) -> dict:
-    raw = unb64(request["b64"]) if request.get("b64") is not None else build(request["gen"])
+    raw = (
+        unb64(request["b64"])
+        if request.get("b64") is not None
+        else build(request["gen"])
+    )
     answer: dict = {}
     if "input" in want or request.get("gen") is not None:
         answer["input_sha256"] = sha(raw)
@@ -274,7 +282,11 @@ def op_encode(request: dict, want: set[str], fmt: str) -> dict:
 
 
 def op_decode(request: dict, want: set[str]) -> dict:
-    raw = unb64(request["b64"]) if request.get("b64") is not None else build(request["gen"])
+    raw = (
+        unb64(request["b64"])
+        if request.get("b64") is not None
+        else build(request["gen"])
+    )
     answer: dict = {"input_sha256": sha(raw)}
     if "input" in want:
         answer["b64_input"] = b64(raw)
@@ -302,7 +314,9 @@ def op_decode(request: dict, want: set[str]) -> dict:
                     answer["b64_pixels"] = b64(pixels)
                 if image.mode in ("P", "PA") and image.palette is not None:
                     answer["palette_mode"] = image.palette.mode
-                    answer["b64_palette"] = b64(bytes(image.getpalette(image.palette.mode) or []))
+                    answer["b64_palette"] = b64(
+                        bytes(image.getpalette(image.palette.mode) or [])
+                    )
     except Exception as exc:
         answer.update(result="error", type=type(exc).__name__, message=str(exc))
     return answer
@@ -332,7 +346,9 @@ def op_plugin(request: dict, want: set[str]) -> dict:
             # _open_core calls accept inside its try: this is "not accepted".
             verdict = False
             answer["accept_raised"] = type(exc).__name__
-        answer["accept"] = verdict if isinstance(verdict, (bool, str)) else bool(verdict)
+        answer["accept"] = (
+            verdict if isinstance(verdict, (bool, str)) else bool(verdict)
+        )
     with warnings.catch_warnings():
         warnings.simplefilter("error", Image.DecompressionBombWarning)
         try:
@@ -343,7 +359,9 @@ def op_plugin(request: dict, want: set[str]) -> dict:
         except BaseException as exc:
             answer.update(open="raise", type=type(exc).__name__, message=str(exc))
             return answer
-        answer.update(open="ok", mode=image.mode, width=image.width, height=image.height)
+        answer.update(
+            open="ok", mode=image.mode, width=image.width, height=image.height
+        )
         try:
             Image._decompression_bomb_check(image.size)
         except BaseException as exc:
@@ -429,7 +447,11 @@ def main() -> None:
                 answer = op_decode(request, want)
             elif op == "gen":
                 raw = build(request["gen"])
-                answer = {"result": "ok", "input_sha256": sha(raw), "b64_input": b64(raw)}
+                answer = {
+                    "result": "ok",
+                    "input_sha256": sha(raw),
+                    "b64_input": b64(raw),
+                }
             elif op == "metrics":
                 answer = op_metrics(request)
             elif op == "plugin":
@@ -437,7 +459,11 @@ def main() -> None:
             else:
                 answer = {"result": "error", "type": "BadOp", "message": op}
         except Exception:
-            answer = {"result": "error", "type": "OracleCrash", "message": traceback.format_exc()}
+            answer = {
+                "result": "error",
+                "type": "OracleCrash",
+                "message": traceback.format_exc(),
+            }
         answer["id"] = request.get("id")
         out.write(json.dumps(answer) + "\n")
         out.flush()

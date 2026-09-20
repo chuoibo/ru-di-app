@@ -537,7 +537,8 @@ def otp_edges() -> list[dict]:
     add(
         "plan_request",
         "five rows but the oldest has just left the window",
-        recent=[T - 900 * SECOND] + [T - (100 + 60 * index) * SECOND for index in range(4)],
+        recent=[T - 900 * SECOND]
+        + [T - (100 + 60 * index) * SECOND for index in range(4)],
         now=T,
         limits=None,
     )
@@ -551,7 +552,10 @@ def otp_edges() -> list[dict]:
     add(
         "plan_request",
         "rows in six offsets, same instants",
-        recent=[(T - (200 + 60 * index) * SECOND).astimezone(zone) for index, zone in enumerate(OFFSETS)],
+        recent=[
+            (T - (200 + 60 * index) * SECOND).astimezone(zone)
+            for index, zone in enumerate(OFFSETS)
+        ],
         now=T,
         limits=None,
     )
@@ -572,8 +576,14 @@ def otp_edges() -> list[dict]:
         ("no challenge per window", {"max_challenges_per_window": 0}),
         ("an unread key", {"never_read": 7}),
         ("cooldown past a float", {"resend_cooldown_seconds": 10**400}),
-        ("window at the timedelta ceiling", {"window_seconds": timedelta.max.days * 86400 + 86399}),
-        ("window one second past the ceiling", {"window_seconds": timedelta.max.days * 86400 + 86400}),
+        (
+            "window at the timedelta ceiling",
+            {"window_seconds": timedelta.max.days * 86400 + 86399},
+        ),
+        (
+            "window one second past the ceiling",
+            {"window_seconds": timedelta.max.days * 86400 + 86400},
+        ),
         ("window past a C int", {"window_seconds": 10**15}),
     ):
         add(
@@ -599,7 +609,14 @@ def otp_edges() -> list[dict]:
     )
 
     # --- plan_verify
-    add("plan_verify", "no challenge", challenge=None, now=T, code_matches=True, limits=None)
+    add(
+        "plan_verify",
+        "no challenge",
+        challenge=None,
+        now=T,
+        code_matches=True,
+        limits=None,
+    )
     add(
         "plan_verify",
         "no challenge and a wrong code",
@@ -687,7 +704,7 @@ def random_instant(rng: random.Random) -> datetime:
     if shape < 0.55:
         moment = T + timedelta(microseconds=rng.randint(-2 * 10**9, 2 * 10**9))
     elif shape < 0.8:
-        moment = T + timedelta(microseconds=rng.randint(-10**14, 10**14))
+        moment = T + timedelta(microseconds=rng.randint(-(10**14), 10**14))
     else:
         moment = datetime(
             rng.randint(1, 9999),
@@ -711,7 +728,7 @@ def random_limits(rng: random.Random) -> dict | None:
             override[key] = rng.choice(
                 [
                     rng.randint(-5, 10),
-                    rng.randint(-10**4, 10**4),
+                    rng.randint(-(10**4), 10**4),
                     rng.randint(-(10**13), 10**13),
                     rng.choice([10**15, -(10**15), 10**30, -(10**30), 10**400]),
                     timedelta.max.days * 86400 + rng.randint(-2, 2),
@@ -732,7 +749,11 @@ def otp_fuzz(seed: int, count: int) -> list[dict]:
             built = case(
                 "generate_code",
                 f"fuzz {index}",
-                {"draw": rng.choice([rng.randint(-10, 10**7), rng.randint(-(10**30), 10**30)])},
+                {
+                    "draw": rng.choice(
+                        [rng.randint(-10, 10**7), rng.randint(-(10**30), 10**30)]
+                    )
+                },
             )
         elif pick < 0.6:
             now = random_instant(rng)
@@ -753,9 +774,11 @@ def otp_fuzz(seed: int, count: int) -> list[dict]:
             if rng.random() < 0.9:
                 consumed = None
                 if rng.random() < 0.3:
-                    consumed = now + timedelta(microseconds=rng.randint(-10**9, 10**9))
+                    consumed = now + timedelta(
+                        microseconds=rng.randint(-(10**9), 10**9)
+                    )
                 challenge = challenge_dict(
-                    now + timedelta(microseconds=rng.randint(-10**9, 10**9)),
+                    now + timedelta(microseconds=rng.randint(-(10**9), 10**9)),
                     rng.choice([rng.randint(-2, 8), rng.randint(-(10**30), 10**30)]),
                     consumed,
                 )
@@ -1069,7 +1092,12 @@ class Stub:
         self, *, person_id, display_name, provider, subject, now
     ):
         self.rec(
-            "create_person_with_identity", person_id, display_name, provider, subject, now
+            "create_person_with_identity",
+            person_id,
+            display_name,
+            provider,
+            subject,
+            now,
         )
         self.maybe_conflict("create_person_with_identity")
         return AccountIdentityRecord(
@@ -1086,7 +1114,12 @@ class Stub:
         self, *, challenge_id, phone_digest, code_digest, expires_at, now
     ):
         self.rec(
-            "create_otp_challenge", challenge_id, phone_digest, code_digest, expires_at, now
+            "create_otp_challenge",
+            challenge_id,
+            phone_digest,
+            code_digest,
+            expires_at,
+            now,
         )
         self.maybe_conflict("create_otp_challenge")
         stored = self.world["created_challenge"]
@@ -1151,7 +1184,12 @@ class Stub:
         self, *, context_id, person_id, invited_by_id, origin, now
     ):
         self.rec(
-            "ensure_invited_membership", context_id, person_id, invited_by_id, origin, now
+            "ensure_invited_membership",
+            context_id,
+            person_id,
+            invited_by_id,
+            origin,
+            now,
         )
         self.maybe_conflict("ensure_invited_membership")
         row = self.world["membership"]
@@ -1634,7 +1672,9 @@ def auth_steps_edges() -> list[dict]:
             {
                 "invites": invite(),
                 "outings": {"OU1": "HOI"},
-                "conflicts": {"consume_named_invite_secret": ["INVITE_ALREADY_ACCEPTED"]},
+                "conflicts": {
+                    "consume_named_invite_secret": ["INVITE_ALREADY_ACCEPTED"]
+                },
             },
         )
     )
@@ -1699,7 +1739,13 @@ def auth_steps_edges() -> list[dict]:
             "list_account_sessions",
             "three rows and no bearer, so none is current",
             {"token": None},
-            {"sessions": [sess("SS1"), sess("SS2", via="google"), sess("SSN", via="invite", invite_id="IV1")]},
+            {
+                "sessions": [
+                    sess("SS1"),
+                    sess("SS2", via="google"),
+                    sess("SSN", via="invite", invite_id="IV1"),
+                ]
+            },
         )
     )
     add(
@@ -2006,7 +2052,11 @@ def auth_steps_edges() -> list[dict]:
                 "verify_otp",
                 f"a right code with {label}",
                 {"challenge_id": "CH1", "phone": "@SO_A", "code": "abcdef"},
-                {"challenge": challenge(expires=expires), **bound, "people": live_people},
+                {
+                    "challenge": challenge(expires=expires),
+                    **bound,
+                    "people": live_people,
+                },
             )
         )
     add(
@@ -2104,7 +2154,11 @@ def auth_steps_edges() -> list[dict]:
             "login_with_google",
             "a sub already bound signs that person in",
             {"id_token": "the-id-token"},
-            {**vouched, "identities": {"google|sub-cua-nguoi-nay": "KIA"}, "people": live_people},
+            {
+                **vouched,
+                "identities": {"google|sub-cua-nguoi-nay": "KIA"},
+                "people": live_people,
+            },
         )
     )
     add(
@@ -2138,7 +2192,11 @@ def auth_steps_edges() -> list[dict]:
         ("only spaces", "   "),
         ("a list", ["the-id-token"]),
     ):
-        add(step_case("login_with_google", f"id_token {label}", {"id_token": value}, vouched))
+        add(
+            step_case(
+                "login_with_google", f"id_token {label}", {"id_token": value}, vouched
+            )
+        )
     add(
         step_case(
             "login_with_google",
@@ -2209,7 +2267,7 @@ FUZZ_KEYS = [KEY, "", "   ", "khoa-ngan", "k" * 32, " " + KEY + " "]
 
 def fuzz_now(rng: random.Random) -> datetime:
     if rng.random() < 0.85:
-        return T + timedelta(microseconds=rng.randint(-10**10, 10**10))
+        return T + timedelta(microseconds=rng.randint(-(10**10), 10**10))
     return random_instant(rng)
 
 
@@ -2219,7 +2277,10 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
         world["key"] = rng.choice(FUZZ_KEYS)
     if rng.random() < 0.6:
         world["people"] = {
-            alias: [rng.choice(["Tôi", "Bạn Kia", "Người cũ", ""]), None if rng.random() < 0.7 else T - DAY]
+            alias: [
+                rng.choice(["Tôi", "Bạn Kia", "Người cũ", ""]),
+                None if rng.random() < 0.7 else T - DAY,
+            ]
             for alias in rng.sample(["TOI", "KIA", "DER", "NEW"], rng.randint(1, 3))
         }
     if rng.random() < 0.3:
@@ -2231,7 +2292,10 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
         world["summaries"] = rows
         if rng.random() < 0.5:
             world["edges"] = {
-                f"{who}|KIA": [rng.choice(["accepted", "blocked", "declined", "pending"]), rng.choice([None, "TOI", "KIA"])]
+                f"{who}|KIA": [
+                    rng.choice(["accepted", "blocked", "declined", "pending"]),
+                    rng.choice([None, "TOI", "KIA"]),
+                ]
                 for who in ("TOI", "KIA", "DER", "NEW")
             }
     if fn == "bootstrap_session_from_invite":
@@ -2240,7 +2304,7 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
                 token=rng.choice(list(TOKENS)),
                 source=rng.choice(["group", "friend", "link"]),
                 person=rng.choice(["KIA", "TOI", None]),
-                expires=T + timedelta(microseconds=rng.randint(-10**9, 10**12)),
+                expires=T + timedelta(microseconds=rng.randint(-(10**9), 10**12)),
                 revoked=None if rng.random() < 0.8 else T - HOUR,
                 accepted=None if rng.random() < 0.8 else T - HOUR,
             )
@@ -2248,15 +2312,34 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
             world["outings"] = {"OU1": rng.choice(["HOI", "CAP"])}
         if rng.random() < 0.25:
             world["conflicts"] = {
-                rng.choice(["consume_named_invite_secret", "ensure_invited_membership", "create_account_session"]): [
-                    rng.choice(["INVITE_ALREADY_ACCEPTED", "INVITE_NOT_FOUND", "CONTEXT_NOT_FOUND"])
+                rng.choice(
+                    [
+                        "consume_named_invite_secret",
+                        "ensure_invited_membership",
+                        "create_account_session",
+                    ]
+                ): [
+                    rng.choice(
+                        [
+                            "INVITE_ALREADY_ACCEPTED",
+                            "INVITE_NOT_FOUND",
+                            "CONTEXT_NOT_FOUND",
+                        ]
+                    )
                 ]
             }
         if rng.random() < 0.2:
-            world["membership"] = [rng.choice(["MB1", "MB2"]), rng.choice(["invited", "active", "left"])]
+            world["membership"] = [
+                rng.choice(["MB1", "MB2"]),
+                rng.choice(["invited", "active", "left"]),
+            ]
         if rng.random() < 0.2:
             world["created_session"] = ["SSN", rng.choice([None, "genesis", "otp"])]
-    elif fn in ("list_account_sessions", "revoke_session_token", "revoke_account_session"):
+    elif fn in (
+        "list_account_sessions",
+        "revoke_session_token",
+        "revoke_account_session",
+    ):
         world["sessions"] = [
             sess(
                 rng.choice(["SS1", "SS2", "SSN"]),
@@ -2268,7 +2351,9 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
         ]
         if rng.random() < 0.6:
             world["by_digest"] = {
-                rng.choice(list(TOKENS)): sess(rng.choice(["SS1", "SS2", "SSN"]), person=rng.choice(["TOI", "KIA"]))
+                rng.choice(list(TOKENS)): sess(
+                    rng.choice(["SS1", "SS2", "SSN"]), person=rng.choice(["TOI", "KIA"])
+                )
             }
         world["session"] = (
             None
@@ -2284,11 +2369,13 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
     elif fn == "request_otp":
         if rng.random() < 0.6:
             world["recent"] = [
-                T + timedelta(microseconds=rng.randint(-10**9, 10**8))
+                T + timedelta(microseconds=rng.randint(-(10**9), 10**8))
                 for _ in range(rng.randint(0, 7))
             ]
         if rng.random() < 0.2:
-            world["sms"] = rng.choice(["gateway answered 502", "URLError", "no route to host"])
+            world["sms"] = rng.choice(
+                ["gateway answered 502", "URLError", "no route to host"]
+            )
         if rng.random() < 0.2:
             world["debug_code"] = rng.choice(["abcabc", "aaaaaa", "abcdef"])
         if rng.random() < 0.3:
@@ -2297,7 +2384,9 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
             world["created_challenge"] = rng.choice(["CH1", "CH2", "CHN"])
         if rng.random() < 0.15:
             world["conflicts"] = {
-                rng.choice(["create_otp_challenge", "record_otp_attempt"]): ["OTP_CHALLENGE_EXISTS"]
+                rng.choice(["create_otp_challenge", "record_otp_attempt"]): [
+                    "OTP_CHALLENGE_EXISTS"
+                ]
             }
     elif fn == "verify_otp":
         if rng.random() < 0.85:
@@ -2307,7 +2396,7 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
                 code=rng.choice(
                     [["CH1", "abcdef"], ["CH2", "abcdef"], ["CH1", "zzzzzz"], "other"]
                 ),
-                expires=T + timedelta(microseconds=rng.randint(-10**9, 10**9)),
+                expires=T + timedelta(microseconds=rng.randint(-(10**9), 10**9)),
                 attempts=rng.choice([0, 1, 2, 3, 4, 5, 6, -1]),
                 consumed=None if rng.random() < 0.75 else T - MINUTE,
             )
@@ -2315,14 +2404,19 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
             world["identities"] = {"phone|@SO_A": rng.choice(["KIA", "TOI", "DER"])}
         if rng.random() < 0.2:
             world["conflicts"] = {
-                rng.choice(["record_otp_attempt", "create_person", "upsert_account_identity"]): ["EXISTS"]
+                rng.choice(
+                    ["record_otp_attempt", "create_person", "upsert_account_identity"]
+                ): ["EXISTS"]
             }
     else:
         answer = rng.random()
         if answer < 0.12:
             world["google"] = None
         elif answer < 0.3:
-            world["google"] = ["bad", rng.choice(["Token expired", "Wrong audience", ""])]
+            world["google"] = [
+                "bad",
+                rng.choice(["Token expired", "Wrong audience", ""]),
+            ]
         else:
             world["google"] = [
                 "ok",
@@ -2331,7 +2425,9 @@ def fuzz_world(rng: random.Random, fn: str) -> dict:
             ]
         if rng.random() < 0.4:
             world["identities"] = {
-                f"google|{rng.choice(['sub-cua-nguoi-nay', 'sub-khac'])}": rng.choice(["KIA", "TOI"])
+                f"google|{rng.choice(['sub-cua-nguoi-nay', 'sub-khac'])}": rng.choice(
+                    ["KIA", "TOI"]
+                )
             }
         if rng.random() < 0.25:
             world["conflicts"] = {"create_person_with_identity": ["IDENTITY_TAKEN"]}
@@ -2377,7 +2473,11 @@ def auth_steps_fuzz(seed: int, count: int) -> list[dict]:
             now=fuzz_now(rng),
             actor=(
                 rng.choice(["TOI", "KIA"]),
-                tuple(rng.sample(["member", "advancer", "former_member"], rng.randint(0, 2))),
+                tuple(
+                    rng.sample(
+                        ["member", "advancer", "former_member"], rng.randint(0, 2)
+                    )
+                ),
             ),
         )
         if fits(built):

@@ -670,7 +670,14 @@ cmd_down() {
 
     if [ -z "$serial" ] && [ -z "$pids" ]; then
         say "AVD '$AVD_NAME' không chạy — không tắt gì cả."
-        local others; others="$(adbq devices 2>/dev/null | awk '/^emulator-[0-9]+\tdevice$/{print $1}' | tr '\n' ' ')"
+        # `|| true`: dòng này chỉ để NÓI THÊM "đang có máy khác, không đụng
+        # tới". Nó không được quyền quyết định mã thoát. `adbq` gọi
+        # `ensure_adb_server` trước mỗi lệnh và trả 1 khi không dựng nổi server;
+        # dưới `pipefail` thì phép gán hỏng theo, và `set -e` giết hàm SAU KHI
+        # đã in "không tắt gì cả" -- `down` báo hỏng đúng lúc nó vừa làm xong
+        # việc. Đỏ trên CI (máy sạch, không có adb server) và xanh trên máy có
+        # sẵn server, tức một phép đo nói về máy chứ không nói về mã.
+        local others; others="$( (adbq devices 2>/dev/null || true) | awk '/^emulator-[0-9]+\tdevice$/{print $1}' | tr '\n' ' ' || true)"
         [ -n "$others" ] && say "  (đang có máy khác chạy: $others — KHÔNG đụng tới)"
         return 0
     fi

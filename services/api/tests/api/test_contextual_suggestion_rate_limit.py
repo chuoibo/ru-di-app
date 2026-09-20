@@ -44,7 +44,7 @@ from app.api.search_rate_limit import (
 )
 from app.domain.suggestion import SUGGESTION_KIND
 
-from .conftest import SeedCatalogueReads, ASGITestClient
+from .conftest import ASGITestClient, SeedCatalogueReads
 
 NOW = datetime(2030, 8, 27, 12, 0, tzinfo=UTC)
 CONTEXT_ID = uuid.UUID("3cc00000-cccc-4ccc-8ccc-0000c0000031")
@@ -88,6 +88,15 @@ _KNOWN_DOORS = frozenset(
         "contextual_suggestion_limiter",
         "face_detection_limiter",
         "reel_limiter",
+        # W7: `POST /outings/{id}/itinerary/preview` reaches Valhalla through
+        # this window. It does not open onto the model at all -- same as
+        # `face_detection_limiter`, and here for the same reason. The property
+        # this file guards is "no two doors resolve to one object", not "who
+        # pays the vendor": a burst of itinerary previews sharing the reason
+        # writer's window would disable `GET /places` just as effectively.
+        # Valhalla is an outside service the product pays per call, so the door
+        # is the same shape as the ones above even though the bill differs.
+        "itinerary_limiter",
     }
 )
 

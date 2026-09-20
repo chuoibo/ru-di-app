@@ -399,7 +399,9 @@ class Stub:
 
 
 def actor(actor_id: str = A, roles=("member",)) -> Actor:
-    return Actor(id=uuid.UUID(actor_id), roles=frozenset(roles), context_ids=frozenset())
+    return Actor(
+        id=uuid.UUID(actor_id), roles=frozenset(roles), context_ids=frozenset()
+    )
 
 
 def problem_of(exc: ApiProblem) -> dict:
@@ -448,7 +450,11 @@ def money_edges() -> list[dict]:
         for allow_negative in (False, True):
             for positive in (False, True):
                 name = f"vnd_violation/{k}/{int(allow_negative)}{int(positive)}"
-                args = {"value": value, "allow_negative": allow_negative, "positive": positive}
+                args = {
+                    "value": value,
+                    "allow_negative": allow_negative,
+                    "positive": positive,
+                }
                 out.append(case("vnd_violation", name, args))
     return out
 
@@ -508,8 +514,16 @@ def alloc_case(name, allocations: dict, advancer, version="v1") -> dict:
     return case(
         "obligations_from_allocations",
         name,
-        {"allocations": pairs(allocations), "advancer_id": advancer, "expense_version_id": version},
-        call={"allocations": allocations, "advancer_id": advancer, "expense_version_id": version},
+        {
+            "allocations": pairs(allocations),
+            "advancer_id": advancer,
+            "expense_version_id": version,
+        },
+        call={
+            "allocations": allocations,
+            "advancer_id": advancer,
+            "expense_version_id": version,
+        },
     )
 
 
@@ -560,23 +574,44 @@ def ledger_edges() -> list[dict]:
 
     # obligations_from_allocations: the Python tests, then the boundaries.
     out += [
-        alloc_case("test_advancer_owes_nothing_to_themselves", {"ha": 82000, "nam": 100000}, "nam"),
-        alloc_case("test_zero_share_creates_no_obligation", {"ha": 0, "nam": 100}, "nam"),
+        alloc_case(
+            "test_advancer_owes_nothing_to_themselves",
+            {"ha": 82000, "nam": 100000},
+            "nam",
+        ),
+        alloc_case(
+            "test_zero_share_creates_no_obligation", {"ha": 0, "nam": 100}, "nam"
+        ),
         alloc_case(
             "test_obligations_sum_to_total_minus_the_advancer_share",
             {"ha": 82000, "nam": 100000, "binh": 55000},
             "nam",
         ),
-        alloc_case("test_advancer_outside_the_participant_set", {"ha": 50, "nam": 50}, "outsider"),
+        alloc_case(
+            "test_advancer_outside_the_participant_set",
+            {"ha": 50, "nam": 50},
+            "outsider",
+        ),
         alloc_case("test_no_advancer_is_rejected", {"ha": 50}, None),
         alloc_case("no_advancer_beats_a_negative_amount", {"ha": -50}, None),
-        alloc_case("test_a_negative_advancer_allocation_is_caught", {"a": 100, "nam": -100}, "nam"),
+        alloc_case(
+            "test_a_negative_advancer_allocation_is_caught",
+            {"a": 100, "nam": -100},
+            "nam",
+        ),
         alloc_case("empty_allocations", {}, "nam"),
         alloc_case("empty_advancer_is_an_id", {"": 10, "ha": 20}, ""),
-        alloc_case("int64_extremes", {"ha": INT64_MAX, "nam": INT64_MAX, "binh": 1}, "binh"),
+        alloc_case(
+            "int64_extremes", {"ha": INT64_MAX, "nam": INT64_MAX, "binh": 1}, "binh"
+        ),
         alloc_case("negative_after_valid", {"ha": 10, "binh": -1, "nam": 5}, "nam"),
         alloc_case("int64_min_share", {"ha": INT64_MIN}, "nam"),
-        alloc_case("unicode_ids_keep_dict_order", {GRINNING_FACE: 3, "z": 2, E_ACUTE: 1}, "a", "v" + CJK_MIDDLE),
+        alloc_case(
+            "unicode_ids_keep_dict_order",
+            {GRINNING_FACE: 3, "z": 2, E_ACUTE: 1},
+            "a",
+            "v" + CJK_MIDDLE,
+        ),
     ]
 
     # merge_obligations
@@ -605,7 +640,12 @@ def ledger_edges() -> list[dict]:
         merge_case("zero_before_self", [ob("a", "b", 0), ob("a", "a", 1)]),
         merge_case(
             "sources_deduplicate_and_sort",
-            [ob("a", "b", 1, "v2"), ob("a", "b", 2, "v1"), ob("a", "b", 3, "v2"), ob("a", "b", 4, "V1")],
+            [
+                ob("a", "b", 1, "v2"),
+                ob("a", "b", 2, "v1"),
+                ob("a", "b", 3, "v2"),
+                ob("a", "b", 4, "V1"),
+            ],
         ),
         merge_case(
             "order_is_by_utf8_bytes",
@@ -620,8 +660,12 @@ def ledger_edges() -> list[dict]:
                 ob("z", E_ACUTE, 1),
             ],
         ),
-        merge_case("total_exactly_int64_max", [ob("a", "b", 2**62), ob("a", "b", 2**62 - 1)]),
-        merge_case("total_one_past_int64_max", [ob("a", "b", 2**62), ob("a", "b", 2**62)]),
+        merge_case(
+            "total_exactly_int64_max", [ob("a", "b", 2**62), ob("a", "b", 2**62 - 1)]
+        ),
+        merge_case(
+            "total_one_past_int64_max", [ob("a", "b", 2**62), ob("a", "b", 2**62)]
+        ),
         merge_case(
             "total_three_int64_max",
             [ob("a", "b", INT64_MAX), ob("a", "b", INT64_MAX), ob("a", "b", INT64_MAX)],
@@ -633,13 +677,25 @@ def ledger_edges() -> list[dict]:
     ]
 
     # group_balances
-    sixty_forty = [{"sender_id": "a", "recipient_id": "b", "amount_vnd": 60}, {"sender_id": "a", "recipient_id": "b", "amount_vnd": 40}]
+    sixty_forty = [
+        {"sender_id": "a", "recipient_id": "b", "amount_vnd": 60},
+        {"sender_id": "a", "recipient_id": "b", "amount_vnd": 40},
+    ]
     out += [
-        balances_case("test_two_obligations_in_one_pair_share_one_receipt", sixty_forty, [["a", "b", 50]]),
-        balances_case("test_a_full_receipt_clears_the_pair", sixty_forty, [["a", "b", 100]]),
+        balances_case(
+            "test_two_obligations_in_one_pair_share_one_receipt",
+            sixty_forty,
+            [["a", "b", 50]],
+        ),
+        balances_case(
+            "test_a_full_receipt_clears_the_pair", sixty_forty, [["a", "b", 100]]
+        ),
         balances_case(
             "test_group_balance_is_netted_and_sums_to_zero",
-            [{"sender_id": "ha", "recipient_id": "nam", "amount_vnd": 50000}, {"sender_id": "nam", "recipient_id": "ha", "amount_vnd": 30000}],
+            [
+                {"sender_id": "ha", "recipient_id": "nam", "amount_vnd": 50000},
+                {"sender_id": "nam", "recipient_id": "ha", "amount_vnd": 30000},
+            ],
             None,
         ),
         balances_case(
@@ -650,20 +706,36 @@ def ledger_edges() -> list[dict]:
         balances_case("empty_ledger", [], None),
         balances_case("empty_ledger_with_receipts", [], [["a", "b", 5]]),
         balances_case("empty_receipts_dict", sixty_forty, []),
-        balances_case("receipt_over_the_debt_is_not_a_credit", sixty_forty, [["a", "b", 1000]]),
+        balances_case(
+            "receipt_over_the_debt_is_not_a_credit", sixty_forty, [["a", "b", 1000]]
+        ),
         balances_case("receipt_one_short", sixty_forty, [["a", "b", 99]]),
-        balances_case("receipt_the_other_way_is_ignored", sixty_forty, [["b", "a", 100]]),
+        balances_case(
+            "receipt_the_other_way_is_ignored", sixty_forty, [["b", "a", 100]]
+        ),
         balances_case("negative_receipt_is_refused", sixty_forty, [["a", "b", -1]]),
-        balances_case("negative_receipt_for_an_unowed_pair_is_never_read", sixty_forty, [["b", "a", -1]]),
+        balances_case(
+            "negative_receipt_for_an_unowed_pair_is_never_read",
+            sixty_forty,
+            [["b", "a", -1]],
+        ),
         balances_case(
             "receipt_checks_run_in_first_seen_pair_order",
             [ob("c", "d", 5), ob("a", "b", 5)],
             [["a", "b", -1], ["c", "d", -2]],
         ),
         balances_case("self_obligation", [ob("a", "b", 5), ob("b", "b", 5)], None),
-        balances_case("self_before_bad_receipt", [ob("a", "b", 5), ob("b", "b", 5)], [["a", "b", -1]]),
+        balances_case(
+            "self_before_bad_receipt",
+            [ob("a", "b", 5), ob("b", "b", 5)],
+            [["a", "b", -1]],
+        ),
         balances_case("zero_amount", [ob("a", "b", 0)], None),
-        balances_case("cycle_nets_to_nothing", [ob("a", "b", 7), ob("b", "c", 7), ob("c", "a", 7)], None),
+        balances_case(
+            "cycle_nets_to_nothing",
+            [ob("a", "b", 7), ob("b", "c", 7), ob("c", "a", 7)],
+            None,
+        ),
         balances_case(
             "people_sort_by_code_point",
             [ob(GRINNING_FACE, "Z", 3), ob(E_ACUTE, "z", 2), ob(CJK_MIDDLE, "", 1)],
@@ -696,15 +768,25 @@ def ledger_edges() -> list[dict]:
         ),
         balances_case(
             "past_int64_positions_that_cancel",
-            [ob("a", "b", INT64_MAX), ob("b", "c", INT64_MAX), ob("c", "a", INT64_MAX), ob("a", "b", INT64_MAX)],
+            [
+                ob("a", "b", INT64_MAX),
+                ob("b", "c", INT64_MAX),
+                ob("c", "a", INT64_MAX),
+                ob("a", "b", INT64_MAX),
+            ],
             [["a", "b", INT64_MAX]],
         ),
     ]
 
     # settlement_plan: the Python tests and corpus-shaped examples, then edges.
     out += [
-        plan_case("test_settlement_suggestions_clear_the_same_positions", {"a": -70, "b": -30, "c": 60, "d": 40}),
-        plan_case("test_settlement_suggestions_reject_unbalanced_input", {"a": -10, "b": 5}),
+        plan_case(
+            "test_settlement_suggestions_clear_the_same_positions",
+            {"a": -70, "b": -30, "c": 60, "d": 40},
+        ),
+        plan_case(
+            "test_settlement_suggestions_reject_unbalanced_input", {"a": -10, "b": 5}
+        ),
         plan_case("test_suggestions_are_shaped_as_drafts", {"a": -70, "b": 70}),
         plan_case(
             "test_within_the_exact_limit_the_plan_is_proven",
@@ -722,7 +804,10 @@ def ledger_edges() -> list[dict]:
         ),
         plan_case(
             "test_beyond_the_exact_limit_the_plan_is_flagged_unproven",
-            {**{f"p{i:02d}": 1000 for i in range(20)}, **{f"q{i:02d}": -1000 for i in range(20)}},
+            {
+                **{f"p{i:02d}": 1000 for i in range(20)},
+                **{f"q{i:02d}": -1000 for i in range(20)},
+            },
         ),
         plan_case("empty", {}),
         plan_case("everyone_square", {"a": 0, "b": 0}),
@@ -730,22 +815,39 @@ def ledger_edges() -> list[dict]:
         plan_case("zero_limit_with_nobody", {}, 0),
         plan_case("zero_limit_greedy", {"a": -5, "b": 5}, 0),
         plan_case("negative_limit_greedy", {"a": -5, "b": 5}, -1),
-        plan_case("limit_equal_to_people_is_exact", {"a": -3, "b": -2, "c": 2, "d": 3}, 4),
-        plan_case("limit_one_below_people_is_greedy", {"a": -3, "b": -2, "c": 2, "d": 3}, 3),
+        plan_case(
+            "limit_equal_to_people_is_exact", {"a": -3, "b": -2, "c": 2, "d": 3}, 4
+        ),
+        plan_case(
+            "limit_one_below_people_is_greedy", {"a": -3, "b": -2, "c": 2, "d": 3}, 3
+        ),
         plan_case("greedy_is_not_minimal", {"a": -3, "b": -2, "c": 2, "d": 3}, 0),
         plan_case("one_dong_off_is_refused", {"a": -3, "b": 2}),
         plan_case("single_nonzero_is_refused", {"a": 5}),
         plan_case("ties_break_by_person", {"d": -5, "b": -5, "c": 5, "a": 5}),
-        plan_case("ties_break_by_code_point", {E_ACUTE: -5, "z": -5, GRINNING_FACE: 5, CJK_MIDDLE: 5}),
+        plan_case(
+            "ties_break_by_code_point",
+            {E_ACUTE: -5, "z": -5, GRINNING_FACE: 5, CJK_MIDDLE: 5},
+        ),
         plan_case("empty_person_id", {"": -1, "a": 1}),
-        plan_case("two_equal_partitions_pick_the_first_found", {"a": -1, "b": -1, "c": 1, "d": 1}),
+        plan_case(
+            "two_equal_partitions_pick_the_first_found",
+            {"a": -1, "b": -1, "c": 1, "d": 1},
+        ),
         plan_case(
             "several_maximum_partitions",
             {"a": -2, "b": -1, "c": -1, "d": 1, "e": 1, "f": 2},
         ),
         plan_case(
             "greedy_loses_twice_six_people",
-            {"a": -600000, "b": -300000, "c": -100000, "d": 200000, "e": 300000, "f": 500000},
+            {
+                "a": -600000,
+                "b": -300000,
+                "c": -100000,
+                "d": 200000,
+                "e": 300000,
+                "f": 500000,
+            },
         ),
         plan_case(
             "int64_min_debtor",
@@ -770,17 +872,31 @@ def ledger_edges() -> list[dict]:
         ),
         plan_case(
             "fifteen_people_exact",
-            {f"p{i:02d}": v for i, v in enumerate((-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 6, -4, 5, 2))},
+            {
+                f"p{i:02d}": v
+                for i, v in enumerate(
+                    (-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 6, -4, 5, 2)
+                )
+            },
         ),
         plan_case(
             "sixteen_people_greedy",
-            {f"p{i:02d}": v for i, v in enumerate((-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 6, -4, 5, 3, -1))},
+            {
+                f"p{i:02d}": v
+                for i, v in enumerate(
+                    (-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 6, -4, 5, 3, -1)
+                )
+            },
         ),
     ]
 
     # Derived sums past int64, and derived sums that are not ints.
     out += [
-        balances_case("receipt_sum_past_int64_clears_the_pair", sixty_forty, [["a", "b", 2 * INT64_MAX]]),
+        balances_case(
+            "receipt_sum_past_int64_clears_the_pair",
+            sixty_forty,
+            [["a", "b", 2 * INT64_MAX]],
+        ),
         balances_case(
             "receipt_exactly_two_to_the_64",
             [ob("a", "b", INT64_MAX), ob("a", "b", INT64_MAX), ob("a", "b", 2)],
@@ -791,9 +907,13 @@ def ledger_edges() -> list[dict]:
             [ob("a", "b", INT64_MAX), ob("a", "b", INT64_MAX)],
             [["a", "b", 2 * INT64_MAX - 1]],
         ),
-        balances_case("negative_receipt_past_int64", sixty_forty, [["a", "b", -(2**64)]]),
+        balances_case(
+            "negative_receipt_past_int64", sixty_forty, [["a", "b", -(2**64)]]
+        ),
         balances_case("receipt_that_is_not_an_int", sixty_forty, [["a", "b", None]]),
-        balances_case("unread_receipt_that_is_not_an_int", sixty_forty, [["b", "a", None]]),
+        balances_case(
+            "unread_receipt_that_is_not_an_int", sixty_forty, [["b", "a", None]]
+        ),
         balances_case(
             "amount_that_is_not_an_int",
             [{"sender_id": "a", "recipient_id": "b", "amount_vnd": None}],
@@ -806,17 +926,27 @@ def ledger_edges() -> list[dict]:
         ),
         balances_case(
             "merged_amount_past_int64",
-            [{"sender_id": "a", "recipient_id": "b", "amount_vnd": 2**70}, ob("c", "b", 1)],
+            [
+                {"sender_id": "a", "recipient_id": "b", "amount_vnd": 2**70},
+                ob("c", "b", 1),
+            ],
             [["a", "b", 2**69]],
         ),
         plan_case("balances_past_int64", {"a": -(2**64), "b": 2**64}),
-        plan_case("balances_past_int64_three", {"a": 2**70, "b": -(2**69), "c": -(2**69)}),
-        plan_case("balances_past_int64_greedy", {"a": 2**70, "b": -(2**69), "c": -(2**69)}, 0),
+        plan_case(
+            "balances_past_int64_three", {"a": 2**70, "b": -(2**69), "c": -(2**69)}
+        ),
+        plan_case(
+            "balances_past_int64_greedy", {"a": 2**70, "b": -(2**69), "c": -(2**69)}, 0
+        ),
         plan_case("balance_that_is_not_an_int", {"a": None, "b": 0}),
         plan_case("not_an_int_before_not_netting", {"a": None, "b": 5}),
         plan_case(
             "twelve_people_past_int64",
-            {f"p{i:02d}": v * 2**64 for i, v in enumerate((-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 9))},
+            {
+                f"p{i:02d}": v * 2**64
+                for i, v in enumerate((-7, -5, -3, -2, -1, 1, 2, 3, 4, 8, -9, 9))
+            },
         ),
     ]
     return out
@@ -856,8 +986,18 @@ def ledger_fuzz() -> list[dict]:
         people = rng.sample(LEDGER_IDS, rng.randrange(0, 6))
         allocations = {person: ledger_amount(rng) for person in people}
         if rng.random() < 0.3:
-            allocations = {person: rng.choice((0, rng.randrange(1, 9) * 1000)) for person in people}
-        advancer = None if rng.random() < 0.03 else (rng.choice(people) if people and rng.random() < 0.7 else random_ledger_id(rng))
+            allocations = {
+                person: rng.choice((0, rng.randrange(1, 9) * 1000)) for person in people
+            }
+        advancer = (
+            None
+            if rng.random() < 0.03
+            else (
+                rng.choice(people)
+                if people and rng.random() < 0.7
+                else random_ledger_id(rng)
+            )
+        )
         version = rng.choice(("v1", "v2", "", E_ACUTE))
         out.append(alloc_case(f"fuzz/{i}", allocations, advancer, version))
     for i in range(700):
@@ -865,7 +1005,14 @@ def ledger_fuzz() -> list[dict]:
         for _ in range(rng.randrange(0, 8)):
             sender = random_ledger_id(rng)
             recipient = sender if rng.random() < 0.03 else random_ledger_id(rng)
-            obligations.append(ob(sender, recipient, ledger_amount(rng), rng.choice(("v1", "v2", "v3", "V1", ""))))
+            obligations.append(
+                ob(
+                    sender,
+                    recipient,
+                    ledger_amount(rng),
+                    rng.choice(("v1", "v2", "v3", "V1", "")),
+                )
+            )
         out.append(merge_case(f"fuzz/{i}", obligations))
     for i in range(700):
         obligations = []
@@ -875,7 +1022,9 @@ def ledger_fuzz() -> list[dict]:
             amount = ledger_amount(rng, 0.02)
             if rng.random() < 0.03:
                 amount = rng.choice((2**64, 2**70, 3 * INT64_MAX))
-            obligations.append({"sender_id": sender, "recipient_id": recipient, "amount_vnd": amount})
+            obligations.append(
+                {"sender_id": sender, "recipient_id": recipient, "amount_vnd": amount}
+            )
         receipts = None
         if rng.random() < 0.8:
             receipts = []
@@ -883,7 +1032,9 @@ def ledger_fuzz() -> list[dict]:
                 if obligations and rng.random() < 0.8:
                     chosen = rng.choice(obligations)
                     pair = (chosen["sender_id"], chosen["recipient_id"])
-                    amount = rng.choice((chosen["amount_vnd"], rng.randrange(0, 600) * 1000, 0, 1))
+                    amount = rng.choice(
+                        (chosen["amount_vnd"], rng.randrange(0, 600) * 1000, 0, 1)
+                    )
                 else:
                     pair = (random_ledger_id(rng), random_ledger_id(rng))
                     amount = rng.randrange(0, 600) * 1000
@@ -892,14 +1043,21 @@ def ledger_fuzz() -> list[dict]:
                 elif rng.random() < 0.05:
                     amount = rng.choice((2**63, 2**64, 2 * INT64_MAX, 2**71, -(2**64)))
                 receipts.append([pair[0], pair[1], amount])
-            receipts = [list(item) for item in {(s, r): [s, r, a] for s, r, a in receipts}.values()]
+            receipts = [
+                list(item)
+                for item in {(s, r): [s, r, a] for s, r, a in receipts}.values()
+            ]
         out.append(balances_case(f"fuzz/{i}", obligations, receipts))
     for i in range(900):
         roll = rng.random()
         if roll < 0.55:
-            balances = zero_sum_balances(rng, rng.randrange(0, 9), rng.choice((3, 10, 500000)))
+            balances = zero_sum_balances(
+                rng, rng.randrange(0, 9), rng.choice((3, 10, 500000))
+            )
         elif roll < 0.75:
-            balances = zero_sum_balances(rng, rng.randrange(9, 13), rng.choice((5, 500000, 10**12)))
+            balances = zero_sum_balances(
+                rng, rng.randrange(9, 13), rng.choice((5, 500000, 10**12))
+            )
         elif roll < 0.8:
             balances = zero_sum_balances(rng, rng.randrange(13, 16), 10**9)
         elif roll < 0.9:
@@ -913,7 +1071,9 @@ def ledger_fuzz() -> list[dict]:
             balances[rng.choice(list(balances))] = 0
         if rng.random() < 0.02 and balances:
             balances[rng.choice(list(balances))] = None
-        exact_limit = rng.choice((15, 15, 15, 0, 1, 2, 3, len(balances), len(balances) - 1))
+        exact_limit = rng.choice(
+            (15, 15, 15, 0, 1, 2, 3, len(balances), len(balances) - 1)
+        )
         out.append(plan_case(f"fuzz/{i}", balances, exact_limit))
     return out
 
@@ -931,7 +1091,11 @@ def context_balances(expenses: list, receipts: list) -> dict:
         for participant, amount in expense["allocations"]:
             rows += 1
             allocations.append(
-                AllocationRow(id=uuid.UUID(int=rows), participant_id=uuid.UUID(participant), amount_vnd=amount)
+                AllocationRow(
+                    id=uuid.UUID(int=rows),
+                    participant_id=uuid.UUID(participant),
+                    amount_vnd=amount,
+                )
             )
         built.append(
             ConfirmedExpense(
@@ -950,7 +1114,11 @@ def context_balances(expenses: list, receipts: list) -> dict:
         response = new_service(stub).get_context_balances(uuid.UUID(CONTEXT), actor())
     except ApiProblem as exc:
         return {"calls": stub.calls, "problem": problem_of(exc), "response": None}
-    return {"calls": stub.calls, "problem": None, "response": response.model_dump(mode="json")}
+    return {
+        "calls": stub.calls,
+        "problem": None,
+        "response": response.model_dump(mode="json"),
+    }
 
 
 def expense(version: str, paid_by: str, allocations: list) -> dict:
@@ -1001,7 +1169,11 @@ def context_balances_edges() -> list[dict]:
         ),
         balances_service_case(
             "cycle_needs_no_transfer",
-            [expense(V1, A, [[B, 7]]), expense(V2, B, [[C, 7]]), expense(V3, C, [[A, 7]])],
+            [
+                expense(V1, A, [[B, 7]]),
+                expense(V2, B, [[C, 7]]),
+                expense(V3, C, [[A, 7]]),
+            ],
             [],
         ),
         balances_service_case(
@@ -1075,7 +1247,11 @@ def context_balances_edges() -> list[dict]:
         ),
         balances_service_case(
             "receipt_sum_past_int64_one_short",
-            [expense(V1, A, [[B, INT64_MAX]]), expense(V2, A, [[B, INT64_MAX]]), expense(V3, A, [[B, 2]])],
+            [
+                expense(V1, A, [[B, INT64_MAX]]),
+                expense(V2, A, [[B, INT64_MAX]]),
+                expense(V3, A, [[B, 2]]),
+            ],
             [[B, A, 2**64 - 1]],
         ),
     ]
@@ -1113,7 +1289,9 @@ def context_balances_fuzz() -> list[dict]:
                 amount = rng.choice((2**63, 2**64 - 1, 2 * INT64_MAX))
             receipts[(sender, recipient)] = amount
         out.append(
-            balances_service_case(f"fuzz/{i}", expenses, [[s, r, a] for (s, r), a in receipts.items()])
+            balances_service_case(
+                f"fuzz/{i}", expenses, [[s, r, a] for (s, r), a in receipts.items()]
+            )
         )
     return out
 
@@ -1154,8 +1332,19 @@ def theme_near_misses() -> list[str]:
 
 def chat_theme_edges() -> list[dict]:
     values = list(chat_theme.THEMES) + theme_near_misses()
-    values += ["", "hong", "#c93900", "mac dinh", "mặc-định", "default", "mac-dinh,hoang-hon"]
-    return [case("is_theme", f"is_theme/{k}", {"value": value}) for k, value in enumerate(values)]
+    values += [
+        "",
+        "hong",
+        "#c93900",
+        "mac dinh",
+        "mặc-định",
+        "default",
+        "mac-dinh,hoang-hon",
+    ]
+    return [
+        case("is_theme", f"is_theme/{k}", {"value": value})
+        for k, value in enumerate(values)
+    ]
 
 
 def chat_theme_fuzz() -> list[dict]:
@@ -1214,12 +1403,24 @@ def direct_edges() -> list[dict]:
     )
     for k, roster in enumerate(rosters):
         for me in (A, B, ""):
-            out.append(case("counterpart_of", f"counterpart_of/{k}/{me[:2]}", {"member_ids": roster, "me": me}))
+            out.append(
+                case(
+                    "counterpart_of",
+                    f"counterpart_of/{k}/{me[:2]}",
+                    {"member_ids": roster, "me": me},
+                )
+            )
     for k, kind in enumerate(KINDS):
         for j, stored in enumerate(("", "Hội đi Đà Lạt", " ")):
             for n, counterpart in enumerate(NAMES):
-                args = {"kind": kind, "stored_name": stored, "counterpart_name": counterpart}
-                out.append(case("display_name_for", f"display_name_for/{k}/{j}/{n}", args))
+                args = {
+                    "kind": kind,
+                    "stored_name": stored,
+                    "counterpart_name": counterpart,
+                }
+                out.append(
+                    case("display_name_for", f"display_name_for/{k}/{j}/{n}", args)
+                )
     return out
 
 
@@ -1227,9 +1428,14 @@ def direct_fuzz() -> list[dict]:
     rng = random.Random(SEED * 1000 + 5)
     out = []
     for i in range(300):
-        roster = [rng.choice((A, B, C, "", random_text(rng, 3))) for _ in range(rng.randrange(0, 5))]
+        roster = [
+            rng.choice((A, B, C, "", random_text(rng, 3)))
+            for _ in range(rng.randrange(0, 5))
+        ]
         me = rng.choice((A, B, C, "", random_text(rng, 3)))
-        out.append(case("counterpart_of", f"fuzz/{i}", {"member_ids": roster, "me": me}))
+        out.append(
+            case("counterpart_of", f"fuzz/{i}", {"member_ids": roster, "me": me})
+        )
     for i in range(300):
         args = {
             "kind": rng.choice(KINDS + (random_text(rng, 4),)),
@@ -1249,10 +1455,17 @@ def update_changes(display_name, theme, kind) -> dict:
     record = None
     if kind is not None:
         record = SimpleNamespace(
-            id=uuid.UUID(CONTEXT), kind=kind, display_name="x", created_by_id=uuid.UUID(A), created_at=NOW, theme="mac-dinh"
+            id=uuid.UUID(CONTEXT),
+            kind=kind,
+            display_name="x",
+            created_by_id=uuid.UUID(A),
+            created_at=NOW,
+            theme="mac-dinh",
         )
     stub = Stub(context=record)
-    request = ContextUpdateRequest.model_construct(display_name=display_name, theme=theme)
+    request = ContextUpdateRequest.model_construct(
+        display_name=display_name, theme=theme
+    )
     try:
         new_service(stub).update_context(uuid.UUID(CONTEXT), request, actor())
     except Captured as captured:
@@ -1272,9 +1485,18 @@ def require_photo_url_context(context_id: str, image_url) -> dict:
 
 def context_view(kind: str, stored_name: str, actor_id: str, members: list) -> dict:
     record = SimpleNamespace(
-        id=uuid.UUID(CONTEXT), kind=kind, display_name=stored_name, created_by_id=uuid.UUID(A), created_at=NOW, theme="mac-dinh"
+        id=uuid.UUID(CONTEXT),
+        kind=kind,
+        display_name=stored_name,
+        created_by_id=uuid.UUID(A),
+        created_at=NOW,
+        theme="mac-dinh",
     )
-    stub = Stub(members=[SimpleNamespace(person_id=uuid.UUID(p), display_name=n) for p, n in members])
+    stub = Stub(
+        members=[
+            SimpleNamespace(person_id=uuid.UUID(p), display_name=n) for p, n in members
+        ]
+    )
     response = new_service(stub)._context_response(record, actor(actor_id))
     counterpart = response.counterpart
     return {
@@ -1286,13 +1508,20 @@ def context_view(kind: str, stored_name: str, actor_id: str, members: list) -> d
     }
 
 
-def accept_permission(origin: str, roles: list, actor_id: str, person_id: str, is_member: bool) -> dict:
+def accept_permission(
+    origin: str, roles: list, actor_id: str, person_id: str, is_member: bool
+) -> dict:
     membership = SimpleNamespace(
-        id=uuid.UUID(int=7), context_id=uuid.UUID(CONTEXT), person_id=uuid.UUID(person_id), origin=origin
+        id=uuid.UUID(int=7),
+        context_id=uuid.UUID(CONTEXT),
+        person_id=uuid.UUID(person_id),
+        origin=origin,
     )
     stub = Stub(membership=membership, is_member=is_member, stop_at_get_context=True)
     try:
-        new_service(stub).accept_context_membership(uuid.UUID(int=7), actor(actor_id, roles))
+        new_service(stub).accept_context_membership(
+            uuid.UUID(int=7), actor(actor_id, roles)
+        )
     except Captured:
         return {"calls": stub.calls, "problem": None}
     except ApiProblem as exc:
@@ -1331,7 +1560,9 @@ def contexts_constants() -> dict:
 
 def photo_urls(context: str) -> list:
     hexed = context.replace("-", "")
-    arabic = "".join(chr(ARABIC_INDIC_ZERO + int(c)) if c.isdigit() else c for c in context)
+    arabic = "".join(
+        chr(ARABIC_INDIC_ZERO + int(c)) if c.isdigit() else c for c in context
+    )
     return [
         None,
         "",
@@ -1368,7 +1599,11 @@ def strip_samples() -> list[str]:
         samples.append(space)
     for other in NOT_QUITE_SPACE:
         samples.append(other + "Nhóm" + other)
-    samples += [FILE_SEPARATOR + UNIT_SEPARATOR + "a", "a" + NEXT_LINE + NO_BREAK_SPACE, OGHAM_SPACE + NARROW_NO_BREAK_SPACE + PARAGRAPH_SEPARATOR]
+    samples += [
+        FILE_SEPARATOR + UNIT_SEPARATOR + "a",
+        "a" + NEXT_LINE + NO_BREAK_SPACE,
+        OGHAM_SPACE + NARROW_NO_BREAK_SPACE + PARAGRAPH_SEPARATOR,
+    ]
     return samples
 
 
@@ -1384,11 +1619,15 @@ def contexts_edges() -> list[dict]:
         for n, theme in enumerate(grid_themes):
             for kind in ("group", "pair", None):
                 args = {"display_name": name, "theme": theme, "kind": kind}
-                out.append(case("update_changes", f"update_changes/grid/{j}/{n}/{kind}", args))
+                out.append(
+                    case("update_changes", f"update_changes/grid/{j}/{n}/{kind}", args)
+                )
     for context in (URL_CONTEXT, A):
         for k, url in enumerate(photo_urls(URL_CONTEXT)):
             args = {"context_id": context, "image_url": url}
-            out.append(case("require_photo_url_context", f"photo_url/{context[:2]}/{k}", args))
+            out.append(
+                case("require_photo_url_context", f"photo_url/{context[:2]}/{k}", args)
+            )
     rosters = (
         [],
         [[A, "An"]],
@@ -1405,13 +1644,24 @@ def contexts_edges() -> list[dict]:
     for kind in ("group", "pair"):
         for j, stored in enumerate(("", "Hội đi Đà Lạt")):
             for k, roster in enumerate(rosters):
-                args = {"kind": kind, "stored_name": stored, "actor_id": A, "members": roster}
+                args = {
+                    "kind": kind,
+                    "stored_name": stored,
+                    "actor_id": A,
+                    "members": roster,
+                }
                 out.append(case("context_view", f"context_view/{kind}/{j}/{k}", args))
     for origin in ("named", "link", "", "LINK", "invite"):
         for roles in (["member"], ["group_admin"], [], ["guest"], ["member", "guest"]):
             for person in (A, B):
                 for is_member in (False, True):
-                    args = {"origin": origin, "roles": roles, "actor_id": A, "person_id": person, "is_member": is_member}
+                    args = {
+                        "origin": origin,
+                        "roles": roles,
+                        "actor_id": A,
+                        "person_id": person,
+                        "is_member": is_member,
+                    }
                     name = f"accept/{origin}/{'+'.join(roles)}/{person[:2]}/{int(is_member)}"
                     out.append(case("accept_permission", name, args))
     return out
@@ -1421,13 +1671,25 @@ def contexts_fuzz() -> list[dict]:
     rng = random.Random(SEED * 1000 + 6)
     out = []
     for i in range(500):
-        name = None if rng.random() < 0.1 else "".join(
-            rng.choice(WHITESPACE) if rng.random() < 0.4 else rng.choice(ODD + tuple(PLAIN))
-            for _ in range(rng.randrange(0, 8))
+        name = (
+            None
+            if rng.random() < 0.1
+            else "".join(
+                rng.choice(WHITESPACE)
+                if rng.random() < 0.4
+                else rng.choice(ODD + tuple(PLAIN))
+                for _ in range(rng.randrange(0, 8))
+            )
         )
         theme = rng.choice((None, None, "mac-dinh", "bien-dem", random_text(rng, 4)))
         kind = rng.choice(("group", "group", "pair", None))
-        out.append(case("update_changes", f"fuzz/{i}", {"display_name": name, "theme": theme, "kind": kind}))
+        out.append(
+            case(
+                "update_changes",
+                f"fuzz/{i}",
+                {"display_name": name, "theme": theme, "kind": kind},
+            )
+        )
     for i in range(400):
         urls = photo_urls(rng.choice((URL_CONTEXT, A)))
         url = rng.choice(urls[3:])
@@ -1437,7 +1699,10 @@ def contexts_fuzz() -> list[dict]:
             if rng.random() < 0.5 and index < len(chars):
                 del chars[index]
             else:
-                chars.insert(index, rng.choice(("/", "-", "0", "a", "A", "{", "}", ":", " ") + ODD))
+                chars.insert(
+                    index,
+                    rng.choice(("/", "-", "0", "a", "A", "{", "}", ":", " ") + ODD),
+                )
         args = {"context_id": rng.choice((URL_CONTEXT, A)), "image_url": "".join(chars)}
         out.append(case("require_photo_url_context", f"fuzz/{i}", args))
     return out
@@ -1445,8 +1710,22 @@ def contexts_fuzz() -> list[dict]:
 
 #: module -> (Go package path, target, constants, edges, fuzz, fuzz shards)
 MODULES = {
-    "money": ("internal/domain/money", money, money_constants, money_edges, money_fuzz, 1),
-    "ledger": ("internal/domain/ledger", ledger, ledger_constants, ledger_edges, ledger_fuzz, 4),
+    "money": (
+        "internal/domain/money",
+        money,
+        money_constants,
+        money_edges,
+        money_fuzz,
+        1,
+    ),
+    "ledger": (
+        "internal/domain/ledger",
+        ledger,
+        ledger_constants,
+        ledger_edges,
+        ledger_fuzz,
+        4,
+    ),
     "context_balances": (
         "internal/domain/ledger",
         api_service,
@@ -1463,7 +1742,14 @@ MODULES = {
         chat_theme_fuzz,
         1,
     ),
-    "direct": ("internal/domain/direct", direct, direct_constants, direct_edges, direct_fuzz, 1),
+    "direct": (
+        "internal/domain/direct",
+        direct,
+        direct_constants,
+        direct_edges,
+        direct_fuzz,
+        1,
+    ),
     "contexts": (
         "internal/domain/contexts",
         api_service,

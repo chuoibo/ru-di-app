@@ -11,8 +11,8 @@ from app.api.cors import PreflightNoContentCORSMiddleware
 from app.api.internal_token import (
     INTERNAL_TOKEN_ENV_VAR,
     INTERNAL_TOKEN_HEADER,
-    InternalTokenMissing,
     TEST_TOKEN,
+    InternalTokenMissing,
 )
 from app.api.main import create_app
 from app.api.routes.brain import BrainDoor
@@ -68,7 +68,10 @@ def test_brain_is_not_in_the_public_route_table(brain_client):
         path = getattr(route, "path", "") or ""
         public.append(path)
         assert not str(path).startswith("/internal")
-    assert any(isinstance(route, APIRoute) and route.path == "/healthz" for route in app.router.routes)
+    assert any(
+        isinstance(route, APIRoute) and route.path == "/healthz"
+        for route in app.router.routes
+    )
     assert "/internal/brain/v1/ready" not in public
 
 
