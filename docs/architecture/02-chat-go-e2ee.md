@@ -70,7 +70,7 @@ staging theo đường dẫn; không gom các artifact không liên quan trong w
 - Ca ban đầu dùng hai HTTP handler cùng process/pool. Đã bổ sung ca hai process
   thật với pool/auth riêng: nhận tin cross-process, bỏ receipt đã commit, kill
   writer, restart/retry không nhân đôi event/outbox; reconnect cursor đúng.
-  Chưa chứng minh kill giữa transaction, failover database hoặc tải 1.000
+  Checkpoint này chưa chứng minh kill giữa transaction, failover database hoặc tải 1.000
   socket. Thử ba người dùng tổng hợp không thay thử người thật.
 - Mobile checkpoint `ad350d41` sửa mất draft khi gửi lỗi, retry theo attempt,
   read mark theo vùng nhìn thấy (kể cả tin dài) và UI Impeccable. 50 test chat
@@ -97,3 +97,29 @@ có review Impeccable **ship trong phạm vi UI legacy đã chụp**. Chưa coi 
 trước đó đã được giải quyết hoàn toàn; chưa kiểm iPhone, máy thật hoặc release
 build. Lịch sử local được sửa pin digest dependency trước publish; source của
 checkpoint mobile cũ `c0a50319` và mới `ad350d41` giống nhau.
+
+## Checkpoint thử nhiều người trên hệ thống thật — 2026-09-21
+
+- Đã dựng riêng Go candidate 151 routes, Python upstream và PostgreSQL với
+  durability bật; tài khoản tổng hợp đăng nhập OTP qua API thật. Đây là đường
+  candidate trong lab, không đổi manifest writer hoặc triển khai production.
+- Đã mở 20 browser context độc lập, đăng nhập qua UI, cùng gửi trong một nhóm.
+  Lượt đầu phát hiện client bỏ qua tin đồng thời khi dùng ACK của chính mình
+  làm cursor nhận. Đã sửa cursor riêng theo trang GET, giữ thứ tự trang xuôi,
+  tuần tự hoá bootstrap/catch-up và mở lại history sau burst vào nhóm rỗng.
+  [Review độc lập](../codex/2026-09-21/chat-cursor-review.md) có regression đỏ
+  trước sửa; kết quả app thực tế nằm trong báo cáo E2E của checkpoint.
+- [Tải Go v2](../codex/2026-09-21/chat-mass-realtime.md): 200 tài khoản × 5
+  thiết bị, 1.000 socket, hai server process, 5.996 tin trong 60 giây,
+  2.998.000 lượt nhận đủ, 100 reconnect. Độ trễ p95 2.427 ms/p99 3.023 ms
+  **không đạt** ADR-0031. Đây là envelope tổng hợp có chữ ký, chưa phải MLS.
+- UI live được Impeccable A/B kiểm độc lập: giữ được giấy–mực–Nếp ở cảnh mở
+  lời và sticker; chưa hoàn tất câu chuyện chat → cùng quyết định → lên plan.
+  `/plan` trong môi trường này chưa có provider; không tạo câu trả lời giả.
+- Reaction, xoá tin và tally bình chọn chưa đồng bộ sang người khác đang
+  mở màn hình. Đây là blocker thực nghiệm, không được che bằng API/unit pass.
+
+**Không đạt production gate.** App vẫn dùng polling legacy plaintext, chưa nối
+v2; voice, native E2EE, consent AI theo trích đoạn, crypto review và các cổng
+Android/iOS thật, tải dài/burst/failover còn mở. Các phép kiểm web thật lần này
+không thay thế native, cũng không biến kho plaintext thành archive chỉ đọc.

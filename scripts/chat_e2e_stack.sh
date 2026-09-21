@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Start an isolated synthetic chat stack. No production secrets or databases.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ "${1:-}" == down ]]; then
+  state="${2:?state directory required}"
+  [[ "$state" == /tmp/rudi-chat-e2e.* ]] || exit 2
+  while read -r container; do
+    [[ "$container" == chat-e2e-*-pg || "$container" == chat-e2e-*-api || "$container" == chat-e2e-*-core ]] || exit 2
+    docker rm -f "$container" >/dev/null
+  done < "$state/containers"
+  exit
+fi
+[[ "${1:-up}" == up ]] || exit 2
+umask 077
+work="$(mktemp -d /tmp/rudi-chat-e2e.XXXXXX)"
+printf '%s\n' "$work"
+touch "$work/containers"
+cleanup_failed_start() {
+  while read -r container; do docker rm -f "$container" >/dev/null 2>&1 || true; done < "$work/containers"
+  printf 'Khởi tạo thất bại; log còn ở %s\n' "$work" >&2
+}
+trap cleanup_failed_start ERR
+run="chat-e2e-$(date +%s)-$$"
+free_port() { node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})'; }
+pg_port="$(free_port)"; api_port="$(free_port)"; core_port="$(free_port)"; live_port="$(free_port)"
+password="$(openssl rand -hex 24)"; identity="$(openssl rand -hex 32)"; internal="$(openssl rand -hex 32)"
+image="rudi-chat-e2e-api:$run"
+docker build -q -t "$image" "$ROOT/services/api" >"$work/build.log" 2>&1
+docker run -d --rm --name "$run-pg" -e POSTGRES_DB=chat_e2e_test -e POSTGRES_USER=chat_e2e -e POSTGRES_PASSWORD="$password" -p "127.0.0.1:$pg_port:5432" postgres:16-alpine -c timezone=UTC > /dev/null
+printf '%s\n' "$run-pg" > "$work/containers"
+for _ in $(seq 1 60); do docker exec "$run-pg" pg_isready -U chat_e2e -d chat_e2e_test >/dev/null 2>&1 && break; sleep 1; done
+dsn="postgresql://chat_e2e:$password@127.0.0.1:$pg_port/chat_e2e_test"
+sqlalchemy="postgresql+psycopg://chat_e2e:$password@127.0.0.1:$pg_port/chat_e2e_test"
+docker run --rm --network host -e MOBILE_DATABASE_URL="$sqlalchemy" "$image" sh -c 'alembic upgrade head && python -m app.places.seed_catalog' >"$work/migrate.log" 2>&1
+mkdir "$work/media"
+docker run -d --rm --name "$run-api" --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:$api_port/healthz', timeout=2)\"" --network host --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$work/media:$work/media" -e MOBILE_DATABASE_URL="$sqlalchemy" -e MOBILE_AUTH_MODE=prod -e MOBILE_PERSON_ID_KEY="$identity" -e MOBILE_INTERNAL_TOKEN="$internal" -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 -e MOBILE_MEDIA_ROOT="$work/media" "$image" uvicorn app.api.main:app --host 127.0.0.1 --port "$api_port" >/dev/null
+printf '%s\n' "$run-api" >> "$work/containers"
+(cd "$ROOT/services/core" && go build -o "$work/core" ./cmd/core)
+docker run -d --rm --name "$run-core" --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:$core_port/healthz', timeout=2)\"" --network host --user "$(id -u):$(id -g)" -v "$work:$work" -e MOBILE_CORE_LISTEN="127.0.0.1:$core_port" -e MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" -e MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$api_port" -e MOBILE_AUTH_MODE=prod -e MOBILE_DATABASE_URL="$dsn" -e MOBILE_PERSON_ID_KEY="$identity" -e MOBILE_INTERNAL_TOKEN="$internal" -e MOBILE_OTP_DEBUG_CODE=000000 -e MOBILE_OTP_LOG_CODES=1 -e MOBILE_MEDIA_ROOT="$work/media" -e MOBILE_CORE_CANDIDATE_ROUTES=ported "$image" "$work/core" serve >/dev/null
+printf '%s\n' "$run-core" >> "$work/containers"
+for _ in $(seq 1 60); do curl -fsS "http://127.0.0.1:$core_port/healthz" >/dev/null 2>&1 && break; sleep 1; done
+curl -fsS "http://127.0.0.1:$core_port/healthz" >/dev/null
+cat > "$work/connection.json" <<EOF
+{"root":"$work","apiUrl":"http://127.0.0.1:$core_port","pythonUrl":"http://127.0.0.1:$api_port","databaseUrl":"$dsn","pgContainer":"$run-pg","apiContainer":"$run-api","coreContainer":"$run-core","image":"$image","sourceCommit":"$(git -C "$ROOT" rev-parse HEAD)"}
+EOF
+docker exec "$run-pg" psql -U chat_e2e -d chat_e2e_test -Atc 'show fsync; show synchronous_commit; show full_page_writes' > "$work/durability.txt"
+echo "READY: $work/connection.json"
+trap - ERR

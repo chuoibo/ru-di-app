@@ -1,0 +1,166 @@
+{
+  "run": "E2E-1789990660515",
+  "users": 20,
+  "mockResponses": false,
+  "startedAt": "2026-09-21T11:37:40.515Z",
+  "steps": [
+    {
+      "name": "distinct_authenticated_UI_sessions",
+      "pass": true,
+      "count": 20
+    },
+    {
+      "name": "simultaneous_group_send",
+      "pass": true,
+      "messages": 20,
+      "expectedUIDeliveries": 400,
+      "persisted": 20,
+      "missingUIDeliveries": 0,
+      "duplicateUIDeliveries": 0,
+      "renderP50Ms": 241,
+      "renderP95Ms": 1404,
+      "renderP99Ms": 3055
+    },
+    {
+      "name": "offline_reconnect_receive",
+      "pass": true,
+      "absentOffline": true,
+      "recovered": true
+    },
+    {
+      "name": "slash_plan_actual",
+      "status": 201,
+      "intent": "plan",
+      "intentError": null,
+      "companion": {
+        "context_id": "530267d4-44b0-41e6-8243-d9ff20ccd8ab",
+        "spoke": false,
+        "reason": "unavailable",
+        "message": null
+      }
+    }
+  ],
+  "clients": [
+    {
+      "index": 0,
+      "errors": [],
+      "personId": "d951c631-0e8f-8186-9e81-7840ab476ffa",
+      "visibility": "visible"
+    },
+    {
+      "index": 1,
+      "errors": [],
+      "personId": "55e90c0b-d730-838a-865c-265e50792ee7",
+      "visibility": "visible"
+    },
+    {
+      "index": 2,
+      "errors": [],
+      "personId": "2bb088dc-5e99-8658-a0a4-473b07c1a02a",
+      "visibility": "visible"
+    },
+    {
+      "index": 3,
+      "errors": [],
+      "personId": "bf4574b1-4b21-8139-9951-9977b7e0e7f9",
+      "visibility": "visible"
+    },
+    {
+      "index": 4,
+      "errors": [],
+      "personId": "476b28e2-89c7-8836-9bd9-36168f268ca2",
+      "visibility": "visible"
+    },
+    {
+      "index": 5,
+      "errors": [],
+      "personId": "ac017f2e-213e-8acc-b20a-4f98875596a3",
+      "visibility": "visible"
+    },
+    {
+      "index": 6,
+      "errors": [],
+      "personId": "57f69164-414a-857a-82d8-07b165b5ca45",
+      "visibility": "visible"
+    },
+    {
+      "index": 7,
+      "errors": [],
+      "personId": "0be93cf9-ba49-8629-af3a-52cb81915d59",
+      "visibility": "visible"
+    },
+    {
+      "index": 8,
+      "errors": [],
+      "personId": "2e7e34d0-2a67-84af-8311-2c09675cb0fe",
+      "visibility": "visible"
+    },
+    {
+      "index": 9,
+      "errors": [],
+      "personId": "48cd21cc-ec19-8c4a-aa17-dc155a94647f",
+      "visibility": "visible"
+    },
+    {
+      "index": 10,
+      "errors": [],
+      "personId": "7ef2f2ca-6b73-8507-89c0-24b2f64d68d0",
+      "visibility": "visible"
+    },
+    {
+      "index": 11,
+      "errors": [],
+      "personId": "86c5c0f5-c8cf-8f4a-88a0-184b275adbed",
+      "visibility": "visible"
+    },
+    {
+      "index": 12,
+      "errors": [],
+      "personId": "7ef413c0-0075-8ba9-a522-678432424de9",
+      "visibility": "visible"
+    },
+    {
+      "index": 13,
+      "errors": [],
+      "personId": "396c684e-ab72-8fac-a853-863b669b0d28",
+      "visibility": "visible"
+    },
+    {
+      "index": 14,
+      "errors": [],
+      "personId": "d58e2872-e8c6-8510-9c81-8d2f1328514a",
+      "visibility": "visible"
+    },
+    {
+      "index": 15,
+      "errors": [],
+      "personId": "978155e1-c813-8b90-9594-ec28fad0d6da",
+      "visibility": "visible"
+    },
+    {
+      "index": 16,
+      "errors": [],
+      "personId": "58173835-75ff-85c7-a4d6-4296b340d7f5",
+      "visibility": "visible"
+    },
+    {
+      "index": 17,
+      "errors": [],
+      "personId": "7a607872-66ef-8f04-934d-0390f9e852c7",
+      "visibility": "visible"
+    },
+    {
+      "index": 18,
+      "errors": [],
+      "personId": "19959505-3da7-8394-a7cc-314029b44f79",
+      "visibility": "visible"
+    },
+    {
+      "index": 19,
+      "errors": [],
+      "personId": "3b9d6f3a-c20a-8641-ab7d-c751ea101378",
+      "visibility": "visible"
+    }
+  ],
+  "finishedAt": "2026-09-21T11:39:29.294Z"
+}

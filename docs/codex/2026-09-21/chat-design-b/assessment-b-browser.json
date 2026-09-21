@@ -1,0 +1,284 @@
+{
+  "mutation": true,
+  "logs": [
+    "%c[impeccable] 3 anti-patterns found color: oklch(84% 0.19 80.46); font-weight: bold"
+  ],
+  "snapshots": [
+    {
+      "name": "b-chat-before-overlay",
+      "url": "http://127.0.0.1:8177/groups/530267d4-44b0-41e6-8243-d9ff20ccd8ab/chat",
+      "text": "\nPhòng kiểm thử đồng thời\n\n21 thành viên\n\n\nCài đặt\n\nChưa mã hoá đầu cuối\nQA design A: Toi nay an gi?\n\nBun bo\n1 phiếu · của bạn\n\nPho\n0 phiếu\n1 phiếu\n\nBạn tạo bình chọn\n18:24\n/vote QA design A: Toi nay an gi? Bun bo | Pho\n18:24\n/plan QA design A: buoi toi ca hoi muon di an roi cafe\nHôm nay\n\n\n",
+      "dimensions": {
+        "width": 430,
+        "scroll": 430,
+        "height": 932
+      },
+      "controls": [
+        {
+          "label": "Quay lại",
+          "text": "",
+          "x": 16,
+          "y": 2,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Thành viên nhóm",
+          "text": "21 thành viên",
+          "x": 105.28125,
+          "y": 44,
+          "width": 138.09375,
+          "height": 48
+        },
+        {
+          "label": "Cài đặt nhóm",
+          "text": "Cài đặt",
+          "x": 245.375,
+          "y": 44,
+          "width": 79.34375,
+          "height": 48
+        },
+        {
+          "label": "Gửi sticker",
+          "text": "",
+          "x": 23,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Gửi ảnh",
+          "text": "",
+          "x": 77,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Ô soạn tin",
+          "text": "",
+          "x": 131,
+          "y": 853,
+          "width": 222,
+          "height": 64
+        },
+        {
+          "label": "Gửi tin nhắn",
+          "text": "",
+          "x": 359,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "name": "b-chat-overlay",
+      "url": "http://127.0.0.1:8177/groups/530267d4-44b0-41e6-8243-d9ff20ccd8ab/chat",
+      "text": "\nPhòng kiểm thử đồng thời\n\n21 thành viên\n\n\nCài đặt\n\nChưa mã hoá đầu cuối\nQA design A: Toi nay an gi?\n\nBun bo\n1 phiếu · của bạn\n\nPho\n0 phiếu\n1 phiếu\n\nBạn tạo bình chọn\n18:24\n/vote QA design A: Toi nay an gi? Bun bo | Pho\n18:24\n/plan QA design A: buoi toi ca hoi muon di an roi cafe\nHôm nay\n\n\n\nlayout property animation\nlayout property animation\nlayout property animation: transition: padding\n◉\n×",
+      "dimensions": {
+        "width": 430,
+        "scroll": 430,
+        "height": 932
+      },
+      "controls": [
+        {
+          "label": "Quay lại",
+          "text": "",
+          "x": 16,
+          "y": 2,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Thành viên nhóm",
+          "text": "21 thành viên",
+          "x": 105.28125,
+          "y": 44,
+          "width": 138.09375,
+          "height": 48
+        },
+        {
+          "label": "Cài đặt nhóm",
+          "text": "Cài đặt",
+          "x": 245.375,
+          "y": 44,
+          "width": 79.34375,
+          "height": 48
+        },
+        {
+          "label": "Gửi sticker",
+          "text": "",
+          "x": 23,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Gửi ảnh",
+          "text": "",
+          "x": 77,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Ô soạn tin",
+          "text": "",
+          "x": 131,
+          "y": 853,
+          "width": 222,
+          "height": 64
+        },
+        {
+          "label": "Gửi tin nhắn",
+          "text": "",
+          "x": 359,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "name": "b-sticker-overlay",
+      "url": "http://127.0.0.1:8177/groups/530267d4-44b0-41e6-8243-d9ff20ccd8ab/chat",
+      "text": "\nPhòng kiểm thử đồng thời\n\n21 thành viên\n\n\nCài đặt\n\nChưa mã hoá đầu cuối\nQA design A: Toi nay an gi?\n\nBun bo\n1 phiếu · của bạn\n\nPho\n0 phiếu\n1 phiếu\n\nBạn tạo bình chọn\n18:24\n/vote QA design A: Toi nay an gi? Bun bo | Pho\n18:24\n/plan QA design A: buoi toi ca hoi muon di an roi cafe\nHôm nay\n\n\n\nSticker\nMột hình thay cho một câu.\nĐi thôi!\nĂn gì?\nCà phê không?\nOK, chốt!\nChờ tí\nKẹt xe\nTrả tiền nè\nTuyệt vời\nlayout property animation\nlayout property animation\nlayout property animation: transition: padding\n◉\n×",
+      "dimensions": {
+        "width": 430,
+        "scroll": 430,
+        "height": 932
+      },
+      "controls": [
+        {
+          "label": "Quay lại",
+          "text": "",
+          "x": 16,
+          "y": 2,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Thành viên nhóm",
+          "text": "21 thành viên",
+          "x": 105.28125,
+          "y": 44,
+          "width": 138.09375,
+          "height": 48
+        },
+        {
+          "label": "Cài đặt nhóm",
+          "text": "Cài đặt",
+          "x": 245.375,
+          "y": 44,
+          "width": 79.34375,
+          "height": 48
+        },
+        {
+          "label": "Gửi sticker",
+          "text": "",
+          "x": 23,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Gửi ảnh",
+          "text": "",
+          "x": 77,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Ô soạn tin",
+          "text": "",
+          "x": 131,
+          "y": 853,
+          "width": 222,
+          "height": 64
+        },
+        {
+          "label": "Gửi tin nhắn",
+          "text": "",
+          "x": 359,
+          "y": 869,
+          "width": 48,
+          "height": 48
+        },
+        {
+          "label": "Đóng",
+          "text": "",
+          "x": 0,
+          "y": 0,
+          "width": 430,
+          "height": 932
+        },
+        {
+          "label": "Đi thôi!",
+          "text": "Đi thôi!",
+          "x": 16,
+          "y": 654,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Ăn gì?",
+          "text": "Ăn gì?",
+          "x": 116.34375,
+          "y": 654,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Cà phê không?",
+          "text": "Cà phê không?",
+          "x": 216.6875,
+          "y": 654,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "OK, chốt!",
+          "text": "OK, chốt!",
+          "x": 317.03125,
+          "y": 654,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Chờ tí",
+          "text": "Chờ tí",
+          "x": 16,
+          "y": 786,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Kẹt xe",
+          "text": "Kẹt xe",
+          "x": 116.34375,
+          "y": 786,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Trả tiền nè",
+          "text": "Trả tiền nè",
+          "x": 216.6875,
+          "y": 786,
+          "width": 90.34375,
+          "height": 122
+        },
+        {
+          "label": "Tuyệt vời",
+          "text": "Tuyệt vời",
+          "x": 317.03125,
+          "y": 786,
+          "width": 90.34375,
+          "height": 122
+        }
+      ]
+    }
+  ]
+}

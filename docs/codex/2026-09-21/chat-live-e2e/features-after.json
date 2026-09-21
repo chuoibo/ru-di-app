@@ -1,0 +1,54 @@
+{
+  "run": "FEATURE-1789990826029",
+  "mockResponses": false,
+  "steps": [
+    {
+      "name": "sticker_send_receive",
+      "pass": true,
+      "before": 2,
+      "after": 3
+    },
+    {
+      "name": "reply_send_receive",
+      "pass": true,
+      "replyTo": "8ae56b4f-cf85-4d28-a69a-7c8bb376a0ba",
+      "originalId": "8ae56b4f-cf85-4d28-a69a-7c8bb376a0ba"
+    },
+    {
+      "name": "reaction_live_propagation",
+      "pass": false,
+      "own": true,
+      "remote": false,
+      "waitMs": 8500
+    },
+    {
+      "name": "delete_live_propagation",
+      "pass": false,
+      "ownDeleted": true,
+      "staleRemote": true,
+      "waitMs": 8500
+    },
+    {
+      "name": "offline_send_retry_preserves_draft",
+      "pass": true,
+      "remote": true,
+      "draft": "Bản nháp mới còn nguyên"
+    },
+    {
+      "name": "image_picker_upload_receive",
+      "pass": true,
+      "images": [
+        {
+          "alt": "Ảnh: FEATURE-1789990826029 ảnh tổng hợp",
+          "loaded": true,
+          "src": "other"
+        },
+        {
+          "alt": "Ảnh: FEATURE-1789990507114 ảnh tổng hợp",
+          "loaded": true,
+          "src": "other"
+        }
+      ]
+    }
+  ]
+}

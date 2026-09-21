@@ -1,0 +1,24 @@
+{
+  "platform": "Expo web / Chrome 148 / Linux",
+  "mockResponses": false,
+  "users": 20,
+  "groupMembers": 21,
+  "auth": "Actual OTP UI; debug provider on isolated synthetic stack",
+  "api": "Go candidate 151 routes; PostgreSQL 16 durable; Python AI/upstream image from checkout",
+  "browserViewport": {
+    "width": 430,
+    "height": 932
+  },
+  "sourceHashes": {
+    "apps/mobile/src/rudi/chat/useTinNhan.ts": "d39f6bc31d8e65c23f1fc25455cc3d1278123e45691aa48e187f608dff050d7f",
+    "apps/mobile/tests/rudi-chat-useTinNhan.test.mjs": "393bc6dabfd861dc75290c1e65cecb93d96398a8b55e7f14dc597bbbabaf76c4",
+    "apps/mobile/tools/chat-live-e2e.mjs": "129fa7fbb6cd99c456970ad02fa9bce7931f93b2e9584ada4a0b830572f4e62a",
+    "apps/mobile/tools/chat-live-features.mjs": "c075d7c17eea2c0c04fc4b6d9fcc56c66a7211e192b6e725c014327c70422bf0"
+  },
+  "bundleHashes": {
+    "SecureStore-212522891b2be366f59bbc795128645b.js": "4d998347427b988c9f39a12799dd7fada722e9767b7ccb8edd33869403c4d169",
+    "entry-054909ca741f5d45c7d8670930f3a060.js": "d895900276ff00df953e50712b3359c9a844016b73ee3766e123cf5590f11a7c",
+    "index-e3e60520922279f73a09e7d52e27b235.js": "d5dfa936c0f975110bfcf00098283cc1f08b4b09ff07fe6724fb03ae07061d73"
+  },
+  "scope": "UI rendering and API/persistence, not native/E2EE or full production qualification"
+}

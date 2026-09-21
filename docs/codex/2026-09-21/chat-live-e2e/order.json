@@ -1,0 +1,87 @@
+{
+  "expectedMessages": 20,
+  "clients": 20,
+  "correctOrder": true,
+  "observations": [
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    },
+    {
+      "count": 20,
+      "correctOrder": true
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "at": "2026-09-21T11:36:06.409Z",
+  "provenance": "Existing live Expo web browsers and real API; synthetic accounts; no response interception",
+  "mapping": [
+    {
+      "position": 2,
+      "index": 15
+    },
+    {
+      "position": 3,
+      "index": 19
+    },
+    {
+      "position": 1,
+      "index": 8
+    },
+    {
+      "position": 13,
+      "index": 12
+    },
+    {
+      "position": 12,
+      "index": 1
+    },
+    {
+      "position": 4,
+      "index": 0
+    },
+    {
+      "position": 10,
+      "index": 17
+    },
+    {
+      "position": 7,
+      "index": 14
+    },
+    {
+      "position": 8,
+      "index": 3
+    },
+    {
+      "position": 5,
+      "index": 13
+    },
+    {
+      "position": 9,
+      "index": 2
+    },
+    {
+      "position": 11,
+      "index": 4
+    },
+    {
+      "position": 14,
+      "index": 16
+    },
+    {
+      "position": 6,
+      "index": 11
+    },
+    {
+      "position": 15,
+      "index": 6
+    },
+    {
+      "position": 18,
+      "index": 9
+    },
+    {
+      "position": 16,
+      "index": 5
+    },
+    {
+      "position": 20,
+      "index": 7
+    },
+    {
+      "position": 17,
+      "index": 18
+    },
+    {
+      "position": 19,
+      "index": 10
+    }
+  ],
+  "poll": {
+    "aBeforePeerVote": "QA design A: Toi nay an gi?\n\nBun bo\n2 phiếu · của bạn\n\nPho\n0 phiếu\n2 phiếu\n\nChat Test 21 tạo bình chọn",
+    "peerPostStatus": 200,
+    "aAfterPeerVoteAndWait": "QA design A: Toi nay an gi?\n\nBun bo\n2 phiếu · của bạn\n\nPho\n0 phiếu\n2 phiếu\n\nChat Test 21 tạo bình chọn",
+    "bAfterOwnVote": "QA design A: Toi nay an gi?\n\nBun bo\n2 phiếu\n\nPho\n1 phiếu · của bạn\n3 phiếu\n\nChat Test 21 tạo bình chọn",
+    "waitAfterPeerVoteMs": 8500,
+    "observerUnchanged": true,
+    "server": {
+      "status": 200,
+      "data": {
+        "id": "5f6687f3-87a5-48b3-bb6b-23192dee73ca",
+        "context_id": "530267d4-44b0-41e6-8243-d9ff20ccd8ab",
+        "outing_id": null,
+        "created_by_id": "c6a58174-225a-866f-b080-13cf8e8f628a",
+        "question": "QA design A: Toi nay an gi?",
+        "created_at": "2026-09-21T11:24:35.799717Z",
+        "closed_at": null,
+        "is_closed": false,
+        "options": [
+          {
+            "id": "d98fe3aa-4459-468a-bb3f-c3089c173d87",
+            "position": 0,
+            "label": "Bun bo",
+            "place_name": null,
+            "ballot_count": 2
+          },
+          {
+            "id": "e7152c96-08fe-42d8-8639-f2b5f8689ffd",
+            "position": 1,
+            "label": "Pho",
+            "place_name": null,
+            "ballot_count": 1
+          }
+        ],
+        "total_ballots": 3,
+        "leading_option_ids": [
+          "d98fe3aa-4459-468a-bb3f-c3089c173d87"
+        ],
+        "is_tie": false,
+        "decided_option_id": "d98fe3aa-4459-468a-bb3f-c3089c173d87",
+        "my_option_id": "d98fe3aa-4459-468a-bb3f-c3089c173d87"
+      }
+    }
+  },
+  "dm": {
+    "sameServerPair": true,
+    "forwardPostStatus": 201,
+    "bReceivedForward": true,
+    "reversePostStatus": 201,
+    "aReceivedReverse": true,
+    "serverStatus": 200,
+    "serverStoredBoth": true,
+    "thirdUserDoesNotListPair": true,
+    "thirdUserReadStatus": 403,
+    "returnedBothToGroup": true
+  }
+}

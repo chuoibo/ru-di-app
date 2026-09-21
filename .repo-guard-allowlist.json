@@ -3670,6 +3670,110 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh adb native tổng hợp của chat legacy, emulator riêng; parent và reviewer Impeccable đã xem nội dung. Không có dữ liệu người tham gia; PNG không chứa EXIF hoặc text metadata. Ghim đúng bytes; không chứng minh E2EE hoặc production."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/01-after-20-users.png",
+      "sha256": "fb1861d8162818e9281f3c36f1e9c3993572e4777d8dd3e2208e2104eb81e372",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/02-plan-unavailable.png",
+      "sha256": "246fd5f1d638158462a520d417406c71a4d33badd0b39978c6ba39dc66d56611",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/03-nep-stickers.png",
+      "sha256": "f280d76471838685dbc801a770357f046249d8ffabb7159081c8baa0d332fd67",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/04-stale-deletion-before.png",
+      "sha256": "8078c4931d62fcd4cada59838cbf57a97900a432ee2534e2efb0d1961279deff",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/05-poll-stale-observer.png",
+      "sha256": "5afae294074b5e8ac3eef2ac730da72d5a578d5cccd0da096878b433763ce2c0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/06-poll-updated-voter.png",
+      "sha256": "e63196f28a617a858215abc59f6d05e389a8f52224403aa146601d487045f58f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/after.json",
+      "sha256": "c77579d8db4df635c64871eadc89c4fcf41c8639d86d986eeb20e522ebbe6c02",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "JSON kiểm chat tổng hợp; chuỗi dài là marker thời gian Date.now của lượt thử, không phải số điện thoại hoặc tài khoản. Ghim đúng nội dung bằng SHA-256; không miễn các rule credential khác."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/before.json",
+      "sha256": "46d6b2d696f81f30939ee5f1fae86c56784f3e8fcfd3271e007b38033e37d40f",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "JSON kiểm chat tổng hợp; chuỗi dài là marker thời gian Date.now của lượt thử, không phải số điện thoại hoặc tài khoản. Ghim đúng nội dung bằng SHA-256; không miễn các rule credential khác."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/features-after.json",
+      "sha256": "1d8da099520a149f673bd056503f4c9502c4aadead32e450c5df5ed16763617e",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "JSON kiểm chat tổng hợp; chuỗi dài là marker thời gian Date.now của lượt thử, không phải số điện thoại hoặc tài khoản. Ghim đúng nội dung bằng SHA-256; không miễn các rule credential khác."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-live-e2e/features-before.json",
+      "sha256": "f2ed701ac89a19a81b903d0a1eeb137cac7db9d1f00362f11ad7a4f449e0ed70",
+      "rules": [
+        "long-number"
+      ],
+      "reason": "JSON kiểm chat tổng hợp; chuỗi dài là marker thời gian Date.now của lượt thử, không phải số điện thoại hoặc tài khoản. Ghim đúng nội dung bằng SHA-256; không miễn các rule credential khác."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-design-b/b-chat-before-overlay.png",
+      "sha256": "85a48b8d48df140b6d6af6a3abd7c8a6c2ef41106f62d404f6a5675c514fffb0",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-design-b/b-chat-overlay.png",
+      "sha256": "c69993b65d935d8c054306d6792dd6ebcd7d0987e97e98f7575441f8ded8e85f",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "docs/codex/2026-09-21/chat-design-b/b-sticker-overlay.png",
+      "sha256": "6c905c36e168ecd9413c460eeacb85e453ba8447cfb4de8b77373bed4de97e7b",
+      "rules": [
+        "controlled-artifact"
+      ],
+      "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
     }
   ]
 }
