@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
-from sqlalchemy import Date, and_, cast, delete, desc, func, or_, select, tuple_
+from sqlalchemy import Date, and_, case, cast, delete, desc, func, or_, select, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased
@@ -3788,24 +3788,35 @@ class SqlAlchemyApiRepository:
         newer client already read; the keyset comparison is the same one the
         feed pages by, so "older" means what the feed means.
         """
-        row = self.session.get(ContextReadMark, (context_id, person_id))
-        if row is None:
-            row = ContextReadMark(
-                context_id=context_id,
-                person_id=person_id,
-                last_read_message_id=message.id,
-                last_read_at=message.created_at,
-                updated_at=now,
-            )
-            self.session.add(row)
-        elif (message.created_at, message.id.bytes) > (
-            row.last_read_at,
-            row.last_read_message_id.bytes,
-        ):
-            row.last_read_message_id = message.id
-            row.last_read_at = message.created_at
-            row.updated_at = now
-        self.session.flush()
+        insert = pg_insert(ContextReadMark).values(
+            context_id=context_id,
+            person_id=person_id,
+            last_read_message_id=message.id,
+            last_read_at=message.created_at,
+            updated_at=now,
+        )
+        newer = tuple_(
+            insert.excluded.last_read_at, insert.excluded.last_read_message_id
+        ) > tuple_(ContextReadMark.last_read_at, ContextReadMark.last_read_message_id)
+        statement = insert.on_conflict_do_update(
+            index_elements=[ContextReadMark.context_id, ContextReadMark.person_id],
+            set_={
+                "last_read_message_id": case(
+                    (newer, insert.excluded.last_read_message_id),
+                    else_=ContextReadMark.last_read_message_id,
+                ),
+                "last_read_at": func.greatest(
+                    ContextReadMark.last_read_at, insert.excluded.last_read_at
+                ),
+                "updated_at": case(
+                    (newer, insert.excluded.updated_at),
+                    else_=ContextReadMark.updated_at,
+                ),
+            },
+        ).returning(ContextReadMark)
+        row = self.session.scalars(
+            statement.execution_options(populate_existing=True)
+        ).one()
         return self._read_mark_record(row)
 
     def count_unread_messages(self, context_id: uuid.UUID, person_id: uuid.UUID) -> int:

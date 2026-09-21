@@ -39,8 +39,8 @@
 //     releases the key and keeps unwinding.
 //   - A replay sends the stored status and body with exactly Content-Length,
 //     Idempotency-Replayed: true and, when the stored media type is non-empty,
-//     Content-Type. A PUT /outings/{id}/itinerary replay is not written here:
-//     the handler receives it through AuthorizedReplay to re-authorize first.
+//     Content-Type. Itinerary and chat write replays are not written here:
+//     the handler receives them through AuthorizedReplay to re-authorize first.
 package idem
 
 import (
@@ -184,8 +184,8 @@ func New(store Store, options ...Option) func(http.Handler) http.Handler {
 type replayContextKey struct{}
 
 // AuthorizedReplay returns the stored answer the middleware handed to a
-// PUT /outings/{id}/itinerary handler instead of writing it (the Python scope
-// key "itinerary_authorized_replay"). The handler must re-check the session
+// protected itinerary or chat handler instead of writing it.
+// The handler must re-check the session
 // and membership, then answer with it without writing again.
 func AuthorizedReplay(ctx context.Context) (StoredResponse, bool) {
 	response, ok := ctx.Value(replayContextKey{}).(StoredResponse)
@@ -254,7 +254,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// to write the same money twice.
 		h.problem(w, r, path, http.StatusConflict, CodeInFlight, detailInFlight)
 	case Replay:
-		if itineraryWrite {
+		if itineraryWrite || ChatReplayNeedsAuthorization(r.Method, path) {
 			inner := r.WithContext(context.WithValue(r.Context(), replayContextKey{}, outcome.Response))
 			inner.Body = io.NopCloser(bytes.NewReader(body))
 			h.next.ServeHTTP(w, inner)
@@ -662,4 +662,22 @@ func isPythonSpace(b byte) bool {
 		return true
 	}
 	return false
+}
+
+// ChatReplayNeedsAuthorization identifies private chat writes whose cached reply
+// must pass through the authenticated endpoint and current membership checks.
+func ChatReplayNeedsAuthorization(method, path string) bool {
+	if !writeMethods[method] {
+		return false
+	}
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) < 3 || parts[0] != "contexts" {
+		return false
+	}
+	switch parts[2] {
+	case "messages", "ai-turn", "read-mark":
+		return true
+	default:
+		return false
+	}
 }

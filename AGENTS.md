@@ -1,5 +1,29 @@
 # Repository Guidelines
 
+## Quy tắc toàn repo: Go cho backend, Python chỉ cho AI
+
+Quyết định của Lead ngày 2026-09-21, ADR-0031: toàn bộ backend nghiệp vụ
+chuyển sang Go. API, auth, domain, persistence, realtime, điều phối media,
+worker, điều phối bot và migration mới viết bằng Go/SQL. Python chỉ dùng cho
+inference, extraction và evaluation AI; AI không trực tiếp ghi sổ cái hoặc
+quyết định quyền truy cập. Frontend giữ TypeScript; thư viện mã hoá native
+được dùng Rust. Comment/docstring tiếng Anh; tài liệu và commit tiếng Việt.
+
+`services/api/` là runtime legacy trong lúc chuyển đổi, không phải mẫu để thêm
+backend Python mới. Cho phép sửa lỗi bảo mật/hồi quy và giữ test legacy làm
+bằng chứng đối chiếu; phải ghi rõ ngoại lệ trong bàn giao. Không xoá test hay
+đổi đường production chỉ để tuyên bố đã chuyển xong. Go chỉ nhận quyền ghi
+của module sau khi qua contract và PostgreSQL thật; mỗi module có một writer.
+
+Chat v2 bắt buộc E2EE, không fallback plaintext. Kho cũ chỉ đọc, có nhãn rõ.
+Server không giữ khoá giải mã chat. AI chỉ nhận lời gọi hoặc trích đoạn được
+đồng ý chia sẻ, không tự đọc chat/gu/lịch sử. Native Android/iOS, kiểm chứng
+crypto độc lập và test tải là các cổng riêng, không được thay bằng unit test.
+
+Quy tắc này ưu tiên hơn các mô tả Python-first lịch sử bên dưới. SQLite vẫn
+bị cấm làm database backend; kho mã hoá cục bộ trên thiết bị là tầng khác.
+Theo dõi tiến độ thật tại `docs/architecture/02-chat-go-e2ee.md`.
+
 ## Project Structure & Module Organization
 
 Product code lives under `services/api/app/`: `domain/` holds pure rules, `db/` holds SQLAlchemy and Alembic, `api/` exposes FastAPI routes, and `web/` serves guests. There is no payment rail: the product names each person's share and stops, so bank accounts and VietQR left the codebase. Layer-aligned tests live in `services/api/tests/`; root `tests/` covers the repo guard. Consult `docs/decisions/` before behavior changes and `docs/architecture/` before boundary changes. `phase0/` and `docs/protocol/v1/` are frozen. CI treats currently absent `apps/mobile/` and `packages/shared/` as conditional.

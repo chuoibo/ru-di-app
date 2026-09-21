@@ -1,9 +1,7 @@
 package repo
 
 import (
-	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -305,66 +303,24 @@ func (r Repository) ListReactions(ctx context.Context, messageIDs []string) ([]R
 	return out, rows.Err()
 }
 
-// SetReadMark is set_read_mark: insert or move forward only.
+// SetReadMark advances the watermark atomically, including concurrent first reads.
 func (r Repository) SetReadMark(ctx context.Context, contextID, personID string, message Message, now time.Time) (ReadMark, error) {
 	var mark ReadMark
-	err := r.Q.QueryRow(ctx,
-		`SELECT context_read_marks.context_id, context_read_marks.person_id,
-		        context_read_marks.last_read_message_id, context_read_marks.last_read_at,
-		        context_read_marks.updated_at
-		   FROM context_read_marks
-		  WHERE context_read_marks.context_id = $1::UUID AND context_read_marks.person_id = $2::UUID`,
-		contextID, personID).
+	err := r.Q.QueryRow(ctx, `
+INSERT INTO context_read_marks (context_id, person_id, last_read_message_id, last_read_at, updated_at)
+VALUES ($1::UUID, $2::UUID, $3::UUID, $4::TIMESTAMPTZ, $5::TIMESTAMPTZ)
+ON CONFLICT (context_id, person_id) DO UPDATE SET
+ last_read_message_id = CASE WHEN (EXCLUDED.last_read_at, EXCLUDED.last_read_message_id) >
+   (context_read_marks.last_read_at, context_read_marks.last_read_message_id)
+   THEN EXCLUDED.last_read_message_id ELSE context_read_marks.last_read_message_id END,
+ last_read_at = GREATEST(context_read_marks.last_read_at, EXCLUDED.last_read_at),
+ updated_at = CASE WHEN (EXCLUDED.last_read_at, EXCLUDED.last_read_message_id) >
+   (context_read_marks.last_read_at, context_read_marks.last_read_message_id)
+   THEN EXCLUDED.updated_at ELSE context_read_marks.updated_at END
+RETURNING context_id, person_id, last_read_message_id, last_read_at, updated_at`,
+		contextID, personID, message.ID, message.CreatedAt, pythonInstant(now)).
 		Scan(&mark.ContextID, &mark.PersonID, &mark.LastReadMessageID, &mark.LastReadAt, &mark.UpdatedAt)
-	updated := pythonInstant(now)
-	if errors.Is(err, pgx.ErrNoRows) {
-		_, err = r.Q.Exec(ctx,
-			`INSERT INTO context_read_marks (context_id, person_id, last_read_message_id, last_read_at, updated_at)
-			 VALUES ($1::UUID, $2::UUID, $3::UUID, $4::TIMESTAMP WITH TIME ZONE, $5::TIMESTAMP WITH TIME ZONE)`,
-			contextID, personID, message.ID, message.CreatedAt, updated)
-		if err != nil {
-			return ReadMark{}, err
-		}
-		return ReadMark{ContextID: contextID, PersonID: personID, LastReadMessageID: message.ID,
-			LastReadAt: message.CreatedAt, UpdatedAt: updated}, nil
-	}
-	if err != nil {
-		return ReadMark{}, err
-	}
 	mark.LastReadAt = mark.LastReadAt.UTC()
 	mark.UpdatedAt = mark.UpdatedAt.UTC()
-	if messageNewer(message, mark) {
-		if err := r.execUpdate(ctx,
-			`UPDATE context_read_marks SET last_read_message_id = $1::UUID, last_read_at = $2::TIMESTAMP WITH TIME ZONE, updated_at = $3::TIMESTAMP WITH TIME ZONE
-			  WHERE context_read_marks.context_id = $4::UUID AND context_read_marks.person_id = $5::UUID`,
-			message.ID, message.CreatedAt, updated, contextID, personID); err != nil {
-			return ReadMark{}, err
-		}
-		mark.LastReadMessageID, mark.LastReadAt, mark.UpdatedAt = message.ID, message.CreatedAt, updated
-	}
-	return mark, nil
-}
-
-func messageNewer(message Message, mark ReadMark) bool {
-	if message.CreatedAt.After(mark.LastReadAt) {
-		return true
-	}
-	if message.CreatedAt.Before(mark.LastReadAt) {
-		return false
-	}
-	return bytes.Compare(uuidBytes(message.ID), uuidBytes(mark.LastReadMessageID)) > 0
-}
-
-func uuidBytes(id string) []byte {
-	hexes := make([]byte, 0, 32)
-	for i := 0; i < len(id); i++ {
-		if id[i] != '-' {
-			hexes = append(hexes, id[i])
-		}
-	}
-	out, err := hex.DecodeString(string(hexes))
-	if err != nil {
-		return nil
-	}
-	return out
+	return mark, err
 }

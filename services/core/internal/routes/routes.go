@@ -189,7 +189,7 @@ func Handlers(contract *pyval.Contract, registry *pyval.Registry, env endpoint.E
 		if err != nil {
 			return nil, fmt.Errorf("routes: %s: %w", route.ID, err)
 		}
-		handler, err := endpoint.New(bound, route.Status, route.Serve, env)
+		handler, err := endpoint.New(bound, route.Status, authorizeChatReplay(route.Serve), env)
 		if err != nil {
 			return nil, fmt.Errorf("routes: %s: %w", route.ID, err)
 		}
