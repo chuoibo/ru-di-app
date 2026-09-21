@@ -695,6 +695,43 @@ jobs:
   # The script provisions its own PostgreSQL and its own uvicorn, pins
   # EXPO_PUBLIC_API_URL at them, and sets MOBILE_REQUIRE_E2E=1 so an
   # unreachable server is a failure rather than a skip.
+  chat-e2e:
+    name: chat end to end on the Go front door
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: present
+        # Same rule as the other suites: skip an absence, fail a defect. The
+        # tier disappearing must never be the thing that turns this green.
+        run: |
+          if [ ! -d services/core/e2e/chat ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::services/core/e2e/chat is not on this branch, skipping"
+          elif [ -x scripts/chat_e2e_go.sh ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::the chat E2E cases exist but scripts/chat_e2e_go.sh does not -- refusing to skip"
+            exit 1
+          fi
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Drives a real stack -- PostgreSQL, the Python API, and the Go core with
+      # the chat candidate on -- over HTTP and WebSocket. The script refuses a
+      # run with no sentinel, any SKIP, or a stack that never came up.
+      - if: steps.present.outputs.found == 'true'
+        run: scripts/chat_e2e_go.sh
+
   e2e:
     name: the vertical slice, client against a real API
     runs-on: ubuntu-latest

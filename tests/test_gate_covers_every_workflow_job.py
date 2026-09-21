@@ -119,6 +119,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
     # it in would make the whole mobile job unrunnable on a machine with no
     # Docker, and the way that gets resolved is by deleting the slice.
     "e2e": ("e2e",),
+    "chat-e2e": ("chat-e2e",),
 }
 
 # Stages that deliberately have no workflow job, because the question they ask

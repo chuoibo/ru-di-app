@@ -474,6 +474,18 @@ INLINE_STEPS: dict[str, Covered] = {
         why="",
     ),
     # --- test.yml: e2e ----------------------------------------------------
+    "test.yml::chat-e2e::present": Covered(
+        kind=GATE_KIND,
+        stages=("chat-e2e",),
+        body_sha="7cf360b2a7c5e880",
+        why="",
+    ),
+    "test.yml::chat-e2e::scripts/chat_e2e_go.sh": Covered(
+        kind=GATE_KIND,
+        stages=("chat-e2e",),
+        body_sha="ae5fe8951003d463",
+        why="",
+    ),
     "test.yml::e2e::present": Covered(
         kind=GATE_KIND,
         stages=("e2e",),
