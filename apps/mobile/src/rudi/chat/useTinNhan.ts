@@ -3,7 +3,8 @@
  *
  * - First page (newest 50) on mount; older pages on demand (`napCuHon`).
  * - Forward poll every 4 s while focused and the app is active, and once
- *   right after a send, using the newest cursor held. The server echoes the
+ *   right after a send, using a separate cursor advanced only by GET pages.
+ *   A send acknowledgement cannot skip concurrent peer messages. The server echoes the
  *   cursor on an empty page (BE6), so a quiet group polls in place instead of
  *   re-reading the top.
  * - Read marks follow viewport reports, never fetched messages. Writes are
@@ -60,8 +61,8 @@ export type TrangThaiChat = {
   loi: string | null;
   /**
    * What is on its way or has failed, newest first. Deliberately NOT part of
-   * `tin`: that list is the server's, and `cursorMoiNhat` polls from its head,
-   * so a row with an invented cursor at the front would poison every poll.
+   * `tin`: that list is confirmed server data; pending rows have no server
+   * cursor and never advance the separate receive boundary.
    */
   hangCho: TinChoGui[];
 };
@@ -75,6 +76,10 @@ const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, het
 export function useTinNhan(contextId: string, personId: string) {
   const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
   const tinRef = useRef<Tin[]>(TRANG_DAU.tin);
+  // A POST acknowledgement is not a contiguous receive cursor: other people
+  // may have committed messages just before it. Advance only from GET pages.
+  const cursorDaNhan = useRef<string | null>(null);
+  const dangNhan = useRef<number | null>(null);
   // Held in a ref as well as in state, for the same reason `tin` is: a
   // re-render between the press and the reply must not be able to lose the
   // key and turn a retry into a second write (`api.ts`, `attemptFor`).
@@ -119,6 +124,8 @@ export function useTinNhan(contextId: string, personId: string) {
   useEffect(() => {
     chuSoHuu.current = { contextId, personId, active: true };
     tinRef.current = TRANG_DAU.tin;
+    cursorDaNhan.current = null;
+    dangNhan.current = null;
     hangRef.current = [];
     daThay.current = null;
     dangGhiDoc.current = null;
@@ -132,28 +139,52 @@ export function useTinNhan(contextId: string, personId: string) {
 
   const napDau = useCallback(async () => {
     const theHe = theHeRef.current;
+    if (dangNhan.current === theHe) return;
+    dangNhan.current = theHe;
     try {
       const page = await docTrangTin(contextId, personId);
       if (theHe !== theHeRef.current) return;
+      if (cursorDaNhan.current === null) cursorDaNhan.current = cursorMoiNhat(page.messages);
       dat(gopTin(tinRef.current, page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null });
     } catch (error) {
       if (theHe !== theHeRef.current) return;
       setTrang((cu) => ({ ...cu, dangNap: false, loi: loiRaChu(error) }));
+    } finally {
+      if (dangNhan.current === theHe) dangNhan.current = null;
     }
   }, [contextId, personId, dat]);
 
   const napMoi = useCallback(async () => {
     const theHe = theHeRef.current;
-    const after = cursorMoiNhat(tinRef.current);
+    if (dangNhan.current === theHe) return;
+    dangNhan.current = theHe;
     try {
-      const page = after === null
-        ? await docTrangTin(contextId, personId)
-        : await docTrangTin(contextId, personId, { after });
-      if (theHe !== theHeRef.current) return;
-      if (page.messages.length > 0) dat(gopTin(tinRef.current, page.messages), { loi: null });
+      // Drain bounded forward pages, retaining the receive boundary between
+      // ticks. Initial history remains paginated separately by napCuHon.
+      for (let pageIndex = 0; pageIndex < 5; pageIndex += 1) {
+        const after = cursorDaNhan.current;
+        const page = after === null
+          ? await docTrangTin(contextId, personId)
+          : await docTrangTin(contextId, personId, { after });
+        if (theHe !== theHeRef.current) return;
+        if (page.messages.length > 0) {
+          // Initial pages are newest-first; forward pages are oldest-first.
+          cursorDaNhan.current = after === null ? cursorMoiNhat(page.messages) : page.next_cursor;
+          dat(gopTin(tinRef.current, page.messages), {
+            dangNap: false,
+            loi: null,
+            ...(after === null ? { hetTinCu: !page.has_more } : {}),
+          });
+        } else if (after === null) {
+          setTrang((cu) => ({ ...cu, dangNap: false, loi: null, hetTinCu: !page.has_more }));
+        }
+        if (after === null || !page.has_more || page.messages.length === 0) break;
+      }
     } catch {
       // A missed poll is not an error the person needs to read; the next tick
       // tries again and a send surfaces its own failure.
+    } finally {
+      if (dangNhan.current === theHe) dangNhan.current = null;
     }
   }, [contextId, personId, dat]);
 

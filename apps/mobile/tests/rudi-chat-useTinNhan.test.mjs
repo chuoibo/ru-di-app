@@ -415,3 +415,108 @@ test("ACK ảnh không xoá bản nháp mới, kể cả khi gõ lại cùng ch�
     assert.equal(draft.text, "", "caption chưa thay đổi được xoá sau ACK");
   } finally { await bo(root); }
 });
+
+test("gửi đồng thời không lấy tin của mình làm mốc bỏ qua tin người khác", async () => {
+  const calls = batFetch();
+  const root = await dung(A);
+  await tra(calls[0], trang(A, "cu"));
+  let sending;
+  await act(async () => { sending = ketQua.gui("mình gửi sau bạn"); });
+  await act(async () => {
+    calls[1].resolve({ ...tin(A, "minh", "2030-09-09T12:00:02Z"), kind: "text", body: "mình gửi sau bạn", intent: null }, 201);
+    await sending;
+  });
+  const catchup = calls.at(-1);
+  assert.equal(new URL(catchup.url).searchParams.get("after"), "a-cu", "mốc nhận phải là trang đã đọc từ server, không phải POST vừa ACK");
+  await tra(catchup, { ...trang(A), messages: [tin(A, "ban", "2030-09-09T12:00:01Z"), tin(A, "minh", "2030-09-09T12:00:02Z")] });
+  assert.deepEqual(ids(), ["a-minh", "a-ban", "a-cu"]);
+  await bo(root);
+});
+
+test("trang tiến ASC dùng mốc cuối trang và đọc hết nhiều trang không lặp", async () => {
+  const calls = batFetch();
+  const root = await dung(A);
+  try {
+    await tra(calls[0], trang(A, "cu"));
+    let syncing;
+    await act(async () => { syncing = ketQua.napMoi(); });
+    const first = calls.at(-1);
+    assert.equal(new URL(first.url).searchParams.get("after"), "a-cu");
+    await tra(first, {
+      ...trang(A),
+      messages: [tin(A, "mot", "2030-09-09T12:00:01Z"), tin(A, "hai", "2030-09-09T12:00:02Z")],
+      next_cursor: "a-hai",
+      has_more: true,
+    });
+    const second = calls.at(-1);
+    assert.equal(new URL(second.url).searchParams.get("after"), "a-hai", "forward page là ASC; đầu trang không phải mốc mới nhất");
+    await tra(second, { ...trang(A), messages: [tin(A, "ba", "2030-09-09T12:00:03Z")], next_cursor: "a-ba" });
+    await syncing;
+    assert.deepEqual(ids(), ["a-ba", "a-hai", "a-mot", "a-cu"]);
+    let next;
+    await act(async () => { next = ketQua.napMoi(); });
+    assert.equal(new URL(calls.at(-1).url).searchParams.get("after"), "a-ba");
+    await tra(calls.at(-1), { ...trang(A), next_cursor: "a-ba" });
+    await next;
+  } finally { await bo(root); }
+});
+
+test("poll trong lúc trang đầu đang tải không bỏ khoảng trống giữa hai snapshot", async () => {
+  const calls = batFetch();
+  const root = await dung(A);
+  const rows = Array.from({ length: 150 }, (_, i) => tin(A, String(i).padStart(3, "0"), new Date(Date.UTC(2030, 8, 9, 12, 0, i)).toISOString()));
+  const answered = new Set();
+  const answer = async (call, body) => { answered.add(call); await tra(call, body); };
+  try {
+    // A focus/send poll can begin while the mount GET is still in flight.
+    // If it independently fetches the newest snapshot, return that first.
+    let early;
+    await act(async () => { early = ketQua.napMoi(); });
+    if (calls.length > 1) {
+      await answer(calls[1], { ...trang(A), messages: rows.slice(100).reverse(), next_cursor: "a-100", has_more: true });
+    }
+    await answer(calls[0], { ...trang(A), messages: rows.slice(0, 50).reverse(), next_cursor: "a-000" });
+    await early;
+    let sync;
+    await act(async () => { sync = ketQua.napMoi(); });
+    for (let i = 0; i < 6; i += 1) {
+      const pending = calls.find((call) => call.method === "GET" && !answered.has(call));
+      if (!pending) break;
+      const after = new URL(pending.url).searchParams.get("after");
+      assert.notEqual(after, null, "sau snapshot ban đầu phải đọc tiến từ mốc đã nhận");
+      const position = Number(after.slice(2));
+      const messages = rows.slice(position + 1, position + 51);
+      await answer(pending, {
+        ...trang(A), messages,
+        next_cursor: messages.at(-1)?.cursor ?? after,
+        has_more: position + 51 < rows.length,
+      });
+    }
+    await sync;
+    assert.equal(new Set(ids()).size, 150, "50 tin nằm giữa hai snapshot không được mất vĩnh viễn");
+  } finally { await bo(root); }
+});
+
+test("nhóm rỗng nhận một đợt vượt trang vẫn cho cuộn đọc những tin cũ hơn", async () => {
+  const calls = batFetch();
+  const root = await dung(A);
+  try {
+    await tra(calls[0], trang(A));
+    assert.equal(ketQua.hetTinCu, true);
+    let syncing;
+    await act(async () => { syncing = ketQua.napMoi(); });
+    await tra(calls.at(-1), {
+      ...trang(A),
+      messages: [tin(A, "150", "2030-09-09T12:02:30Z"), tin(A, "101", "2030-09-09T12:01:41Z")],
+      next_cursor: "a-101", has_more: true,
+    });
+    await syncing;
+    assert.equal(ketQua.hetTinCu, false, "snapshot mới báo còn lịch sử; trạng thái nhóm rỗng cũ không được chặn phân trang");
+    let older;
+    await act(async () => { older = ketQua.napCuHon(); });
+    assert.equal(new URL(calls.at(-1).url).searchParams.get("before"), "a-101");
+    await tra(calls.at(-1), { ...trang(A), messages: [tin(A, "100", "2030-09-09T12:01:40Z")] });
+    await older;
+    assert.ok(ids().includes("a-100"));
+  } finally { await bo(root); }
+});
