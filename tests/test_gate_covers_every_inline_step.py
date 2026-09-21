@@ -381,7 +381,7 @@ INLINE_STEPS: dict[str, Covered] = {
     "test.yml::docker::The core container reports healthy": Covered(
         kind=GATE_KIND,
         stages=("docker",),
-        body_sha="f37b9c2f2297fa73",
+        body_sha="e8b5729c68efcf2e",
         why="",
     ),
     # --- test.yml: shared -------------------------------------------------
