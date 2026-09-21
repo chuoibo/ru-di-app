@@ -573,7 +573,7 @@ async function main() {
     // HAI lần cùng một cổng — `places.ts:parsePhotoUrl` gọi `nguonAnhAnToan`
     // lúc parse, rồi `Anh` gọi lại lúc render. Nên "0 lượt gọi" ở đây KHÔNG
     // nói cổng nào đã giữ. Đo bằng đột biến thì tách được, và kết quả nằm
-    // trong `docs/claude/2026-08-30/rd-qa-36-*`:
+    // trong `docs/archive/claude/2026-08-30/rd-qa-36-*`:
     //
     //   places=cổng, Anh=cổng   -> 0 lượt gọi   (hôm nay)
     //   places=THẢ,  Anh=cổng   -> 0 lượt gọi   <- Anh MỘT MÌNH giữ được

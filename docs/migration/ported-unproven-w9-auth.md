@@ -39,7 +39,7 @@ Bảy hàng đã có thẻ route và kịch bản, nên chúng đã **đo đư�
 
 Lượt này làm lộ một lỗi hạ tầng: `MOBILE_OTP_DEBUG_CODE` chưa bao giờ được truyền cho core Go,
 nên Go sinh mã OTP ngẫu nhiên còn reference sinh `000000`. Đã vá trong
-`scripts/parity_stacks.sh`; chi tiết ở `docs/claude/2026-09-19/cong-a305b25f-racy-va-diff.md`.
+`scripts/parity_stacks.sh`; chi tiết ở `docs/archive/claude/2026-09-19/cong-a305b25f-racy-va-diff.md`.
 
 Chưa chạy trọn `gate.sh parity` xanh trên SHA sạch **sau** khi thêm các kịch bản này, nên nhãn
 vẫn là `PORTED-UNPROVEN`.

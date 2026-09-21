@@ -10,7 +10,7 @@ receipt reader, which is not merged yet. On `main` there is nothing to guard, so
 the file skips. On the branch that carries the reader it is expected to be RED
 until the guards land -- that redness IS the finding, not a broken test.
 
-Evidence behind each case is in docs/claude/2026-08-29/rd-qa-03-ai-co-bia-khong.md.
+Evidence behind each case is in docs/archive/claude/2026-08-29/rd-qa-03-ai-co-bia-khong.md.
 """
 
 from __future__ import annotations

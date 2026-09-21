@@ -2,7 +2,7 @@
 
 - **Trạng thái:** ĐÃ CHẤP NHẬN
 - **Ngày:** 2026-08-26
-- **Nguồn:** review của Codex tại `docs/codex/2026-08-26/review-claude-2026-08-26.md`, verdict `REQUEST_CHANGES`
+- **Nguồn:** review của Codex tại `docs/archive/codex/2026-08-26/review-claude-2026-08-26.md`, verdict `REQUEST_CHANGES`
 - **Áp dụng:** `docs/team/charter.md`, `docs/team/backlog.md`
 
 ## B-01 — Required check không có DRI kích hoạt

@@ -1,7 +1,7 @@
 // Bounds check for F41: are «Thử lại» and «Bỏ» drawn, label and all, INSIDE the screen?
 //
 // Two things a view-tree assertion cannot see, both measured on the audit's own
-// dump (docs/codex/2026-09-09/native-audit-evidence/16-failed-sticker-dark.xml):
+// dump (docs/archive/codex/2026-09-09/native-audit-evidence/16-failed-sticker-dark.xml):
 //
 //   1. `uiautomator dump` CLAMPS bounds to the screen. The «Thử lại» button that
 //      hung off the left edge is reported as [0,1209]→[195,1335], which looks

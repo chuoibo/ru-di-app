@@ -11,7 +11,7 @@
  * the input's accessible name is still the full sentence, and a typed value
  * hides the node. What it cannot prove is the wrapping itself -- that is what
  * the device screenshots at font scale 1.0/1.3/2.0 in
- * docs/claude/2026-09-10/native-r12 are for.
+ * docs/archive/claude/2026-09-10/native-r12 are for.
  */
 import assert from "node:assert/strict";
 import test from "node:test";

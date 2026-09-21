@@ -247,7 +247,7 @@ là độ dài đầu ra Pillow, nên lệch byte làm thân JSON và hàng DB k
 
 ### 2.9 Đóng băng và cửa sổ kép
 
-- Khi một group bắt đầu ghi mốc parity, route của nó được ghi vào `docs/codex/QUEUE.md`.
+- Khi một group bắt đầu ghi mốc parity, route của nó được ghi vào `docs/team/hang-doi.md`.
 - `scripts/check_go_owned_python_touch.py` dựng đồ thị gọi AST (route → service → repository → domain) và làm
   đỏ mọi diff Python chạm được tới route Go đang sở hữu, trừ khi PR mang kèm thay đổi Go với bằng chứng mới hoặc
   lật route về Python.

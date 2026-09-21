@@ -164,12 +164,12 @@
     },
     {
       "path": "apps/mobile/src/rudi/ui/Wordmark.tsx",
-      "sha256": "f1d79e99cce6e57cd2acd767fd6ff1fcc454818be9ad6b4636936acd807b1d4f",
+      "sha256": "c96b9b23606296868f3d7f4eb56b8dd7bb3ce230424c6de4550d7c19dd3536dc",
       "rules": [
         "long-number",
         "vn-phone"
       ],
-      "reason": "Wordmark «Rủ Đi» dạng vector: bốn chuỗi `d` của SVG path là toạ độ outline glyph (Baloo 2 ExtraBold, OFL) do fontTools trích, mỗi số làm tròn một chữ số thập phân; các dãy số dài và mẫu giống số điện thoại là toạ độ nối nhau, không phải dữ liệu người. Sinh một lần bởi công cụ ghi trong docs/claude/2026-09-05/ui-v2-direction-round.md; đổi outline thì sinh lại và ghim lại digest."
+      "reason": "Wordmark «Rủ Đi» dạng vector: bốn chuỗi `d` của SVG path là toạ độ outline glyph (Baloo 2 ExtraBold, OFL) do fontTools trích, mỗi số làm tròn một chữ số thập phân; các dãy số dài và mẫu giống số điện thoại là toạ độ nối nhau, không phải dữ liệu người. Sinh một lần bởi công cụ ghi trong docs/archive/claude/2026-09-05/ui-v2-direction-round.md; đổi outline thì sinh lại và ghim lại digest. Digest ghim lại 2026-09-21: nội dung đổi đúng một loại — đường dẫn `docs/claude/` và `docs/codex/` thành `docs/archive/...` ở đợt gom nhật ký. Không thêm chữ số, không thêm dữ liệu người thật."
     },
     {
       "path": "docs/assets/bang-mau.svg",
@@ -260,7 +260,7 @@
       "reason": "Sơ đồ tầng kiến trúc trong README, render sẵn từ khối Mermaid nằm ngay dưới nó.\n\nRender sẵn thay vì để GitHub tự render, vì GitHub đã trả \"Unable to render rich display\" cho khối Mermaid này trong khi cùng nguồn đó render sạch trên mọi bản mermaid 9.4.3, 10.2.4, 10.6.1, 10.9.1 và 11.4.1 chạy tại máy — tức lỗi nằm ở trình render phía GitHub, không ở cú pháp. Ảnh thì không phụ thuộc vào nó.\n\nSinh bằng mermaid 11.4.1 với htmlLabels:false, vì nhãn dạng <foreignObject> không hiện khi SVG được nạp qua <img>. viewBox lấy từ getBBox() chứ không lấy viewBox mermaid tự ghi (nó hụt và cắt mất nhãn actor dưới đáy). Các số thực được làm tròn hai chữ số thập phân, và các <symbol> không có <use> nào trỏ tới bị bỏ. Cả hai đều để luật long-number của guard KHÔNG phải bị allowlist ở đây: mermaid ghi toạ độ với hàng chục chữ số thập phân, và path icon viết ở dạng rút gọn liên tiếp nhau, nên cả hai đọc như một dãy số dài. Tiêu một luật của guard cho hình vẽ là mất nhiều hơn được.\n\nNguồn Mermaid nằm trong chính README, trong khối <details> ngay dưới ảnh, nên sửa sơ đồ vẫn có đường đi rõ ràng. Pin theo digest: dựng lại ảnh là phải quay lại review."
     },
     {
-      "path": "docs/claude/2026-08-26/review-p0-w9a-repo-guard.md",
+      "path": "docs/archive/claude/2026-08-26/review-p0-w9a-repo-guard.md",
       "sha256": "7d2be32a51b6cbdab65f1222cfe492d6b0e56dc9da47a78298975351c04ab68e",
       "rules": [
         "vn-phone",
@@ -269,7 +269,7 @@
       "reason": "Synthetic attack fixtures documented by reviewer"
     },
     {
-      "path": "docs/claude/2026-09-10/nghia-hinh/canh-truoc.json",
+      "path": "docs/archive/claude/2026-09-10/nghia-hinh/canh-truoc.json",
       "sha256": "fe25d1b120fd5d2fec8d760a1a92e1a26f3abbfc541147098bdd8efb11a35dd1",
       "rules": [
         "long-number",
@@ -278,7 +278,7 @@
       "reason": "Mốc so byte cho tái cấu trúc bảng NEP (F45, 10/09): JSON các lớp vẽ của mười cảnh, mọi dãy số là toạ độ SVG (M/L/C) — không có số điện thoại hay tài khoản. Đổi một byte là phải pin lại."
     },
     {
-      "path": "docs/codex/2026-09-10/assessment-b-ky-thuat.md",
+      "path": "docs/archive/codex/2026-09-10/assessment-b-ky-thuat.md",
       "sha256": "6e95baaee58b5b1a13d2d2bcb91222e51bfb4cf38d1145680cac5eb34b1fbfd8",
       "rules": [
         "long-number"
@@ -286,7 +286,7 @@
       "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/environment.json",
+      "path": "docs/archive/codex/2026-09-10/reaudit-evidence/environment.json",
       "sha256": "57fbd353715db87d002bd71b1424a949126ce0b2759ba845ebb1e51dade678cc",
       "rules": [
         "long-number"
@@ -294,7 +294,7 @@
       "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-evidence/manifest.json",
+      "path": "docs/archive/codex/2026-09-10/reaudit-evidence/manifest.json",
       "sha256": "dc3082b98ae6cc3a2e7edca8df32f9a0538a97f3223605257cb9ea1bb2944573",
       "rules": [
         "long-number"
@@ -302,12 +302,12 @@
       "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
     },
     {
-      "path": "docs/codex/2026-09-10/reaudit-native-my-thuat.md",
-      "sha256": "d95b9c41141c1d37467d952f39828dd04ff75660cbdfaf6baed42dc118d492bd",
+      "path": "docs/archive/codex/2026-09-10/reaudit-native-my-thuat.md",
+      "sha256": "1f31d9560949175203408c5a32ce195aa9e10543cee70a835a06b5b8a35ccd7c",
       "rules": [
         "long-number"
       ],
-      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản"
+      "reason": "Báo cáo tái audit Codex 10/09: SHA commit 40 ký tự và sha256 trong manifest bị long-number đọc nhầm; không có số tài khoản Digest ghim lại 2026-09-21: nội dung đổi đúng một loại — đường dẫn `docs/claude/` và `docs/codex/` thành `docs/archive/...` ở đợt gom nhật ký. Không thêm chữ số, không thêm dữ liệu người thật."
     },
     {
       "path": "product/RuDi_Mobile_Product_Mockups/01_onboarding/01_welcome/01_01_welcome.png",

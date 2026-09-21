@@ -99,8 +99,8 @@ Nguồn sự thật: `docs/team/charter.md`, `docs/decisions/ADR-*.md`, `docs/ar
 - **Nhánh**: `<owner>/p0-w<N>-<slug>`, slug phải là Work ID cụ thể — `backend`/`research` là sai.
 - **PR (ADR-0007)**: review sống trên GitHub PR, không phải file. Verdict đúng ba giá trị: `APPROVE` / `REQUEST_CHANGES` / `REJECT`. `APPROVE` → merge ngay, ai bấm nút không quan trọng. `REQUEST_CHANGES` → trả về cho tác giả, không thương lượng qua comment rồi merge lén. **Không tự review PR của chính mình.** Leader chỉ đọc `main`, nên mô tả PR phải nói *cái gì đổi và vì sao*, đừng bắt người đọc suy từ diff.
 - **Blocker chỉ hợp lệ** khi thuộc 5 loại: vi phạm spec/cổng · sai tiền · quyền riêng tư/bảo mật/consent · hỏng tính hợp lệ thí nghiệm · không tái lập được. Đặt tên, phong cách, "tôi thích cách kia hơn" là suggestion. Blocker phải kèm dẫn chứng · hậu quả · tiêu chí gỡ chặn.
-- **Review doc dài** (khi cần lập luận hơn một comment) commit lên chính nhánh đang được review, đặt ở `docs/claude/<YYYY-MM-DD>/` hoặc `docs/codex/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict · blocker còn mở · bằng chứng đã xem.
-- `docs/codex/QUEUE.md` là hàng đợi việc đang mở giữa hai engineer — đọc khi cần biết cái gì còn nợ.
+- **Review doc dài** (khi cần lập luận hơn một comment) commit lên chính nhánh đang được review, đặt ở `docs/archive/claude/<YYYY-MM-DD>/` hoặc `docs/archive/codex/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict · blocker còn mở · bằng chứng đã xem.
+- `docs/team/hang-doi.md` là hàng đợi việc đang mở giữa hai engineer — đọc khi cần biết cái gì còn nợ.
 
 ## Bẫy đã biết
 

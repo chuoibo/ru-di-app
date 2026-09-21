@@ -105,7 +105,7 @@ Bảng đối chiếu 21 mockup với ảnh vừa chụp:
 
 ```bash
 python3 scripts/bang_doi_chieu_mockup.py --run .impeccable/review/native/<lượt> [--run …] \
-  --out docs/claude/<ngày>/bang-doi-chieu-mockup.md --sheet-dir /tmp/sheet   # mã thoát 2 khi còn ô CHƯA CHỤP
+  --out docs/archive/claude/<ngày>/bang-doi-chieu-mockup.md --sheet-dir /tmp/sheet   # mã thoát 2 khi còn ô CHƯA CHỤP
 ```
 
 ---

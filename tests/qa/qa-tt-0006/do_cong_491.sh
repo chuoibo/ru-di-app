@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Re-run every number in docs/claude/2026-08-31/qa-tt-0006/phan-quyet-491.md.
+# Re-run every number in docs/archive/claude/2026-08-31/qa-tt-0006/phan-quyet-491.md.
 #
 # Nothing here writes to a shared service and nothing here needs a database.
 # The URL scan is NOT run automatically: it needs a pinned Chrome and takes

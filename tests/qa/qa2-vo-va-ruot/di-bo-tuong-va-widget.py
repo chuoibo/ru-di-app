@@ -2,7 +2,7 @@
 
 ## Why this file exists
 
-A QA report of mine (`docs/claude/2026-08-31/qa2-042742-do-lai-47-tren-880cd6d.md`)
+A QA report of mine (`docs/archive/claude/2026-08-31/qa2-042742-do-lai-47-tren-880cd6d.md`)
 filed F35 and F38 as "the shell is all I can prove", on the reasoning that the
 guts need photographs and that putting photographs into a group would break
 CLAUDE.md's rule about real data. That reasoning was wrong, and this file is the

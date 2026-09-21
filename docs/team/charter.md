@@ -90,8 +90,8 @@ Leader phá được thế bế tắc về đánh đổi sản phẩm. Leader **
 docs/protocol/              giao thức thực địa — có version, snapshot bất biến
 docs/decisions/             ADR — mọi thay đổi protocol/gate/phạm vi
 docs/team/                  điều lệ + backlog
-docs/claude/<YYYY-MM-DD>/   nhật ký + review việc của Codex
-docs/codex/<YYYY-MM-DD>/    nhật ký + review việc của Claude
+docs/archive/claude/<YYYY-MM-DD>/   nhật ký + review việc của Codex
+docs/archive/codex/<YYYY-MM-DD>/    nhật ký + review việc của Claude
 docs/superpowers/specs/     spec sản phẩm — ĐÓNG BĂNG cho tới sau gate
 ```
 

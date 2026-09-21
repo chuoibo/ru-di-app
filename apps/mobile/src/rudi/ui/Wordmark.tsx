@@ -9,7 +9,7 @@ import { useRudiTheme } from "../theme";
  * Đ (U+0110) · i, laid out with the face's own advances and kerning, sheared
  * 9° for the brand's lean. The hook over «u» is part of the mark, as
  * PRODUCT.md commits. Generated once by the outline extractor recorded in
- * docs/claude/2026-09-05/ui-v2-direction-round.md; edit the SVG, not the numbers.
+ * docs/archive/claude/2026-09-05/ui-v2-direction-round.md; edit the SVG, not the numbers.
  */
 export const WORDMARK_VIEWBOX = { x: 46, y: 4, width: 2408, height: 836 };
 export const WORDMARK_RATIO = 2.8804;

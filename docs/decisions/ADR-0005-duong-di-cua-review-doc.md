@@ -29,7 +29,7 @@ Reviewer commit file review lên **nhánh đang được review**, và nó vào 
 ```
 codex/p0-w6a-allocator
   ├── <các commit của Codex>
-  └── docs/claude/<ngày>/review-p0-w6a-allocator.md   ← Claude thêm vào ĐÂY
+  └── docs/archive/claude/<ngày>/review-p0-w6a-allocator.md   ← Claude thêm vào ĐÂY
 ```
 
 Không PR riêng. Không ngoại lệ. Không direct push. Vòng lặp đệ quy biến mất vì **không còn PR nào chỉ chứa review**.
@@ -49,7 +49,7 @@ Có check đó thì mới mở lại được mô hình review-only PR độc l�
 ## Nợ để lại, ghi rõ chứ không giấu
 
 Hai review doc đã tồn tại **sai đường** theo quy tắc mới:
-- `docs/claude/2026-08-26/review-p0-w9a-repo-guard.md` — đã trên `main`
-- `docs/codex/2026-08-26/review-claude-2026-08-26.md` — trên nhánh của Codex
+- `docs/archive/claude/2026-08-26/review-p0-w9a-repo-guard.md` — đã trên `main`
+- `docs/archive/codex/2026-08-26/review-claude-2026-08-26.md` — trên nhánh của Codex
 
 **Không viết lại lịch sử để dọn.** Rewrite `main` gây hại nhiều hơn hai file đặt sai chỗ. Ghi lại ở đây và áp dụng quy tắc mới từ review tiếp theo.

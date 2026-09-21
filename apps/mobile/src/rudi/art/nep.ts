@@ -1,7 +1,7 @@
 /**
  * Nếp: the folded invitation that keeps a seat for you.
  *
- * Drawn after the 2026-09-08 concept sheet (docs/codex/2026-09-08/nep-concept),
+ * Drawn after the 2026-09-08 concept sheet (docs/archive/codex/2026-09-08/nep-concept),
  * not after the rectangular sketch of 07/09: a short, slightly wide sheet with
  * a diagonal fold across the lower body like two lapels, ONE coral corner
  * folded down over the top right, small ink eyes under ONE uneven brow (the
