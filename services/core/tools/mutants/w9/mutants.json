@@ -1,0 +1,239 @@
+{
+  "comment": [
+    "Mutants for the W9 port (internal/domain/otp and internal/domain/authsteps).",
+    "Each entry names one source file, one exact string to find, and what to put",
+    "in its place. run.sh applies the replacement to a copy, hands the copy to",
+    "`go build -overlay` and `go test -overlay`, and never touches the tracked",
+    "file. `find` must occur exactly `count` times (default 1), so a mutant that",
+    "no longer lands on code fails loudly instead of quietly doing nothing.",
+    "`observable` says which compared value the changed expression reaches; a",
+    "mutant that cannot change any compared output is equivalent and proves",
+    "nothing about the corpus."
+  ],
+  "mutants": [
+    {
+      "name": "otp-window-edge-inclusive",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\t\tif row.After(windowStart) {",
+      "replace": "\t\tif !row.Before(windowStart) {",
+      "observable": "a row exactly at window_start joins in_window, so `allowed` and `reason` change",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-cooldown-boundary-inclusive",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\t\tif cooldownLeft > 0 {",
+      "replace": "\t\tif cooldownLeft >= 0 {",
+      "observable": "a row exactly at the cooldown answers resend_too_soon instead of ok",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-window-count-strict",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\t\tif big.NewInt(int64(len(inWindow))).Cmp(lim.MaxChallengesPerWindow) >= 0 {",
+      "replace": "\t\tif big.NewInt(int64(len(inWindow))).Cmp(lim.MaxChallengesPerWindow) > 0 {",
+      "observable": "the fifth challenge in the window is allowed, so `allowed` changes",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-retry-after-truncates",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif accuracy == big.Below {\n\t\twhole.Add(whole, big.NewInt(1))\n\t}",
+      "replace": "\tif accuracy == big.Above {\n\t\twhole.Add(whole, big.NewInt(1))\n\t}",
+      "observable": "retry_after_seconds loses the ceiling and reports one second less",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-total-seconds-rounds-twice",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tvalue, _ := new(big.Float).SetPrec(53).SetRat(big.NewRat(micros, micro)).Float64()\n\treturn value",
+      "replace": "\treturn float64(micros) / float64(micro)",
+      "observable": "a gap of more than about 285 years rounds the microsecond count to a double before dividing, which moves retry_after_seconds",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-timedelta-skips-c-int",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif days.Cmp(big.NewInt(cIntMin)) < 0 || days.Cmp(big.NewInt(cIntMax)) > 0 {\n\t\treturn nil, &OverflowError{Message: \"Python int too large to convert to C int\"}\n\t}",
+      "replace": "",
+      "observable": "a window past a C int raises the other OverflowError message",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-expiry-boundary-strict",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif !challenge.ExpiresAt.After(now) {",
+      "replace": "\tif challenge.ExpiresAt.Before(now) {",
+      "observable": "a challenge exactly at its deadline is live instead of expired",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-burned-already-strict",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif attempts.Cmp(lim.MaxAttempts) >= 0 {\n\t\treturn VerifyPlan{Outcome: \"burned_already\", Attempts: attempts}\n\t}",
+      "replace": "\tif attempts.Cmp(lim.MaxAttempts) > 0 {\n\t\treturn VerifyPlan{Outcome: \"burned_already\", Attempts: attempts}\n\t}",
+      "observable": "a challenge at exactly max_attempts takes one more guess",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-burn-strict",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif attempts.Cmp(lim.MaxAttempts) >= 0 {\n\t\treturn VerifyPlan{Outcome: \"burned\", Attempts: attempts, AttemptsLeft: big.NewInt(0)}\n\t}",
+      "replace": "\tif attempts.Cmp(lim.MaxAttempts) > 0 {\n\t\treturn VerifyPlan{Outcome: \"burned\", Attempts: attempts, AttemptsLeft: big.NewInt(0)}\n\t}",
+      "observable": "the fifth wrong guess answers wrong_code with zero left instead of burned",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-consumed-after-expired",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif challenge.ConsumedAt != nil {\n\t\treturn VerifyPlan{Outcome: \"consumed\", Attempts: attempts}\n\t}\n\tif !challenge.ExpiresAt.After(now) {\n\t\treturn VerifyPlan{Outcome: \"expired\", Attempts: attempts}\n\t}",
+      "replace": "\tif !challenge.ExpiresAt.After(now) {\n\t\treturn VerifyPlan{Outcome: \"expired\", Attempts: attempts}\n\t}\n\tif challenge.ConsumedAt != nil {\n\t\treturn VerifyPlan{Outcome: \"consumed\", Attempts: attempts}\n\t}",
+      "observable": "a spent AND expired challenge names the other outcome",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "otp-pad-ignores-sign",
+      "file": "internal/domain/otp/otp.go",
+      "find": "\tif pad := width - len(sign) - len(digits); pad > 0 {",
+      "replace": "\tif pad := width - len(digits); pad > 0 {",
+      "observable": "a negative draw is padded one digit too wide",
+      "test": "TestOtpMatchesPython"
+    },
+    {
+      "name": "steps-invite-expiry-boundary",
+      "file": "internal/domain/authsteps/sessions.go",
+      "find": "\tif invite.RevokedAt != nil || !invite.ExpiresAt.After(now) {",
+      "replace": "\tif invite.RevokedAt != nil || invite.ExpiresAt.Before(now) {",
+      "observable": "an invitation exactly at its deadline still mints a session",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-digest-length-ignored",
+      "file": "internal/domain/authsteps/authsteps.go",
+      "find": "func compareDigest(a, b []byte) bool {\n\tif len(a) != len(b) {\n\t\treturn false\n\t}",
+      "replace": "func compareDigest(a, b []byte) bool {\n\tif len(a) > len(b) {\n\t\ta = a[:len(b)]\n\t} else {\n\t\tb = b[:len(a)]\n\t}",
+      "observable": "a stored digest of another length compares by its prefix, so a challenge of another number can be reached",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-phone-digest-not-checked",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\tif challenge != nil && !compareDigest(challenge.PhoneDigest, digest) {\n\t\tchallenge = nil\n\t}",
+      "replace": "",
+      "observable": "a challenge issued to another number is verified against this caller's code",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-attempt-not-recorded-before-refusal",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\tif _, err := s.RecordOtpAttempt(challenge.ID, plan.Attempts.Int64(), spent, now); err != nil {\n\t\treturn SessionView{}, err\n\t}\n\tif plan.Outcome == \"burned\" {",
+      "replace": "\tif plan.Outcome == \"burned\" {",
+      "observable": "a wrong guess makes no record_otp_attempt call, so the recorded call list changes",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-burned-not-consumed",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\tspent := plan.Outcome == \"ok\" || plan.Outcome == \"burned\"",
+      "replace": "\tspent := plan.Outcome == \"ok\"",
+      "observable": "record_otp_attempt is called with consumed false on the last wrong guess",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-code-not-stripped-before-emptiness",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\tif !ok || strip(typed) == \"\" {",
+      "replace": "\tif !ok || typed == \"\" {",
+      "observable": "a code of only whitespace reaches the digest instead of answering code_required",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-python-only-whitespace",
+      "file": "internal/domain/authsteps/authsteps.go",
+      "find": "\tcase r >= 0x09 && r <= 0x0D, r >= 0x1C && r <= 0x20:",
+      "replace": "\tcase r >= 0x09 && r <= 0x0D, r == 0x20:",
+      "observable": "a code wrapped in U+001C..U+001F keeps them, so its digest differs",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-binding-ignored",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\tif bound != nil {\n\t\tpersonID = bound.PersonID\n\t} else {",
+      "replace": "\tif false {\n\t\tpersonID = bound.PersonID\n\t} else {",
+      "observable": "a bound number derives an id again instead of reading account_identities",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-deleted-person-revived",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\t\tif person != nil && person.DeletedAt != nil {",
+      "replace": "\t\tif person == nil {",
+      "observable": "an ended account is signed back into instead of becoming a new person",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-stored-challenge-id-ignored",
+      "file": "internal/domain/authsteps/otpdoor.go",
+      "find": "\treturn OtpRequestView{\n\t\tChallengeID:        record.ID,",
+      "replace": "\treturn OtpRequestView{\n\t\tChallengeID:        challengeID,",
+      "observable": "the answer names the drawn id rather than the stored one",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-session-owner-not-checked",
+      "file": "internal/domain/authsteps/sessions.go",
+      "find": "\tif record == nil || record.PersonID != actor.ID {",
+      "replace": "\tif record == nil {",
+      "observable": "somebody else's session is revoked instead of answering 404",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-token-digest-before-permission",
+      "file": "internal/domain/authsteps/sessions.go",
+      "find": "\tif err := requirePermission(\"manage_own_sessions\", actor, fact{\"is_self\", true}); err != nil {\n\t\treturn SessionListView{}, err\n\t}\n\tvar here []byte\n\tif currentToken != nil {\n\t\there = mint.TokenDigest(*currentToken)\n\t}",
+      "replace": "\tvar here []byte\n\tif currentToken != nil {\n\t\there = mint.TokenDigest(*currentToken)\n\t}\n\tif err := requirePermission(\"manage_own_sessions\", actor, fact{\"is_self\", true}); err != nil {\n\t\treturn SessionListView{}, err\n\t}",
+      "observable": "a refused caller still hashes the bearer, so the recorded call list grows one entry",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-link-invitation-accepted",
+      "file": "internal/domain/authsteps/sessions.go",
+      "find": "\tif invite == nil || invite.InvitedPersonID == nil {",
+      "replace": "\tif invite == nil {",
+      "observable": "a link invitation reaches the repository with no person, changing the call list",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-google-blank-name-kept",
+      "file": "internal/domain/authsteps/google.go",
+      "find": "\t\tif claims.DisplayName != nil && *claims.DisplayName != \"\" {",
+      "replace": "\t\tif claims.DisplayName != nil {",
+      "observable": "a blank Google name becomes the person's name instead of the placeholder",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-google-race-not-reread",
+      "file": "internal/domain/authsteps/google.go",
+      "find": "\t\t\twon, err := s.GetAccountIdentity(\"google\", claims.Subject)",
+      "replace": "\t\t\tvar won *AccountIdentity\n\t\t\tvar err error",
+      "observable": "the racing login re-raises instead of signing in as the winner",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-session-echoes-argument",
+      "file": "internal/domain/authsteps/wire.go",
+      "find": "\t\tIssuedVia:       record.IssuedVia,",
+      "replace": "\t\tIssuedVia:       \"invite\",",
+      "observable": "the answer names the door from the argument rather than the stored row",
+      "test": "TestAuthStepsMatchPython"
+    },
+    {
+      "name": "steps-missing-person-refuses",
+      "file": "internal/domain/authsteps/wire.go",
+      "find": "\tdisplayName := NewPersonName\n\tif person != nil {\n\t\tdisplayName = person.DisplayName\n\t}",
+      "replace": "\tdisplayName := \"\"\n\tif person != nil {\n\t\tdisplayName = person.DisplayName\n\t}",
+      "observable": "a person row that cannot be read back answers with an empty name",
+      "test": "TestAuthStepsMatchPython"
+    }
+  ]
+}

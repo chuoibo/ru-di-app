@@ -1,0 +1,113 @@
+# W7 concurrency · POST /outing-stops/{stop_id}/checkins. Three arrivals of one person at
+# one stop at once: the outing row is taken FOR UPDATE first, so they serialise, and
+# uq_outing_stop_checkins_person lets exactly one row in -- one 201 and two 409, and the
+# outing's timeline_revision moves once. Three under one header key are one write and two
+# replays; three under three keys meet the same index and are one write and two 409s.
+# Texts are sample data (dữ liệu mẫu).
+id: w7/concurrency/post-outing-stops-stop_id-checkins
+routes: ['POST /outing-stops/{stop_id}/checkins']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_coffee: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_dinner: {from: body, pointer: /stops/2/id, class: uuid}
+  - id: owner_arrives_three_times_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  - id: owner_reads_list_after_the_burst
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: mate_arrives_three_times_under_one_key
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+      headers:
+        idempotency-key: 'c7ef0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: mate_arrives_three_times_under_three_keys
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+      headers:
+        idempotency-key: 'c7ef000{{burst}}-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: owner_reads_checkins
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'

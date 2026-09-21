@@ -31,6 +31,35 @@ API có timeout mỗi lần gọi 12 giây, tối đa 50 chặng, ma trận có 
 preview/phút/actor mỗi process. Giới hạn process không thay thế hạn mức toàn
 cụm nếu triển khai nhiều worker. Không tuyên bố tìm được tối ưu tuyệt đối.
 
+## Stub routing cho parity — KHÔNG phải engine thật
+
+`scripts/parity_stacks.sh` dựng cho **mỗi bên** một `parity routing-stub` trên
+cổng loopback riêng và trao cho API của bên đó qua `MOBILE_VALHALLA_URL` cùng
+`MOBILE_ROUTING_GRAPH_VERSION`. Trước đó hai stack không có biến nào trong hai
+biến này, nên `configured_provider()` trả `None` và **mọi** preview trong mọi
+lượt parity dừng ở `status: "unavailable"`: `_route`, `schedule`,
+`suggest_order`, savings, `feasible`, `segments` và `late_fixed_stop` không có
+bằng chứng parity nào.
+
+Câu trả lời của stub là hàm thuần của chính yêu cầu — cặp tọa độ có thứ tự tính
+theo micro-độ và tên costing, không đồng hồ, không nguồn ngẫu nhiên, không thứ
+tự chèn — nên hai tiến trình không chia sẻ gì vẫn trả cùng từng byte cho cùng
+một yêu cầu. Số học là số nguyên từ đầu đến cuối; ki-lô-mét in ra từ số mét
+nguyên với đúng ba chữ số thập phân để `round(km * 1000)` trong `routing.py`
+lấy lại đúng số mét đó. Graph version là digest của bộ luật
+(`parity-stub-<16 hex>`), đổi luật thì đổi version.
+
+Luật điều khiển nằm ở chữ số thập phân thứ sáu của tọa độ — Valhalla thật bỏ
+qua, stub đọc: một chặng có vĩ độ tận cùng chữ số micro là 5 nằm trên đường một
+chiều chỉ vào được từ phía tây, nên chặng đi từ phía đông **không có đường**.
+Nhờ đó ma trận có ô `null` (chạm nhánh phạt thiếu chặng của `suggest_order`) mà
+thứ tự hiện tại của ngày vẫn đi được, và một tuyến trọn vẹn có thể trả
+`trip.status` khác 0.
+
+Đây là fixture, không phải đường thật: nó không chứng minh gì về Valhalla, về
+chất lượng đề xuất, hay về việc một graph thật có trả lời nổi hay không. Bản
+kiểm thử `tests/journey` vẫn cần `MOBILE_TEST_VALHALLA_URL` trỏ tới engine thật.
+
 ## Triển khai và quay lại
 
 Chạy `alembic upgrade head` tới `d6a2f93b81e7` trước khi đưa API mới lên.

@@ -1,0 +1,391 @@
+# W1 · POST /reports — 201 with id and created_at; the note is never echoed.
+# Pydantic caps note at 500 code points on the raw string, before the domain strips it.
+id: w1/reports/post-reports
+routes: ['POST /reports']
+auth_mode: dev
+personas:
+  reporter: {}
+  other: {}
+  ghost: {}
+steps:
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type": '
+  - id: anonymous_with_key_is_released
+    as: anonymous
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-anon'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  # reports.reporter_id is a foreign key into people and nothing checks first
+  - id: ghost_reporter_has_no_person_row
+    as: ghost
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: register_reporter
+    as: reporter
+    request:
+      method: PUT
+      path: '/people/{{persona.reporter}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người báo cáo (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: person_spam_no_note
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: post_harassment_note_trimmed
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"harassment","note":"  câu chữ của người gửi  "}'
+  - id: comment_impersonation
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"comment","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"impersonation","note":null}'
+  - id: message_inappropriate_whitespace_note
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"message","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"inappropriate","note":" \t\n "}'
+  - id: story_other_about_self
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"story","target_id":"{{persona.reporter}}","reason":"other","note":"tự báo"}'
+  - id: note_500_ascii
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+  - id: note_501_ascii
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+  # length is checked on the raw string, so stripping cannot rescue it
+  - id: note_500_plus_trailing_space
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "}'
+  - id: note_500_emoji_code_points
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"}'
+  - id: note_501_emoji_code_points
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"}'
+  - id: note_number
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","note":5}'
+  - id: target_type_unknown
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"trip","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: target_type_wrong_case
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"Person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: reason_unknown
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"vi phạm"}'
+  - id: target_id_not_uuid
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"khong-phai-uuid","reason":"spam"}'
+  - id: target_id_uppercase
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE","reason":"spam"}'
+  - id: target_id_unhyphenated
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"aaaaaaaabbbb4ccc8dddeeeeeeeeeeee","reason":"spam"}'
+  - id: target_id_number
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":12,"reason":"spam"}'
+  - id: missing_target_id
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","reason":"spam"}'
+  - id: extra_field_reporter_id
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam","reporter_id":"{{persona.other}}"}'
+  - id: empty_object
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: empty_body
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+  - id: text_plain_content_type
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: roles_guest_only
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: roles_empty
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: roles_unknown
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        x-actor-roles: 'member,emperor'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: get_not_allowed
+    as: reporter
+    request:
+      method: GET
+      path: '/reports'
+  - id: trailing_slash_redirects
+    as: reporter
+    request:
+      method: POST
+      path: '/reports/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: idem_first_write
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"spam","note":"lặp lại"}'
+  - id: idem_replay_same_bytes
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"spam","note":"lặp lại"}'
+  - id: idem_replay_reordered_keys
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-a'
+        content-type: 'application/json'
+      body_raw: '{"note": "lặp lại", "reason": "spam", "target_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee", "target_type": "post"}'
+  - id: idem_reuse_different_body
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"other","note":"lặp lại"}'
+  - id: idem_second_distinct_key
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-b'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"spam","note":"lặp lại"}'
+  - id: idem_same_key_other_actor
+    as: other
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"post","target_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","reason":"spam","note":"lặp lại"}'
+  - id: idem_raw_body_first
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-raw'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  # without a JSON content-type the fingerprint hashes raw bytes, so spacing is a different request
+  - id: idem_raw_body_respaced_is_reuse
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-raw'
+      body_raw: '{"target_type": "person", "target_id": "{{persona.other}}", "reason": "spam"}'
+  - id: idem_refusal_not_stored
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-c'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"x"}'
+  - id: idem_same_key_after_refusal
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'w1-report-c'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: idem_key_too_long
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: idem_empty_key
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'

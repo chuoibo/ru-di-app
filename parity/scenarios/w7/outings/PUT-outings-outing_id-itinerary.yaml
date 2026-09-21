@@ -1,0 +1,621 @@
+# W7 · PUT /outings/{outing_id}/itinerary: the v2 plan — stops with ids, days with a
+# transport mode, anchors, durations and a meeting point. The header idempotency-key is
+# DECLARED on this route, so leaving it out is a body-shaped 422 from FastAPI while an
+# empty one is the middleware's own 422. Order after that: actor, path uuid, body model,
+# the trip row (404 in Vietnamese here, English on /timeline), ACTIVE membership,
+# expected_revision (409, and a different sentence from /timeline's), every day inside
+# the trip, anchors inside their day, every stop id known or `tmp-`, every stop's day
+# configured, every place in the catalogue, then the write. The save is one unit of work:
+# survivors keep their rows and their check-ins, `tmp-` ids become real ones and the
+# anchors are rewritten to match. Four shapes are exercised on purpose: a permutation
+# that keeps every stop, a save that drops stops, a save that adds one, and a save that
+# changes nothing. A replay is re-authorized before the stored body is handed back.
+# Texts are sample data (dữ liệu mẫu).
+id: w7/outings/put-outings-outing_id-itinerary
+routes: ['PUT /outings/{outing_id}/itinerary']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_saves
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        idempotency-key: 'c72f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: anonymous_without_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: anonymous_empty_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/khong-phai-uuid/itinerary'
+      headers:
+        idempotency-key: 'c72f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        idempotency-key: 'c72f0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hành trình (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  # the row, then the roster, before anything in the body is looked at twice
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary'
+      headers:
+        idempotency-key: 'c72f0004-aaaa-4aaa-8aaa-aaaaaaaaaaa4'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: stranger_saves
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0005-aaaa-4aaa-8aaa-aaaaaaaaaaa5'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: owner_saves_as_guest_role
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        x-actor-roles: 'guest'
+        idempotency-key: 'c72f0006-aaaa-4aaa-8aaa-aaaaaaaaaaa6'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  # the body model
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0007-aaaa-4aaa-8aaa-aaaaaaaaaaa7'
+  - id: owner_revision_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0008-aaaa-4aaa-8aaa-aaaaaaaaaaa8'
+        content-type: 'application/json'
+      body_raw: '{"stops":[],"days":[]}'
+  - id: owner_revision_string
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0009-aaaa-4aaa-8aaa-aaaaaaaaaaa9'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":"0","stops":[],"days":[]}'
+  - id: owner_revision_negative
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000a-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":-1,"stops":[],"days":[]}'
+  - id: owner_duplicate_stop_ids
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000b-aaaa-4aaa-8aaa-aaaaaaaaaaab'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)"},{"id":"tmp-mot","at":"09:00","label":"Chặng hai (dữ liệu mẫu)"}],"days":[]}'
+  - id: owner_duplicate_days
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000c-aaaa-4aaa-8aaa-aaaaaaaaaaac'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00"},{"day":"2026-03-14","transport_mode":"walk","start_at":"09:00"}]}'
+  - id: owner_stop_id_not_uuid_nor_tmp
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000d-aaaa-4aaa-8aaa-aaaaaaaaaaad'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"chang-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)"}],"days":[]}'
+  - id: owner_stop_id_bare_tmp_prefix
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000e-aaaa-4aaa-8aaa-aaaaaaaaaaae'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-","at":"08:00","label":"Chặng một (dữ liệu mẫu)"}],"days":[]}'
+  - id: owner_place_and_meeting_point_together
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f000f-aaaa-4aaa-8aaa-aaaaaaaaaaaf'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","place_id":"p-dreampark","meeting_point":{"lat":11.94,"lng":108.44,"label":"Cổng công viên (dữ liệu mẫu)"}}],"days":[]}'
+  - id: owner_meeting_point_out_of_range
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0010-aaaa-4aaa-8aaa-aaaaaaaaaab0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","meeting_point":{"lat":91,"lng":108.44,"label":"Ngoài quả đất (dữ liệu mẫu)"}}],"days":[]}'
+  - id: owner_meeting_point_label_blank
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0011-aaaa-4aaa-8aaa-aaaaaaaaaab1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","meeting_point":{"lat":11.94,"lng":108.44,"label":"   "}}],"days":[]}'
+  - id: owner_meeting_point_lat_as_string
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0012-aaaa-4aaa-8aaa-aaaaaaaaaab2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","meeting_point":{"lat":"11.94","lng":108.44,"label":"Cổng (dữ liệu mẫu)"}}],"days":[]}'
+  - id: owner_duration_over_a_day
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0013-aaaa-4aaa-8aaa-aaaaaaaaaab3'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","duration_minutes":1441}],"days":[]}'
+  - id: owner_duration_float
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0014-aaaa-4aaa-8aaa-aaaaaaaaaab4'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","duration_minutes":30.0}],"days":[]}'
+  - id: owner_time_locked_string
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0015-aaaa-4aaa-8aaa-aaaaaaaaaab5'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","time_locked":"true"}],"days":[]}'
+  - id: owner_transport_mode_unknown
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0016-aaaa-4aaa-8aaa-aaaaaaaaaab6'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[{"day":"2026-03-14","transport_mode":"xe-buyt","start_at":"08:00"}]}'
+  - id: owner_start_at_out_of_pattern
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0017-aaaa-4aaa-8aaa-aaaaaaaaaab7'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"8:00"}]}'
+  - id: owner_day_not_a_real_date
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0018-aaaa-4aaa-8aaa-aaaaaaaaaab8'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[{"day":"2026-02-30","transport_mode":"car","start_at":"08:00"}]}'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0019-aaaa-4aaa-8aaa-aaaaaaaaaab9'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"khong_biet":1}'
+  # the service's own refusals, in order
+  - id: owner_stale_revision
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001a-aaaa-4aaa-8aaa-aaaaaaaaaaba'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":5,"stops":[],"days":[]}'
+  - id: owner_day_outside_the_trip
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001b-aaaa-4aaa-8aaa-aaaaaaaaaabb'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[{"day":"2026-03-20","transport_mode":"car","start_at":"08:00"}]}'
+  - id: owner_anchor_outside_its_day
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001c-aaaa-4aaa-8aaa-aaaaaaaaaabc'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00","start_stop_id":"tmp-khong-co"}]}'
+  - id: owner_end_anchor_outside_its_day
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001d-aaaa-4aaa-8aaa-aaaaaaaaaabd'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00","end_stop_id":"tmp-khong-co"}]}'
+  - id: owner_stop_id_of_another_trip
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001e-aaaa-4aaa-8aaa-aaaaaaaaaabe'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","at":"08:00","label":"Chặng lạ (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00"}]}'
+  - id: owner_stop_day_not_configured
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f001f-aaaa-4aaa-8aaa-aaaaaaaaaabf'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","day":"2026-03-15","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00"}]}'
+  - id: owner_stop_day_outside_the_trip
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0020-aaaa-4aaa-8aaa-aaaaaaaaaac0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","day":"2026-03-20","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00"}]}'
+  - id: owner_place_not_in_catalogue
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0021-aaaa-4aaa-8aaa-aaaaaaaaaac1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-mot","at":"08:00","label":"Chặng một (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-khong-co-that"}],"days":[{"day":"2026-03-14","transport_mode":"car","start_at":"08:00"}]}'
+  # the first real save: three tmp- stops, two days, anchors rewritten to real ids
+  - id: owner_saves_first_itinerary
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0030-aaaa-4aaa-8aaa-aaaaaaaaaad0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"id":"tmp-don","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"tmp-cafe","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45,"time_locked":false},{"id":"tmp-toi","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-15","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00","start_stop_id":"tmp-don","end_stop_id":"tmp-cafe"},{"day":"2026-03-15","transport_mode":"car","start_at":"18:00","return_to_start":true}]}'
+    bind:
+      stop_don: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_cafe: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_toi: {from: body, pointer: /stops/2/id, class: uuid}
+  - id: owner_reads_list_after_first_save
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_checks_in_at_cafe
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_cafe}}/checkins'
+  - id: mate_reads_checkins
+    as: mate
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # an arrival moved the revision: the save that was in flight is now stale
+  - id: owner_saves_with_the_revision_from_before_the_arrival
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0031-aaaa-4aaa-8aaa-aaaaaaaaaad1'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":1,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00"}]}'
+  # a permutation that keeps every stop
+  - id: owner_permutes_keeping_every_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0032-aaaa-4aaa-8aaa-aaaaaaaaaad2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-15","place_id":"p-tiem-nuong-xom-lao"},{"id":"{{stop_cafe}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45,"time_locked":false},{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00","start_stop_id":"{{stop_cafe}}","end_stop_id":"{{stop_don}}"},{"day":"2026-03-15","transport_mode":"car","start_at":"18:00","return_to_start":true}]}'
+  - id: owner_reads_checkins_after_permutation
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a save that changes nothing but the revision
+  - id: owner_saves_the_same_plan_again
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0033-aaaa-4aaa-8aaa-aaaaaaaaaad3'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":3,"stops":[{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-15","place_id":"p-tiem-nuong-xom-lao"},{"id":"{{stop_cafe}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45,"time_locked":false},{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00","start_stop_id":"{{stop_cafe}}","end_stop_id":"{{stop_don}}"},{"day":"2026-03-15","transport_mode":"car","start_at":"18:00","return_to_start":true}]}'
+  # a save that adds a stop, keeping the three that were there
+  - id: owner_adds_a_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0034-aaaa-4aaa-8aaa-aaaaaaaaaad4'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":4,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cafe}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe","duration_minutes":45,"time_locked":false},{"id":"tmp-cheo","at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"},{"id":"{{stop_toi}}","at":"19:45","label":"Ăn tối (dữ liệu mẫu)","day":"2026-03-15","place_id":"p-tiem-nuong-xom-lao"}],"days":[{"day":"2026-03-14","transport_mode":"motorbike","start_at":"07:00","start_stop_id":"{{stop_don}}","end_stop_id":"tmp-cheo"},{"day":"2026-03-15","transport_mode":"car","start_at":"18:00"}]}'
+    bind:
+      stop_cheo: {from: body, pointer: /stops/2/id, class: uuid}
+  - id: owner_reads_checkins_after_adding
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a save that drops stops: the dropped rows take their own check-ins
+  - id: owner_drops_two_stops
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0035-aaaa-4aaa-8aaa-aaaaaaaaaad5'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":5,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","duration_minutes":15,"meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cheo}}","at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"walk","start_at":"07:00"}]}'
+  - id: owner_reads_checkins_after_dropping
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_checks_in_at_dropped_stop
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_cafe}}/checkins'
+  - id: owner_names_a_dropped_stop_again
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0036-aaaa-4aaa-8aaa-aaaaaaaaaad6'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":6,"stops":[{"id":"{{stop_cafe}}","at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-lung-chung-cafe"}],"days":[{"day":"2026-03-14","transport_mode":"walk","start_at":"07:00"}]}'
+  # an empty anchor is silently no anchor at all
+  - id: owner_saves_with_empty_anchors
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0037-aaaa-4aaa-8aaa-aaaaaaaaaad7'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":6,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","day":"2026-03-14","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"{{stop_cheo}}","at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","day":"2026-03-14","place_id":"p-dreampark"}],"days":[{"day":"2026-03-14","transport_mode":"walk","start_at":"07:00","start_stop_id":"","end_stop_id":""}]}'
+  # a stop with no day at all, and a plan with no stops
+  - id: owner_saves_a_stop_without_a_day
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0038-aaaa-4aaa-8aaa-aaaaaaaaaad8'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":7,"stops":[{"id":"{{stop_don}}","at":"07:30","label":"Đón nhau (dữ liệu mẫu)","meeting_point":{"lat":11.9404,"lng":108.4419,"label":"Cổng chợ (dữ liệu mẫu)"}},{"id":"tmp-moi","at":"10:00","label":"Chặng chưa xếp ngày (dữ liệu mẫu)"}],"days":[{"day":"2026-03-14","transport_mode":"walk","start_at":"07:00"}]}'
+  - id: owner_saves_an_empty_plan
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0039-aaaa-4aaa-8aaa-aaaaaaaaaad9'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":8,"stops":[],"days":[]}'
+  - id: owner_reads_list_after_empty_plan
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # replay: the key hands back the stored body, but only after access is proved again
+  - id: mate_saves_with_key
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":9,"stops":[{"id":"tmp-gap","at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)","day":"2026-03-16","meeting_point":{"lat":11.9512,"lng":108.4380,"label":"Cổng sau (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-16","transport_mode":"walk","start_at":"09:00"}]}'
+  - id: mate_replays_key
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":9,"stops":[{"id":"tmp-gap","at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)","day":"2026-03-16","meeting_point":{"lat":11.9512,"lng":108.4380,"label":"Cổng sau (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-16","transport_mode":"walk","start_at":"09:00"}]}'
+  - id: mate_same_key_other_body
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":10,"stops":[],"days":[]}'
+  - id: owner_same_key_own_scope
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":10,"stops":[],"days":[]}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_replays_key_after_leaving
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":9,"stops":[{"id":"tmp-gap","at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)","day":"2026-03-16","meeting_point":{"lat":11.9512,"lng":108.4380,"label":"Cổng sau (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-16","transport_mode":"walk","start_at":"09:00"}]}'
+  - id: stranger_replays_mates_key
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary'
+      headers:
+        idempotency-key: 'c72f0040-aaaa-4aaa-8aaa-aaaaaaaaaae0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":9,"stops":[{"id":"tmp-gap","at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)","day":"2026-03-16","meeting_point":{"lat":11.9512,"lng":108.4380,"label":"Cổng sau (dữ liệu mẫu)"}}],"days":[{"day":"2026-03-16","transport_mode":"walk","start_at":"09:00"}]}'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/itinerary/'
+      headers:
+        idempotency-key: 'c72f0050-aaaa-4aaa-8aaa-aaaaaaaaaaf0'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":10,"stops":[],"days":[]}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/itinerary'

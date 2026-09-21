@@ -1,0 +1,216 @@
+# W4 · POST /bills/{bill_id}/my-items with two or more lines in one call, the
+# core of the feature: the caller's whole set of claims. Every share of the
+# caller on the bill (suggested or confirmed, on any line) is deleted and one
+# confirmed share per requested key, de-duplicated in first order, is written.
+# The new share rows of one call differ only by the line they point to, which
+# the database lane now tells apart by the line ids it has already numbered.
+# Other people's shares are untouched; an unknown key anywhere in the list
+# refuses the whole call before anything changes. Texts are sample data (dữ
+# liệu mẫu).
+id: w4/bill/post-bills-bill_id-my-items-many
+routes: ['POST /bills/{bill_id}/my-items', 'GET /bills/{bill_id}', 'POST /bills/{bill_id}/split']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm nhận nhiều món (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn nhận nhiều món (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba nhận nhiều món (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận nhiều món (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  # four lines; the owner is suggested on two of them, the mate on two
+  - id: owner_creates_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":190000,"confidence":75,"needs_review":true,"items":[{"item_key":"pho","name":"Phở bò (dữ liệu mẫu)","quantity":2,"unit_price_vnd":50000,"line_total_vnd":100000,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]},{"item_key":"Nem","name":"Nem rán (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":45000,"suggested_participant_ids":["{{persona.mate}}"]},{"item_key":"tra","name":"Trà đá (dữ liệu mẫu)","quantity":3,"unit_price_vnd":5000,"line_total_vnd":15000,"suggested_participant_ids":["{{persona.owner}}"]},{"item_key":"banh","name":"Bánh flan (dữ liệu mẫu)","quantity":2,"unit_price_vnd":15000,"line_total_vnd":30000,"suggested_participant_ids":[]}],"surcharges":[{"surcharge_key":"vat","kind":"VAT","amount_vnd":7000,"mode":"proportional"}],"discounts":[{"discount_key":"giam-pho","amount_vnd":4000,"scope":"item","item_key":"pho"}]}'
+    bind:
+      bill: {from: body, pointer: /id, class: uuid}
+  # two lines at once: both of the mate's suggestions go, both come back confirmed
+  - id: mate_claims_pho_and_nem
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["pho","Nem"]}'
+  # three lines, in an order unlike the bill: two suggestions deleted, three shares written
+  - id: owner_claims_three_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra","banh","pho"]}'
+  # repeats collapse in first order: banh, Nem, tra
+  - id: third_claims_with_repeats
+    as: third
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["banh","Nem","banh","tra","Nem"]}'
+  - id: owner_reads_after_claims
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{bill}}'
+  - id: owner_splits_claimed_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"for_ledger":true,"paid_by_id":"{{persona.owner}}"}'
+  # the list is the whole claim: pho is released, banh taken, Nem kept
+  - id: mate_reclaims_dropping_pho
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["Nem","banh"]}'
+  - id: mate_claims_every_line
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["banh","tra","pho","Nem"]}'
+  # one unknown key in the middle refuses the whole list; the third keeps three lines
+  - id: third_claims_with_unknown_in_the_middle
+    as: third
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra","khong-co","pho"]}'
+  - id: mate_splits_after_everyone_claimed
+    as: mate
+    request:
+      method: POST
+      path: '/bills/{{bill}}/split'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"paid_by_id":"{{persona.mate}}"}'
+  - id: third_releases_three_lines
+    as: third
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":[]}'
+  # idempotency with a many-line claim: replay after the state moved on; the
+  # same keys in another order are another request
+  - id: owner_key_many_first
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        idempotency-key: 'w4-claim-many-a'
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["pho","Nem","tra"]}'
+  - id: owner_claims_banh_without_key
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["banh","pho"]}'
+  - id: owner_key_many_replay
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        idempotency-key: 'w4-claim-many-a'
+        content-type: 'application/json'
+      body_raw: '{ "item_keys": ["pho", "Nem", "tra"] }'
+  - id: owner_key_many_other_order
+    as: owner
+    request:
+      method: POST
+      path: '/bills/{{bill}}/my-items'
+      headers:
+        idempotency-key: 'w4-claim-many-a'
+        content-type: 'application/json'
+      body_raw: '{"item_keys":["tra","Nem","pho"]}'
+  - id: owner_reads_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{bill}}'

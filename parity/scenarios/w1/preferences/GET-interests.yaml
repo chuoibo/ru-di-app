@@ -1,0 +1,63 @@
+# W1 · GET /interests — the public taste vocabulary and budget bands.
+# No actor dependency: junk X-Actor-* is ignored, not refused.
+id: w1/preferences/get-interests
+routes: ['GET /interests']
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests'
+  - id: with_actor
+    as: reader
+    request:
+      method: GET
+      path: '/interests'
+  - id: junk_actor_headers_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'
+  - id: query_string_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests?locale=en&interests=cafe'
+  - id: accept_html_still_json
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests'
+      headers:
+        accept: 'text/html'
+  - id: cors_simple_get
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests'
+      headers:
+        origin: 'http://localhost:8081'
+  - id: trailing_slash_redirects
+    as: anonymous
+    request:
+      method: GET
+      path: '/interests/'
+  - id: head_not_allowed
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/interests'
+  - id: post_not_allowed
+    as: reader
+    request:
+      method: POST
+      path: '/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"]}'

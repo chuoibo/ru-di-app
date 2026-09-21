@@ -1,0 +1,279 @@
+# W2 stories with a real photo · DELETE /stories/{id} on real stories: 204 (with the
+# story_views cascade), 403 is_author for a friend, the 404-before-403 matrix,
+# delete twice, and the idempotency replay of a 204.
+# Refusals that need no story: w2/stories/delete-stories-story_id.
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/delete-stories-story_id
+routes: ['DELETE /stories/{story_id}']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_one
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một"}'
+    bind:
+      story_one: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_two
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_three
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"ba"}'
+    bind:
+      story_three: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_four
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"bốn"}'
+    bind:
+      story_four: {from: body, pointer: /id, class: uuid}
+  - id: stranger_real_story
+    as: stranger
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+  - id: friend_asks_author
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_pending_request
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+  - id: author_accepts
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # a friend who may view it passes the 404 gate and fails is_author
+  - id: friend_deletes_friends_story
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+  # the role check of view_story comes first: 404, not the 403 above
+  - id: friend_roles_empty
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        x-actor-roles: ''
+  - id: author_roles_empty
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        x-actor-roles: ''
+  - id: author_roles_guest_only
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        x-actor-roles: 'guest'
+  - id: friend_sees_story_one
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+  - id: author_deletes_story_one
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+  - id: author_deletes_story_one_again
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+  - id: friend_feed_after_delete
+    as: friend
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_group_admin_only_with_ignored_body
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_two}}'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: idem_first
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_three}}'
+      headers:
+        idempotency-key: 'w2-del-a'
+  # a stored 204 is replayed with content-length 0 and idempotency-replayed
+  - id: idem_replay
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_three}}'
+      headers:
+        idempotency-key: 'w2-del-a'
+  - id: idem_reuse_other_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'w2-del-a'
+  - id: idem_refusal_not_stored
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'w2-del-c'
+  - id: idem_refusal_unknown_story_not_stored
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        idempotency-key: 'w2-del-c'
+  - id: idem_same_key_after_refusal
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_four}}'
+      headers:
+        idempotency-key: 'w2-del-c'
+  - id: author_creates_story_five
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"năm"}'
+    bind:
+      story_five: {from: body, pointer: /id, class: uuid}
+  - id: friend_blocks_author
+    as: friend
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  # behind a block the friend can no longer view the story: 404 replaces the 403
+  - id: friend_deletes_after_block
+    as: friend
+    request:
+      method: DELETE
+      path: '/stories/{{story_five}}'
+  - id: stranger_asks_author
+    as: stranger
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      stranger_request: {from: body, pointer: /id, class: uuid}
+  - id: author_accepts_stranger
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{stranger_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: new_friend_deletes_friends_story
+    as: stranger
+    request:
+      method: DELETE
+      path: '/stories/{{story_five}}'
+  # an ended account loses its friend edges: the 403 above becomes 404
+  - id: new_friend_deletes_account
+    as: stranger
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: new_friend_after_account_deleted
+    as: stranger
+    request:
+      method: DELETE
+      path: '/stories/{{story_five}}'
+  - id: author_deletes_while_blocked
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story_five}}'

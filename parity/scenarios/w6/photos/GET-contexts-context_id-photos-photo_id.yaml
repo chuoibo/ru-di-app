@@ -1,0 +1,493 @@
+# W6 · GET /contexts/{context_id}/photos/{photo_id} — the stored bytes of a group
+# photograph. view_group_memories (roles, then active membership of the context in
+# the path) runs before the photo is looked up, so an unknown id in a group the
+# caller is outside of is 403 and inside it is 404. The photo is looked up by
+# (context_id, id): another group's photo, an avatar or a personal photo under this
+# path is 404. The body is the file the sanitizer wrote, compared byte for byte.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/photos/get-contexts-context_id-photos-photo_id
+routes: ['GET /contexts/{context_id}/photos/{photo_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+  other: {}
+  both: {}
+steps:
+  - id: anonymous_read
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: anonymous_non_uuid_both
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/photos/cung-khong-phai'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: stranger_non_uuid_photo
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cung-khong-phai'
+  - id: stranger_non_uuid_both
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/photos/cung-khong-phai'
+  - id: stranger_unknown_both
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: stranger_roles_empty_unknown_both
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+      headers:
+        x-actor-roles: ''
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm ảnh (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm khác (dữ liệu mẫu)"}'
+  - id: register_both
+    as: both
+    request:
+      method: PUT
+      path: '/people/{{persona.both}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên hai nhóm (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm ảnh chung (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_both
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.both}}"}'
+    bind:
+      m_both: {from: body, pointer: /id, class: uuid}
+  - id: both_accepts
+    as: both
+    request:
+      method: POST
+      path: '/memberships/{{m_both}}/accept'
+  - id: other_creates_group
+    as: other
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+  - id: other_invites_both
+    as: other
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.both}}"}'
+    bind:
+      m_both_other: {from: body, pointer: /id, class: uuid}
+  - id: both_accepts_other
+    as: both
+    request:
+      method: POST
+      path: '/memberships/{{m_both_other}}/accept'
+  - id: owner_uploads_jpeg
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 21}}
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: owner_uploads_png_alpha
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 40, height: 30, seed: 22, alpha: true}}
+    bind:
+      photo_png: {from: body, pointer: /id, class: uuid}
+  - id: mate_uploads_rotated
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 23, orientation: 6}}
+    bind:
+      photo_mate: {from: body, pointer: /id, class: uuid}
+  - id: leaver_uploads_while_member
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 24, height: 24, seed: 24}}
+    bind:
+      photo_leaver: {from: body, pointer: /id, class: uuid}
+  - id: other_uploads_in_other_group
+    as: other
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 16, height: 16, seed: 25}}
+    bind:
+      photo_other: {from: body, pointer: /id, class: uuid}
+  - id: owner_sets_avatar
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 16, height: 16, seed: 26}}
+    bind:
+      avatar: {from: body, pointer: /id, class: uuid}
+  - id: owner_uploads_personal
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 16, height: 16, seed: 27}}
+    bind:
+      personal: {from: body, pointer: /id, class: uuid}
+  # readers
+  - id: owner_reads_jpeg
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: owner_reads_png
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_png}}'
+  - id: mate_reads_owners_jpeg
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: owner_reads_mates_rotated
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_mate}}'
+  - id: leaver_reads_while_member
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: both_reads_in_first_group
+    as: both
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_png}}'
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        x-actor-roles: 'group_admin'
+  # conditional and partial requests are not honoured: always the whole file
+  - id: mate_reads_with_if_none_match
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        if-none-match: '*'
+        if-modified-since: 'Wed, 01 Jan 2025 00:00:00 GMT'
+  - id: mate_reads_with_range
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        range: 'bytes=0-9'
+  - id: mate_reads_with_accept_json
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        accept: 'application/json'
+  # the ladder
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: stranger_reads
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: stranger_with_contexts_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: stranger_reads_unknown_photo_in_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: mate_roles_guest
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        x-actor-roles: 'guest'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+      headers:
+        x-actor-roles: ''
+  # lookups by (context, id)
+  - id: owner_unknown_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff'
+  - id: owner_uppercase_unknown_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/BBBBBBBB-CCCC-4DDD-8EEE-FFFFFFFFFFFF'
+  - id: owner_unhyphenated_unknown_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/bbbbbbbbcccc4ddd8eeeffffffffffff'
+  - id: owner_short_photo_id
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/bbbbbbbb-cccc-4ddd-8eee-fffffffffff'
+  - id: owner_other_groups_photo_under_own_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_other}}'
+  - id: both_other_groups_photo_under_first_group
+    as: both
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_other}}'
+  - id: both_reads_other_groups_photo
+    as: both
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/photos/{{photo_other}}'
+  - id: both_first_groups_photo_under_other_group
+    as: both
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/photos/{{photo}}'
+  - id: other_own_photo_under_first_group
+    as: other
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_other}}'
+  - id: owner_avatar_under_group_path
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{avatar}}'
+  - id: owner_personal_photo_under_group_path
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{personal}}'
+  # leaving and ending an account
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_reads_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: leaver_reads_own_photo_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_leaver}}'
+  - id: owner_reads_leavers_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_leaver}}'
+  - id: mate_deletes_account
+    as: mate
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_reads_deleted_mates_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_mate}}'
+  - id: mate_reads_after_deleting_account
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  # framework
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}/'
+  - id: head_not_allowed
+    as: owner
+    request:
+      method: HEAD
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: delete_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/photos/{{photo}}'

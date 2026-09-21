@@ -98,6 +98,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 API_DIR = REPO_ROOT / "services" / "api"
 CLIENT_DIR = REPO_ROOT / "apps" / "mobile" / "src"

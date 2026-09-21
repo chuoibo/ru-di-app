@@ -1,0 +1,184 @@
+# W4 cross replay · POST /batches/{id}/publish, refusals only: a publish that
+# succeeds returns a random guest token the harness cannot bind. No refusal is
+# stored by either implementation (409 gate, 422 expiry, 404, 403), so the same
+# key sent again, with the same or another body, runs again on the other side
+# instead of replaying or being refused as reuse. The batch comes from an
+# expense its payer never acknowledged, so it cannot be published.
+# Texts are sample data (dữ liệu mẫu).
+id: w4/crossreplay/post-batches-batch_id-publish
+routes: ['POST /batches/{batch_id}/publish']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm gửi chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn gửi chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gửi chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":false}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  # Python refuses at the gate: nothing stored, Go runs the same key again
+  - id: python_gate_refusal_with_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: core_same_key_runs_again
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: core_same_key_other_body_not_reuse
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  # Go refuses at the gate: nothing stored, Python runs the same key again
+  - id: core_gate_refusal_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: python_same_key_runs_again
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: python_same_key_other_body_not_reuse
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  # a 404 under a key, then the key on the real batch
+  - id: python_unknown_batch_with_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        idempotency-key: 'x-pub-c'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: core_same_key_real_batch
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-c'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # a 403 under a key, on both sides
+  - id: mate_core_not_owner_with_key
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-d'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: mate_python_same_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        idempotency-key: 'x-pub-d'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'

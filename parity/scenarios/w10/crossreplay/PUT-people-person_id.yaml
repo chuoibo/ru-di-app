@@ -1,0 +1,93 @@
+# W10 cross replay · PUT /people/{person_id}. A 2xx stored under a header key by one side
+# is replayed by the other, both ways; another name under that key is 422
+# idempotency_key_reuse; a refusal frees the key. Go serves none of these routes yet, so
+# both paths reach Python; the file is here for when one side is Go. Texts are sample
+# data (dữ liệu mẫu).
+id: w10/crossreplay/put-people-person_id
+routes: ['PUT /people/{person_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  stranger: {}
+steps:
+  - id: python_registers
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: front_replays
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: front_other_name_same_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên khác (dữ liệu mẫu)"}'
+  - id: front_renames_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đổi tên (dữ liệu mẫu)"}'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đổi tên (dữ liệu mẫu)"}'
+  - id: front_stranger_rename_refused
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Kẻ mạo danh (dữ liệu mẫu)"}'
+  - id: python_stranger_same_key_own_name
+    as: stranger
+    via: python
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        idempotency-key: 'a30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: front_replays_python
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        idempotency-key: 'a30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: python_reads_owner
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me'

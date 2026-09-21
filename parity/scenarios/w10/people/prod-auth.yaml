@@ -1,0 +1,428 @@
+# W10 people in prod auth mode (ADR-0014). The actor comes from the bearer session and
+# every live session carries member, so X-Actor-ID, X-Actor-Roles and X-Actor-Contexts
+# change nothing; a missing or junk bearer is 401 before the path, the body model and the
+# row (JSON decoding still comes first). Idempotency is scoped by the bearer digest.
+# DELETE /people/me revokes the caller's sessions: afterwards the same bearer is 401
+# «Session is not valid» on every route, while a replay of the stored 204 under its key
+# is still answered by the middleware; other people meet the id as a stranger. Texts
+# are sample data (dữ liệu mẫu).
+id: w10/people/prod-auth
+routes: ['GET /people/me/contexts', 'GET /people/me', 'PATCH /people/me', 'GET /people/me/saved-places', 'PUT /people/me/saved-places/{place_id}', 'DELETE /people/me/saved-places/{place_id}', 'GET /people/me/blocked', 'DELETE /people/me', 'POST /people/{person_id}/block', 'DELETE /people/{person_id}/block', 'POST /people/{person_id}/dm', 'GET /people/{person_id}', 'PUT /people/{person_id}']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_reads_profile
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me'
+  - id: anonymous_non_uuid_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid'
+  - id: junk_bearer_lists_contexts
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/contexts'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_lists_blocked
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/blocked'
+      headers:
+        authorization: 'Basic khong-phai-token-that'
+  - id: dev_headers_without_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+  - id: anonymous_malformed_json_delete
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":'
+  - id: anonymous_bad_body_patch
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: anonymous_registers
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Ẩn danh (dữ liệu mẫu)"}'
+  - id: junk_bearer_blocks
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/block'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: junk_bearer_unknown_place
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: anonymous_opens_dm
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+  - id: anonymous_unblocks
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/{{persona.mate}}/block'
+  - id: anonymous_unsaves
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+  # sessions carry member whatever the headers say
+  - id: owner_reads_profile
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_reads_profile_with_guest_roles
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'guest'
+  - id: stranger_reads_profile_claiming_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/people/me'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+  - id: owner_renames_self
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ phiên (dữ liệu mẫu)"}'
+  - id: mate_renames_self
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn phiên (dữ liệu mẫu)"}'
+  - id: stranger_renames_owner_claiming_owner
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Kẻ mạo danh (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_names_a_new_id
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chưa có tài khoản (dữ liệu mẫu)"}'
+  - id: owner_writes_profile
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"bio":"Có phiên (dữ liệu mẫu)","city":"Hà Nội (dữ liệu mẫu)"}'
+  # friends, a pair, profiles
+  - id: owner_asks_mate
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+      headers:
+        idempotency-key: 'd20e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_replays_pair_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+      headers:
+        idempotency-key: 'd20e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: mate_same_key_own_session
+    as: mate
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+      headers:
+        idempotency-key: 'd20e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: stranger_opens_mate_claiming_owner
+    as: stranger
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+  - id: mate_reads_owner
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: stranger_reads_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: mate_lists_contexts
+    as: mate
+    request:
+      method: GET
+      path: '/people/me/contexts'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  # saved places and blocks under sessions
+  - id: owner_saves_place
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: owner_lists_saved
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: stranger_unsaves_claiming_owner
+    as: stranger
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+  - id: owner_lists_saved_after_stranger
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_blocks_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.stranger}}/block'
+  - id: stranger_unblocks_claiming_owner
+    as: stranger
+    request:
+      method: DELETE
+      path: '/people/{{persona.stranger}}/block'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+  - id: owner_lists_blocked
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'
+  - id: owner_unblocks_stranger
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.stranger}}/block'
+  - id: owner_patch_with_key
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f20a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hải Phòng (dữ liệu mẫu)"}'
+  - id: mate_patch_same_key_own_session
+    as: mate
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f20a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hải Phòng (dữ liệu mẫu)"}'
+  - id: anonymous_patch_same_key
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f20a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hải Phòng (dữ liệu mẫu)"}'
+  # ending the account ends the session
+  - id: owner_confirm_false
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: owner_ends_account_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de2e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_replays_erasure_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de2e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_ends_account_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_reads_profile_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_lists_contexts_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: owner_patches_after
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Vẫn còn đây? (dữ liệu mẫu)"}'
+  - id: owner_reclaims_name_after
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ phiên (dữ liệu mẫu)"}'
+  - id: owner_saves_after
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+  - id: owner_blocks_after
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/block'
+  - id: owner_opens_pair_after
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+  - id: owner_patch_key_replay_after
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        idempotency-key: 'f20a0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"city":"Hải Phòng (dữ liệu mẫu)"}'
+  # the others meet the ended id as a stranger
+  - id: mate_reads_owner_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: mate_opens_pair_after
+    as: mate
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: mate_lists_contexts_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: mate_names_owner_after
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"owner"}'
+  - id: mate_blocks_owner_after
+    as: mate
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/block'
+  - id: mate_reads_own_profile_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/me'

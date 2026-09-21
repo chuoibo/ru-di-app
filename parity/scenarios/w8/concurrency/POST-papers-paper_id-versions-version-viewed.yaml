@@ -1,0 +1,85 @@
+# W8 concurrency · POST …/versions/{version}/viewed. Three looks at once by the recipient
+# are one view row and one move to da_xem, 204 each; under one header key, one 204 and
+# two replays. Texts are sample data (dữ liệu mẫu).
+id: w8/concurrency/post-papers-paper_id-versions-version-viewed
+routes: ['POST /papers/{paper_id}/versions/{version}/viewed']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: sheet_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: sheet_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_views_three_at_once
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: mate_same_key_three_at_once
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+      headers:
+        idempotency-key: 'w8-c-xem'
+  - id: owner_reads
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'

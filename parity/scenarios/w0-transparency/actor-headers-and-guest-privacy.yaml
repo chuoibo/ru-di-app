@@ -1,0 +1,42 @@
+# W0 transparency: dev-mode actor parsing errors, validation errors and the
+# guest privacy headers, all of which Python renders and core must pass through.
+id: w0/actor-headers-and-guest-privacy
+routes: ["GET /contexts/{context_id}", "GET /g/{token}", "POST /friends/lookup"]
+auth_mode: dev
+personas:
+  caller: {}
+steps:
+  - id: missing_actor
+    as: anonymous
+    request: {method: GET, path: /contexts/3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b}
+  - id: malformed_actor_id
+    as: anonymous
+    request:
+      method: GET
+      path: /contexts/3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b
+      headers: {x-actor-id: not-a-uuid, x-actor-roles: member}
+  - id: unknown_role
+    as: caller
+    request:
+      method: GET
+      path: /contexts/3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b
+      headers: {x-actor-roles: "member,emperor"}
+  - id: path_not_a_uuid
+    as: caller
+    request: {method: GET, path: /contexts/khong-phai-uuid}
+  - id: unknown_context
+    as: caller
+    request: {method: GET, path: /contexts/3f2b8c1e-9a4d-4e2f-8b1a-7c6d5e4f3a2b}
+  - id: guest_token_too_short
+    as: anonymous
+    request: {method: GET, path: /g/ngan}
+  - id: guest_token_unknown
+    as: anonymous
+    request: {method: GET, path: /g/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+  - id: lookup_not_json
+    as: caller
+    request:
+      method: POST
+      path: /friends/lookup
+      headers: {content-type: application/json}
+      body_raw: '{"phone": '

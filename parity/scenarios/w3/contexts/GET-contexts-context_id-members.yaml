@@ -1,0 +1,293 @@
+# W3 · GET /contexts/{id}/members — the current roster (INVITED and ACTIVE rows),
+# oldest first, for ACTIVE members only. Names are read from people at call time.
+# Order: actor, path, role + ACTIVE membership (403 for unknown and real ids).
+id: w3/contexts/get-contexts-context_id-members
+routes: ['GET /contexts/{context_id}/members']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  ghost: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/members'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/members'
+  - id: roles_unknown_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/members'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/members'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/members'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/members'
+  - id: stranger_urn_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/members'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm danh sách (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_lists_alone
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_ghost
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.ghost}}"}'
+    bind:
+      m_ghost: {from: body, pointer: /id, class: uuid}
+  - id: ghost_accepts
+    as: ghost
+    request:
+      method: POST
+      path: '/memberships/{{m_ghost}}/accept'
+  - id: owner_lists_everyone
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: mate_lists
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: invitee_lists
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        x-actor-roles: ''
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_lists_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_lists_after_leave
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_reinvites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+  - id: owner_lists_after_reinvite
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_lists_after_deletion
+    as: ghost
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_lists_after_deletion
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: mate_renames_self
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm đổi tên (dữ liệu mẫu)"}'
+  - id: owner_lists_after_rename
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members?context_id=x'
+  - id: undeclared_malformed_body_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"x": '
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members/'
+  - id: put_not_allowed
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'

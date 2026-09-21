@@ -59,7 +59,7 @@ from zoneinfo import ZoneInfo
 
 import psycopg
 
-API_BASE = os.environ.get("MOBILE_SEED_API_BASE_URL", "http://api:8000").rstrip("/")
+API_BASE = os.environ.get("MOBILE_SEED_API_BASE_URL", "http://core:8000").rstrip("/")
 DATABASE_URL = os.environ.get("MOBILE_DATABASE_URL")
 
 GROUP_NAME = "Team Đà Lạt"

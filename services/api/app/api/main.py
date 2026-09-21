@@ -29,6 +29,7 @@ from app.api.idempotency import (
     IdempotencyStoreFactory,
     SqlAlchemyIdempotencyStore,
 )
+from app.api.internal_token import resolve_internal_token
 from app.api.routes import (
     albums,
     auth,
@@ -63,6 +64,7 @@ from app.api.routes import (
     suggestions,
     votes,
 )
+from app.api.routes.brain import BrainDoor, build_brain_app
 from app.api.routes.places import CachedReasonWriter
 from app.api.schemas import ErrorResponse
 from app.api.search_rate_limit import (
@@ -143,6 +145,10 @@ def create_app(
     # silent one: a box that kept trusting `X-Actor-*` looks exactly like a box
     # that does not, until somebody sends a header.
     LOGGER.info("auth mode: %s", resolved_auth_mode)
+    # ADR-0029 §2.7: the brain door is locked or the process does not start.
+    # An empty token looks like a host that locked the door and is a host that
+    # left it off the hinges.
+    application.state.internal_token = resolve_internal_token()
 
     # Per application, not per module: `POST /places/search` spends real model
     # quota, and the window that caps it has to outlive a request while not
@@ -262,6 +268,13 @@ def create_app(
     # As a decorator on each handler this was already wrong on three of the
     # seven guest routes.
     application.add_middleware(GuestPrivacyHeadersMiddleware)
+
+    # Inside CORS, outside guest and idempotency: `/internal/` never becomes a
+    # public route (orders 0–155 stay put) and a write key on a brain call
+    # does not reserve an idempotency row.
+    application.add_middleware(
+        BrainDoor, brain=build_brain_app(application.state.internal_token)
+    )
 
     # The one guest answer the middleware above cannot reach. Starlette's
     # `ServerErrorMiddleware` is prepended ahead of every middleware installed

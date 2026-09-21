@@ -1,0 +1,100 @@
+# W2 concurrency · POST /stories/{id}/seen. Copies are released together. Under
+# one key the burst records one look and the other copies replay. Without a key,
+# three first looks at once race on pk_story_views: INSERT ... ON CONFLICT DO
+# NOTHING lets one row in, the other INSERTs wait for it and do nothing, and
+# every copy reads back the winner's seen_at. The instants of one burst share a
+# rank, so the multiset is the same whichever copy wins. Texts and the 1x1 PPM
+# photo are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-stories-story_id-seen
+routes: ['POST /stories/{story_id}/seen']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn xem cùng lúc (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_one
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một"}'
+    bind:
+      story_one: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_two
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  - id: friend_asks_author
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: author_accepts
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: same_key_burst
+    as: friend
+    concurrent: 3
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'c-seen-same'
+  - id: no_key_first_look_burst
+    as: friend
+    concurrent: 3
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+  - id: same_key_other_story_burst
+    as: friend
+    concurrent: 2
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'c-seen-same'

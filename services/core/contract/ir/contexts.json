@@ -1,0 +1,1557 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "contexts",
+ "routes": [
+  {
+   "id": "POST /contexts",
+   "order": 18,
+   "method": "POST",
+   "path": "/contexts",
+   "name": "create_context",
+   "endpoint": "app.api.routes.contexts.create_context",
+   "status_code": 201,
+   "path_convertors": {},
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.contexts.create_context",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.create_context",
+     []
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ContextCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ContextCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "PATCH /contexts/{context_id}",
+   "order": 19,
+   "method": "PATCH",
+   "path": "/contexts/{context_id}",
+   "name": "update_context",
+   "endpoint": "app.api.routes.contexts.update_context",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.contexts.update_context",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.update_context",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.ContextUpdateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.ContextUpdateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /contexts/{context_id}/members",
+   "order": 20,
+   "method": "POST",
+   "path": "/contexts/{context_id}/members",
+   "name": "invite_context_member",
+   "endpoint": "app.api.routes.contexts.invite_context_member",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.contexts.invite_context_member",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.invite_context_member",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.MembershipInviteRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.MembershipInviteRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /memberships/{membership_id}/accept",
+   "order": 21,
+   "method": "POST",
+   "path": "/memberships/{membership_id}/accept",
+   "name": "accept_context_membership",
+   "endpoint": "app.api.routes.contexts.accept_context_membership",
+   "status_code": null,
+   "path_convertors": {
+    "membership_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.contexts.accept_context_membership",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.accept_context_membership",
+     []
+    ],
+    "path": [
+     {
+      "name": "membership_id",
+      "alias": "membership_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "DELETE /contexts/{context_id}/members/{person_id}",
+   "order": 22,
+   "method": "DELETE",
+   "path": "/contexts/{context_id}/members/{person_id}",
+   "name": "leave_context",
+   "endpoint": "app.api.routes.contexts.leave_context",
+   "status_code": 204,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "person_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.contexts.leave_context",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.leave_context",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "person_id",
+      "alias": "person_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/members",
+   "order": 23,
+   "method": "GET",
+   "path": "/contexts/{context_id}/members",
+   "name": "list_context_members",
+   "endpoint": "app.api.routes.contexts.list_context_members",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.contexts.list_context_members",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.list_context_members",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/balances",
+   "order": 24,
+   "method": "GET",
+   "path": "/contexts/{context_id}/balances",
+   "name": "get_context_balances",
+   "endpoint": "app.api.routes.contexts.get_context_balances",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.contexts.get_context_balances",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.get_context_balances",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}",
+   "order": 25,
+   "method": "GET",
+   "path": "/contexts/{context_id}",
+   "name": "get_context",
+   "endpoint": "app.api.routes.contexts.get_context",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.contexts.get_context",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.contexts.get_context",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.ContextCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.ContextCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "ContextCreateRequest",
+    "fields": [
+     {
+      "name": "display_name",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "min_length": 1,
+       "max_length": 200
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 200
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "app.api.schemas.ContextUpdateRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.ContextUpdateRequest._something_to_change"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.ContextUpdateRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "model_validators": [
+      {
+       "name": "_something_to_change",
+       "function": "app.api.schemas.ContextUpdateRequest._something_to_change",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "ContextUpdateRequest",
+     "fields": [
+      {
+       "name": "display_name",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "str",
+          "strict": true,
+          "min_length": 1,
+          "max_length": 200
+         }
+        },
+        "default": null
+       },
+       "annotation": "Annotated[str, Strict(strict=True), Field(MinLen(min_length=1), MaxLen(max_length=200))] | None",
+       "required": false
+      },
+      {
+       "name": "theme",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "literal",
+          "expected": [
+           "mac-dinh",
+           "hoang-hon",
+           "bien-dem",
+           "rung-thong",
+           "ruc-ro"
+          ]
+         }
+        },
+        "default": null
+       },
+       "annotation": "Literal['mac-dinh', 'hoang-hon', 'bien-dem', 'rung-thong', 'ruc-ro'] | None",
+       "required": false
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.MembershipInviteRequest": {
+   "type": "model",
+   "class": "app.api.schemas.MembershipInviteRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "MembershipInviteRequest",
+    "fields": [
+     {
+      "name": "person_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     }
+    ]
+   }
+  }
+ }
+}

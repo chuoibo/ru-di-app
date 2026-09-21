@@ -1,0 +1,151 @@
+# W10 cross replay · POST /people/{person_id}/dm. The 201 of a created pair stored by one
+# side is replayed as 201 by the other, both ways, while a keyless open answers 200;
+# another person under the key is reuse; the one 404 frees the key. Go serves none of
+# these routes yet, so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w10/crossreplay/post-people-person_id-dm
+routes: ['POST /people/{person_id}/dm']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  second: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn một (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn hai (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_asks_second
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second}}"}'
+    bind:
+      fr_second: {from: body, pointer: /id, class: uuid}
+  - id: second_accepts
+    as: second
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_second}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: python_opens
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_opens_without_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_other_person_same_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.second}}/dm'
+      headers:
+        idempotency-key: 'd30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_opens_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.second}}/dm'
+      headers:
+        idempotency-key: 'd30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.second}}/dm'
+      headers:
+        idempotency-key: 'd30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: front_stranger_refused
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.stranger}}/dm'
+      headers:
+        idempotency-key: 'd30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_same_key_friend
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: front_replays_python_second
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_lists_contexts
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me/contexts'

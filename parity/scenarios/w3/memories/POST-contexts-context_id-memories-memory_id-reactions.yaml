@@ -1,0 +1,336 @@
+# W3 · POST /contexts/{id}/memories/{memory_id}/reactions — one heart, 201.
+# Order: idempotency key shape, actor, both path ids, role + ACTIVE membership of
+# the path's group (403 whether or not the memory exists), then the memory must
+# belong to that group (404), then a second heart is 409 already_reacted.
+# No body is declared: a body naming somebody else is never read.
+id: w3/memories/post-contexts-context_id-memories-memory_id-reactions
+routes: ['POST /contexts/{context_id}/memories/{memory_id}/reactions']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: anonymous_non_uuid_both
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/reactions'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+      headers:
+        idempotency-key: ''
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_both
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/reactions'
+  - id: stranger_non_uuid_memory
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/khong-phai-uuid/reactions'
+  - id: stranger_unknown_both
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_b: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_posts_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      checkin: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_in_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo_b: {from: body, pointer: /id, class: uuid}
+  # membership before lookup: a real and an unknown memory are the same 403
+  - id: stranger_real_memory
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: stranger_unknown_memory_real_context
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: invitee_hearts
+    as: invitee
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_unknown_memory
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  # a memory of another group is 404 through this group's path
+  - id: mate_other_groups_memory_via_this_context
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo_b}}/reactions'
+  - id: owner_this_groups_memory_via_other_context
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories/{{photo}}/reactions'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        x-actor-roles: ''
+  - id: mate_hearts_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_hearts_photo_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: owner_hearts_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_body_naming_owner_ignored
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{checkin}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.owner}}"}'
+  - id: owner_malformed_body_ignored
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{checkin}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id": '
+  - id: leaver_hearts_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_hearts_after_leaving
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{checkin}}/reactions'
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories/{{photo_b}}/reactions'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_reads_wall
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  # idempotency
+  - id: mate_takes_back_heart
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: idem_first
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-heart-a'
+  - id: idem_replay
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-heart-a'
+  - id: idem_reuse_other_memory
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{checkin}}/reactions'
+      headers:
+        idempotency-key: 'w3-heart-a'
+  # a 409 is not stored and releases the key
+  - id: idem_refusal_not_stored
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-heart-b'
+  - id: mate_takes_back_heart_again
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: idem_same_key_after_refusal
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-heart-b'
+  - id: idem_key_too_long
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+  - id: trailing_slash_redirects
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions/'
+  - id: get_not_allowed
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'

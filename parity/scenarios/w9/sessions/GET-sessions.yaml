@@ -1,0 +1,171 @@
+# W9 · GET /sessions: where this account is signed in (ADR-0023 §2.5). The row set is
+# the caller's own and nobody else's -- `manage_own_sessions` with `is_self`. `current`
+# is computed from the token this request arrived on rather than stored, so in `dev`
+# mode, where there is no bearer at all, every row answers false: no session is being
+# used. That is the honest answer, not a missing feature, and it is why the prod file
+# beside this one exists. The list carries no device label, no IP and no user agent,
+# because the table stores none. Texts are sample data (dữ liệu mẫu).
+id: w9/sessions/get-sessions
+routes: ['GET /sessions']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+steps:
+  - id: anonymous_lists
+    as: anonymous
+    request: {method: GET, path: /sessions}
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'vai-tro-la'
+  # `manage_own_sessions` wants the `member` role and `is_self`; a caller who sends
+  # no role, or only a guest one, is refused before any row is read.
+  - id: owner_lists_with_empty_roles
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: ''
+  - id: owner_lists_as_guest_role
+    as: anonymous
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'guest'
+  # Nobody has signed in through a door yet, so the account has no rows.
+  - id: owner_lists_empty
+    as: owner
+    request: {method: GET, path: /sessions}
+  # --- give `friend` one session through the invitation door --------------------
+  - id: owner_names_self
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở nhóm (dữ liệu mẫu)"}'
+  - id: owner_names_friend
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn được mời đích danh (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xem phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_friend_by_name
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      token_friend: {from: body, pointer: /invite_token, class: token}
+  - id: friend_redeems_invitation
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_friend}}"}'
+  # One row, issued_via `invite`, and `current` false because dev sends no bearer.
+  - id: friend_lists_one
+    as: friend
+    request: {method: GET, path: /sessions}
+  # The owner's own list is still empty: a list is the caller's own account only.
+  - id: owner_lists_still_empty
+    as: owner
+    request: {method: GET, path: /sessions}
+  # A second door for the same person adds a second row rather than replacing one.
+  # It has to be a second trip: `uq_outing_invites_person` is unique on
+  # (outing_id, invited_person_id), so a second named invitation on the SAME trip
+  # is a 409 and would carry no token to bind.
+  - id: owner_creates_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Nha Trang hai ngày (dữ liệu mẫu)","starts_on":"2026-04-11","ends_on":"2026-04-12","headcount":3,"budget_per_person_vnd":300000}'
+    bind:
+      outing_two: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_friend_to_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_two}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      token_friend_two: {from: body, pointer: /invite_token, class: token}
+  - id: friend_redeems_second_invitation
+    as: anonymous
+    request:
+      method: POST
+      path: '/sessions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"invite_token":"{{token_friend_two}}"}'
+  - id: friend_lists_two
+    as: friend
+    request: {method: GET, path: /sessions}
+  # An Authorization header in dev mode is read next to the actor, but dev identity
+  # still comes from X-Actor-ID; a junk bearer must not change who is asking.
+  - id: friend_lists_with_junk_bearer
+    as: friend
+    request:
+      method: GET
+      path: '/sessions'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  # --- framework ----------------------------------------------------------------
+  - id: trailing_slash
+    as: owner
+    request: {method: GET, path: '/sessions/'}
+  - id: patch_not_allowed
+    as: owner
+    request: {method: PATCH, path: '/sessions'}
+  - id: head_lists
+    as: owner
+    request: {method: HEAD, path: '/sessions'}

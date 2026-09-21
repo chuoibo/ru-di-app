@@ -1,0 +1,404 @@
+# W1 · POST /contexts/{id}/meet — areas in, ranked meeting points out.
+# Refusal order: JSON decode, actor, path + body model, role/membership,
+# origin count, unknown area (first one named, echoed verbatim in detail).
+id: w1/social_map/post-meet
+routes: ['POST /contexts/{context_id}/meet']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  # FastAPI decodes a JSON body before resolving dependencies: 422 json_invalid beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas": ['
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  # body validation happens before the handler, so 422 beats the 403
+  - id: stranger_unknown_context_extra_field
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"],"members":["{{persona.owner}}"]}'
+  # path and body errors arrive in one 422 list
+  - id: stranger_non_uuid_and_bad_body
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":"hcm-quan-1"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hẹn gặp (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  # membership is checked before the origin count and the area ids
+  - id: stranger_real_group_unknown_area
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["sao-hoa"]}'
+  - id: owner_two_origins
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: owner_three_with_repeat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-quan-1","hcm-quan-7"]}'
+  - id: owner_cross_city
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["da-lat","hcm-quan-1"]}'
+  - id: owner_every_area
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["da-lat","hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-phu-nhuan","hcm-quan-7","hcm-binh-thanh","hcm-thu-duc"]}'
+  - id: owner_twelve_origins_max
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7","hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7","hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7"]}'
+  - id: owner_thirteen_origins
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7","hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7","hcm-quan-1","hcm-quan-3","hcm-quan-4","hcm-quan-7","hcm-thu-duc"]}'
+  - id: owner_one_origin
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1"]}'
+  - id: owner_zero_origins
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":[]}'
+  - id: owner_unknown_area
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","sao-hoa"]}'
+  - id: owner_first_unknown_is_named
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["mat-trang","sao-hoa"]}'
+  # echoed into detail: exercises JSON escaping of < > & quote backslash and non-ASCII
+  - id: owner_unknown_area_needs_escaping
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","<b>&\"Quận 9\"</b>\\"]}'
+  - id: owner_one_unknown_area_counts_first
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["sao-hoa"]}'
+  - id: owner_area_leading_space
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":[" hcm-quan-1","hcm-quan-3"]}'
+  - id: owner_area_uppercase
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["HCM-QUAN-1","hcm-quan-3"]}'
+  - id: from_areas_not_a_list
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":"hcm-quan-1"}'
+  - id: from_areas_numbers
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":[1,2]}'
+  - id: from_areas_null
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":null}'
+  - id: missing_from_areas
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: extra_field_members
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-quan-3"],"members":["{{persona.mate}}"]}'
+  - id: empty_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+  - id: text_plain_content_type
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/meet'
+  - id: mate_invited_not_yet_active
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: mate_two_origins
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: idem_first
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh"]}'
+  # a read-only route still replays: the middleware keys every POST that carries the header
+  - id: idem_replay
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-4","hcm-binh-thanh"]}'
+  - id: idem_reuse_different_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-a'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: idem_second_distinct_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-b'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: idem_refusal_not_stored
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-c'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["sao-hoa","hcm-quan-1"]}'
+  - id: idem_same_key_after_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        idempotency-key: 'w1-meet-c'
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a membership row with left_at set is not membership
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/meet'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"from_areas":["hcm-quan-1","hcm-thu-duc"]}'

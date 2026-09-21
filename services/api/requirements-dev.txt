@@ -4,6 +4,20 @@
 # start failing for reasons nobody changed.
 alembic==1.14.0
 fastapi==0.115.6
+# ADR-0029: the parity harness compares Go with this exact Python stack, and
+# pydantic, pydantic-core and starlette decide the bytes of every 422, 404, 405
+# and 307 body. Unpinned, the image took whatever was newest on build day, so two
+# builds of one commit could disagree on error text. These are the versions the
+# image resolved on 2026-09-14 (image sha256:c707ef4a9cf4), pinned as they were.
+pydantic==2.13.5
+pydantic-core==2.46.5
+starlette==0.41.3
+anyio==4.15.0
+annotated-types==0.8.0
+typing-inspection==0.4.4
+typing-extensions==4.16.0
+markupsafe==3.0.3
+h11==0.16.0
 google-genai==2.10.0
 google-auth==2.55.1
 httpx==0.28.1

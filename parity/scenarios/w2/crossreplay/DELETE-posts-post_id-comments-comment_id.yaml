@@ -1,0 +1,167 @@
+# W2 cross replay · DELETE /posts/{id}/comments/{comment_id} (204, deletes the
+# row). A deletion stored under a key by one implementation is replayed by the
+# other although the row is gone; another comment under the key is refused by
+# the other. A 204 replayed through core carries no content-length, the one
+# accepted divergence (ADR-0029 §2.4 RESPONSE-204-CONTENT-LENGTH). A 403 is not
+# stored by either side. Texts are sample data (dữ liệu mẫu).
+id: w2/crossreplay/delete-posts-post_id-comments-comment_id
+routes: ['DELETE /posts/{post_id}/comments/{comment_id}']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người gỡ bình luận chéo (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để gỡ bình luận chéo (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  - id: reader_comments_one
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận một (dữ liệu mẫu)"}'
+    bind:
+      c_one: {from: body, pointer: /id, class: uuid}
+  - id: reader_comments_two
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận hai (dữ liệu mẫu)"}'
+    bind:
+      c_two: {from: body, pointer: /id, class: uuid}
+  - id: reader_comments_three
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận ba (dữ liệu mẫu)"}'
+    bind:
+      c_three: {from: body, pointer: /id, class: uuid}
+  - id: reader_comments_four
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận bốn (dữ liệu mẫu)"}'
+    bind:
+      c_four: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_one}}'
+      headers:
+        idempotency-key: 'x-uncomment-a'
+  # a fresh delete would now be 404 comment_not_found: only a replay answers 204
+  - id: core_replays_python_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_one}}'
+      headers:
+        idempotency-key: 'x-uncomment-a'
+  - id: core_refuses_python_key_other_comment
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_two}}'
+      headers:
+        idempotency-key: 'x-uncomment-a'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_two}}'
+      headers:
+        idempotency-key: 'x-uncomment-b'
+  - id: python_replays_core_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_two}}'
+      headers:
+        idempotency-key: 'x-uncomment-b'
+  - id: python_refuses_core_key_other_comment
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_one}}'
+      headers:
+        idempotency-key: 'x-uncomment-b'
+  # a 403 (no role) is not stored: the same deletion then runs on the other side
+  - id: python_refusal_releases_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_three}}'
+      headers:
+        idempotency-key: 'x-uncomment-c'
+        x-actor-roles: ''
+  - id: core_uses_key_python_released
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_three}}'
+      headers:
+        idempotency-key: 'x-uncomment-c'
+  - id: core_refusal_releases_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_four}}'
+      headers:
+        idempotency-key: 'x-uncomment-d'
+        x-actor-roles: ''
+  - id: python_uses_key_core_released
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_four}}'
+      headers:
+        idempotency-key: 'x-uncomment-d'
+  - id: core_replays_what_python_stored_after_release
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/comments/{{c_four}}'
+      headers:
+        idempotency-key: 'x-uncomment-d'

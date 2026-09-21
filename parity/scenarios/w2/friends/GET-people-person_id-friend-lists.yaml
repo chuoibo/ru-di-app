@@ -1,0 +1,234 @@
+# W2 · GET /people/{id}/friend-requests and GET /people/{id}/friends — the two
+# friend lists that need only the repository and view_own_friends (is_self).
+# direction is "outgoing" only when it says exactly that; anything else, the
+# empty string and a repeated key whose last value is not "outgoing" included,
+# gives the incoming list.
+id: w2/friends/friend-lists
+routes: ['GET /people/{person_id}/friend-requests', 'GET /people/{person_id}/friends']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  asker: {}
+  asked: {}
+  stranger: {}
+steps:
+  - id: anonymous_friends
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friends'
+  - id: anonymous_requests
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friend-requests?direction=outgoing'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ danh sách (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_asker
+    as: asker
+    request:
+      method: PUT
+      path: '/people/{{persona.asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi (dữ liệu mẫu)"}'
+  - id: register_asked
+    as: asked
+    request:
+      method: PUT
+      path: '/people/{{persona.asked}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_non_uuid_friends
+    as: owner
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friends'
+  - id: owner_non_uuid_requests_outgoing
+    as: owner
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friend-requests?direction=outgoing'
+  - id: owner_empty_friends
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends'
+  - id: owner_empty_requests
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests'
+  - id: stranger_reads_owner_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends'
+  - id: stranger_reads_owner_requests_outgoing
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=outgoing'
+  - id: owner_roles_empty_friends
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends'
+      headers:
+        x-actor-roles: ''
+  - id: friend_asks_owner
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: asker_asks_owner
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      asker_request: {from: body, pointer: /id, class: uuid}
+  - id: owner_asks_asked
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.asked}}"}'
+  - id: owner_incoming_by_default
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests'
+  - id: owner_incoming_named
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=incoming'
+  - id: owner_outgoing
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=outgoing'
+  - id: owner_direction_uppercase_is_incoming
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=OUTGOING'
+  - id: owner_direction_empty_is_incoming
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction='
+  - id: owner_direction_junk_is_incoming
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=both'
+  - id: owner_direction_repeated_last_wins_incoming
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=outgoing&direction=sideways'
+  - id: owner_direction_repeated_last_wins_outgoing
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests?direction=sideways&direction=outgoing'
+  - id: friend_outgoing
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/friend-requests?direction=outgoing'
+  - id: asked_incoming
+    as: asked
+    request:
+      method: GET
+      path: '/people/{{persona.asked}}/friend-requests'
+  - id: owner_accepts_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_declines_asker
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{asker_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: owner_incoming_after_decisions
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friend-requests'
+  - id: owner_friends_after_accept
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends'
+  - id: friend_friends_after_accept
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/friends'
+  - id: friend_outgoing_after_accept
+    as: friend
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/friend-requests?direction=outgoing'
+  - id: asker_friends_after_decline
+    as: asker
+    request:
+      method: GET
+      path: '/people/{{persona.asker}}/friends'
+  - id: friends_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/friends/'
+  - id: requests_post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/friend-requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

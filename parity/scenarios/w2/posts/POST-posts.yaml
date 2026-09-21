@@ -1,0 +1,598 @@
+# W2 · POST /posts — one post, as the actor, to one of four audiences.
+# Refusal order: idempotency key shape, JSON decode, actor, body model,
+# role (create_post), audience/context pairing, group membership, image_url.
+id: w2/posts/post-posts
+routes: ['POST /posts']
+auth_mode: dev
+personas:
+  author: {}
+  mate: {}
+  stranger: {}
+  leaver: {}
+  ghost: {}
+steps:
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)","audience":"public"}'
+  # body model errors come after get_actor: a well-formed JSON with bad fields is still 401
+  - id: anonymous_bad_fields_valid_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"","audience":"moi-nguoi"}'
+  # JSON decoding happens before dependencies: 422 json_invalid beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":'
+  # the idempotency middleware answers before routing and before identity
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Xin chào (dữ liệu mẫu)","audience":"public"}'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sắp rời (dữ liệu mẫu)"}'
+  # ghost has no people row: the insert fails its foreign key and the app answers a bare 500
+  - id: ghost_unregistered_author_500
+    as: ghost
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chưa có hồ sơ (dữ liệu mẫu)","audience":"only_me"}'
+  - id: author_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghi chú riêng (dữ liệu mẫu)","audience":"only_me"}'
+  - id: author_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends","context_id":null,"image_url":null}'
+  - id: author_public_escaping
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"<b>&\"Công khai\"</b>\\ 😀 (dữ liệu mẫu)","audience":"public"}'
+  - id: author_body_single_space
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":" ","audience":"only_me"}'
+  - id: author_body_at_max_length
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"ạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạ","audience":"only_me"}'
+  - id: author_body_over_max_length
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"ạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạ","audience":"only_me"}'
+  # without a content-type FastAPI still parses the body as JSON
+  - id: author_no_content_type
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      body_raw: '{"body":"Không content-type (dữ liệu mẫu)","audience":"only_me"}'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bài viết (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: author_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho cả nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: author_group_no_context
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Thiếu nhóm (dữ liệu mẫu)","audience":"group"}'
+  - id: author_group_null_context
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm null (dữ liệu mẫu)","audience":"group","context_id":null}'
+  - id: author_only_me_names_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Riêng mà có nhóm (dữ liệu mẫu)","audience":"only_me","context_id":"{{ctx}}"}'
+  # the pairing is checked before any roster read: an unknown group is 422 here, not 403
+  - id: author_public_names_unknown_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Công khai có nhóm lạ (dữ liệu mẫu)","audience":"public","context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: mate_invited_posts_to_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Chưa nhận lời (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: mate_posts_to_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Thành viên đăng cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: stranger_posts_to_group
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Người lạ vào nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  # X-Actor-Contexts is a claim; the roster decides
+  - id: stranger_group_with_contexts_header
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Tự khai là thành viên (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: stranger_unknown_group
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm không tồn tại (dữ liệu mẫu)","audience":"group","context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: stranger_only_me
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Người lạ viết riêng (dữ liệu mẫu)","audience":"only_me"}'
+  - id: roles_empty
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Không role (dữ liệu mẫu)","audience":"only_me"}'
+  # the role check runs before the audience/context pairing
+  - id: roles_empty_bad_pairing
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Không role và thiếu nhóm (dữ liệu mẫu)","audience":"group"}'
+  - id: roles_guest_only
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"body":"Chỉ guest (dữ liệu mẫu)","audience":"only_me"}'
+  # create_post accepts group_admin as well as member; in dev the header alone grants it
+  - id: roles_group_admin_only
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"body":"Chỉ group_admin (dữ liệu mẫu)","audience":"only_me"}'
+  - id: roles_unknown
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: 'member,khong-co-role-nay'
+        content-type: 'application/json'
+      body_raw: '{"body":"Role lạ (dữ liệu mẫu)","audience":"only_me"}'
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"body":"Id sai (dữ liệu mẫu)","audience":"only_me"}'
+  - id: body_empty_string
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"","audience":"only_me"}'
+  - id: body_number
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":42,"audience":"only_me"}'
+  - id: audience_missing
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Thiếu audience (dữ liệu mẫu)"}'
+  - id: audience_unknown
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Audience lạ (dữ liệu mẫu)","audience":"Public"}'
+  - id: context_id_not_uuid
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm sai dạng (dữ liệu mẫu)","audience":"group","context_id":"khong-phai-uuid"}'
+  # errors of several fields arrive in one list; no input is echoed
+  - id: extra_author_id_and_empty_body
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"","audience":"only_me","author_id":"{{persona.mate}}"}'
+  - id: empty_object
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: empty_body
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+  - id: top_level_array
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[{"body":"Mảng (dữ liệu mẫu)","audience":"only_me"}]'
+  - id: text_plain_content_type
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"body":"Text plain (dữ liệu mẫu)","audience":"only_me"}'
+  - id: image_url_bad_shape
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh sai dạng (dữ liệu mẫu)","audience":"only_me","image_url":"/contexts/khong-phai/photos/cung-khong"}'
+  - id: image_url_other_persons_photo
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh của người khác (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.mate}}/photos/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: image_url_own_photo_missing
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh của mình chưa có (dữ liệu mẫu)","audience":"only_me","image_url":"/people/{{persona.author}}/photos/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  # the photo id is uppercase; the owner id is compared after UUID parsing
+  - id: image_url_own_photo_uppercase_missing
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh viết hoa (dữ liệu mẫu)","audience":"only_me","image_url":"/people/{{persona.author}}/photos/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE"}'
+  - id: image_url_group_photo_on_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh nhóm công khai (dữ liệu mẫu)","audience":"public","image_url":"/contexts/{{ctx}}/photos/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: image_url_group_photo_of_another_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh nhóm khác (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}","image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  # membership of context_id is refused before the photo is looked at
+  - id: stranger_group_photo_unknown_group
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh nhóm lạ (dữ liệu mẫu)","audience":"group","context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  # a group photo url is accepted on its own group without checking the photo exists; stored lowercase
+  - id: image_url_group_photo_same_group_uppercase
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh nhóm chưa tải (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}","image_url":"/contexts/{{ctx}}/photos/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE"}'
+  - id: trailing_slash_redirects
+    as: author
+    request:
+      method: POST
+      path: '/posts/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Gạch chéo cuối (dữ liệu mẫu)","audience":"only_me"}'
+  - id: put_not_allowed
+    as: author
+    request:
+      method: PUT
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"PUT (dữ liệu mẫu)","audience":"only_me"}'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # dev trusts X-Actor-ID, and the anonymised people row still satisfies the foreign key
+  - id: leaver_posts_after_deletion
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Sau khi xoá tài khoản (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_first
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần thôi (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_replay
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần thôi (dữ liệu mẫu)","audience":"only_me"}'
+  # the fingerprint is canonical JSON: key order and whitespace do not matter
+  - id: idem_replay_reordered_keys
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-a'
+        content-type: 'application/json'
+      body_raw: '{ "audience" : "only_me", "body" : "Một lần thôi (dữ liệu mẫu)" }'
+  - id: idem_reuse_different_body
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Lần khác (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_same_key_other_actor
+    as: mate
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần thôi (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_second_distinct_key
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần thôi (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_refusal_not_stored
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bị từ chối (dữ liệu mẫu)","audience":"group"}'
+  - id: idem_same_key_after_refusal
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-c'
+        content-type: 'application/json'
+      body_raw: '{"body":"Sau khi bị từ chối (dữ liệu mẫu)","audience":"friends"}'
+  - id: idem_forbidden_not_stored
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm không vào được (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: idem_same_key_after_forbidden
+    as: stranger
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-post-d'
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm không vào được (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_key_too_long
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"body":"Key quá dài (dữ liệu mẫu)","audience":"only_me"}'

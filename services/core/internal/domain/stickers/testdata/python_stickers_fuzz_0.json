@@ -1,0 +1,614 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.stickers",
+ "mode": "stickers-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 60
+ },
+ "cases": [
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/0",
+   "args": {
+    "value": "xsl7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/1",
+   "args": {
+    "value": "b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/2",
+   "args": {
+    "value": "tra-tien-ne"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/3",
+   "args": {
+    "value": "ket-xe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/4",
+   "args": {
+    "value": "zi8dimj78n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/5",
+   "args": {
+    "value": "e"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/6",
+   "args": {
+    "value": "5"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/7",
+   "args": {
+    "value": "j-5vb0x"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/8",
+   "args": {
+    "value": "wd3xazph8np"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/9",
+   "args": {
+    "value": "drerm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/10",
+   "args": {
+    "value": "78iqtwuk"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/11",
+   "args": {
+    "value": "rvadwb2r3"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/12",
+   "args": {
+    "value": "mtqe4b96iz4"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/13",
+   "args": {
+    "value": "zlmqjhnd7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/14",
+   "args": {
+    "value": "udk-f"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/15",
+   "args": {
+    "value": "qz3e"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/16",
+   "args": {
+    "value": "po7q9ksd"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/17",
+   "args": {
+    "value": "z4o8-61"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/18",
+   "args": {
+    "value": "tuyet-voi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/19",
+   "args": {
+    "value": "3um"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/20",
+   "args": {
+    "value": "b9960dvk8"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/21",
+   "args": {
+    "value": "ket-xe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/22",
+   "args": {
+    "value": "t0w"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/23",
+   "args": {
+    "value": "6"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/24",
+   "args": {
+    "value": "di-thoi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/25",
+   "args": {
+    "value": "cafe-khong"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/26",
+   "args": {
+    "value": "5i7831a"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/27",
+   "args": {
+    "value": "cafe-khong"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/28",
+   "args": {
+    "value": "vvndrg6"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/29",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/30",
+   "args": {
+    "value": "tuyet-voi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/31",
+   "args": {
+    "value": "ngb2"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/32",
+   "args": {
+    "value": "bzh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/33",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/34",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/35",
+   "args": {
+    "value": "cho-ti"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/36",
+   "args": {
+    "value": "ket-xe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/37",
+   "args": {
+    "value": "-za6vfcsu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/38",
+   "args": {
+    "value": "i7p4s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/39",
+   "args": {
+    "value": "pe-t"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/40",
+   "args": {
+    "value": "xin59js"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/41",
+   "args": {
+    "value": "tuyet-voi"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/42",
+   "args": {
+    "value": "6j8jk7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/43",
+   "args": {
+    "value": "s-epkjp"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/44",
+   "args": {
+    "value": "715is"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/45",
+   "args": {
+    "value": "q5mxahv"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/46",
+   "args": {
+    "value": "f5ypke"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/47",
+   "args": {
+    "value": "s"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/48",
+   "args": {
+    "value": "ujjrtyu"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/49",
+   "args": {
+    "value": "j0gqpnn7"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/50",
+   "args": {
+    "value": "0yrftznuac9"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/51",
+   "args": {
+    "value": "4z0qt"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/52",
+   "args": {
+    "value": "-n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/53",
+   "args": {
+    "value": "ket-xe"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/54",
+   "args": {
+    "value": "moye2mw5i31"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/55",
+   "args": {
+    "value": "i"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/56",
+   "args": {
+    "value": "tra-tien-ne"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/57",
+   "args": {
+    "value": "zy4"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/58",
+   "args": {
+    "value": "puynl4a3g-3"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_sticker",
+   "name": "fuzz/59",
+   "args": {
+    "value": "cafe-khong"
+   },
+   "result": {
+    "ok": true
+   }
+  }
+ ]
+}

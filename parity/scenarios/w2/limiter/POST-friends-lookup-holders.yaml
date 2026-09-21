@@ -1,0 +1,286 @@
+# W2 limiter lane · POST /friends/lookup against numbers that belong to
+# somebody: found (200), hidden (discoverable_by_phone false), ended account,
+# blocked pair, and idempotency around a stored 200.
+#
+# Why this file is in the limiter lane: finding a holder needs the holder's
+# derived id, and the only HTTP door to it is POST /identity/person-id, which
+# spends person_id_limit (20 per 60 s per source address). The id is bound, and
+# the canary repeats the main corpus once per damage mode, so a bound step could
+# meet a 429 there. `parity run --lane limiter` starts this file in a fresh
+# window on each side instead, with the database lane on.
+# scenarios/w2/friends/POST-friends-lookup.yaml keeps every branch that needs
+# no registered holder.
+#
+# Order: actor dependency (401/422) -> limiter -> hand-parsed JSON -> phone
+# shape -> identity key -> role -> person (deleted / not discoverable / none
+# all answer the same 404). Blocks are not consulted.
+#
+# LIMITERS: friend_lookup_limit is spent by every step that reaches the handler
+# (10 here); person_id_limit by the 2 mints. The 429 branches are in
+# w2/limiter/POST-friends-lookup-limit.yaml and POST-identity-person-id-limit.yaml.
+#
+# The two numbers are sample data (dữ liệu mẫu), fixed in this file, so the
+# people they derive to outlive a run: the second run on the same stacks finds
+# them registered (PUT answers 200) and the deleted one stays deleted (PUT
+# answers 404). Both sides share the history, so each run stays comparable.
+id: w2/limiter/post-friends-lookup-holders
+routes: ['POST /friends/lookup']
+auth_mode: dev
+lane: limiter
+personas:
+  seeker: {}
+  holder: {}
+steps:
+  # the actor dependency runs before the handler: nothing is spent
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  # no body model, so broken JSON does not beat the 401 here (unlike pydantic routes)
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone": '
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  - id: register_seeker
+    as: seeker
+    request:
+      method: PUT
+      path: '/people/{{persona.seeker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người tìm bạn (dữ liệu mẫu)"}'
+  - id: mint_holder_id
+    as: holder
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+    bind:
+      holder_id: {from: body, pointer: /person_id, class: uuid}
+  - id: mint_leaver_id
+    as: holder
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t04"}'
+    bind:
+      leaver_id: {from: body, pointer: /person_id, class: uuid}
+  - id: register_holder
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{holder_id}}'
+      headers:
+        x-actor-id: '{{holder_id}}'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người giữ số (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{leaver_id}}'
+      headers:
+        x-actor-id: '{{leaver_id}}'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: leaver_deletes_account
+    as: holder
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        x-actor-id: '{{leaver_id}}'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # the holder hides and shows again inside the run, so the next run starts discoverable
+  - id: holder_turns_lookup_off
+    as: holder
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-id: '{{holder_id}}'
+        content-type: 'application/json'
+      body_raw: '{"discoverable_by_phone":false}'
+  # spends 1: discoverable_by_phone false answers the same 404 as nobody
+  - id: seeker_hidden_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  - id: holder_turns_lookup_on
+    as: holder
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        x-actor-id: '{{holder_id}}'
+        content-type: 'application/json'
+      body_raw: '{"discoverable_by_phone":true}'
+  # spends 1 (and stores the answer under the key)
+  - id: seeker_finds_holder
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'w2-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  - id: idem_replay
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'w2-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  - id: idem_reuse_other_spelling
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'w2-lookup-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t02"}'
+  # spends 1: +84, brackets, dots and dashes reach the same person
+  - id: seeker_finds_holder_other_spelling
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t(399)\t00.00-02"}'
+  # spends 1: nobody derives to this number; a 404 is not stored
+  - id: idem_refusal_unregistered_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'w2-lookup-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t05"}'
+  # spends 1
+  - id: idem_same_key_after_refusal
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: 'w2-lookup-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  # spends 1: an ended account answers the same 404 as nobody
+  - id: seeker_deleted_number
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t04"}'
+  # spends 1: the role is checked after the body, so a good number meets the 403
+  - id: roles_empty
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  # spends 1: ... and a bad number meets the 422 first
+  - id: roles_empty_not_a_mobile
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"khong-phai-so"}'
+  # spends 1
+  - id: not_json
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone": '
+  # spends 1: a nested object must not be echoed back
+  - id: phone_as_object
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"so":"03\t99"}}'
+  - id: holder_blocks_seeker
+    as: holder
+    request:
+      method: POST
+      path: '/people/{{persona.seeker}}/block'
+      headers:
+        x-actor-id: '{{holder_id}}'
+  # spends 1: a block does not hide the holder from lookup
+  - id: blocked_seeker_still_finds_holder
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  # spends 0: middleware refuses the empty key before routing
+  - id: empty_idempotency_key
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'
+  - id: get_not_allowed
+    as: seeker
+    request:
+      method: GET
+      path: '/friends/lookup'
+  - id: trailing_slash_redirects
+    as: seeker
+    request:
+      method: POST
+      path: '/friends/lookup/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t02"}'

@@ -1,0 +1,476 @@
+# W4 · POST /expenses/{id}/confirm — write one immutable expense version and its
+# confirmed allocations. Order: idempotency key, JSON, actor, path and body
+# validation, then: expense exists (404, row locked FOR UPDATE), proposal
+# context matches (409), role + ACTIVE membership (403), every participant,
+# payer and recorder is an ACTIVE member (422), advancer acknowledgement (403),
+# allocator (422), expected allocations equal (409). A second confirm of the
+# same expense is version 2, never an overwrite. Amounts are integer VND;
+# texts are sample data (dữ liệu mẫu).
+id: w4/expenses/post-expenses-expense_id-confirm
+routes: ['POST /expenses/{expense_id}/confirm']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_expense
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # FastAPI decodes a JSON body before resolving the actor: 422 beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal": '
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: roles_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: stranger_non_uuid_expense
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/khong-phai-uuid/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xác nhận chi (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: stranger_unknown_expense
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  # the context check runs before the permission check
+  - id: stranger_wrong_context
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: stranger_right_context
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: invitee_confirms
+    as: invitee
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  # an invitation is not membership; a literal id names nobody. Both are
+  # listed, in byte order, and the allocation is never attempted
+  - id: owner_names_non_members
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","ffffffff-ffff-4fff-8fff-ffffffffffff","{{persona.invitee}}","{{persona.stranger}}","{{persona.stranger}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000}}'
+  - id: owner_paid_by_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.stranger}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: owner_recorded_by_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.stranger}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  # members only, but the allocator refuses: membership passes on the set
+  - id: owner_empty_participants
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":[],"total_amount_vnd":200000},"expected_allocations":{}}'
+  # the acknowledgement is checked before the allocator
+  - id: mate_acknowledges_owners_payment
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":1,"{{persona.mate}}":1},"acknowledge_as_advancer":true}'
+  - id: owner_acknowledges_without_advancer_role
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: owner_allocation_refused
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[{"item_id":"com","amount_vnd":150000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]}]},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  - id: owner_expected_differs
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100001,"{{persona.mate}}":99999}}'
+  - id: owner_expected_extra_person
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000,"{{persona.third}}":0}}'
+  # pydantic: a float amount in the expected map, an expected key that is no uuid
+  - id: owner_expected_float
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000.0,"khong-phai-uuid":100000},"acknowledge_as_advancer":"true"}'
+  # version 1, pending; expected keys in another order than the participants
+  - id: owner_confirms_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.mate}}":100000,"{{persona.owner}}":100000}}'
+  # an edit is version 2, acknowledged by the payer
+  - id: owner_confirms_edit_acknowledged
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối sửa lại (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":240000},"expected_allocations":{"{{persona.owner}}":120000,"{{persona.mate}}":120000},"acknowledge_as_advancer":true}'
+  # version 3 by a member who did not pay; the odd dong goes to the advancer
+  - id: mate_confirms_version_three
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":250001},"expected_allocations":{"{{persona.owner}}":125001,"{{persona.mate}}":125000},"acknowledge_as_advancer":false}'
+  - id: owner_proposes_hotpot
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Lẩu (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":426000}'
+    bind:
+      hotpot: {from: body, pointer: /expense_id, class: uuid}
+  # items, shares, three surcharge kinds (VAT, shipping, other) and both
+  # discount scopes: rows in five child tables and the version roll-ups.
+  # Each participant shares one item only: two share rows of one person in one
+  # step differ only by a fresh expense_item_id, which the harness cannot number
+  # the same way on both stacks.
+  - id: owner_confirms_hotpot_items
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Lẩu (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":426000,"items":[{"item_id":"lau","label":"Nồi lẩu (dữ liệu mẫu)","amount_vnd":300000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]},{"item_id":"bia","amount_vnd":90000,"shared_by":["{{persona.third}}"]}],"surcharges":[{"surcharge_id":"vat","kind":"VAT","amount_vnd":42000,"mode":"proportional"},{"surcharge_id":"phi","kind":"service","amount_vnd":30000,"mode":"even"},{"surcharge_id":"ship","kind":"shipping","amount_vnd":15000,"mode":"even"}],"discounts":[{"discount_id":"giam-lau","amount_vnd":30000,"scope":"item","item_id":"lau"},{"discount_id":"voucher","amount_vnd":21000,"scope":"global_proportional"}]},"expected_allocations":{"{{persona.owner}}":157875,"{{persona.mate}}":157875,"{{persona.third}}":110250},"acknowledge_as_advancer":true}'
+  # a participant on no item: a confirmed allocation row of 0
+  - id: mate_proposes_coffee
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cà phê (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T09:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":50000,"items":[{"item_id":"ca-phe","amount_vnd":50000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]}]}'
+    bind:
+      coffee: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_zero_share
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{coffee}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Cà phê (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T09:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":50000,"items":[{"item_id":"ca-phe","amount_vnd":50000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]}]},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.mate}}":25000,"{{persona.third}}":0},"acknowledge_as_advancer":true}'
+  # the payer is not among the participants and still acknowledges
+  - id: third_proposes_hotel
+    as: third
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khách sạn trả hộ (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000}'
+    bind:
+      hotel: {from: body, pointer: /expense_id, class: uuid}
+  - id: third_confirms_advancer_outside
+    as: third
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khách sạn trả hộ (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000},"acknowledge_as_advancer":true}'
+  # idempotency: replay, reuse with another body, a refusal that releases the key
+  - id: owner_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-a'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000}}'
+  - id: owner_key_replay
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-a'
+        content-type: 'application/json'
+      body_raw: '{"expected_allocations": {"{{persona.third}}": 30000, "{{persona.mate}}": 30000, "{{persona.owner}}": 30000}, "proposal": {"total_amount_vnd": 90000, "participants": ["{{persona.owner}}", "{{persona.mate}}", "{{persona.third}}"], "occurred_at": "2030-01-03T20:00:00+07:00", "verification_scope": "totals_only", "paid_by_id": "{{persona.owner}}", "recorded_by_id": "{{persona.owner}}", "context_id": "{{ctx}}"}}'
+  - id: owner_key_reused_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-a'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+  - id: mate_key_refused_403
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-b'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":80000},"expected_allocations":{"{{persona.owner}}":40000,"{{persona.mate}}":40000}}'
+  - id: mate_key_after_403
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{hotpot}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-b'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":80000},"expected_allocations":{"{{persona.owner}}":40000,"{{persona.mate}}":40000}}'
+  - id: mate_key_refused_409
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{coffee}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-c'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-04T09:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.mate}}":49999}}'
+  - id: mate_key_after_409
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{coffee}}/confirm'
+      headers:
+        idempotency-key: 'w4-confirm-c'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-04T09:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.mate}}":50000}}'
+  # leaving ends the right to confirm, and to be named
+  - id: third_leaves
+    as: third
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.third}}'
+  - id: third_confirms_after_leaving
+    as: third
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000}}'
+  - id: owner_names_the_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000}}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/expenses/{{dinner}}/confirm'

@@ -1,0 +1,244 @@
+# W6 photos in prod auth mode (ADR-0014): the six routes on bearer sessions. The
+# actor and its roles come from the session (roster roles), so X-Actor-ID and
+# X-Actor-Roles are ignored; a missing or junk bearer is 401 before membership or
+# the file is looked at. The idempotency scope is the digest of the bearer.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/photos/prod-auth
+routes: ['POST /contexts/{context_id}/photos', 'GET /contexts/{context_id}/photos/{photo_id}', 'POST /people/{person_id}/avatar', 'GET /people/{person_id}/avatar', 'POST /people/me/photos', 'GET /people/{person_id}/photos/{photo_id}']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_group_upload
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: anonymous_multipart_without_boundary
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data'
+      body_raw: 'x'
+  - id: dev_headers_without_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: junk_bearer_personal_upload
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: junk_bearer_avatar_read
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm ảnh qua phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # dev would answer 403 role_not_permitted to this header; prod ignores it
+  - id: owner_uploads_with_guest_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 48, height: 36, seed: 111, orientation: 6}}
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: stranger_uploads_claiming_owner
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_uploads_garbage
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: mate_reads_group_photo
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: stranger_reads_group_photo
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: anonymous_reads_group_photo
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: owner_sets_avatar
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 32, height: 32, seed: 112, alpha: true}}
+  - id: owner_sets_mates_avatar
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: mate_reads_owners_avatar
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: stranger_reads_owners_avatar
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: owner_uploads_personal
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-prod-personal'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 30, height: 20, seed: 113}}
+    bind:
+      personal: {from: body, pointer: /id, class: uuid}
+  # the scope is the bearer's digest, not the (ignored) actor header
+  - id: owner_personal_replay_with_mates_actor_header
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-prod-personal'
+        x-actor-id: '{{persona.mate}}'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 30, height: 20, seed: 113}}
+  - id: mate_same_key_is_another_scope
+    as: mate
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: 'w6-prod-personal'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 30, height: 20, seed: 113}}
+  - id: owner_reads_personal
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/photos/{{personal}}'
+  - id: mate_reads_personal_before_post
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/photos/{{personal}}'
+  - id: owner_posts_personal_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh cho nhóm qua phiên (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}","image_url":"/people/{{persona.owner}}/photos/{{personal}}"}'
+  - id: mate_reads_personal_after_group_post
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/photos/{{personal}}'
+  - id: stranger_reads_personal_after_group_post
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/photos/{{personal}}'
+  - id: mate_signs_out
+    as: mate
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: mate_reads_group_photo_after_sign_out
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'
+  - id: mate_uploads_after_sign_out
+    as: mate
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_still_reads_group_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}'

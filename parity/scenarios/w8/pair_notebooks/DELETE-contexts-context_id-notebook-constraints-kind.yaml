@@ -1,0 +1,219 @@
+# W8 · DELETE …/notebook/constraints/{kind}. Kind first (404 constraint_kind_unknown), then
+# pair and roles. Always 204 otherwise: a fresh pair gets its notebook row, a missing
+# row is no error, and each person only ever deletes their own line. Writing again
+# after a delete starts the version at 1. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_notebooks/delete-contexts-context_id-notebook-constraints-kind
+routes: ['DELETE /contexts/{context_id}/notebook/constraints/{kind}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_deletes
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/constraints/dung'
+  - id: stranger_unknown_kind
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/constraints/so_thich'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: owner_deletes_on_fresh_pair
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+  - id: stranger_deletes_in_pair
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+  - id: owner_deletes_in_group
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{grp}}/notebook/constraints/dung'
+  - id: owner_deletes_as_advancer
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_kind_uppercase
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/DUNG'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_deletes_missing
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+  - id: owner_puts
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành (dữ liệu mẫu)"}'
+  - id: owner_puts_again
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành phi (dữ liệu mẫu)"}'
+  - id: mate_puts
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn tôm (dữ liệu mẫu)"}'
+  # only mate's own line goes
+  - id: mate_deletes_khong_an_duoc
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+  - id: owner_reads_after_mate_delete
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_deletes_khong_an_duoc
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+  - id: owner_puts_after_delete
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành (dữ liệu mẫu)"}'
+  - id: mate_reads_version_restart
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_header_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        idempotency-key: 'w8-xoa-rang-buoc-a'
+  - id: owner_puts_between
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn ớt (dữ liệu mẫu)"}'
+  # the stored 204 answers; the line written in between stays
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        idempotency-key: 'w8-xoa-rang-buoc-a'
+  - id: owner_reads_after_replay
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"e3b0c44298fc1c14"}'
+  - id: owner_deletes_after_close
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'

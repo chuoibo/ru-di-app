@@ -1,0 +1,830 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.message_edit",
+ "mode": "message_edit-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 40
+ },
+ "cases": [
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/0",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "KIND_NOT_DELETABLE",
+     "code": "KIND_NOT_DELETABLE"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/1",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/2",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/3",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/4",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/5",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/6",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/7",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/8",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/9",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/10",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/11",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/12",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/13",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/14",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/15",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/16",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/17",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/18",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "KIND_NOT_DELETABLE",
+     "code": "KIND_NOT_DELETABLE"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/19",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/20",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/21",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/22",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/23",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/24",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/25",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/26",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/27",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/28",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/29",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/30",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/31",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/32",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/33",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/34",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/35",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/36",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "image",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/37",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+     "kind": "sticker",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/38",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "fuzz/39",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": null,
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  }
+ ]
+}

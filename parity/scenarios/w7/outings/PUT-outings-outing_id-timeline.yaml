@@ -1,0 +1,468 @@
+# W7 · PUT /outings/{outing_id}/timeline: the v1 plan, a list of wall-clock stops in the
+# order the group built them. Order: actor, path uuid, body model, the trip row (404 in
+# English), ACTIVE membership, every place_id against the catalogue, then the write.
+# The request carries no stop ids, so identity is read off what a stop SAYS -- the triple
+# (minute of day, label, place name). A stop that says the same thing keeps its row and
+# its check-ins; a retyped stop is a new row. expected_revision is optional here: leave
+# it out and the save always wins. Once the v2 itinerary route has run, this door answers
+# 409 for good. Texts are sample data (dữ liệu mẫu).
+id: w7/outings/put-outings-outing_id-timeline
+routes: ['PUT /outings/{outing_id}/timeline']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_saves
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/khong-phai-uuid/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/timeline'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/timeline'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: owner_path_not_uuid_with_bad_body
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/khong-phai-uuid/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"99:99","label":""}]}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm lịch trình (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_one_day_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Một ngày trong phố (dữ liệu mẫu)","starts_on":"2026-04-02","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":180000}'
+    bind:
+      outing_one_day: {from: body, pointer: /id, class: uuid}
+  # the trip row before the roster, and both before the catalogue
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: owner_unknown_outing_with_bad_place
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê (dữ liệu mẫu)","place_id":"p-khong-co-that"}]}'
+  - id: stranger_saves
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê (dữ liệu mẫu)"}]}'
+  - id: owner_saves_as_guest_role
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê (dữ liệu mẫu)"}]}'
+  - id: owner_unknown_place
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê (dữ liệu mẫu)","place_id":"p-khong-co-that"}]}'
+  - id: owner_unknown_place_on_second_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Cà phê (dữ liệu mẫu)","place_id":"p-dreampark"},{"at":"09:00","label":"Chặng hai (dữ liệu mẫu)","place_id":"p-khong-co-that"}]}'
+  # the body model
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+  - id: owner_stops_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_stops_not_a_list
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":{}}'
+  - id: owner_clock_out_of_pattern
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"24:00","label":"Nửa đêm (dữ liệu mẫu)"}]}'
+  - id: owner_clock_single_digit_hour
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"8:00","label":"Tám giờ (dữ liệu mẫu)"}]}'
+  - id: owner_clock_with_seconds
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00:00","label":"Kèm giây (dữ liệu mẫu)"}]}'
+  - id: owner_label_blank
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"   "}]}'
+  - id: owner_place_id_empty
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"08:00","label":"Chặng rỗng khoá (dữ liệu mẫu)","place_id":""}]}'
+  - id: owner_expected_revision_negative
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":-1,"stops":[]}'
+  - id: owner_expected_revision_string
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":"0","stops":[]}'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[],"khong_biet":1}'
+  # the plan goes in
+  - id: owner_saves_three_stops
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_coffee: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_dinner: {from: body, pointer: /stops/2/id, class: uuid}
+  - id: owner_saves_stale_revision
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"}]}'
+  - id: owner_checks_in_at_coffee
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: mate_checks_in_at_coffee
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: owner_reads_checkins
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a permutation that keeps every stop: same three sentences, new order
+  - id: owner_reorders_keeping_every_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":3,"stops":[{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"},{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"}]}'
+  - id: owner_reads_checkins_after_reorder
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a save that changes nothing
+  - id: owner_saves_the_same_plan_again
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":4,"stops":[{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"},{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"}]}'
+  # a save that adds a stop and keeps the rest
+  - id: owner_adds_a_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":5,"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"},{"at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","place_id":"p-dreampark"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+  # only the catalogue link may change on a kept row
+  - id: owner_attaches_a_place_to_a_kept_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":6,"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)","place_id":"p-lung-chung-cafe"},{"at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","place_id":"p-dreampark"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+  - id: owner_reads_checkins_after_attaching_place
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a retyped stop is a different stop: the check-ins on the old row go with it
+  - id: owner_retypes_the_coffee_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":7,"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng nhé (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"},{"at":"15:00","label":"Chèo thuyền (dữ liệu mẫu)","place_id":"p-dreampark"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+  - id: owner_reads_checkins_after_retyping
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_checks_in_at_dropped_stop
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  # a save that drops stops, without saying which revision it expects
+  - id: mate_drops_to_one_stop
+    as: mate
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"}]}'
+  - id: owner_saves_empty_plan
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: owner_checks_in_at_pickup_after_empty
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  # a one-day trip stamps the day onto every stop it adds
+  - id: owner_saves_one_day_plan
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)"},{"at":"12:00","label":"Ăn trưa (dữ liệu mẫu)","place_id":"p-lau-ga-la-e"}]}'
+  # the key header, on a route that does not declare one
+  - id: owner_saves_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        idempotency-key: 'c71f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)"}]}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        idempotency-key: 'c71f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)"}]}'
+  - id: owner_same_key_other_body
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        idempotency-key: 'c71f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"09:16","label":"Gặp ở cổng (dữ liệu mẫu)"}]}'
+  # once the v2 door has been through, this one is closed for good
+  - id: owner_upgrades_to_itinerary
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/itinerary'
+      headers:
+        idempotency-key: 'c71f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":2,"stops":[{"id":"tmp-mot","at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)","day":"2026-04-02","place_id":"p-dreampark"}],"days":[{"day":"2026-04-02","transport_mode":"motorbike","start_at":"09:00"}]}'
+  - id: owner_saves_timeline_after_upgrade
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)"}]}'
+  - id: owner_saves_timeline_after_upgrade_with_revision
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing_one_day}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":99,"stops":[{"at":"09:15","label":"Gặp ở cổng (dữ liệu mẫu)"}]}'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[]}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/timeline'

@@ -1,0 +1,2869 @@
+{
+ "generator": "scripts/render_domain_w2_goldens.py",
+ "module": "app.domain.story_visibility",
+ "mode": "story_visibility",
+ "python": "3.12.14",
+ "seed": 41,
+ "constants": {
+  "ttl_microseconds": "$i:0x14_1dd7_6000",
+  "audiences": [
+   "friends"
+  ],
+  "default_audience": "friends",
+  "max_caption_length": 200,
+  "names": [
+   "DEFAULT_STORY_AUDIENCE",
+   "MAX_CAPTION_LENGTH",
+   "STORY_AUDIENCES",
+   "STORY_TTL",
+   "StoryError",
+   "can_view",
+   "check_caption",
+   "expires_at_for",
+   "is_live",
+   "order_authors"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": "$dt:2026-09-16T09:30:12.345678|+00:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": "$dt:2026-09-16T16:30:12.345678|+07:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/2",
+   "args": {
+    "created_at": "$dt:2026-09-14T23:30:12.345678|-10:00"
+   },
+   "result": {
+    "ok": "$dt:2026-09-15T23:30:12.345678|-10:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/3",
+   "args": {
+    "created_at": "$dt:2026-09-15T15:00:27.345678|+05:30:15"
+   },
+   "result": {
+    "ok": "$dt:2026-09-16T15:00:27.345678|+05:30:15"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/4",
+   "args": {
+    "created_at": "$dt:9999-12-30T23:59:59.999999|+00:00"
+   },
+   "result": {
+    "ok": "$dt:9999-12-31T23:59:59.999999|+00:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/5",
+   "args": {
+    "created_at": "$dt:9999-12-31T00:00:00.000000|+00:00"
+   },
+   "result": {
+    "raised": {
+     "type": "OverflowError",
+     "message": "date value out of range",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/6",
+   "args": {
+    "created_at": "$dt:9999-12-31T00:00:00.000000|-10:00"
+   },
+   "result": {
+    "raised": {
+     "type": "OverflowError",
+     "message": "date value out of range",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/7",
+   "args": {
+    "created_at": "$dt:9999-12-30T23:00:00.000000|+07:00"
+   },
+   "result": {
+    "ok": "$dt:9999-12-31T23:00:00.000000|+07:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/8",
+   "args": {
+    "created_at": "$dt:0001-01-01T00:00:00.000000|+00:00"
+   },
+   "result": {
+    "ok": "$dt:0001-01-02T00:00:00.000000|+00:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/9",
+   "args": {
+    "created_at": "$dt:2024-02-28T12:00:00.000000|+00:00"
+   },
+   "result": {
+    "ok": "$dt:2024-02-29T12:00:00.000000|+00:00"
+   }
+  },
+  {
+   "fn": "expires_at_for",
+   "name": "expires_at_for/10",
+   "args": {
+    "created_at": "$dt:2023-02-28T23:59:59.000000|+00:00"
+   },
+   "result": {
+    "ok": "$dt:2023-03-01T23:59:59.000000|+00:00"
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/0/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/0/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/1/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-14T23:30:12.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/1/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-14T23:30:12.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/2/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/2/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/3/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-14T23:30:11.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/3/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-14T23:30:11.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/4/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:13.345678|+00:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/4/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:13.345678|+00:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/5/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T23:30:12.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_live",
+   "name": "is_live/5/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T23:30:12.345678|-10:00"
+    },
+    "now": "$dt:2026-09-15T16:30:12.345678|+07:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/0",
+   "args": {
+    "caption": null
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/1",
+   "args": {
+    "caption": ""
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/2",
+   "args": {
+    "caption": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/3",
+   "args": {
+    "caption": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/4",
+   "args": {
+    "caption": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/5",
+   "args": {
+    "caption": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00"
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/6",
+   "args": {
+    "caption": "e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/7",
+   "args": {
+    "caption": "e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e"
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/8",
+   "args": {
+    "caption": "\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d\u4e2d"
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/9",
+   "args": {
+    "caption": "\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/10",
+   "args": {
+    "caption": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "check_caption",
+   "name": "check_caption/11",
+   "args": {
+    "caption": "                                                                                                                                                                                                         "
+   },
+   "result": {
+    "raised": {
+     "type": "StoryError",
+     "message": "CAPTION_TOO_LONG",
+     "code": "CAPTION_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/author/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/0/other/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/author/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/1/other/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "Friends",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/author/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/2/other/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/author/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/3/other/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "public",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/author/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/00/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/00/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/00/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/01/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/01/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/01/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": false,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/10/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/10/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/10/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": false,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/11/0",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345679|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/11/1",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "can_view",
+   "name": "can_view/4/other/11/2",
+   "args": {
+    "story": {
+     "author_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "audience": "friends ",
+     "expires_at": "$dt:2026-09-15T09:30:12.345677|+00:00"
+    },
+    "reader_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_friend": true,
+    "is_blocked": true,
+    "now": "$dt:2026-09-15T09:30:12.345678|+00:00"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/empty",
+   "args": {
+    "groups": []
+   },
+   "result": {
+    "ok": []
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/one",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     0
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/mine_then_unseen_then_seen_newest_first",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T08:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T06:30:12.345678|+00:00"
+     },
+     {
+      "mine": true,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T04:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T08:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     2,
+     3,
+     1,
+     4,
+     0
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/ties_keep_the_callers_order",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/same_instant_different_offsets_tie",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T16:30:12.345678|+07:00"
+     },
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-14T23:30:12.345678|-10:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     0,
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/far_future_microseconds_collide_as_floats",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999990|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999993|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999991|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999999|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999995|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999992|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:9999-12-31T23:59:59.999998|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/year_one",
+   "args": {
+    "groups": [
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:0001-01-01T00:00:00.000000|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:0001-01-01T00:00:00.000007|+00:00"
+     },
+     {
+      "mine": false,
+      "all_seen": false,
+      "latest_at": "$dt:0001-01-01T00:00:00.000003|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     1,
+     0,
+     2
+    ]
+   }
+  },
+  {
+   "fn": "order_authors",
+   "name": "order/two_mine",
+   "args": {
+    "groups": [
+     {
+      "mine": true,
+      "all_seen": false,
+      "latest_at": "$dt:2026-09-15T09:30:12.345678|+00:00"
+     },
+     {
+      "mine": true,
+      "all_seen": true,
+      "latest_at": "$dt:2026-09-15T10:30:12.345678|+00:00"
+     }
+    ]
+   },
+   "result": {
+    "ok": [
+     0,
+     1
+    ]
+   }
+  }
+ ]
+}

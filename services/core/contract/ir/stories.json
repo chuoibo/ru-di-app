@@ -1,0 +1,727 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "stories",
+ "routes": [
+  {
+   "id": "POST /stories",
+   "order": 120,
+   "method": "POST",
+   "path": "/stories",
+   "name": "create_story",
+   "endpoint": "app.api.routes.stories.create_story",
+   "status_code": 201,
+   "path_convertors": {},
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.stories.create_story",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.stories.create_story",
+     []
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.StoryCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.StoryCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /stories",
+   "order": 121,
+   "method": "GET",
+   "path": "/stories",
+   "name": "list_stories",
+   "endpoint": "app.api.routes.stories.list_stories",
+   "status_code": null,
+   "path_convertors": {},
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.stories.list_stories",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.stories.list_stories",
+     []
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /stories/{story_id}/seen",
+   "order": 122,
+   "method": "POST",
+   "path": "/stories/{story_id}/seen",
+   "name": "mark_story_seen",
+   "endpoint": "app.api.routes.stories.mark_story_seen",
+   "status_code": null,
+   "path_convertors": {
+    "story_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.stories.mark_story_seen",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.stories.mark_story_seen",
+     []
+    ],
+    "path": [
+     {
+      "name": "story_id",
+      "alias": "story_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "DELETE /stories/{story_id}",
+   "order": 123,
+   "method": "DELETE",
+   "path": "/stories/{story_id}",
+   "name": "delete_story",
+   "endpoint": "app.api.routes.stories.delete_story",
+   "status_code": 204,
+   "path_convertors": {
+    "story_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.stories.delete_story",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.stories.delete_story",
+     []
+    ],
+    "path": [
+     {
+      "name": "story_id",
+      "alias": "story_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.StoryCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.StoryCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "StoryCreateRequest",
+    "fields": [
+     {
+      "name": "image_url",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "pattern": "\\A/people/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/photos/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\z"
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='\\\\A/people/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/photos/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\\\z')"
+       }
+      ]
+     },
+     {
+      "name": "caption",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "max_length": 200
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=200))] | None",
+      "required": false
+     }
+    ]
+   }
+  }
+ }
+}

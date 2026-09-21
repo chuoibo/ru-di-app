@@ -1,0 +1,166 @@
+# W2 cross replay · DELETE /posts/{id}/reactions/{kind} (200, removes one's row
+# of that kind). The fingerprint covers the path and the ignored body: a removal
+# stored by one implementation is replayed by the other, and another kind or a
+# body under the key is refused by the other. A 403 is not stored by either
+# side. Texts are sample data (dữ liệu mẫu).
+id: w2/crossreplay/delete-posts-post_id-reactions-kind
+routes: ['DELETE /posts/{post_id}/reactions/{kind}']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người gỡ cảm xúc chéo (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để gỡ cảm xúc chéo (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  - id: reader_hearts
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: reader_wows
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  - id: reader_likes
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: reader_fires
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/heart'
+      headers:
+        idempotency-key: 'x-unreact-a'
+  - id: core_replays_python_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/heart'
+      headers:
+        idempotency-key: 'x-unreact-a'
+  - id: core_refuses_python_key_with_body
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/heart'
+      headers:
+        idempotency-key: 'x-unreact-a'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: core_refuses_python_key_other_kind
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/wow'
+      headers:
+        idempotency-key: 'x-unreact-a'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/wow'
+      headers:
+        idempotency-key: 'x-unreact-b'
+  - id: python_replays_core_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/wow'
+      headers:
+        idempotency-key: 'x-unreact-b'
+  - id: python_refuses_core_key_other_kind
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/heart'
+      headers:
+        idempotency-key: 'x-unreact-b'
+  # a 403 (no role) is not stored: the same removal then runs on the other side
+  - id: python_refusal_releases_key
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/like'
+      headers:
+        idempotency-key: 'x-unreact-c'
+        x-actor-roles: ''
+  - id: core_uses_key_python_released
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/like'
+      headers:
+        idempotency-key: 'x-unreact-c'
+  - id: core_refusal_releases_key
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/fire'
+      headers:
+        idempotency-key: 'x-unreact-d'
+        x-actor-roles: ''
+  - id: python_uses_key_core_released
+    as: reader
+    via: python
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/fire'
+      headers:
+        idempotency-key: 'x-unreact-d'
+  - id: core_replays_what_python_stored_after_release
+    as: reader
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/fire'
+      headers:
+        idempotency-key: 'x-unreact-d'

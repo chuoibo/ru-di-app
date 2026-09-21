@@ -1,0 +1,204 @@
+# W5 concurrency · POST /g/{token}/doi-so-tien and xin-cach-tinh, one batch per
+# sender. record_objection
+# reads the envelope through get_guest_envelope, which locks the link row FOR
+# UPDATE, and counts objections after the lock: the same objection twice at once
+# writes two events and answers 303 twice; two more at once are one 303 and one
+# 429 objection_rate_limited; four at once on a fresh link are three 303 and one
+# 429. Evidence requests have no quota: two at once are two 303 and two events.
+# Texts are sample data (dữ liệu mẫu).
+id: w5/concurrency/post-g-token-doi-so-tien
+routes: ['POST /g/{token}/doi-so-tien', 'POST /g/{token}/xin-cach-tinh']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt thắc mắc cùng lúc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm thắc mắc cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_meal_a
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa với khách a (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000}'
+    bind:
+      meal_a: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_meal_a
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{meal_a}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa với khách a (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      meal_a_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_a
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{meal_a_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_a: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes_a
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch_a}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+  - id: owner_proposes_meal_b
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa với khách b (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":60000}'
+    bind:
+      meal_b: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_meal_b
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{meal_b}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa với khách b (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      meal_b_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_b
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{meal_b_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_b: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes_b
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch_b}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_b: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+  - id: objection_twice_at_once
+    as: anonymous
+    concurrent: 2
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=amount_too_high'
+  - id: objection_twice_more_at_once
+    as: anonymous
+    concurrent: 2
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=amount_too_high'
+  - id: objection_four_at_once
+    as: anonymous
+    concurrent: 4
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&reason=did_not_join'
+  - id: evidence_twice_at_once
+    as: anonymous
+    concurrent: 2
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: owner_rounds_after_bursts
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'

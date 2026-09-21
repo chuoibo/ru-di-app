@@ -169,6 +169,12 @@ class GateDockerNamesArePerLane(unittest.TestCase):
                 REPO_ROOT / "services" / "api" / name,
                 lane_b / "services" / "api" / name,
             )
+        # ADR-0029: the docker stage builds the Go front door too.
+        (lane_b / "services" / "core").mkdir(parents=True)
+        shutil.copy(
+            REPO_ROOT / "services" / "core" / "Dockerfile",
+            lane_b / "services" / "core" / "Dockerfile",
+        )
         cls.lane_b = lane_b
 
     @classmethod
@@ -248,11 +254,25 @@ class GateDockerNamesArePerLane(unittest.TestCase):
         for what is one artifact."""
         found = run_gate(REPO_ROOT, "pinned-import", "docker")
         self.assertTrue(found.images)
+        # Two artifacts exist since ADR-0029 -- the API image and the Go front
+        # door -- and each must still be one tag per run.
+        api_images = sorted(i for i in found.images if i.startswith("mobile-api:"))
+        core_images = sorted(i for i in found.images if i.startswith("mobile-core:"))
         self.assertEqual(
             1,
-            len(found.images),
-            "một lượt gate dựng %d tag khác nhau (%s) — pinned-import và docker "
-            "phải nói về cùng một ảnh" % (len(found.images), sorted(found.images)),
+            len(api_images),
+            "một lượt gate dựng %d tag ảnh API khác nhau (%s) — pinned-import và "
+            "docker phải nói về cùng một ảnh" % (len(api_images), api_images),
+        )
+        self.assertEqual(
+            1,
+            len(core_images),
+            "một lượt gate dựng %d tag ảnh core (%s)" % (len(core_images), core_images),
+        )
+        self.assertEqual(
+            set(found.images),
+            set(api_images) | set(core_images),
+            "ảnh lạ ngoài API và core: %s" % sorted(found.images),
         )
 
     def test_no_globally_named_leftover(self) -> None:
@@ -268,7 +288,9 @@ class GateDockerNamesArePerLane(unittest.TestCase):
         stray = {
             t
             for t in found.tokens
-            if (t.startswith("mobile-api:") or t.startswith("mobile-api-"))
+            if t.startswith(
+                ("mobile-api:", "mobile-api-", "mobile-core:", "mobile-core-")
+            )
             and t not in known
         }
         self.assertEqual(

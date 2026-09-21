@@ -1,0 +1,189 @@
+# W4 · confirm-receipt in prod auth mode (ADR-0014): identity is a bearer session
+# read by digest; X-Actor-* headers are ignored. Every session holder carries
+# the recipient role, so only the obligation decides. The idempotency header is
+# scoped by the bearer digest. The harness seeds a people row and a live session
+# per persona before step one. Amounts are integer VND; texts are sample data
+# (dữ liệu mẫu).
+id: w4/obligations/prod-auth
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_missing_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: junk_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  # dev would trust this header; prod answers 401 Missing bearer session
+  - id: actor_headers_ignored
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'recipient'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_lowercase_scheme_unknown_obligation
+    as: anonymous
+    request:
+      method: POST
+      path: '/obligations/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/confirm-receipt'
+      headers:
+        authorization: 'bearer {{token.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận tiền prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: mate_confirms_as_sender
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{dinner}}"}'
+  - id: stranger_confirms
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{dinner}}"}'
+  - id: stranger_claims_owner_headers
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'recipient'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{dinner}}"}'
+  - id: owner_confirms_partial
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{dinner}}"}'
+  - id: owner_same_body_key_again
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":5000,"idempotency_key":"{{dinner}}"}'
+  - id: owner_header_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-prod-r'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":15000,"idempotency_key":"{{dinner_v}}"}'
+  - id: owner_header_key_replay
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-prod-r'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":15000,"idempotency_key":"{{dinner_v}}"}'
+  # the key scope is the bearer digest, so the stranger's request runs and is refused
+  - id: stranger_same_header_key
+    as: stranger
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        idempotency-key: 'w4-prod-r'
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":15000,"idempotency_key":"{{dinner_v}}"}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_after_revoke
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{ctx}}"}'

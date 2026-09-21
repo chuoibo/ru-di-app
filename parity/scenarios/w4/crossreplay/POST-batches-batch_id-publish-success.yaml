@@ -1,0 +1,260 @@
+# W4 cross replay · POST /batches/{id}/publish that succeeds. A publish stored
+# under a key by one implementation is replayed by the other with the same
+# tokens (<token43#n> keeps its number, also when the body keys are reordered)
+# and refused as reuse for another body. The link either side minted opens the
+# guest page, which Python serves on both stacks, so the digest Go stored is
+# the one Python looks up. A batch one side published is 409
+# ILLEGAL_TRANSITION on the other. Amounts are integer VND; texts are sample
+# data (dữ liệu mẫu).
+id: w4/crossreplay/post-batches-batch_id-publish-success
+routes: ['POST /batches/{batch_id}/publish']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm gửi chéo thành công (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn gửi chéo thành công (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm gửi chéo thành công (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: propose_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản chéo một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-01T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      e1: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_one
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e1}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản chéo một (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-01T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+    bind:
+      v1: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: batch_one
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v1}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      b1: {from: body, pointer: /batch_id, class: uuid}
+  - id: propose_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản chéo hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000}'
+    bind:
+      e2: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_two
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{e2}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản chéo hai (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      v2: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: batch_two
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v2}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      b2: {from: body, pointer: /batch_id, class: uuid}
+  - id: propose_three
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khoản chéo ba (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":80000}'
+    bind:
+      e3: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_three
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{e3}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khoản chéo ba (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":80000},"expected_allocations":{"{{persona.owner}}":40000,"{{persona.mate}}":40000},"acknowledge_as_advancer":true}'
+    bind:
+      v3: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: batch_three
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{v3}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      b3: {from: body, pointer: /batch_id, class: uuid}
+  # Python publishes and stores the response; Go replays it
+  - id: python_publishes_with_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{b1}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok1: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{b1}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{b1}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-a'
+        content-type: 'application/json'
+      body_raw: '{"guest_link_expires_at":"2030-03-01T12:00:00+07:00","delivery_method":"personal_link"}'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{b1}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-a'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-02T12:00:00+07:00"}'
+  - id: guest_opens_python_link
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok1}}'
+  # Go publishes and stores the response; Python replays it
+  - id: core_publishes_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00.5-03:30"}'
+    bind:
+      tok2: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00.5-03:30"}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        idempotency-key: 'x-pub-ok-b'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00-03:30"}'
+  - id: guest_opens_core_link
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok2}}'
+  # a batch published on one side is refused on the other
+  - id: python_publishes_without_key
+    as: mate
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{b3}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00Z"}'
+  - id: core_publishes_python_published
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{b3}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00Z"}'
+  - id: python_publishes_core_published
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/batches/{{b2}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: core_reads_board_python_published
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{b1}}/obligations'

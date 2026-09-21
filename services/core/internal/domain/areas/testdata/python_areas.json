@@ -1,0 +1,177 @@
+{
+ "areas": [
+  {
+   "id": "da-lat",
+   "label": "Đà Lạt",
+   "lat": "11.9429",
+   "lng": "108.4428",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-quan-1",
+   "label": "Quận 1, TP.HCM",
+   "lat": "10.7769",
+   "lng": "106.7009",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-quan-3",
+   "label": "Quận 3, TP.HCM",
+   "lat": "10.784",
+   "lng": "106.687",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-quan-4",
+   "label": "Quận 4, TP.HCM",
+   "lat": "10.759",
+   "lng": "106.705",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-phu-nhuan",
+   "label": "Phú Nhuận, TP.HCM",
+   "lat": "10.799",
+   "lng": "106.68",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-quan-7",
+   "label": "Quận 7, TP.HCM",
+   "lat": "10.734",
+   "lng": "106.722",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-binh-thanh",
+   "label": "Bình Thạnh, TP.HCM",
+   "lat": "10.804",
+   "lng": "106.71",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  },
+  {
+   "id": "hcm-thu-duc",
+   "label": "Thủ Đức, TP.HCM",
+   "lat": "10.85",
+   "lng": "106.755",
+   "summary_keys": [
+    "id",
+    "label",
+    "lat",
+    "lng"
+   ]
+  }
+ ],
+ "find": [
+  {
+   "id": "da-lat",
+   "found": true,
+   "index": 0
+  },
+  {
+   "id": "hcm-quan-1",
+   "found": true,
+   "index": 1
+  },
+  {
+   "id": "hcm-quan-3",
+   "found": true,
+   "index": 2
+  },
+  {
+   "id": "hcm-quan-4",
+   "found": true,
+   "index": 3
+  },
+  {
+   "id": "hcm-phu-nhuan",
+   "found": true,
+   "index": 4
+  },
+  {
+   "id": "hcm-quan-7",
+   "found": true,
+   "index": 5
+  },
+  {
+   "id": "hcm-binh-thanh",
+   "found": true,
+   "index": 6
+  },
+  {
+   "id": "hcm-thu-duc",
+   "found": true,
+   "index": 7
+  },
+  {
+   "id": "",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": "DA-LAT",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": " da-lat",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": "da-lat ",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": "hcm-quan-2",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": "quan-1",
+   "found": false,
+   "index": null
+  },
+  {
+   "id": "hcm_quan_1",
+   "found": false,
+   "index": null
+  }
+ ]
+}

@@ -1,0 +1,94 @@
+# W10 cross replay · DELETE /people/me/saved-places/{place_id}. A 204 stored by one side
+# is replayed by the other with content-length 0 and idempotency-replayed, both ways, even
+# after the place was saved again; another place under the key is reuse; an unknown place
+# frees the key. Go serves none of these routes yet, so both paths reach Python. Texts
+# are sample data (dữ liệu mẫu).
+id: w10/crossreplay/delete-people-me-saved-places-place_id
+routes: ['DELETE /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: save_first
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: python_unsaves
+    as: owner
+    via: python
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: save_first_again
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_other_place_same_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c30e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_unsaves_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: front_unknown_place_refused
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        idempotency-key: 'c30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_same_key_known_place
+    as: owner
+    via: python
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: front_replays_python_second
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c30e0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_lists
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me/saved-places'

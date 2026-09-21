@@ -1,0 +1,113 @@
+# W7 concurrency · POST /outing-invites/{token}/accept. One link, three redemptions at
+# once: the invite row is taken FOR UPDATE, so exactly one stamps accepted_at and the
+# other two find it stamped -- one 200 and two 409, one INVITED membership. A second link
+# redeemed three times under one header key is one redemption and two replays. A link redeemed by somebody
+# already ACTIVE is still a one-shot row: one 200 whose membership_state is `active` and
+# whose membership_id is the one they already had, and two 409s behind it. Texts are sample data (dữ liệu mẫu).
+id: w7/concurrency/post-outing-invites-token-accept
+routes: ['POST /outing-invites/{token}/accept']
+auth_mode: dev
+personas:
+  owner: {}
+  holder: {}
+  second: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_holder
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{persona.holder}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người cầm link (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người cầm link thứ hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mở link cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_second_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_keyed: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_third_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_for_owner: {from: body, pointer: /invite_token, class: token}
+  - id: holder_opens_the_link_three_times_at_once
+    as: holder
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: second_opens_the_second_link_three_times_under_one_key
+    as: second
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-invites/{{token_keyed}}/accept'
+      headers:
+        idempotency-key: 'c7ff0020-aaaa-4aaa-8aaa-aaaaaaaaaac0'
+  - id: owner_opens_a_link_three_times_at_once_as_an_active_member
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/outing-invites/{{token_for_owner}}/accept'
+  - id: owner_lists_members
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'

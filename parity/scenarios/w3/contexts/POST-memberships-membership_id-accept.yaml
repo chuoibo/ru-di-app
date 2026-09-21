@@ -1,0 +1,423 @@
+# W3 · POST /memberships/{id}/accept — turn an INVITED row ACTIVE.
+# Order: idempotency key shape, actor, path, then the row is looked up (404
+# before any permission). A named invitation is accepted by its invitee; a
+# link request (origin=link) is approved by another ACTIVE member. Then a pair
+# is 409 not_a_group and a row that is not INVITED is 409.
+id: w3/contexts/post-memberships-membership_id-accept
+routes: ['POST /memberships/{membership_id}/accept']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  joiner: {}
+  ghost: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_membership
+    as: anonymous
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+  - id: anonymous_non_uuid_membership
+    as: anonymous
+    request:
+      method: POST
+      path: '/memberships/khong-phai-uuid/accept'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+      headers:
+        idempotency-key: ''
+  - id: roles_unknown_non_uuid_membership
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/khong-phai-uuid/accept'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_joiner
+    as: joiner
+    request:
+      method: PUT
+      path: '/people/{{persona.joiner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người vào bằng link (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_membership
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/khong-phai-uuid/accept'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/accept'
+  - id: stranger_unknown_membership
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+  - id: stranger_uppercase_unknown_membership
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/accept'
+  # the row is looked up before the role: 404, not 403
+  - id: stranger_unknown_membership_roles_empty
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+      headers:
+        x-actor-roles: ''
+  # the route declares no body, so a broken one is never decoded
+  - id: stranger_malformed_body_ignored
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"x": '
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận lời mời (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_own_membership
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+    bind:
+      m_owner: {from: body, pointer: /members/0/id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: stranger_accepts_mates_invite
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_accepts_mates_invite
+    as: owner
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+      headers:
+        x-actor-roles: ''
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: mate_accepts_again
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_accepts_own_active_membership
+    as: owner
+    request:
+      method: POST
+      path: '/memberships/{{m_owner}}/accept'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts_with_ignored_body
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"state":"left"}'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_accepts_left_membership
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_ghost
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.ghost}}"}'
+    bind:
+      m_ghost: {from: body, pointer: /id, class: uuid}
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # erasure closes every open membership, the INVITED one included
+  - id: ghost_accepts_after_deletion
+    as: ghost
+    request:
+      method: POST
+      path: '/memberships/{{m_ghost}}/accept'
+  # a bearer link gives an INVITED row with origin=link that another member approves
+  - id: owner_plans_outing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đi biển (dữ liệu mẫu)","starts_on":"2030-01-02","ends_on":"2030-01-04","headcount":4,"budget_per_person_vnd":0}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      link: {from: body, pointer: /invite_token, class: token}
+  - id: joiner_redeems_link
+    as: joiner
+    request:
+      method: POST
+      path: '/outing-invites/{{link}}/accept'
+    bind:
+      m_joiner: {from: body, pointer: /membership_id, class: uuid}
+  - id: joiner_accepts_own_link_request
+    as: joiner
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+  - id: stranger_approves_link_request
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+    bind:
+      m_invitee: {from: body, pointer: /id, class: uuid}
+  - id: invitee_approves_link_request
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+  - id: mate_approves_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+      headers:
+        x-actor-roles: ''
+  - id: mate_approves_link_request
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+  - id: owner_approves_again
+    as: owner
+    request:
+      method: POST
+      path: '/memberships/{{m_joiner}}/accept'
+  - id: joiner_reads_members
+    as: joiner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_asks_mate_to_be_friends
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair_with_mate
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+      m_pair_owner: {from: body, pointer: /membership_id, class: uuid}
+  # the invitee of the row is the actor, so the pair check answers
+  - id: owner_accepts_pair_membership
+    as: owner
+    request:
+      method: POST
+      path: '/memberships/{{m_pair_owner}}/accept'
+  - id: mate_accepts_owners_pair_membership
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_pair_owner}}/accept'
+  # idempotency
+  - id: owner_invites_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.stranger}}"}'
+    bind:
+      m_stranger: {from: body, pointer: /id, class: uuid}
+  - id: idem_first
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_stranger}}/accept'
+      headers:
+        idempotency-key: 'w3-accept-a'
+  - id: idem_replay
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_stranger}}/accept'
+      headers:
+        idempotency-key: 'w3-accept-a'
+  - id: idem_reuse_other_membership
+    as: stranger
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+      headers:
+        idempotency-key: 'w3-accept-a'
+  # a 404 is not stored and releases the key
+  - id: idem_refusal_not_stored
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/accept'
+      headers:
+        idempotency-key: 'w3-accept-b'
+  - id: idem_same_key_after_refusal
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept'
+      headers:
+        idempotency-key: 'w3-accept-b'
+  - id: idem_key_too_long
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+  - id: trailing_slash_redirects
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept/'
+  - id: get_not_allowed
+    as: invitee
+    request:
+      method: GET
+      path: '/memberships/{{m_invitee}}/accept'

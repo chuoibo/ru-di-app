@@ -1,0 +1,146 @@
+# W1 · GET /contexts/{id}/map on a two-person pair (POST /people/{id}/dm).
+# group_taste asks _pair_chat_consent first: until both people grant doc_chat
+# the taste is unknown, however much each has stated; after a revoke it is
+# unknown again. The group scenario never reaches this branch (not a pair).
+id: w1/social_map/get-map-pair
+routes: ['GET /contexts/{context_id}/map']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: owner_asks_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_map_pair_no_tastes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: owner_states_tastes
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  - id: mate_states_tastes
+    as: mate
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'
+  # tastes stated, no notebook yet: still unknown
+  - id: owner_map_pair_no_notebook
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: owner_proposes_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_map_pair_notebook_pending
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: mate_grants_notebook
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  # the notebook is open, but reading chat is a rung of its own
+  - id: owner_map_pair_notebook_open
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: owner_proposes_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      doc_chat: {from: body, pointer: /id, class: uuid}
+  - id: mate_map_pair_chat_one_sided
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: mate_grants_chat
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{doc_chat}}/grant'
+  # both said yes to doc_chat: the stated tastes now rank recommended
+  - id: owner_map_pair_chat_consented
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: mate_map_pair_chat_consented
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'
+  - id: mate_revokes_chat
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: owner_map_pair_after_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/map'

@@ -1,0 +1,40 @@
+{
+  "ghi_chu": [
+    "Hai đột biến của NGƯỜI GỘP cho W9 HTTP (auth/sessions), theo ADR-0030 — tách khỏi",
+    "w9-dot-bien (tầng repository, của tác giả) và w9-http-dot-bien (tầng HTTP, của tác giả).",
+    "",
+    "Chạy trên STACK SỐNG, không qua `go test -overlay`. Bài học phải ghi ra đây vì tôi đã",
+    "mắc: lần chạy đầu CẢ HAI đột biến đều 'sống sót', nhưng không phải vì chúng tương",
+    "đương — mà vì tôi chạy SAI TẬP KỊCH BẢN. Một đột biến sống sót chưa nói gì cho tới khi",
+    "chứng minh được kịch bản có VỚI TỚI nó:",
+    "  - `current` chỉ có nghĩa khi có bearer thật -> phải chạy stack --auth prod;",
+    "  - số lần thử OTP chỉ lộ ở w9/limiter/ -> phải chạy --lane limiter.",
+    "Và stack chế độ prod cần --reference-dsn/--candidate-dsn để gieo phiên."
+  ],
+  "do_tren": {
+    "moc": "d9c500ef",
+    "doi_chung": "core gốc: prod-sessions 1 EQUAL/0 khác biệt; làn limiter 3 EQUAL/0 khác biệt"
+  },
+  "dot_bien": [
+    {
+      "ten": "phien-hien-tai-khong-duoc-danh-dau",
+      "tep": "services/core/internal/routes/auth_support.go",
+      "cu": "item.Set(\"current\", pyjson.Bool(row.Current))",
+      "moi": "item.Set(\"current\", pyjson.Bool(false))",
+      "cho_doi": "do",
+      "chay_bang": "--auth prod + --reference-dsn/--candidate-dsn, scenarios/w9/",
+      "da_do": "1 kịch bản (prod-sessions), 10 khác biệt",
+      "vi_sao": "GET /sessions đánh dấu phiên nào là phiên đang dùng. Người dùng đọc cột này để biết mình đang thu hồi phiên NÀO, nên sai ở đây là sai ở chỗ nguy hiểm. Chỉ quan sát được ở chế độ prod vì dev không có bearer."
+    },
+    {
+      "ten": "so-lan-thu-lay-nham-truong",
+      "tep": "services/core/internal/domain/authsteps/otpdoor.go",
+      "cu": "422, \"otp_code_invalid\", \"Mã chưa đúng. Còn \"+plan.AttemptsLeft.String()+\" lần thử.\",",
+      "moi": "422, \"otp_code_invalid\", \"Mã chưa đúng. Còn \"+plan.Attempts.String()+\" lần thử.\",",
+      "cho_doi": "do",
+      "chay_bang": "--lane limiter, scenarios/w9/limiter/",
+      "da_do": "1 kịch bản, 5 khác biệt; reference «Còn 4 lần thử», candidate «Còn 1 lần thử»",
+      "vi_sao": "Lấy nhầm trường liền kề (Attempts thay vì AttemptsLeft) là lỗi port kinh điển, và nó đi thẳng ra CÂU CHỮ người dùng đọc — đúng thứ cổng phải bắt."
+    }
+  ]
+}

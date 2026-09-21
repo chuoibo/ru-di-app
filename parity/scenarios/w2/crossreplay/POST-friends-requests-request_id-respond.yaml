@@ -1,0 +1,213 @@
+# W2 cross replay · POST /friends/requests/{id}/respond (200, one UPDATE of the
+# row). A decision stored under a key by one implementation is replayed, not
+# decided again, by the other; another decision under the key is refused by the
+# other. A 403 is not stored by either side. Names are sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-friends-requests-request_id-respond
+routes: ['POST /friends/requests/{request_id}/respond']
+auth_mode: dev
+personas:
+  answerer: {}
+  first_asker: {}
+  second_asker: {}
+  third_asker: {}
+  fourth_asker: {}
+steps:
+  - id: register_answerer
+    as: answerer
+    request:
+      method: PUT
+      path: '/people/{{persona.answerer}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người trả lời chéo (dữ liệu mẫu)"}'
+  - id: register_first_asker
+    as: first_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.first_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi một (dữ liệu mẫu)"}'
+  - id: register_second_asker
+    as: second_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.second_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi hai (dữ liệu mẫu)"}'
+  - id: register_third_asker
+    as: third_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.third_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi ba (dữ liệu mẫu)"}'
+  - id: register_fourth_asker
+    as: fourth_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.fourth_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi bốn (dữ liệu mẫu)"}'
+  - id: first_asks
+    as: first_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_one: {from: body, pointer: /id, class: uuid}
+  - id: second_asks
+    as: second_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_two: {from: body, pointer: /id, class: uuid}
+  - id: third_asks
+    as: third_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_three: {from: body, pointer: /id, class: uuid}
+  - id: fourth_asks
+    as: fourth_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.answerer}}"}'
+    bind:
+      req_four: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: answerer
+    via: python
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'x-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # a fresh accept would now be 409 not_pending: only a replay answers 200
+  - id: core_replays_python_key
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'x-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: core_replays_python_key_respaced
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'x-respond-a'
+        content-type: 'application/json'
+      body_raw: '{ "decision" : "accept" }'
+  - id: core_refuses_python_key_other_body
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_one}}/respond'
+      headers:
+        idempotency-key: 'x-respond-a'
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_two}}/respond'
+      headers:
+        idempotency-key: 'x-respond-b'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: python_replays_core_key
+    as: answerer
+    via: python
+    request:
+      method: POST
+      path: '/friends/requests/{{req_two}}/respond'
+      headers:
+        idempotency-key: 'x-respond-b'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: python_refuses_core_key_other_body
+    as: answerer
+    via: python
+    request:
+      method: POST
+      path: '/friends/requests/{{req_two}}/respond'
+      headers:
+        idempotency-key: 'x-respond-b'
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  # a 403 (no role) is not stored: the other side runs the next request
+  - id: python_refusal_releases_key
+    as: answerer
+    via: python
+    request:
+      method: POST
+      path: '/friends/requests/{{req_three}}/respond'
+      headers:
+        idempotency-key: 'x-respond-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: core_uses_key_python_released
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_three}}/respond'
+      headers:
+        idempotency-key: 'x-respond-c'
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: core_refusal_releases_key
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_four}}/respond'
+      headers:
+        idempotency-key: 'x-respond-d'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: python_uses_key_core_released
+    as: answerer
+    via: python
+    request:
+      method: POST
+      path: '/friends/requests/{{req_four}}/respond'
+      headers:
+        idempotency-key: 'x-respond-d'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: core_replays_what_python_stored_after_release
+    as: answerer
+    request:
+      method: POST
+      path: '/friends/requests/{{req_four}}/respond'
+      headers:
+        idempotency-key: 'x-respond-d'
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'

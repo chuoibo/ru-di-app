@@ -1,0 +1,572 @@
+# W3 · PATCH /contexts/{id} — any ACTIVE member renames a group or picks its theme.
+# Refusal order: idempotency key shape, JSON decode, actor, path + body model
+# (with its after-validator), role + ACTIVE membership, then a rename of a
+# pair is 409 not_a_group. A pair may still change its theme.
+id: w3/contexts/patch-contexts-context_id
+routes: ['PATCH /contexts/{context_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/contexts/khong-phai-uuid'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme": '
+  # the after-validator never runs ahead of the actor
+  - id: anonymous_empty_update
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: PATCH
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đổi tên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  # membership is proved before the row is read: unknown and real ids are one 403
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/khong-phai-uuid'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: stranger_uppercase_unknown_context
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  # body validation runs before the handler: 422 beats the 403
+  - id: stranger_empty_update_real_context
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: stranger_non_uuid_and_empty_update
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/khong-phai-uuid'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: invitee_renames
+    as: invitee
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên của người được mời (dữ liệu mẫu)"}'
+  - id: leaver_renames
+    as: leaver
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên của người đã rời (dữ liệu mẫu)"}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  # the stored name is stripped
+  - id: mate_renames
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"  Tên mới (dữ liệu mẫu)  "}'
+  - id: mate_sets_theme
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"hoang-hon"}'
+  - id: owner_both_at_once
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên cả hai (dữ liệu mẫu)","theme":"rung-thong"}'
+  - id: owner_theme_with_null_name
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":null,"theme":"ruc-ro"}'
+  - id: owner_name_with_null_theme
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên thứ ba (dữ liệu mẫu)","theme":null}'
+  - id: owner_same_theme_again
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"ruc-ro"}'
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"theme":"mac-dinh"}'
+  - id: empty_update
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: both_null
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":null,"theme":null}'
+  - id: blank_name
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"   "}'
+  - id: empty_name
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":""}'
+  - id: name_201_letters
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"ạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạạ"}'
+  - id: name_number
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":7}'
+  - id: theme_unknown
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"tim"}'
+  - id: theme_wrong_case
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"Bien-Dem"}'
+  - id: theme_number
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":1}'
+  - id: extra_field_kind
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"pair"}'
+  # a field error stops the after-validator: only extra_forbidden is reported
+  - id: blank_name_plus_extra_field
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"  ","kind":"pair"}'
+  - id: top_level_array
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: owner_reads_after
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}'
+  - id: owner_asks_mate_to_be_friends
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair_with_mate
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  # a pair has no name of its own: renaming it is 409, nothing is written
+  - id: owner_renames_pair
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên cặp (dữ liệu mẫu)"}'
+  - id: owner_renames_and_themes_pair
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên cặp (dữ liệu mẫu)","theme":"bien-dem"}'
+  - id: owner_themes_pair
+    as: owner
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: mate_themes_pair
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"hoang-hon"}'
+  - id: stranger_themes_pair
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"ruc-ro"}'
+  - id: stranger_renames_pair
+    as: stranger
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên cặp (dữ liệu mẫu)"}'
+  # idempotency
+  - id: idem_first
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: idem_replay
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: idem_reuse_different_body
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"ruc-ro"}'
+  - id: idem_reuse_other_context
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        idempotency-key: 'w3-patch-a'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  # a 409 is not stored and releases the key
+  - id: idem_refusal_not_stored
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{pair}}'
+      headers:
+        idempotency-key: 'w3-patch-b'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên cặp (dữ liệu mẫu)"}'
+  - id: idem_same_key_after_refusal
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-b'
+        content-type: 'application/json'
+      body_raw: '{"theme":"ruc-ro"}'
+  - id: idem_validation_refusal_not_stored
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-c'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: idem_same_key_after_validation_refusal
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'w3-patch-c'
+        content-type: 'application/json'
+      body_raw: '{"theme":"hoang-hon"}'
+  - id: idem_key_too_long
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: trailing_slash_redirects
+    as: mate
+    request:
+      method: PATCH
+      path: '/contexts/{{ctx}}/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: put_not_allowed
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"theme":"bien-dem"}'
+  - id: delete_not_allowed
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}'

@@ -1,0 +1,25 @@
+{
+ "generator": "scripts/render_domain_w4_goldens.py",
+ "module": "app.domain.allocator",
+ "mode": "apportion",
+ "python": "3.12.14",
+ "seed": 44,
+ "constants": {"names":[]},
+ "cases": [
+{"fn":"apportion","name":"thirds_advancer_b","args":{"total_vnd":1,"exact":[["a","1/3"],["b","1/3"],["c","1/3"]],"advancer_id":"b"},"result":{"ok":{"allocations":[["a",0],["b",1],["c",0]],"gainers":["b"]}}},
+{"fn":"apportion","name":"thirds_no_advancer","args":{"total_vnd":2,"exact":[["a","2/3"],["b","2/3"],["c","2/3"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",1],["b",1],["c",0]],"gainers":["a","b"]}}},
+{"fn":"apportion","name":"negative_thirds","args":{"total_vnd":-1,"exact":[["a","-1/3"],["b","-1/3"],["c","-1/3"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",0],["b",0],["c",-1]],"gainers":["a","b"]}}},
+{"fn":"apportion","name":"negative_two_thirds_advancer_c","args":{"total_vnd":-2,"exact":[["a","-2/3"],["b","-2/3"],["c","-2/3"]],"advancer_id":"c"},"result":{"ok":{"allocations":[["a",-1],["b",-1],["c",0]],"gainers":["c"]}}},
+{"fn":"apportion","name":"negative_and_positive","args":{"total_vnd":1,"exact":[["a","-4/3"],["b","7/3"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",-1],["b",2]],"gainers":["a"]}}},
+{"fn":"apportion","name":"negative_integer_shares","args":{"total_vnd":-5,"exact":[["a","-2/1"],["b","-3/1"]],"advancer_id":"a"},"result":{"ok":{"allocations":[["a",-2],["b",-3]],"gainers":[]}}},
+{"fn":"apportion","name":"half_ties","args":{"total_vnd":1,"exact":[["a","1/2"],["b","1/2"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",1],["b",0]],"gainers":["a"]}}},
+{"fn":"apportion","name":"half_ties_advancer_b","args":{"total_vnd":1,"exact":[["a","1/2"],["b","1/2"]],"advancer_id":"b"},"result":{"ok":{"allocations":[["a",0],["b",1]],"gainers":["b"]}}},
+{"fn":"apportion","name":"negative_half_ties","args":{"total_vnd":-1,"exact":[["a","-1/2"],["b","-1/2"]],"advancer_id":"b"},"result":{"ok":{"allocations":[["a",-1],["b",0]],"gainers":["b"]}}},
+{"fn":"apportion","name":"three_halves","args":{"total_vnd":3,"exact":[["a","3/2"],["b","3/2"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",2],["b",1]],"gainers":["a"]}}},
+{"fn":"apportion","name":"minus_three_halves","args":{"total_vnd":-3,"exact":[["a","-3/2"],["b","-3/2"]],"advancer_id":null},"result":{"ok":{"allocations":[["a",-1],["b",-2]],"gainers":["a"]}}},
+{"fn":"apportion","name":"utf8_order","args":{"total_vnd":2,"exact":[["\ud83d\ude00","1/2"],["\u4e2d","1/2"],["Z","1/2"],["a","1/2"]],"advancer_id":null},"result":{"ok":{"allocations":[["\ud83d\ude00",0],["\u4e2d",0],["Z",1],["a",1]],"gainers":["Z","a"]}}},
+{"fn":"apportion","name":"past_int64","args":{"total_vnd":"$i:0x1_0000_0000_0000_0001","exact":[["a","$sp:184467|440737|095516|17/2"],["b","$sp:184467|440737|095516|17/2"]],"advancer_id":null},"result":{"ok":{"allocations":[["a","$i:0x8000_0000_0000_0001"],["b","$i:0x8000_0000_0000_0000"]],"gainers":["a"]}}},
+{"fn":"apportion","name":"below_int64","args":{"total_vnd":"$i:-0x1_0000_0000_0000_0001","exact":[["a","$sp:-18446|744073|709551|617/2"],["b","$sp:-18446|744073|709551|617/2"]],"advancer_id":"a"},"result":{"ok":{"allocations":[["a","$i:-0x8000_0000_0000_0000"],["b","$i:-0x8000_0000_0000_0001"]],"gainers":["a"]}}},
+{"fn":"apportion","name":"empty","args":{"total_vnd":0,"exact":[],"advancer_id":null},"result":{"ok":{"allocations":[],"gainers":[]}}}
+ ]
+}

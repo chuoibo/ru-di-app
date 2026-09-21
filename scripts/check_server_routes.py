@@ -98,11 +98,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 API_DIR = REPO_ROOT / "services" / "api"
@@ -171,10 +174,7 @@ def server_paths(url: str, timeout: float) -> set[str]:
     except urllib.error.HTTPError as exc:
         die(f"{doc_url} trả về HTTP {exc.code}. Máy chủ có đang chạy đúng ảnh không?")
     except (urllib.error.URLError, OSError) as exc:
-        die(
-            f"không gọi được {doc_url}: {exc}\n"
-            "   Máy chủ chưa chạy. Gỡ:  make up"
-        )
+        die(f"không gọi được {doc_url}: {exc}\n   Máy chủ chưa chạy. Gỡ:  make up")
 
     if ctype != "application/json":
         die(
@@ -235,10 +235,14 @@ def main(argv: list[str] | None = None) -> int:
         print(file=sys.stderr)
         print("!! Máy chủ đang chạy MÃ CŨ hơn cây này.", file=sys.stderr)
         print(f"   máy chủ: {args.url}", file=sys.stderr)
-        print(f"   cây này khai {len(declared)} route, máy chủ phục vụ {len(served)}.",
-              file=sys.stderr)
+        print(
+            f"   cây này khai {len(declared)} route, máy chủ phục vụ {len(served)}.",
+            file=sys.stderr,
+        )
         print(file=sys.stderr)
-        print(f"   Thiếu {len(missing)} route — app gọi tới sẽ nhận 404:", file=sys.stderr)
+        print(
+            f"   Thiếu {len(missing)} route — app gọi tới sẽ nhận 404:", file=sys.stderr
+        )
         for path in missing:
             print(f"      {path}", file=sys.stderr)
         print(file=sys.stderr)

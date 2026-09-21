@@ -1,0 +1,68 @@
+# W2 concurrency · POST /posts/{id}/comments (201, one post_comments row per
+# write). Copies are released together. Under one key the burst comments once
+# and the other copies replay; under distinct keys every copy writes its own
+# row; a different body under the completed key is refused by every copy.
+# Nothing unique constrains a comment. Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-posts-post_id-comments
+routes: ['POST /posts/{post_id}/comments']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bình luận cùng lúc (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để bình luận cùng lúc (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'c-comment-same'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận cùng lúc (dữ liệu mẫu)"}'
+  - id: distinct_key_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'c-comment-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận khác khoá (dữ liệu mẫu)"}'
+  - id: same_key_other_body_burst
+    as: reader
+    concurrent: 2
+    request:
+      method: POST
+      path: '/posts/{{post}}/comments'
+      headers:
+        idempotency-key: 'c-comment-same'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận cùng lúc, sửa lại (dữ liệu mẫu)"}'

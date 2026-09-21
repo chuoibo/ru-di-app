@@ -1,0 +1,226 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "faces",
+ "routes": [
+  {
+   "id": "POST /contexts/{context_id}/photos/{photo_id}/face-boxes",
+   "order": 135,
+   "method": "POST",
+   "path": "/contexts/{context_id}/photos/{photo_id}/face-boxes",
+   "name": "detect_faces",
+   "endpoint": "app.api.routes.faces.detect_faces",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "photo_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.faces.detect_faces",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.faces.detect_faces",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "photo_id",
+      "alias": "photo_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_photo_storage",
+      "name": "photo_storage",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_photo_storage",
+       []
+      ]
+     },
+     {
+      "call": "app.api.deps.get_face_detector",
+      "name": "detector",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_face_detector",
+       []
+      ]
+     },
+     {
+      "call": "app.api.routes.faces.get_face_detection_limiter",
+      "name": "limiter",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.faces.get_face_detection_limiter",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {}
+}

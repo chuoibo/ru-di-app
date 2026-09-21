@@ -1,0 +1,35 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "main",
+ "routes": [
+  {
+   "id": "GET /healthz",
+   "order": 155,
+   "method": "GET",
+   "path": "/healthz",
+   "name": "healthz",
+   "endpoint": "app.api.main.create_app.<locals>.healthz",
+   "status_code": null,
+   "path_convertors": {},
+   "body": null,
+   "dependant": {
+    "call": "app.api.main.create_app.<locals>.healthz",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.main.create_app.<locals>.healthz",
+     []
+    ]
+   }
+  }
+ ],
+ "definitions": {}
+}

@@ -1,0 +1,346 @@
+# W2 · GET /people/{id}/friend-requests — one's own pending requests.
+# `direction` is "outgoing" or anything else (incoming); a repeated parameter
+# takes the last value. Answered rows leave the list; newest first.
+id: w2/friends/get-people-person_id-friend-requests
+routes: ['GET /people/{person_id}/friend-requests']
+auth_mode: dev
+personas:
+  me: {}
+  first_asker: {}
+  second_asker: {}
+  third_asker: {}
+  first_target: {}
+  second_target: {}
+  stranger: {}
+  leaver: {}
+steps:
+  - id: anonymous_unknown_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friend-requests'
+  - id: anonymous_non_uuid_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friend-requests'
+  - id: register_me
+    as: me
+    request:
+      method: PUT
+      path: '/people/{{persona.me}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tôi (dữ liệu mẫu)"}'
+  - id: register_first_asker
+    as: first_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.first_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi một (dữ liệu mẫu)"}'
+  - id: register_second_asker
+    as: second_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.second_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi hai (dữ liệu mẫu)"}'
+  - id: register_third_asker
+    as: third_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.third_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi ba (dữ liệu mẫu)"}'
+  - id: register_first_target
+    as: first_target
+    request:
+      method: PUT
+      path: '/people/{{persona.first_target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi một (dữ liệu mẫu)"}'
+  - id: register_second_target
+    as: second_target
+    request:
+      method: PUT
+      path: '/people/{{persona.second_target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi hai (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: me_empty_inbox
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: first_asker_asks_me
+    as: first_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+    bind:
+      from_first: {from: body, pointer: /id, class: uuid}
+  - id: second_asker_asks_me
+    as: second_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+    bind:
+      from_second: {from: body, pointer: /id, class: uuid}
+  - id: me_asks_first_target
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.first_target}}"}'
+    bind:
+      to_first: {from: body, pointer: /id, class: uuid}
+  - id: me_asks_second_target
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second_target}}"}'
+  - id: third_asker_asks_me
+    as: third_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+    bind:
+      from_third: {from: body, pointer: /id, class: uuid}
+  - id: me_incoming_default
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: me_outgoing
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=outgoing'
+  - id: me_direction_incoming_explicit
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=incoming'
+  # anything but the exact word "outgoing" narrows to incoming
+  - id: me_direction_uppercase
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=OUTGOING'
+  - id: me_direction_unknown
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=both'
+  - id: me_direction_empty
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction='
+  - id: me_direction_repeated_last_is_incoming
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=outgoing&direction=incoming'
+  - id: me_direction_repeated_last_is_outgoing
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=incoming&direction=outgoing'
+  - id: me_direction_name_is_case_sensitive
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?Direction=outgoing'
+  # an Idempotency-Key on a GET is ignored by the middleware
+  - id: me_with_idempotency_key
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+      headers:
+        idempotency-key: 'w2-list-requests'
+  - id: first_target_sees_me_incoming
+    as: first_target
+    request:
+      method: GET
+      path: '/people/{{persona.first_target}}/friend-requests'
+  - id: stranger_reads_my_inbox
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: stranger_reads_unknown_person
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friend-requests'
+  - id: me_roles_empty
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+      headers:
+        x-actor-roles: ''
+  - id: me_roles_group_admin_only
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+      headers:
+        x-actor-roles: 'group_admin'
+  # there is no /people/me/friend-requests: "me" is parsed as the uuid
+  - id: me_literal_me_path
+    as: me
+    request:
+      method: GET
+      path: '/people/me/friend-requests'
+  - id: stranger_non_uuid_person
+    as: stranger
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friend-requests'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/friend-requests'
+  - id: stranger_unhyphenated_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/friend-requests'
+  - id: trailing_slash_redirects
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests/'
+  - id: post_not_allowed
+    as: me
+    request:
+      method: POST
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: me_accepts_first
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests/{{from_first}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: me_declines_second
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests/{{from_second}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  - id: me_blocks_third
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests/{{from_third}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  - id: first_target_declines_me
+    as: first_target
+    request:
+      method: POST
+      path: '/friends/requests/{{to_first}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  # accepted, declined and blocked rows are no longer pending
+  - id: me_incoming_after_answers
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: me_outgoing_after_decline
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests?direction=outgoing'
+  - id: leaver_asks_me
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+  - id: me_incoming_with_leaver
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # the ended account's rows were erased
+  - id: me_incoming_after_leaver_deleted
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  # dev trusts X-Actor-ID: the ended account asks again and is listed under the anonymised name
+  - id: deleted_leaver_asks_me_again
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+  - id: me_incoming_names_ended_account
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friend-requests'
+  - id: deleted_leaver_reads_own_outgoing
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/friend-requests?direction=outgoing'

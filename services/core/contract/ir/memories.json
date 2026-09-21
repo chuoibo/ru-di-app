@@ -1,0 +1,1753 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "memories",
+ "routes": [
+  {
+   "id": "POST /contexts/{context_id}/memories",
+   "order": 26,
+   "method": "POST",
+   "path": "/contexts/{context_id}/memories",
+   "name": "post_context_memory",
+   "endpoint": "app.api.routes.memories.post_context_memory",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.memories.post_context_memory",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.post_context_memory",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.MemoryCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.MemoryCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /contexts/{context_id}/checkins",
+   "order": 27,
+   "method": "POST",
+   "path": "/contexts/{context_id}/checkins",
+   "name": "post_context_checkin",
+   "endpoint": "app.api.routes.memories.post_context_checkin",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.memories.post_context_checkin",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.post_context_checkin",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.CheckinCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.CheckinCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/memories",
+   "order": 28,
+   "method": "GET",
+   "path": "/contexts/{context_id}/memories",
+   "name": "list_context_memories",
+   "endpoint": "app.api.routes.memories.list_context_memories",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.memories.list_context_memories",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.list_context_memories",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "query": [
+     {
+      "name": "limit",
+      "alias": "limit",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "int",
+      "required": false,
+      "default": 50,
+      "constraints": [
+       {
+        "kind": "Ge",
+        "ge": 1
+       },
+       {
+        "kind": "Le",
+        "le": 100
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "int",
+        "ge": 1,
+        "le": 100
+       },
+       "default": 50
+      }
+     },
+     {
+      "name": "before",
+      "alias": "before",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "kind",
+      "alias": "kind",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "Literal['photo', 'checkin'] | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "literal",
+         "expected": [
+          "photo",
+          "checkin"
+         ]
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "place_id",
+      "alias": "place_id",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "constraints": [
+       {
+        "kind": "MaxLen",
+        "max_length": 200
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "max_length": 200
+        }
+       },
+       "default": null
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/widget",
+   "order": 29,
+   "method": "GET",
+   "path": "/contexts/{context_id}/widget",
+   "name": "read_context_widget",
+   "endpoint": "app.api.routes.memories.read_context_widget",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.memories.read_context_widget",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.read_context_widget",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /contexts/{context_id}/memories/{memory_id}/reactions",
+   "order": 30,
+   "method": "POST",
+   "path": "/contexts/{context_id}/memories/{memory_id}/reactions",
+   "name": "post_memory_reaction",
+   "endpoint": "app.api.routes.memories.post_memory_reaction",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "memory_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.memories.post_memory_reaction",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.post_memory_reaction",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "memory_id",
+      "alias": "memory_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "DELETE /contexts/{context_id}/memories/{memory_id}/reactions",
+   "order": 31,
+   "method": "DELETE",
+   "path": "/contexts/{context_id}/memories/{memory_id}/reactions",
+   "name": "delete_memory_reaction",
+   "endpoint": "app.api.routes.memories.delete_memory_reaction",
+   "status_code": 204,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "memory_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.memories.delete_memory_reaction",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.delete_memory_reaction",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "memory_id",
+      "alias": "memory_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /contexts/{context_id}/memories/{memory_id}/comments",
+   "order": 32,
+   "method": "POST",
+   "path": "/contexts/{context_id}/memories/{memory_id}/comments",
+   "name": "post_memory_comment",
+   "endpoint": "app.api.routes.memories.post_memory_comment",
+   "status_code": 201,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "memory_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.memories.post_memory_comment",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.post_memory_comment",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "memory_id",
+      "alias": "memory_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.MemoryCommentCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.MemoryCommentCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /contexts/{context_id}/memories/{memory_id}/comments",
+   "order": 33,
+   "method": "GET",
+   "path": "/contexts/{context_id}/memories/{memory_id}/comments",
+   "name": "list_memory_comments",
+   "endpoint": "app.api.routes.memories.list_memory_comments",
+   "status_code": null,
+   "path_convertors": {
+    "context_id": "StringConvertor",
+    "memory_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.memories.list_memory_comments",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.memories.list_memory_comments",
+     []
+    ],
+    "path": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     },
+     {
+      "name": "memory_id",
+      "alias": "memory_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.CheckinCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.CheckinCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "CheckinCreateRequest",
+    "fields": [
+     {
+      "name": "place_id",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "min_length": 1,
+       "max_length": 200
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 200
+       }
+      ]
+     },
+     {
+      "name": "caption",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "max_length": 2000
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Field(MaxLen(max_length=2000))] | None",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.MemoryCommentCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.MemoryCommentCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "MemoryCommentCreateRequest",
+    "fields": [
+     {
+      "name": "body",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "min_length": 1,
+       "max_length": 2000
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 2000
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "app.api.schemas.MemoryCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.MemoryCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "MemoryCreateRequest",
+    "fields": [
+     {
+      "name": "image_url",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "pattern": "\\A/contexts/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/photos/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\z"
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "_PydanticGeneralMetadata",
+        "text": "_PydanticGeneralMetadata(pattern='\\\\A/contexts/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/photos/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\\\z')"
+       }
+      ]
+     },
+     {
+      "name": "caption",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      },
+      "annotation": "str | None",
+      "required": false
+     },
+     {
+      "name": "place_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 200
+        }
+       },
+       "default": null
+      },
+      "annotation": "Annotated[str, Strict(strict=True), Field(MinLen(min_length=1), MaxLen(max_length=200))] | None",
+      "required": false
+     }
+    ]
+   }
+  }
+ }
+}

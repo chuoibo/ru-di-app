@@ -1,0 +1,233 @@
+# W4 · batches in prod auth mode (ADR-0014): identity is a bearer session read
+# by digest; X-Actor-* headers are ignored. A session never carries
+# batch_owner: creating a batch derives it for the creator, publishing derives
+# it only for the owner, so any other caller is 403 role_not_permitted. The
+# batch here is built from an unacknowledged expense, so publishing can only be
+# refused. The harness seeds a people row and a live session per persona.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/batches/prod-auth
+routes: ['POST /batches', 'POST /batches/{batch_id}/publish', 'GET /batches/{batch_id}/obligations', 'GET /contexts/{context_id}/batches']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_create_missing_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: junk_bearer_board
+    as: anonymous
+    request:
+      method: GET
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/obligations'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: basic_scheme_rounds
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/batches'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+  # dev would trust these headers; prod answers 401 Missing bearer session
+  - id: actor_headers_ignored_publish
+    as: anonymous
+    request:
+      method: POST
+      path: '/batches/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/publish'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member,batch_owner'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đợt thu prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: stranger_creates_batch
+    as: stranger
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  # in dev an empty X-Actor-Roles is 403 role_not_permitted; prod ignores it
+  - id: owner_creates_batch_empty_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: mate_reads_board
+    as: mate
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'
+  - id: stranger_reads_board
+    as: stranger
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'
+  - id: mate_publishes
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  # dev would let this header through to owns_batch; prod: role_not_permitted
+  - id: mate_publishes_with_batch_owner_header
+    as: mate
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        x-actor-roles: 'member,batch_owner'
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: stranger_publishes
+    as: stranger
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: owner_publish_expiry_in_past
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2020-03-01T12:00:00+07:00"}'
+  - id: owner_publish_gate
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+  - id: mate_lists_rounds
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'
+  - id: stranger_lists_rounds
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/batches'
+  - id: owner_proposes_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_lunch_pending
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000}}'
+    bind:
+      lunch_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'w4-prod-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: owner_key_replay
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'w4-prod-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  # the key scope is the bearer digest, so the stranger's request runs and is refused
+  - id: stranger_same_key
+    as: stranger
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        idempotency-key: 'w4-prod-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_after_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'

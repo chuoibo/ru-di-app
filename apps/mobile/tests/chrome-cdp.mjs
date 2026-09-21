@@ -280,7 +280,15 @@ export async function launch(bin) {
 
     /** Poll a predicate. Deliberately not a fixed sleep: a timeout tuned on
      *  this machine is a flake on a slower one. */
-    async waitFor(fn, { timeout = 15000, label = "condition" } = {}, ...args) {
+    /** Poll until `fn` is true in the page.
+     *
+     *  `diagnose` runs in the page when the deadline passes and its value is
+     *  appended to the error. A bare "timed out waiting for X" says the
+     *  condition never held and nothing about WHY, which on a machine you
+     *  cannot open is the difference between fixing it and guessing at it:
+     *  a hit-test that keeps failing should be able to name what was on top.
+     */
+    async waitFor(fn, { timeout = 15000, label = "condition", diagnose = null } = {}, ...args) {
       const deadline = Date.now() + timeout;
       for (;;) {
         let ok = false;
@@ -290,7 +298,17 @@ export async function launch(bin) {
           ok = false;
         }
         if (ok) return;
-        if (Date.now() > deadline) throw new Error(`timed out waiting for ${label}`);
+        if (Date.now() > deadline) {
+          let extra = "";
+          if (diagnose) {
+            try {
+              extra = " -- " + JSON.stringify(await this.evaluate(diagnose));
+            } catch (err) {
+              extra = ` -- diagnose threw: ${err.message}`;
+            }
+          }
+          throw new Error(`timed out waiting for ${label}${extra}`);
+        }
         await new Promise((r) => setTimeout(r, 60));
       }
     },

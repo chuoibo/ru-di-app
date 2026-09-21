@@ -1,0 +1,240 @@
+# W1 · GET /contexts/{id}/map — visited / trending / recommended / declared-missing saved.
+# recommended is re-ranked once members state tastes (group_taste reads person_interests).
+id: w1/social_map/get-map
+routes: ['GET /contexts/{context_id}/map']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/map'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/map'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/map'
+  # an unknown group is the same 403 is_group_member as a real one, never 404
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/map'
+  - id: stranger_uppercase_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/map'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/map'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/map'
+  - id: stranger_urn_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/map'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/map'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bản đồ (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_map
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+      headers:
+        x-actor-roles: ''
+  - id: stranger_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: mate_invited_not_yet_active
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  # MemoryResponse.cursor is base64(created_at|id), opaque to the normaliser; binding it as a token replaces it with a named placeholder on both stacks
+  - id: checkin_bbq_owner
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-tiem-nuong-xom-lao"}'
+    bind:
+      cursor_checkin_bbq_owner: {from: body, pointer: /cursor, class: token}
+  - id: checkin_bbq_mate
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-tiem-nuong-xom-lao"}'
+    bind:
+      cursor_checkin_bbq_mate: {from: body, pointer: /cursor, class: token}
+  - id: checkin_hot_rooftop
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-the-hill-rooftop"}'
+    bind:
+      cursor_checkin_hot_rooftop: {from: body, pointer: /cursor, class: token}
+  - id: checkin_seafood
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      cursor_checkin_seafood: {from: body, pointer: /cursor, class: token}
+  - id: checkin_cafe
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+    bind:
+      cursor_checkin_cafe: {from: body, pointer: /cursor, class: token}
+  - id: owner_map_visited_no_tastes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: owner_states_tastes
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  - id: mate_states_tastes
+    as: mate
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'
+  - id: owner_map_with_tastes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: mate_map_with_tastes
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/map'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a membership row with left_at set is not membership
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'
+  # group_taste sums ACTIVE members only, so recommended re-ranks without mate
+  - id: owner_map_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/map'

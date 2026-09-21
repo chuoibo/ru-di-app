@@ -240,6 +240,7 @@ loopback_nuot_syn() {
 # tránh.
 ensure_adb_server() {
     port_dang_nghe "$ADB_SERVER_PORT" && return 0
+    [ "${ADB_SERVER_HONG:-0}" = 1 ] && return 1
     if loopback_nuot_syn; then
         printf 'adb server chưa chạy, và localhost máy này HÚT SYN (WSL2 mirrored networking).\n' >&2
         printf "  -> 'adb start-server' sẽ treo vĩnh viễn. Bật thẳng bằng 'server nodaemon'.\n" >&2
@@ -248,12 +249,17 @@ ensure_adb_server() {
     fi
     setsid nohup "$ADB" -L "tcp:$ADB_SERVER_PORT" server nodaemon \
         >>"$ADB_SERVER_LOG" 2>&1 </dev/null &
+    local server_pid=$!
     local deadline=$(( SECONDS + ADB_SERVER_WAIT ))
     while [ "$SECONDS" -lt "$deadline" ]; do
         if port_dang_nghe "$ADB_SERVER_PORT"; then
             printf '  adb server đã nghe ở %s.\n' "$ADB_SERVER_PORT" >&2
             return 0
         fi
+        # Tiến trình vừa bật đã chết mà cổng vẫn im: nó sẽ không bao giờ nghe,
+        # nên ngồi hết ADB_SERVER_WAIT chỉ là tiêu thời gian. Một adb thật chết
+        # ngay cũng nói đúng điều đó.
+        kill -0 "$server_pid" 2>/dev/null || break
         sleep 0.2
     done
     # KHÔNG `die`: hàm này chạy trong subshell của `$(…)`, ở đó `exit` chỉ giết
@@ -261,6 +267,10 @@ ensure_adb_server() {
     # hỏng thành tiếng.
     printf 'HỎNG: adb server không lên nổi ở cổng %s sau %ss. Log: %s\n' \
         "$ADB_SERVER_PORT" "$ADB_SERVER_WAIT" "$ADB_SERVER_LOG" >&2
+    # Nhớ là đã hỏng. Script gọi adbq 16 chỗ, và thử dựng lại server ở từng chỗ
+    # thì một lượt `down` trên máy không có adb phải trả giá chờ nhiều lần --
+    # đo được trên CI: 48,5 giây cho một lệnh lẽ ra dưới 25.
+    ADB_SERVER_HONG=1
     return 1
 }
 
@@ -670,7 +680,14 @@ cmd_down() {
 
     if [ -z "$serial" ] && [ -z "$pids" ]; then
         say "AVD '$AVD_NAME' không chạy — không tắt gì cả."
-        local others; others="$(adbq devices 2>/dev/null | awk '/^emulator-[0-9]+\tdevice$/{print $1}' | tr '\n' ' ')"
+        # `|| true`: dòng này chỉ để NÓI THÊM "đang có máy khác, không đụng
+        # tới". Nó không được quyền quyết định mã thoát. `adbq` gọi
+        # `ensure_adb_server` trước mỗi lệnh và trả 1 khi không dựng nổi server;
+        # dưới `pipefail` thì phép gán hỏng theo, và `set -e` giết hàm SAU KHI
+        # đã in "không tắt gì cả" -- `down` báo hỏng đúng lúc nó vừa làm xong
+        # việc. Đỏ trên CI (máy sạch, không có adb server) và xanh trên máy có
+        # sẵn server, tức một phép đo nói về máy chứ không nói về mã.
+        local others; others="$( (adbq devices 2>/dev/null || true) | awk '/^emulator-[0-9]+\tdevice$/{print $1}' | tr '\n' ' ' || true)"
         [ -n "$others" ] && say "  (đang có máy khác chạy: $others — KHÔNG đụng tới)"
         return 0
     fi

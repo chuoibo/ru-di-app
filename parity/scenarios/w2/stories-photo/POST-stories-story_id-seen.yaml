@@ -1,0 +1,269 @@
+# W2 stories with a real photo · POST /stories/{id}/seen on real stories: 200 and the
+# first look kept, the 404 matrix (stranger, pending, no role, blocked, block
+# lifted, deleted story, deleted account), replay (also after a block).
+# Refusals that need no story: w2/stories/post-stories-story_id-seen.
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/post-stories-story_id-seen
+routes: ['POST /stories/{story_id}/seen']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Xem chưa?"}'
+    bind:
+      story: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_second_story
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Tấm thứ hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  # a real story the stranger may not view answers exactly like an unknown id
+  - id: stranger_real_story
+    as: stranger
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: friend_asks_author
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_pending_request
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: author_accepts
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # view_story's role check is inside the 404 gate: no role is 404, never 403
+  - id: friend_roles_empty
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        x-actor-roles: ''
+  - id: friend_roles_guest_only
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        x-actor-roles: 'guest'
+  - id: friend_first_look
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  # the second look answers the first look's time
+  - id: friend_second_look
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: friend_look_with_ignored_body
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"seen_at":"2030-01-01T00:00:00Z","viewer_id":"{{persona.stranger}}"}'
+  - id: friend_roles_group_admin_only
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: author_sees_own_story
+    as: author
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: friend_feed_shows_seen
+    as: friend
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_feed_shows_own_seen
+    as: author
+    request:
+      method: GET
+      path: '/stories'
+  - id: idem_first
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'w2-seen-a'
+  - id: idem_replay
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'w2-seen-a'
+  # the fingerprint covers the path: another story under the same key is reuse
+  - id: idem_reuse_other_story
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        idempotency-key: 'w2-seen-a'
+  - id: idem_refusal_not_stored
+    as: friend
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        idempotency-key: 'w2-seen-c'
+  - id: idem_same_key_after_refusal
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+      headers:
+        idempotency-key: 'w2-seen-c'
+  - id: author_blocks_friend
+    as: author
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/block'
+  - id: friend_after_block
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  # a stored answer is replayed even though the block now refuses the route
+  - id: idem_replay_after_block
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'w2-seen-a'
+  - id: author_still_sees_own_while_blocking
+    as: author
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+  - id: author_unblocks_friend
+    as: author
+    request:
+      method: DELETE
+      path: '/people/{{persona.friend}}/block'
+  - id: friend_after_unblock_declined
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: author_deletes_story
+    as: author
+    request:
+      method: DELETE
+      path: '/stories/{{story}}'
+  - id: author_sees_deleted_story
+    as: author
+    request:
+      method: POST
+      path: '/stories/{{story}}/seen'
+  - id: author_asks_friend_again
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request_again: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts_again
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request_again}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: friend_refriended_looks_at_story_two
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+  # an ended account loses its friend edges (and its story_views rows): 404 again
+  - id: friend_deletes_account
+    as: friend
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: friend_after_account_deleted
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'

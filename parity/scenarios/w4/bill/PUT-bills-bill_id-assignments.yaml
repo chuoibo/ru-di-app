@@ -1,0 +1,408 @@
+# W4 · PUT /bills/{bill_id}/assignments — a person decides who ate each listed
+# line. Order: idempotency key, JSON, actor, path and body validation, bill
+# exists (404), role + ACTIVE membership (403), every named participant is an
+# ACTIVE member (422), then the bill and its lines are locked FOR UPDATE: an
+# unknown item_key is 409 UNKNOWN_BILL_ITEM, every share on a named line is
+# deleted and rewritten as confirmed by the caller. Lines not named keep their
+# shares. The same item_key twice: the last one wins. Texts are sample data
+# (dữ liệu mẫu).
+id: w4/bill/put-bills-bill_id-assignments
+routes: ['PUT /bills/{bill_id}/assignments']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_bill
+    as: anonymous
+    request:
+      method: PUT
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[]}'
+  # FastAPI decodes a JSON body before resolving the actor: 422 beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: PUT
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments": '
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: PUT
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/assignments'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"assignments":[]}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_bill
+    as: stranger
+    request:
+      method: PUT
+      path: '/bills/khong-phai-uuid/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[]}'
+  # 404 comes before the membership rule on the body
+  - id: stranger_unknown_bill_naming_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/bills/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.stranger}}"]}]}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia món (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_creates_bill
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":175000,"items_total_vnd":175000,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở bò (dữ liệu mẫu)","quantity":2,"unit_price_vnd":50000,"line_total_vnd":100000,"suggested_participant_ids":["{{persona.owner}}","{{persona.mate}}"]},{"item_key":"Nem","name":"Nem rán (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.third}}"]},{"item_key":"tra","name":"Trà đá (dữ liệu mẫu)","quantity":3,"unit_price_vnd":5000,"line_total_vnd":15000,"suggested_participant_ids":[]}]}'
+    bind:
+      bill: {from: body, pointer: /id, class: uuid}
+  - id: stranger_real_bill
+    as: stranger
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}"]}]}'
+  - id: invitee_assigns
+    as: invitee
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}"]}]}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}"]}]}'
+  # an invitation is not membership; named once each, in byte order
+  - id: owner_assigns_non_members
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}","{{persona.stranger}}","ffffffff-ffff-4fff-8fff-ffffffffffff"]},{"item_key":"Nem","participant_ids":["{{persona.invitee}}","{{persona.stranger}}"]}]}'
+  # the membership rule is checked before the item keys
+  - id: owner_non_member_on_unknown_item
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"khong-co","participant_ids":["{{persona.stranger}}"]}]}'
+  - id: owner_assigns_unknown_item
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}"]},{"item_key":"khong-co","participant_ids":["{{persona.owner}}"]}]}'
+  # item keys match exactly: a different case is another key
+  - id: owner_assigns_item_key_other_case
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"nem","participant_ids":["{{persona.mate}}"]}]}'
+  - id: owner_assigns_nothing
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[]}'
+  # one line confirmed, the others stay as they were: still ai_suggested
+  - id: owner_confirms_one_item
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.mate}}","{{persona.owner}}"]}]}'
+  - id: owner_overrules_the_suggestion
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"Nem","participant_ids":["{{persona.mate}}"]}]}'
+  # any member decides; the last line makes the bill confirmed
+  - id: mate_confirms_last_item
+    as: mate
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"]}]}'
+  - id: owner_clears_item
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":[]}]}'
+  - id: owner_same_item_twice_last_wins
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.owner}}"]},{"item_key":"tra","participant_ids":["{{persona.mate}}"]}]}'
+  # one person twice on one line passes every check and then violates
+  # uq_bill_item_shares_item_participant, which nothing catches: 500
+  - id: owner_duplicate_participant_on_item
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}","{{persona.owner}}"]}]}'
+  # the 500 rolled back: the shares on pho are unchanged
+  - id: owner_reads_after_500
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{bill}}'
+  # pydantic: item_key 65 chars, a participant that is no uuid, an unknown key
+  - id: owner_invalid_assignment
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","participant_ids":["khong-phai-uuid"],"source":"confirmed"}]}'
+  - id: owner_assignments_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  # idempotency: replay after the state moved on, reuse, a refusal that releases
+  - id: owner_key_first
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        idempotency-key: 'w4-assign-a'
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.third}}"]}]}'
+  - id: owner_changes_tra_without_key
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.owner}}"]}]}'
+  - id: owner_key_replay_reordered
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        idempotency-key: 'w4-assign-a'
+        content-type: 'application/json'
+      body_raw: '{ "assignments": [ { "participant_ids": ["{{persona.third}}"], "item_key": "tra" } ] }'
+  - id: owner_key_reused_other_body
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        idempotency-key: 'w4-assign-a'
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.mate}}"]}]}'
+  - id: owner_key_refused_non_member
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        idempotency-key: 'w4-assign-b'
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.stranger}}"]}]}'
+  - id: owner_key_after_refusal
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        idempotency-key: 'w4-assign-b'
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"tra","participant_ids":["{{persona.mate}}"]}]}'
+  - id: owner_creates_bill_without_lines
+    as: owner
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":0,"confidence":0,"needs_review":false,"items":[]}'
+    bind:
+      empty_bill: {from: body, pointer: /id, class: uuid}
+  - id: owner_assigns_nothing_on_bill_without_lines
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{empty_bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[]}'
+  - id: owner_assigns_on_bill_without_lines
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{empty_bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":[]}]}'
+  - id: third_leaves
+    as: third
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.third}}'
+  - id: third_assigns_after_leaving
+    as: third
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.owner}}"]}]}'
+  - id: owner_assigns_the_leaver
+    as: owner
+    request:
+      method: PUT
+      path: '/bills/{{bill}}/assignments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"assignments":[{"item_key":"pho","participant_ids":["{{persona.third}}"]}]}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/bills/{{bill}}/assignments'

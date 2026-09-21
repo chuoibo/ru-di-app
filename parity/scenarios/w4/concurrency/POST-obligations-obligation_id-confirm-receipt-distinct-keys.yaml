@@ -1,0 +1,123 @@
+# W4 concurrency · POST /obligations/{id}/confirm-receipt with distinct body
+# keys on one obligation. Copies are released together, each with its own
+# idempotency_key ({{burst}}), no Idempotency-Key header. get_receipt_target
+# locks the obligation FOR UPDATE, so the copies write one receipt each, in
+# turn. Every copy stays partially_confirmed whatever the order (3 x 1000 on
+# 25001), so the responses tie once masked and keep copy order, their receipt
+# ids are numbered in copy order, and each receipt row, which carries its
+# copy's key, is numbered the same way on both stacks. A later receipt reads the
+# sum of all three (confirmed), and a second burst past the amount is
+# over_confirmed for every copy. The mate owes the owner alone, so the batch has
+# one obligation. Body keys borrow this run's group id. Amounts are integer
+# VND; texts are sample data (dữ liệu mẫu).
+id: w4/concurrency/post-obligations-obligation_id-confirm-receipt-distinct-keys
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm nhận nhiều khoá (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn trả nhiều khoá (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm nhận nhiều khoá (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối nhiều khoá (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50002}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối nhiều khoá (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50002},"expected_allocations":{"{{persona.owner}}":25001,"{{persona.mate}}":25001},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      ob: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: distinct_body_keys_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-ccccccccccc{{burst}}"}'
+  # 3000 received so far: 22001 more is exactly the amount owed
+  - id: owner_confirms_rest
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":22001,"idempotency_key":"{{kp}}-cccccccccccf"}'
+  - id: distinct_body_keys_past_amount_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/obligations/{{ob}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1,"idempotency_key":"{{kp}}-ddddddddddd{{burst}}"}'
+  - id: mate_reads_finance
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'

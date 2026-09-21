@@ -1,0 +1,416 @@
+# W3 · GET /contexts/{id}/memories — the wall, newest first, keyset paged.
+# Order: actor, path + query model (limit 1..100, kind photo|checkin, place_id
+# <= 200), role + ACTIVE membership, then a `before` cursor that does not decode
+# is 422 invalid_cursor. Cursors below are built by hand: base64url of
+# '<isoformat>|<uuid>' without padding, the shape app/api/cursors.py writes.
+id: w3/memories/get-contexts-context_id-memories
+routes: ['GET /contexts/{context_id}/memories']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/memories'
+  # get_actor runs before query validation
+  - id: anonymous_bad_limit
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories?limit=0'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/memories'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+  - id: stranger_unknown_context_bad_limit
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories?limit=0'
+  # the cursor is decoded after the membership check: 403, not 422
+  - id: stranger_unknown_context_bad_cursor
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories?before=%2A%2A%2A'
+  - id: stranger_non_uuid_and_bad_query
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/memories?limit=x&kind=video'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_b: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_empty_wall
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: mate_posts_first_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":"Ảnh đầu (dữ liệu mẫu)"}'
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+  - id: mate_posts_photo_at_place
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-lung-chung-cafe"}'
+  - id: owner_posts_second_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo_two: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_in_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: mate_hearts_second_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo_two}}/reactions'
+  - id: owner_comments_second_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo_two}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: owner_reads_wall
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  # viewer_has_reacted is about the reader of this request
+  - id: mate_reads_wall
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_reads_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-roles: ''
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: limit_one
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=1'
+  - id: limit_hundred
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=100'
+  - id: limit_zero
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=0'
+  - id: limit_101
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=101'
+  - id: limit_text
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=x'
+  - id: limit_float
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=1.5'
+  - id: limit_repeated_last_wins
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?limit=0&limit=2'
+  - id: kind_photo
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind=photo'
+  - id: kind_checkin
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind=checkin'
+  - id: kind_video
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind=video'
+  - id: kind_uppercase
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind=PHOTO'
+  - id: kind_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind='
+  - id: place_filter
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?place_id=p-lung-chung-cafe'
+  - id: place_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?place_id=p-khong-co-that'
+  - id: place_201_letters
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?place_id=ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp'
+  - id: place_and_kind
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?kind=checkin&place_id=p-lung-chung-cafe'
+  - id: before_far_future
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMCswMDowMHxmZmZmZmZmZi1mZmZmLTRmZmYtYmZmZi1mZmZmZmZmZmZmZmY'
+  - id: before_far_future_limit_one
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMCswMDowMHxmZmZmZmZmZi1mZmZmLTRmZmYtYmZmZi1mZmZmZmZmZmZmZmY&limit=1'
+  - id: before_far_past
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjAwMS0wMS0wMVQwMDowMDowMCswMDowMHxhYWFhYWFhYS1hYWFhLTRhYWEtOGFhYS1hYWFhYWFhYWFhYWE'
+  # a timestamp without an offset is read as UTC
+  - id: before_naive_timestamp
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMHxmZmZmZmZmZi1mZmZmLTRmZmYtYmZmZi1mZmZmZmZmZmZmZmY'
+  - id: before_padded
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMCswMDowMHxmZmZmZmZmZi1mZmZmLTRmZmYtYmZmZi1mZmZmZmZmZmZmZmY%3D'
+  - id: before_no_separator
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMCswMDowMA'
+  - id: before_bad_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=MjA5OS0wMS0wMVQwMDowMDowMCswMDowMHxraG9uZy1waGFpLXV1aWQ'
+  - id: before_bad_date
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=bmdheS1tYWl8ZmZmZmZmZmYtZmZmZi00ZmZmLWJmZmYtZmZmZmZmZmZmZmZm'
+  - id: before_not_base64
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before=%2A%2A%2A'
+  - id: before_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?before='
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories?viewer_id={{persona.mate}}&limit=1'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories/'
+  - id: put_not_allowed
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

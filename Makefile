@@ -40,7 +40,7 @@ DC = $(COMPOSE) -p $(PROJECT)
 WAIT_TIMEOUT ?= 300
 
 .DEFAULT_GOAL := help
-.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb
+.PHONY: help gate gate-merge ruff-fix test-db e2e up down clean logs ps migrate db-check seed demo demo-reset demo-check demo-data-check demo-persona-check demo-key-check demo-watch demo-watch-status demo-watch-install hero-walk hero-walk-status smoke bundle-check bundle android-doctor android-up android-check android-down android-adb parity parity-up parity-down go-postgres
 
 # `demo` phải gọi đúng bộ container mà `up` vừa dựng. Trên nhánh này biến đó là
 # $(COMPOSE); PR #60 (đang mở, cùng lane) đổi nó thành $(DC) = compose kèm
@@ -126,6 +126,19 @@ test-db: ## Chạy tầng PostgreSQL thật trên database dùng một lần —
 e2e: ## Chạy lát cắt dọc qua src/api.ts trên API + database dùng một lần
 	@scripts/e2e_slice.sh
 
+parity: ## Bộ so parity (ADR-0029): test harness, canary và lượt trong suốt qua core trên hai stack cô lập
+	@scripts/gate.sh parity
+
+parity-up: ## Dựng hai stack cô lập để so tay — ENV=<file env> bắt buộc, AUTH=dev hoặc prod
+	@test -n "$(ENV)" || { echo "cần ENV=<đường file env>, ví dụ ENV=/tmp/parity.env" >&2; exit 2; }
+	@scripts/parity_stacks.sh up --auth $(or $(AUTH),dev) --env "$(ENV)"
+
+parity-down: ## Tắt hai stack đã dựng bằng parity-up — ENV=<file env>
+	@scripts/parity_stacks.sh down --env "$(ENV)"
+
+go-postgres: ## Test Postgres thật của services/core trên database dùng một lần (bỏ qua là hỏng)
+	@scripts/go_postgres_tier.sh
+
 up: ## Dựng ảnh, chạy migration, bật API, seed dữ liệu mẫu, rồi tự kiểm
 	@# Trước `docker build`, không phải sau: build mất vài phút, và một cảnh
 	@# báo in ra sau đó thì đã trôi khỏi màn hình. In ở đây thì còn kịp Ctrl-C.
@@ -180,8 +193,8 @@ clean: ## Tắt hệ và XOÁ volume Postgres + ảnh đã tải lên của cả
 	fi
 	$(DC) down -v
 
-logs: ## Bám log API và Postgres
-	$(DC) logs -f api postgres
+logs: ## Bám log cửa trước Go, API và Postgres
+	$(DC) logs -f core api postgres
 
 ps: ## Trạng thái các service
 	@echo "Project compose: $(PROJECT)"
@@ -203,7 +216,8 @@ db-check: ## Hỏi database xem nó có ở đúng head mà mã đang phục v�
 	@sh scripts/check_db_revision.sh $(DC) run --rm --no-deps -T migrate alembic
 
 seed: ## Chỉ seed dữ liệu mẫu — chạy lại là no-op, không nhân đôi
-	@$(DC) ps --services --filter status=running | grep -qx api || { \
+	@# `seed` gọi API qua `core` (ADR-0029), nên điều kiện là `core` đang chạy.
+	@$(DC) ps --services --filter status=running | grep -qx core || { \
 	  echo "API chưa chạy. Chạy 'make up' trước." >&2; exit 1; }
 	@# --no-deps là bắt buộc, không phải tối ưu. `compose run` không có nó sẽ
 	@# chạy lại `migrate` (service đã exited thì nó coi là phải dựng lại) rồi
@@ -406,7 +420,7 @@ smoke: ## Gọi thật /healthz qua cổng đã publish và in địa chỉ ra
 	@# riêng: `smoke` trả lời "bộ này dùng được không", và "API sống nhưng
 	@# không đọc được bill" là đúng loại câu trả lời đó.
 	@$(KEY_CHECK) --brief
-	@addr="$$($(DC) port api 8000 2>/dev/null)"; \
+	@addr="$$($(DC) port core 8000 2>/dev/null)"; \
 	if [ -z "$$addr" ]; then \
 	  echo "API chưa chạy. Chạy 'make up' trước." >&2; exit 1; \
 	fi; \
@@ -425,7 +439,7 @@ smoke: ## Gọi thật /healthz qua cổng đã publish và in địa chỉ ra
 	@# Phần này BỎ QUA khi máy không có fastapi cho python3, vì đầu file Makefile
 	@# hứa `make up` chỉ cần docker+make+curl và một cổng mới không được phép rút
 	@# lại lời hứa đó. Bỏ qua thì NÓI RA — bỏ qua im lặng là cổng chết.
-	@addr="$$($(DC) port api 8000 2>/dev/null)"; \
+	@addr="$$($(DC) port core 8000 2>/dev/null)"; \
 	url="http://127.0.0.1:$${addr##*:}"; \
 	if python3 -c "import fastapi" >/dev/null 2>&1; then \
 	  python3 scripts/check_server_routes.py --url "$$url"; \

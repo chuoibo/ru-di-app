@@ -1,0 +1,119 @@
+# W4 · POST /expenses/{id}/confirm — one person sharing two items in one
+# confirmation. Each confirmation writes two expense_item_shares rows per person
+# that differ only by a fresh expense_item_id. The database lane now tells such
+# rows apart by values it has already numbered: the expense_items rows of the
+# same step differ by item_key, so their ids are numbered first, and the shares
+# pointing at them order the same way on both stacks. An item-scoped discount
+# points at one of those items too. A second confirmation writes version 2 with
+# the same item keys, so the shares tie again against new item ids.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/expenses/post-expenses-expense_id-confirm-shared-items
+routes: ['POST /expenses/{expense_id}/confirm']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chia món (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn chia món (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba chia món (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia nhiều món (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cơm trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-06T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":106000}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  # owner and mate each share com and tra: two share rows per person; the
+  # item discount on tra points at the tra row. owner 30000 + 8000, mate the
+  # same, third 30000.
+  - id: owner_confirms_two_items_each
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Cơm trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-06T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":106000,"items":[{"item_id":"com","label":"Cơm (dữ liệu mẫu)","amount_vnd":60000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]},{"item_id":"tra","amount_vnd":20000,"shared_by":["{{persona.mate}}","{{persona.owner}}"]},{"item_id":"banh","amount_vnd":30000,"shared_by":["{{persona.third}}"]}],"discounts":[{"discount_id":"giam-tra","amount_vnd":4000,"scope":"item","item_id":"tra"}]},"expected_allocations":{"{{persona.owner}}":38000,"{{persona.mate}}":38000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      lunch_v1: {from: body, pointer: /expense_version_id, class: uuid}
+  # version 2 of the same expense with the same item keys: new item ids, the
+  # shares tie again and are told apart the same way; third now shares tra.
+  - id: mate_confirms_edit_with_same_keys
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Cơm trưa sửa (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-06T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":114000,"items":[{"item_id":"com","amount_vnd":60000,"shared_by":["{{persona.mate}}","{{persona.owner}}"]},{"item_id":"tra","amount_vnd":24000,"shared_by":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"]},{"item_id":"banh","amount_vnd":30000,"shared_by":["{{persona.third}}"]}]},"expected_allocations":{"{{persona.third}}":38000,"{{persona.owner}}":38000,"{{persona.mate}}":38000}}'
+  - id: owner_reads_balances
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'

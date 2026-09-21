@@ -1,0 +1,55 @@
+# W1 concurrency · POST /reports (201, one reports row per filing). Under one key
+# the burst files once and the other copies replay it; under distinct keys, or
+# with no key at all, every copy files its own row.
+id: w1/concurrency/post-reports
+routes: ['POST /reports']
+auth_mode: dev
+personas:
+  reporter: {}
+  other: {}
+steps:
+  - id: register_reporter
+    as: reporter
+    request:
+      method: PUT
+      path: '/people/{{persona.reporter}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người báo cáo cùng lúc (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị báo cáo cùng lúc (dữ liệu mẫu)"}'
+  - id: same_key_burst
+    as: reporter
+    concurrent: 4
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'c-report-same'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: distinct_key_burst
+    as: reporter
+    concurrent: 4
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'c-report-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"harassment"}'
+  - id: no_key_burst
+    as: reporter
+    concurrent: 3
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"other","note":"cùng lúc (dữ liệu mẫu)"}'

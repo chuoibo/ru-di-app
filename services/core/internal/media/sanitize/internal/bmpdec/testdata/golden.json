@@ -1,0 +1,121 @@
+[
+  {
+    "name": "os2-8bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "P",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "fedd37883963eb40",
+    "palette_sha256_prefix": "2f0b17ad871a6199"
+  },
+  {
+    "name": "v3-1bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "P",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "0a6221500964c81f",
+    "palette_sha256_prefix": "cfd68f8ba738c4a7"
+  },
+  {
+    "name": "v3-4bit-topdown",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "P",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "63e358243bd4b217",
+    "palette_sha256_prefix": "d39c12c4d214adbd"
+  },
+  {
+    "name": "v5-16bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "RGB",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "66e1195d119a9d4b"
+  },
+  {
+    "name": "v4-24bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "RGB",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "280efa98aa8a5b9b"
+  },
+  {
+    "name": "v3-32bit-dib",
+    "plugin": "DIB",
+    "result": "ok",
+    "mode": "RGB",
+    "width": 13,
+    "height": 6,
+    "pixels_sha256_prefix": "c9fa5ab38479fe15"
+  },
+  {
+    "name": "gray-1bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "1",
+    "width": 9,
+    "height": 3,
+    "pixels_sha256_prefix": "8eb3ab716dd2f1d1"
+  },
+  {
+    "name": "gray-8bit",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "L",
+    "width": 9,
+    "height": 3,
+    "pixels_sha256_prefix": "14e6abdba69a27f8"
+  },
+  {
+    "name": "bitfields-bgra",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "RGBA",
+    "width": 5,
+    "height": 4,
+    "pixels_sha256_prefix": "a0fbdaccbba43cad"
+  },
+  {
+    "name": "rle8",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "P",
+    "width": 11,
+    "height": 7,
+    "pixels_sha256_prefix": "cd177537df3b029e",
+    "palette_sha256_prefix": "843ec5a9a0f81426"
+  },
+  {
+    "name": "rle4-topdown",
+    "plugin": "BMP",
+    "result": "ok",
+    "mode": "P",
+    "width": 11,
+    "height": 7,
+    "pixels_sha256_prefix": "73463472c14299a1",
+    "palette_sha256_prefix": "19285dd62887534e"
+  },
+  {
+    "name": "truncated-pixels",
+    "plugin": "BMP",
+    "result": "load-error"
+  },
+  {
+    "name": "zero-height",
+    "plugin": "BMP",
+    "result": "next-plugin"
+  },
+  {
+    "name": "bad-bitfields",
+    "plugin": "BMP",
+    "result": "open-error"
+  }
+]

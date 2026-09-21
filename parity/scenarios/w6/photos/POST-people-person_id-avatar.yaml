@@ -1,0 +1,410 @@
+# W6 · POST /people/{person_id}/avatar — set one's own avatar. set_own_avatar
+# checks roles, then is_self (the path id is the actor), then the file is
+# sanitized; a new row every time (purpose avatar, context_id NULL), and the
+# newest row is the avatar. The url in the answer is /people/{id}/avatar, not the
+# row. A person with no people row still passes the permission check.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/photos/post-people-person_id-avatar
+routes: ['POST /people/{person_id}/avatar']
+auth_mode: dev
+personas:
+  owner: {}
+  other: {}
+  ghost: {}
+  gone: {}
+steps:
+  - id: anonymous_upload
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: anonymous_me_path
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/me/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: roles_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        x-actor-roles: 'khong-co'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người đặt ảnh đại diện (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: register_gone
+    as: gone
+    request:
+      method: PUT
+      path: '/people/{{persona.gone}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  # "me" is not a person id on this route
+  - id: owner_me_path
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_non_uuid_without_file
+    as: owner
+    request:
+      method: POST
+      path: '/people/khong-phai-uuid/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts: []
+  - id: owner_for_other_person
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_for_other_person_garbage
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: owner_for_unknown_person
+    as: owner
+    request:
+      method: POST
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_roles_guest_self
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_roles_guest_other
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/avatar'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 20, height: 20, seed: 30}}
+  - id: owner_sets_jpeg
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 64, seed: 31}}
+  - id: owner_reads_jpeg_avatar
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: owner_replaces_with_png_alpha
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 48, height: 48, seed: 32, alpha: true}}
+  - id: owner_reads_replaced_avatar
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: owner_sets_rotated_jpeg
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 40, seed: 33, orientation: 8}}
+  - id: owner_sets_webp
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 32, height: 32, seed: 34}}
+  - id: owner_sets_ppm_ascii
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.ppm, content_type: image/x-portable-pixmap, text: "P3\n1 1\n255\n200 120 40\n"}
+  - id: owner_reads_ppm_avatar
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  # refusals of the file: nothing is replaced
+  - id: owner_garbage
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: owner_empty_file
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: ''}
+  - id: owner_gif_truncated
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 64, height: 48, seed: 1, truncate_at: 100}}
+  - id: owner_over_cap
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 8, height: 8, pad_to_bytes: 10485761}}
+  - id: owner_over_pixel_cap
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, header_width: 7072, header_height: 7072}}
+  - id: owner_reads_avatar_after_refusals
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  # the envelope
+  - id: owner_no_parts
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts: []
+  - id: owner_wrong_field_name
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: avatar, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: owner_text_value_named_file
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, text: 'mau.jpg'}
+  - id: owner_two_files
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mot.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 35}}
+        - {name: file, filename: hai.png, content_type: image/png, image: {format: png, width: 12, height: 12, seed: 36, alpha: true}}
+  - id: owner_reads_after_two_files
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: owner_json_body
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"file":"mau.jpg"}'
+  # idempotency
+  - id: owner_idem_first
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: 'w6-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 30, seed: 37}}
+  - id: owner_idem_replay
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: 'w6-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 30, seed: 37}}
+  - id: owner_idem_other_image
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: 'w6-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 30, seed: 38}}
+  - id: other_idem_same_key_own_avatar
+    as: other
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/avatar'
+      headers:
+        idempotency-key: 'w6-avatar-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 30, height: 30, seed: 37}}
+  # no people row: the check is is_self only; the row names people.id twice
+  - id: ghost_sets_own_avatar
+    as: ghost
+    request:
+      method: POST
+      path: '/people/{{persona.ghost}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 39}}
+  - id: ghost_reads_own_avatar
+    as: ghost
+    request:
+      method: GET
+      path: '/people/{{persona.ghost}}/avatar'
+  # an ended account keeps its people row (anonymised): dev still uploads
+  - id: gone_sets_avatar
+    as: gone
+    request:
+      method: POST
+      path: '/people/{{persona.gone}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 40}}
+  - id: gone_deletes_account
+    as: gone
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: gone_reads_avatar_after_deletion
+    as: gone
+    request:
+      method: GET
+      path: '/people/{{persona.gone}}/avatar'
+  - id: gone_sets_avatar_after_deletion
+    as: gone
+    request:
+      method: POST
+      path: '/people/{{persona.gone}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8, seed: 41}}
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar/'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 8, height: 8}}
+  - id: put_not_allowed
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}/avatar'
+  - id: delete_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/avatar'

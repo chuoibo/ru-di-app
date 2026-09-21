@@ -4,8 +4,15 @@
 
 ## Cây thư mục
 
+> **Đổi từ 2026-09-14 theo `ADR-0029`:** lõi backend chuyển dần sang Go ở `services/core/` (cửa trước công khai,
+> proxy route chưa chuyển về Python); `services/api/` chỉ còn "brain" AI sau decommission. Ai phục vụ route nào
+> thì đọc `services/core/ownership/routes.json`, không đọc cây này.
+
 ```
-services/api/                       FastAPI, Python 3.12+
+services/core/                      Go 1.23 — cửa trước + lõi đang chuyển (ADR-0029)
+  ownership/routes.json             manifest: route nào Go sở hữu, trạng thái, bằng chứng
+parity/                             module Go riêng, hộp đen: so Python trước / Go sau
+services/api/                       FastAPI, Python 3.12+ (đang chuyển; cuối cùng chỉ còn brain AI)
   app/
     domain/                         ← CLAUDE. Thuần, không I/O, không framework
       allocator.py                  hiện thực ADR-0004

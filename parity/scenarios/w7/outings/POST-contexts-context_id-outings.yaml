@@ -1,0 +1,452 @@
+# W7 · POST /contexts/{context_id}/outings: open a trip on a group's calendar (F15).
+# Order: idempotency header, actor, path uuid, body model, then one permission whose
+# only fact is ACTIVE membership -- so an unknown context and a group the caller is not
+# in answer the same 403, and the context is never read. There is no group-kind gate
+# here, so a member of a pair opens a trip inside the two-person conversation and gets
+# a 201. Dates and money are integers and plain dates; the trip starts with no stops,
+# timeline_revision 0, itinerary_version 1 and an empty days list. Texts are sample
+# data (dữ liệu mẫu).
+id: w7/outings/post-contexts-context_id-outings
+routes: ['POST /contexts/{context_id}/outings']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_creates
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến ẩn danh (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến ẩn danh (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến ẩn danh (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến hỏng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        x-actor-roles: 'khong-co'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến hỏng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_path_not_uuid_with_bad_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":""}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đi chơi (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # an unknown context and a group the caller is not in are the same 403
+  - id: owner_creates_on_unknown_context
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến không nhóm (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: stranger_creates
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến người lạ (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_creates_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến vai khách (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_creates_with_empty_roles
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến không vai (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  # the body model, refused before any row is read
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_body_empty_object
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_body_malformed_json
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":'
+  - id: owner_body_not_an_object
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: owner_body_text_plain
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"title":"Chuyến sai kiểu (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_title_blank
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"   ","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_title_not_string
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":7,"starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_ends_before_starts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến ngược ngày (dữ liệu mẫu)","starts_on":"2026-03-16","ends_on":"2026-03-14","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_starts_on_not_a_date
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến sai ngày (dữ liệu mẫu)","starts_on":"14-03-2026","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_starts_on_datetime
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến kèm giờ (dữ liệu mẫu)","starts_on":"2026-03-14T08:00:00Z","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: owner_headcount_zero
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến không người (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":0,"budget_per_person_vnd":450000}'
+  - id: owner_headcount_over_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến quá đông (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":1001,"budget_per_person_vnd":450000}'
+  - id: owner_headcount_string
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến số chuỗi (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":"4","budget_per_person_vnd":450000}'
+  - id: owner_headcount_bool
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến số chân trị (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":true,"budget_per_person_vnd":450000}'
+  - id: owner_budget_negative
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến âm tiền (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":-1}'
+  - id: owner_budget_float
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến tiền lẻ (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000.5}'
+  - id: owner_budget_zero
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến không ngân sách (dữ liệu mẫu)","starts_on":"2026-03-20","ends_on":"2026-03-20","headcount":1,"budget_per_person_vnd":0}'
+    bind:
+      outing_zero: {from: body, pointer: /id, class: uuid}
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến thừa khoá (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000,"khong_biet":1}'
+  # the trips that go in
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_one_day_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Một ngày trong phố (dữ liệu mẫu)","starts_on":"2026-04-02","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":180000}'
+  - id: owner_title_is_trimmed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"   Có khoảng trắng hai đầu (dữ liệu mẫu)   ","starts_on":"2026-05-05","ends_on":"2026-05-06","headcount":3,"budget_per_person_vnd":220000}'
+  - id: mate_creates_trip
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến của bạn đồng hành (dữ liệu mẫu)","starts_on":"2026-06-01","ends_on":"2026-06-03","headcount":6,"budget_per_person_vnd":700000}'
+  - id: owner_creates_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c70f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến có khoá (dữ liệu mẫu)","starts_on":"2026-07-10","ends_on":"2026-07-12","headcount":5,"budget_per_person_vnd":520000}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c70f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến có khoá (dữ liệu mẫu)","starts_on":"2026-07-10","ends_on":"2026-07-12","headcount":5,"budget_per_person_vnd":520000}'
+  - id: owner_same_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c70f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến khác cùng khoá (dữ liệu mẫu)","starts_on":"2026-07-10","ends_on":"2026-07-12","headcount":5,"budget_per_person_vnd":520000}'
+  - id: mate_same_key_own_scope
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c70f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến cùng khoá khác người (dữ liệu mẫu)","starts_on":"2026-08-01","ends_on":"2026-08-02","headcount":2,"budget_per_person_vnd":300000}'
+  - id: stranger_same_key_own_scope
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c70f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến người lạ có khoá (dữ liệu mẫu)","starts_on":"2026-08-01","ends_on":"2026-08-02","headcount":2,"budget_per_person_vnd":300000}'
+  - id: owner_lists_trips
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # no group-kind gate: a trip opens inside a two-person conversation
+  - id: owner_asks_mate
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_trip_on_pair
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Hai đứa đi ăn (dữ liệu mẫu)","starts_on":"2026-09-09","ends_on":"2026-09-09","headcount":2,"budget_per_person_vnd":160000}'
+  - id: stranger_lists_pair_trips
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/outings'
+  # the leftovers a member sees after leaving
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_creates_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến sau khi rời (dữ liệu mẫu)","starts_on":"2026-10-01","ends_on":"2026-10-02","headcount":2,"budget_per_person_vnd":240000}'
+  - id: owner_lists_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến gạch chéo (dữ liệu mẫu)","starts_on":"2026-11-01","ends_on":"2026-11-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: delete_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/outings'

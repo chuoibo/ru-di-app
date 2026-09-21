@@ -1,0 +1,539 @@
+# W8 · POST /papers/{id}/versions/{version}/responses. A body told apart by `kind`
+# (the generated corpus defers the route: the path version is an int). The version must
+# exist, then roles, then version_current before is_not_version_sender. dong_y from the
+# second person makes chot and one outing in the same request; a repeated dong_y is
+# answered with the sheet's state now. de_nghi_sua writes a new version sent and agreed
+# by its author, and is 409 paper_frozen on a plan. Texts are sample data.
+id: w8/pair_papers/post-papers-paper_id-versions-version-responses
+routes: ['POST /papers/{paper_id}/versions/{version}/responses']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_responds
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: stranger_responds_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_agrees_own_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_agrees_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_counter_own_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_agrees_own_sent
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_agrees_version_2
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_agrees_version_9
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: stranger_agrees_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_agrees_as_advancer
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_kind_missing
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: mate_kind_unknown
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"ok"}'
+  - id: mate_kind_number
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":1}'
+  - id: mate_agree_with_content
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: mate_counter_without_content
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua"}'
+  - id: mate_counter_three_stops
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn (dữ liệu mẫu)"},{"gio":"19:00","viec":"Ăn (dữ liệu mẫu)"},{"gio":"19:00","viec":"Ăn (dữ liệu mẫu)"}]}}'
+  - id: mate_counter_ly_do_201
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]},"ly_do":"dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu mẫu dữ liệu m"}'
+  - id: mate_body_null
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'null'
+  - id: mate_body_array
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: mate_kind_uppercase
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"DONG_Y"}'
+  - id: mate_version_word
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/mot/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_version_decimal
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9.0/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_version_leading_zero
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/09/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_proposes
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:30","viec":"Lẩu nấm (dữ liệu mẫu)"}]},"ly_do":"  Muộn hơn nửa tiếng (dữ liệu mẫu)  "}'
+  - id: mate_agrees_stale_v1
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_agrees_own_v2
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_own_v2
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_counter_v2
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"20:00","viec":"Ốc luộc (dữ liệu mẫu)"}]}}'
+  # no look first: dong_y is allowed from da_gui
+  - id: mate_agrees_v3
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_reads_plan
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: mate_agrees_v3_again
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: owner_agrees_own_v3
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_frozen
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_records_done
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/done'
+  - id: mate_agrees_after_done
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_after_done
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_keeps
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/keeps'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"line":"Quán nhỏ đầu hẻm (dữ liệu mẫu)"}'
+  - id: mate_agrees_after_keep
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_after_keep
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/3/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: second_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: second_owner_dates
+    as: owner
+    request:
+      method: PATCH
+      path: '/papers/{{paper_2}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: second_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_agrees_with_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/versions/1/responses'
+      headers:
+        idempotency-key: 'w8-tra-loi-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_replays_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/versions/1/responses'
+      headers:
+        idempotency-key: 'w8-tra-loi-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_header_key_other_body
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/versions/1/responses'
+      headers:
+        idempotency-key: 'w8-tra-loi-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: third_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_3: {from: body, pointer: /id, class: uuid}
+  - id: third_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_counter_task_nul
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn\u0000tối (dữ liệu mẫu)"}]}}'
+  - id: mate_counter_hostile
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"<i>Ăn</i> <script>alert(1)</script>"}]},"ly_do":"\u202eiộv mộh (dữ liệu mẫu)"}'
+  - id: owner_reads_hostile_counter
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper_3}}'
+  - id: mate_withdraws_v2
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: owner_agrees_withdrawn
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: fourth_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_4: {from: body, pointer: /id, class: uuid}
+  - id: fourth_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_skips_fourth
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/skip'
+  - id: mate_agrees_cancelled
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_counter_cancelled
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'

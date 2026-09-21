@@ -1,0 +1,86 @@
+# W8 concurrency · POST …/proposals/{id}/grant. Three grants of one offer at once queue on
+# the notebook row: one completes it and opens the cycle, two read it completed and
+# answer 409 consent_proposal_expired. Under one header key: one 200, two replays.
+# Texts are sample data (dữ liệu mẫu).
+id: w8/concurrency/post-contexts-context_id-notebook-proposals-proposal_id-grant
+routes: ['POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_three_at_once
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_proposes_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      doc_chat: {from: body, pointer: /id, class: uuid}
+  - id: mate_same_key_three_at_once
+    as: mate
+    concurrent: 3
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{doc_chat}}/grant'
+      headers:
+        idempotency-key: 'w8-c-dong-y'

@@ -1,0 +1,146 @@
+# W2 · GET /stories — the rail: every live story the actor may see, grouped by
+# author. This file holds the branches that need no story: identity refusals,
+# the empty rail for a stranger, a friend with nothing up, deleted people, and
+# the framework doors. Stories need an uploaded photo, whose uploaded_images row
+# carries a random storage_key the database lane cannot normalise, so the
+# visibility matrix and the ordering live in
+# parity/scenarios/w2/stories-photo/GET-stories.yaml.
+id: w2/stories/get-stories
+routes: ['GET /stories']
+auth_mode: dev
+personas:
+  viewer: {}
+  friend: {}
+  ghost: {}
+steps:
+  - id: anonymous_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/stories'
+  # dev never reads a bearer: still Missing X-Actor-ID
+  - id: anonymous_junk_bearer_ignored_in_dev
+    as: anonymous
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: actor_id_not_uuid
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        x-actor-roles: 'member,thuyen-truong'
+  - id: contexts_header_not_uuid
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        x-actor-contexts: 'khong-phai-uuid'
+  # nobody has to be registered to read an empty rail
+  - id: ghost_empty_feed
+    as: ghost
+    request:
+      method: GET
+      path: '/stories'
+  - id: register_viewer
+    as: viewer
+    request:
+      method: PUT
+      path: '/people/{{persona.viewer}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người xem (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: viewer_empty_feed
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+  # GET /stories asks for no permission: an empty role list still reads the rail
+  - id: viewer_roles_empty_feed
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+      headers:
+        x-actor-roles: ''
+  - id: viewer_query_string_ignored
+    as: viewer
+    request:
+      method: GET
+      path: '/stories?limit=1&author_id={{persona.friend}}&include_expired=true'
+  - id: trailing_slash_redirects
+    as: viewer
+    request:
+      method: GET
+      path: '/stories/'
+  - id: delete_not_allowed
+    as: viewer
+    request:
+      method: DELETE
+      path: '/stories'
+  - id: patch_not_allowed
+    as: viewer
+    request:
+      method: PATCH
+      path: '/stories'
+  - id: viewer_asks_friend
+    as: viewer
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # a friend with nothing up is absent, not an empty group
+  - id: viewer_feed_friend_without_stories
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+  - id: friend_deletes_account
+    as: friend
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: viewer_feed_after_friend_deleted
+    as: viewer
+    request:
+      method: GET
+      path: '/stories'
+  - id: friend_feed_after_own_account_deleted
+    as: friend
+    request:
+      method: GET
+      path: '/stories'

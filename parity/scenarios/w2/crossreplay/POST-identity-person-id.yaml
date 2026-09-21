@@ -1,0 +1,137 @@
+# W2 cross replay, limiter lane · POST /identity/person-id (200 stored under a
+# key). One implementation stores the minted id and the other replays it, in
+# both directions; another spelling of the number under the key is refused by
+# the other; a hand-parsed 422 is not stored by either side.
+#
+# Why the limiter lane: person_id_limit (20 per 60 s per address, in memory) is
+# spent by every step that reaches a handler; replays and key refusals are
+# answered by the middleware first. The reference Python spends 6; the candidate
+# spends 3 in core and 3 in its own Python (the via: python steps), two separate
+# counters. No step bursts: the lane refuses concurrent steps.
+#
+# Numbers are sample data (dữ liệu mẫu), split by JSON \t escapes so no digit
+# run reaches the repo. The scope is the persona's X-Actor-ID, fresh per run.
+id: w2/crossreplay/post-identity-person-id
+routes: ['POST /identity/person-id']
+auth_mode: dev
+lane: limiter
+personas:
+  caller: {}
+steps:
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: caller
+    via: python
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t08"}'
+  - id: core_replays_python_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t08"}'
+  - id: core_replays_python_key_respaced
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{ "phone" : "03\t99\t00\t00\t08" }'
+  - id: core_refuses_python_key_other_spelling
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t08"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t09"}'
+  - id: python_replays_core_key
+    as: caller
+    via: python
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t09"}'
+  - id: python_refuses_core_key_other_spelling
+    as: caller
+    via: python
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-b'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t399\t00\t00\t09"}'
+  # a 422 phone_not_mobile is not stored
+  - id: python_refusal_releases_key
+    as: caller
+    via: python
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-c'
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t08"}'
+  - id: core_uses_key_python_released
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-c'
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t(399)\t00.00-08"}'
+  # a 422 phone_required is not stored
+  - id: core_refusal_releases_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-d'
+        content-type: 'application/json'
+      body_raw: '{"phone": 7}'
+  - id: python_uses_key_core_released
+    as: caller
+    via: python
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-d'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t09"}'
+  - id: core_replays_what_python_stored_after_release
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'x-person-id-d'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t09"}'

@@ -1,0 +1,1533 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "bills",
+ "routes": [
+  {
+   "id": "POST /bills",
+   "order": 12,
+   "method": "POST",
+   "path": "/bills",
+   "name": "create_bill",
+   "endpoint": "app.api.routes.bills.create_bill",
+   "status_code": 201,
+   "path_convertors": {},
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.bills.create_bill",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.bills.create_bill",
+     []
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.BillCreateRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.BillCreateRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /bills/{bill_id}",
+   "order": 13,
+   "method": "GET",
+   "path": "/bills/{bill_id}",
+   "name": "get_bill",
+   "endpoint": "app.api.routes.bills.get_bill",
+   "status_code": null,
+   "path_convertors": {
+    "bill_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.bills.get_bill",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.bills.get_bill",
+     []
+    ],
+    "path": [
+     {
+      "name": "bill_id",
+      "alias": "bill_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "PUT /bills/{bill_id}/assignments",
+   "order": 14,
+   "method": "PUT",
+   "path": "/bills/{bill_id}/assignments",
+   "name": "confirm_bill_assignments",
+   "endpoint": "app.api.routes.bills.confirm_bill_assignments",
+   "status_code": null,
+   "path_convertors": {
+    "bill_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.bills.confirm_bill_assignments",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.bills.confirm_bill_assignments",
+     []
+    ],
+    "path": [
+     {
+      "name": "bill_id",
+      "alias": "bill_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.BillAssignmentsRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.BillAssignmentsRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /bills/{bill_id}/my-items",
+   "order": 15,
+   "method": "POST",
+   "path": "/bills/{bill_id}/my-items",
+   "name": "claim_bill_items",
+   "endpoint": "app.api.routes.bills.claim_bill_items",
+   "status_code": null,
+   "path_convertors": {
+    "bill_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.bills.claim_bill_items",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.bills.claim_bill_items",
+     []
+    ],
+    "path": [
+     {
+      "name": "bill_id",
+      "alias": "bill_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.BillSelfClaimRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.BillSelfClaimRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /bills/{bill_id}/split",
+   "order": 16,
+   "method": "POST",
+   "path": "/bills/{bill_id}/split",
+   "name": "split_bill",
+   "endpoint": "app.api.routes.bills.split_bill",
+   "status_code": null,
+   "path_convertors": {
+    "bill_id": "StringConvertor"
+   },
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.bills.split_bill",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.bills.split_bill",
+     []
+    ],
+    "path": [
+     {
+      "name": "bill_id",
+      "alias": "bill_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.schemas.BillSplitRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.schemas.BillSplitRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.schemas.BillAssignment": {
+   "type": "model",
+   "class": "app.api.schemas.BillAssignment",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillAssignment",
+    "fields": [
+     {
+      "name": "item_key",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "max_length": 64
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 64
+       }
+      ]
+     },
+     {
+      "name": "participant_ids",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "uuid"
+       }
+      },
+      "annotation": "list[uuid.UUID]",
+      "required": true
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillAssignmentsRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillAssignmentsRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillAssignmentsRequest",
+    "fields": [
+     {
+      "name": "assignments",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "ref",
+        "ref": "app.api.schemas.BillAssignment"
+       }
+      },
+      "annotation": "list[app.api.schemas.BillAssignment]",
+      "required": true
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillCreateRequest",
+    "fields": [
+     {
+      "name": "context_id",
+      "schema": {
+       "type": "uuid"
+      },
+      "annotation": "uuid.UUID",
+      "required": true
+     },
+     {
+      "name": "printed_total_vnd",
+      "schema": {
+       "type": "nullable",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "ge": 0
+       }
+      },
+      "annotation": "Annotated[int, Field(Strict(strict=True), Ge(ge=0))] | None",
+      "required": true
+     },
+     {
+      "name": "items_total_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true,
+       "ge": 0
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Ge",
+        "ge": 0
+       }
+      ]
+     },
+     {
+      "name": "confidence",
+      "schema": {
+       "type": "int",
+       "strict": true,
+       "ge": 0,
+       "le": 100
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Ge",
+        "ge": 0
+       },
+       {
+        "kind": "Le",
+        "le": 100
+       }
+      ]
+     },
+     {
+      "name": "needs_review",
+      "schema": {
+       "type": "bool",
+       "strict": true
+      },
+      "annotation": "bool",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "items",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "ref",
+        "ref": "app.api.schemas.BillItemCreateRequest"
+       }
+      },
+      "annotation": "list[app.api.schemas.BillItemCreateRequest]",
+      "required": true
+     },
+     {
+      "name": "surcharges",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.BillSurchargeCreateRequest"
+        }
+       },
+       "default_factory": {
+        "name": "builtins.list"
+       },
+       "default_factory_takes_data": false
+      },
+      "annotation": "list[app.api.schemas.BillSurchargeCreateRequest]",
+      "required": false
+     },
+     {
+      "name": "discounts",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "list",
+        "items_schema": {
+         "type": "ref",
+         "ref": "app.api.schemas.BillDiscountCreateRequest"
+        }
+       },
+       "default_factory": {
+        "name": "builtins.list"
+       },
+       "default_factory_takes_data": false
+      },
+      "annotation": "list[app.api.schemas.BillDiscountCreateRequest]",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillDiscountCreateRequest": {
+   "type": "function-after",
+   "function": {
+    "kind": "no-info",
+    "name": "app.api.schemas.BillDiscountCreateRequest._target_matches_scope"
+   },
+   "schema": {
+    "type": "model",
+    "class": "app.api.schemas.BillDiscountCreateRequest",
+    "custom_init": false,
+    "root_model": false,
+    "config": {
+     "extra_fields_behavior": "forbid"
+    },
+    "decorators": {
+     "model_validators": [
+      {
+       "name": "_target_matches_scope",
+       "function": "app.api.schemas.BillDiscountCreateRequest._target_matches_scope",
+       "mode": "after"
+      }
+     ]
+    },
+    "schema": {
+     "type": "model-fields",
+     "model_name": "BillDiscountCreateRequest",
+     "fields": [
+      {
+       "name": "discount_key",
+       "schema": {
+        "type": "str",
+        "strict": true,
+        "max_length": 64
+       },
+       "annotation": "str",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "MaxLen",
+         "max_length": 64
+        }
+       ]
+      },
+      {
+       "name": "amount_vnd",
+       "schema": {
+        "type": "int",
+        "strict": true,
+        "gt": 0
+       },
+       "annotation": "int",
+       "required": true,
+       "constraints": [
+        {
+         "kind": "Strict",
+         "strict": true
+        },
+        {
+         "kind": "Gt",
+         "gt": 0
+        }
+       ]
+      },
+      {
+       "name": "scope",
+       "schema": {
+        "type": "literal",
+        "expected": [
+         "global_proportional",
+         "item"
+        ]
+       },
+       "annotation": "Literal['global_proportional', 'item']",
+       "required": true
+      },
+      {
+       "name": "item_key",
+       "schema": {
+        "type": "default",
+        "schema": {
+         "type": "nullable",
+         "schema": {
+          "type": "str",
+          "strict": true,
+          "max_length": 64
+         }
+        },
+        "default": null
+       },
+       "annotation": "Annotated[str, Strict(strict=True), Field(MaxLen(max_length=64))] | None",
+       "required": false
+      }
+     ]
+    }
+   }
+  },
+  "app.api.schemas.BillItemCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillItemCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillItemCreateRequest",
+    "fields": [
+     {
+      "name": "item_key",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "max_length": 64
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 64
+       }
+      ]
+     },
+     {
+      "name": "name",
+      "schema": {
+       "type": "str",
+       "strict": true
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "quantity",
+      "schema": {
+       "type": "int",
+       "strict": true,
+       "gt": 0
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Gt",
+        "gt": 0
+       }
+      ]
+     },
+     {
+      "name": "unit_price_vnd",
+      "schema": {
+       "type": "nullable",
+       "schema": {
+        "type": "int",
+        "strict": true
+       }
+      },
+      "annotation": "Annotated[int, Field(Strict(strict=True))] | None",
+      "required": true
+     },
+     {
+      "name": "line_total_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true,
+       "gt": 0
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Gt",
+        "gt": 0
+       }
+      ]
+     },
+     {
+      "name": "suggested_participant_ids",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "uuid"
+       }
+      },
+      "annotation": "list[uuid.UUID]",
+      "required": true
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillSelfClaimRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillSelfClaimRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillSelfClaimRequest",
+    "fields": [
+     {
+      "name": "item_keys",
+      "schema": {
+       "type": "list",
+       "items_schema": {
+        "type": "str",
+        "strict": true,
+        "max_length": 64
+       }
+      },
+      "annotation": "list[Annotated[str, Strict(strict=True), Field(MaxLen(max_length=64))]]",
+      "required": true
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillSplitRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillSplitRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillSplitRequest",
+    "fields": [
+     {
+      "name": "for_ledger",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "bool",
+        "strict": true
+       },
+       "default": false
+      },
+      "annotation": "bool",
+      "required": false,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       }
+      ]
+     },
+     {
+      "name": "paid_by_id",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "uuid"
+        }
+       },
+       "default": null
+      },
+      "annotation": "uuid.UUID | None",
+      "required": false
+     }
+    ]
+   }
+  },
+  "app.api.schemas.BillSurchargeCreateRequest": {
+   "type": "model",
+   "class": "app.api.schemas.BillSurchargeCreateRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {
+    "extra_fields_behavior": "forbid"
+   },
+   "decorators": {},
+   "schema": {
+    "type": "model-fields",
+    "model_name": "BillSurchargeCreateRequest",
+    "fields": [
+     {
+      "name": "surcharge_key",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "max_length": 64
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 64
+       }
+      ]
+     },
+     {
+      "name": "kind",
+      "schema": {
+       "type": "str",
+       "strict": true,
+       "max_length": 32
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 32
+       }
+      ]
+     },
+     {
+      "name": "amount_vnd",
+      "schema": {
+       "type": "int",
+       "strict": true,
+       "gt": 0
+      },
+      "annotation": "int",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "Strict",
+        "strict": true
+       },
+       {
+        "kind": "Gt",
+        "gt": 0
+       }
+      ]
+     },
+     {
+      "name": "mode",
+      "schema": {
+       "type": "literal",
+       "expected": [
+        "proportional",
+        "even"
+       ]
+      },
+      "annotation": "Literal['proportional', 'even']",
+      "required": true
+     }
+    ]
+   }
+  }
+ }
+}

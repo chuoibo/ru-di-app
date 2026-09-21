@@ -1,0 +1,4433 @@
+{
+ "generator": "scripts/render_domain_w2_goldens.py",
+ "module": "app.api.cursors",
+ "mode": "cursors",
+ "python": "3.12.14",
+ "seed": 41,
+ "constants": {
+  "isspace": [
+   [
+    9,
+    13
+   ],
+   [
+    28,
+    32
+   ],
+   [
+    133,
+    133
+   ],
+   [
+    160,
+    160
+   ],
+   [
+    5760,
+    5760
+   ],
+   [
+    8192,
+    8202
+   ],
+   [
+    8232,
+    8233
+   ],
+   [
+    8239,
+    8239
+   ],
+   [
+    8287,
+    8287
+   ],
+   [
+    12288,
+    12288
+   ]
+  ],
+  "decimal": [
+   [
+    48,
+    57,
+    0
+   ],
+   [
+    1632,
+    1641,
+    0
+   ],
+   [
+    1776,
+    1785,
+    0
+   ],
+   [
+    1984,
+    1993,
+    0
+   ],
+   [
+    2406,
+    2415,
+    0
+   ],
+   [
+    2534,
+    2543,
+    0
+   ],
+   [
+    2662,
+    2671,
+    0
+   ],
+   [
+    2790,
+    2799,
+    0
+   ],
+   [
+    2918,
+    2927,
+    0
+   ],
+   [
+    3046,
+    3055,
+    0
+   ],
+   [
+    3174,
+    3183,
+    0
+   ],
+   [
+    3302,
+    3311,
+    0
+   ],
+   [
+    3430,
+    3439,
+    0
+   ],
+   [
+    3558,
+    3567,
+    0
+   ],
+   [
+    3664,
+    3673,
+    0
+   ],
+   [
+    3792,
+    3801,
+    0
+   ],
+   [
+    3872,
+    3881,
+    0
+   ],
+   [
+    4160,
+    4169,
+    0
+   ],
+   [
+    4240,
+    4249,
+    0
+   ],
+   [
+    6112,
+    6121,
+    0
+   ],
+   [
+    6160,
+    6169,
+    0
+   ],
+   [
+    6470,
+    6479,
+    0
+   ],
+   [
+    6608,
+    6617,
+    0
+   ],
+   [
+    6784,
+    6793,
+    0
+   ],
+   [
+    6800,
+    6809,
+    0
+   ],
+   [
+    6992,
+    7001,
+    0
+   ],
+   [
+    7088,
+    7097,
+    0
+   ],
+   [
+    7232,
+    7241,
+    0
+   ],
+   [
+    7248,
+    7257,
+    0
+   ],
+   [
+    42528,
+    42537,
+    0
+   ],
+   [
+    43216,
+    43225,
+    0
+   ],
+   [
+    43264,
+    43273,
+    0
+   ],
+   [
+    43472,
+    43481,
+    0
+   ],
+   [
+    43504,
+    43513,
+    0
+   ],
+   [
+    43600,
+    43609,
+    0
+   ],
+   [
+    44016,
+    44025,
+    0
+   ],
+   [
+    65296,
+    65305,
+    0
+   ],
+   [
+    66720,
+    66729,
+    0
+   ],
+   [
+    68912,
+    68921,
+    0
+   ],
+   [
+    69734,
+    69743,
+    0
+   ],
+   [
+    69872,
+    69881,
+    0
+   ],
+   [
+    69942,
+    69951,
+    0
+   ],
+   [
+    70096,
+    70105,
+    0
+   ],
+   [
+    70384,
+    70393,
+    0
+   ],
+   [
+    70736,
+    70745,
+    0
+   ],
+   [
+    70864,
+    70873,
+    0
+   ],
+   [
+    71248,
+    71257,
+    0
+   ],
+   [
+    71360,
+    71369,
+    0
+   ],
+   [
+    71472,
+    71481,
+    0
+   ],
+   [
+    71904,
+    71913,
+    0
+   ],
+   [
+    72016,
+    72025,
+    0
+   ],
+   [
+    72784,
+    72793,
+    0
+   ],
+   [
+    73040,
+    73049,
+    0
+   ],
+   [
+    73120,
+    73129,
+    0
+   ],
+   [
+    73552,
+    73561,
+    0
+   ],
+   [
+    92768,
+    92777,
+    0
+   ],
+   [
+    92864,
+    92873,
+    0
+   ],
+   [
+    93008,
+    93017,
+    0
+   ],
+   [
+    120782,
+    120831,
+    0
+   ],
+   [
+    123200,
+    123209,
+    0
+   ],
+   [
+    123632,
+    123641,
+    0
+   ],
+   [
+    124144,
+    124153,
+    0
+   ],
+   [
+    125264,
+    125273,
+    0
+   ],
+   [
+    130032,
+    130041,
+    0
+   ]
+  ],
+  "names": [
+   "CursorError",
+   "decode_cursor",
+   "encode_cursor"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "encode_cursor",
+   "name": "encode/0/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345678|+00:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzgr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/0/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345678|+00:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzgr|MDA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/0/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345678|+00:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzgr|MDA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/1/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.000000|+00:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MiswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/1/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.000000|+00:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MiswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/1/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.000000|+00:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MiswMD|owMHxm|ZmZmZm|ZmZi1m|ZmZmLW|ZmZmYt|ZmZmZi|1mZmZm|ZmZmZm|ZmZmY"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/2/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T16:30:12.345678|+07:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNj|ozMDox|Mi4zND|U2Nzgr|MDc6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/2/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T16:30:12.345678|+07:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNj|ozMDox|Mi4zND|U2Nzgr|MDc6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/2/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T16:30:12.345678|+07:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNj|ozMDox|Mi4zND|U2Nzgr|MDc6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/3/0",
+   "args": {
+    "created_at": "$dt:2026-09-14T23:30:12.345678|-10:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQyMz|ozMDox|Mi4zND|U2Nzgt|MTA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/3/1",
+   "args": {
+    "created_at": "$dt:2026-09-14T23:30:12.345678|-10:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQyMz|ozMDox|Mi4zND|U2Nzgt|MTA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/3/2",
+   "args": {
+    "created_at": "$dt:2026-09-14T23:30:12.345678|-10:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQyMz|ozMDox|Mi4zND|U2Nzgt|MTA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/4/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T15:00:27.345678|+05:30:15",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNT|owMDoy|Ny4zND|U2Nzgr|MDU6Mz|A6MTV8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/4/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T15:00:27.345678|+05:30:15",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNT|owMDoy|Ny4zND|U2Nzgr|MDU6Mz|A6MTV8|MDAwMD|AwMDAt|MDAwMC|0wMDAw|LTAwMD|AtMDAw|MDAwMD|AwMDAw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/4/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T15:00:27.345678|+05:30:15",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxNT|owMDoy|Ny4zND|U2Nzgr|MDU6Mz|A6MTV8|ZmZmZm|ZmZmYt|ZmZmZi|1mZmZm|LWZmZm|YtZmZm|ZmZmZm|ZmZmZm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/5/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.345678|-00:00:01",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4zND|U2Nzgt|MDA6MD|A6MDF8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/5/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.345678|-00:00:01",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4zND|U2Nzgt|MDA6MD|A6MDF8|MDAwMD|AwMDAt|MDAwMC|0wMDAw|LTAwMD|AtMDAw|MDAwMD|AwMDAw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/5/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.345678|-00:00:01",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4zND|U2Nzgt|MDA6MD|A6MDF8|ZmZmZm|ZmZmYt|ZmZmZi|1mZmZm|LWZmZm|YtZmZm|ZmZmZm|ZmZmZm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/6/0",
+   "args": {
+    "created_at": "$dt:0001-01-01T00:00:00.000000|+00:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/6/1",
+   "args": {
+    "created_at": "$dt:0001-01-01T00:00:00.000000|+00:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/6/2",
+   "args": {
+    "created_at": "$dt:0001-01-01T00:00:00.000000|+00:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHxm|ZmZmZm|ZmZi1m|ZmZmLW|ZmZmYt|ZmZmZi|1mZmZm|ZmZmZm|ZmZmY"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/7/0",
+   "args": {
+    "created_at": "$dt:9999-12-31T23:59:59.999999|+00:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/7/1",
+   "args": {
+    "created_at": "$dt:9999-12-31T23:59:59.999999|+00:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkr|MDA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/7/2",
+   "args": {
+    "created_at": "$dt:9999-12-31T23:59:59.999999|+00:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkr|MDA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/8/0",
+   "args": {
+    "created_at": "$dt:0999-01-02T03:04:05.000006|+00:00",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MDk5OS|0wMS0w|MlQwMz|owNDow|NS4wMD|AwMDYr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/8/1",
+   "args": {
+    "created_at": "$dt:0999-01-02T03:04:05.000006|+00:00",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MDk5OS|0wMS0w|MlQwMz|owNDow|NS4wMD|AwMDYr|MDA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/8/2",
+   "args": {
+    "created_at": "$dt:0999-01-02T03:04:05.000006|+00:00",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MDk5OS|0wMS0w|MlQwMz|owNDow|NS4wMD|AwMDYr|MDA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/9/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345679|+00:00:00.000001",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzkr|MDA6MD|A6MDAu|MDAwMD|AxfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/9/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345679|+00:00:00.000001",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzkr|MDA6MD|A6MDAu|MDAwMD|AxfDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/9/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:12.345679|+00:00:00.000001",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzkr|MDA6MD|A6MDAu|MDAwMD|AxfGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/10/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T10:30:12.845678|+01:00:00.500000",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxMD|ozMDox|Mi44ND|U2Nzgr|MDE6MD|A6MDAu|NTAwMD|AwfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/10/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T10:30:12.845678|+01:00:00.500000",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxMD|ozMDox|Mi44ND|U2Nzgr|MDE6MD|A6MDAu|NTAwMD|AwfDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/10/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T10:30:12.845678|+01:00:00.500000",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQxMD|ozMDox|Mi44ND|U2Nzgr|MDE6MD|A6MDAu|NTAwMD|AwfGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/11/0",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.095678|-00:00:01.250000",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4wOT|U2Nzgt|MDA6MD|A6MDEu|MjUwMD|AwfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/11/1",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.095678|-00:00:01.250000",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4wOT|U2Nzgt|MDA6MD|A6MDEu|MjUwMD|AwfDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/11/2",
+   "args": {
+    "created_at": "$dt:2026-09-15T09:30:11.095678|-00:00:01.250000",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4wOT|U2Nzgt|MDA6MD|A6MDEu|MjUwMD|AwfGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/12/0",
+   "args": {
+    "created_at": "$dt:2026-09-14T09:30:12.345679|-23:59:59.999999",
+    "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQwOT|ozMDox|Mi4zND|U2Nzkt|MjM6NT|k6NTku|OTk5OT|k5fGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/12/1",
+   "args": {
+    "created_at": "$dt:2026-09-14T09:30:12.345679|-23:59:59.999999",
+    "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQwOT|ozMDox|Mi4zND|U2Nzkt|MjM6NT|k6NTku|OTk5OT|k5fDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA"
+   }
+  },
+  {
+   "fn": "encode_cursor",
+   "name": "encode/12/2",
+   "args": {
+    "created_at": "$dt:2026-09-14T09:30:12.345679|-23:59:59.999999",
+    "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+   },
+   "result": {
+    "ok": "$sp:MjAyNi|0wOS0x|NFQwOT|ozMDox|Mi4zND|U2Nzkt|MjM6NT|k6NTku|OTk5OT|k5fGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg"
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/0",
+   "args": {
+    "raw": ""
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/1",
+   "args": {
+    "raw": "not-a-cursor"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/2",
+   "args": {
+    "raw": "!!!!"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/3",
+   "args": {
+    "raw": "YWJj"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/4",
+   "args": {
+    "raw": "eyJhIjoxfQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/5",
+   "args": {
+    "raw": "="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/6",
+   "args": {
+    "raw": "=="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/7",
+   "args": {
+    "raw": "A"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/garbage/8",
+   "args": {
+    "raw": "AB"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/unparseable_id",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxu|b3QtYS|11dWlk"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/0",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzgr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      9,
+      30,
+      12,
+      345678,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzgr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/1",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MiswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      9,
+      30,
+      12,
+      0,
+      0,
+      0
+     ],
+     "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MiswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA",
+     "utc_microseconds": "$i:0x6_5b82_3289_5100"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/2",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQxNj|ozMDox|Mi4zND|U2Nzgr|MDc6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      16,
+      30,
+      12,
+      345678,
+      25200,
+      0
+     ],
+     "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQxNj|ozMDox|Mi4zND|U2Nzgr|MDc6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/3",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NFQyMz|ozMDox|Mi4zND|U2Nzgt|MTA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      14,
+      23,
+      30,
+      12,
+      345678,
+      -36000,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NFQyMz|ozMDox|Mi4zND|U2Nzgt|MTA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/4",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQxNT|owMDoy|Ny4zND|U2Nzgr|MDU6Mz|A6MTV8|MDAwMD|AwMDAt|MDAwMC|0wMDAw|LTAwMD|AtMDAw|MDAwMD|AwMDAw"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      15,
+      0,
+      27,
+      345678,
+      19815,
+      0
+     ],
+     "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQxNT|owMDoy|Ny4zND|U2Nzgr|MDU6Mz|A6MTV8|MDAwMD|AwMDAt|MDAwMC|0wMDAw|LTAwMD|AtMDAw|MDAwMD|AwMDAw",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/5",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4zND|U2Nzgt|MDA6MD|A6MDF8|ZmZmZm|ZmZmYt|ZmZmZi|1mZmZm|LWZmZm|YtZmZm|ZmZmZm|ZmZmZm"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      9,
+      30,
+      11,
+      345678,
+      -1,
+      0
+     ],
+     "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4zND|U2Nzgt|MDA6MD|A6MDF8|ZmZmZm|ZmZmYt|ZmZmZi|1mZmZm|LWZmZm|YtZmZm|ZmZmZm|ZmZmZm",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/6",
+   "args": {
+    "raw": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:-0xdc_bffe_ff2b_c000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/7",
+   "args": {
+    "raw": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkr|MDA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      9999,
+      12,
+      31,
+      23,
+      59,
+      59,
+      999999,
+      0,
+      0
+     ],
+     "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000",
+     "reencoded": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkr|MDA6MD|B8MDAw|MDAwMD|AtMDAw|MC0wMD|AwLTAw|MDAtMD|AwMDAw|MDAwMD|Aw",
+     "utc_microseconds": "$i:0x384_440c_cc73_5fff"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/8",
+   "args": {
+    "raw": "$sp:MDk5OS|0wMS0w|MlQwMz|owNDow|NS4wMD|AwMDYr|MDA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      999,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      0,
+      0
+     ],
+     "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "reencoded": "$sp:MDk5OS|0wMS0w|MlQwMz|owNDow|NS4wMD|AwMDYr|MDA6MD|B8ZmZm|ZmZmZm|YtZmZm|Zi1mZm|ZmLWZm|ZmYtZm|ZmZmZm|ZmZmZm|Zm",
+     "utc_microseconds": "$i:-0x6c_dc6e_03eb_0cba"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/9",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzkr|MDA6MD|A6MDAu|MDAwMD|AxfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      9,
+      30,
+      12,
+      345679,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|Mi4zND|U2Nzkr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5b82_328e_974f"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/10",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQxMD|ozMDox|Mi44ND|U2Nzgr|MDE6MD|A6MDAu|NTAwMD|AwfDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      10,
+      30,
+      12,
+      845678,
+      3600,
+      500000
+     ],
+     "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQxMD|ozMDox|Mi44ND|U2Nzgr|MDE6MD|A6MDAu|NTAwMD|AwfDAw|MDAwMD|AwLTAw|MDAtMD|AwMC0w|MDAwLT|AwMDAw|MDAwMD|AwMA",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/11",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4wOT|U2Nzgt|MDA6MD|A6MDEu|MjUwMD|AwfGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      15,
+      9,
+      30,
+      11,
+      95678,
+      -2,
+      750000
+     ],
+     "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NVQwOT|ozMDox|MS4wOT|U2Nzgt|MDA6MD|A6MDEu|MjUwMD|AwfGZm|ZmZmZm|ZmLWZm|ZmYtZm|ZmZi1m|ZmZmLW|ZmZmZm|ZmZmZm|ZmZg",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/round_trip/12",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOS0x|NFQwOT|ozMDox|Mi4zND|U2Nzkt|MjM6NT|k6NTku|OTk5OT|k5fGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      9,
+      14,
+      9,
+      30,
+      12,
+      345679,
+      -86400,
+      1
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOS0x|NFQwOT|ozMDox|Mi4zND|U2Nzkt|MjM6NT|k6NTku|OTk5OT|k5fGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ",
+     "utc_microseconds": "$i:0x6_5b82_328e_974e"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/0",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/1",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      123456,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a2e_bcf0_4980"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/2",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/3",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a24_400a_4000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/4",
+   "args": {
+    "raw": "$sp:MjAyNj|A4Mjl8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a24_400a_4000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/5",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzV8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      24,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|NFQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_59bf_aad5_6000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/6",
+   "args": {
+    "raw": "$sp:MjAyNl|czNXxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      24,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|NFQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_59bf_aad5_6000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/7",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|NnxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a24_400a_4000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/8",
+   "args": {
+    "raw": "$sp:MjAyNl|czNTZ8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a24_400a_4000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/9",
+   "args": {
+    "raw": "$sp:MjAyNl|czNVQx|MnxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      24,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|NFQxMj|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_59c9_b9c1_1000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/10",
+   "args": {
+    "raw": "$sp:MjAyNl|czNTZU|MTJ8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_4ef5_f000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/11",
+   "args": {
+    "raw": "$sp:MjAyNl|czNTYx|MjMwfG|ExYTFh|MWExLW|IxYjEt|NGMxYy|04ZDFk|LWUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      24,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|NFQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_59ca_250a_e200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/12",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|NjEyOj|MwfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/13",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|NlQxMj|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/14",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/15",
+   "args": {
+    "raw": "$sp:MjAyNi|1XM3xh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/16",
+   "args": {
+    "raw": "$sp:MjAyMC|1XNTN8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2020,
+      12,
+      28,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyMC|0xMi0y|OFQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x5_b77a_f488_0000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/17",
+   "args": {
+    "raw": "$sp:MjAyNi|1XNTN8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      12,
+      28,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0xMi0y|OFQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_63a6_5ad6_a000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/18",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMDB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/19",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|MHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/20",
+   "args": {
+    "raw": "$sp:MjAyNi|1XMzUt|OHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/21",
+   "args": {
+    "raw": "$sp:OTk5OS|1XNTIt|NXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      9999,
+      12,
+      31,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:OTk5OS|0xMi0z|MVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x384_43f8_ae9c_0000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/22",
+   "args": {
+    "raw": "$sp:OTk5OS|1XNTIt|NnxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/23",
+   "args": {
+    "raw": "$sp:MDAwMS|1XMDEt|MXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:-0xdc_bffe_ff2b_c000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/24",
+   "args": {
+    "raw": "$sp:MDAwMC|1XMDEt|MXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/25",
+   "args": {
+    "raw": "$sp:MDAwMC|0wMS0w|MXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/26",
+   "args": {
+    "raw": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMT|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      3600,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MDAwMS|0wMS0w|MVQwMD|owMDow|MCswMT|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:-0xdc_bfff_d5bf_6400"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/27",
+   "args": {
+    "raw": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkt|MTA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      9999,
+      12,
+      31,
+      23,
+      59,
+      59,
+      999999,
+      -36000,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:OTk5OS|0xMi0z|MVQyMz|o1OTo1|OS45OT|k5OTkt|MTA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x384_4415_2e37_c7ff"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/28",
+   "args": {
+    "raw": "$sp:MjAyNi|0wMi0y|OXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/29",
+   "args": {
+    "raw": "$sp:MjAyNC|0wMi0y|OXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2024,
+      2,
+      29,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNC|0wMi0y|OVQwMD|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_1279_f0c4_4000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/30",
+   "args": {
+    "raw": "$sp:MjAyNi|0xMy0w|MXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/31",
+   "args": {
+    "raw": "$sp:MjAyNi|0wMC0x|MHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/32",
+   "args": {
+    "raw": "$sp:MjAyNi|0wMS0z|MnxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/33",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OSAxMj|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/34",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OXQxMj|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/35",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OXgxMj|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/36",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OcOpMT|I6MzB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/37",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OeS4rT|EyOjMw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/38",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OfCfmI|AxMjoz|MHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/39",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OTEyOj|MwfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/40",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMn|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|owMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_4ef5_f000"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/41",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|MwfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/42",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|MwNDV8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/43",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDQ1|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/44",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|MwOjQ1|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/45",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSw1fG|ExYTFh|MWExLW|IxYjEt|NGMxYy|04ZDFk|LWUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      500000,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41MD|AwMDAr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a2e_bcf6_0860"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/46",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS58YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/47",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTY3|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      123456,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a2e_bcf0_4980"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/48",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTY3|eHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/49",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMn|h8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/50",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQyND|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/51",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQyMz|o2MHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/52",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQyMz|o1OTo2|MHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/53",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMFp8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/54",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMHp8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/55",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMFog|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/56",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMFoA|anVua3|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/57",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|N3xhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswNz|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a28_dc36_4600"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/58",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|NzAwfG|ExYTFh|MWExLW|IxYjEt|NGMxYy|04ZDFk|LWUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswNz|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a28_dc36_4600"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/59",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|NzowMD|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      25230,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswNz|owMDoz|MHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE",
+     "utc_microseconds": "$i:0x6_5a28_da6c_8280"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/60",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|NzowMD|ozMC41|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      25230,
+      500000
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswNz|owMDoz|MC41MD|AwMDB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx",
+     "utc_microseconds": "$i:0x6_5a28_da64_e160"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/61",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|MDowMD|owMC41|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/62",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMC0w|MDowMD|owMS41|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      -2,
+      500000
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MC0wMD|owMDow|MS41MD|AwMDB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx",
+     "utc_microseconds": "$i:0x6_5a2e_ba56_a560"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/63",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsy|NDowMH|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/64",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMC0y|NDowMH|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/65",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsy|Mzo1OT|o1OS45|OTk5OT|l8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      86399,
+      999999
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCsyMz|o1OTo1|OS45OT|k5OTl8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx",
+     "utc_microseconds": "$i:0x6_5a1a_9c68_6201"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/66",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMC0y|Mzo1OT|o1OS45|OTk5OT|l8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      -86400,
+      1
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MC0yMz|o1OTo1|OS45OT|k5OTl8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx",
+     "utc_microseconds": "$i:0x6_5a42_d817_21ff"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/67",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCsw|MDo5OX|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      5940,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMT|ozOXxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2d_5832_8d00"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/68",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMCs3|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/69",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMFgr|MDE6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      3600,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMT|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2d_e3ac_1e00"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/70",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|MwWCsw|MTowMH|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      3600,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMT|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2d_e3ac_1e00"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/71",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVR8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/72",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQrMD|E6MDB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/73",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVRafG|ExYTFh|MWExLW|IxYjEt|NGMxYy|04ZDFk|LWUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/74",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/75",
+   "args": {
+    "raw": "$sp:MjAyNi|04LTI5|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/76",
+   "args": {
+    "raw": "$sp:MjYtMD|gtMjl8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/77",
+   "args": {
+    "raw": "$sp:MjAyNi|8wOC8y|OXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/78",
+   "args": {
+    "raw": "$sp:c2hvcn|R8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/79",
+   "args": {
+    "raw": "$sp:fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/80",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYA|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      123456,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a2e_bcf0_4980"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/81",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMAB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/82",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OQAxMj|ozMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      0,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDow|MCswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_ba3f_c200"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/83",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMCB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/84",
+   "args": {
+    "raw": "$sp:IDIwMj|YtMDgt|MjlUMT|I6MzA6|NDUrMD|A6MDB8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/85",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMAp8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/86",
+   "args": {
+    "raw": "$sp:MjAyNi|0wMDF8|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/87",
+   "args": {
+    "raw": "$sp:MjAyNj|AwMXxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/88",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDU6Mz|A6MTUu|MDAwMD|AxfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      123456,
+      19815,
+      1
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|M0NTYr|MDU6Mz|A6MTUu|MDAwMD|AxfGEx|YTFhMW|ExLWIx|YjEtNG|MxYy04|ZDFkLW|UxZTFl|MWUxZT|FlMQ",
+     "utc_microseconds": "$i:0x6_5a2a_1fdf_61bf"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/89",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMi|0zMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/90",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMi|szMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/timestamp/91",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41LX|xhMWEx|YTFhMS|1iMWIx|LTRjMW|MtOGQx|ZC1lMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/0",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/1",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxB|MUExQT|FBMS1C|MUIxLT|RDMUMt|OEQxRC|1FMUUx|RTFFMU|UxRTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/2",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/3",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx7|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx|fQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/4",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx7|e2ExYT|FhMWEx|YjFiMT|RjMWM4|ZDFkZT|FlMWUx|ZTFlMW|UxfX0"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/5",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx1|cm46dX|VpZDph|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/6",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx1|dWlkOm|ExYTFh|MWExLW|IxYjEt|NGMxYy|04ZDFk|LWUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/7",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx1|dXJuOn|VpZDph|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/8",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxu|b3QtYS|11dWlk"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/9",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHw"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/10",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwg|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/11",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwx|YTFhMW|ExYjFi|MTRjMW|M4ZDFk|ZTFlMW|UxZTFl|MWUxIA"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/12",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwJ|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/13",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzC|oDFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/14",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzC|hTFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/15",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzj|gIAxYT|FhMWEx|YjFiMT|RjMWM4|ZDFkZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/16",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwc|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/17",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|eGExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "00a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MGExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/18",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|WF8xYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "0001a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MDAxYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/19",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|eF9fYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/20",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwr|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "01a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/21",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwt|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/22",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwt|MDAwMD|AwMDAw|MDAwMD|AwMDAw|MDAwMD|AwMDAw|MDAwMA"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/23",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwr|MHgxYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "0001a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MDAxYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/24",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwg|LTB4MD|AwMDAw|MDAwMD|AwMDAw|MDAwMD|AwMDAw|MDAwMA"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/25",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|XzE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "0a1a1a1a-1b11-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|YTFhMW|ExYS0x|YjExLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/26",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|X180Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/27",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxf|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/28",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlXw"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/29",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFl"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/30",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlMT|A"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/31",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlZw"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/32",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzZ|oTFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "11a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwx|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/33",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|nvvJnv|vJnvvJ|k"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "$sp:999999|99-999|9-9999|-9999-|999999|999999",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHw5|OTk5OT|k5OS05|OTk5LT|k5OTkt|OTk5OS|05OTk5|OTk5OT|k5OTk",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/34",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzw|nZ-V8J|2flfCd|n5XwnZ|-V8J2f|lfCdn5|XwnZ-V|8J2flf|Cdn5Xw|nZ-V8J|2flfCd|n5XwnZ|-V8J2f|lfCdn5|XwnZ-V|8J2flf|Cdn5Xw|nZ-V8J|2flfCd|n5XwnZ|-V8J2f|lfCdn5|XwnZ-V|8J2flf|Cdn5Xw|nZ-V8J|2flfCd|n5XwnZ|-VYQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "$sp:777777|77-777|7-7777|-7777-|777777|77777a",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHw3|Nzc3Nz|c3Ny03|Nzc3LT|c3Nzct|Nzc3Ny|03Nzc3|Nzc3Nz|c3N2E",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/35",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzC|sjFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/36",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzi|haAxYT|FhMWEx|YjFiMT|RjMWM4|ZDFkZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/37",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHzv|vKExYT|FhMWEx|YjFiMT|RjMWM4|ZDFkZT|FlMWUx|ZTFlMW|Ux"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/38",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjAGQx|ZGUxZT|FlMWUx|ZTFlMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/39",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMWIx|YjE0Yz|FjOGQx|ZGUxZT|FlMWUx|ZTFlfw"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/40",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx7|YTFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|F9fX0"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/41",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHx1|cm46YT|FhMWEx|YTFiMW|IxNGMx|YzhkMW|RlMWUx|ZTFlMW|UxZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/42",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTEt"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/43",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHwt|LS0tLS|0tYTFh|MWExYT|FiMWIx|NGMxYz|hkMWRl|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxh|MWExYT|FhMS1i|MWIxLT|RjMWMt|OGQxZC|1lMWUx|ZTFlMW|UxZTE",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/44",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxm|ZmZmZm|ZmZi1m|ZmZmLW|ZmZmYt|ZmZmZi|1mZmZm|ZmZmZm|ZmZmY"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHxm|ZmZmZm|ZmZi1m|ZmZmLW|ZmZmYt|ZmZmZi|1mZmZm|ZmZmZm|ZmZmY",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/uuid/45",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      0,
+      0,
+      0
+     ],
+     "message_id": "$sp:000000|00-000|0-0000|-0000-|000000|000000",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHww|MDAwMD|AwMC0w|MDAwLT|AwMDAt|MDAwMC|0wMDAw|MDAwMD|AwMDA",
+     "utc_microseconds": "$i:0x6_5a2e_bcee_6740"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/padding_kept",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ=="
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      500000,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41MD|AwMDAr|MDc6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a28_deec_8c60"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/standard_alphabet",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      500000,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41MD|AwMDAr|MDc6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a28_deec_8c60"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/standard_alphabet_padded",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ=="
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      500000,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41MD|AwMDAr|MDc6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a28_deec_8c60"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/extra_padding",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ===="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/leading_padding",
+   "args": {
+    "raw": "$sp:=MjAyN|i0wOC0|yOVQxM|jozMDo|0NS41K|zA3OjA|wfGExY|TFhMWE|xLWIxY|jEtNGM|xYy04Z|DFkLWU|xZTFlM|WUxZTF|lMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/space_inside",
+   "args": {
+    "raw": "$sp:MjAyNi|0w OC0|yOVQxM|jozMDo|0NS41K|zA3OjA|wfGExY|TFhMWE|xLWIxY|jEtNGM|xYy04Z|DFkLWU|xZTFlM|WUxZTF|lMQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/newline_at_end",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ\n"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/non_ascii",
+   "args": {
+    "raw": "$sp:MjAyN\u00e9|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/one_char_over_a_quad",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQA"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/two_separators",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MXxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/no_separator",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|YTFhMW|ExYTEt|YjFiMS|00YzFj|LThkMW|QtZTFl|MWUxZT|FlMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/separator_first",
+   "args": {
+    "raw": "$sp:fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MQ"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/invalid_utf8",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NSswMD|owMHz_|YTFhMW|ExYTFi|MWIxNG|MxYzhk|MWRlMW|UxZTFl|MWUxZT|E"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/surrogate_bytes",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMO2g|gHxhMW|ExYTFh|MS1iMW|IxLTRj|MWMtOG|QxZC1l|MWUxZT|FlMWUx|ZTE"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/padding_mid_quad",
+   "args": {
+    "raw": "YWI=Y2Q"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/double_quad_padding",
+   "args": {
+    "raw": "YQ==Yg=="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/nonzero_trailing_bits",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41Kz|A3OjAw|fGExYT|FhMWEx|LWIxYj|EtNGMx|Yy04ZD|FkLWUx|ZTFlMW|UxZTFl|MB"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      500000,
+      25200,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e0",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS41MD|AwMDAr|MDc6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Uw",
+     "utc_microseconds": "$i:0x6_5a28_deec_8c60"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx"
+   },
+   "result": {
+    "ok": {
+     "created_at": [
+      2026,
+      8,
+      29,
+      12,
+      30,
+      45,
+      125000,
+      0,
+      0
+     ],
+     "message_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "reencoded": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UwMDAr|MDA6MD|B8YTFh|MWExYT|EtYjFi|MS00Yz|FjLThk|MWQtZT|FlMWUx|ZTFlMW|Ux",
+     "utc_microseconds": "$i:0x6_5a2e_bcf0_4f88"
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads_then_one_pad",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads_then_two_pads",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx=="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads_then_three_pads",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx==|="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads_then_four_pads",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx==|=="
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/whole_quads_then_pad_and_data",
+   "args": {
+    "raw": "$sp:MjAyNi|0wOC0y|OVQxMj|ozMDo0|NS4xMj|UrMDA6|MDB8YT|FhMWEx|YTEtYj|FiMS00|YzFjLT|hkMWQt|ZTFlMW|UxZTFl|MWUx=A|AA"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "decode_cursor",
+   "name": "decode/base64/pad_between_whole_quads",
+   "args": {
+    "raw": "$sp:MjAyNi|0w=OC0|yOVQxM|jozMDo|0NS4xM|jUrMDA|6MDB8Y|TFhMWE|xYTEtY|jFiMS0|0YzFjL|ThkMWQ|tZTFlM|WUxZTF|lMWUx"
+   },
+   "result": {
+    "raised": {
+     "type": "CursorError",
+     "message": "Invalid cursor",
+     "code": null
+    }
+   }
+  }
+ ]
+}

@@ -25,6 +25,10 @@ import os
 import sys
 from pathlib import Path
 
+# The brain token is fail-closed: importing create_app without it refuses to
+# start. Tests that do not care about the token still need the process to boot.
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
+
 # `tests/qa` reaches into the API package; the path is added here rather than
 # depending on which directory pytest happened to be invoked from.
 API_ROOT = Path(__file__).resolve().parents[1] / "services" / "api"

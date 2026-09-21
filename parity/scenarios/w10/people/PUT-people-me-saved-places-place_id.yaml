@@ -1,0 +1,195 @@
+# W10 · PUT /people/me/saved-places/{place_id}: bookmark a catalogue place. The member
+# role is checked before the key is looked up; an unknown key (case-sensitive, after
+# percent-decoding) is 404 place_not_found. 201 the first time, 200 when it already was,
+# with the first saved_at. An unregistered caller (dev) hits the foreign key, which the
+# repository reads as a lost race and then fails its own assertion. Texts are sample
+# data (dữ liệu mẫu).
+id: w10/people/put-people-me-saved-places-place_id
+routes: ['PUT /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  other: {}
+  ghost: {}
+steps:
+  - id: anonymous_saves
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: anonymous_unknown_place
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_unknown_place_without_roles
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: ghost_saves_unregistered
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: ghost_unknown_place_unregistered
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: owner_unknown_place
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+  - id: owner_place_uppercase
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/P-TIEM-NUONG-XOM-LAO'
+  - id: owner_place_padded
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao%20'
+  - id: owner_place_encoded_slash
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem%2Fnuong'
+  - id: owner_place_vietnamese
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/qu%C3%A1n-%C4%83n'
+  - id: owner_saves_first
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_saves_first_again
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_saves_percent_encoded_hyphens
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p%2Dtiem%2Dnuong%2Dxom%2Dlao'
+  - id: owner_saves_with_json_body
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+  - id: owner_saves_second_as_group_admin_and_member
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        x-actor-roles: 'group_admin,member'
+  - id: owner_saves_third_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+      headers:
+        idempotency-key: 'c10d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+      headers:
+        idempotency-key: 'c10d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_key_other_place
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c10d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_saves_third_without_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+  - id: other_saves_same_place
+    as: other
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_lists
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_unsaves_then_saves_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_saves_first_after_unsave
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark/'
+  - id: empty_place_segment
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/me/saved-places/p-dreampark'

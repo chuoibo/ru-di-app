@@ -1,0 +1,461 @@
+# W3 · POST /contexts/{id}/memories/{memory_id}/comments — say something, 201.
+# Order: idempotency key shape, JSON decode, actor, both path ids + body model
+# (body: strict string, 1..2000), role + ACTIVE membership, then the memory must
+# belong to the path's group (404). The author is the actor; the name is read now.
+id: w3/memories/post-contexts-context_id-memories-memory_id-comments
+routes: ['POST /contexts/{context_id}/memories/{memory_id}/comments']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: anonymous_non_uuid_both
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body": '
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: anonymous_invalid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  # two path errors and a body error in one 422 list
+  - id: stranger_non_uuid_both_bad_body
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: stranger_unknown_both
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: stranger_unknown_bad_body
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_b: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_posts_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      checkin: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_in_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo_b: {from: body, pointer: /id, class: uuid}
+  - id: stranger_real_memory
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: invitee_comments
+    as: invitee
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: mate_unknown_memory
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: mate_other_groups_memory_via_this_context
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo_b}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: mate_comments
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: owner_comments
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Lần sau đi tiếp (dữ liệu mẫu)"}'
+  - id: mate_comments_same_text_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: mate_comments_on_checkin
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{checkin}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Quán này ngon (dữ liệu mẫu)"}'
+  # min_length counts characters and nothing strips: spaces alone are stored
+  - id: mate_comment_spaces_only
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"   "}'
+  - id: mate_comment_with_newline
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Dòng một\nDòng hai (dữ liệu mẫu)"}'
+  - id: leaver_comments_before_leaving
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_comments_after_leaving
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: body_empty
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":""}'
+  - id: body_number
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":5}'
+  - id: body_null
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":null}'
+  - id: body_missing
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: extra_field_author_id
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Mạo danh (dữ liệu mẫu)","author_id":"{{persona.owner}}"}'
+  - id: top_level_array
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: text_plain_content_type
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: owner_reads_comments
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+  # idempotency
+  - id: idem_first
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        idempotency-key: 'w3-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: idem_replay
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        idempotency-key: 'w3-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: idem_reuse_different_body
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        idempotency-key: 'w3-comment-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Khác (dữ liệu mẫu)"}'
+  # a 404 is not stored and releases the key
+  - id: idem_refusal_not_stored
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/comments'
+      headers:
+        idempotency-key: 'w3-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: idem_same_key_after_refusal
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        idempotency-key: 'w3-comment-b'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: idem_key_too_long
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: trailing_slash_redirects
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'
+  - id: put_not_allowed
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/memories/{{photo}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Đẹp quá (dữ liệu mẫu)"}'

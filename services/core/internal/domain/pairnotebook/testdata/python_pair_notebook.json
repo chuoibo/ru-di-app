@@ -1,0 +1,3115 @@
+{
+ "mode": "edges",
+ "constants": {
+  "cycle_states": [
+   "pending",
+   "active",
+   "closed"
+  ],
+  "consent_purposes": [
+   "lap_so",
+   "bat_doi",
+   "doc_chat"
+  ],
+  "constraint_kinds": [
+   "khong_an_duoc",
+   "dung"
+  ],
+  "han_de_nghi_seconds": 604800,
+  "notebook_error_code": "notebook_revision_stale",
+  "all": [
+   "CONSENT_PURPOSES",
+   "CONSTRAINT_KINDS",
+   "CYCLE_STATES",
+   "NotebookError",
+   "can_bat_doi",
+   "chat_consent_active",
+   "dang_cho",
+   "granted_by",
+   "granted_purposes",
+   "han_de_nghi",
+   "xem_truoc_dong_so"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "consents",
+   "name": "no consents",
+   "consents": [],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "no consents, nobody",
+   "consents": [],
+   "participants": [],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "one side only",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "the other side only",
+   "consents": [
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "both sides",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "both sides, participants reversed",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "revoked at now",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": "$dt:2026-09-13T12:00:00.000000|+00:00",
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "revoked in the future still revokes",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": "$dt:2026-09-14T12:00:00.000000|+00:00",
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "not granted",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": null,
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "granted after now still counts",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-15T12:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "no proposal deadline",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": null
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond before now",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond before now, now at +07:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T19:00:00.000000|+07:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond before now, deadline at -10:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T01:59:59.999999|-10:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T01:59:59.999999|-10:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline exactly at now",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline exactly at now, now at +07:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T19:00:00.000000|+07:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline exactly at now, deadline at -10:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T02:00:00.000000|-10:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T02:00:00.000000|-10:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond after now",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond after now, now at +07:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T19:00:00.000000|+07:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one microsecond after now, deadline at -10:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T02:00:00.000001|-10:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T02:00:00.000001|-10:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one second before now",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one second before now, now at +07:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T11:59:59.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T19:00:00.000000|+07:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "proposal deadline one second before now, deadline at -10:00",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T01:59:59.000000|-10:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-13T01:59:59.000000|-10:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a lapsed proposal is ignored when now is None",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-04T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": null,
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "now is None, nothing lapsed",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": null,
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "extra person who has not granted",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "extra person who has granted",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "one participant",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "one participant twice",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a repeated participant",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a stranger's grant does not stand in",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "unknown purposes",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_het",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_het",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "DOC_CHAT",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "DOC_CHAT",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat ",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat ",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a lower rung never implies a higher one",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "lap_so",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "lap_so",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "lap_so"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "lap_so"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "lap_so"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "bat_doi from both, doc_chat from one",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "lap_so",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "lap_so",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi",
+       "doc_chat",
+       "lap_so"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi",
+       "lap_so"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi",
+     "lap_so"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a lapsed row and a live row of one purpose",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-05T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "a revoked row and a live row of one purpose",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": "$dt:2026-09-12T12:00:00.000000|+00:00",
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "participants from the cycle",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "participants from the members after a third joined",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "participants from the members after one left",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "ids compare as written",
+   "consents": [
+    {
+     "person_id": "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      [
+       "doc_chat"
+      ]
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "unicode and empty ids",
+   "consents": [
+    {
+     "person_id": "",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "nguệ",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "",
+    "nguệ"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+    "",
+    "nguệ"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ],
+     [
+      "",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "nguệ",
+      [
+       "bat_doi"
+      ]
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "empty",
+   "papers": [],
+   "proposals": [],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:e3b0_c442_98fc_1c14",
+     "so_nhap_bo": 0,
+     "so_to_huy": 0,
+     "so_to_khoa": 0,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [],
+    "dang_cho": []
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "three kinds of cost",
+   "papers": [
+    {
+     "id": "p1",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p2",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p3",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p4",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p5",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p6",
+     "state": "da_giu",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p7",
+     "state": "het_han",
+     "current_version": 1,
+     "expires_at": null
+    }
+   ],
+   "proposals": [],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:a8c1_db71_345e_a41d",
+     "so_nhap_bo": 1,
+     "so_to_huy": 2,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [
+     "nhap",
+     "da_gui",
+     "da_xem",
+     "chot",
+     "da_di",
+     "da_giu",
+     "het_han"
+    ],
+    "dang_cho": []
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "reading order is not a change",
+   "papers": [
+    {
+     "id": "p7",
+     "state": "het_han",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p6",
+     "state": "da_giu",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p5",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p4",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p3",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p2",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p1",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": null
+    }
+   ],
+   "proposals": [],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:a8c1_db71_345e_a41d",
+     "so_nhap_bo": 1,
+     "so_to_huy": 2,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [
+     "het_han",
+     "da_giu",
+     "da_di",
+     "chot",
+     "da_xem",
+     "da_gui",
+     "nhap"
+    ],
+    "dang_cho": []
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "every state and an unknown one",
+   "papers": [
+    {
+     "id": "s0",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s1",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s2",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s3",
+     "state": "de_nghi_sua",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s4",
+     "state": "dong_y",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s5",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s6",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s7",
+     "state": "da_giu",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s8",
+     "state": "nghi_tuan",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s9",
+     "state": "het_han",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s10",
+     "state": "rut",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s11",
+     "state": "bo",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s12",
+     "state": "huy",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "s-la",
+     "state": "la",
+     "current_version": 1,
+     "expires_at": null
+    }
+   ],
+   "proposals": [],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:b6c3_7e42_fc96_49f5",
+     "so_nhap_bo": 1,
+     "so_to_huy": 4,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [
+     "nhap",
+     "da_gui",
+     "da_xem",
+     "de_nghi_sua",
+     "dong_y",
+     "chot",
+     "da_di",
+     "da_giu",
+     "nghi_tuan",
+     "het_han",
+     "rut",
+     "bo",
+     "huy",
+     "la"
+    ],
+    "dang_cho": []
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "proposals waiting, done and lapsed",
+   "papers": [],
+   "proposals": [
+    {
+     "id": "d1",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-14T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "d2",
+     "completed_at": "$dt:2026-09-13T12:00:00.000000|+00:00",
+     "expires_at": "$dt:2026-09-14T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "d3",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T11:59:59.000000|+00:00"
+    },
+    {
+     "id": "d4",
+     "completed_at": null,
+     "expires_at": null
+    },
+    {
+     "id": "d5",
+     "completed_at": "$dt:2026-09-18T12:00:00.000000|+00:00",
+     "expires_at": null
+    }
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:c9a6_630f_dd30_53f2",
+     "so_nhap_bo": 0,
+     "so_to_huy": 0,
+     "so_to_khoa": 0,
+     "so_de_nghi_huy": 2
+    },
+    "hieu_luc": [],
+    "dang_cho": [
+     true,
+     false,
+     false,
+     true,
+     false
+    ]
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "ids that need care",
+   "papers": [
+    {
+     "id": "p:1",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p\n1",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "中",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "😀",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p1",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    },
+    {
+     "id": "p1",
+     "state": "da_xem",
+     "current_version": 1,
+     "expires_at": null
+    }
+   ],
+   "proposals": [
+    {
+     "id": "p1:da_xem",
+     "completed_at": null,
+     "expires_at": null
+    },
+    {
+     "id": "",
+     "completed_at": null,
+     "expires_at": null
+    },
+    {
+     "id": "ệ",
+     "completed_at": null,
+     "expires_at": null
+    }
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:2eb8_60f2_fb7e_10ea",
+     "so_nhap_bo": 2,
+     "so_to_huy": 4,
+     "so_to_khoa": 1,
+     "so_de_nghi_huy": 3
+    },
+    "hieu_luc": [
+     "da_gui",
+     "chot",
+     "nhap",
+     "nhap",
+     "da_xem",
+     "da_xem",
+     "da_xem"
+    ],
+    "dang_cho": [
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "deadline one microsecond before now",
+   "papers": [
+    {
+     "id": "x-nhap",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "x-da_gui",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "x-dong_y",
+     "state": "dong_y",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "x-chot",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "x-da_di",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "x-huy",
+     "state": "huy",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    }
+   ],
+   "proposals": [
+    {
+     "id": "dn-x",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T11:59:59.999999|+00:00"
+    },
+    {
+     "id": "dn-y",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T18:59:59.999999|+07:00"
+    }
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:5882_bc5a_af84_6104",
+     "so_nhap_bo": 0,
+     "so_to_huy": 0,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [
+     "het_han",
+     "het_han",
+     "het_han",
+     "chot",
+     "da_di",
+     "huy"
+    ],
+    "dang_cho": [
+     false,
+     false
+    ]
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "deadline exactly at now",
+   "papers": [
+    {
+     "id": "x-nhap",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "x-da_gui",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "x-dong_y",
+     "state": "dong_y",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "x-chot",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "x-da_di",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "x-huy",
+     "state": "huy",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    }
+   ],
+   "proposals": [
+    {
+     "id": "dn-x",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T12:00:00.000000|+00:00"
+    },
+    {
+     "id": "dn-y",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T19:00:00.000000|+07:00"
+    }
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:5882_bc5a_af84_6104",
+     "so_nhap_bo": 0,
+     "so_to_huy": 0,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 0
+    },
+    "hieu_luc": [
+     "het_han",
+     "het_han",
+     "het_han",
+     "chot",
+     "da_di",
+     "huy"
+    ],
+    "dang_cho": [
+     false,
+     false
+    ]
+   }
+  },
+  {
+   "fn": "preview",
+   "name": "deadline one microsecond after now",
+   "papers": [
+    {
+     "id": "x-nhap",
+     "state": "nhap",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "x-da_gui",
+     "state": "da_gui",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "x-dong_y",
+     "state": "dong_y",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "x-chot",
+     "state": "chot",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "x-da_di",
+     "state": "da_di",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "x-huy",
+     "state": "huy",
+     "current_version": 1,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    }
+   ],
+   "proposals": [
+    {
+     "id": "dn-x",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T12:00:00.000001|+00:00"
+    },
+    {
+     "id": "dn-y",
+     "completed_at": null,
+     "expires_at": "$dt:2026-09-13T19:00:00.000001|+07:00"
+    }
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": {
+    "preview": {
+     "revision": "$hex:490b_8d3a_b29e_ce58",
+     "so_nhap_bo": 1,
+     "so_to_huy": 2,
+     "so_to_khoa": 2,
+     "so_de_nghi_huy": 2
+    },
+    "hieu_luc": [
+     "nhap",
+     "da_gui",
+     "dong_y",
+     "chot",
+     "da_di",
+     "huy"
+    ],
+    "dang_cho": [
+     true,
+     true
+    ]
+   }
+  },
+  {
+   "fn": "han_de_nghi",
+   "name": "now",
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "result": "$dt:2026-09-20T12:00:00.000000|+00:00"
+  },
+  {
+   "fn": "han_de_nghi",
+   "name": "now at +07:00",
+   "now": "$dt:2026-09-13T19:00:00.000000|+07:00",
+   "result": "$dt:2026-09-20T19:00:00.000000|+07:00"
+  },
+  {
+   "fn": "han_de_nghi",
+   "name": "microseconds",
+   "now": "$dt:2026-09-13T12:00:00.123457|+00:00",
+   "result": "$dt:2026-09-20T12:00:00.123457|+00:00"
+  },
+  {
+   "fn": "han_de_nghi",
+   "name": "across a year end",
+   "now": "$dt:2030-12-28T23:59:59.999999|+00:00",
+   "result": "$dt:2031-01-04T23:59:59.999999|+00:00"
+  },
+  {
+   "fn": "han_de_nghi",
+   "name": "across February in a leap year",
+   "now": "$dt:2028-02-25T01:00:00.000000|-10:00",
+   "result": "$dt:2028-03-03T01:00:00.000000|-10:00"
+  }
+ ]
+}

@@ -1,0 +1,255 @@
+# W8 · POST /contexts/{id}/papers/draft. The pair, then the notebook row is created and
+# locked, then roles and cycle_active_or_temporary: a pending cycle is 409
+# cycle_not_active, no cycle at all (never opened, or closed) gives a temporary sheet.
+# Then one open sheet per pair, whoever owns it: 409 paper_wrong_state, also for the
+# person who cannot see the other's draft. The request body is never read. Texts are
+# sample data (dữ liệu mẫu).
+id: w8/pair_papers/post-contexts-context_id-papers-draft
+routes: ['POST /contexts/{context_id}/papers/draft']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_drafts
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/papers/draft'
+  - id: stranger_drafts_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/papers/draft'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: stranger_drafts_pair
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  - id: owner_drafts_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{grp}}/papers/draft'
+  - id: owner_drafts_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_drafts_temporary
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      t1: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_temporary
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{t1}}'
+  - id: owner_drafts_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  # mate cannot see t1, yet is told a sheet is open
+  - id: mate_drafts_while_owner_draft_open
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_drafts_in_pending_notebook
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_drafts_while_temporary_open
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+  - id: owner_skips_temporary
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{t1}}/skip'
+  - id: owner_puts_constraint
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn hành (dữ liệu mẫu)"}'
+  - id: owner_drafts_with_ignored_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"state":"chot","cycle_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","content":{"ngay":"2026-09-01"}}'
+    bind:
+      d2: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_prefilled
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{d2}}'
+  - id: owner_skips_d2
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{d2}}/skip'
+  - id: mate_drafts
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      d3: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_mates_draft
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{d3}}'
+  - id: mate_skips_d3
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{d3}}/skip'
+  - id: owner_drafts_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-phac-to-a'
+    bind:
+      d4: {from: body, pointer: /id, class: uuid}
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-phac-to-a'
+  - id: mate_uses_owner_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-phac-to-a'
+  - id: owner_header_key_with_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+      headers:
+        idempotency-key: 'w8-phac-to-a'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  # the closed cycle is not live: a temporary sheet again
+  - id: owner_drafts_after_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      d5: {from: body, pointer: /id, class: uuid}
+  - id: owner_reads_after_close
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{d5}}'
+  - id: owner_lists_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/papers'

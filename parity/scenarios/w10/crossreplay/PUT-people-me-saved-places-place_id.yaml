@@ -1,0 +1,88 @@
+# W10 cross replay · PUT /people/me/saved-places/{place_id}. The 201 of a first save
+# stored by one side is replayed as 201 by the other, both ways; another place under the
+# key is reuse; an unknown place (404) frees the key. Go serves none of these routes yet,
+# so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w10/crossreplay/put-people-me-saved-places-place_id
+routes: ['PUT /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: python_saves
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: 'c30d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_saves_without_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: front_other_place_same_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c30d0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_saves_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c30d0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c30d0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: front_unknown_place_refused
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        idempotency-key: 'c30d0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_same_key_known_place
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+      headers:
+        idempotency-key: 'c30d0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: front_replays_python_second
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-chill-dem-da-lat'
+      headers:
+        idempotency-key: 'c30d0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_lists
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me/saved-places'

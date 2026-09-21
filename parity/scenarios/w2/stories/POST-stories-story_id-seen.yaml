@@ -1,0 +1,169 @@
+# W2 · POST /stories/{id}/seen — refusals that need no story: identity, path
+# parsing, the unknown-story 404, framework doors and idempotency refusals.
+# A real story needs an uploaded photo whose uploaded_images row carries a
+# random storage_key the database lane cannot normalise, so every step on a
+# real story (200, first look kept, the 404 matrix, replay) lives in
+# parity/scenarios/w2/stories-photo/POST-stories-story_id-seen.yaml.
+id: w2/stories/post-stories-story_id-seen
+routes: ['POST /stories/{story_id}/seen']
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: anonymous_unknown_story
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_story
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories/khong-phai-uuid/seen'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  # both the actor header and the path are wrong: which 422 wins
+  - id: roles_unknown_non_uuid_story
+    as: reader
+    request:
+      method: POST
+      path: '/stories/khong-phai-uuid/seen'
+      headers:
+        x-actor-roles: 'member,thuyen-truong'
+  # an unregistered reader is answered like anybody else: 404 for an unknown story
+  - id: unregistered_unknown_story
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người xem (dữ liệu mẫu)"}'
+  - id: reader_non_uuid_story
+    as: reader
+    request:
+      method: POST
+      path: '/stories/khong-phai-uuid/seen'
+  - id: reader_short_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/seen'
+  - id: reader_unknown_story
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+  - id: reader_uppercase_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/seen'
+  - id: reader_unhyphenated_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/seen'
+  - id: reader_braced_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/seen'
+  - id: reader_urn_uuid
+    as: reader
+    request:
+      method: POST
+      path: '/stories/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+  - id: reader_roles_empty_unknown_story
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        x-actor-roles: ''
+  # the route declares no body, so even malformed JSON is never decoded
+  - id: reader_malformed_body_ignored
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"seen_at":"2030-01-01T00:00:00Z"'
+  - id: trailing_slash_redirects
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen/'
+  - id: get_not_allowed
+    as: reader
+    request:
+      method: GET
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+  - id: idem_key_too_long
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+  - id: idem_refusal_not_stored
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        idempotency-key: 'w2-seen-c'
+  # the 404 released the key: another path under it is processed, not idempotency_key_reuse
+  - id: idem_same_key_other_story_after_refusal
+    as: reader
+    request:
+      method: POST
+      path: '/stories/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/seen'
+      headers:
+        idempotency-key: 'w2-seen-c'
+  - id: idem_path_422_not_stored
+    as: reader
+    request:
+      method: POST
+      path: '/stories/khong-phai-uuid/seen'
+      headers:
+        idempotency-key: 'w2-seen-d'
+  - id: idem_same_key_after_path_422
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'
+      headers:
+        idempotency-key: 'w2-seen-d'
+  - id: reader_deletes_account
+    as: reader
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: reader_after_account_deleted
+    as: reader
+    request:
+      method: POST
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/seen'

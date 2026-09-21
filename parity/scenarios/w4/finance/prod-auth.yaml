@@ -1,0 +1,143 @@
+# W4 · finance in prod auth mode (ADR-0014): identity is a bearer session read by
+# digest; X-Actor-* headers are ignored, so the path id is compared with the
+# session's person. The harness seeds a people row (display name = persona
+# name) and a live session per persona before step one.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/finance/prod-auth
+routes: ['GET /people/{person_id}/finance']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_missing_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: basic_scheme
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+  - id: junk_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  # dev would read the mate's id from the header; prod reads the session
+  - id: owner_reads_self_with_mate_actor_header
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        x-actor-id: '{{persona.mate}}'
+  - id: owner_reads_mate_claiming_mate
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+      headers:
+        x-actor-id: '{{persona.mate}}'
+  - id: stranger_reads_self
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.stranger}}/finance'
+  - id: stranger_non_uuid_person
+    as: stranger
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/finance'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm tài chính prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_creates_batch
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      obligation: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_confirms_receipt
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":20000,"idempotency_key":"{{kp}}-aaaaaaaaaaa1"}'
+  - id: mate_reads_self
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  - id: owner_lowercase_scheme_reads_self
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        authorization: 'bearer {{token.owner}}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_after_revoke
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'

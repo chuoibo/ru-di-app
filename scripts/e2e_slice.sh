@@ -91,6 +91,7 @@ done
 
 CONTAINER=""
 API_PID=""
+CORE_PID=""
 WORK_DIR=""
 
 cleanup() {
@@ -99,6 +100,10 @@ cleanup() {
   # next reader diagnoses a stale answer as somebody else's bug.
   if [ "$KEEP" -eq 1 ]; then
     return
+  fi
+  if [ -n "$CORE_PID" ]; then
+    kill "$CORE_PID" >/dev/null 2>&1 || true
+    wait "$CORE_PID" 2>/dev/null || true
   fi
   if [ -n "$API_PID" ]; then
     kill "$API_PID" >/dev/null 2>&1 || true
@@ -230,16 +235,23 @@ s.close()")" || { echo "không tìm được cổng trống" >&2; return 2; }
   # A key of this run's own. The API answers 503 identity_key_missing without
   # one, and a literal in the repository would be the enumeration bug of
   # bug-140342 with extra steps -- see scripts/check_identity_key.sh.
-  local id_key
-  id_key="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
+  ID_KEY="$(head -c 48 /dev/urandom | base64 | tr -d '/+=' | head -c 44)"
+
+  # Since the /internal brain door became fail-closed, create_app() refuses to
+  # start without a token. It went into docker-compose and eight scripts but not
+  # into this one, so the slice could not start an API at all -- the same miss
+  # as scripts/parity_stacks.sh. A token of this run's own, like the id key
+  # above: the slice never sends it, it only has to exist.
+  INTERNAL_TOKEN="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 32)"
 
   (
     cd "$REPO_ROOT/services/api" || exit 2
     MOBILE_DATABASE_URL="$DATABASE_URL" \
     MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
-    MOBILE_PERSON_ID_KEY="$id_key" \
+    MOBILE_PERSON_ID_KEY="$ID_KEY" \
     MOBILE_OTP_DEBUG_CODE="000000" \
     MOBILE_OTP_LOG_CODES="1" \
+    MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
       python3 -m uvicorn app.api.main:app \
         --host 127.0.0.1 --port "$port" --log-level warning
   ) >"$API_LOG" 2>&1 &
@@ -267,6 +279,77 @@ s.close()")" || { echo "không tìm được cổng trống" >&2; return 2; }
   done
   echo "API không bao giờ trả lời /healthz" >&2
   tail -30 "$API_LOG" >&2
+  return 2
+}
+
+# --- the front door -------------------------------------------------------
+
+# ADR-0029: clients reach the API through the Go front door, so the slice does
+# too. Everything below talks to API_URL, which from here on is core; uvicorn
+# stays reachable only as core's upstream. Go missing is a failure, not a skip:
+# a slice that quietly bypasses the front door proves nothing about it.
+start_core() {
+  if ! command -v go >/dev/null 2>&1; then
+    echo "không có go trên PATH — lát cắt dọc phải đi qua cửa trước Go (ADR-0029)" >&2
+    return 2
+  fi
+  local core_bin="$WORK_DIR/core" core_log="$WORK_DIR/core.log" port liveness
+  ( cd "$REPO_ROOT/services/core" && go build -o "$core_bin" ./cmd/core ) || {
+    echo "go build ./cmd/core thất bại" >&2
+    return 2
+  }
+  port="$(python3 -c "import socket
+s = socket.socket()
+s.bind(('127.0.0.1', 0))
+print(s.getsockname()[1])
+s.close()")" || return 2
+  liveness="$(python3 -c "import socket
+s = socket.socket()
+s.bind(('127.0.0.1', 0))
+print(s.getsockname()[1])
+s.close()")" || return 2
+
+  # Same database as the API, and no MOBILE_AUTH_MODE for either, so both run
+  # prod. Merged Go routes (manifest PORTED or later) are served from Go.
+  #
+  # core gets the SAME settings the API got, not fewer. A route moving to Go
+  # moves its configuration with it: once W9 landed, core answered the OTP
+  # routes and minted person ids, and a core without MOBILE_OTP_DEBUG_CODE or
+  # MOBILE_PERSON_ID_KEY failed the slice at its first login. Same for the media
+  # root, which the W6 photo routes write through. The rule to keep: whatever
+  # the API is started with, core is started with.
+  MOBILE_CORE_LISTEN="127.0.0.1:$port" \
+  MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
+  MOBILE_PYTHON_UPSTREAM="$API_URL" \
+  MOBILE_DATABASE_URL="$DATABASE_URL" \
+  MOBILE_CORE_CANDIDATE_ROUTES="${MOBILE_CORE_CANDIDATE_ROUTES:-ported}" \
+  MOBILE_PERSON_ID_KEY="$ID_KEY" \
+  MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
+  MOBILE_OTP_DEBUG_CODE="000000" \
+  MOBILE_OTP_LOG_CODES="1" \
+  MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
+    "$core_bin" serve >"$core_log" 2>&1 &
+  CORE_PID=$!
+
+  local upstream="$API_URL" i
+  API_URL="http://127.0.0.1:$port"
+  for i in $(seq 1 30); do
+    # Through core, so this proves the whole chain: core answers and reaches
+    # the uvicorn above.
+    if curl -fsS --max-time 2 "$API_URL/healthz" >/dev/null 2>&1; then
+      echo "cửa trước Go: $API_URL -> $upstream (sẵn sàng sau ${i}s)"
+      return 0
+    fi
+    if ! kill -0 "$CORE_PID" 2>/dev/null; then
+      echo "core thoát trước khi trả lời /healthz" >&2
+      tail -30 "$core_log" >&2
+      CORE_PID=""
+      return 2
+    fi
+    sleep 1
+  done
+  echo "core không bao giờ trả lời /healthz" >&2
+  tail -30 "$core_log" >&2
   return 2
 }
 
@@ -462,6 +545,7 @@ command -v npm  >/dev/null 2>&1 || { echo "không có npm" >&2; exit 2; }
 
 provision_db || exit $?
 start_api || exit $?
+start_core || exit $?
 mint_sessions || exit $?
 redeem_a_real_invite || exit $?
 login_by_otp || exit $?

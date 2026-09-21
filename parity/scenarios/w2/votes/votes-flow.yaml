@@ -1,0 +1,261 @@
+# W2 · votes: create, list, read, ballot, close. The group has a creator and an
+# accepted member; a stranger is in no group. Blank text goes through the
+# app's strip validators (422 for question and label, null for place_name).
+id: w2/votes/votes-flow
+routes: ['POST /contexts/{context_id}/votes', 'GET /contexts/{context_id}/votes', 'GET /votes/{vote_id}', 'POST /votes/{vote_id}/ballots', 'POST /votes/{vote_id}/close']
+auth_mode: dev
+personas:
+  owner: {}
+  member: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người tạo bình chọn (dữ liệu mẫu)"}'
+  - id: register_member
+    as: member
+    request:
+      method: PUT
+      path: '/people/{{persona.member}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên bỏ phiếu (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài nhóm (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bình chọn (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_member
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.member}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: member_accepts
+    as: member
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: anonymous_lists_votes
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: stranger_lists_votes
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: owner_lists_no_votes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: stranger_creates_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Đi đâu?","options":[{"label":"A"},{"label":"B"}]}'
+  - id: owner_blank_question
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"   ","options":[{"label":"A"},{"label":"B"}]}'
+  - id: owner_blank_label
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Đi đâu?","options":[{"label":"A"},{"label":" \t "}]}'
+  - id: owner_unknown_outing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Đi đâu?","options":[{"label":"A"},{"label":"B"}],"outing_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: owner_creates_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"  Tối nay đi đâu?  ","options":[{"label":" Quán nướng ","place_name":"   "},{"label":"Cà phê","place_name":" Lưng Chừng "},{"label":"Đi dạo"}]}'
+    bind:
+      vote_a: {from: body, pointer: /id, class: uuid}
+      option_a1: {from: body, pointer: /options/0/id, class: uuid}
+      option_a2: {from: body, pointer: /options/1/id, class: uuid}
+  - id: owner_lists_one_vote
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: member_reads_vote
+    as: member
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}'
+  - id: stranger_reads_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}'
+  - id: owner_reads_unknown_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: member_votes_first
+    as: member
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a1}}"}'
+  - id: member_changes_ballot
+    as: member
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a2}}"}'
+  - id: owner_votes
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a1}}"}'
+  - id: owner_reads_tied_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}'
+  - id: member_reads_tied_vote
+    as: member
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}'
+  - id: owner_changes_to_lead
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a2}}"}'
+  - id: member_reads_decided_vote
+    as: member
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}'
+  - id: stranger_votes
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a1}}"}'
+  - id: member_votes_unknown_option
+    as: member
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: member_votes_on_unknown_vote
+    as: member
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a1}}"}'
+  - id: member_closes_not_creator
+    as: member
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/close'
+  - id: stranger_closes
+    as: stranger
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/close'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/close'
+  - id: owner_closes_again
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/close'
+  - id: member_votes_on_closed_vote
+    as: member
+    request:
+      method: POST
+      path: '/votes/{{vote_a}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{option_a1}}"}'
+  - id: owner_closes_unknown_vote
+    as: owner
+    request:
+      method: POST
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/close'
+  - id: member_creates_second_vote
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Mấy giờ?","options":[{"label":"Bảy giờ"},{"label":"Tám giờ"}]}'
+  - id: owner_lists_open_and_closed
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/votes'
+  - id: vote_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote_a}}/'

@@ -1,0 +1,132 @@
+# W7 · POST /outings/{outing_id}/itinerary/preview — the routed half.
+#
+# Until scripts/parity_stacks.sh started a routing stub per side, every preview
+# in every parity run answered status "unavailable": configured_provider() had
+# no MOBILE_VALHALLA_URL to read, so _route, schedule, suggest_order, savings,
+# feasible, segments and late_fixed_stop were never compared. These steps go
+# past that door.
+#
+# The coordinates are chosen against the stub's rules, which are written down in
+# parity/internal/routingstub: a stop whose latitude ends in the microdegree
+# digit 5 sits on a one-way that may only be entered from the west. That is what
+# puts a null cell in the matrix without breaking the day's own order, and what
+# makes a whole route come back with a trip status that is not 0.
+#
+# The four stops sit on one east-west line at longitude .20 .50 .30 .40, so
+# visiting them in the order they are written is a detour and swapping the two
+# unpinned ones is not. The last stop is pinned late enough that the detour
+# misses it and the swap makes it.
+id: w7/itinerary/post-itinerary-preview
+routes: ['POST /outings/{outing_id}/itinerary/preview']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm lịch trình (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_outing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Một ngày dọc biển (dữ liệu mẫu)","starts_on":"2020-05-01","ends_on":"2020-05-02","headcount":2,"budget_per_person_vnd":500000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: routed_two_stops
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062,"lng":108.24,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: routed_two_stops_repeated
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062,"lng":108.24,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: routed_on_foot
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062,"lng":108.24,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"walk","start_at":"08:00","return_to_start":false}]}'
+  - id: routed_by_car_returning
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062,"lng":108.24,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"car","start_at":"08:00","return_to_start":true}]}'
+  - id: routed_overnight
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062,"lng":108.24,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"23:00","return_to_start":false}]}'
+  - id: suggestion_saves_the_appointment
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":true,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:00","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.062,"lng":108.5,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}},{"id":"tmp-s2","at":"10:00","label":"Điểm hẹn S2 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.064,"lng":108.3,"label":"Điểm hẹn S2 (dữ liệu mẫu)"}},{"id":"tmp-s3","at":"12:00","label":"Điểm hẹn S3 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.066,"lng":108.4,"label":"Điểm hẹn S3 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: suggestion_saves_the_appointment_repeated
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":true,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:00","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.062,"lng":108.5,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}},{"id":"tmp-s2","at":"10:00","label":"Điểm hẹn S2 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.064,"lng":108.3,"label":"Điểm hẹn S2 (dữ liệu mẫu)"}},{"id":"tmp-s3","at":"12:00","label":"Điểm hẹn S3 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.066,"lng":108.4,"label":"Điểm hẹn S3 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: suggestion_blocked_by_a_leg_with_no_road
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":true,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:00","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.062,"lng":108.5,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}},{"id":"tmp-s2","at":"10:00","label":"Điểm hẹn S2 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.064,"lng":108.3,"label":"Điểm hẹn S2 (dữ liệu mẫu)"}},{"id":"tmp-s3","at":"12:00","label":"Điểm hẹn S3 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.066005,"lng":108.4,"label":"Điểm hẹn S3 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: route_refused_by_the_one_way
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.5,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:30","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.062005,"lng":108.3,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'
+  - id: suggestion_not_asked_for
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"day":"2020-05-01","include_suggestion":false,"stops":[{"id":"tmp-s0","at":"08:00","label":"Điểm hẹn S0 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.06,"lng":108.2,"label":"Điểm hẹn S0 (dữ liệu mẫu)"}},{"id":"tmp-s1","at":"09:00","label":"Điểm hẹn S1 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.062,"lng":108.5,"label":"Điểm hẹn S1 (dữ liệu mẫu)"}},{"id":"tmp-s2","at":"10:00","label":"Điểm hẹn S2 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":false,"meeting_point":{"lat":16.064,"lng":108.3,"label":"Điểm hẹn S2 (dữ liệu mẫu)"}},{"id":"tmp-s3","at":"12:00","label":"Điểm hẹn S3 (dữ liệu mẫu)","day":"2020-05-01","duration_minutes":30,"time_locked":true,"meeting_point":{"lat":16.066,"lng":108.4,"label":"Điểm hẹn S3 (dữ liệu mẫu)"}}],"days":[{"day":"2020-05-01","transport_mode":"motorbike","start_at":"08:00","return_to_start":false}]}'

@@ -1,0 +1,310 @@
+# W10 · GET /people/me: the caller's own profile with server-counted numbers. The member
+# role is required; an unregistered caller is 404. Counts are read from their sources on
+# every call: accepted friendships either way (not pending, not blocked), ACTIVE
+# memberships of groups (not pairs, not invitations), outings of active contexts,
+# distinct stops checked in at, memories authored. Interests are ordered by the
+# vocabulary. In dev an ended account still reads its anonymised row. Texts are sample
+# data (dữ liệu mẫu).
+id: w10/people/get-people-me
+routes: ['GET /people/me']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  asker: {}
+  blocked: {}
+  host: {}
+  leaver: {}
+steps:
+  - id: anonymous_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/me'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_reads_without_roles
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_reads_unregistered
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ hồ sơ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_asker
+    as: asker
+    request:
+      method: PUT
+      path: '/people/{{persona.asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi (dữ liệu mẫu)"}'
+  - id: register_blocked
+    as: blocked
+    request:
+      method: PUT
+      path: '/people/{{persona.blocked}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: register_host
+    as: host
+    request:
+      method: PUT
+      path: '/people/{{persona.host}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm khác (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: owner_reads_fresh
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_reads_with_query_and_body
+    as: owner
+    request:
+      method: GET
+      path: '/people/me?fields=counts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"x":'
+  # friends: accepted counts, pending and blocked do not
+  - id: friend_asks_owner
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: owner_accepts_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: asker_asks_owner
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+  - id: owner_asks_blocked
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocked}}"}'
+    bind:
+      fr_blocked: {from: body, pointer: /id, class: uuid}
+  - id: blocked_accepts
+    as: blocked
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_blocked}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_reads_two_friends
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_blocks_blocked
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.blocked}}/block'
+  # groups: active groups count, a pair and an invitation do not; memories authored count
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đếm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: host_creates_group
+    as: host
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mời (dữ liệu mẫu)"}'
+    bind:
+      host_ctx: {from: body, pointer: /id, class: uuid}
+  - id: host_invites_owner
+    as: host
+    request:
+      method: POST
+      path: '/contexts/{{host_ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.owner}}"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: owner_checks_in
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+  - id: owner_writes_memory
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_states_interests
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  - id: owner_writes_profile
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Thích cà phê (dữ liệu mẫu)","city":"Huế (dữ liệu mẫu)","wall_comment_policy":"nobody","discoverable_by_phone":false}'
+  - id: owner_reads_full
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: friend_reads_own
+    as: friend
+    request:
+      method: GET
+      path: '/people/me'
+  # an ended account (dev headers still work) reads its anonymised row
+  - id: owner_asks_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      fr_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_leaver}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: leaver_writes_profile
+    as: leaver
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Sắp đi xa (dữ liệu mẫu)","city":"Vinh (dữ liệu mẫu)"}'
+  - id: leaver_states_interests
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife"],"budget_band":"thoai-mai"}'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: leaver_reads_after_erasure
+    as: leaver
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_reads_after_friend_ended
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/me'
+  - id: head_not_allowed
+    as: owner
+    request:
+      method: HEAD
+      path: '/people/me'

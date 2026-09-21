@@ -1,0 +1,221 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.message_edit",
+ "mode": "message_edit",
+ "python": "3.12.14",
+ "seed": 17,
+ "constants": {
+  "DELETABLE_KINDS": [
+   "text",
+   "image",
+   "sticker"
+  ],
+  "REPLYABLE_KINDS": [
+   "text",
+   "image",
+   "sticker"
+  ],
+  "names": [
+   "check_deletable",
+   "check_reply_target",
+   "deleted_shape"
+  ]
+ },
+ "cases": [
+  {
+   "fn": "check_deletable",
+   "name": "ok",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "not-author",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "actor_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NOT_AUTHOR",
+     "code": "NOT_AUTHOR"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "deleted",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "ALREADY_DELETED",
+     "code": "ALREADY_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "check_deletable",
+   "name": "card",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "ai_card",
+     "body": "hi"
+    },
+    "actor_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "KIND_NOT_DELETABLE",
+     "code": "KIND_NOT_DELETABLE"
+    }
+   }
+  },
+  {
+   "fn": "check_reply_target",
+   "name": "ok",
+   "args": {
+    "target": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+   },
+   "result": {
+    "ok": null
+   }
+  },
+  {
+   "fn": "check_reply_target",
+   "name": "missing",
+   "args": {
+    "target": null,
+    "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "REPLY_NOT_FOUND",
+     "code": "REPLY_NOT_FOUND"
+    }
+   }
+  },
+  {
+   "fn": "check_reply_target",
+   "name": "other-ctx",
+   "args": {
+    "target": {
+     "id": "m1",
+     "context_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "REPLY_NOT_FOUND",
+     "code": "REPLY_NOT_FOUND"
+    }
+   }
+  },
+  {
+   "fn": "check_reply_target",
+   "name": "deleted",
+   "args": {
+    "target": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "deleted",
+     "body": "hi"
+    },
+    "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "REPLY_TO_DELETED",
+     "code": "REPLY_TO_DELETED"
+    }
+   }
+  },
+  {
+   "fn": "deleted_shape",
+   "name": "ok",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "now": "$dt:2026-06-01T12:00:00+00:00"
+   },
+   "result": {
+    "ok": {
+     "kind": "deleted",
+     "deleted_at": "$dt:2026-06-01T12:00:00+00:00"
+    }
+   }
+  },
+  {
+   "fn": "deleted_shape",
+   "name": "naive",
+   "args": {
+    "message": {
+     "id": "m1",
+     "context_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+     "author_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+     "kind": "text",
+     "body": "hi"
+    },
+    "now": "$naive:2026-01-01T00:00:00"
+   },
+   "result": {
+    "raised": {
+     "type": "MessageEditError",
+     "message": "NAIVE_DATETIME",
+     "code": "NAIVE_DATETIME"
+    }
+   }
+  }
+ ]
+}

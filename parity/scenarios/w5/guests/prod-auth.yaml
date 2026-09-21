@@ -1,0 +1,210 @@
+# W5 · guest routes in prod auth mode (ADR-0014). The setup runs on bearer
+# sessions the harness seeds (people rows named after the personas), and the
+# guest routes themselves read no identity: a persona's session, a junk bearer
+# and X-Actor-* headers all get the same page and the same writes. The one place
+# prod differs is the Idempotency-Key scope, taken from the bearer digest before
+# any route runs: the owner's key replays for the owner, runs again for another
+# session, for no bearer, and for a junk bearer. Amounts are integer VND; texts
+# are sample data (dữ liệu mẫu).
+id: w5/guests/prod-auth
+routes: ['GET /g/{token}', 'POST /g/{token}/da-chuyen', 'POST /g/{token}/khong-phai-toi', 'POST /g/{token}/doi-so-tien']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm link khách prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối prod (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối prod (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+  # guest routes read no identity: a session, a junk bearer or dev headers change nothing
+  - id: guest_a_opens_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: guest_a_opens_with_owner_session
+    as: owner
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+  - id: guest_a_opens_with_junk_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+      headers:
+        authorization: 'Bearer khong-phai-phien-that'
+  - id: guest_a_opens_with_actor_headers
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_a}}'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'batch_owner'
+  # but the Idempotency-Key header is scoped by the bearer digest, even on a guest route
+  - id: owner_reports_for_a_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: mate_sends_owner_key
+    as: mate
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: anonymous_sends_owner_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: anonymous_replays_its_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: junk_bearer_sends_owner_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-fafafafafafa'
+        authorization: 'Bearer khong-phai-phien-that'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: mate_says_not_me_for_b
+    as: mate
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+  - id: third_opens_b_revoked
+    as: third
+    request:
+      method: GET
+      path: '/g/{{tok_b}}'
+  - id: anonymous_not_me_b_again
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+  - id: third_objects_on_a
+    as: third
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: owner_board
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch}}/obligations'

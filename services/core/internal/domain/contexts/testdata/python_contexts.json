@@ -1,0 +1,8116 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.api.service",
+ "mode": "contexts",
+ "python": "3.12.14",
+ "seed": 43,
+ "constants": {
+  "somebody": "Th\u00e0nh vi\u00ean nh\u00f3m",
+  "isspace": [
+   [
+    9,
+    13
+   ],
+   [
+    28,
+    32
+   ],
+   [
+    133,
+    133
+   ],
+   [
+    160,
+    160
+   ],
+   [
+    5760,
+    5760
+   ],
+   [
+    8192,
+    8202
+   ],
+   [
+    8232,
+    8233
+   ],
+   [
+    8239,
+    8239
+   ],
+   [
+    8287,
+    8287
+   ],
+   [
+    12288,
+    12288
+   ]
+  ]
+ },
+ "cases": [
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/0",
+   "args": {
+    "display_name": "",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/1",
+   "args": {
+    "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/2",
+   "args": {
+    "display_name": "  H\u1ed9i  ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "H\u1ed9i"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/3",
+   "args": {
+    "display_name": "a b",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "a b"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/4",
+   "args": {
+    "display_name": " ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/5",
+   "args": {
+    "display_name": "\t\n",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/6",
+   "args": {
+    "display_name": "x",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "x"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/7",
+   "args": {
+    "display_name": "\tNh\u00f3m\t",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/8",
+   "args": {
+    "display_name": "\t",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/9",
+   "args": {
+    "display_name": "\nNh\u00f3m\n",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/10",
+   "args": {
+    "display_name": "\n",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/11",
+   "args": {
+    "display_name": "\u000bNh\u00f3m\u000b",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/12",
+   "args": {
+    "display_name": "\u000b",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/13",
+   "args": {
+    "display_name": "\fNh\u00f3m\f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/14",
+   "args": {
+    "display_name": "\f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/15",
+   "args": {
+    "display_name": "\rNh\u00f3m\r",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/16",
+   "args": {
+    "display_name": "\r",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/17",
+   "args": {
+    "display_name": "\u001cNh\u00f3m\u001c",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/18",
+   "args": {
+    "display_name": "\u001c",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/19",
+   "args": {
+    "display_name": "\u001dNh\u00f3m\u001d",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/20",
+   "args": {
+    "display_name": "\u001d",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/21",
+   "args": {
+    "display_name": "\u001eNh\u00f3m\u001e",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/22",
+   "args": {
+    "display_name": "\u001e",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/23",
+   "args": {
+    "display_name": "\u001fNh\u00f3m\u001f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/24",
+   "args": {
+    "display_name": "\u001f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/25",
+   "args": {
+    "display_name": " Nh\u00f3m ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/26",
+   "args": {
+    "display_name": " ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/27",
+   "args": {
+    "display_name": "\u0085Nh\u00f3m\u0085",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/28",
+   "args": {
+    "display_name": "\u0085",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/29",
+   "args": {
+    "display_name": "\u00a0Nh\u00f3m\u00a0",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/30",
+   "args": {
+    "display_name": "\u00a0",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/31",
+   "args": {
+    "display_name": "\u1680Nh\u00f3m\u1680",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/32",
+   "args": {
+    "display_name": "\u1680",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/33",
+   "args": {
+    "display_name": "\u2000Nh\u00f3m\u2000",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/34",
+   "args": {
+    "display_name": "\u2000",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/35",
+   "args": {
+    "display_name": "\u2001Nh\u00f3m\u2001",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/36",
+   "args": {
+    "display_name": "\u2001",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/37",
+   "args": {
+    "display_name": "\u2002Nh\u00f3m\u2002",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/38",
+   "args": {
+    "display_name": "\u2002",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/39",
+   "args": {
+    "display_name": "\u2003Nh\u00f3m\u2003",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/40",
+   "args": {
+    "display_name": "\u2003",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/41",
+   "args": {
+    "display_name": "\u2004Nh\u00f3m\u2004",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/42",
+   "args": {
+    "display_name": "\u2004",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/43",
+   "args": {
+    "display_name": "\u2005Nh\u00f3m\u2005",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/44",
+   "args": {
+    "display_name": "\u2005",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/45",
+   "args": {
+    "display_name": "\u2006Nh\u00f3m\u2006",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/46",
+   "args": {
+    "display_name": "\u2006",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/47",
+   "args": {
+    "display_name": "\u2007Nh\u00f3m\u2007",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/48",
+   "args": {
+    "display_name": "\u2007",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/49",
+   "args": {
+    "display_name": "\u2008Nh\u00f3m\u2008",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/50",
+   "args": {
+    "display_name": "\u2008",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/51",
+   "args": {
+    "display_name": "\u2009Nh\u00f3m\u2009",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/52",
+   "args": {
+    "display_name": "\u2009",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/53",
+   "args": {
+    "display_name": "\u200aNh\u00f3m\u200a",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/54",
+   "args": {
+    "display_name": "\u200a",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/55",
+   "args": {
+    "display_name": "\u2028Nh\u00f3m\u2028",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/56",
+   "args": {
+    "display_name": "\u2028",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/57",
+   "args": {
+    "display_name": "\u2029Nh\u00f3m\u2029",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/58",
+   "args": {
+    "display_name": "\u2029",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/59",
+   "args": {
+    "display_name": "\u202fNh\u00f3m\u202f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/60",
+   "args": {
+    "display_name": "\u202f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/61",
+   "args": {
+    "display_name": "\u205fNh\u00f3m\u205f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/62",
+   "args": {
+    "display_name": "\u205f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/63",
+   "args": {
+    "display_name": "\u3000Nh\u00f3m\u3000",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/64",
+   "args": {
+    "display_name": "\u3000",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/65",
+   "args": {
+    "display_name": "\u200bNh\u00f3m\u200b",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u200bNh\u00f3m\u200b"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/66",
+   "args": {
+    "display_name": "\ufeffNh\u00f3m\ufeff",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\ufeffNh\u00f3m\ufeff"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/67",
+   "args": {
+    "display_name": "\u180eNh\u00f3m\u180e",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u180eNh\u00f3m\u180e"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/68",
+   "args": {
+    "display_name": "\u00adNh\u00f3m\u00ad",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u00adNh\u00f3m\u00ad"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/69",
+   "args": {
+    "display_name": "\u0000Nh\u00f3m\u0000",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u0000Nh\u00f3m\u0000"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/70",
+   "args": {
+    "display_name": "\u001bNh\u00f3m\u001b",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u001bNh\u00f3m\u001b"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/71",
+   "args": {
+    "display_name": "\u007fNh\u00f3m\u007f",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u007fNh\u00f3m\u007f"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/72",
+   "args": {
+    "display_name": "\u2060Nh\u00f3m\u2060",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "\u2060Nh\u00f3m\u2060"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/73",
+   "args": {
+    "display_name": "\u001c\u001fa",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "a"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/74",
+   "args": {
+    "display_name": "a\u0085\u00a0",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "a"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/strip/75",
+   "args": {
+    "display_name": "\u1680\u202f\u2029",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/0/group",
+   "args": {
+    "display_name": null,
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/0/pair",
+   "args": {
+    "display_name": null,
+    "theme": null,
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/0/None",
+   "args": {
+    "display_name": null,
+    "theme": null,
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/1/group",
+   "args": {
+    "display_name": null,
+    "theme": "mac-dinh",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/1/pair",
+   "args": {
+    "display_name": null,
+    "theme": "mac-dinh",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/1/None",
+   "args": {
+    "display_name": null,
+    "theme": "mac-dinh",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/2/group",
+   "args": {
+    "display_name": null,
+    "theme": "ruc-ro",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/2/pair",
+   "args": {
+    "display_name": null,
+    "theme": "ruc-ro",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/2/None",
+   "args": {
+    "display_name": null,
+    "theme": "ruc-ro",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/3/group",
+   "args": {
+    "display_name": null,
+    "theme": "hong",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/3/pair",
+   "args": {
+    "display_name": null,
+    "theme": "hong",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/3/None",
+   "args": {
+    "display_name": null,
+    "theme": "hong",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/4/group",
+   "args": {
+    "display_name": null,
+    "theme": "",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/4/pair",
+   "args": {
+    "display_name": null,
+    "theme": "",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/4/None",
+   "args": {
+    "display_name": null,
+    "theme": "",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/5/group",
+   "args": {
+    "display_name": null,
+    "theme": "MAC-DINH",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/5/pair",
+   "args": {
+    "display_name": null,
+    "theme": "MAC-DINH",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/0/5/None",
+   "args": {
+    "display_name": null,
+    "theme": "MAC-DINH",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/0/group",
+   "args": {
+    "display_name": "",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/0/pair",
+   "args": {
+    "display_name": "",
+    "theme": null,
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/0/None",
+   "args": {
+    "display_name": "",
+    "theme": null,
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/1/group",
+   "args": {
+    "display_name": "",
+    "theme": "mac-dinh",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/1/pair",
+   "args": {
+    "display_name": "",
+    "theme": "mac-dinh",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/1/None",
+   "args": {
+    "display_name": "",
+    "theme": "mac-dinh",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/2/group",
+   "args": {
+    "display_name": "",
+    "theme": "ruc-ro",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/2/pair",
+   "args": {
+    "display_name": "",
+    "theme": "ruc-ro",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/2/None",
+   "args": {
+    "display_name": "",
+    "theme": "ruc-ro",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/3/group",
+   "args": {
+    "display_name": "",
+    "theme": "hong",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/3/pair",
+   "args": {
+    "display_name": "",
+    "theme": "hong",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/3/None",
+   "args": {
+    "display_name": "",
+    "theme": "hong",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/4/group",
+   "args": {
+    "display_name": "",
+    "theme": "",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/4/pair",
+   "args": {
+    "display_name": "",
+    "theme": "",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/4/None",
+   "args": {
+    "display_name": "",
+    "theme": "",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/5/group",
+   "args": {
+    "display_name": "",
+    "theme": "MAC-DINH",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/5/pair",
+   "args": {
+    "display_name": "",
+    "theme": "MAC-DINH",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/1/5/None",
+   "args": {
+    "display_name": "",
+    "theme": "MAC-DINH",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/0/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/0/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": null,
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/0/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": null,
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/1/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "mac-dinh",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/1/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "mac-dinh",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/1/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "mac-dinh",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/2/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "ruc-ro",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/2/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "ruc-ro",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/2/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "ruc-ro",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       "Nh\u00f3m m\u1edbi"
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/3/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "hong",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/3/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "hong",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/3/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "hong",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/4/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/4/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/4/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/5/group",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "MAC-DINH",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/5/pair",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "MAC-DINH",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/2/5/None",
+   "args": {
+    "display_name": "  Nh\u00f3m m\u1edbi  ",
+    "theme": "MAC-DINH",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/0/group",
+   "args": {
+    "display_name": " ",
+    "theme": null,
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/0/pair",
+   "args": {
+    "display_name": " ",
+    "theme": null,
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/0/None",
+   "args": {
+    "display_name": " ",
+    "theme": null,
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/1/group",
+   "args": {
+    "display_name": " ",
+    "theme": "mac-dinh",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/1/pair",
+   "args": {
+    "display_name": " ",
+    "theme": "mac-dinh",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/1/None",
+   "args": {
+    "display_name": " ",
+    "theme": "mac-dinh",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "mac-dinh"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/2/group",
+   "args": {
+    "display_name": " ",
+    "theme": "ruc-ro",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/2/pair",
+   "args": {
+    "display_name": " ",
+    "theme": "ruc-ro",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/2/None",
+   "args": {
+    "display_name": " ",
+    "theme": "ruc-ro",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context",
+      "update_context"
+     ],
+     "changes": [
+      [
+       "display_name",
+       ""
+      ],
+      [
+       "theme",
+       "ruc-ro"
+      ]
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/3/group",
+   "args": {
+    "display_name": " ",
+    "theme": "hong",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/3/pair",
+   "args": {
+    "display_name": " ",
+    "theme": "hong",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/3/None",
+   "args": {
+    "display_name": " ",
+    "theme": "hong",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/4/group",
+   "args": {
+    "display_name": " ",
+    "theme": "",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/4/pair",
+   "args": {
+    "display_name": " ",
+    "theme": "",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/4/None",
+   "args": {
+    "display_name": " ",
+    "theme": "",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/5/group",
+   "args": {
+    "display_name": " ",
+    "theme": "MAC-DINH",
+    "kind": "group"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/5/pair",
+   "args": {
+    "display_name": " ",
+    "theme": "MAC-DINH",
+    "kind": "pair"
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 409,
+      "code": "not_a_group",
+      "detail": "\u0110\u00e2y l\u00e0 cu\u1ed9c tr\u00f2 chuy\u1ec7n ri\u00eang, kh\u00f4ng c\u00f3 danh s\u00e1ch th\u00e0nh vi\u00ean \u0111\u1ec3 \u0111\u1ed5i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "update_changes",
+   "name": "update_changes/grid/3/5/None",
+   "args": {
+    "display_name": " ",
+    "theme": "MAC-DINH",
+    "kind": null
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "is_member",
+      "get_context"
+     ],
+     "changes": null,
+     "problem": {
+      "status": 422,
+      "code": "theme_unknown",
+      "detail": "B\u1ed9 m\u00e0u n\u00e0y kh\u00f4ng c\u00f3 trong b\u1ed9 c\u1ee7a R\u1ee7 \u0110i."
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/0",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": null
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/1",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": ""
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/2",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/3",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/4",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "$sp:/conte|xts/B7|B7B7B7|-C8C8-|4D9D-8|EAE-FB|FBFBFB|FBFB/p|hotos/|E2E2E2|E2-F3F|3-4A4A|-8B5B-|C6C6C6|C6C6C6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/5",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/{b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb}/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/6",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/urn:uuid:b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/7",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7c8c84d9d8eaefbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/8",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b\u0667b\u0667b\u0667b\u0667-c\u0668c\u0668-\u0664d\u0669d-\u0668eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/9",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/ b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb /photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/10",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/11",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/12",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "//contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/13",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/14",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "x/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/15",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/people/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/16",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "$sp:/Conte|xts/b7|b7b7b7|-c8c8-|4d9d-8|eae-fb|fbfbfb|fbfb/p|hotos/|e2e2e2|e2-f3f|3-4a4a|-8b5b-|c6c6c6|c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/17",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "$sp:/conte|xts/b7|b7b7b7|-c8c8-|4d9d-8|eae-fb|fbfbfb|fbfb/P|hotos/|e2e2e2|e2-f3f|3-4a4a|-8b5b-|c6c6c6|c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/18",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/not-a-uuid"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/19",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbf/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/20",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb0/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/21",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6?x=1"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/22",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb\u200b/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/23",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/b7/24",
+   "args": {
+    "context_id": "b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb",
+    "image_url": "/contexts/b7b7b7b7_c8c8_4d9d_8eae_fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/0",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": null
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/1",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": ""
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/2",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/3",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/4",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "$sp:/conte|xts/B7|B7B7B7|-C8C8-|4D9D-8|EAE-FB|FBFBFB|FBFB/p|hotos/|E2E2E2|E2-F3F|3-4A4A|-8B5B-|C6C6C6|C6C6C6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/5",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/{b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb}/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/6",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/urn:uuid:b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/7",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7c8c84d9d8eaefbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/8",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b\u0667b\u0667b\u0667b\u0667-c\u0668c\u0668-\u0664d\u0669d-\u0668eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_context_mismatch",
+      "detail": "Photo URL context does not match the requested context"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/9",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/ b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb /photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/10",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/11",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/12",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "//contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/13",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/14",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "x/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/15",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/people/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/16",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "$sp:/Conte|xts/b7|b7b7b7|-c8c8-|4d9d-8|eae-fb|fbfbfb|fbfb/p|hotos/|e2e2e2|e2-f3f|3-4a4a|-8b5b-|c6c6c6|c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/17",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "$sp:/conte|xts/b7|b7b7b7|-c8c8-|4d9d-8|eae-fb|fbfbfb|fbfb/P|hotos/|e2e2e2|e2-f3f|3-4a4a|-8b5b-|c6c6c6|c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/18",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/not-a-uuid"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/19",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbf/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/20",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb0/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/21",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6?x=1"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/22",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7-c8c8-4d9d-8eae-fbfbfbfbfbfb\u200b/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/23",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "require_photo_url_context",
+   "name": "photo_url/a1/24",
+   "args": {
+    "context_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "image_url": "/contexts/b7b7b7b7_c8c8_4d9d_8eae_fbfbfbfbfbfb/photos/e2e2e2e2-f3f3-4a4a-8b5b-c6c6c6c6c6c6"
+   },
+   "result": {
+    "ok": {
+     "problem": {
+      "status": 422,
+      "code": "photo_url_invalid",
+      "detail": "Photo URL is not a path into this product's photo storage"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/0",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": []
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/1",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/2",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/3",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/4",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      ""
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/5",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      " "
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/6",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/7",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/8",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/9",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An again"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/0/10",
+   "args": {
+    "kind": "group",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh hai"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/0",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": []
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/1",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/2",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/3",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/4",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      ""
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/5",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      " "
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/6",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/7",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/8",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/9",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An again"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/group/1/10",
+   "args": {
+    "kind": "group",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh hai"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [],
+     "display_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/0",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/1",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/2",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/3",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/4",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      ""
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "Th\u00e0nh vi\u00ean"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/5",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      " "
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": " ",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": " "
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/6",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/7",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/8",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/9",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An again"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/0/10",
+   "args": {
+    "kind": "pair",
+    "stored_name": "",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh hai"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/0",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": []
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/1",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/2",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/3",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/4",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      ""
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "Th\u00e0nh vi\u00ean"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/5",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      " "
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": " ",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": " "
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/6",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/7",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/8",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      "Chi"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/9",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An again"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "B\u00ecnh",
+     "counterpart": {
+      "id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "display_name": "B\u00ecnh"
+     }
+    }
+   }
+  },
+  {
+   "fn": "context_view",
+   "name": "context_view/pair/1/10",
+   "args": {
+    "kind": "pair",
+    "stored_name": "H\u1ed9i \u0111i \u0110\u00e0 L\u1ea1t",
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "members": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      "An"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh"
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      "B\u00ecnh hai"
+     ]
+    ]
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "list_members"
+     ],
+     "display_name": "Th\u00e0nh vi\u00ean",
+     "counterpart": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member/a1/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member/a1/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member/a2/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member/a2/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/group_admin/a1/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/group_admin/a1/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/group_admin/a2/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/group_admin/a2/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named//a1/0",
+   "args": {
+    "origin": "named",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named//a1/1",
+   "args": {
+    "origin": "named",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named//a2/0",
+   "args": {
+    "origin": "named",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named//a2/1",
+   "args": {
+    "origin": "named",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/guest/a1/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/guest/a1/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/guest/a2/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/guest/a2/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member+guest/a1/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member+guest/a1/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member+guest/a2/0",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/named/member+guest/a2/1",
+   "args": {
+    "origin": "named",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member/a1/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member/a1/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_not_self"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member/a2/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member/a2/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/group_admin/a1/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/group_admin/a1/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_not_self"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/group_admin/a2/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/group_admin/a2/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link//a1/0",
+   "args": {
+    "origin": "link",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link//a1/1",
+   "args": {
+    "origin": "link",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link//a2/0",
+   "args": {
+    "origin": "link",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link//a2/1",
+   "args": {
+    "origin": "link",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/guest/a1/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/guest/a1/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/guest/a2/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/guest/a2/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member+guest/a1/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member+guest/a1/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_not_self"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member+guest/a2/0",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_group_member"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/link/member+guest/a2/1",
+   "args": {
+    "origin": "link",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "is_member",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member/a1/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member/a1/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member/a2/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member/a2/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//group_admin/a1/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//group_admin/a1/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//group_admin/a2/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//group_admin/a2/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept///a1/0",
+   "args": {
+    "origin": "",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept///a1/1",
+   "args": {
+    "origin": "",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept///a2/0",
+   "args": {
+    "origin": "",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept///a2/1",
+   "args": {
+    "origin": "",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//guest/a1/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//guest/a1/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//guest/a2/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//guest/a2/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member+guest/a1/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member+guest/a1/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member+guest/a2/0",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept//member+guest/a2/1",
+   "args": {
+    "origin": "",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member/a1/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member/a1/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member/a2/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member/a2/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/group_admin/a1/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/group_admin/a1/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/group_admin/a2/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/group_admin/a2/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK//a1/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK//a1/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK//a2/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK//a2/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/guest/a1/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/guest/a1/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/guest/a2/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/guest/a2/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member+guest/a1/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member+guest/a1/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member+guest/a2/0",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/LINK/member+guest/a2/1",
+   "args": {
+    "origin": "LINK",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member/a1/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member/a1/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member/a2/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member/a2/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/group_admin/a1/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/group_admin/a1/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/group_admin/a2/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/group_admin/a2/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "group_admin"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite//a1/0",
+   "args": {
+    "origin": "invite",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite//a1/1",
+   "args": {
+    "origin": "invite",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite//a2/0",
+   "args": {
+    "origin": "invite",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite//a2/1",
+   "args": {
+    "origin": "invite",
+    "roles": [],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/guest/a1/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/guest/a1/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/guest/a2/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/guest/a2/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "role_not_permitted"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member+guest/a1/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member+guest/a1/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership",
+      "get_context"
+     ],
+     "problem": null
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member+guest/a2/0",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": false
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  },
+  {
+   "fn": "accept_permission",
+   "name": "accept/invite/member+guest/a2/1",
+   "args": {
+    "origin": "invite",
+    "roles": [
+     "member",
+     "guest"
+    ],
+    "actor_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "is_member": true
+   },
+   "result": {
+    "ok": {
+     "calls": [
+      "get_membership"
+     ],
+     "problem": {
+      "status": 403,
+      "code": "permission_denied",
+      "detail": "is_invitee"
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+# W10 · PUT /people/{person_id}: say who an id belongs to. A new id is created by any
+# member (201); the same name again is a retry answered 200 before any permission is
+# asked, so even a caller without roles gets it; a different name is a rename, which
+# only the person themself may do (403 is_self). An ended account (ADR-0023 §2.2.3) is
+# 404 with the invite-by-phone sentence, whoever asks and whatever the name. The name
+# is not stripped: blank-looking names are stored as sent. Texts are sample data
+# (dữ liệu mẫu).
+id: w10/people/put-people-person_id
+routes: ['PUT /people/{person_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  stranger: {}
+  leaver: {}
+  blank: {}
+steps:
+  # identity and wire order: JSON decoding before get_actor, get_actor before the body model
+  - id: anonymous_register
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":'
+  - id: anonymous_bad_body_fields
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/khong-phai-uuid'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":""}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'member,khong-co'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: contexts_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-contexts: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: PUT
+      path: '/people/khong-phai-uuid'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  # the literal me has GET, PATCH and DELETE routes but no PUT: it reaches {person_id}
+  - id: owner_put_me_literal
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_body_missing
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+  - id: owner_name_empty
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":""}'
+  - id: owner_name_number
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":5}'
+  - id: owner_name_null
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":null}'
+  - id: owner_extra_field
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)","id":"{{persona.owner}}"}'
+  - id: owner_text_plain
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_body_array
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["Chủ (dữ liệu mẫu)"]'
+  - id: owner_name_201_code_points
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"ệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệ"}'
+  # roles are checked only when the id is new
+  - id: owner_roles_guest_new
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_roles_empty_new
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_registers_with_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: owner_key_other_name
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        idempotency-key: 'a10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên khác (dữ liệu mẫu)"}'
+  - id: owner_retry_same_name
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: stranger_retries_owner_name_without_roles
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: stranger_renames_owner
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Kẻ mạo danh (dữ liệu mẫu)"}'
+  - id: owner_renames_self_as_guest
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đổi tên (dữ liệu mẫu)"}'
+  - id: owner_renames_self
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đổi tên (dữ liệu mẫu)"}'
+  - id: owner_renames_self_as_group_admin
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ lần ba (dữ liệu mẫu)"}'
+  # a member names somebody who has no row yet, then that person renames themself
+  - id: owner_names_friend
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn do chủ đặt tên (dữ liệu mẫu)"}'
+  - id: friend_renames_self
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn tự đặt tên (dữ liệu mẫu)"}'
+  - id: owner_renames_friend_after
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn do chủ đặt tên (dữ liệu mẫu)"}'
+  # 200 code points is inside the bound; three blanks pass min_length and are stored
+  - id: blank_registers_200_code_points
+    as: blank
+    request:
+      method: PUT
+      path: '/people/{{persona.blank}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"ệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệệ"}'
+  - id: blank_renames_to_spaces
+    as: blank
+    request:
+      method: PUT
+      path: '/people/{{persona.blank}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"   "}'
+  - id: blank_renames_escaped_unicode
+    as: blank
+    request:
+      method: PUT
+      path: '/people/{{persona.blank}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"T\u00ean <b>\u0111\u1eb7t</b> & \"k\u00e9p\" \ud83d\ude00"}'
+  - id: blank_renames_nul
+    as: blank
+    request:
+      method: PUT
+      path: '/people/{{persona.blank}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"a\u0000b"}'
+  - id: blank_reads_own_profile_after_nul
+    as: blank
+    request:
+      method: GET
+      path: '/people/me'
+  # an ended account is 404 with the same sentence, whoever asks and whatever the name
+  - id: leaver_registers
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: leaver_reclaims_old_name
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: owner_names_leaver_anonymous_name
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người dùng đã rời"}'
+  - id: stranger_without_roles_names_leaver
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tên mới (dữ liệu mẫu)"}'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ lần ba (dữ liệu mẫu)"}'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ lần ba (dữ liệu mẫu)"}'
+  - id: patch_on_id_not_allowed
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ lần ba (dữ liệu mẫu)"}'
+  - id: owner_reads_own_profile
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'

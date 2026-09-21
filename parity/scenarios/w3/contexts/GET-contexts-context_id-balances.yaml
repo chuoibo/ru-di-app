@@ -1,0 +1,448 @@
+# W3 · GET /contexts/{id}/balances — net positions and a settlement proposal,
+# recomputed from confirmed expense versions and recipient-confirmed receipts.
+# Order: actor, path, role + ACTIVE membership. Amounts are integer VND; the
+# read takes FOR UPDATE row locks on expense_versions and confirmed_allocations.
+id: w3/contexts/get-contexts-context_id-balances
+routes: ['GET /contexts/{context_id}/balances']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/balances'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/balances'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/balances'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/balances'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/balances'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chia tiền (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+      headers:
+        x-actor-roles: ''
+  - id: propose_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  # a proposal alone is not in the ledger
+  - id: owner_after_proposal_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: confirm_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_after_dinner
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: mate_after_dinner
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: propose_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi về khách sạn (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi về khách sạn (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_version: {from: body, pointer: /expense_version_id, class: uuid}
+  # two debtors, one creditor: two transfers
+  - id: owner_after_taxi
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: propose_hotel
+    as: third
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khách sạn trả hộ (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      hotel: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_hotel
+    as: third
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khách sạn trả hộ (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      hotel_version: {from: body, pointer: /expense_version_id, class: uuid}
+  # the payer is not a participant and still is the creditor
+  - id: third_after_hotel
+    as: third
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  # receipts: a batch of the dinner alone, whose only recipient is the owner
+  - id: owner_creates_batch
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      obligation: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_after_batch
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: owner_confirms_partial_receipt
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":40000,"idempotency_key":"{{dinner}}"}'
+  - id: owner_after_partial_receipt
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  # more confirmed than owed: the pair drops out instead of turning negative
+  - id: owner_confirms_over_receipt
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":70000,"idempotency_key":"{{taxi}}"}'
+  - id: owner_after_over_receipt
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  # sums past int64 on one pair (mate owes owner), spread over two new obligations:
+  # collection_obligation_progress casts one obligation's receipt sum to bigint,
+  # so each obligation takes exactly one receipt of 2**63 - 1 dong
+  - id: propose_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      breakfast: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{breakfast}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      breakfast_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: propose_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T12:30:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      lunch_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_creates_breakfast_batch
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{breakfast_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      breakfast_obligation: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_creates_lunch_batch
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      lunch_obligation: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_confirms_int64_max_receipt
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{breakfast_obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{breakfast}}"}'  # repo-guard: allow=long-number reason=int64-receipt-sum-probe
+  - id: owner_confirms_int64_max_receipt_again
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{lunch_obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{lunch}}"}'  # repo-guard: allow=long-number reason=int64-receipt-sum-probe
+  - id: owner_after_int64_receipts
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: mate_after_int64_receipts
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: third_after_int64_receipts
+    as: third
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  # then an ordinary receipt on another pair: the taxi, whose recipient is the mate
+  - id: mate_creates_taxi_batch
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      taxi_obligation: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: mate_confirms_taxi_receipt
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{taxi_obligation}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{dinner_version}}"}'
+  - id: owner_after_normal_receipt_other_pair
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  # the ledger keeps the person who left
+  - id: owner_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances?person_id=x'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/balances/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/balances'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

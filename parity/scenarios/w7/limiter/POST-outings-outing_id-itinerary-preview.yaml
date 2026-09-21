@@ -1,0 +1,298 @@
+# W7 limiter lane · POST /outings/{outing_id}/itinerary/preview. The only route of this
+# wave with in-memory state: a fixed window of 30 calls a minute per actor id
+# (app/api/main.py:151). The check is the FIRST thing the handler does, before the trip
+# row is read, so a caller who has spent the window is refused even for a trip that does
+# not exist -- which is what lets this file spend the window with nothing set up and no
+# rows written. Thirty calls answer 404, the thirty-first is 429, and the window is NOT
+# extended by the refusal, so the counter stays where it was. This scenario carries
+# `lane: limiter` because the main run and the canary repeat the corpus, and a refusal
+# that depends on how many calls came before must not fall on whichever pass met the
+# window first. Texts are sample data (dữ liệu mẫu).
+id: w7/limiter/post-outings-outing_id-itinerary-preview
+routes: ['POST /outings/{outing_id}/itinerary/preview']
+auth_mode: dev
+lane: limiter
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: owner_preview_01
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_02
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_03
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_04
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_05
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_06
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_07
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_08
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_09
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_10
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_11
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_12
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_13
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_14
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_15
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_16
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_17
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_18
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_19
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_20
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_21
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_22
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_23
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_24
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_25
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_26
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_27
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_28
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_29
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_30
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_31
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: mate_preview_once
+    as: mate
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_preview_after_the_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'
+  - id: owner_bad_body_after_the_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[]}'
+  - id: anonymous_preview_after_the_ceiling
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/itinerary/preview'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"expected_revision":0,"stops":[],"days":[],"day":"2026-03-14"}'

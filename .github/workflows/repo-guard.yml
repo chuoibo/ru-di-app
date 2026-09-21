@@ -13,7 +13,11 @@ jobs:
   repo-guard:
     name: repo-guard
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # `range` từng quét TRỌN CÂY ở từng commit, nên một PR 151 commit ra 497.785
+    # lượt quét và chạy quá cả trần 60 phút. Giờ nó chỉ quét những file mỗi
+    # commit CHẠM -- cùng phán quyết, 1.814 lượt quét, 41 giây ở máy dev. 20
+    # phút là chỗ rộng cho một PR lớn hơn nữa, và vẫn là một cái trần.
+    timeout-minutes: 20
 
     steps:
       - name: Check out complete history

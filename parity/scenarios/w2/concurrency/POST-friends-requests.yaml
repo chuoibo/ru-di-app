@@ -1,0 +1,87 @@
+# W2 concurrency · POST /friends/requests. Copies are released together.
+# Under one key the first copy reserves it and the others poll and replay its
+# 201. Without a key, copies asking the same person race on the partial unique
+# index uq_friend_edge_live: one row is written and every other copy is 409
+# request_not_open, whether it read the new row first (domain arm) or lost the
+# INSERT (IntegrityError arm). Python answers both arms with one status, code
+# and sentence, so the multiset does not depend on which copy wins.
+# Names are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-friends-requests
+routes: ['POST /friends/requests']
+auth_mode: dev
+personas:
+  asker: {}
+  first: {}
+  second: {}
+  third: {}
+steps:
+  - id: register_asker
+    as: asker
+    request:
+      method: PUT
+      path: '/people/{{persona.asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi cùng lúc (dữ liệu mẫu)"}'
+  - id: register_first
+    as: first
+    request:
+      method: PUT
+      path: '/people/{{persona.first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi một (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi hai (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi ba (dữ liệu mẫu)"}'
+  - id: same_key_burst
+    as: asker
+    concurrent: 3
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'c-friend-same'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.first}}"}'
+  - id: no_key_same_pair_burst
+    as: asker
+    concurrent: 3
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second}}"}'
+  - id: same_key_after_burst
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'c-friend-same'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.first}}"}'
+  - id: same_key_other_body_burst
+    as: asker
+    concurrent: 2
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'c-friend-same'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.third}}"}'

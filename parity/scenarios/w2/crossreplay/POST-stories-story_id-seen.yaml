@@ -1,0 +1,174 @@
+# W2 cross replay · POST /stories/{id}/seen (200, story_views keeps the first
+# look). The route reads no body, but the fingerprint covers the path and any
+# body: a look stored under a key by one implementation is replayed by the
+# other, and another story or a body under the key is refused by the other. The
+# no-role 404 is not stored by either side. Texts and the 1x1 PPM photo are
+# sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-stories-story_id-seen
+routes: ['POST /stories/{story_id}/seen']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn xem chéo (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_one
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một"}'
+    bind:
+      story_one: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_two
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  - id: friend_asks_author
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.author}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: author_accepts
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: friend
+    via: python
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-a'
+  - id: core_replays_python_key
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-a'
+  - id: core_refuses_python_key_with_body
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-a'
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: core_refuses_python_key_other_story
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-a'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-b'
+  - id: python_replays_core_key
+    as: friend
+    via: python
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-b'
+  - id: python_refuses_core_key_other_story
+    as: friend
+    via: python
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-b'
+  # no role is 404 inside the view gate, not stored: the other side then answers
+  # the first look's time again
+  - id: python_refusal_releases_key
+    as: friend
+    via: python
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-c'
+        x-actor-roles: ''
+  - id: core_uses_key_python_released
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_one}}/seen'
+      headers:
+        idempotency-key: 'x-seen-c'
+  - id: core_refusal_releases_key
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-d'
+        x-actor-roles: ''
+  - id: python_uses_key_core_released
+    as: friend
+    via: python
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-d'
+  - id: core_replays_what_python_stored_after_release
+    as: friend
+    request:
+      method: POST
+      path: '/stories/{{story_two}}/seen'
+      headers:
+        idempotency-key: 'x-seen-d'

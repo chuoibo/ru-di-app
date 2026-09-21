@@ -1,0 +1,200 @@
+# W4 · expenses in prod auth mode (ADR-0014): identity is a bearer session read
+# by digest; X-Actor-* headers are ignored. POST /expenses declares no actor at
+# all, so it answers 201 with no bearer and with a junk one. Confirm needs a live
+# session; every session holder carries advancer, so acknowledging turns on
+# is_named_advancer alone. Idempotency keys are scoped by the bearer digest.
+# The harness seeds a people row and a live session per persona before step one.
+# Texts are sample data (dữ liệu mẫu).
+id: w4/expenses/prod-auth
+routes: ['POST /expenses', 'POST /expenses/{expense_id}/confirm']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chi qua phiên (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: anonymous_proposes_without_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: junk_bearer_proposes
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":1000}'
+  - id: anonymous_confirms
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+  - id: basic_scheme_confirms
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+  - id: junk_bearer_confirms
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+  # dev would trust these headers; prod answers 401 Missing bearer session
+  - id: actor_headers_ignored_confirm
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member,advancer'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+  - id: stranger_confirms_claiming_context
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'
+  - id: mate_acknowledges_owners_payment
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000},"acknowledge_as_advancer":true}'
+  # in dev an empty X-Actor-Roles is 403 role_not_permitted; prod ignores it
+  - id: owner_confirms_acknowledged_empty_roles_header
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối qua phiên (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000},"acknowledge_as_advancer":true}'
+  - id: mate_confirms_version_two
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120001},"expected_allocations":{"{{persona.owner}}":60001,"{{persona.mate}}":60000}}'
+  - id: owner_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'w4-prod-confirm'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000}}'
+  - id: owner_key_replay
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'w4-prod-confirm'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000}}'
+  # the key scope is the bearer digest, so the stranger's request runs and is refused
+  - id: stranger_same_key
+    as: stranger
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'w4-prod-confirm'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":100000},"expected_allocations":{"{{persona.owner}}":50000,"{{persona.mate}}":50000}}'
+  # no bearer: the anonymous scope, shared by every caller, so the key carries the group id
+  - id: anonymous_key_first
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-prod-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T19:00:00+07:00","participants":["{{persona.mate}}","{{persona.owner}}"],"total_amount_vnd":3}'
+  - id: anonymous_key_replay
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-prod-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T19:00:00+07:00","participants":["{{persona.mate}}","{{persona.owner}}"],"total_amount_vnd":3}'
+  - id: owner_same_key_bearer_scope
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-prod-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T19:00:00+07:00","participants":["{{persona.mate}}","{{persona.owner}}"],"total_amount_vnd":3}'
+  - id: owner_revokes_session
+    as: owner
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: owner_confirms_after_revoke
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":60000,"{{persona.mate}}":60000}}'

@@ -1,0 +1,98 @@
+# GET /contexts/{context_id}/notebook
+
+pair_notebooks · core · trạng thái trong bộ nhớ: không có
+
+## Mục đích
+
+Sổ hai người nhìn từ một trong hai người (ADR-0027 K1, K4): chu kỳ đang sống, hai người của nó, mình đã bật công tắc nào, người kia đã bật công tắc nào (chỉ boolean), các lời đề nghị còn chờ, hai ô ràng buộc của cả hai, và id tờ giấy đang mở mà người này được biết. Route chỉ đọc; không tạo hàng sổ.
+
+## Xác thực và quyền
+
+Thứ tự (đọc từ mã, kịch bản đo):
+
+1. Router: đuôi `/` → 307 `location` tuyệt đối (`owner_reads_trailing_slash`); `POST` → 405 `allow: GET` (`owner_posts_to_notebook`). Query lạ bị bỏ qua (`owner_reads_with_query`).
+2. `get_actor` (`services/api/app/api/deps.py:110-164`):
+   - dev: thiếu `X-Actor-ID` → 401 `authentication_required` `Missing X-Actor-ID` (`anonymous_reads_unknown`); không phải UUID → 422 `invalid_actor_id` (`stranger_bad_actor_id`); role lạ → 422 `invalid_actor_roles`.
+   - prod: không có bearer → 401 `authentication_required` `Missing bearer session`; bearer rác → 401 `Session is not valid`; `X-Actor-*` bị bỏ qua (`pair_notebooks/prod-auth.yaml`).
+3. Validation path `context_id` (UUID lax) → 422.
+4. `_pair_context_or_404` (`services/api/app/api/service.py:7215-7237`): context không có, `kind != 'pair'`, hoặc actor không có membership `active` và `left_at IS NULL` (`repository.py:2769-2782`) → **cùng một** 404 `notebook_not_found` `Không có sổ này.` (`stranger_reads_unknown`, `owner_reads_group`, `stranger_reads_pair`, `third_reads_pair` — bạn của owner nhưng không ở pair).
+5. `_require_pair_permission("view_pair_notebook", {"is_group_member": True})` (`service.py:7254`, `:8095-8104`; `services/api/app/domain/permissions.py:525`): chỉ còn kiểm role `member` → 403 `permission_denied` `role_not_permitted` (`owner_reads_as_advancer`). Người lạ gửi cùng header vẫn 404 vì bước 4 đi trước (`stranger_reads_pair_as_advancer`). Ở prod mọi phiên mang `member` (`repository.py:3629`).
+6. Không kiểm chặn: sau khi một người chặn người kia, cả hai vẫn đọc 200 (`owner_reads_after_block`, `mate_reads_after_block`).
+
+## Đầu vào
+
+- Path `context_id`. Không query, không thân.
+
+## Đầu ra
+
+**200** `PairNotebookResponse` (`services/api/app/api/schemas.py:2742-2760`), JSON gọn, thứ tự khoá:
+
+1. `context_id` — lặp lại id trong path.
+2. `cycle_state` — `null` khi chưa có hàng sổ hoặc không còn chu kỳ chưa đóng (`_live_cycle`, `repository.py:7715-7730`); ngược lại `pending` / `active`. **Không bao giờ `closed`**: chu kỳ đã đóng không phải chu kỳ sống (sau khi đóng và hỏi lại, `mate_reads_reopened` chỉ thấy chu kỳ `pending` mới, không còn đồng ý hay ràng buộc cũ).
+3. `participants` — chu kỳ sống thì là `pair_cycle_participants` xếp `created_at, person_id` (`repository.py:7667-7674`); không có chu kỳ thì là membership đang hoạt động xếp `created_at, id` (`repository.py:2749-2767`, `service.py:7239-7247`). Hai người của một chu kỳ được ghi cùng `now`, nên thứ tự thực tế là thứ tự **person_id**. Không có chu kỳ sống thì hai membership của pair cũng cùng `created_at` (tạo trong một giao dịch), nên thứ tự rơi vào `memberships.id` là uuid4 ngẫu nhiên: **Python không tất định** ở nhánh này (đo được: `owner_reads_closed` khác nhau giữa hai stack Python ở lượt chạy đầu), và kịch bản không đọc 200 một sổ chưa có hoặc đã hết chu kỳ sống.
+4. `my_consents` — luôn ba phần tử theo `CONSENT_PURPOSES` (`lap_so`, `bat_doi`, `doc_chat`), mỗi phần tử `{purpose, granted}`.
+5. `their_consents_granted` — object ba khoá cùng thứ tự, boolean; không lộ thời điểm người kia bấm.
+6. `pending_proposals` — lời đề nghị của chu kỳ sống còn `dang_cho` (chưa `completed_at`, chưa tới `expires_at`), xếp `created_at, id`; mỗi phần tử `{id, purpose, expires_at, proposed_by_id, my_granted}`. `my_granted` là «mình đang giữ đồng ý **sống** cho purpose này ở bất kỳ lời đề nghị nào của chu kỳ», không phải cho riêng lời đề nghị đó (`service.py:7260-7282`).
+7. `constraints` — hàng `pair_shared_constraints` của chu kỳ sống, xếp `owner_id, kind` (`repository.py:7683-7696`), mỗi phần tử `{owner_id, kind, content, version}`; cả hai người đọc cả hai dòng.
+8. `nep_gui_ho` — luôn `false` (lát 1 không có cửa bật).
+9. `open_paper_id` — tờ đầu tiên (theo `created_at DESC, id`) có `hieu_luc` thuộc `OPEN_STATES`, **bỏ qua nháp của người khác** (`service.py:7312-7324`; `owner_reads_own_draft` thấy id, `mate_reads_without_draft` thấy `null`, `mate_reads_sent_paper` thấy id).
+
+Datetime `expires_at`: ISO-8601 UTC đuôi `Z`, 6 chữ số thập phân (trừ khi micro giây bằng 0). Hạn = lúc đề nghị + 7 ngày (`services/api/app/domain/pair_notebook.py:49`, `:72-74`).
+
+## Tác dụng phụ
+
+Không ghi. Không khoá. Mọi lần đọc dùng `now` của request để áp hạn lời đề nghị (`service.py:406`), nên một lời đề nghị quá 7 ngày biến khỏi `pending_proposals` và đồng ý đi kèm nó thôi tính (`pair_notebook.py:77-91`).
+
+## Lỗi
+
+| Status | code | detail (nguyên văn) | Nguồn |
+|---|---|---|---|
+| 401 | `authentication_required` | `Missing X-Actor-ID` (dev) / `Missing bearer session`, bearer rác `Session is not valid` (prod) | `deps.py:142-143`; `service.py` `actor_for_session_token` |
+| 422 | `invalid_actor_id` | `X-Actor-ID must be a UUID` | `deps.py:144-147` |
+| 422 | (validation) | `{"detail":[…]}` không có `input` | `main.py:318-351` |
+| 404 | `notebook_not_found` | `Không có sổ này.` | `service.py:7231` |
+| 403 | `permission_denied` | `role_not_permitted` | `service.py:504`, `:8095-8104` |
+| 405 | — | `{"detail":"Method Not Allowed"}`, `allow: GET` | Starlette |
+| 307 | — | thân rỗng, `location` tuyệt đối | Starlette |
+
+## Mã Python
+
+- Route: `services/api/app/api/routes/pair_notebooks.py:52-64`
+- Service: `services/api/app/api/service.py:7249-7310` (`pair_notebook`), `:7215-7237`, `:7239-7247`, `:7312-7324`, `:8141-8152`
+- Repository: `services/api/app/api/repository.py:7732-7738` (`get_pair_notebook`), `:7657-7713`, `:7623-7643`, `:7715-7730`, `:8092-8098`
+- Domain: `services/api/app/domain/pair_notebook.py:77-116` (`_live`, `granted_by`), `:220-233` (`dang_cho`); `services/api/app/domain/pair_paper.py:150-164` (`hieu_luc`)
+- Schema: `services/api/app/api/schemas.py:2722-2760`
+
+## Test đang phủ
+
+- `services/api/tests/api/test_pair_notebook.py`: `test_a_fresh_pair_has_a_notebook_nobody_has_opened` (60), `test_one_yes_opens_nothing_and_the_other_side_can_see_whose_turn_it_is` (80), `test_an_offer_nobody_answered_in_time_stops_being_an_offer` (117), `test_both_may_read_the_two_lines_and_only_their_owner_writes_one` (185), `test_everybody_outside_the_pair_gets_the_same_four_oh_four` (330)
+- `services/api/tests/api/test_pair_papers.py`: `test_every_pair_route_refuses_a_stranger` (660)
+- `services/api/tests/postgres/test_pair_notebook_postgres.py` (ràng buộc bảng, không qua route)
+
+## Kịch bản parity
+
+`parity/scenarios/w8/pair_notebooks/GET-contexts-context_id-notebook.yaml`, id `w8/pair_notebooks/get-contexts-context_id-notebook` (44 bước, `dev`):
+
+- Ngoài sổ: `anonymous_reads_unknown`, `stranger_bad_actor_id`, `stranger_reads_unknown`, `owner_reads_group`, `stranger_reads_pair`, `third_reads_pair`, `stranger_reads_pair_as_advancer`, `owner_reads_as_advancer`.
+- Framework: `owner_reads_trailing_slash`, `owner_reads_with_query`, `owner_posts_to_notebook`.
+- Vòng đời: `owner_reads_one_yes`, `mate_reads_one_yes`, `owner_reads_open`, `mate_reads_constraints_and_offer`, `owner_reads_own_draft`, `mate_reads_without_draft`, `mate_reads_sent_paper`, `owner_reads_couple`, `owner_reads_after_block`, `mate_reads_after_block`, `owner_reopens`, `mate_reads_reopened`.
+
+`pair_notebooks/prod-auth.yaml` (39 bước): `anonymous_reads`, `dev_headers_without_bearer`, `owner_reads_with_guest_roles_header`, `stranger_reads_claiming_owner`, `mate_reads_open`.
+
+Corpus sinh tự động: `parity/scenarios/generated/w8-422/get-contexts-context_id-notebook.yaml`.
+
+## Chưa phủ / lưu ý cho bản Go
+
+- Sổ không có chu kỳ sống (pair chưa từng hỏi, hoặc vừa đóng) không được đọc 200 trong kịch bản vì thứ tự `participants` ngẫu nhiên ở Python. Mọi thứ tự Go chọn đều là một câu trả lời Python có thể cho; xếp theo `person_id` khớp với nhánh có chu kỳ.
+- Lời đề nghị hết hạn (7 ngày) và `consent_proposal_expired` theo đồng hồ không phủ được: harness không có bước đồng hồ.
+- Thứ tự `participants` và `constraints` dựa vào person_id (hai hàng cùng `created_at`); Go phải đọc cùng `ORDER BY` chứ không dựa vào thứ tự chèn.
+- `my_granted` trong `pending_proposals` là «đã đồng ý purpose này», không phải «đã đồng ý lời đề nghị này»: hai lời đề nghị cùng purpose hiện cùng giá trị.
+- `their_consents_granted` là object JSON: thứ tự khoá phải là `lap_so`, `bat_doi`, `doc_chat`.
+- `open_paper_id` áp `hieu_luc` (hạn tuần) lúc đọc; một tờ quá hạn không còn là tờ mở dù cột `state` vẫn là trạng thái mở.
+- 404 đi trước 403 role; chặn không ảnh hưởng.
+
+## Lỗi Python (chỉ báo, không sửa)
+
+- `participants` của sổ không có chu kỳ sống xếp theo `memberships.created_at, id`; hai membership của pair luôn cùng `created_at`, nên thứ tự phụ thuộc uuid4 ngẫu nhiên của membership và khác nhau giữa hai pair hay hai stack.
+- Chặn (ADR-0023) không đóng cửa sổ: người đã chặn và người bị chặn vẫn đọc và ghi sổ của nhau. Chỉ tin nhắn kiểm `_require_pair_is_alive`.
+- Người kia đã xoá tài khoản vẫn nằm trong `participants` của chu kỳ sống (danh sách chụp lúc mở chu kỳ).

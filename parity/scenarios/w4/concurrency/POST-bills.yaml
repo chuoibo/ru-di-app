@@ -1,0 +1,62 @@
+# W4 concurrency · POST /bills (201, one bills row with its lines per write).
+# Copies are released together. Under one key the burst writes once and the
+# other copies wait for that answer and replay it; under distinct keys every
+# copy writes its own bill, with no lines (line rows of three copies would
+# differ only by bill id, which the database lane cannot order); a different
+# body under the completed key is refused by every copy. Nothing unique spans
+# two bills, so no copy can lose a database race. Texts are sample data
+# (dữ liệu mẫu).
+id: w4/concurrency/post-bills
+routes: ['POST /bills']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm quét cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm quét cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        idempotency-key: 'c-bill-same'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":60000,"items_total_vnd":60000,"confidence":80,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.owner}}"]}]}'
+  - id: distinct_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        idempotency-key: 'c-bill-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":null,"items_total_vnd":0,"confidence":70,"needs_review":false,"items":[]}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/bills'
+      headers:
+        idempotency-key: 'c-bill-same'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","printed_total_vnd":60000,"items_total_vnd":60000,"confidence":81,"needs_review":true,"items":[{"item_key":"pho","name":"Phở (dữ liệu mẫu)","quantity":1,"unit_price_vnd":null,"line_total_vnd":60000,"suggested_participant_ids":["{{persona.owner}}"]}]}'

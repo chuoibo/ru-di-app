@@ -1,0 +1,318 @@
+# W7 · POST /outings/{outing_id}/invites/{invite_id}/revoke: take an invitation back.
+# Existence comes FIRST here, before the permission: an unknown trip, an unknown invite
+# and an invite that belongs to a different trip are one 404 with one sentence, and only
+# then does a stranger meet the 403. Revoking is idempotent by construction -- the second
+# call finds `revoked_at` already set and returns the row without writing -- while an
+# invitation somebody already spent is a 409, so revocation can never rewrite history.
+# The response never carries a token: the secret is returned once, at the mint, and this
+# route passes None. Texts are sample data (dữ liệu mẫu).
+id: w7/outings/post-outings-outing_id-invites-invite_id-revoke
+routes: ['POST /outings/{outing_id}/invites/{invite_id}/revoke']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: anonymous_revokes
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: owner_both_paths_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/invites/cung-khong-phai-uuid/revoke'
+  - id: owner_invite_path_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/khong-phai-uuid/revoke'
+  - id: owner_unknown_everything
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn ngoài nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm rút lời mời (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến thứ hai (dữ liệu mẫu)","starts_on":"2026-06-01","ends_on":"2026-06-02","headcount":3,"budget_per_person_vnd":300000}'
+    bind:
+      outing_two: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_link: {from: body, pointer: /id, class: uuid}
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_second_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_spent: {from: body, pointer: /id, class: uuid}
+      token_spent: {from: body, pointer: /invite_token, class: token}
+  - id: owner_names_a_friend
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      invite_named: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link_on_the_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_two}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_other_trip: {from: body, pointer: /id, class: uuid}
+  # existence first, and it is the same 404 whatever is missing
+  - id: owner_revokes_an_unknown_invite
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+  - id: owner_revokes_a_real_invite_on_an_unknown_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/{{invite_link}}/revoke'
+  - id: owner_revokes_an_invite_of_another_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_other_trip}}/revoke'
+  - id: stranger_revokes_an_unknown_invite
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/revoke'
+  - id: stranger_revokes_a_real_invite
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+  - id: friend_revokes_their_own_invitation
+    as: friend
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/revoke'
+  - id: owner_revokes_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+      headers:
+        x-actor-roles: 'guest'
+  # taking a link back kills it for everybody holding it
+  - id: owner_revokes_the_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+  - id: stranger_opens_the_revoked_link
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: owner_revokes_the_link_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+  - id: mate_revokes_the_link_again
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+  # an invitation already spent cannot be taken back
+  - id: stranger_opens_the_second_link
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-invites/{{token_spent}}/accept'
+  - id: owner_revokes_the_spent_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_spent}}/revoke'
+  # a named invitation is taken back the same way
+  - id: mate_revokes_the_named_invitation
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/revoke'
+  - id: owner_names_the_same_friend_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+  # the key header
+  - id: owner_mints_a_link_for_the_key_case
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_keyed: {from: body, pointer: /id, class: uuid}
+  - id: owner_revokes_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_keyed}}/revoke'
+      headers:
+        idempotency-key: 'c76f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_keyed}}/revoke'
+      headers:
+        idempotency-key: 'c76f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_same_key_other_invite
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'
+      headers:
+        idempotency-key: 'c76f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  # leaving closes the door
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_revokes_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_other_trip}}/revoke'
+  - id: owner_revokes_the_other_trips_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_two}}/invites/{{invite_other_trip}}/revoke'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/invites/{{invite_link}}/revoke'

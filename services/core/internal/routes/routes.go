@@ -1,0 +1,199 @@
+// Package routes holds the Go implementations of API routes, keyed by
+// manifest id. A route here is served only when the manifest gives it to Go or
+// MOBILE_CORE_CANDIDATE_ROUTES names it (package ownership).
+package routes
+
+import (
+	"fmt"
+	"net/http"
+
+	"mobile/services/core/internal/httpapi/endpoint"
+	"mobile/services/core/internal/pyval"
+)
+
+// Route is one Go implementation.
+type Route struct {
+	// ID is the manifest id, "METHOD /path".
+	ID string
+	// Status is the route decorator's status_code; 200 when it has none.
+	Status int
+	Serve  endpoint.Serve
+}
+
+// All lists every route this binary implements.
+func All() []Route {
+	return []Route{
+		interestVocabulary(),
+		listAreas(),
+		createReport(),
+		putMyInterests(),
+		groupRecap(),
+		preferenceProfile(),
+		groupHeatmap(),
+		postMeetingPoint(),
+		socialMap(),
+		listFriendRequests(),
+		listFriends(),
+		sendFriendRequest(),
+		respondToFriendRequest(),
+		createVote(),
+		listContextVotes(),
+		getVoteResults(),
+		castVoteBallot(),
+		closeVote(),
+		createStory(),
+		listStories(),
+		markStorySeen(),
+		deleteStory(),
+		createPost(),
+		listPosts(),
+		listPersonPosts(),
+		readPost(),
+		reactToPost(),
+		unreactToPost(),
+		listPostComments(),
+		postComment(),
+		deletePostComment(),
+		mintPersonID(),
+		findPersonByPhone(),
+		createContext(),
+		updateContext(),
+		inviteContextMember(),
+		acceptContextMembership(),
+		leaveContext(),
+		listContextMembers(),
+		getContextBalances(),
+		getContext(),
+		postContextMemory(),
+		postContextCheckin(),
+		listContextMemories(),
+		readContextWidget(),
+		postMemoryReaction(),
+		deleteMemoryReaction(),
+		postMemoryComment(),
+		listMemoryComments(),
+		uploadContextPhoto(),
+		readContextPhoto(),
+		setPersonAvatar(),
+		readPersonAvatar(),
+		uploadPersonalPhoto(),
+		readPersonPhoto(),
+		listMyContexts(),
+		getMyProfile(),
+		updateMyProfile(),
+		listSavedPlaces(),
+		savePlace(),
+		unsavePlace(),
+		listBlocked(),
+		deleteMyAccount(),
+		blockPerson(),
+		unblockPerson(),
+		openDirectMessage(),
+		getPersonProfile(),
+		registerPerson(),
+		createBill(),
+		getBill(),
+		confirmBillAssignments(),
+		claimBillItems(),
+		splitBill(),
+		createBatch(),
+		publishBatch(),
+		listBatchObligations(),
+		listContextBatches(),
+		proposeExpense(),
+		confirmExpense(),
+		confirmReceipt(),
+		readPersonFinance(),
+		readGroupBudget(),
+		guestPage(),
+		guestReportPayment(),
+		guestNotMePage(),
+		guestNotMeSubmit(),
+		guestWrongAmountPage(),
+		guestWrongAmountSubmit(),
+		guestRequestEvidence(),
+		readPairNotebook(),
+		proposePairConsent(),
+		grantPairConsent(),
+		revokePairConsent(),
+		putPairConstraint(),
+		deletePairConstraint(),
+		previewClosePairNotebook(),
+		closePairNotebook(),
+		listPairPapers(),
+		draftPairPaper(),
+		readPairPaper(),
+		editPairDraft(),
+		sendPairPaper(),
+		markPairPaperViewed(),
+		respondPairPaper(),
+		withdrawPairPaper(),
+		skipPairWeek(),
+		recordPairOutingDone(),
+		keepPairPaperLine(),
+		createSession(),
+		listSessions(),
+		revokeCurrentSession(),
+		revokeSession(),
+		requestOTP(),
+		verifyOTP(),
+		loginGoogle(),
+		previewOutingItinerary(),
+		replaceOutingItinerary(),
+		createOuting(),
+		listContextOutings(),
+		replaceOutingTimeline(),
+		checkInToStop(),
+		listOutingCheckins(),
+		createOutingInvite(),
+		revokeOutingInvite(),
+		rotateOutingInvite(),
+		acceptOutingInvite(),
+		postContextMessage(),
+		listContextMessages(),
+		deleteOwnMessage(),
+		reactToMessage(),
+		unreactToMessage(),
+		createChatExpenseDraft(),
+		takeCompanionTurnRoute(),
+		setContextMemberRole(),
+		markContextRead(),
+		listDestinations(),
+		listPlacesWAI(),
+		listPlacePhotos(),
+		listPlaceGroupPhotos(),
+		readPlacePhoto(),
+		getPlaceWAI(),
+		searchPlacesWAI(),
+		scanReceipt(),
+		scanScreenshot(),
+		readGroupSuggestion(),
+		readContextualSuggestion(),
+		listTripAlbums(),
+		readTripAlbum(),
+		readTripReel(),
+		detectFaces(),
+		healthz(),
+	}
+}
+
+// Handlers binds every route to its request contract and builds its handler.
+// A route whose contract pyval cannot bind refuses to start the binary.
+func Handlers(contract *pyval.Contract, registry *pyval.Registry, env endpoint.Env) (map[string]http.Handler, error) {
+	handlers := map[string]http.Handler{}
+	for _, route := range All() {
+		if _, dup := handlers[route.ID]; dup {
+			return nil, fmt.Errorf("routes: %s is implemented twice", route.ID)
+		}
+		bound, err := contract.Bind(route.ID, registry)
+		if err != nil {
+			return nil, fmt.Errorf("routes: %s: %w", route.ID, err)
+		}
+		handler, err := endpoint.New(bound, route.Status, route.Serve, env)
+		if err != nil {
+			return nil, fmt.Errorf("routes: %s: %w", route.ID, err)
+		}
+		handlers[route.ID] = handler
+	}
+	return handlers, nil
+}

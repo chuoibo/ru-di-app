@@ -218,6 +218,143 @@ jobs:
         name: Every header the client sends survives the CORS preflight
         run: python3 scripts/check_cors_contract.py
 
+  # ADR-0029: the Go front door. The same commands as the ownership, go-vet and
+  # go-test stages of scripts/gate.sh.
+  core:
+    name: go front door and route ownership
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -r services/api/requirements-dev.txt
+
+      - name: Format and vet
+        working-directory: services/core
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt wants to change: $unformatted"
+            exit 1
+          fi
+          go vet ./...
+
+      - name: Test
+        working-directory: services/core
+        run: go test -count=1 ./...
+
+      - name: Real-PostgreSQL tests on a disposable database
+        # Builds the API image to migrate the schema with Alembic, then runs
+        # `go test -tags postgres`; a skip or a missing sentinel fails.
+        run: scripts/go_postgres_tier.sh
+
+      - name: Route manifest matches the app and the binary
+        # Selftest first: the gate must be seen red on each failure it exists for.
+        run: |
+          python3 scripts/check_route_ownership.py --selftest
+          python3 scripts/check_route_ownership.py
+
+      - name: Python changes do not reach routes Go already serves
+        # The checkout is shallow; the gate needs main to know what changed.
+        run: |
+          git fetch --no-tags --depth=200 origin main:refs/remotes/origin/main
+          python3 scripts/check_go_owned_python_touch.py --selftest
+          python3 scripts/check_go_owned_python_touch.py --base origin/main
+
+  # ADR-0029: the parity harness. Same commands as the `parity` stage of
+  # scripts/gate.sh, but split across jobs that run at the same time.
+  #
+  # Why split. One job ran every phase of both auth modes in sequence, under
+  # `timeout-minutes: 40`. Measured on this runner: two stacks up in 41 SECONDS,
+  # then the dev main lane alone took 29m30s (339 scenarios, 10,369 steps), and
+  # the canary's first mode another 2m37s of fourteen. The job was cancelled at
+  # 40m every time -- not by a push, by its own budget, and the identical
+  # durations (40m14s, 40m15s, 40m19s) are what gave it away. The whole thing
+  # needs ~85 minutes, so it had never once run to the end.
+  #
+  # Raising the budget to 120 would work and cost every pull request an
+  # hour-and-a-half job. Splitting costs 41 seconds of stack per job instead,
+  # because provisioning is the cheap part here -- the phases are what is slow.
+  # Each phase gets its own pair of stacks, which also removes the ordering
+  # constraint the single job had to honour by hand: the canary leaves the two
+  # databases unequal, so it could never run before a main lane on the same
+  # stacks. Here it cannot, because it starts from its own.
+  parity:
+    name: parity harness (${{ matrix.phase }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      # One red phase must not hide the others: they answer different questions.
+      fail-fast: false
+      matrix:
+        include:
+          - phase: dev main lane and probe
+            mode: dev
+            lane: main
+            probe: "yes"
+            canary: "no"
+          - phase: dev canary
+            mode: dev
+            lane: none
+            probe: "no"
+            canary: "yes"
+          - phase: dev limiter lane
+            mode: dev
+            lane: limiter
+            probe: "no"
+            canary: "no"
+          - phase: prod main lane and canary
+            mode: prod
+            lane: main
+            probe: "no"
+            canary: "yes"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: parity/go.mod
+
+      - name: Harness unit tests
+        working-directory: parity
+        run: go test -count=1 ./...
+
+      - name: One pair of stacks, then this phase
+        env:
+          MODE: ${{ matrix.mode }}
+          LANE: ${{ matrix.lane }}
+          WANT_PROBE: ${{ matrix.probe }}
+          WANT_CANARY: ${{ matrix.canary }}
+        run: |
+          (cd parity && go run ./cmd/parity lint scenarios)
+          env_file="$(mktemp)"
+          scripts/parity_stacks.sh up --auth "$MODE" --env "$env_file"
+          . "$env_file"
+          status=0
+          (
+            cd parity &&
+              { [ "$LANE" = none ] || go run ./cmd/parity run --lane "$LANE" --auth "$PARITY_AUTH" \
+                  --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+                  --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
+                  --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" \
+                  --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; } &&
+              { [ "$WANT_PROBE" != yes ] || go run ./cmd/parity probe \
+                  --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
+              { [ "$WANT_CANARY" != yes ] || go run ./cmd/parity canary --auth "$PARITY_AUTH" \
+                  --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
+                  --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios; }
+          ) || status=1
+          scripts/parity_stacks.sh down --env "$env_file"
+          exit "$status"
+
   screens:
     name: every screen is rendered by something
     # The third link in the chain the `api` job holds the first two of.
@@ -320,7 +457,15 @@ jobs:
         # stranger, and it exercises the HEALTHCHECK instruction at the same
         # time.
         run: |
-          docker run -d --name api mobile-api:ci
+          # The brain door is fail-closed: create_app() refuses to start
+          # without a token, so a container started without one never reaches
+          # healthy and this step reports an image that "does not serve". The
+          # token is a secret the image never sends anywhere; one of this run's
+          # own is enough, and a literal in the workflow would be a secret in
+          # the repository.
+          docker run -d --name api \
+            -e MOBILE_INTERNAL_TOKEN="$(head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 32)" \
+            mobile-api:ci
           for i in $(seq 1 60); do
             status=$(docker inspect --format '{{.State.Health.Status}}' api)
             case "$status" in
@@ -347,6 +492,46 @@ jobs:
           echo "::error::container never became healthy"
           docker logs api
           docker rm -f api >/dev/null
+          exit 1
+
+      # ADR-0029: the Go front door ships as its own image, held to the same bar.
+      - name: Core base images are pinned by digest
+        run: scripts/check_dockerfile_pinning.sh services/core/Dockerfile
+
+      - name: Build core
+        working-directory: services/core
+        run: docker build -t mobile-core:ci .
+
+      - name: Core runs as a non-root user without a shell
+        run: |
+          user=$(docker image inspect --format '{{.Config.User}}' mobile-core:ci)
+          echo "image user = ${user:-<unset>}"
+          case "${user%%:*}" in
+            ""|0|root) echo "::error::core image runs as root"; exit 1 ;;
+          esac
+          if docker run --rm --entrypoint sh mobile-core:ci -c true >/dev/null 2>&1; then
+            echo "::error::core image ships a shell"
+            exit 1
+          fi
+
+      - name: The core container reports healthy
+        # Any upstream will do: core's healthcheck never goes through Python.
+        run: |
+          docker run -d --name core --health-interval 2s -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 mobile-core:ci
+          for i in $(seq 1 60); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' core)
+            case "$status" in
+              healthy) echo "core healthy after ${i}s"; docker rm -f core >/dev/null; exit 0 ;;
+              unhealthy) echo "::error::core went unhealthy"; docker logs core; docker rm -f core >/dev/null; exit 1 ;;
+            esac
+            if [ "$(docker inspect --format '{{.State.Running}}' core)" != "true" ]; then
+              echo "::error::core exited before becoming healthy"; docker logs core; docker rm -f core >/dev/null; exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::core never became healthy"
+          docker logs core
+          docker rm -f core >/dev/null
           exit 1
 
       - name: Image size
@@ -527,6 +712,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # ADR-0029: the slice runs through the Go front door, so it needs Go.
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
 
       - if: steps.present.outputs.found == 'true'
         uses: actions/setup-node@v4

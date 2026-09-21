@@ -1,0 +1,156 @@
+# W2 cross replay · POST /posts/{id}/reactions (200, at most one post_reactions
+# row per kind). A reaction stored under a key by one implementation is replayed
+# by the other with the totals it stored; another kind under the key is refused
+# by the other; a 403 is not stored by either side. Texts are sample data
+# (dữ liệu mẫu).
+id: w2/crossreplay/post-posts-post_id-reactions
+routes: ['POST /posts/{post_id}/reactions']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người đọc chéo (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để thả cảm xúc chéo (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: core_replays_python_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: core_replays_python_key_respaced
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-a'
+        content-type: 'application/json'
+      body_raw: '{ "kind" : "heart" }'
+  - id: core_refuses_python_key_other_body
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-a'
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  # Go stores, Python answers: the replay keeps the totals from before
+  - id: core_stores_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-b'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: python_replays_core_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-b'
+        content-type: 'application/json'
+      body_raw: '{"kind":"haha"}'
+  - id: python_refuses_core_key_other_body
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-b'
+        content-type: 'application/json'
+      body_raw: '{"kind":"sad"}'
+  # a 403 (no role) is not stored: the same request then writes on the other side
+  - id: python_refusal_releases_key
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-c'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: core_uses_key_python_released
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-c'
+        content-type: 'application/json'
+      body_raw: '{"kind":"like"}'
+  - id: core_refusal_releases_key
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-d'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: python_uses_key_core_released
+    as: reader
+    via: python
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-d'
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: core_replays_what_python_stored_after_release
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        idempotency-key: 'x-react-d'
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'

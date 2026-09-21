@@ -1,0 +1,483 @@
+# W3 · POST /contexts/{id}/memories — a photograph onto the group's wall.
+# Order: idempotency key shape, JSON decode, actor, path + body model (image_url
+# pattern), role + ACTIVE membership, then the url's group must be the path's
+# (422) and a named place must exist (422). No uploaded image is looked up.
+id: w3/memories/post-contexts-context_id-memories
+routes: ['POST /contexts/{context_id}/memories']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url": '
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: anonymous_invalid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  # the pattern is checked before the handler: 422 beats the 403
+  - id: stranger_unknown_context_bad_url
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/photos/khong-phai-anh"}'
+  - id: stranger_non_uuid_and_bad_url
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/khong-phai-uuid/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/photos/khong-phai-anh"}'
+  # membership before the url's group: a stranger never learns about the mismatch
+  - id: stranger_unknown_context_mismatched_url
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_b: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: invitee_posts
+    as: invitee
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: leaver_posts
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: mate_posts_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: mate_posts_with_caption
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":"Ảnh ở biển (dữ liệu mẫu)"}'
+  - id: mate_posts_null_caption_and_place
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":null,"place_id":null}'
+  # the place name is read from the catalogue; a photo never carries lat/lng
+  - id: mate_posts_at_place
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-lung-chung-cafe"}'
+  - id: mate_posts_unknown_place
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-khong-co-that"}'
+  - id: mate_posts_other_groups_url
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  # the url's group is checked before the place
+  - id: mate_posts_other_url_unknown_place
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-khong-co-that"}'
+  # uppercase hex matches the pattern and is stored as sent
+  - id: owner_posts_uppercase_photo_id
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/CCCCCCCC-DDDD-4EEE-8FFF-AAAAAAAAAAAA"}'
+  - id: owner_posts_same_url_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: url_person_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: url_trailing_slash
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/"}'
+  - id: url_trailing_newline
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa\n"}'
+  - id: url_number
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":7}'
+  - id: url_missing
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"caption":"Không có ảnh (dữ liệu mẫu)"}'
+  - id: caption_number
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":5}'
+  - id: place_empty
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":""}'
+  - id: place_201_letters
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"}'
+  - id: extra_field_author_id
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","author_id":"{{persona.owner}}"}'
+  - id: extra_field_lat
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","lat":10.5}'
+  - id: top_level_array
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[]'
+  - id: owner_reads_wall
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  # idempotency
+  - id: idem_first
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'w3-mem-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: idem_replay
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'w3-mem-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: idem_reuse_different_body
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'w3-mem-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":"Khác (dữ liệu mẫu)"}'
+  # a 422 from the handler is not stored and releases the key
+  - id: idem_refusal_not_stored
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'w3-mem-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-khong-co-that"}'
+  - id: idem_same_key_after_refusal
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'w3-mem-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: idem_key_too_long
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: trailing_slash_redirects
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+  - id: put_not_allowed
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'

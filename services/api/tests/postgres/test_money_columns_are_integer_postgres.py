@@ -76,6 +76,16 @@ EXACT_INTEGER_TYPES = frozenset({"smallint", "integer", "bigint"})
 # states why it is not money. Coordinates, a bounding box, a star rating and a
 # distance -- nothing anybody pays.
 INEXACT_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
+    # W7: điểm hẹn của một chặng trong hành trình. Toạ độ dịch vụ định tuyến
+    # trả về, không phải một khoản tiền.
+    (
+        "outing_stops",
+        "meeting_lat",
+    ): "geographic latitude of a meeting point, not an amount",
+    (
+        "outing_stops",
+        "meeting_lng",
+    ): "geographic longitude of a meeting point, not an amount",
     ("memories", "lat"): "geographic latitude of a memory, not an amount",
     ("memories", "lng"): "geographic longitude of a memory, not an amount",
     # M9 (ADR-0017), the catalogue as tables.
@@ -100,6 +110,14 @@ JSONB_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
     # `outings` đi qua đúng cổng tạo outing đang có, và ngân sách sống ở cột
     # bigint của bảng ấy — không có số tiền nào nằm trong JSONB này, và nếu lát
     # sau có ai muốn để một con số vào đây thì cổng này là chỗ họ phải nói ra.
+    # W7: các ngày của hành trình. Mỗi ngày mang mốc thời gian, thứ tự chặng và
+    # id địa điểm; ngân sách của buổi sống ở cột bigint của chính `outings`, nên
+    # không có số nào ở đây là tiền. Ai muốn để một con số tiền vào đây thì cổng
+    # này là chỗ phải nói ra.
+    ("outings", "itinerary_days"): (
+        "các ngày của hành trình ({start_at, stops, return_to_start}); "
+        "không có số tiền, ngân sách sống ở cột bigint của `outings`"
+    ),
     ("pair_paper_versions", "content"): (
         "một ngày và một hai chặng ({gio, viec, place_id, can_kiem}); "
         "không có số tiền, ngân sách của buổi sống ở `outings`"

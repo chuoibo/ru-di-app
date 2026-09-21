@@ -1,0 +1,209 @@
+# W2 stories with a real photo · POST /stories — every branch that needs a real photo:
+# 201 (caption normalisation, limit, no content-type, group_admin only), the 403
+# on somebody else's real photo, the idempotency replay set, and the photo
+# erased with the account. Refusals that need no photo: w2/stories/post-stories.
+# Every upload writes uploaded_images.storage_key = secrets.token_hex(16), which
+# never reaches the wire; the database lane compares it as <hex32#n> (ADR-0029 §2.4).
+id: w2/stories-photo/post-stories
+routes: ['POST /stories']
+auth_mode: dev
+personas:
+  author: {}
+  other: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  # the role check runs before the url is read: even another person's photo is 403 role_not_permitted
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_with_caption
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Hoàng hôn ở bãi đá <b>&\"mẫu\"</b>\\"}'
+  - id: author_creates_without_caption
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  - id: author_empty_caption_stored_as_null
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":""}'
+  - id: author_null_caption
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":null}'
+  # whitespace is kept as sent: only "" becomes null
+  - id: author_whitespace_caption_kept
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"   "}'
+  # 200 code points, each two UTF-8 bytes: the limit counts characters, not bytes
+  - id: author_caption_at_limit
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"ăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăă"}'
+  - id: no_content_type_is_parsed_as_json
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"không content-type"}'
+  # the photo exists, but it is the author's: nobody else may post it
+  - id: author_group_admin_only_creates
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"chỉ group_admin"}'
+  - id: other_uses_authors_real_photo
+    as: other
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  - id: idem_first
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một lần"}'
+  - id: idem_replay
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một lần"}'
+  - id: idem_replay_reordered_keys
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-a'
+        content-type: 'application/json'
+      body_raw: '{ "caption" : "một lần", "image_url" : "/people/{{persona.author}}/photos/{{photo}}" }'
+  - id: idem_reuse_different_body
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"lần hai"}'
+  - id: idem_second_distinct_key
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một lần"}'
+  # a scope is the raw X-Actor-ID: the same key from another person is a fresh key
+  - id: idem_same_key_other_actor_refused
+    as: other
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một lần"}'
+  - id: idem_refusal_not_stored
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"lỗi"}'
+  - id: idem_same_key_after_refusal
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"sau lỗi"}'
+  - id: author_feed_after_writes
+    as: author
+    request:
+      method: GET
+      path: '/stories'
+  - id: author_deletes_account
+    as: author
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # an ended account's photos are erased with it: the same url is now 404
+  - id: author_after_deleting_account
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}"}'

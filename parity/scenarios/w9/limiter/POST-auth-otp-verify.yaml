@@ -1,0 +1,287 @@
+# W9 · POST /auth/otp/verify, in the limiter lane. Like its sibling, the address
+# window is spent BEFORE the body is read (`routes/auth.py:153-155`), so every request
+# costs one of the thirty -- refusals included, and there is no `get_actor` in front to
+# refuse anything for free. The bucket is application state keyed by caller address and
+# every scenario arrives from the same host, so this cannot live in the main lane.
+#
+# Thirty requests that reach the handler and a thirty-first the window refuses. The
+# stack sets MOBILE_OTP_DEBUG_CODE, so every challenge carries the same code and the
+# comparison path on verify is one path rather than two. Four different 404s ride the
+# same code on purpose (`domain/otp.py:8-12`): not_found, consumed, expired and
+# burned_already are indistinguishable to a caller, because telling a guesser that a
+# code was once real is worth more to them than to the person who asks for a new one.
+# No example number appears in plain digits.
+id: w9/limiter/post-auth-otp-verify
+routes: ['POST /auth/otp/verify']
+auth_mode: dev
+lane: limiter
+steps:
+  # spends 0 of 30: a different route, and so a different address window
+  - id: code_for_first_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\t99\t00\t01\t04"}'
+    bind:
+      challenge_a: {from: body, pointer: /challenge_id, class: uuid}
+  # spends 0 of 30: same, for the challenge this file burns
+  - id: code_for_second_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/request'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"phone":"03\t99\t00\t01\t05"}'
+    bind:
+      challenge_b: {from: body, pointer: /challenge_id, class: uuid}
+  # spends 1 (1 of 30): the body is not JSON
+  - id: spend_01_body_broken_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id": '
+  # spends 1 (2 of 30): JSON, but not an object
+  - id: spend_02_body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '[]'
+  # spends 1 (3 of 30): no challenge_id: parsed by hand, so one closed 422
+  - id: spend_03_challenge_id_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'
+  # spends 1 (4 of 30): challenge_id is not a uuid
+  - id: spend_04_challenge_id_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"khong-phai-uuid"}'
+  # spends 1 (5 of 30): challenge_id is not even a string
+  - id: spend_05_challenge_id_not_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":7}'
+  # spends 1 (6 of 30): challenge names a number, the body does not
+  - id: spend_06_phone_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}"}'
+  # spends 1 (7 of 30): not a Vietnamese mobile
+  - id: spend_07_phone_not_mobile
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"khong-phai-so"}'
+  # spends 1 (8 of 30): no code
+  - id: spend_08_code_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04"}'
+  # spends 1 (9 of 30): a blank code is no code
+  - id: spend_09_code_blank
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":"   "}'
+  # spends 1 (10 of 30): a number is not a code
+  - id: spend_10_code_not_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":0}'
+  # spends 1 (11 of 30): a challenge that never existed
+  - id: spend_11_unknown_challenge
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (12 of 30): a challenge issued to another number is, to this caller, no challenge
+  - id: spend_12_challenge_of_another_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t05","code":"000000"}'
+  # spends 1 (13 of 30): wrong code 1 of 5 on the second challenge; the fifth burns it
+  - id: spend_13_wrong_code_1
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"999999"}'
+  # spends 1 (14 of 30): wrong code 2 of 5 on the second challenge; the fifth burns it
+  - id: spend_14_wrong_code_2
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"999999"}'
+  # spends 1 (15 of 30): wrong code 3 of 5 on the second challenge; the fifth burns it
+  - id: spend_15_wrong_code_3
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"999999"}'
+  # spends 1 (16 of 30): wrong code 4 of 5 on the second challenge; the fifth burns it
+  - id: spend_16_wrong_code_4
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"999999"}'
+  # spends 1 (17 of 30): wrong code 5 of 5 on the second challenge; the fifth burns it
+  - id: spend_17_wrong_code_5
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"999999"}'
+  # spends 1 (18 of 30): the right code on a burned challenge is still one 404
+  - id: spend_18_burned_challenge
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_b}}","phone":"03\t99\t00\t01\t05","code":"000000"}'
+  # spends 1 (19 of 30): the door opens: 201 with a token, the person id derived from the number
+  - id: spend_19_right_code_opens_a_session
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (20 of 30): consumed is one of the four refusals that share a 404
+  - id: spend_20_spent_code_replayed
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (21 of 30): a challenge that never existed
+  - id: spend_21_unknown_challenge
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (22 of 30): JSON, but not an object
+  - id: spend_22_body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '[]'
+  # spends 1 (23 of 30): no challenge_id
+  - id: spend_23_challenge_id_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'
+  # spends 1 (24 of 30): a blank code is no code
+  - id: spend_24_code_blank
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":" "}'
+  # spends 1 (25 of 30): the spent code stays dead
+  - id: spend_25_spent_code_replayed
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (26 of 30): a challenge that never existed
+  - id: spend_26_unknown_challenge
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # spends 1 (27 of 30): JSON, but not an object
+  - id: spend_27_body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '[]'
+  # spends 1 (28 of 30): no challenge_id
+  - id: spend_28_challenge_id_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'
+  # spends 1 (29 of 30): a blank code is no code
+  - id: spend_29_code_blank
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":" "}'
+  # spends 1 (30 of 30): the spent code stays dead
+  - id: spend_30_spent_code_replayed
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"challenge_id":"{{challenge_a}}","phone":"03\t99\t00\t01\t04","code":"000000"}'
+  # the thirty-first: nothing left in the window. Refused before the body is read,
+  # which is why a body that would have been a 422 answers 429 here.
+  - id: thirty_first_is_rate_limited
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/otp/verify'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'

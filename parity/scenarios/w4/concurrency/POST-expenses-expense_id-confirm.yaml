@@ -1,0 +1,98 @@
+# W4 concurrency · POST /expenses/{id}/confirm. Copies are released together.
+# Under one key the burst writes one version and the other copies wait for the
+# winner and replay it; a different body under the completed key is refused by
+# every copy. Not here on purpose: two versions of one expense written inside
+# one burst. get_expense locks the expenses row FOR UPDATE, so the copies queue
+# and number versions 1 and 2, but their confirmed allocation rows are identical
+# once ids are masked, and with distinct keys which copy gets which version is
+# scheduling; the harness cannot compare either. Amounts are integer VND; texts
+# are sample data (dữ liệu mẫu).
+id: w4/concurrency/post-expenses-expense_id-confirm
+routes: ['POST /expenses/{expense_id}/confirm']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm cùng lúc (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng lúc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xác nhận cùng lúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: same_key_burst
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'c-conf-same'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: same_key_other_body_burst
+    as: owner
+    concurrent: 2
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'c-conf-same'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000}}'
+  # a second key on the same expense after the burst: version 2, one row set
+  - id: mate_key_after_burst
+    as: mate
+    concurrent: 2
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        idempotency-key: 'c-conf-mate'
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200001},"expected_allocations":{"{{persona.owner}}":100001,"{{persona.mate}}":100000}}'

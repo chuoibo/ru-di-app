@@ -1,0 +1,60 @@
+{
+  "ghi_chu": [
+    "Đột biến của làn W9 (phiên và cửa đăng nhập). Mỗi mục thay ĐÚNG MỘT lần xuất hiện",
+    "của `cu` bằng `moi` trong `tep`, qua `go build -overlay` — không sửa file trong cây.",
+    "`cho_doi` nói trước ca đỏ mong đợi; `vi_sao` nói vì sao đột biến ĐÁNG KỂ (nó phải",
+    "đổi một thứ cổng thật sự so sánh). Oracle ghi VĂN BẢN câu lệnh chứ không ghi tham số,",
+    "nên đột biến chỉ đổi giá trị tham số được đánh dấu `chi_kiem_tham_so`."
+  ],
+  "dot_bien": [
+    {
+      "ten": "han-danh-sach",
+      "tep": "internal/repo/account_sessions.go",
+      "cu": "AND account_sessions.expires_at > $2::TIMESTAMP WITH TIME ZONE",
+      "moi": "AND account_sessions.expires_at >= $2::TIMESTAMP WITH TIME ZONE",
+      "cho_doi": "do",
+      "vi_sao": "list_account_sessions dùng `>` chặt. Thế giới có sesEdge hết hạn ĐÚNG vào đồng hồ của ca, nên `>=` đổi cả văn bản câu lệnh lẫn danh sách trả về."
+    },
+    {
+      "ten": "thu-hoi-ghi-de",
+      "tep": "internal/repo/account_sessions.go",
+      "cu": "\tif session.RevokedAt != nil {\n\t\treturn session, nil\n\t}\n\trevoked := pythonInstant(now)",
+      "moi": "\trevoked := pythonInstant(now)",
+      "cho_doi": "do",
+      "vi_sao": "Bỏ cửa «đã thu hồi rồi» thì lần thu hồi thứ hai ghi đè revoked_at. Văn bản câu lệnh không đổi (vẫn một UPDATE), nhưng bản đổ bảng account_sessions đổi — đúng chỗ cổng nhìn được."
+    },
+    {
+      "ten": "roi-nhom-van-tinh",
+      "tep": "internal/repo/account_sessions.go",
+      "cu": "\t\tstates[contextID] = append(states[contextID], state)",
+      "moi": "\t\tstates[contextID] = append(states[contextID], \"active\")",
+      "cho_doi": "do",
+      "vi_sao": "actor_grants chỉ tính context từ membership `active`, và `left` mới sinh former_member. Coi mọi hàng là active thì cả roles lẫn context_ids đổi trong kết quả."
+    },
+    {
+      "ten": "han-loi-moi",
+      "tep": "internal/repo/named_invite_secret.go",
+      "cu": "\tif invite.RevokedAt != nil || !invite.ExpiresAt.After(accepted) {",
+      "moi": "\tif invite.RevokedAt != nil || invite.ExpiresAt.Before(accepted) {",
+      "cho_doi": "do",
+      "vi_sao": "Python từ chối ở `expires_at <= now`. Đổi thành `<` thì invEdge — hết hạn đúng vào đồng hồ — được tiêu thay vì bị chặn: đổi cả phán quyết lẫn bản đổ outing_invites."
+    },
+    {
+      "ten": "gioi-han-hai",
+      "tep": "internal/repo/account_sessions.go",
+      "cu": "\t\t  LIMIT $2::INTEGER`, tokenDigest, 1))",
+      "moi": "\t\t  LIMIT $2::INTEGER`, tokenDigest, 2))",
+      "cho_doi": "song-sot-oracle",
+      "chi_kiem_tham_so": true,
+      "vi_sao": "token_digest là duy nhất, nên LIMIT 2 đọc đúng một hàng ấy; văn bản câu lệnh sau chuẩn hoá vẫn là `LIMIT ?`. Oracle vi sai KHÔNG thấy được — đây chính là tính chất đã biết của nó. Ca đỏ phải đến từ TestAuthRepoBindsWhatPythonBinds, cổng duy nhất đọc tham số đã buộc."
+    },
+    {
+      "ten": "cua-sau-mac-dinh",
+      "tep": "internal/repo/account_sessions.go",
+      "cu": "\t\tissuedVia = \"genesis\"\n\t\tif in.IssuedFromInviteID != nil {\n\t\t\tissuedVia = \"invite\"\n\t\t}",
+      "moi": "\t\tissuedVia = \"invite\"\n\t\tif in.IssuedFromInviteID != nil {\n\t\t\tissuedVia = \"genesis\"\n\t\t}",
+      "cho_doi": "do",
+      "vi_sao": "Nhánh mặc định của create_account_session khi caller không nói issued_via. Đảo hai giá trị thì CHECK invite_matches_via nổ ở chỗ Python trả về hàng."
+    }
+  ]
+}

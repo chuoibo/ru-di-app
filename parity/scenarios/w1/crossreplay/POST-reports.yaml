@@ -1,0 +1,105 @@
+# W1 cross replay · POST /reports (201, writes a reports row). A report filed
+# through one implementation with a key is replayed, not filed twice, by the
+# other; a different body under the same key is refused by the other.
+id: w1/crossreplay/post-reports
+routes: ['POST /reports']
+auth_mode: dev
+personas:
+  reporter: {}
+  other: {}
+steps:
+  - id: register_reporter
+    as: reporter
+    request:
+      method: PUT
+      path: '/people/{{persona.reporter}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người báo cáo chéo (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị báo cáo (dữ liệu mẫu)"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: reporter
+    via: python
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: core_replays_python_key
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: core_refuses_python_key_other_body
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-a'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"harassment"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-b'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"other","note":"ghi chú (dữ liệu mẫu)"}'
+  - id: python_replays_core_key
+    as: reporter
+    via: python
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-b'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"other","note":"ghi chú (dữ liệu mẫu)"}'
+  - id: python_refuses_core_key_other_body
+    as: reporter
+    via: python
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-b'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"other","note":null}'
+  # a pydantic 422 is not stored by either side
+  - id: core_validation_refusal_not_stored
+    as: reporter
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-c'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"planet","target_id":"{{persona.other}}","reason":"spam"}'
+  - id: python_uses_key_after_core_refusal
+    as: reporter
+    via: python
+    request:
+      method: POST
+      path: '/reports'
+      headers:
+        idempotency-key: 'x-report-c'
+        content-type: 'application/json'
+      body_raw: '{"target_type":"person","target_id":"{{persona.other}}","reason":"spam"}'

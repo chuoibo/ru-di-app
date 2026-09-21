@@ -1,0 +1,608 @@
+# W2 · GET /posts/{post_id}/comments — oldest first, keyset pages, `after` continues forward.
+# Refusal order: actor, path + query model, readable post (404, never 403), cursor
+# decode (422). No role check: any actor who may read the post may read its comments.
+# next_cursor is base64(created_at|id): bound as a token where it first appears.
+id: w2/posts/get-posts-post_id-comments
+routes: ['GET /posts/{post_id}/comments']
+auth_mode: dev
+personas:
+  author: {}
+  friend: {}
+  mate: {}
+  stranger: {}
+  rival: {}
+  ghost: {}
+  departed: {}
+steps:
+  - id: anonymous_unknown_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+  # get_actor is a dependency, so 401 wins over path and query 422s
+  - id: anonymous_non_uuid_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/khong-phai-uuid/comments'
+  - id: anonymous_limit_zero
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments?limit=0'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_rival
+    as: rival
+    request:
+      method: PUT
+      path: '/people/{{persona.rival}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_departed
+    as: departed
+    request:
+      method: PUT
+      path: '/people/{{persona.departed}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết sẽ rời đi (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_post
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/khong-phai-uuid/comments'
+  # path and query errors arrive in one 422 list
+  - id: stranger_non_uuid_and_limit_zero
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/khong-phai-uuid/comments?limit=0'
+  - id: stranger_unknown_post
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments'
+  # query validation runs before the handler: 422 beats the 404
+  - id: stranger_unknown_post_limit_zero
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments?limit=0'
+  # the cursor is decoded after the readable check: 404 beats invalid_cursor
+  - id: stranger_unknown_post_bad_cursor
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/comments?after=khong-phai-cursor'
+  - id: author_creates_group
+    as: author
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đọc bình luận (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_mate
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership_mate: {from: body, pointer: /id, class: uuid}
+  - id: author_invites_rival
+    as: author
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.rival}}"}'
+    bind:
+      membership_rival: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership_mate}}/accept'
+  - id: rival_accepts
+    as: rival
+    request:
+      method: POST
+      path: '/memberships/{{membership_rival}}/accept'
+  - id: author_asks_friend
+    as: author
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: author_posts_only_me
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ghi chú riêng (dữ liệu mẫu)","audience":"only_me"}'
+    bind:
+      post_only_me: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_friends
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho bạn bè (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      post_friends: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_group
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho nhóm (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      post_group: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Cho mọi người (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_public: {from: body, pointer: /id, class: uuid}
+  - id: author_posts_second_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài công khai thứ hai (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_other: {from: body, pointer: /id, class: uuid}
+  - id: departed_posts_public
+    as: departed
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài của người sắp rời đi (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post_departed: {from: body, pointer: /id, class: uuid}
+  - id: author_empty_list
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  - id: author_comments_public
+    as: author
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận thứ nhất (dữ liệu mẫu)"}'
+  - id: friend_comments_public
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận thứ hai (dữ liệu mẫu)"}'
+  - id: stranger_comments_public
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận thứ ba (dữ liệu mẫu)"}'
+  - id: mate_comments_public
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận thứ tư (dữ liệu mẫu)"}'
+  - id: stranger_comments_other
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_other}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận ở bài khác (dữ liệu mẫu)"}'
+  - id: mate_comments_group
+    as: mate
+    request:
+      method: POST
+      path: '/posts/{{post_group}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận trong nhóm (dữ liệu mẫu)"}'
+  - id: friend_comments_friends
+    as: friend
+    request:
+      method: POST
+      path: '/posts/{{post_friends}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận cho bạn bè (dữ liệu mẫu)"}'
+  - id: stranger_comments_departed
+    as: stranger
+    request:
+      method: POST
+      path: '/posts/{{post_departed}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận ở bài sắp mất (dữ liệu mẫu)"}'
+  - id: list_default
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  # pages: the cursor names the last row of the page
+  - id: list_limit_one
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1'
+    bind:
+      cursor_one: {from: body, pointer: /next_cursor, class: token}
+  - id: list_after_one_limit_one
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1&after={{cursor_one}}'
+    bind:
+      cursor_two: {from: body, pointer: /next_cursor, class: token}
+  # the last page: has_more false and next_cursor null
+  - id: list_after_two_limit_two
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after={{cursor_two}}&limit=2'
+  - id: list_limit_three
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=3'
+    bind:
+      cursor_three: {from: body, pointer: /next_cursor, class: token}
+  - id: list_after_three
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after={{cursor_three}}'
+  # exactly limit rows left: has_more is false, not a trailing empty page
+  - id: list_limit_equals_count
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=4'
+  - id: list_limit_two_repeats_cursor_two
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=2'
+  - id: list_limit_max
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=100'
+  - id: list_limit_over_max
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=101'
+  - id: list_limit_zero
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=0'
+  - id: list_limit_negative
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=-1'
+  - id: list_limit_not_int
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=abc'
+  - id: list_limit_float
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1.5'
+  - id: list_limit_empty
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit='
+  - id: list_limit_repeated_last_wins
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=3&limit=1'
+  - id: list_limit_plus_sign
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=%2B2'
+  - id: list_unknown_query_ignored
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?before=x&viewer_id={{persona.author}}'
+  # cursor faults
+  - id: after_malformed
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=khong-phai-cursor'
+  - id: after_empty
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after='
+  - id: after_without_separator
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=eGluLWNoYW8'
+  - id: after_bad_uuid_inside
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=MjAyNi0wMS0wMVQwMDowMDowMCswMDowMHxraG9uZy1waGFpLXV1aWQ'
+  - id: after_bad_timestamp_inside
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=aG9tLXF1YXxhYWFhYWFhYS1iYmJiLTRjY2MtOGRkZC1lZWVlZWVlZWVlZWU'
+  # a hand-made cursor is accepted: naive time is read as UTC, far past returns all
+  - id: after_naive_far_past
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=MjAwMC0wMS0wMVQwMDowMDowMHxhYWFhYWFhYS1iYmJiLTRjY2MtOGRkZC1lZWVlZWVlZWVlZWU'
+  - id: after_far_future
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?after=Mjk5OS0wMS0wMVQwMDowMDowMCswNzowMHxhYWFhYWFhYS1iYmJiLTRjY2MtOGRkZC1lZWVlZWVlZWVlZWU'
+  # a cursor is not tied to its post: it is only a (created_at, id) position
+  - id: after_foreign_cursor
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_other}}/comments?after={{cursor_one}}'
+  # an unreadable post with a valid query is still 404
+  - id: stranger_on_only_me
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_only_me}}/comments'
+  - id: stranger_on_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_friends}}/comments?limit=1'
+  - id: friend_on_friends
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{post_friends}}/comments'
+  - id: friend_on_group
+    as: friend
+    request:
+      method: GET
+      path: '/posts/{{post_group}}/comments'
+  - id: mate_on_group
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{post_group}}/comments'
+  - id: author_on_only_me
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_only_me}}/comments'
+  # no role check on reading comments
+  - id: stranger_roles_empty_readable
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1'
+      headers:
+        x-actor-roles: ''
+  - id: stranger_roles_unknown
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        x-actor-roles: 'member,thu-quy'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  # names are read at list time
+  - id: friend_renames
+    as: friend
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thân đổi tên (dữ liệu mẫu)"}'
+  - id: ghost_comments_public
+    as: ghost
+    request:
+      method: POST
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bình luận sẽ bị xoá cùng tài khoản (dữ liệu mẫu)"}'
+  - id: list_after_rename_and_ghost
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: list_after_ghost_deleted
+    as: author
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  - id: ghost_reads_after_deletion
+    as: ghost
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1'
+  # blocks: public post hidden both ways, shared group post still readable
+  - id: rival_blocks_author
+    as: rival
+    request:
+      method: POST
+      path: '/people/{{persona.author}}/block'
+  - id: rival_on_public_after_blocking
+    as: rival
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments'
+  - id: rival_on_group_after_blocking
+    as: rival
+    request:
+      method: GET
+      path: '/posts/{{post_group}}/comments'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_on_group_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/posts/{{post_group}}/comments'
+  - id: stranger_on_departed_before
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_departed}}/comments'
+  - id: departed_deletes_account
+    as: departed
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: stranger_on_departed_after
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_departed}}/comments'
+  # GET is not a write method: the idempotency middleware ignores the key, even an empty one
+  - id: get_with_empty_idempotency_key
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments?limit=1'
+      headers:
+        idempotency-key: ''
+  - id: trailing_slash_redirects
+    as: stranger
+    request:
+      method: GET
+      path: '/posts/{{post_public}}/comments/?limit=1'
+  - id: head_not_allowed
+    as: stranger
+    request:
+      method: HEAD
+      path: '/posts/{{post_public}}/comments'
+  - id: put_not_allowed
+    as: stranger
+    request:
+      method: PUT
+      path: '/posts/{{post_public}}/comments'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"x"}'

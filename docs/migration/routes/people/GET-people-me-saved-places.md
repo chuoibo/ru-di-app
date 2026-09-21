@@ -1,0 +1,75 @@
+# GET /people/me/saved-places
+
+people · core · trạng thái trong bộ nhớ: không có
+
+## Mục đích
+
+Các địa điểm người gọi đã đánh dấu, mới nhất trước, mỗi hàng được đặt tên từ danh mục lúc đọc (M2).
+
+## Xác thực và quyền
+
+Thứ tự (`services/api/app/api/routes/people.py:96-105`, `services/api/app/api/service.py:4245-4254`), đo trên stack:
+
+1. Router: đuôi `/` → 307; `POST` → 405.
+2. `get_actor` → 401, 422 `invalid_actor_id` / `invalid_actor_roles`.
+3. `_require_permission("manage_saved_places", {"is_self": True})` (`services/api/app/domain/permissions.py:202`): thiếu `member` → 403 `permission_denied` `role_not_permitted` (`owner_lists_without_roles`).
+4. Không tra hàng `people`: chưa đăng ký → 200 `{"saved": []}`.
+
+## Đầu vào
+
+Không path, không thân; query bị bỏ qua (`owner_lists_with_query`).
+
+## Đầu ra
+
+**200** `{"saved": [{"place_id", "name", "category", "saved_at"}, …]}` (`services/api/app/api/schemas.py:951-959`).
+
+- Hàng: `saved_places WHERE person_id = me ORDER BY created_at DESC, id` (`services/api/app/api/repository.py:4265-4271`). Lưu lại một chỗ đã lưu không đổi `created_at` nên không đổi thứ tự (`owner_lists_after_resave`).
+- Mỗi hàng tra `place_row(place_id)` (`service.py:1241-1247`, rồi `get_place`, `repository.py:4190-4192`): không còn trong danh mục → hàng bị bỏ khỏi đầu ra, không bị xoá (`service.py:4251-4253`).
+- `saved_at` = `saved_places.created_at`.
+
+## Tác dụng phụ
+
+Không. Một câu danh sách, rồi một `places` mỗi hàng.
+
+## Lỗi
+
+| Status | code | detail (nguyên văn) | Nguồn |
+|---|---|---|---|
+| 401 | `authentication_required` | `Missing X-Actor-ID` / `Missing bearer session`, `Session is not valid` | `deps.py:93-143` |
+| 422 | `invalid_actor_id` / `invalid_actor_roles` | | `deps.py:144-155` |
+| 403 | `permission_denied` | `role_not_permitted` | `service.py:4246` |
+| 307 / 405 | — | | Starlette |
+
+## Mã Python
+
+- Route: `services/api/app/api/routes/people.py:96-105`
+- Service: `services/api/app/api/service.py:4245-4254`, `:4282-4288`, `:1241-1247`
+- Repository: `services/api/app/api/repository.py:4265-4271`, `:4190-4192`
+- Quyền: `services/api/app/domain/permissions.py:202`
+
+## Test đang phủ
+
+- `services/api/tests/api/test_profile.py`: `test_saved_places_are_idempotent_and_named_from_the_catalogue` (191)
+- `services/api/tests/postgres/test_profile_postgres.py`: `test_one_bookmark_per_person_and_place_in_the_database_and_over_http` (262)
+
+## Kịch bản parity
+
+`parity/scenarios/w10/people/GET-people-me-saved-places.yaml`, id `w10/people/get-people-me-saved-places` (27 bước, `dev`):
+
+- Thứ tự: `anonymous_lists`, `actor_id_not_uuid`, `roles_unknown`, `owner_lists_without_roles` (`guest`), `owner_lists_unregistered` (200 rỗng).
+- Thứ tự hàng: `owner_lists_three` (mới nhất trước), `owner_saves_first_again` + `owner_lists_after_resave` (không đổi), `owner_unsaves_second`, `owner_lists_as_group_admin_and_member`, `other_lists_own`, `owner_lists_with_query`.
+- Xoá tài khoản: `leaver_saves`, `leaver_lists_before`, `leaver_ends_account`, `leaver_lists_after` (rỗng), `other_lists_after_leaver`.
+- Framework: `trailing_slash` (307), `post_not_allowed` (405 `allow: GET`).
+
+Đọc lại cũng có trong `crossreplay/PUT-…`, `crossreplay/DELETE-…`, `concurrency/PUT-…`, `concurrency/DELETE-…` và `prod-auth.yaml` (`owner_lists_saved`, `owner_lists_saved_after_stranger`).
+
+Corpus sinh: `generated/w10-422/get-people-me-saved-places.yaml` (5 bước).
+
+## Chưa phủ / lưu ý cho bản Go
+
+- Hàng có `place_id` không còn trong danh mục bị bỏ khỏi đầu ra; chưa phủ vì không có cửa HTTP xoá danh mục.
+- Tên và loại đọc lúc trả lời, không lưu cùng dấu.
+
+## Lỗi Python (chỉ báo, không sửa)
+
+- Một truy vấn `places` cho mỗi hàng (N+1). Không ảnh hưởng đầu ra.

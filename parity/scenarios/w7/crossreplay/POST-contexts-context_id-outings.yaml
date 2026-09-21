@@ -1,0 +1,115 @@
+# W7 cross replay · POST /contexts/{context_id}/outings. A 201 stored by one path is
+# replayed as 201 by the other, both ways, and the replay carries the trip that was
+# created rather than creating a second one. A key spent on a different body is reuse; a
+# 403 frees the key, so the same key opens a real trip afterwards. Go serves none of
+# these routes yet, so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w7/crossreplay/post-contexts-context_id-outings
+routes: ['POST /contexts/{context_id}/outings']
+auth_mode: dev
+personas:
+  owner: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm phát lại (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: python_creates_trip
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến qua cửa sau (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến qua cửa sau (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: front_same_key_other_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến khác (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+  - id: front_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến qua cửa trước (dữ liệu mẫu)","starts_on":"2026-04-01","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến qua cửa trước (dữ liệu mẫu)","starts_on":"2026-04-01","ends_on":"2026-04-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: python_refuses_a_stranger
+    as: stranger
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến người lạ (dữ liệu mẫu)","starts_on":"2026-05-01","ends_on":"2026-05-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: front_reuses_the_freed_key
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        idempotency-key: 'c7af0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến người lạ (dữ liệu mẫu)","starts_on":"2026-05-01","ends_on":"2026-05-02","headcount":2,"budget_per_person_vnd":200000}'
+  - id: python_lists_trips
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: front_lists_trips
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'

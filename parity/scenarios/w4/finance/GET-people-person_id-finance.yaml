@@ -1,0 +1,624 @@
+# W4 · GET /people/{id}/finance — one person's own money, recomputed from the
+# ledger on every read: spend (own shares of the newest confirmed versions),
+# outstanding (shares someone else fronted, less receipts confirmed on their
+# obligations as sender, clamped at 0), settled (spend - outstanding),
+# receivable (shares they fronted, less receipts collected, clamped at 0), and
+# the 20 newest receipt movements in both directions. Self-only: 403 before any
+# read, no membership check, no role check. No batch is published here.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/finance/get-people-person_id-finance
+routes: ['GET /people/{person_id}/finance']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  stranger: {}
+  newcomer: {}
+steps:
+  - id: anonymous_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/finance'
+  - id: anonymous_non_uuid_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/finance'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/finance'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: newcomer_non_uuid_person
+    as: newcomer
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/finance'
+  - id: newcomer_reads_unknown_person
+    as: newcomer
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/finance'
+  # never registered: a real answer of zeros with a null name, not 404
+  - id: newcomer_reads_self_unregistered
+    as: newcomer
+    request:
+      method: GET
+      path: '/people/{{persona.newcomer}}/finance'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_reads_self_empty
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  # the group id also seeds this run's receipt idempotency keys
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm tài chính (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  # self-only, with no group-admin exception
+  - id: owner_reads_mate
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  - id: stranger_reads_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  # no role is checked: an empty role header still reads
+  - id: owner_roles_empty_reads_self
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        x-actor-roles: ''
+  # ledger: a dinner corrected to version 2, a taxi the mate paid, a snack with
+  # no description, breakfast and lunch for the int64 pair
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: owner_confirms_dinner_edit
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":240000},"expected_allocations":{"{{persona.owner}}":120000,"{{persona.mate}}":120000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: mate_proposes_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-03T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_proposes_snack
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000}'
+    bind:
+      snack: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_snack
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{snack}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T15:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      snack_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_proposes_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      breakfast: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{breakfast}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa sáng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T07:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      breakfast_version: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_proposes_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000}'
+    bind:
+      lunch: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{lunch}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa trưa (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":20000},"expected_allocations":{"{{persona.owner}}":10000,"{{persona.mate}}":10000},"acknowledge_as_advancer":true}'
+    bind:
+      lunch_version: {from: body, pointer: /expense_version_id, class: uuid}
+  # a proposal alone is not in the ledger
+  - id: third_proposes_unconfirmed
+    as: third
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Chưa xác nhận (dữ liệu mẫu)","recorded_by_id":"{{persona.third}}","paid_by_id":"{{persona.third}}","verification_scope":"totals_only","occurred_at":"2030-01-04T13:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":90000}'
+  - id: owner_after_expenses
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_after_expenses
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  # a member who shares no expense: counts zero, one group
+  - id: third_after_expenses
+    as: third
+    request:
+      method: GET
+      path: '/people/{{persona.third}}/finance'
+  # batches: one expense each. An obligation merged from two expenses lists
+  # source_expense_version_ids sorted by random uuid text, which no two stacks
+  # share, so the "first +N" occasion is left out
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      o_dinner: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: mate_batches_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      o_taxi: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_batches_snack
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{snack_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      o_snack: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_batches_breakfast
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{breakfast_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      o_breakfast: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_batches_lunch
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{lunch_version}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      o_lunch: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  # a batched but unpaid share still counts as owed
+  - id: mate_after_batches
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  # the snack obligation has no description: occasion null
+  - id: owner_confirms_snack_receipt
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_snack}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":30000,"idempotency_key":"{{kp}}-aaaaaaaaaaa1"}'
+  - id: owner_after_first_receipt
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_after_first_receipt
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  # more than owed: outstanding and receivable clamp at zero
+  - id: mate_over_confirms_taxi
+    as: mate
+    request:
+      method: POST
+      path: '/obligations/{{o_taxi}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":40000,"idempotency_key":"{{kp}}-aaaaaaaaaaa2"}'
+  - id: owner_after_over_receipt
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_after_over_receipt
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  # 21 receipts on the dinner obligation: the movement list stops at 20
+  - id: owner_confirms_dinner_receipt_01
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb01"}'
+  - id: owner_confirms_dinner_receipt_02
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb02"}'
+  - id: owner_confirms_dinner_receipt_03
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb03"}'
+  - id: owner_confirms_dinner_receipt_04
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb04"}'
+  - id: owner_confirms_dinner_receipt_05
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb05"}'
+  - id: owner_confirms_dinner_receipt_06
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb06"}'
+  - id: owner_confirms_dinner_receipt_07
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb07"}'
+  - id: owner_confirms_dinner_receipt_08
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb08"}'
+  - id: owner_confirms_dinner_receipt_09
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb09"}'
+  - id: owner_confirms_dinner_receipt_10
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb10"}'
+  - id: owner_confirms_dinner_receipt_11
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb11"}'
+  - id: owner_confirms_dinner_receipt_12
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb12"}'
+  - id: owner_confirms_dinner_receipt_13
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb13"}'
+  - id: owner_confirms_dinner_receipt_14
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb14"}'
+  - id: owner_confirms_dinner_receipt_15
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb15"}'
+  - id: owner_confirms_dinner_receipt_16
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb16"}'
+  - id: owner_confirms_dinner_receipt_17
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb17"}'
+  - id: owner_confirms_dinner_receipt_18
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb18"}'
+  - id: owner_confirms_dinner_receipt_19
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb19"}'
+  - id: owner_confirms_dinner_receipt_20
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb20"}'
+  - id: owner_confirms_dinner_receipt_21
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":1000,"idempotency_key":"{{kp}}-bbbbbbbbbb21"}'
+  - id: owner_after_twenty_one_receipts
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_after_twenty_one_receipts
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  # sums past int64 on one pair (mate owes owner), one receipt of 2**63 - 1 on
+  # each of two obligations: collection_obligation_progress casts a single
+  # obligation's receipt sum to bigint
+  - id: owner_confirms_breakfast_int64_max
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_breakfast}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{kp}}-cccccccccc01"}'  # repo-guard: allow=long-number reason=int64-receipt-sum-probe
+  - id: owner_confirms_lunch_int64_max
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{o_lunch}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":9223372036854775807,"idempotency_key":"{{kp}}-cccccccccc02"}'  # repo-guard: allow=long-number reason=int64-receipt-sum-probe
+  # collected past int64 for the owner, paid past int64 for the mate
+  - id: owner_after_int64_receipts
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_after_int64_receipts
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  - id: third_after_int64_receipts
+    as: third
+    request:
+      method: GET
+      path: '/people/{{persona.third}}/finance'
+  # leaving drops the group count; the ledger keeps every figure
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance?limit=1'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/finance'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

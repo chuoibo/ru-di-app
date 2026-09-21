@@ -1,0 +1,366 @@
+# W8 · POST /papers/{id}/withdraw. paper_unseen_unanswered is proved before the version:
+# anything but a da_gui sheet whose current version the caller sent and the other
+# person has not opened is 409 paper_not_withdrawable, whatever the reason, and only
+# then a wrong version is 409 paper_version_stale. The author of a counter-proposal may
+# withdraw it. Every sheet here is temporary. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_papers/post-papers-paper_id-withdraw
+routes: ['POST /papers/{paper_id}/withdraw']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_withdraws
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: stranger_withdraws_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_withdraws_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_withdraws_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: stranger_withdraws_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_withdraws_as_advancer
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_withdraws_sent
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_withdraws_sent_stale
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: owner_withdraws_stale
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: owner_version_string
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":"1"}'
+  - id: owner_version_missing
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_version_zero
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":0}'
+  - id: owner_withdraws
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_withdraws_again
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_reads_withdrawn
+    as: mate
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: seen_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_2: {from: body, pointer: /id, class: uuid}
+  - id: seen_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_views_second
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/versions/1/viewed'
+  - id: owner_withdraws_seen
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_skips_second
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_2}}/skip'
+  - id: countered_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_3: {from: body, pointer: /id, class: uuid}
+  - id: countered_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_counter_proposes
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_withdraws_countered
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: mate_withdraws_counter_stale
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_withdraws_counter
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_3}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: owner_reads_withdrawn_counter
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper_3}}'
+  - id: counter_seen_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_4: {from: body, pointer: /id, class: uuid}
+  - id: counter_seen_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: mate_counter_proposes_fourth
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_views_counter
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/2/viewed'
+  - id: mate_withdraws_seen_counter
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: owner_agrees_counter
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/versions/2/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"dong_y"}'
+  - id: mate_withdraws_plan
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper_4}}/withdraw'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":2}'
+  - id: keyed_owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper_5: {from: body, pointer: /id, class: uuid}
+  - id: keyed_owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_withdraws_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/withdraw'
+      headers:
+        idempotency-key: 'w8-rut-a'
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/withdraw'
+      headers:
+        idempotency-key: 'w8-rut-a'
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_header_key_other_version
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper_5}}/withdraw'
+      headers:
+        idempotency-key: 'w8-rut-a'
+        content-type: 'application/json'
+      body_raw: '{"version":2}'

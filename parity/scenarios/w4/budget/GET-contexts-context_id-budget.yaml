@@ -1,0 +1,493 @@
+# W4 · GET /contexts/{id}/budget — per-person spend of the trips a group is on
+# and a comparison of one candidate price with the average of finished trips,
+# all recomputed from the newest confirmed expense versions. Order: actor, path
+# and query validation, role + ACTIVE membership. A trip claims the expenses
+# whose Vietnamese calendar day lies inside its dates. Every started trip here
+# ends on a distinct day: ties fall to random outing ids.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/budget/get-contexts-context_id-budget
+routes: ['GET /contexts/{context_id}/budget']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/budget'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/budget'
+  - id: anonymous_bad_candidate
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/budget?candidate_per_person_vnd=-1'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/budget'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/budget'
+  # path and query refused together: one 422 listing both
+  - id: stranger_non_uuid_context_bad_candidate
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/budget?candidate_per_person_vnd=1.5'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/budget'
+  # query validation runs before the permission check
+  - id: stranger_unknown_context_bad_candidate
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/budget?candidate_per_person_vnd=x'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm ngân sách (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  # a candidate without any finished trip: no comparison
+  - id: owner_empty_group_with_candidate
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=50000'
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  # an invitation is on the roster but not counted as an active member
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  - id: invitee_reads
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=1'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+      headers:
+        x-actor-roles: ''
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+  # trips: two finished (2020), two still running (end in 2099 and 2098), one
+  # not started; the title is stored stripped
+  - id: owner_creates_finished_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"  Đà Lạt (dữ liệu mẫu)  ","starts_on":"2020-01-01","ends_on":"2020-01-03","headcount":2,"budget_per_person_vnd":500000}'
+  - id: owner_creates_second_finished_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Bảo tàng (dữ liệu mẫu)","starts_on":"2020-02-10","ends_on":"2020-02-11","headcount":3,"budget_per_person_vnd":300000}'
+  - id: owner_creates_live_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến dài (dữ liệu mẫu)","starts_on":"2020-03-01","ends_on":"2099-12-31","headcount":2,"budget_per_person_vnd":100000}'
+  - id: owner_creates_long_live_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến rất dài (dữ liệu mẫu)","starts_on":"2020-01-01","ends_on":"2098-12-31","headcount":4,"budget_per_person_vnd":0}'
+  - id: owner_creates_future_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chưa đi (dữ liệu mẫu)","starts_on":"2099-01-01","ends_on":"2099-01-02","headcount":2,"budget_per_person_vnd":1000000}'
+  # finished trips with no money: the average is 0, not null
+  - id: owner_trips_without_money
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  - id: owner_zero_average_candidate_zero
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=0'
+  - id: owner_zero_average_candidate_one
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=1'
+  # money: dinner and a late supper inside the first trip (the supper is
+  # 23:30 in Vietnam), a supper after midnight in Vietnam outside it
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối Đà Lạt (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300001}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối Đà Lạt (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":300001},"expected_allocations":{"{{persona.owner}}":150001,"{{persona.mate}}":150000},"acknowledge_as_advancer":true}'
+  - id: owner_proposes_late_supper
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Ăn khuya (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-03T16:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":10000}'
+    bind:
+      late_supper: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_late_supper
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{late_supper}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Ăn khuya (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-03T16:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":10000},"expected_allocations":{"{{persona.owner}}":5000,"{{persona.mate}}":5000},"acknowledge_as_advancer":true}'
+  - id: owner_proposes_after_midnight
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Sau nửa đêm (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-03T17:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000}'
+    bind:
+      after_midnight: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_after_midnight
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{after_midnight}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Sau nửa đêm (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-03T17:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.mate}}":25000},"acknowledge_as_advancer":true}'
+  - id: mate_proposes_museum
+    as: mate
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Vé bảo tàng (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2020-02-10T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000}'
+    bind:
+      museum: {from: body, pointer: /expense_id, class: uuid}
+  - id: mate_confirms_museum
+    as: mate
+    request:
+      method: POST
+      path: '/expenses/{{museum}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Vé bảo tàng (dữ liệu mẫu)","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2020-02-10T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":45000,"{{persona.mate}}":45000},"acknowledge_as_advancer":true}'
+  - id: owner_proposes_hotel
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Khách sạn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-03-05T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":250000}'
+    bind:
+      hotel: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_hotel
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khách sạn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-03-05T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":250000},"expected_allocations":{"{{persona.owner}}":125000,"{{persona.mate}}":125000},"acknowledge_as_advancer":true}'
+  - id: owner_after_hotel_first_version
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  # the correction is version 2: only it counts
+  - id: owner_confirms_hotel_edit
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{hotel}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Khách sạn (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-03-05T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":260000},"expected_allocations":{"{{persona.owner}}":130000,"{{persona.mate}}":130000},"acknowledge_as_advancer":true}'
+  # a proposal alone, and an expense of another group, count nowhere
+  - id: owner_proposes_unconfirmed
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Chưa xác nhận (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-03-06T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":998000}'
+  - id: owner_proposes_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx_other}}","description":"Nhóm khác (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":70000}'
+    bind:
+      other: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{other}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx_other}}","description":"Nhóm khác (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":70000},"expected_allocations":{"{{persona.owner}}":70000},"acknowledge_as_advancer":true}'
+  # finished: 310001 over 2 people and 90000 over 3, average 400001 // 5
+  - id: owner_after_history
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  # verdict boundaries around an average of 80000 (ten percent is 8000)
+  - id: mate_candidate_equal_to_average
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=80000'
+  - id: owner_candidate_upper_boundary
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=88000'
+  - id: owner_candidate_above_boundary
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=88001'
+  - id: owner_candidate_lower_boundary
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=72000'
+  - id: owner_candidate_below_boundary
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=71999'
+  - id: owner_candidate_zero
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=0'
+  - id: owner_candidate_leading_zeros
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=007'
+  # |delta| * 100 no longer fits int64, delta itself still does
+  - id: owner_candidate_scaled_past_int64
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=100000000000000000'  # repo-guard: allow=long-number reason=int64-overflow-probe
+  # the candidate and delta_vnd are past int64
+  - id: owner_candidate_past_int64
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=18446744073709551616'  # repo-guard: allow=long-number reason=int64-overflow-probe
+  - id: owner_candidate_negative
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=-1'
+  - id: owner_candidate_plus_sign
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=%2B1'
+  - id: owner_candidate_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd='
+  - id: owner_candidate_exponent
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=1e2'
+  # full-width digits are digits to str.isdigit but not ASCII
+  - id: owner_candidate_fullwidth_digits
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=%EF%BC%91%EF%BC%92'
+  - id: owner_candidate_repeated_last_accepted
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=-1&candidate_per_person_vnd=80000'
+  - id: owner_candidate_repeated_last_refused
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=80000&candidate_per_person_vnd=x'
+  - id: owner_undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?person_id=x'
+  - id: mate_leaves
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget'
+  # the ledger keeps the leaver's shares; only the member count drops
+  - id: owner_after_mate_left
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget?candidate_per_person_vnd=80000'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/budget/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/budget'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

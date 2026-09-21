@@ -1,0 +1,418 @@
+# W5 · the guest routes' 422 corpus, written by hand: the generator refuses every
+# guest route at its token (a str with a pattern) and would refuse three of them
+# again for their form bodies. On every route the token is 32..128 characters of
+# [A-Za-z0-9_-]; outside that FastAPI answers the JSON validation 422 (input
+# redacted) with path and body errors in one list. da-chuyen reads a form model
+# with extra=forbid, so an extra field is refused, an empty value is a UUID
+# parsing error rather than "missing", and a JSON, text/plain or untyped body is
+# "missing". doi-so-tien and xin-cach-tinh read plain Form() fields. Repeated
+# fields take the last value; multipart and a charset parameter are accepted.
+# Texts are sample data (dữ liệu mẫu).
+id: w5/guests/validation-422
+routes: ['GET /g/{token}', 'POST /g/{token}/da-chuyen', 'GET /g/{token}/khong-phai-toi', 'POST /g/{token}/khong-phai-toi', 'GET /g/{token}/doi-so-tien', 'POST /g/{token}/doi-so-tien', 'POST /g/{token}/xin-cach-tinh']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt kiểm dạng (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kiểm dạng form (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối kiểm dạng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối kiểm dạng (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}"],"total_amount_vnd":90000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+  # token length and pattern on every guest route; a short token with a bad body lists both errors
+  - id: page_token_too_short
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l'
+  - id: page_token_too_long
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix'
+  - id: page_token_off_pattern
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c'
+  - id: not_me_page_token_too_short
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/khong-phai-toi'
+  - id: not_me_page_token_too_long
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/khong-phai-toi'
+  - id: not_me_page_token_off_pattern
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/khong-phai-toi'
+  - id: wrong_amount_page_token_too_short
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/doi-so-tien?obligation_id={{ob_a}}'
+  - id: wrong_amount_page_token_too_long
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/doi-so-tien?obligation_id={{ob_a}}'
+  - id: wrong_amount_page_token_off_pattern
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/doi-so-tien?obligation_id={{ob_a}}'
+  - id: report_token_too_short
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: ''
+  - id: report_token_too_long
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: report_token_off_pattern
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: not_me_token_too_short
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/khong-phai-toi'
+  - id: not_me_token_too_long
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/khong-phai-toi'
+  - id: not_me_token_off_pattern
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/khong-phai-toi'
+  - id: objection_token_too_short
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: ''
+  - id: objection_token_too_long
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: objection_token_off_pattern
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: evidence_token_too_short
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-da-bi-cat-link-da-bi-cat-l/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: ''
+  - id: evidence_token_too_long
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-dai-van-hop-le-link-daix/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: evidence_token_off_pattern
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/khong-co-link-nay-khong-co-link-nay-khong.c/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}'
+  # da-chuyen reads a form model with extra=forbid
+  - id: report_no_content_type
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: report_text_plain
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'text/plain'
+      body_raw: 'obligation_id={{ob_b}}'
+  - id: report_json_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"obligation_id":"{{ob_b}}"}'
+  - id: report_empty_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: ''
+  - id: report_empty_value
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id='
+  - id: report_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id=khong-phai-uuid'
+  - id: report_extra_field
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&note=x'
+  - id: report_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key='
+  - id: report_idempotency_key_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_b}}&idempotency_key=khong-phai-uuid'
+  - id: report_field_name_case
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'Obligation_id={{ob_b}}'
+  - id: report_multipart_missing_field
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'multipart/form-data; boundary=w5-ranh-gioi'
+      body_raw: "--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"note\"\r\n\r\nx\r\n--w5-ranh-gioi--\r\n"
+  - id: report_multipart_extra_field
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'multipart/form-data; boundary=w5-ranh-gioi'
+      body_raw: "--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"obligation_id\"\r\n\r\n{{ob_b}}\r\n--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"note\"\r\n\r\nx\r\n--w5-ranh-gioi--\r\n"
+  # the shapes that are accepted: repeated fields take the last value
+  - id: report_repeated_field_last_wins
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_a}}&obligation_id={{ob_b}}'
+  - id: report_multipart
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'multipart/form-data; boundary=w5-ranh-gioi'
+      body_raw: "--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"obligation_id\"\r\n\r\n{{ob_b}}\r\n--w5-ranh-gioi--\r\n"
+  - id: report_form_with_charset
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded; charset=utf-8'
+      body_raw: 'obligation_id={{ob_b}}'
+  # doi-so-tien and xin-cach-tinh read plain Form() fields: missing is 422, extra is ignored
+  - id: objection_json_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"obligation_id":"{{ob_a}}","reason":"other"}'
+  - id: objection_text_plain
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'text/plain'
+      body_raw: 'obligation_id={{ob_a}}&reason=other'
+  - id: objection_multipart_missing_reason
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/doi-so-tien'
+      headers:
+        content-type: 'multipart/form-data; boundary=w5-ranh-gioi'
+      body_raw: "--w5-ranh-gioi\r\nContent-Disposition: form-data; name=\"obligation_id\"\r\n\r\n{{ob_a}}\r\n--w5-ranh-gioi--\r\n"
+  - id: evidence_no_content_type
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      body_raw: 'obligation_id={{ob_a}}'
+  - id: evidence_text_plain
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/xin-cach-tinh'
+      headers:
+        content-type: 'text/plain'
+      body_raw: 'obligation_id={{ob_a}}'

@@ -1,0 +1,143 @@
+# W6 cross replay · POST /contexts/{context_id}/photos. The idempotency middleware
+# drains the whole multipart body and fingerprints it raw (not JSON-canonical), so
+# a 201 stored by one side under a header key is replayed by the other, and any
+# other body (another picture, another filename) is 422 idempotency_key_reuse. A
+# refusal (415) releases the key. The photo a key stored through one side is read
+# back through the other: the file and the row must be visible to both, which is
+# the shared media root a Go candidate needs. Go serves none of these routes yet,
+# so both paths reach Python; the file is here for when one side is Go.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/crossreplay/post-contexts-context_id-photos
+routes: ['POST /contexts/{context_id}/photos', 'GET /contexts/{context_id}/photos/{photo_id}']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm phát lại chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm ảnh phát lại chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: python_stores_upload
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 48, height: 36, seed: 91, orientation: 6}}
+    bind:
+      photo_python: {from: body, pointer: /id, class: uuid}
+  - id: front_replays_python_upload
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 48, height: 36, seed: 91, orientation: 6}}
+  - id: front_other_picture_same_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 48, height: 36, seed: 92, orientation: 6}}
+  - id: front_reads_python_upload
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_python}}'
+  - id: front_stores_upload
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 30, height: 30, seed: 93, alpha: true}}
+    bind:
+      photo_front: {from: body, pointer: /id, class: uuid}
+  - id: python_replays_front_upload
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 30, height: 30, seed: 93, alpha: true}}
+  - id: python_other_filename_same_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: khac.png, content_type: image/png, image: {format: png, width: 30, height: 30, seed: 93, alpha: true}}
+  - id: python_reads_front_upload
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo_front}}'
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-c'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}
+  - id: front_same_key_after_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-c'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 20, height: 20, seed: 94}}
+  - id: python_replays_after_refusal
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        idempotency-key: '{{persona.owner}}-group-c'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.webp, content_type: image/webp, image: {format: webp, width: 20, height: 20, seed: 94}}

@@ -1,0 +1,49 @@
+# W2 concurrency · POST /posts (201, one posts row per write). Copies are
+# released together. Under one key the burst writes once and the other copies
+# replay it; under distinct keys every copy writes its own row; a different body
+# under the completed key is refused by every copy. Nothing unique constrains a
+# post, so no copy can lose a database race. Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/post-posts
+routes: ['POST /posts']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết cùng lúc (dữ liệu mẫu)"}'
+  - id: same_key_burst
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'c-post-same'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài cùng lúc (dữ liệu mẫu)","audience":"public"}'
+  - id: distinct_key_burst
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'c-post-{{burst}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài khác khoá (dữ liệu mẫu)","audience":"friends"}'
+  - id: same_key_other_body_burst
+    as: author
+    concurrent: 2
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'c-post-same'
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài cùng lúc (dữ liệu mẫu)","audience":"only_me"}'

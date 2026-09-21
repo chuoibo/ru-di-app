@@ -129,6 +129,7 @@ esac
 # changes included, against the dependencies about to ship.
 echo "--- nạp app.api.main bằng fastapi $PINNED"
 docker run --rm \
+  -e MOBILE_INTERNAL_TOKEN=test-brain-token \
   -v "$REPO_ROOT/services/api:/src:ro" \
   -w /src \
   --entrypoint /venv/bin/python "$IMAGE" \

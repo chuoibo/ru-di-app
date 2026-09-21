@@ -1,0 +1,409 @@
+# W2 · GET /votes/{id} — one vote with its tally.
+# Refusal order: actor, path UUID, vote lookup (404 vote_not_found) BEFORE the
+# role and membership check (403): the route tells a stranger that an id exists.
+# Tally: leading_option_ids in position order, decided only on a single leader.
+id: w2/votes/get-votes-vote_id
+routes: ['GET /votes/{vote_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  ghost: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_vote
+    as: anonymous
+    request:
+      method: GET
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_vote
+    as: anonymous
+    request:
+      method: GET
+      path: '/votes/khong-phai-uuid'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_ghost
+    as: ghost
+    request:
+      method: PUT
+      path: '/people/{{persona.ghost}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá tài khoản (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/khong-phai-uuid'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee'
+  - id: stranger_unknown_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: stranger_uppercase_unknown_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE'
+  # the vote is looked up before the role check: 404, not 403
+  - id: owner_roles_empty_unknown_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-roles: ''
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đếm phiếu (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+    bind:
+      m_invitee: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_invites_ghost
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.ghost}}"}'
+    bind:
+      m_ghost: {from: body, pointer: /id, class: uuid}
+  - id: ghost_accepts
+    as: ghost
+    request:
+      method: POST
+      path: '/memberships/{{m_ghost}}/accept'
+  - id: owner_creates_outing
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến mẫu (dữ liệu mẫu)","starts_on":"2030-01-01","ends_on":"2030-01-02","headcount":5,"budget_per_person_vnd":100000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Tối nay đi đâu? (dữ liệu mẫu)","options":[{"label":"Chợ đêm","place_name":"Chợ Bến Thành"},{"label":"Quán cà phê"},{"label":"Bờ sông","place_name":"Bến Bạch Đằng"}],"outing_id":"{{outing}}"}'
+    bind:
+      vote: {from: body, pointer: /id, class: uuid}
+      opt_x: {from: body, pointer: /options/0/id, class: uuid}
+      opt_y: {from: body, pointer: /options/1/id, class: uuid}
+      opt_z: {from: body, pointer: /options/2/id, class: uuid}
+  # no ballots: every count 0, no leader, not a tie
+  - id: owner_reads_fresh
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: stranger_real_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: invitee_not_yet_active
+    as: invitee
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: owner_roles_empty_real_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+      headers:
+        x-actor-roles: ''
+  - id: owner_roles_guest
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_roles_unknown
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+      headers:
+        x-actor-roles: 'chu-tich'
+  - id: mate_ballot_x
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: owner_reads_single_leader
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: mate_reads_own_choice
+    as: mate
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: invitee_accepts
+    as: invitee
+    request:
+      method: POST
+      path: '/memberships/{{m_invitee}}/accept'
+  - id: invitee_ballot_y
+    as: invitee
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_y}}"}'
+  - id: owner_reads_two_way_tie
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: leaver_ballot_z
+    as: leaver
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_z}}"}'
+  - id: owner_reads_three_way_tie
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: ghost_ballot_x
+    as: ghost
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_x}}"}'
+  - id: owner_reads_tie_broken
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  # a departed member's ballot keeps counting
+  - id: owner_reads_after_leaver_left
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: ghost_deletes_account
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_after_deletion
+    as: ghost
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: owner_reads_after_ghost_deleted
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: mate_changes_to_z
+    as: mate
+    request:
+      method: POST
+      path: '/votes/{{vote}}/ballots'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"option_id":"{{opt_z}}"}'
+  # x 1, y 1, z 2: z decided, my_option_id follows the change
+  - id: mate_reads_after_change
+    as: mate
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}/close'
+  - id: mate_reads_closed
+    as: mate
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: invitee_reads_closed
+    as: invitee
+    request:
+      method: GET
+      path: '/votes/{{vote}}'
+  - id: stranger_creates_other_ctx
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người lạ (dữ liệu mẫu)"}'
+    bind:
+      other_ctx: {from: body, pointer: /id, class: uuid}
+  - id: stranger_creates_own_vote
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{other_ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Nhóm khác hỏi (dữ liệu mẫu)","options":[{"label":"Một"},{"label":"Hai"}]}'
+    bind:
+      other_vote: {from: body, pointer: /id, class: uuid}
+  - id: stranger_reads_own_vote
+    as: stranger
+    request:
+      method: GET
+      path: '/votes/{{other_vote}}'
+  - id: owner_reads_other_groups_vote
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{other_vote}}'
+  - id: query_string_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}?voter={{persona.mate}}'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/votes/{{vote}}/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote}}'
+  - id: delete_not_allowed
+    as: owner
+    request:
+      method: DELETE
+      path: '/votes/{{vote}}'

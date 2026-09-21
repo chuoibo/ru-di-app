@@ -1,0 +1,262 @@
+# W4 · POST /obligations/{id}/confirm-receipt citing a real payment report.
+# The harness now names a guest link token (<token43#n>) and a step can bind it,
+# so a guest can report a transfer through POST /g/{token}/da-chuyen and the
+# recipient can cite that report. Two rounds, one sender each, so each batch has
+# exactly one obligation and one link: the mate owes the owner for dinner, the
+# third owes the owner for a taxi. Covered: a receipt citing the report of its
+# obligation (201), the same body key with the same report (the stored receipt,
+# 201), the same key without the report (409 idempotency_key_reused), a report
+# of another obligation (409 payment_report_not_for_obligation), a second
+# receipt citing the same report (201), and the finance movements of both
+# sides. Body keys borrow this run's group id. Amounts are integer VND; texts
+# are sample data (dữ liệu mẫu).
+id: w4/obligations/post-obligations-obligation_id-confirm-receipt-payment-report
+routes: ['POST /obligations/{obligation_id}/confirm-receipt']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm có báo chuyển (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn báo chuyển (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thứ ba báo chuyển (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm có báo chuyển (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối báo chuyển (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối báo chuyển (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":50000},"expected_allocations":{"{{persona.owner}}":25000,"{{persona.mate}}":25000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_dinner: {from: body, pointer: /batch_id, class: uuid}
+      ob_dinner: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_publishes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch_dinner}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00Z"}'
+    bind:
+      tok_dinner: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+  - id: owner_proposes_taxi
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Taxi báo chuyển (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":30000}'
+    bind:
+      taxi: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_taxi
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{taxi}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Taxi báo chuyển (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-03T22:00:00+07:00","participants":["{{persona.owner}}","{{persona.third}}"],"total_amount_vnd":30000},"expected_allocations":{"{{persona.owner}}":15000,"{{persona.third}}":15000},"acknowledge_as_advancer":true}'
+    bind:
+      taxi_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches_taxi
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{taxi_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch_taxi: {from: body, pointer: /batch_id, class: uuid}
+      ob_taxi: {from: body, pointer: /obligations/0/obligation_id, class: uuid}
+  - id: owner_publishes_taxi
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch_taxi}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00Z"}'
+    bind:
+      tok_taxi: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+  # the guest of each link says the money was sent
+  - id: guest_reports_dinner
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_dinner}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_dinner}}'
+    bind:
+      report_dinner: {from: body, pointer: /payment_report_id, class: uuid}
+  - id: guest_reports_taxi
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_taxi}}/da-chuyen'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+      body_raw: 'obligation_id={{ob_taxi}}'
+    bind:
+      report_taxi: {from: body, pointer: /payment_report_id, class: uuid}
+  - id: owner_confirms_citing_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-bbbbbbbbbbb1","payment_report_id":"{{report_dinner}}"}'
+  # the same body key, the same report: the stored receipt, status recomputed
+  - id: owner_same_key_same_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"payment_report_id":"{{report_dinner}}","idempotency_key":"{{kp}}-bbbbbbbbbbb1","amount_vnd":10000}'
+  - id: owner_same_key_without_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-bbbbbbbbbbb1"}'
+  - id: owner_cites_report_of_other_obligation
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":10000,"idempotency_key":"{{kp}}-bbbbbbbbbbb2","payment_report_id":"{{report_taxi}}"}'
+  # the refused key is free again: a second receipt citing the same report
+  - id: owner_confirms_rest_citing_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_dinner}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":15000,"idempotency_key":"{{kp}}-bbbbbbbbbbb2","payment_report_id":"{{report_dinner}}"}'
+  # the sender cannot confirm, report or not
+  - id: third_confirms_own_report
+    as: third
+    request:
+      method: POST
+      path: '/obligations/{{ob_taxi}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":15000,"idempotency_key":"{{kp}}-bbbbbbbbbbb3","payment_report_id":"{{report_taxi}}"}'
+  - id: owner_confirms_taxi_citing_report
+    as: owner
+    request:
+      method: POST
+      path: '/obligations/{{ob_taxi}}/confirm-receipt'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"amount_vnd":20000,"idempotency_key":"{{kp}}-bbbbbbbbbbb4","payment_report_id":"{{report_taxi}}"}'
+  - id: owner_reads_board
+    as: owner
+    request:
+      method: GET
+      path: '/batches/{{batch_dinner}}/obligations'
+  - id: owner_reads_finance
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/finance'
+  - id: mate_reads_finance
+    as: mate
+    request:
+      method: GET
+      path: '/people/{{persona.mate}}/finance'

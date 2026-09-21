@@ -1,0 +1,121 @@
+# W10 cross replay · DELETE /people/{person_id}/block. A 200 «declined» stored by one side
+# is replayed by the other, both ways, even when a new block stands; another person under
+# the key is reuse; a refusal (403 is_blocker) frees the key. Go serves none of these
+# routes yet, so both paths reach Python. Texts are sample data (dữ liệu mẫu).
+id: w10/crossreplay/delete-people-person_id-block
+routes: ['DELETE /people/{person_id}/block']
+auth_mode: dev
+personas:
+  owner: {}
+  target: {}
+  other: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_target
+    as: target
+    request:
+      method: PUT
+      path: '/people/{{persona.target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: block_target
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.target}}/block'
+  - id: block_other
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/block'
+  - id: python_unblocks
+    as: owner
+    via: python
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        idempotency-key: 'e30b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: block_target_again
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.target}}/block'
+  - id: front_replays_python
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        idempotency-key: 'e30b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_other_person_same_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e30b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: front_unblocks_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e30b0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: python_replays_front
+    as: owner
+    via: python
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e30b0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: front_wrong_side_refused
+    as: target
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
+      headers:
+        idempotency-key: 'e30b0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: target_blocks_other
+    as: target
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/block'
+  - id: python_same_key_own_block
+    as: target
+    via: python
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e30b0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: front_replays_python_second
+    as: target
+    request:
+      method: DELETE
+      path: '/people/{{persona.other}}/block'
+      headers:
+        idempotency-key: 'e30b0003-aaaa-4aaa-8aaa-aaaaaaaaaaa3'
+  - id: python_lists_blocked
+    as: owner
+    via: python
+    request:
+      method: GET
+      path: '/people/me/blocked'

@@ -1,0 +1,794 @@
+{
+ "generator": "scripts/render_domain_w3_goldens.py",
+ "module": "app.domain.chat_theme",
+ "mode": "chat_theme",
+ "python": "3.12.14",
+ "seed": 43,
+ "constants": {
+  "names": [
+   "DEFAULT_THEME",
+   "THEMES",
+   "is_theme"
+  ],
+  "themes": [
+   "mac-dinh",
+   "hoang-hon",
+   "bien-dem",
+   "rung-thong",
+   "ruc-ro"
+  ],
+  "default_theme": "mac-dinh"
+ },
+ "cases": [
+  {
+   "fn": "is_theme",
+   "name": "is_theme/0",
+   "args": {
+    "value": "mac-dinh"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/1",
+   "args": {
+    "value": "hoang-hon"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/2",
+   "args": {
+    "value": "bien-dem"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/3",
+   "args": {
+    "value": "rung-thong"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/4",
+   "args": {
+    "value": "ruc-ro"
+   },
+   "result": {
+    "ok": true
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/5",
+   "args": {
+    "value": "MAC-DINH"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/6",
+   "args": {
+    "value": "$sp:Mac-di|nh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/7",
+   "args": {
+    "value": " mac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/8",
+   "args": {
+    "value": "mac-dinh "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/9",
+   "args": {
+    "value": "mac-dinh\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/10",
+   "args": {
+    "value": "\u00a0mac-dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/11",
+   "args": {
+    "value": "mac-dinh\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/12",
+   "args": {
+    "value": "mac_dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/13",
+   "args": {
+    "value": "macdinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/14",
+   "args": {
+    "value": "mac\uff0ddinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/15",
+   "args": {
+    "value": "mac-din"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/16",
+   "args": {
+    "value": "mac-dinhh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/17",
+   "args": {
+    "value": "mac-dinh\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/18",
+   "args": {
+    "value": "HOANG-HON"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/19",
+   "args": {
+    "value": "$sp:Hoang-|hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/20",
+   "args": {
+    "value": " hoang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/21",
+   "args": {
+    "value": "hoang-hon "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/22",
+   "args": {
+    "value": "hoang-hon\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/23",
+   "args": {
+    "value": "\u00a0hoang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/24",
+   "args": {
+    "value": "hoang-hon\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/25",
+   "args": {
+    "value": "hoang_hon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/26",
+   "args": {
+    "value": "hoanghon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/27",
+   "args": {
+    "value": "hoang\uff0dhon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/28",
+   "args": {
+    "value": "hoang-ho"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/29",
+   "args": {
+    "value": "hoang-honn"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/30",
+   "args": {
+    "value": "hoang-hon\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/31",
+   "args": {
+    "value": "BIEN-DEM"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/32",
+   "args": {
+    "value": "$sp:Bien-d|em"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/33",
+   "args": {
+    "value": " bien-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/34",
+   "args": {
+    "value": "bien-dem "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/35",
+   "args": {
+    "value": "bien-dem\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/36",
+   "args": {
+    "value": "\u00a0bien-dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/37",
+   "args": {
+    "value": "bien-dem\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/38",
+   "args": {
+    "value": "bien_dem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/39",
+   "args": {
+    "value": "biendem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/40",
+   "args": {
+    "value": "bien\uff0ddem"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/41",
+   "args": {
+    "value": "bien-de"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/42",
+   "args": {
+    "value": "bien-demm"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/43",
+   "args": {
+    "value": "bien-dem\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/44",
+   "args": {
+    "value": "RUNG-THONG"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/45",
+   "args": {
+    "value": "$sp:Rung-t|hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/46",
+   "args": {
+    "value": " rung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/47",
+   "args": {
+    "value": "rung-thong "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/48",
+   "args": {
+    "value": "rung-thong\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/49",
+   "args": {
+    "value": "\u00a0rung-thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/50",
+   "args": {
+    "value": "rung-thong\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/51",
+   "args": {
+    "value": "rung_thong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/52",
+   "args": {
+    "value": "rungthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/53",
+   "args": {
+    "value": "rung\uff0dthong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/54",
+   "args": {
+    "value": "rung-thon"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/55",
+   "args": {
+    "value": "rung-thongg"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/56",
+   "args": {
+    "value": "rung-thong\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/57",
+   "args": {
+    "value": "RUC-RO"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/58",
+   "args": {
+    "value": "Ruc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/59",
+   "args": {
+    "value": " ruc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/60",
+   "args": {
+    "value": "ruc-ro "
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/61",
+   "args": {
+    "value": "ruc-ro\n"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/62",
+   "args": {
+    "value": "\u00a0ruc-ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/63",
+   "args": {
+    "value": "ruc-ro\u200b"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/64",
+   "args": {
+    "value": "ruc_ro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/65",
+   "args": {
+    "value": "rucro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/66",
+   "args": {
+    "value": "ruc\uff0dro"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/67",
+   "args": {
+    "value": "ruc-r"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/68",
+   "args": {
+    "value": "ruc-roo"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/69",
+   "args": {
+    "value": "ruc-ro\u0000"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/70",
+   "args": {
+    "value": ""
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/71",
+   "args": {
+    "value": "hong"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/72",
+   "args": {
+    "value": "#c93900"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/73",
+   "args": {
+    "value": "mac dinh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/74",
+   "args": {
+    "value": "m\u1eb7c-\u0111\u1ecbnh"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/75",
+   "args": {
+    "value": "default"
+   },
+   "result": {
+    "ok": false
+   }
+  },
+  {
+   "fn": "is_theme",
+   "name": "is_theme/76",
+   "args": {
+    "value": "mac-dinh,hoang-hon"
+   },
+   "result": {
+    "ok": false
+   }
+  }
+ ]
+}

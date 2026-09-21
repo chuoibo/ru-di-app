@@ -1,0 +1,5354 @@
+{
+ "generator": "scripts/render_domain_w1_goldens.py",
+ "module": "app.domain.preferences",
+ "mode": "preferences",
+ "python": "3.12.14",
+ "seed": 29,
+ "constants": {
+  "section_of_category": [
+   [
+    "quan-an-local",
+    "food"
+   ],
+   [
+    "cafe",
+    "activity"
+   ],
+   [
+    "vui-choi",
+    "activity"
+   ],
+   [
+    "di-choi-dem",
+    "activity"
+   ]
+  ],
+  "section_order": [
+   "food",
+   "activity"
+  ],
+  "max_tastes_per_section": 6,
+  "max_label": 40,
+  "isspace": [
+   [
+    9,
+    13
+   ],
+   [
+    28,
+    32
+   ],
+   [
+    133,
+    133
+   ],
+   [
+    160,
+    160
+   ],
+   [
+    5760,
+    5760
+   ],
+   [
+    8192,
+    8202
+   ],
+   [
+    8232,
+    8233
+   ],
+   [
+    8239,
+    8239
+   ],
+   [
+    8287,
+    8287
+   ],
+   [
+    12288,
+    12288
+   ]
+  ]
+ },
+ "cases": [
+  {
+   "fn": "build_preference_profile",
+   "name": "test_top_taste_of_a_section_scores_one",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_score_is_the_share_of_the_busiest_taste_in_the_section",
+   "args": [
+    {
+     "$runs": [
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "BBQ"
+        ]
+       },
+       4
+      ],
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "L\u1ea9u"
+        ]
+       },
+       3
+      ]
+     ]
+    },
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 4,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "L\u1ea9u",
+         "checkin_count": 3,
+         "score": "$f:0x1.8000000000000p-1"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 7,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_sections_are_scored_independently",
+   "args": [
+    {
+     "$runs": [
+      [
+       {
+        "category": "cafe",
+        "kinds": [
+         "C\u00e0 ph\u00ea"
+        ]
+       },
+       40
+      ],
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "BBQ"
+        ]
+       },
+       4
+      ]
+     ]
+    },
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 4,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      },
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "C\u00e0 ph\u00ea",
+         "checkin_count": 40,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 44,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_count_travels_beside_the_score_so_the_ratio_can_be_checked",
+   "args": [
+    {
+     "$runs": [
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "BBQ"
+        ]
+       },
+       3
+      ],
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "L\u1ea9u"
+        ]
+       },
+       1
+      ]
+     ]
+    },
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 3,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "L\u1ea9u",
+         "checkin_count": 1,
+         "score": "$f:0x1.51eb851eb851fp-2"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 4,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_rounding_is_half_up_not_bankers",
+   "args": [
+    {
+     "$runs": [
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "BBQ"
+        ]
+       },
+       200
+      ],
+      [
+       {
+        "category": "quan-an-local",
+        "kinds": [
+         "L\u1ea9u"
+        ]
+       },
+       25
+      ]
+     ]
+    },
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 200,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "L\u1ea9u",
+         "checkin_count": 25,
+         "score": "$f:0x1.0a3d70a3d70a4p-3"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 225,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_unknown_category_is_skipped_never_defaulted",
+   "args": [
+    [
+     {
+      "category": "khong-co-trong-bang",
+      "kinds": [
+       "G\u00ec \u0110\u00f3"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_visit_with_no_kinds_contributes_nothing",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": []
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_group_with_no_checkins_has_no_sections",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 0,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": 0
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_same_rows_render_the_same_way_twice",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "Chill"
+      ]
+     },
+     {
+      "category": "vui-choi",
+      "kinds": [
+       "Outdoor"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ",
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      },
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "Chill",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Outdoor",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_ties_break_on_label_not_on_insertion_order/forward",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Zeta"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Alpha"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "Alpha",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Zeta",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_ties_break_on_label_not_on_insertion_order/backward",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Alpha"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Zeta"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "Alpha",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Zeta",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_taste_count_reports_the_full_number_when_the_list_is_capped",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon00"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon01"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon02"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon03"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon04"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon05"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon06"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon07"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon08"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Mon09"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 10,
+       "tastes": [
+        {
+         "label": "Mon00",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Mon01",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Mon02",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Mon03",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Mon04",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Mon05",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 10,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_average_is_floor_division_over_person_trips",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1000000,
+      "headcount": 3
+     },
+     {
+      "split_total_vnd": 500000,
+      "headcount": 4
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 2,
+     "split_total_vnd": 1500000,
+     "avg_per_person_vnd": 214285
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_no_trips_means_no_average_rather_than_zero",
+   "args": [
+    [],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/true",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": true,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/false",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": false,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/str",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": "200000",
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/float",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": "$f:0x1.86a0000000000p+17",
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/none",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": null,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_money_value_that_is_not_a_whole_number_of_dong_is_refused/negative",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": -1,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_headcount_that_is_not_an_integer_is_refused/true",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1000,
+      "headcount": true
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_headcount_that_is_not_an_integer_is_refused/str",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1000,
+      "headcount": "3"
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_headcount_that_is_not_an_integer_is_refused/float",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1000,
+      "headcount": "$f:0x1.8000000000000p+1"
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_headcount_that_is_not_an_integer_is_refused/none",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1000,
+      "headcount": null
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_visit_that_is_not_a_mapping_is_refused",
+   "args": [
+    [
+     "quan-an-local"
+    ],
+    []
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_visit_malformed",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "test_a_trip_that_is_not_a_mapping_is_refused",
+   "args": [
+    [],
+    [
+     "a trip"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_trip_malformed",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/quan-an-local",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/cafe",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/vui-choi",
+   "args": [
+    [
+     {
+      "category": "vui-choi",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/di-choi-dem",
+   "args": [
+    [
+     {
+      "category": "di-choi-dem",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/title_case",
+   "args": [
+    [
+     {
+      "category": "Cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/leading_space",
+   "args": [
+    [
+     {
+      "category": " cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/trailing_space",
+   "args": [
+    [
+     {
+      "category": "quan-an-local ",
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/prefix",
+   "args": [
+    [
+     {
+      "category": "quan-an",
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/none",
+   "args": [
+    [
+     {
+      "category": null,
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/int",
+   "args": [
+    [
+     {
+      "category": 7,
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/skipped/list",
+   "args": [
+    [
+     {
+      "category": [
+       "cafe"
+      ],
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "category/missing_key",
+   "args": [
+    [
+     {
+      "kinds": [
+       "BBQ"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "visit/extra_keys_ignored",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ],
+      "x": 1
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/none",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": null
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/string",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": "BBQ"
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/int",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": 7
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/dict",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": {
+       "BBQ": 1
+      }
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/empty_string_only",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       ""
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/skipped/whitespace_only",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "   "
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/missing_key",
+   "args": [
+    [
+     {
+      "category": "cafe"
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "Chill"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Chill",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/tuple",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": {
+       "$tuple": [
+        "BBQ",
+        "L\u1ea9u"
+       ]
+      }
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "L\u1ea9u",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/non_strings_ignored",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       null,
+       7,
+       true,
+       "$f:0x1.0000000000000p+0",
+       "$o:bytes",
+       [
+        "BBQ"
+       ],
+       {
+        "$tuple": [
+         "BBQ"
+        ]
+       },
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/only_non_strings",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       null,
+       7,
+       [
+        "BBQ"
+       ]
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "kinds/duplicates_count_twice",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ",
+       "BBQ",
+       "BBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "Chill"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 3,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "Chill",
+         "checkin_count": 1,
+         "score": "$f:0x1.51eb851eb851fp-2"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+0009",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\tBBQ\t"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\t\t"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+000A",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\nBBQ\n"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\n\n"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+000B",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u000bBBQ\u000b"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u000b\u000b"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+000C",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\fBBQ\f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\f\f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+000D",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\rBBQ\r"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\r\r"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+001C",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001cBBQ\u001c"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001c\u001c"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+001D",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001dBBQ\u001d"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001d\u001d"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+001E",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001eBBQ\u001e"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001e\u001e"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+001F",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001fBBQ\u001f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001f\u001f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+0020",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       " BBQ "
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "  "
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+0085",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u0085BBQ\u0085"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u0085\u0085"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+00A0",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u00a0BBQ\u00a0"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u00a0\u00a0"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+1680",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u1680BBQ\u1680"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u1680\u1680"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2000",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2000BBQ\u2000"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2000\u2000"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2001",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2001BBQ\u2001"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2001\u2001"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2002",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2002BBQ\u2002"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2002\u2002"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2003",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2003BBQ\u2003"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2003\u2003"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2004",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2004BBQ\u2004"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2004\u2004"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2005",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2005BBQ\u2005"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2005\u2005"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2006",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2006BBQ\u2006"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2006\u2006"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2007",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2007BBQ\u2007"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2007\u2007"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2008",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2008BBQ\u2008"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2008\u2008"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2009",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2009BBQ\u2009"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2009\u2009"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+200A",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200aBBQ\u200a"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200a\u200a"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2028",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2028BBQ\u2028"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2028\u2028"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+2029",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2029BBQ\u2029"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2029\u2029"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+202F",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u202fBBQ\u202f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u202f\u202f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+205F",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u205fBBQ\u205f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u205f\u205f"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/U+3000",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u3000BBQ\u3000"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u3000\u3000"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 2,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+200B",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200bBBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200b"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u200b",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u200bBBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+200D",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200dBBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u200d"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u200d",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u200dBBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+2060",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2060BBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u2060"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u2060",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u2060BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+FEFF",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\ufeffBBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\ufeff"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\ufeff",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\ufeffBBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+180E",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u180eBBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u180e"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u180e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u180eBBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "no_strip/U+00AD",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u00adBBQ"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u00ad"
+      ]
+     },
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u00ad",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u00adBBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 3,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/interior_space_kept",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       " C\u00e0  ph\u00ea "
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "C\u00e0  ph\u00ea",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "strip/nul_is_not_space",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u0000BBQ\u0000",
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "\u0000BBQ\u0000",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/ascii_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/ascii_41",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/vietnamese_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/vietnamese_41",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7\u1ec7",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/combining_pairs_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/combining_mark_cut_at_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "ae\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "ae\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e\u0301e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/astral_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/astral_41",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/astral_at_40_kept_whole",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\ud83d\ude00y"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\ud83d\ude00",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/strip_then_truncate",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u3000"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/truncation_keeps_trailing_space",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx yz"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/merge_after_truncation",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1",
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2",
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         "checkin_count": 3,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/file_separator_padding_then_40",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "\u001cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u001f"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "label/dollar_prefix",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       {
+        "$str": [
+         [
+          "$BBQ",
+          1
+         ]
+        ]
+       },
+       {
+        "$str": [
+         [
+          "$f:0x1.0p+0",
+          1
+         ]
+        ]
+       }
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": {
+          "$str": [
+           [
+            "$BBQ",
+            1
+           ]
+          ]
+         },
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": {
+          "$str": [
+           [
+            "$f:0x1.0p+0",
+            1
+           ]
+          ]
+         },
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/local_before_lao",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "L\u00e0o",
+       "Local"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "Local",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "L\u00e0o",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/upper_before_lower",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "b",
+       "B",
+       "a",
+       "A"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 4,
+       "tastes": [
+        {
+         "label": "A",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "B",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "b",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/precomposed_after_combining",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "f",
+       "\u00e9",
+       "e\u0301",
+       "e"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 4,
+       "tastes": [
+        {
+         "label": "e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "e\u0301",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "f",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\u00e9",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/astral_after_halfwidth",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "\ud83d\ude00",
+       "\uff61",
+       "z"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "z",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\uff61",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "\ud83d\ude00",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/prefix_first",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ",
+       "BB",
+       "B"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 3,
+       "tastes": [
+        {
+         "label": "B",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "BB",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/digits_and_punctuation",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "a",
+       "1",
+       "A",
+       "_",
+       "~"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 5,
+       "tastes": [
+        {
+         "label": "1",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "A",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "_",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "~",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/nul_suffix",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "a\u0000",
+       "a"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "a\u0000",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "sort/count_then_label",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": {
+       "$runs": [
+        [
+         "c",
+         1
+        ],
+        [
+         "b",
+         2
+        ],
+        [
+         "a",
+         2
+        ],
+        [
+         "d",
+         3
+        ]
+       ]
+      }
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 4,
+       "tastes": [
+        {
+         "label": "d",
+         "checkin_count": 3,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "a",
+         "checkin_count": 2,
+         "score": "$f:0x1.570a3d70a3d71p-1"
+        },
+        {
+         "label": "b",
+         "checkin_count": 2,
+         "score": "$f:0x1.570a3d70a3d71p-1"
+        },
+        {
+         "label": "c",
+         "checkin_count": 1,
+         "score": "$f:0x1.51eb851eb851fp-2"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "cap/exactly_six",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 6,
+       "tastes": [
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "b",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "c",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "d",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "f",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "cap/seven_last_tie_cut",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "g",
+       "f",
+       "e",
+       "d",
+       "c",
+       "b",
+       "a"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 7,
+       "tastes": [
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "b",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "c",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "d",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "f",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "cap/both_sections",
+   "args": [
+    [
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "a",
+       "b",
+       "c",
+       "d",
+       "e",
+       "f",
+       "g",
+       "h"
+      ]
+     },
+     {
+      "category": "vui-choi",
+      "kinds": [
+       "A",
+       "B",
+       "C",
+       "D",
+       "E",
+       "F",
+       "G",
+       "H",
+       "I"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 8,
+       "tastes": [
+        {
+         "label": "a",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "b",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "c",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "d",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "e",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "f",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      },
+      {
+       "section": "activity",
+       "taste_count": 9,
+       "tastes": [
+        {
+         "label": "A",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "B",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "C",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "D",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "E",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "F",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "order/activity_rows_first",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "Chill"
+      ]
+     },
+     {
+      "category": "quan-an-local",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "food",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "BBQ",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      },
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Chill",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 2,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "order/activity_only",
+   "args": [
+    [
+     {
+      "category": "di-choi-dem",
+      "kinds": [
+       "Bar"
+      ]
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 1,
+       "tastes": [
+        {
+         "label": "Bar",
+         "checkin_count": 1,
+         "score": "$f:0x1.0000000000000p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "score/zero",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": {
+       "$runs": [
+        [
+         "T",
+         201
+        ],
+        [
+         "u",
+         1
+        ]
+       ]
+      }
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "T",
+         "checkin_count": 201,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "u",
+         "checkin_count": 1,
+         "score": "$f:0x0.0p+0"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "score/one_third",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": {
+       "$runs": [
+        [
+         "T",
+         3
+        ],
+        [
+         "u",
+         1
+        ]
+       ]
+      }
+     }
+    ],
+    []
+   ],
+   "result": {
+    "ok": {
+     "sections": [
+      {
+       "section": "activity",
+       "taste_count": 2,
+       "tastes": [
+        {
+         "label": "T",
+         "checkin_count": 3,
+         "score": "$f:0x1.0000000000000p+0"
+        },
+        {
+         "label": "u",
+         "checkin_count": 1,
+         "score": "$f:0x1.51eb851eb851fp-2"
+        }
+       ]
+      }
+     ],
+     "checkin_count": 1,
+     "outing_count": 0,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "precedence/visit_before_trip",
+   "args": [
+    [
+     "x"
+    ],
+    [
+     "y"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_visit_malformed",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "precedence/second_trip_bad",
+   "args": [
+    [
+     {
+      "category": "cafe",
+      "kinds": [
+       "BBQ"
+      ]
+     }
+    ],
+    [
+     {
+      "split_total_vnd": 1,
+      "headcount": 1
+     },
+     "bad"
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_trip_malformed",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/headcount_zero",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 5,
+      "headcount": 0
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": 5,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/floor",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 7,
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": 7,
+     "avg_per_person_vnd": 3
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/zero_zero",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 0,
+      "headcount": 0
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": 0,
+     "avg_per_person_vnd": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/beyond_float",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": "$i:0x4000_0000_0000_0001",
+      "headcount": 3
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": "$i:0x4000_0000_0000_0001",
+     "avg_per_person_vnd": "$i:0x1555_5555_5555_5555"
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/near_int64",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": "$i:0x2000_0000_0000_0007",
+      "headcount": 1
+     },
+     {
+      "split_total_vnd": "$i:0x2000_0000_0000_0007",
+      "headcount": 1
+     },
+     {
+      "split_total_vnd": "$i:0x2000_0000_0000_0007",
+      "headcount": 1
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 3,
+     "split_total_vnd": "$i:0x6000_0000_0000_0015",
+     "avg_per_person_vnd": "$i:0x2000_0000_0000_0007"
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/missing_split",
+   "args": [
+    [],
+    [
+     {
+      "headcount": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/missing_headcount",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 2
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/float_zero",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": "$f:0x0.0p+0",
+      "headcount": 1
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/false_headcount",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 1,
+      "headcount": false
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_count_not_integer",
+     "code": null
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/extra_keys",
+   "args": [
+    [],
+    [
+     {
+      "split_total_vnd": 9,
+      "headcount": 2,
+      "id": "o"
+     }
+    ]
+   ],
+   "result": {
+    "ok": {
+     "sections": [],
+     "checkin_count": 0,
+     "outing_count": 1,
+     "split_total_vnd": 9,
+     "avg_per_person_vnd": 4
+    }
+   }
+  },
+  {
+   "fn": "build_preference_profile",
+   "name": "trips/tuple_not_mapping",
+   "args": [
+    [],
+    [
+     {
+      "$tuple": [
+       "split_total_vnd",
+       1
+      ]
+     }
+    ]
+   ],
+   "result": {
+    "raised": {
+     "type": "PreferenceError",
+     "message": "preference_trip_malformed",
+     "code": null
+    }
+   }
+  }
+ ]
+}

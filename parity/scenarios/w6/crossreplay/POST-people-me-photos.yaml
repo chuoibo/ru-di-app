@@ -1,0 +1,108 @@
+# W6 cross replay · POST /people/me/photos. A 201 stored under a header key by one
+# side is replayed by the other with the same id and url; another picture under
+# the key is 422. The photo stored through one side is read by its owner through
+# the other, and a post made through one side with the url the other returned
+# opens the photo to a stranger through both. Go serves none of these routes yet,
+# so both paths reach Python; the file is here for when one side is Go.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/crossreplay/post-people-me-photos
+routes: ['POST /people/me/photos', 'GET /people/{person_id}/photos/{photo_id}']
+auth_mode: dev
+personas:
+  author: {}
+  stranger: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả phát lại chéo (dữ liệu mẫu)"}'
+  - id: python_stores_photo
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 32, height: 32, seed: 98, alpha: true}}
+    bind:
+      photo_python: {from: body, pointer: /id, class: uuid}
+  - id: front_replays_python_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 32, height: 32, seed: 98, alpha: true}}
+  - id: front_other_picture_same_key
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-a'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 32, height: 32, seed: 99, alpha: true}}
+  - id: front_owner_reads_python_photo
+    as: author
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{photo_python}}'
+  - id: front_stores_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 36, height: 28, seed: 100, orientation: 5}}
+    bind:
+      photo_front: {from: body, pointer: /id, class: uuid}
+  - id: python_replays_front_photo
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-b'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 36, height: 28, seed: 100, orientation: 5}}
+  - id: python_posts_front_photo_publicly
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Ảnh công khai chéo (dữ liệu mẫu)","audience":"public","image_url":"/people/{{persona.author}}/photos/{{photo_front}}"}'
+  - id: stranger_reads_through_front
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{photo_front}}'
+  - id: stranger_reads_through_python
+    as: stranger
+    via: python
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{photo_front}}'
+  - id: stranger_reads_unposted_python_photo
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.author}}/photos/{{photo_python}}'

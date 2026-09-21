@@ -1,0 +1,361 @@
+# W7 · POST /outing-invites/{token}/accept: redeem a forwardable link. The token is the
+# whole claim, so this route checks no permission at all -- by design, and written down
+# here so a later reader does not mistake it for an omission. What it does NOT do is make
+# anybody a member: the redemption caps at an INVITED membership, and an existing member
+# of the group must still approve. The path parameter is a plain string, so a junk token
+# is a 404 rather than a 422, and every refusal is the same 404 with the same sentence:
+# no such digest, a named invitation presented at the link door, a revoked link, an
+# expired one, a link whose trip is gone. The one exception is a link somebody already
+# spent, which is a 409 -- it reports that the row was used, never what it was for.
+# Redeeming twice, and redeeming as somebody who is already ACTIVE, are both covered.
+# Every token is bound from the mint, never written down. Texts are sample data
+# (dữ liệu mẫu).
+id: w7/outings/post-outing-invites-token-accept
+routes: ['POST /outing-invites/{token}/accept']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  holder: {}
+  second: {}
+  friend: {}
+steps:
+  - id: anonymous_accepts_junk
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: holder_accepts_junk
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/khong-phai-token/accept'
+  - id: holder_accepts_a_token_shaped_string
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/khong-co-that-dau-nhung-dai-bang-mot-token-that-nhe/accept'
+  - id: holder_accepts_with_url_escapes
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/kh%C3%B4ng-ph%E1%BA%A3i/accept'
+  - id: holder_accepts_an_empty_token
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites//accept'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_holder
+    as: holder
+    request:
+      method: PUT
+      path: '/people/{{persona.holder}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người cầm link (dữ liệu mẫu)"}'
+  - id: register_second
+    as: second
+    request:
+      method: PUT
+      path: '/people/{{persona.second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người cầm link thứ hai (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn ngoài nhóm (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm mở link (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_membership
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_link: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_second_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_second: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_third_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_revoked: {from: body, pointer: /id, class: uuid}
+      token_revoked: {from: body, pointer: /invite_token, class: token}
+  - id: owner_mints_a_fourth_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_for_member: {from: body, pointer: /invite_token, class: token}
+  - id: owner_names_a_friend
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      token_named: {from: body, pointer: /invite_token, class: token}
+  # a named invitation is not this door's credential, and says nothing about itself
+  - id: friend_opens_their_own_named_secret
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_named}}/accept'
+  - id: holder_opens_the_named_secret
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_named}}/accept'
+  # a revoked link is the same 404 as a token nobody minted
+  - id: owner_revokes_the_third_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_revoked}}/revoke'
+  - id: holder_opens_the_revoked_link
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_revoked}}/accept'
+  # the redemption itself: INVITED, never ACTIVE
+  - id: holder_reads_own_contexts_before
+    as: holder
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: holder_opens_the_link
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: holder_reads_own_contexts_after
+    as: holder
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: holder_lists_the_trips
+    as: holder
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: holder_checks_in
+    as: holder
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  - id: holder_reads_the_checkins
+    as: holder
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: holder_mints_a_link_of_their_own
+    as: holder
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+  # one link, one redemption
+  - id: holder_opens_the_link_again
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: second_opens_the_spent_link
+    as: second
+    request:
+      method: POST
+      path: '/outing-invites/{{token_link}}/accept'
+  - id: second_opens_the_second_link
+    as: second
+    request:
+      method: POST
+      path: '/outing-invites/{{token_second}}/accept'
+  # somebody already inside the group gets their existing membership back
+  - id: mate_opens_a_link_as_an_active_member
+    as: mate
+    request:
+      method: POST
+      path: '/outing-invites/{{token_for_member}}/accept'
+  - id: mate_lists_contexts_after
+    as: mate
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  # the door the invited holder is still waiting behind
+  - id: owner_lists_members
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: holder_approves_themselves
+    as: holder
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.holder}}"}'
+  # the key header
+  - id: owner_mints_a_keyed_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      token_keyed: {from: body, pointer: /invite_token, class: token}
+  - id: friend_opens_the_keyed_link
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_keyed}}/accept'
+      headers:
+        idempotency-key: 'c78f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: friend_replays_key
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_keyed}}/accept'
+      headers:
+        idempotency-key: 'c78f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: friend_same_key_other_token
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_second}}/accept'
+      headers:
+        idempotency-key: 'c78f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: second_same_key_own_scope
+    as: second
+    request:
+      method: POST
+      path: '/outing-invites/{{token_keyed}}/accept'
+      headers:
+        idempotency-key: 'c78f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_members_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  # framework
+  - id: trailing_slash
+    as: holder
+    request:
+      method: POST
+      path: '/outing-invites/{{token_second}}/accept/'
+  - id: get_not_allowed
+    as: holder
+    request:
+      method: GET
+      path: '/outing-invites/{{token_second}}/accept'

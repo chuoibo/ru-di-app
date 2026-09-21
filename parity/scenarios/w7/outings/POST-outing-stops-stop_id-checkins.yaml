@@ -1,0 +1,346 @@
+# W7 · POST /outing-stops/{stop_id}/checkins (F46): «đã tới». There is no request body
+# and no coordinate anywhere on the route: the only two facts recorded are who pressed
+# it and when, and both are already the server's. Order: idempotency header, actor, path
+# uuid, the stop row (404 in English, and a stop id names its outing, so an id from
+# another group answers before the roster is read), ACTIVE membership of THAT outing's
+# group, then the unique index, which is the rule -- a second arrival is a 409 from the
+# database, not from a question asked first. A successful arrival bumps the outing's
+# timeline_revision, which is how a draft somebody else has open goes stale. A body sent
+# anyway is ignored. Texts are sample data (dữ liệu mẫu).
+id: w7/outings/post-outing-stops-stop_id-checkins
+routes: ['POST /outing-stops/{stop_id}/checkins']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  stranger: {}
+steps:
+  - id: anonymous_checks_in
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+  - id: anonymous_non_uuid_stop
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-stops/khong-phai-uuid/checkins'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/khong-phai-uuid/checkins'
+  - id: owner_unknown_stop
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/checkins'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đã tới (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_saves_timeline
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"08:00","label":"Cà phê sáng (dữ liệu mẫu)","place_name":"Quán góc phố (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+    bind:
+      stop_pickup: {from: body, pointer: /stops/0/id, class: uuid}
+      stop_coffee: {from: body, pointer: /stops/1/id, class: uuid}
+      stop_dinner: {from: body, pointer: /stops/2/id, class: uuid}
+  # a stop of a group somebody is not in
+  - id: stranger_creates_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người lạ (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+  - id: stranger_creates_own_trip
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến nhóm khác (dữ liệu mẫu)","starts_on":"2026-05-01","ends_on":"2026-05-02","headcount":2,"budget_per_person_vnd":200000}'
+    bind:
+      outing_other: {from: body, pointer: /id, class: uuid}
+  - id: stranger_saves_own_timeline
+    as: stranger
+    request:
+      method: PUT
+      path: '/outings/{{outing_other}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"10:00","label":"Chặng nhóm khác (dữ liệu mẫu)"}]}'
+    bind:
+      stop_other: {from: body, pointer: /stops/0/id, class: uuid}
+  - id: owner_checks_in_at_another_groups_stop
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_other}}/checkins'
+  - id: stranger_checks_in_at_our_stop
+    as: stranger
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: invitee_checks_in
+    as: invitee
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: owner_checks_in_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+      headers:
+        x-actor-roles: 'guest'
+  # the arrivals themselves
+  - id: owner_reads_list_before_arriving
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_checks_in_at_coffee
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: owner_reads_list_after_arriving
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  - id: owner_checks_in_at_coffee_again
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: mate_checks_in_at_coffee
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: owner_checks_in_at_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+  - id: owner_reads_checkins
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # a body is not a place for a coordinate to arrive
+  - id: owner_checks_in_with_a_body
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lat":11.9404,"lng":108.4419}'
+  - id: mate_checks_in_with_broken_json
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"lat":'
+  # the key header
+  - id: mate_checks_in_at_dinner_with_key
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+      headers:
+        idempotency-key: 'c74f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: mate_replays_key
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+      headers:
+        idempotency-key: 'c74f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: mate_same_key_other_stop
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+      headers:
+        idempotency-key: 'c74f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_same_key_own_scope
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+      headers:
+        idempotency-key: 'c74f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: mate_key_frees_after_conflict
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_dinner}}/checkins'
+      headers:
+        idempotency-key: 'c74f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: mate_reuses_the_freed_key_for_another_stop
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+      headers:
+        idempotency-key: 'c74f0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  # an editor drops the stop under an arrival
+  - id: owner_drops_the_coffee_stop
+    as: owner
+    request:
+      method: PUT
+      path: '/outings/{{outing}}/timeline'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"stops":[{"at":"07:30","label":"Đón nhau (dữ liệu mẫu)"},{"at":"19:45","label":"Ăn tối (dữ liệu mẫu)","place_id":"p-tiem-nuong-xom-lao"}]}'
+  - id: owner_checks_in_at_the_dropped_stop
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_coffee}}/checkins'
+  - id: owner_reads_checkins_after_the_drop
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  # leaving the group closes the door, the rows stay
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_checks_in_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins'
+  - id: owner_reads_checkins_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/checkins'
+  - id: owner_reads_list_at_the_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/outings'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/outing-stops/{{stop_pickup}}/checkins/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outing-stops/{{stop_pickup}}/checkins'

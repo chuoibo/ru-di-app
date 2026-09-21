@@ -1,0 +1,164 @@
+{#
+  The guest page. Spec section 8.6.
+
+  Two rules shape every choice here:
+    1. The wording never assumes the person who opened the link is the person
+       named in it. Everything is attributed: "Nam recorded that Ha's share is".
+    2. They are almost certainly reading this on the same phone they will pay
+       from, so there is no second device to scan a QR with. Copy, deep link
+       and save-image are the primary paths; the QR is the fallback.
+
+  Rendered server-side and progressively enhanced. The transfer panel is open
+  in the markup and collapsed by CSS only once the inline script has marked the
+  document as scripted, so with JavaScript off it stays open: the failure mode
+  is "shows more at once", never "cannot pay".
+
+  An earlier version put `hidden` straight on the panel, which meant a guest
+  with scripting disabled could not reach the detail underneath at all. Caught
+  in review by Codex, back when that detail was a bank account number.
+#}<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ preview.title }}</title>
+{# Neutral preview metadata. Whoever sees the card in a group chat is not
+   necessarily the intended reader, so no name and no amount. #}
+<meta property="og:title" content="{{ preview.title }}">
+<meta property="og:description" content="{{ preview.description }}">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/static/guest.css">
+</head>
+<body>
+<script>document.documentElement.classList.add('js')</script>
+
+<main class="sheet">
+
+  {% if view.link_state != 'active' %}
+    <section class="card card--quiet">
+      <p class="eyebrow">Link không còn dùng được</p>
+      <h1 class="lede">Link này đã {{ {'revoked':'bị thu hồi','expired':'hết hạn','rotated':'được thay bằng link mới'}[view.link_state] }}.</h1>
+      <p class="note">Khoản cần gửi vẫn còn. Nhắn cho {{ view.recorded_by_display_name }} để xin link mới.</p>
+    </section>
+  {% else %}
+
+  {% for block in view.blocks %}
+  <section class="card" data-obligation="{{ block.obligation_id }}">
+
+    {# --- face one: the claim ------------------------------------------- #}
+    <p class="eyebrow">{{ view.recorded_by_display_name }} đã ghi</p>
+    <h1 class="lede">
+      Phần của <strong>{{ view.claimed_person_display_name }}</strong>
+      trong {{ block.occasion_label }}
+    </h1>
+
+    {# The amount is the button. It is the single thing they need to carry
+       wherever they are going to pay, and on a phone the biggest target
+       should be the most frequent action. #}
+    <button class="amount" type="button"
+            data-copy="{{ block.amount_vnd }}"
+            aria-label="Sao chép số tiền {{ block.amount_display }} đồng">
+      <span class="amount__figure">{{ block.amount_display }}</span><span class="amount__unit">đ</span>
+      <span class="amount__hint">chạm để chép</span>
+    </button>
+
+    {# The page claimed collection had paused while giving no sign of it. A
+       promise that leaves no trace on the screen it was made on is not a
+       promise. #}
+    {% if block.disputed %}
+    <p class="note">
+      Bạn đang thắc mắc khoản này. Nó đã được đánh dấu trên bảng thu của
+      {{ view.recorded_by_display_name }} và sẽ không bị tính là còn nợ cho tới
+      khi hai bên thống nhất. Bạn vẫn chuyển được nếu muốn.
+    </p>
+    {% endif %}
+
+    {# Where this person stands, on the face they land on.
+       This used to live inside the transfer panel, which only opens when the
+       "Đúng, xem cách chuyển" button is pressed. So somebody who transferred
+       yesterday reopened the link and saw the untouched first screen: the same
+       amount, the same "Đúng, xem cách chuyển", no sign they had already
+       reported anything. The obvious thing to do from that screen is pay
+       again. State that is only visible after an action is not state a person
+       can act on. #}
+    {% if block.receiver_confirmed %}
+    <p class="standing standing--done">
+      {{ block.recipient_display_name }} đã xác nhận nhận được. Bạn không cần
+      làm gì thêm.
+    </p>
+    {% elif block.already_reported %}
+    <p class="standing">
+      Bạn đã báo là đã chuyển. Đang chờ {{ block.recipient_display_name }}
+      xác nhận. Bạn không cần chuyển lại.
+    </p>
+    {% endif %}
+
+    <div class="choices">
+      {# The label changes with the standing above it. "Đúng, xem cách chuyển"
+         reads as an instruction to somebody who has already done it. #}
+      {# Demoted once the money is confirmed. Nothing is left to do, and the
+         loudest thing on the page should not be an instruction for a task
+         that is finished. The objection routes stay: disagreeing about an
+         amount is independent of whether it was paid. #}
+      <button class="btn {% if block.receiver_confirmed %}btn--quiet{% else %}btn--primary{% endif %}"
+              type="button" data-reveal>
+        {%- if block.receiver_confirmed or block.already_reported -%}
+        Xem lại cách chuyển
+        {%- else -%}
+        Đúng, xem cách chuyển
+        {%- endif -%}
+      </button>
+      <div class="choices__escape">
+        {# The obligation id is the whole point of this link. Without it the
+           route fell back to blocks[0], so on a link carrying two obligations
+           the button under the second card raised an objection against the
+           FIRST -- flagging a debt to one person because somebody disagreed
+           about a debt to another, while leaving the real one unobjectable. #}
+        {% if block.can_object %}
+        <a class="btn btn--quiet"
+           href="/g/{{ token }}/doi-so-tien?obligation_id={{ block.obligation_id }}">Số tiền không đúng</a>
+        {% endif %}
+        <a class="btn btn--quiet" href="/g/{{ token }}/khong-phai-toi">Tôi không phải {{ view.claimed_person_display_name }}</a>
+      </div>
+    </div>
+
+    {# --- face two: who this is owed to ----------------------------------
+       There used to be a bank account and a QR code here. There is not any
+       more: the product works out what each person's share is and says so,
+       and how the money actually moves is between the two people. Saying that
+       out loud beats showing an amount with no next step and letting somebody
+       wonder whether the page failed to load. #}
+    <div class="transfer" data-transfer>
+      <p class="eyebrow">Trả cho</p>
+      <p class="recipient">{{ block.recipient_display_name }}</p>
+      <p class="note">RuDi chỉ tính phần của bạn. Chuyển bằng cách nào là chuyện giữa bạn và {{ block.recipient_display_name }}.</p>
+
+      {% if block.receiver_confirmed %}
+        <p class="status status--done">{{ block.recipient_display_name }} đã xác nhận nhận được.</p>
+      {% elif block.already_reported %}
+        {# Self-report never closes an obligation (section 8.6), so the wording
+           must not sound like it did. #}
+        <p class="status">Bạn đã báo là đã chuyển. Đang chờ {{ block.recipient_display_name }} xác nhận.</p>
+      {% elif view.can_report_payment %}
+        <form method="post" action="/g/{{ token }}/da-chuyen">
+          <input type="hidden" name="obligation_id" value="{{ block.obligation_id }}">
+          <button class="btn btn--ghost" type="submit">Tôi đã chuyển</button>
+        </form>
+        <p class="note">Báo ở đây chỉ để {{ block.recipient_display_name }} biết mà đối chiếu. Khoản chỉ đóng khi họ xác nhận.</p>
+      {% else %}
+        <p class="note">Bạn đã báo nhiều lần rồi. Nhắn trực tiếp cho {{ block.recipient_display_name }} sẽ nhanh hơn.</p>
+      {% endif %}
+    </div>
+
+  </section>
+  {% endfor %}
+
+  {% endif %}
+
+  <p class="footer">Chỉ hiển thị phần của bạn. Trang này không cho xem gì khác của nhóm.</p>
+</main>
+
+<div class="toast" data-toast role="status" aria-live="polite" hidden>Đã chép</div>
+<script src="/static/guest.js" defer></script>
+</body>
+</html>

@@ -407,6 +407,9 @@ class IdempotencyMiddleware:
             return
 
         path_parts = scope["path"].strip("/").split("/")
+        if path_parts and path_parts[0] == "internal":
+            await self.app(scope, receive, send)
+            return
         itinerary_write = (
             scope["method"] == "PUT"
             and len(path_parts) == 3

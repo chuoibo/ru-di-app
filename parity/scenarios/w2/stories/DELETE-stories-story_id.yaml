@@ -1,0 +1,145 @@
+# W2 · DELETE /stories/{id} — refusals that need no story: identity, path
+# parsing, the unknown-story 404, framework doors and idempotency refusals.
+# A real story needs an uploaded photo whose uploaded_images row carries a
+# random storage_key the database lane cannot normalise, so 204, the 403
+# is_author branch, the 404-before-403 matrix and replay live in
+# parity/scenarios/w2/stories-photo/DELETE-stories-story_id.yaml.
+id: w2/stories/delete-stories-story_id
+routes: ['DELETE /stories/{story_id}']
+auth_mode: dev
+personas:
+  caller: {}
+steps:
+  - id: anonymous_unknown_story
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_story
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/stories/khong-phai-uuid'
+  - id: anonymous_key_too_long
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+  - id: actor_id_not_uuid
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-roles: 'thuyen-truong'
+  - id: register_caller
+    as: caller
+    request:
+      method: PUT
+      path: '/people/{{persona.caller}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người gọi (dữ liệu mẫu)"}'
+  - id: caller_non_uuid_story
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/khong-phai-uuid'
+  - id: caller_short_uuid
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee'
+  - id: caller_unknown_story
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: caller_uppercase_uuid
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE'
+  - id: caller_urn_uuid
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: caller_roles_empty_unknown_story
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        x-actor-roles: ''
+  - id: caller_body_ignored_unknown_story
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: get_not_allowed
+    as: caller
+    request:
+      method: GET
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: patch_not_allowed
+    as: caller
+    request:
+      method: PATCH
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"caption":"sửa"}'
+  - id: trailing_slash_redirects
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/'
+  - id: idem_empty_key
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        idempotency-key: ''
+  - id: idem_refusal_not_stored
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+      headers:
+        idempotency-key: 'w2-del-c'
+  # the 404 released the key: another path under it is processed, not idempotency_key_reuse
+  - id: idem_same_key_other_story_after_refusal
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa'
+      headers:
+        idempotency-key: 'w2-del-c'
+  - id: caller_deletes_account
+    as: caller
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: caller_after_account_deleted
+    as: caller
+    request:
+      method: DELETE
+      path: '/stories/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'

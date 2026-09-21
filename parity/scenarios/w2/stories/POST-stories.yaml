@@ -1,0 +1,368 @@
+# W2 · POST /stories — one of one's own photographs, to one's friends, for 24 hours.
+# Refusal order: idempotency key shape, JSON decode, actor, body model, role,
+# photo url owner (403), photo existence (404).
+# No step here uploads a photo: an uploaded_images row carries a random
+# storage_key the database lane cannot normalise. Every path that needs a real
+# photo (201, replay, 403 on a real photo) lives in
+# parity/scenarios/w2/stories-photo/POST-stories.yaml.
+id: w2/stories/post-stories
+routes: ['POST /stories']
+auth_mode: dev
+personas:
+  author: {}
+  other: {}
+  ghost: {}
+steps:
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # get_actor runs before the body model is validated: 401 beats a bad url
+  - id: anonymous_invalid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"https://example.invalid/anh.jpg","caption":7}'
+  # the JSON body is decoded before dependencies: 422 json_invalid beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url": '
+  # the idempotency middleware answers before routing and before auth
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+        idempotency-key: ''
+      body_raw: '{"image_url":"/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: actor_id_not_uuid
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: roles_unknown
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: 'member,thuyen-truong'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  # the role check runs before the url is read: even another person's photo is 403 role_not_permitted
+  - id: roles_empty_other_persons_photo
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.other}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: roles_guest_only
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: 'guest'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: roles_group_admin_only_unknown_photo
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # ownership is checked before existence: a made-up photo id of somebody else is 403, not 404
+  - id: author_other_persons_photo_unknown
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.other}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: author_own_url_unknown_photo
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: author_uppercase_photo_id_unknown
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/BBBBBBBB-CCCC-4DDD-8EEE-FFFFFFFFFFFF"}'
+  # an unregistered actor passes dev auth and the role check, then has no photo
+  - id: ghost_own_url_unknown_photo
+    as: ghost
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.ghost}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # 200 code points, each two UTF-8 bytes, pass the model and reach the photo lookup
+  - id: caption_at_limit_reaches_photo_lookup
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"ăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăă"}'
+  - id: caption_over_limit
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"ăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăă"}'
+  # the model runs before the role check: an over-long caption is 422, not 403
+  - id: roles_empty_caption_over_limit
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"ăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăăă"}'
+  # a JSON body with no content-type is still parsed as JSON (404, not 422)
+  - id: no_content_type_is_parsed_as_json
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"không content-type"}'
+  - id: missing_image_url
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"caption":"thiếu ảnh"}'
+  - id: image_url_number
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":42}'
+  - id: image_url_group_photo_shape
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: image_url_absolute
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"http://parity.test/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: image_url_trailing_slash
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/"}'
+  - id: caption_number
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":12}'
+  - id: extra_fields_author_and_deadline
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","author_id":"{{persona.other}}","expires_at":"2030-01-01T00:00:00Z","audience":"public"}'
+  - id: empty_object
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: empty_body
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+  - id: top_level_array
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}]'
+  - id: text_plain_content_type
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: trailing_slash_redirects
+    as: author
+    request:
+      method: POST
+      path: '/stories/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: put_not_allowed
+    as: author
+    request:
+      method: PUT
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: idem_key_too_long
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # 255 characters is a valid key: the request reaches the route and is refused there
+  - id: idem_key_at_limit_refused
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  - id: idem_refusal_not_stored
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"lỗi"}'
+  # the 404 released the key: a different body under it is processed, not idempotency_key_reuse
+  - id: idem_same_key_other_body_after_refusal
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.other}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # and the first body again is answered again, not replayed
+  - id: idem_same_body_after_two_refusals
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"lỗi"}'
+  # a validation 422 is not stored either
+  - id: idem_validation_refusal_not_stored
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-d'
+        content-type: 'application/json'
+      body_raw: '{"caption":12}'
+  - id: idem_same_key_after_validation_refusal
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'w2-story-d'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'
+  # the author owns no photo, so deleting the account touches no uploaded_images row
+  - id: author_deletes_account
+    as: author
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: author_after_deleting_account
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"}'

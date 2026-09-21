@@ -1,0 +1,206 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "pyval_synthetic_form",
+ "routes": [
+  {
+   "id": "POST /pyval-synthetic/form/fields",
+   "order": 156,
+   "method": "POST",
+   "path": "/pyval-synthetic/form/fields",
+   "name": "syn_fields",
+   "endpoint": "pyval_synthetic_form.syn_fields",
+   "status_code": null,
+   "path_convertors": {},
+   "body": {
+    "kind": "form",
+    "field_info": "Form",
+    "media_type": "application/x-www-form-urlencoded",
+    "embed": true,
+    "required": true
+   },
+   "dependant": {
+    "call": "pyval_synthetic_form.syn_fields",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "pyval_synthetic_form.syn_fields",
+     []
+    ],
+    "body": [
+     {
+      "name": "a",
+      "alias": "a",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "str"
+      }
+     },
+     {
+      "name": "n",
+      "alias": "n",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "int",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "int"
+      }
+     },
+     {
+      "name": "b",
+      "alias": "b",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": false,
+      "default": "dflt",
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "str"
+       },
+       "default": "dflt"
+      }
+     },
+     {
+      "name": "c",
+      "alias": "c",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "int | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "int"
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "d",
+      "alias": "d-key",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str",
+      "required": false,
+      "default": "x",
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "str"
+       },
+       "default": "x"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /pyval-synthetic/form/file",
+   "order": 157,
+   "method": "POST",
+   "path": "/pyval-synthetic/form/file",
+   "name": "syn_file",
+   "endpoint": "pyval_synthetic_form.syn_file",
+   "status_code": null,
+   "path_convertors": {},
+   "body": {
+    "kind": "multipart",
+    "field_info": "File",
+    "media_type": "multipart/form-data",
+    "embed": true,
+    "required": true
+   },
+   "dependant": {
+    "call": "pyval_synthetic_form.syn_file",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "pyval_synthetic_form.syn_file",
+     []
+    ],
+    "body": [
+     {
+      "name": "upload",
+      "alias": "upload",
+      "in": "body",
+      "field_info": "File",
+      "annotation": "fastapi.datastructures.UploadFile",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "multipart/form-data",
+      "schema": {
+       "type": "function-plain",
+       "function": {
+        "kind": "with-info",
+        "name": "fastapi.datastructures.UploadFile._validate"
+       }
+      }
+     },
+     {
+      "name": "note",
+      "alias": "note",
+      "in": "body",
+      "field_info": "Form",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/x-www-form-urlencoded",
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {}
+}

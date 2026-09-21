@@ -1,0 +1,317 @@
+# W2 · posts in prod auth mode (ADR-0014): identity is a bearer session read by
+# digest; X-Actor-* headers are ignored, so roles come from the roster and a
+# header cannot take them away. An ended account's session stops working at
+# once, where dev keeps trusting the header.
+id: w2/posts/prod-auth
+routes: ['POST /posts', 'GET /posts', 'GET /people/{person_id}/posts', 'GET /posts/{post_id}']
+auth_mode: prod
+personas:
+  owner: {}
+  reader: {}
+  leaver: {}
+steps:
+  - id: anonymous_create_missing_bearer
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Không phiên (dữ liệu mẫu)","audience":"only_me"}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":'
+  - id: junk_bearer_create
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"body":"Phiên giả (dữ liệu mẫu)","audience":"only_me"}'
+  - id: basic_scheme_create
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        authorization: 'Basic {{token.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Sai scheme (dữ liệu mẫu)","audience":"only_me"}'
+  - id: actor_headers_ignored_create
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+        content-type: 'application/json'
+      body_raw: '{"body":"Chỉ có header dev (dữ liệu mẫu)","audience":"only_me"}'
+  # dev answers 403 role_not_permitted here; prod reads roles from the roster
+  - id: owner_empty_roles_header_ignored
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"body":"Header role rỗng bị bỏ qua (dữ liệu mẫu)","audience":"only_me"}'
+  - id: owner_lowercase_scheme_create
+    as: anonymous
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        authorization: 'bearer {{token.owner}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Scheme viết thường (dữ liệu mẫu)","audience":"only_me"}'
+  - id: owner_posts_public
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Công khai qua phiên (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_public: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_friends
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bạn bè qua phiên (dữ liệu mẫu)","audience":"friends"}'
+    bind:
+      p_friends: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm prod (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_group
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Nhóm qua phiên (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+    bind:
+      p_group: {from: body, pointer: /id, class: uuid}
+  - id: reader_posts_to_group_with_contexts_header
+    as: reader
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Tự khai thành viên (dữ liệu mẫu)","audience":"group","context_id":"{{ctx}}"}'
+  - id: anonymous_read_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: junk_bearer_read_post
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: reader_reads_public
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: reader_reads_friends_not_yet
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: reader_reads_group_with_actor_headers
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_group}}'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-contexts: '{{ctx}}'
+  - id: reader_asks_owner
+    as: reader
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+  - id: owner_accepts_reader
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: reader_reads_friends_as_friend
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_friends}}'
+  - id: anonymous_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts?limit=1'
+  - id: junk_bearer_feed
+    as: anonymous
+    request:
+      method: GET
+      path: '/posts?limit=1'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  # owner reads the five posts this scenario gave them
+  - id: owner_feed_limit_5
+    as: owner
+    request:
+      method: GET
+      path: '/posts?limit=5'
+  # reader reads owner's public and friends posts
+  - id: reader_feed_limit_2
+    as: reader
+    request:
+      method: GET
+      path: '/posts?limit=2'
+  - id: anonymous_wall
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/posts'
+  - id: reader_wall_of_owner
+    as: reader
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/posts'
+  - id: owner_wall_of_owner
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/posts'
+  - id: idem_owner_first
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-posts-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần qua phiên (dữ liệu mẫu)","audience":"only_me"}'
+  - id: idem_owner_replay
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-posts-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần qua phiên (dữ liệu mẫu)","audience":"only_me"}'
+  # in prod the key's scope is the bearer digest, so another session starts fresh
+  - id: idem_reader_same_key_same_body
+    as: reader
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-posts-prod-a'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần qua phiên (dữ liệu mẫu)","audience":"only_me"}'
+  # X-Actor-ID does not change the scope either: same bearer, same key → replay
+  - id: idem_owner_replay_with_actor_header
+    as: owner
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        idempotency-key: 'w2-posts-prod-a'
+        x-actor-id: '{{persona.reader}}'
+        content-type: 'application/json'
+      body_raw: '{"body":"Một lần qua phiên (dữ liệu mẫu)","audience":"only_me"}'
+  - id: leaver_posts_public
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Sắp xoá tài khoản (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      p_leaver: {from: body, pointer: /id, class: uuid}
+  - id: reader_reads_leaver_post
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_leaver}}'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # erasure revokes every session: dev would still accept this actor
+  - id: leaver_posts_after_deletion
+    as: leaver
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Sau khi xoá (dữ liệu mẫu)","audience":"only_me"}'
+  - id: leaver_feed_after_deletion
+    as: leaver
+    request:
+      method: GET
+      path: '/posts?limit=1'
+  - id: reader_reads_leaver_post_after_deletion
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_leaver}}'
+  - id: reader_wall_of_leaver_after_deletion
+    as: reader
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/posts'
+  - id: reader_signs_out
+    as: reader
+    request:
+      method: DELETE
+      path: '/sessions/current'
+  - id: reader_reads_public_after_sign_out
+    as: reader
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'
+  - id: owner_still_reads_public
+    as: owner
+    request:
+      method: GET
+      path: '/posts/{{p_public}}'

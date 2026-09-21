@@ -1,0 +1,1084 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "places",
+ "routes": [
+  {
+   "id": "GET /destinations",
+   "order": 102,
+   "method": "GET",
+   "path": "/destinations",
+   "name": "list_destinations",
+   "endpoint": "app.api.routes.places.list_destinations",
+   "status_code": null,
+   "path_convertors": {},
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.list_destinations",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.list_destinations",
+     []
+    ],
+    "query": [
+     {
+      "name": "lat",
+      "alias": "lat",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "float | None",
+      "required": false,
+      "default": null,
+      "constraints": [
+       {
+        "kind": "Ge",
+        "ge": -90
+       },
+       {
+        "kind": "Le",
+        "le": 90
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "float",
+         "ge": -90,
+         "le": 90
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "lng",
+      "alias": "lng",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "float | None",
+      "required": false,
+      "default": null,
+      "constraints": [
+       {
+        "kind": "Ge",
+        "ge": -180
+       },
+       {
+        "kind": "Le",
+        "le": 180
+       }
+      ],
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "float",
+         "ge": -180,
+         "le": 180
+        }
+       },
+       "default": null
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /places",
+   "order": 103,
+   "method": "GET",
+   "path": "/places",
+   "name": "list_places",
+   "endpoint": "app.api.routes.places.list_places",
+   "status_code": null,
+   "path_convertors": {},
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.list_places",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.list_places",
+     []
+    ],
+    "query": [
+     {
+      "name": "context_id",
+      "alias": "context_id",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "uuid.UUID | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "uuid"
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "category",
+      "alias": "category",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "q",
+      "alias": "q",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     },
+     {
+      "name": "destination",
+      "alias": "destination",
+      "in": "query",
+      "field_info": "Query",
+      "annotation": "str | None",
+      "required": false,
+      "default": null,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "default",
+       "schema": {
+        "type": "nullable",
+        "schema": {
+         "type": "str"
+        }
+       },
+       "default": null
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.routes.places.get_reason_writer",
+      "name": "reason_writer",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.places.get_reason_writer",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_actor_optional",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor_optional",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /places/{place_id}/photos",
+   "order": 104,
+   "method": "GET",
+   "path": "/places/{place_id}/photos",
+   "name": "list_place_photos",
+   "endpoint": "app.api.routes.places.list_place_photos",
+   "status_code": null,
+   "path_convertors": {
+    "place_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.list_place_photos",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.list_place_photos",
+     []
+    ],
+    "path": [
+     {
+      "name": "place_id",
+      "alias": "place_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /places/{place_id}/group-photos",
+   "order": 105,
+   "method": "GET",
+   "path": "/places/{place_id}/group-photos",
+   "name": "list_place_group_photos",
+   "endpoint": "app.api.routes.places.list_place_group_photos",
+   "status_code": null,
+   "path_convertors": {
+    "place_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.list_place_group_photos",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.list_place_group_photos",
+     []
+    ],
+    "path": [
+     {
+      "name": "place_id",
+      "alias": "place_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /places/{place_id}/photos/{photo_id}",
+   "order": 106,
+   "method": "GET",
+   "path": "/places/{place_id}/photos/{photo_id}",
+   "name": "read_place_photo",
+   "endpoint": "app.api.routes.places.read_place_photo",
+   "status_code": null,
+   "path_convertors": {
+    "place_id": "StringConvertor",
+    "photo_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.read_place_photo",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.read_place_photo",
+     []
+    ],
+    "path": [
+     {
+      "name": "place_id",
+      "alias": "place_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str"
+      }
+     },
+     {
+      "name": "photo_id",
+      "alias": "photo_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "uuid.UUID",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "uuid"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_photo_storage",
+      "name": "photo_storage",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_photo_storage",
+       []
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "GET /places/{place_id}",
+   "order": 107,
+   "method": "GET",
+   "path": "/places/{place_id}",
+   "name": "get_place",
+   "endpoint": "app.api.routes.places.get_place",
+   "status_code": null,
+   "path_convertors": {
+    "place_id": "StringConvertor"
+   },
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.places.get_place",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.get_place",
+     []
+    ],
+    "path": [
+     {
+      "name": "place_id",
+      "alias": "place_id",
+      "in": "path",
+      "field_info": "Path",
+      "annotation": "str",
+      "required": true,
+      "sequence": false,
+      "scalar": true,
+      "schema": {
+       "type": "str"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.routes.places.get_reason_writer",
+      "name": "reason_writer",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.places.get_reason_writer",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.deps.get_actor_optional",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor_optional",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "POST /places/search",
+   "order": 108,
+   "method": "POST",
+   "path": "/places/search",
+   "name": "search_places",
+   "endpoint": "app.api.routes.places.search_places",
+   "status_code": null,
+   "path_convertors": {},
+   "body": {
+    "kind": "json",
+    "field_info": "Body",
+    "media_type": "application/json",
+    "embed": false,
+    "required": true
+   },
+   "dependant": {
+    "call": "app.api.routes.places.search_places",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.places.search_places",
+     []
+    ],
+    "body": [
+     {
+      "name": "request",
+      "alias": "request",
+      "in": "body",
+      "field_info": "Body",
+      "annotation": "app.api.routes.places.PlaceSearchRequest",
+      "required": true,
+      "sequence": false,
+      "scalar": false,
+      "embed": null,
+      "media_type": "application/json",
+      "schema": {
+       "type": "ref",
+       "ref": "app.api.routes.places.PlaceSearchRequest"
+      }
+     }
+    ],
+    "dependencies": [
+     {
+      "call": "app.api.deps.get_actor",
+      "name": "actor",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_actor",
+       []
+      ],
+      "header": [
+       {
+        "name": "authorization",
+        "alias": "Authorization",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_id",
+        "alias": "X-Actor-ID",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_roles",
+        "alias": "X-Actor-Roles",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       },
+       {
+        "name": "actor_contexts",
+        "alias": "X-Actor-Contexts",
+        "in": "header",
+        "field_info": "Header",
+        "annotation": "str | None",
+        "required": false,
+        "default": null,
+        "sequence": false,
+        "scalar": true,
+        "convert_underscores": true,
+        "schema": {
+         "type": "default",
+         "schema": {
+          "type": "nullable",
+          "schema": {
+           "type": "str"
+          }
+         },
+         "default": null
+        }
+       }
+      ],
+      "specials": {
+       "request": "request"
+      },
+      "dependencies": [
+       {
+        "call": "app.api.deps.get_repository",
+        "name": "repository",
+        "use_cache": true,
+        "cache_key": [
+         "app.api.deps.get_repository",
+         []
+        ],
+        "specials": {
+         "request": "request"
+        }
+       }
+      ]
+     },
+     {
+      "call": "app.api.routes.places.get_search_rate_limiter",
+      "name": "limiter",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.places.get_search_rate_limiter",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     },
+     {
+      "call": "app.api.routes.places.get_place_searcher",
+      "name": "place_searcher",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.routes.places.get_place_searcher",
+       []
+      ]
+     },
+     {
+      "call": "app.api.deps.get_repository",
+      "name": "repository",
+      "use_cache": true,
+      "cache_key": [
+       "app.api.deps.get_repository",
+       []
+      ],
+      "specials": {
+       "request": "request"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "definitions": {
+  "app.api.routes.places.PlaceSearchRequest": {
+   "type": "model",
+   "class": "app.api.routes.places.PlaceSearchRequest",
+   "custom_init": false,
+   "root_model": false,
+   "config": {},
+   "decorators": {
+    "field_validators": [
+     {
+      "name": "_reject_blank",
+      "function": "app.api.routes.places.PlaceSearchRequest._reject_blank",
+      "fields": [
+       "query"
+      ],
+      "mode": "after"
+     }
+    ]
+   },
+   "schema": {
+    "type": "model-fields",
+    "model_name": "PlaceSearchRequest",
+    "fields": [
+     {
+      "name": "query",
+      "schema": {
+       "type": "function-after",
+       "function": {
+        "kind": "no-info",
+        "name": "app.api.routes.places.PlaceSearchRequest._reject_blank"
+       },
+       "schema": {
+        "type": "str",
+        "min_length": 1,
+        "max_length": 300
+       }
+      },
+      "annotation": "str",
+      "required": true,
+      "constraints": [
+       {
+        "kind": "MinLen",
+        "min_length": 1
+       },
+       {
+        "kind": "MaxLen",
+        "max_length": 300
+       }
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

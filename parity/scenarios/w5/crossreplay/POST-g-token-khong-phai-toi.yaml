@@ -1,0 +1,269 @@
+# W5 cross replay · POST /g/{token}/khong-phai-toi, doi-so-tien and xin-cach-tinh
+# under an Idempotency-Key. "Not me" answers 200 HTML, so one side's stored page
+# is replayed by the other (content-type text/html; charset=utf-8,
+# idempotency-replayed: true) and a form body under the same key is 422 reuse;
+# without the key the second press is 409 LINK_NOT_ACTIVE. Objections and
+# evidence requests answer 303, which the middleware never stores, so the other
+# side writes a second audit event; a 422 releases the key for a valid retry on
+# the other side. Go serves none of these routes yet. Texts are sample data
+# (dữ liệu mẫu).
+id: w5/crossreplay/post-g-token-khong-phai-toi
+routes: ['POST /g/{token}/khong-phai-toi', 'POST /g/{token}/doi-so-tien', 'POST /g/{token}/xin-cach-tinh']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  fourth: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ đợt phản đối chéo (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách một (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách hai (dữ liệu mẫu)"}'
+  - id: register_fourth
+    as: fourth
+    request:
+      method: PUT
+      path: '/people/{{persona.fourth}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Khách ba (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm phản đối chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+      kp: {from: body, pointer: /id, regex: '^(.{23})', class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_third
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.third}}"}'
+    bind:
+      m_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts
+    as: third
+    request:
+      method: POST
+      path: '/memberships/{{m_third}}/accept'
+  - id: owner_invites_fourth
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.fourth}}"}'
+    bind:
+      m_fourth: {from: body, pointer: /id, class: uuid}
+  - id: fourth_accepts
+    as: fourth
+    request:
+      method: POST
+      path: '/memberships/{{m_fourth}}/accept'
+  - id: owner_proposes_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối phản đối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":120000}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_confirms_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối phản đối chéo (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","{{persona.third}}","{{persona.fourth}}"],"total_amount_vnd":120000},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000,"{{persona.third}}":30000,"{{persona.fourth}}":30000},"acknowledge_as_advancer":true}'
+    bind:
+      dinner_v: {from: body, pointer: /expense_version_id, class: uuid}
+  - id: owner_batches
+    as: owner
+    request:
+      method: POST
+      path: '/batches'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","expense_version_ids":["{{dinner_v}}"],"due_at":"2030-02-01T12:00:00+07:00"}'
+    bind:
+      batch: {from: body, pointer: /batch_id, class: uuid}
+  - id: owner_publishes
+    as: owner
+    request:
+      method: POST
+      path: '/batches/{{batch}}/publish'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"delivery_method":"personal_link","guest_link_expires_at":"2030-03-01T12:00:00+07:00"}'
+    bind:
+      tok_a: {from: body, pointer: /guest_links/0/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_a: {from: body, pointer: /guest_links/0/obligations/0/obligation_id, class: uuid}
+      tok_b: {from: body, pointer: /guest_links/1/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_b: {from: body, pointer: /guest_links/1/obligations/0/obligation_id, class: uuid}
+      tok_c: {from: body, pointer: /guest_links/2/path, regex: '^/g/([A-Za-z0-9_-]+)$', class: token}
+      ob_c: {from: body, pointer: /guest_links/2/obligations/0/obligation_id, class: uuid}
+  # the not-me page is a 200 HTML answer, so a key stores and replays it
+  - id: python_not_me_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/khong-phai-toi'
+      headers:
+        idempotency-key: '{{kp}}-edededededea'
+  - id: core_replays_python_not_me_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/khong-phai-toi'
+      headers:
+        idempotency-key: '{{kp}}-edededededea'
+  - id: core_not_me_key_other_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/khong-phai-toi'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-edededededea'
+      body_raw: 'x=1'
+  - id: core_not_me_without_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_a}}/khong-phai-toi'
+  - id: core_not_me_with_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+      headers:
+        idempotency-key: '{{kp}}-edededededeb'
+  - id: python_replays_core_not_me_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+      headers:
+        idempotency-key: '{{kp}}-edededededeb'
+  - id: python_not_me_key_other_body
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_b}}/khong-phai-toi'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-edededededeb'
+      body_raw: 'x=1'
+  # objections and evidence requests answer 303, which is never stored
+  - id: python_objects_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-abababababac'
+      body_raw: 'obligation_id={{ob_c}}&reason=other'
+  - id: core_objects_same_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-abababababac'
+      body_raw: 'obligation_id={{ob_c}}&reason=other'
+  - id: python_asks_evidence_with_key
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-efefefefefec'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: core_asks_evidence_same_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/xin-cach-tinh'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-efefefefefec'
+      body_raw: 'obligation_id={{ob_c}}'
+  - id: core_refused_objection_with_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-abababababad'
+      body_raw: 'obligation_id={{ob_c}}&reason=bogus'
+  - id: python_objection_same_key_valid
+    as: anonymous
+    via: python
+    request:
+      method: POST
+      path: '/g/{{tok_c}}/doi-so-tien'
+      headers:
+        content-type: 'application/x-www-form-urlencoded'
+        idempotency-key: '{{kp}}-abababababad'
+      body_raw: 'obligation_id={{ob_c}}&reason=split_wrong'
+  - id: core_page_c
+    as: anonymous
+    request:
+      method: GET
+      path: '/g/{{tok_c}}'

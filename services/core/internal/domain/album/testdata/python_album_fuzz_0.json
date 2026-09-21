@@ -1,0 +1,894 @@
+{
+ "generator": "scripts/render_domain_wai_goldens.py",
+ "module": "app.domain.album",
+ "mode": "album-fuzz-0",
+ "python": "3.12.14",
+ "seed": 17,
+ "fuzz": {
+  "shard": 0,
+  "shards": 1,
+  "total": 80
+ },
+ "cases": [
+  {
+   "fn": "period_label",
+   "name": "fuzz/0",
+   "args": {
+    "starts_on": "$date:2026-05-12",
+    "ends_on": "$date:2026-10-07"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/1",
+   "args": {
+    "starts_on": "$date:2022-12-23",
+    "ends_on": "$date:2023-09-25"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/2",
+   "args": {
+    "starts_on": "$date:2024-02-01",
+    "ends_on": "$date:2024-06-07"
+   },
+   "result": {
+    "ok": "2024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/3",
+   "args": {
+    "starts_on": "$date:2026-12-14",
+    "ends_on": "$date:2027-04-22"
+   },
+   "result": {
+    "ok": "2026\u20132027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/4",
+   "args": {
+    "starts_on": "$date:2025-11-22",
+    "ends_on": "$date:2026-11-27"
+   },
+   "result": {
+    "ok": "2025\u20132026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/5",
+   "args": {
+    "starts_on": "$date:2026-03-18",
+    "ends_on": "$date:2026-04-18"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/6",
+   "args": {
+    "starts_on": "$date:2022-04-05",
+    "ends_on": "$date:2023-04-01"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/7",
+   "args": {
+    "starts_on": "$date:2023-06-18",
+    "ends_on": "$date:2023-08-20"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/8",
+   "args": {
+    "starts_on": "$date:2021-05-14",
+    "ends_on": "$date:2021-06-24"
+   },
+   "result": {
+    "ok": "2021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/9",
+   "args": {
+    "starts_on": "$date:2027-11-20",
+    "ends_on": "$date:2028-01-31"
+   },
+   "result": {
+    "ok": "2027\u20132028"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/10",
+   "args": {
+    "starts_on": "$date:2026-09-11",
+    "ends_on": "$date:2026-09-20"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/11",
+   "args": {
+    "starts_on": "$date:2026-06-19",
+    "ends_on": "$date:2026-07-15"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/12",
+   "args": {
+    "starts_on": "$date:2025-01-16",
+    "ends_on": "$date:2025-07-26"
+   },
+   "result": {
+    "ok": "2025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/13",
+   "args": {
+    "starts_on": "$date:2020-07-08",
+    "ends_on": "$date:2020-09-05"
+   },
+   "result": {
+    "ok": "2020"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/14",
+   "args": {
+    "starts_on": "$date:2023-04-17",
+    "ends_on": "$date:2023-10-18"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/15",
+   "args": {
+    "starts_on": "$date:2020-05-03",
+    "ends_on": "$date:2020-09-21"
+   },
+   "result": {
+    "ok": "2020"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/16",
+   "args": {
+    "starts_on": "$date:2023-12-20",
+    "ends_on": "$date:2024-09-29"
+   },
+   "result": {
+    "ok": "2023\u20132024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/17",
+   "args": {
+    "starts_on": "$date:2022-05-22",
+    "ends_on": "$date:2022-10-26"
+   },
+   "result": {
+    "ok": "2022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/18",
+   "args": {
+    "starts_on": "$date:2025-06-06",
+    "ends_on": "$date:2025-11-23"
+   },
+   "result": {
+    "ok": "2025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/19",
+   "args": {
+    "starts_on": "$date:2021-10-19",
+    "ends_on": "$date:2022-03-07"
+   },
+   "result": {
+    "ok": "2021\u20132022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/20",
+   "args": {
+    "starts_on": "$date:2025-01-02",
+    "ends_on": "$date:2026-01-22"
+   },
+   "result": {
+    "ok": "2025\u20132026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/21",
+   "args": {
+    "starts_on": "$date:2025-01-15",
+    "ends_on": "$date:2026-01-31"
+   },
+   "result": {
+    "ok": "2025\u20132026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/22",
+   "args": {
+    "starts_on": "$date:2024-08-21",
+    "ends_on": "$date:2024-09-17"
+   },
+   "result": {
+    "ok": "2024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/23",
+   "args": {
+    "starts_on": "$date:2023-05-09",
+    "ends_on": "$date:2023-06-16"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/24",
+   "args": {
+    "starts_on": "$date:2027-01-20",
+    "ends_on": "$date:2027-11-04"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/25",
+   "args": {
+    "starts_on": "$date:2022-07-16",
+    "ends_on": "$date:2023-07-25"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/26",
+   "args": {
+    "starts_on": "$date:2026-03-07",
+    "ends_on": "$date:2026-07-13"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/27",
+   "args": {
+    "starts_on": "$date:2022-11-04",
+    "ends_on": "$date:2023-02-20"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/28",
+   "args": {
+    "starts_on": "$date:2020-09-10",
+    "ends_on": "$date:2021-02-18"
+   },
+   "result": {
+    "ok": "2020\u20132021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/29",
+   "args": {
+    "starts_on": "$date:2025-01-06",
+    "ends_on": "$date:2025-08-08"
+   },
+   "result": {
+    "ok": "2025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/30",
+   "args": {
+    "starts_on": "$date:2021-12-25",
+    "ends_on": "$date:2022-06-02"
+   },
+   "result": {
+    "ok": "2021\u20132022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/31",
+   "args": {
+    "starts_on": "$date:2024-11-13",
+    "ends_on": "$date:2025-07-16"
+   },
+   "result": {
+    "ok": "2024\u20132025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/32",
+   "args": {
+    "starts_on": "$date:2021-09-03",
+    "ends_on": "$date:2022-06-08"
+   },
+   "result": {
+    "ok": "2021\u20132022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/33",
+   "args": {
+    "starts_on": "$date:2023-04-18",
+    "ends_on": "$date:2023-08-31"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/34",
+   "args": {
+    "starts_on": "$date:2022-05-02",
+    "ends_on": "$date:2023-05-08"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/35",
+   "args": {
+    "starts_on": "$date:2027-10-13",
+    "ends_on": "$date:2028-06-18"
+   },
+   "result": {
+    "ok": "2027\u20132028"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/36",
+   "args": {
+    "starts_on": "$date:2023-09-14",
+    "ends_on": "$date:2024-06-04"
+   },
+   "result": {
+    "ok": "2023\u20132024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/37",
+   "args": {
+    "starts_on": "$date:2027-02-15",
+    "ends_on": "$date:2028-03-05"
+   },
+   "result": {
+    "ok": "2027\u20132028"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/38",
+   "args": {
+    "starts_on": "$date:2023-04-16",
+    "ends_on": "$date:2023-09-25"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/39",
+   "args": {
+    "starts_on": "$date:2023-06-20",
+    "ends_on": "$date:2023-07-04"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/40",
+   "args": {
+    "starts_on": "$date:2026-01-27",
+    "ends_on": "$date:2026-07-14"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/41",
+   "args": {
+    "starts_on": "$date:2022-09-08",
+    "ends_on": "$date:2023-07-18"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/42",
+   "args": {
+    "starts_on": "$date:2025-06-06",
+    "ends_on": "$date:2026-06-27"
+   },
+   "result": {
+    "ok": "2025\u20132026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/43",
+   "args": {
+    "starts_on": "$date:2023-05-14",
+    "ends_on": "$date:2023-11-12"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/44",
+   "args": {
+    "starts_on": "$date:2027-10-03",
+    "ends_on": "$date:2028-06-24"
+   },
+   "result": {
+    "ok": "2027\u20132028"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/45",
+   "args": {
+    "starts_on": "$date:2021-09-01",
+    "ends_on": "$date:2021-12-08"
+   },
+   "result": {
+    "ok": "2021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/46",
+   "args": {
+    "starts_on": "$date:2022-08-15",
+    "ends_on": "$date:2023-03-31"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/47",
+   "args": {
+    "starts_on": "$date:2022-09-18",
+    "ends_on": "$date:2023-05-19"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/48",
+   "args": {
+    "starts_on": "$date:2027-01-10",
+    "ends_on": "$date:2027-05-24"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/49",
+   "args": {
+    "starts_on": "$date:2022-01-27",
+    "ends_on": "$date:2022-09-23"
+   },
+   "result": {
+    "ok": "2022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/50",
+   "args": {
+    "starts_on": "$date:2025-06-07",
+    "ends_on": "$date:2025-07-03"
+   },
+   "result": {
+    "ok": "2025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/51",
+   "args": {
+    "starts_on": "$date:2024-02-17",
+    "ends_on": "$date:2025-01-23"
+   },
+   "result": {
+    "ok": "2024\u20132025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/52",
+   "args": {
+    "starts_on": "$date:2020-01-04",
+    "ends_on": "$date:2020-09-01"
+   },
+   "result": {
+    "ok": "2020"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/53",
+   "args": {
+    "starts_on": "$date:2024-10-07",
+    "ends_on": "$date:2025-11-10"
+   },
+   "result": {
+    "ok": "2024\u20132025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/54",
+   "args": {
+    "starts_on": "$date:2021-01-15",
+    "ends_on": "$date:2021-10-16"
+   },
+   "result": {
+    "ok": "2021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/55",
+   "args": {
+    "starts_on": "$date:2023-11-01",
+    "ends_on": "$date:2024-05-23"
+   },
+   "result": {
+    "ok": "2023\u20132024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/56",
+   "args": {
+    "starts_on": "$date:2021-07-02",
+    "ends_on": "$date:2022-07-15"
+   },
+   "result": {
+    "ok": "2021\u20132022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/57",
+   "args": {
+    "starts_on": "$date:2020-04-18",
+    "ends_on": "$date:2020-08-30"
+   },
+   "result": {
+    "ok": "2020"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/58",
+   "args": {
+    "starts_on": "$date:2024-06-12",
+    "ends_on": "$date:2025-03-17"
+   },
+   "result": {
+    "ok": "2024\u20132025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/59",
+   "args": {
+    "starts_on": "$date:2026-07-01",
+    "ends_on": "$date:2027-03-27"
+   },
+   "result": {
+    "ok": "2026\u20132027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/60",
+   "args": {
+    "starts_on": "$date:2025-02-25",
+    "ends_on": "$date:2026-03-15"
+   },
+   "result": {
+    "ok": "2025\u20132026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/61",
+   "args": {
+    "starts_on": "$date:2020-11-24",
+    "ends_on": "$date:2021-04-18"
+   },
+   "result": {
+    "ok": "2020\u20132021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/62",
+   "args": {
+    "starts_on": "$date:2025-06-04",
+    "ends_on": "$date:2025-11-22"
+   },
+   "result": {
+    "ok": "2025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/63",
+   "args": {
+    "starts_on": "$date:2022-09-27",
+    "ends_on": "$date:2023-01-29"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/64",
+   "args": {
+    "starts_on": "$date:2027-05-15",
+    "ends_on": "$date:2027-07-17"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/65",
+   "args": {
+    "starts_on": "$date:2024-04-03",
+    "ends_on": "$date:2025-03-17"
+   },
+   "result": {
+    "ok": "2024\u20132025"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/66",
+   "args": {
+    "starts_on": "$date:2026-05-22",
+    "ends_on": "$date:2026-09-01"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/67",
+   "args": {
+    "starts_on": "$date:2027-06-05",
+    "ends_on": "$date:2027-09-22"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/68",
+   "args": {
+    "starts_on": "$date:2022-05-03",
+    "ends_on": "$date:2022-12-12"
+   },
+   "result": {
+    "ok": "2022"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/69",
+   "args": {
+    "starts_on": "$date:2027-09-13",
+    "ends_on": "$date:2028-10-16"
+   },
+   "result": {
+    "ok": "2027\u20132028"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/70",
+   "args": {
+    "starts_on": "$date:2022-11-18",
+    "ends_on": "$date:2023-01-30"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/71",
+   "args": {
+    "starts_on": "$date:2022-10-18",
+    "ends_on": "$date:2023-03-29"
+   },
+   "result": {
+    "ok": "2022\u20132023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/72",
+   "args": {
+    "starts_on": "$date:2027-05-14",
+    "ends_on": "$date:2027-06-16"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/73",
+   "args": {
+    "starts_on": "$date:2023-03-23",
+    "ends_on": "$date:2023-06-08"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/74",
+   "args": {
+    "starts_on": "$date:2023-07-18",
+    "ends_on": "$date:2023-12-29"
+   },
+   "result": {
+    "ok": "2023"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/75",
+   "args": {
+    "starts_on": "$date:2027-09-26",
+    "ends_on": "$date:2027-11-30"
+   },
+   "result": {
+    "ok": "2027"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/76",
+   "args": {
+    "starts_on": "$date:2024-04-16",
+    "ends_on": "$date:2024-08-22"
+   },
+   "result": {
+    "ok": "2024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/77",
+   "args": {
+    "starts_on": "$date:2023-06-01",
+    "ends_on": "$date:2024-04-21"
+   },
+   "result": {
+    "ok": "2023\u20132024"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/78",
+   "args": {
+    "starts_on": "$date:2021-06-16",
+    "ends_on": "$date:2021-07-25"
+   },
+   "result": {
+    "ok": "2021"
+   }
+  },
+  {
+   "fn": "period_label",
+   "name": "fuzz/79",
+   "args": {
+    "starts_on": "$date:2026-02-17",
+    "ends_on": "$date:2026-08-29"
+   },
+   "result": {
+    "ok": "2026"
+   }
+  }
+ ]
+}

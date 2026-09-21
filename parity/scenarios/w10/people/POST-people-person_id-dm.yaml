@@ -1,0 +1,440 @@
+# W10 · POST /people/{person_id}/dm: open, or find, a two-person context (ADR-0021 §2.5).
+# Writing to oneself is 422 before anything else. Every other refusal is one 404 with one
+# sentence: no such person, a stranger, a pending request, a caller without the member
+# role, a block either way, an ended account. 201 when the pair is created (the context
+# and two ACTIVE memberships), 200 when it already exists, with the same ContextSummary
+# body as a row of GET /people/me/contexts. After a block is lifted and the friendship
+# is made again, the old pair comes back. In dev an ended account can still act: it
+# befriends somebody again and its own open finds a pair it has left (404
+# context_not_found). Texts are sample data (dữ liệu mẫu).
+id: w10/people/post-people-person_id-dm
+routes: ['POST /people/{person_id}/dm']
+auth_mode: dev
+personas:
+  owner: {}
+  friend: {}
+  pending: {}
+  stranger: {}
+  blocker: {}
+  leaver: {}
+steps:
+  - id: anonymous_opens
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: anonymous_non_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/khong-phai-uuid/dm'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_path_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/people/khong-phai-uuid/dm'
+  # before anybody is registered: self is 422, anybody else the one 404
+  - id: owner_opens_self_unregistered
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_opens_unregistered_friend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn (dữ liệu mẫu)"}'
+  - id: register_pending
+    as: pending
+    request:
+      method: PUT
+      path: '/people/{{persona.pending}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Đang chờ (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: owner_opens_self
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_opens_self_without_roles
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+      headers:
+        x-actor-roles: ''
+  - id: owner_opens_unknown_id
+    as: owner
+    request:
+      method: POST
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/dm'
+  - id: owner_opens_stranger
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.stranger}}/dm'
+  - id: owner_asks_pending
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.pending}}"}'
+  - id: owner_opens_pending
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.pending}}/dm'
+  - id: pending_opens_owner
+    as: pending
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_asks_friend
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.friend}}"}'
+    bind:
+      fr_friend: {from: body, pointer: /id, class: uuid}
+  - id: friend_accepts
+    as: friend
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_friend}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_friend_without_roles
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        x-actor-roles: ''
+  - id: owner_opens_friend_as_guest
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        x-actor-roles: 'guest'
+  - id: owner_lists_before_pair
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: owner_opens_friend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_opens_friend_again
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  - id: friend_opens_owner
+    as: friend
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_opens_friend_with_json_body
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"bị bỏ qua (dữ liệu mẫu)"}'
+  - id: owner_opens_friend_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+      headers:
+        idempotency-key: 'd10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_key_other_person
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.stranger}}/dm'
+      headers:
+        idempotency-key: 'd10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_with_pair
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: friend_lists_with_pair
+    as: friend
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: friend_writes_in_pair
+    as: friend
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Chào nhé (dữ liệu mẫu)"}'
+  - id: friend_renames_self
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đổi tên (dữ liệu mẫu)"}'
+  - id: owner_opens_friend_after_message_and_rename
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm'
+  # a block either way closes the door; lifting it does not reopen it until friends again
+  - id: owner_asks_blocker
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+    bind:
+      fr_blocker: {from: body, pointer: /id, class: uuid}
+  - id: blocker_accepts
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_blocker}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: blocker_opens_owner
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+    bind:
+      blocked_pair: {from: body, pointer: /id, class: uuid}
+  - id: blocker_blocks_owner
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_opens_blocker_after_block
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.blocker}}/dm'
+  - id: blocker_opens_owner_after_block
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_lists_blocked_pair
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  - id: blocker_unblocks_owner
+    as: blocker
+    request:
+      method: DELETE
+      path: '/people/{{persona.owner}}/block'
+  - id: owner_opens_blocker_after_unblock
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.blocker}}/dm'
+  - id: owner_asks_blocker_again
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+    bind:
+      fr_blocker_again: {from: body, pointer: /id, class: uuid}
+  - id: blocker_accepts_again
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_blocker_again}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_blocker_after_refriend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.blocker}}/dm'
+  - id: blocker_lists_after_refriend
+    as: blocker
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  # an ended account: the friend edge is gone, the pair stays with one side left
+  - id: owner_asks_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+    bind:
+      fr_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_leaver}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/dm'
+  - id: leaver_ends_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_opens_leaver_after_erasure
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/dm'
+  - id: owner_lists_after_erasure
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/contexts'
+  # dev only: the ended account's headers still work, and it can befriend again
+  - id: leaver_asks_owner_after_erasure
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.owner}}"}'
+    bind:
+      fr_leaver_back: {from: body, pointer: /id, class: uuid}
+  - id: owner_accepts_ended_account
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_leaver_back}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: leaver_opens_owner_after_refriend
+    as: leaver
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+  - id: owner_opens_leaver_after_refriend
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.leaver}}/dm'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.friend}}/dm/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.friend}}/dm'
+  - id: stranger_opens_pair_id_as_person
+    as: stranger
+    request:
+      method: POST
+      path: '/people/{{pair}}/dm'

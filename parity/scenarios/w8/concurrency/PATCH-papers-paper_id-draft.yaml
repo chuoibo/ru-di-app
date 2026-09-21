@@ -1,0 +1,82 @@
+# W8 concurrency · PATCH /papers/{id}/draft. Three identical edits at once all land on
+# version 1 (200 each); three edits under one header key are one edit and two replays.
+# Texts are sample data (dữ liệu mẫu).
+id: w8/concurrency/patch-papers-paper_id-draft
+routes: ['PATCH /papers/{paper_id}/draft']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_edits_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: PATCH
+      path: '/papers/{{paper}}/draft'
+      headers:
+        idempotency-key: 'w8-c-sua'
+        content-type: 'application/json'
+      body_raw: '{"content":{"ngay":"2031-12-31","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: owner_reads
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'

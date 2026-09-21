@@ -1,0 +1,50 @@
+# W6 concurrency · POST /people/{person_id}/avatar. Four copies of one avatar at once
+# are four rows; the newest row is the avatar, and since the four files are the
+# same picture, GET /people/{id}/avatar answers the same bytes whichever copy
+# committed last. Under one header key one copy runs and the others replay it.
+# Texts are sample data (dữ liệu mẫu).
+id: w6/concurrency/post-people-person_id-avatar
+routes: ['POST /people/{person_id}/avatar']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Đặt ảnh đại diện cùng lúc (dữ liệu mẫu)"}'
+  - id: set_four_at_once
+    as: owner
+    concurrent: 4
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 40, height: 40, seed: 104}}
+  - id: read_after_four
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'
+  - id: set_same_key_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/avatar'
+      headers:
+        idempotency-key: '{{persona.owner}}-avatar-burst'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.png, content_type: image/png, image: {format: png, width: 24, height: 24, seed: 105, alpha: true}}
+  - id: read_after_same_key
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}/avatar'

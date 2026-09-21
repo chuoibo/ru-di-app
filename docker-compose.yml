@@ -30,6 +30,18 @@ name: ${MOBILE_PROJECT:-mobile-local}
 # `docker run mobile-local/api:dev` một mình vẫn cư xử đúng như Dockerfile
 # khai (EXPOSE 8000, HEALTHCHECK 8000). Ánh xạ "8099:8000" đọc thẳng ra điều
 # đó; đừng "sửa" vế phải cho khớp vế trái.
+#
+# Từ ADR-0029, người giữ 8099 là `core` (cửa trước Go), không phải `api`.
+# `api` không publish cổng nào, nên mọi request từ ngoài máy compose phải đi qua
+# `core`; `seed` và `demo` cũng gọi `core` để đi đúng đường người dùng đi.
+#
+# Cố ý chỉ MỘT mạng (mạng mặc định của project), không tách edge/backend: máy
+# dev này chạy nhiều project compose cùng lúc, và mỗi mạng thêm ăn một subnet
+# trong pool chung của daemon. Ngày 2026-09-14 tách hai mạng làm cạn pool —
+# "all predefined address pools have been fully subnetted" — và project tạm của
+# scripts/check_media_persists.sh không dựng được nữa. Điều cần bảo vệ là không
+# client nào chạm được `api` mà bỏ qua `core`; "không publish cổng" giữ đúng
+# điều đó, và tests/ kiểm nó.
 
 x-api-image: &api-image
   build:
@@ -49,6 +61,10 @@ x-api-env: &api-env
   # thế chạy `prod`; đổi dòng này thành `prod` ở đây thì seed sẽ 401, đó là
   # hành vi đúng chứ không phải hỏng.
   MOBILE_AUTH_MODE: dev
+  # ADR-0029 §2.7: the Python process refuses to start without a brain token.
+  # Letter-only so a compose file never trips the repo guard's digit-run rule.
+  # Override in `.env` on a host that is not this machine.
+  MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
 
 services:
   postgres:
@@ -117,10 +133,10 @@ services:
       # API answers 503 on sign-in rather than falling back to the unkeyed
       # digest that let group members read each other's telephone numbers.
       #
-      # On `api` alone. `migrate` and `seed` share the `x-api-env` anchor and
-      # neither derives an id: seeding uses fixed uuids straight out of
-      # `scripts/seed_dev_data.py`. A secret belongs in exactly the processes
-      # that use it.
+      # On `api` and `core` (whose Go routes derive ids too), never in the
+      # anchor: `migrate` and `seed` share `x-api-env` and neither derives an
+      # id; seeding uses fixed uuids straight out of `scripts/seed_dev_data.py`.
+      # A secret belongs in exactly the processes that use it.
       MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
       # Where uploaded photos land. Unset, `app/media/storage.py` falls back to
       # `$HOME/.local/share/rudi/media` -- inside the container's writable
@@ -138,6 +154,14 @@ services:
       # gets the silent-loss behaviour back. Someone who genuinely wants the
       # photos elsewhere edits both lines together, which is the point.
       MOBILE_MEDIA_ROOT: /var/lib/rudi/media
+      # uvicorn already honours X-Forwarded-For, but only from 127.0.0.1. Behind
+      # `core` every request arrives from core's address, so without this line
+      # every caller would share one per-IP limiter bucket (OTP, person-id,
+      # friend lookup). `*` is safe ONLY because `api` publishes no port: nothing
+      # outside this project can open a connection to it, and the one process
+      # in the request path, `core`, replaces any client-sent X-Forwarded-For
+      # with the real socket address.
+      FORWARDED_ALLOW_IPS: "*"
     volumes:
       # A named volume, NOT a bind mount into the source tree. Photos of real
       # bills must never be reachable from a path git can stage: the repo guard
@@ -151,8 +175,10 @@ services:
     # nhưng `grep -rn MOBILE_PUBLIC_BASE_URL services/` không ra dòng code nào
     # đọc: publish trả về `path` tương đối, người gửi tự ghép host. Đặt một
     # biến không ai đọc chỉ tạo ảo giác là nó có tác dụng.
-    ports:
-      - "${MOBILE_API_PORT:-8099}:8000"
+    #
+    # No `ports:` here any more (ADR-0029). Publishing 8000 would let a client
+    # skip `core` and pick its own X-Forwarded-For; see FORWARDED_ALLOW_IPS.
+    expose: ["8000"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -178,6 +204,44 @@ services:
     # thì "chạy được trên máy tôi" quay lại qua cửa sau: code chạy từ bind
     # mount còn ảnh thì chưa ai chứng minh là dựng được.
 
+  # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
+  # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
+  core:
+    build:
+      context: ./services/core
+    image: mobile-local/core:dev
+    environment:
+      # Go routes authenticate and query for themselves: same database and auth
+      # mode as `api`, from the one anchor both read.
+      <<: *api-env
+      MOBILE_PYTHON_UPSTREAM: http://api:8000
+      # Go talks to the brain on the Python process, never through its own
+      # public door (dispatch 404s `/internal` rather than proxying it).
+      MOBILE_BRAIN_URL: http://api:8000
+      MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
+      # POST /identity/person-id and POST /friends/lookup derive ids in Go when
+      # served from Go; same key as `api`, or the two would name one number
+      # differently. Unset, those routes answer 503 as Python does.
+      MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
+      # Go code merged but not yet owned by Go (manifest PORTED or later) is
+      # served from Go only when named here, e.g. `ported`. Empty keeps Python.
+      MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}
+      # Rollback without a rebuild: `MOBILE_FORCE_PYTHON=all make up`.
+      MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
+    ports:
+      - "${MOBILE_API_PORT:-8099}:8000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      # Liveness of core itself, on its loopback port — not a proxied /healthz,
+      # which would report Python's health under core's name.
+      test: ["CMD", "/core", "healthcheck"]
+      interval: 2s
+      timeout: 3s
+      start_period: 2s
+      retries: 30
+
   # Không nằm trong `docker compose up`: seed là thao tác có chủ đích, không
   # phải thứ chạy lén mỗi lần ai đó khởi động lại hệ. `make seed` gọi nó.
   seed: &seed-service
@@ -186,13 +250,13 @@ services:
     command: ["python", "/seed/seed_dev_data.py"]
     environment:
       <<: *api-env
-      MOBILE_SEED_API_BASE_URL: http://api:8000
+      MOBILE_SEED_API_BASE_URL: http://core:8000
     volumes:
       # Script nằm ngoài build context của services/api nên phải mount. Chỉ
       # đọc: một fixture dev không có việc gì phải ghi vào cây nguồn.
       - ./scripts:/seed:ro
     depends_on:
-      api:
+      core:
         condition: service_healthy
 
   # Cùng một cách chạy với `seed`, khác đúng cái script. Tách ra thành service

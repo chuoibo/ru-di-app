@@ -1,0 +1,38 @@
+{
+ "ir_version": 1,
+ "generator": "scripts/render_contract_ir.py",
+ "stack": {
+  "fastapi": "0.115.6",
+  "pydantic": "2.13.5",
+  "pydantic_core": "2.46.5",
+  "starlette": "0.41.3",
+  "python": "3.12.14"
+ },
+ "group": "identity",
+ "routes": [
+  {
+   "id": "POST /identity/person-id",
+   "order": 101,
+   "method": "POST",
+   "path": "/identity/person-id",
+   "name": "mint_person_id",
+   "endpoint": "app.api.routes.identity.mint_person_id",
+   "status_code": null,
+   "path_convertors": {},
+   "body": null,
+   "dependant": {
+    "call": "app.api.routes.identity.mint_person_id",
+    "name": null,
+    "use_cache": true,
+    "cache_key": [
+     "app.api.routes.identity.mint_person_id",
+     []
+    ],
+    "specials": {
+     "request": "request"
+    }
+   }
+  }
+ ],
+ "definitions": {}
+}

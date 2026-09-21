@@ -21,6 +21,9 @@ from __future__ import annotations
 
 import os
 
+# Fail-closed brain token: set before any import of create_app.
+os.environ.setdefault("MOBILE_INTERNAL_TOKEN", "test-brain-token")
+
 from app.api.auth_mode import AUTH_MODE_ENV_VAR, DEV
 
 os.environ.setdefault(AUTH_MODE_ENV_VAR, DEV)

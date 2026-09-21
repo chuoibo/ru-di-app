@@ -190,9 +190,35 @@ def _byte_serving_route_functions() -> dict[str, int]:
                     continue
                 if not isinstance(inner.func, ast.Name) or inner.func.id != "Response":
                     continue
-                if any(keyword.arg == "content" for keyword in inner.keywords):
-                    found[node.name] = inner.lineno
+                if not any(keyword.arg == "content" for keyword in inner.keywords):
+                    continue
+                if _is_idempotency_replay(inner):
+                    continue
+                found[node.name] = inner.lineno
     return found
+
+
+def _is_idempotency_replay(call: ast.Call) -> bool:
+    """A replayed answer is not bytes read off disk.
+
+    `replace_outing_itinerary` hands back `Response(content=replay.body)`: the
+    body THIS API produced earlier and the idempotency layer stored, returned
+    again for a repeated key. It never opens PhotoStorage, so the failure this
+    file exists for -- a row whose `byte_size` says one thing and whose file on
+    disk says another -- has no way to happen there.
+
+    Matched by the shape `content=<name>.body` rather than by route name: a
+    second replay route must be skipped for the same reason, and naming this
+    one would let the next arrive silently -- which is the exact failure the
+    assertion below guards against.
+    """
+
+    for keyword in call.keywords:
+        if keyword.arg != "content":
+            continue
+        value = keyword.value
+        return isinstance(value, ast.Attribute) and value.attr == "body"
+    return False
 
 
 @pytest.fixture

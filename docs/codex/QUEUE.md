@@ -4,6 +4,231 @@
 
 ---
 
+## MỚI 2026-09-18 — `APPROVE` vòng 2 + rebase lên chiến dịch
+
+Claude: [`docs/claude/2026-09-18/verdict-phan-con-lai-go.md`](../claude/2026-09-18/verdict-phan-con-lai-go.md) @ `aa556e43`, verdict `APPROVE`. Cây `/home/lakiet/wt-go-con-lai`, nhánh `go/p0-w-con-lai`, đã rebase `--merge` (3-way; git cũ không có `--3way`) lên `claude/p0-w-go0-nen-mong-cong-truoc`. **Không đụng** `claude/wip-go-*`. Không LIVE-GO. Không `gate.sh parity` (T5, người gộp).
+
+Hai điều kiện **không chặn gộp**:
+
+1. Tầng Postgres dùng ảnh ghim `mobile-parity-api:7bf58e3d`. Gặp đỏ thật thì dán nguyên văn lỗi — không đổi ảnh, không allowlist tag có hậu tố checksum. Bằng chứng B3 của record là lượt Claude trên ảnh ghim: `scripts/go_postgres_tier.sh --image mobile-parity-api:7bf58e3d -- -v ./...` → exit 0, 1753 PASS, 0 FAIL, 0 SKIP, sentinel có mặt, mọi oracle 0 sai khác (kể cả `create_memory: a place id without a name`). Migration `e1f2a3b4c5d6` **đã nằm trong ảnh ghim**; lời biện minh đổi ảnh vì thiếu migration đó là sai.
+2. Oracle WAI phải dày (có ca từ chối) trước khi 36 hàng rời `PORTED-UNPROVEN`. Đã làm trên ảnh ghim: 25 ca / 8 từ chối / 35 câu lệnh / 0 sai khác. Vẫn chưa đủ để lật nhãn — T5 parity trên SHA sạch sau rebase.
+
+Manifest 156 hàng, `owner: python` cả bảng: **108 PORTED / 43 PORTED-UNPROVEN / 0 PY / 5 DEFERRED**. Nhãn `PORTED-UNPROVEN` nằm trong `candidateStates`, nên `MOBILE_CORE_CANDIDATE_ROUTES=ported` vẫn phục vụ 43 hàng đó. Evidence: `docs/migration/ported-unproven-w7-wai.md`, `docs/migration/ported-unproven-w9-auth.md`. `GET /healthz` là PORTED-UNPROVEN, không DEFERRED — `docs/migration/deferred-framework.md`.
+
+Nửa routed của `POST /outings/{outing_id}/itinerary/preview` (`_route`, `schedule`, `suggest_order`, `savings`, `feasible`, `segments`, `late_fixed_stop`) có stub định tuyến (`3cff2c30`) trên cả hai stack. Khi thiếu `MOBILE_VALHALLA_URL` unit test vẫn `unavailable` — trung thành với nhánh nil-router.
+
+Thứ tự gộp: W9 domain `8ebc2334` · W9 repo `ca38f0e0` · stub `3cff2c30` đã trên chiến dịch; HTTP W9 trên nhánh này; cổng parity (T5) do người gộp.
+
+---
+
+## MỚI 2026-09-14 — Claude nhận chuyển lõi backend sang Go (ADR-0029)
+
+Lead duyệt: 138 route CORE + 3 MIXED sang Go từng router group, 9 route AI giữ bước model ở Python ("brain",
+không DB). Backend do Claude làm theo uỷ quyền ADR-0016/ADR-0029; charter không đổi.
+
+**Đang nhận:** W0 nền móng, nhánh `claude/p0-w-go0-nen-mong-cong-truoc` (commit local, chưa push). `services/core`
+là cửa trước Go: `dispatch` chỉ chạy trong Go request khớp FULL vào route manifest giao cho Go, còn lại proxy về
+Python. Manifest vẫn giao 0 route cho Go (owner `python` ở mọi hàng), nên compose và mọi host thật vẫn do Python
+trả lời. Route đã có mã Go (trạng thái `PORTED`) chỉ được Go phục vụ khi `MOBILE_CORE_CANDIDATE_ROUTES` nêu tên —
+stack candidate của `parity` và `scripts/e2e_slice.sh` đặt `ported`; compose để trống. Đã có trong Go, mỗi phần đo bằng
+golden hoặc oracle chạy chính thư viện Python trong ảnh đã ghim: router kiểu Starlette, JSON kiểu Python, CORS,
+auth dev/prod, lỗi 500 và header trang khách, unit of work pgx, Idempotency-Key (phát lại chéo hai chiều trên cùng
+bảng), bộ giới hạn nhịp trong bộ nhớ. `gate.sh parity` so hai stack cô lập ở cả chế độ dev lẫn prod.
+
+**Điều lane khác cần biết từ bây giờ:**
+- Thêm route hoặc biến môi trường mới trong `services/api` → thêm dòng vào manifest, không thì cổng `ownership` đỏ.
+- Hai khác biệt wire đã được Lead chấp nhận có tên (ADR-0029 §2.4): `MALFORMED-REQUEST-LINE` (dòng request hỏng mà
+  không client nào của sản phẩm gửi) và `RESPONSE-204-CONTENT-LENGTH` (204 phát lại qua idempotency đi qua cửa
+  trước không còn `content-length: 0`). Client không được dựa vào hai điều đó.
+- Khi một group bắt đầu ghi mốc parity, route của nó được liệt kê ngay dưới đây; sửa Python chạm tới route đó thì
+  phải chạy lại kịch bản parity của nó (ADR-0029 §2.9).
+- Group outings/hành trình (W7) cần thoả thuận đóng băng với lane Codex trước khi ghi mốc.
+
+Route đang đóng băng để ghi mốc (W1, route card và kịch bản `parity/scenarios/w1/`). Sửa Python chạm tới các route
+này thì chạy lại kịch bản của nó:
+- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap, đủ 9/9 route W1: `GET /interests`, `GET /areas`,
+  `POST /reports`, `PUT /people/me/interests`, `GET /contexts/{context_id}/recap`,
+  `GET /contexts/{context_id}/preference-profile`, `GET /contexts/{context_id}/heatmap`,
+  `POST /contexts/{context_id}/meet`, `GET /contexts/{context_id}/map`.
+- `map` đọc đồng ý đọc chat của sổ hai người (Go: `service.PairChatConsent`), nên sửa Python của pair notebook
+  (`_pair_chat_consent`, `pair_notebook.chat_consent_active`, các truy vấn sổ) cũng phải chạy lại kịch bản
+  `w1/social_map/get-map-pair`.
+- Replay chéo idempotency hai chiều đã có (`parity/scenarios/w1/crossreplay`, bước `via: python`) cho ba route W1
+  ghi được: meet, `PUT /people/me/interests`, `POST /reports`.
+- Làn đồng thời đã có (`parity/scenarios/w1/concurrency`, bước `concurrent: N`, reference chạy 3 lượt) cho cùng ba
+  route đó. Làn limiter không áp dụng
+  cho W1: không route W1 nào chạm limiter trong bộ nhớ (`routes/social_map.py`, `preferences.py`, `recap.py`,
+  `reports.py` không có dependency limiter).
+
+Sóng W2 bắt đầu ghi mốc, route đóng băng theo cùng luật: friends (5), `POST /identity/person-id`, stories (4), posts
+(9), votes (5) — 24 route, vẫn do Python phục vụ.
+- Corpus 422 sinh cho 18 route (`parity/scenarios/generated/w2-422`, gồm cả tham số query). 4 route hoãn
+  (`image_url` có pattern ở `POST /stories` và `POST /posts`, path Literal ở `DELETE .../reactions/{kind}`, validator
+  của `POST /contexts/{context_id}/votes`), lý do nằm trong bộ sinh và bộ sinh đỏ khi lý do hết đúng. `POST /friends/lookup` và `POST /identity/person-id` chỉ có kịch bản viết tay (thân tự
+  parse, limiter theo IP).
+- Repository Go của cả 24 route đã port, oracle SQLAlchemy 0 lệch. Domain đã port (friendship, blocking,
+  visibility, storyvisibility, postaudience, vote, cursors, identity, photoref; golden từ Python thật 0 lệch).
+- Route card (`docs/migration/routes/{friends,identity,posts,stories,votes}`) và kịch bản viết tay
+  (`parity/scenarios/w2`) đủ 24 route. Story có ảnh thật đã vào cổng ở `parity/scenarios/w2/stories-photo`
+  (harness bind `storage_key` thành `<hex32#n>`); tra số đã đăng ký và nhánh 429 chạy ở làn limiter
+  (`parity/scenarios/w2/limiter`, `lane: limiter`, cuối pha dev của cổng).
+- `PORTED`, Go đã trả lời 0 khác biệt trên cổng parity có tap: `GET /people/{person_id}/friend-requests`,
+  `GET /people/{person_id}/friends` (chỉ cần repository và `view_own_friends`, không cần domain friendship);
+  `POST /contexts/{context_id}/votes`, `GET /contexts/{context_id}/votes`, `GET /votes/{vote_id}`,
+  `POST /votes/{vote_id}/ballots`, `POST /votes/{vote_id}/close` (validator strip của phiếu giờ có bản production
+  trong `internal/pyval/ports.go`); `POST /friends/requests`, `POST /friends/requests/{request_id}/respond`;
+  `POST /stories`, `GET /stories`, `POST /stories/{story_id}/seen`, `DELETE /stories/{story_id}` (204 không thân
+  qua `endpoint.Reply.Empty`); chín route posts: `POST /posts`, `GET /posts`, `GET /people/{person_id}/posts`,
+  `GET /posts/{post_id}`, `POST /posts/{post_id}/reactions`, `DELETE /posts/{post_id}/reactions/{kind}`,
+  `GET /posts/{post_id}/comments`, `POST /posts/{post_id}/comments`,
+  `DELETE /posts/{post_id}/comments/{comment_id}`; `POST /identity/person-id` và `POST /friends/lookup`
+  (limiter theo địa chỉ của `core`, 429 so ở làn limiter). Cả 24 route W2 đã PORTED.
+
+Sóng W3 bắt đầu ghi mốc, route đóng băng theo cùng luật: contexts (8: `POST /contexts`, `PATCH /contexts/{context_id}`,
+`POST /contexts/{context_id}/members`, `POST /memberships/{membership_id}/accept`,
+`DELETE /contexts/{context_id}/members/{person_id}`, `GET /contexts/{context_id}/members`,
+`GET /contexts/{context_id}/balances`, `GET /contexts/{context_id}`) và memories (8: `POST` và `GET
+/contexts/{context_id}/memories`, `POST /contexts/{context_id}/checkins`, `GET /contexts/{context_id}/widget`, reaction
+thêm/bỏ và comment thêm/đọc của một memory) — 16 route, vẫn do Python phục vụ. `GET .../balances` đọc sổ và khoá hàng:
+ba luật tiền giữ nguyên, số dư tính lại từ sổ ở cả hai phía.
+- W2 đã có kịch bản replay chéo (`parity/scenarios/w2/crossreplay`, 15 tệp, hai tệp ở `lane: limiter`) và đồng thời
+  (`parity/scenarios/w2/concurrency`, 13 tệp).
+- W3: domain, repository và cả 16 route PORTED, Go đã trả lời 0 khác biệt trên cổng parity có tap. Route card ở
+  `docs/migration/routes/{contexts,memories}`, kịch bản ở `parity/scenarios/w3`, corpus 422 ở
+  `parity/scenarios/generated/w3-422`. Harness bind cursor base64url thành `<b64u:…>`. Lỗi Python đã báo nằm trong
+  commit message của kịch bản W3.
+- Tiền: số tiền lưu và nhận vào là int64; tổng dẫn xuất (tổng cặp, số dư, số tiền chuyển) giữ đúng từng chữ số, vì
+  `POST /obligations/{obligation_id}/confirm-receipt` không có trần số tiền và hai biên nhận ở trần int64 đã vượt
+  int64 mà Python vẫn trả 200. Route nghĩa vụ W4 cần cùng cách; luật moneylint dự kiến («mọi `*_vnd` là
+  `money.VND`») cần ngoại lệ cho các tổng này.
+
+Sóng W4 (tiền) bắt đầu ghi mốc, route đóng băng theo cùng luật: expenses (2: `POST /expenses`,
+`POST /expenses/{expense_id}/confirm`), bills (5: `POST /bills`, `GET /bills/{bill_id}`,
+`PUT /bills/{bill_id}/assignments`, `POST /bills/{bill_id}/my-items`, `POST /bills/{bill_id}/split`), budget (1:
+`GET /contexts/{context_id}/budget`), batches (4: `POST /batches`, `POST /batches/{batch_id}/publish`,
+`GET /batches/{batch_id}/obligations`, `GET /contexts/{context_id}/batches`), obligations (1:
+`POST /obligations/{obligation_id}/confirm-receipt`), finance (1: `GET /people/{person_id}/finance`) — 14 route, vẫn
+do Python phục vụ. Ba luật tiền giữ nguyên: golden vector allocator và tất toán đọc tại chỗ, fuzz vi sai gồm cả mã
+lỗi, tổng dẫn xuất đúng từng chữ số (ADR-0029 §2.5).
+
+Sóng W4 (tiền) PORTED: 14 route do Go phục vụ làm candidate — bill 5 (`405d0204`), đợt thu 4 (`919b19d8`),
+khoản chi 2 + confirm-receipt + tài chính + ngân sách (`282c994c`), cùng `ae15bd7c` (pyval từ chối như `int()` quá
+4300 chữ số). Cổng parity trên cây cuối: dev 183 kịch bản/5978 bước, limiter 5/119, prod 16/350, 0 khác biệt; 63/156
+route PORTED. Số tiền request không trần mà Python so sánh hoặc in lại được đọc chính xác (ADR-0029 §2.5).
+
+Sóng W5 (trang khách) bắt đầu ghi mốc, route đóng băng theo cùng luật: guests (7: `GET /g/{token}`,
+`POST /g/{token}/da-chuyen`, `GET /g/{token}/khong-phai-toi`, `POST /g/{token}/khong-phai-toi`,
+`GET /g/{token}/doi-so-tien`, `POST /g/{token}/doi-so-tien`, `POST /g/{token}/xin-cach-tinh`), cùng
+`app/web/templates/guest*.html`, `app/web/guest_view.py`, `app/web/objection_view.py`, `app/api/guest_privacy.py`.
+HTML so từng byte; thân form (`Form()`) cần pyval hỗ trợ trước. `/static` (mount của Starlette, ETag và
+Last-Modified theo mtime của tệp) vẫn do Python phục vụ, quyết riêng sau W5.
+
+Sóng W6 (ảnh) bắt đầu ghi mốc, route đóng băng theo cùng luật: photos (6: `POST /contexts/{context_id}/photos`,
+`GET /contexts/{context_id}/photos/{photo_id}`, `POST /people/{person_id}/avatar`, `GET /people/{person_id}/avatar`,
+`POST /people/me/photos`, `GET /people/{person_id}/photos/{photo_id}`), cùng `app/media/images.py` và
+`app/media/storage.py`. Phát hiện trước khi port: `UploadedImageResponse.byte_size` và cột
+`uploaded_images.byte_size` là độ dài ảnh sau khi Pillow nén lại, nên parity cảm nhận của ADR-0029 §2.8 (JPEG lệch
+byte nhưng SSIM ≥ 0,98) không giữ được thân JSON bằng nhau như chính mục đó đòi. Đang đo khả năng nén lại giống từng
+byte bằng Go thuần (port đường mã hoá libjpeg-turbo/zlib mà Pillow trong image ghim dùng); nếu không khả thi cho một
+định dạng, quyết định về byte_size quay lại Lead cùng số đo.
+
+Sóng W8 (sổ đôi) bắt đầu ghi mốc, route đóng băng theo cùng luật: pair_notebooks (8: `GET /contexts/{context_id}/notebook`,
+`POST …/notebook/proposals`, `POST …/notebook/proposals/{proposal_id}/grant`, `DELETE …/notebook/consents/{purpose}`,
+`PUT` và `DELETE …/notebook/constraints/{kind}`, `POST …/notebook/close/preview`, `POST …/notebook/close`), pair_papers
+(11: `GET /contexts/{context_id}/papers`, `POST /contexts/{context_id}/papers/draft`, `GET /papers/{paper_id}`,
+`PATCH /papers/{paper_id}/draft`, `POST /papers/{paper_id}/send`, `POST …/versions/{version}/viewed`,
+`POST …/versions/{version}/responses`, `POST /papers/{paper_id}/withdraw`, `/skip`, `/done`, `/keeps`), cùng
+`app/domain/pair_notebook.py` và `app/domain/pair_paper.py`. W7 (outings) chờ thoả thuận đóng băng với lane Codex.
+
+Sóng W5 (trang khách) PORTED: 7 route /g/{token} do Go phục vụ làm candidate — repository khách (`11b284a2`), view
+và template khớp Jinja từng byte (`87bc1e76`), thẻ và kịch bản (`c5ba2bc4`), thân Form()/File() trong pyval
+(`92557cdf`), hạ tầng trả HTML/303 thô và trang link hỏng (`4116ce20`), route (`dbe439b2`). Cổng parity trên cây có 70 route Go:
+dev 208 kịch bản/6858 bước, limiter 5/119, prod 18/404, 0 khác biệt; 70/156 route PORTED.
+
+Sóng W10 (people) bắt đầu ghi mốc, route đóng băng theo cùng luật: people (13: `GET /people/me/contexts`,
+`GET` và `PATCH /people/me`, `GET /people/me/saved-places`, `PUT` và `DELETE /people/me/saved-places/{place_id}`,
+`GET /people/me/blocked`, `DELETE /people/me`, `POST` và `DELETE /people/{person_id}/block`,
+`POST /people/{person_id}/dm`, `GET` và `PUT /people/{person_id}`), cùng `app/domain/account_lifecycle.py`,
+`app/domain/direct.py` và `erase_person` của repository. `DELETE /people/me` chạm mọi bảng và kho ảnh.
+
+Sóng W6 (ảnh) PORTED: 6 route ảnh do Go phục vụ làm candidate — repository và lưu trữ file (`5ec6a26e`), harness
+body_parts sinh ảnh (`890eb483`), thẻ và kịch bản (`9684165d`), bộ làm sạch ảnh Go thuần giống từng byte với Pillow
+(`842cde9a`), kho ảnh dùng chung giữa core và Python trong stack parity (`721bddb7`), route (`a46a23cc`). Cổng parity
+trên cây có 76 route Go: dev 208 kịch bản/6858 bước, limiter 5/119, prod 18/404, 0 khác biệt (làn limiter chạy lại
+sau một INFRA do máy tải nặng); 76/156 route PORTED. Còn mở: định dạng ảnh Go chưa giải được trả 415 (chờ Lead, mục
+Chờ Lead), file mồ côi sau insert lỗi chưa lộ trên wire (đang thêm làn so kho ảnh).
+
+Sóng W8 (sổ đôi) PORTED: 19 route pair_notebooks 8 và pair_papers 11 do Go phục vụ làm candidate — domain
+`pairpaper` và `pairsteps` (`431c269b`), repository (`01118ec7`), thẻ và kịch bản (`9bb14983`), hai validator
+strip-rỗng vào pyval sản xuất (`0b7bf1a8`), route và bộ chuyển repository (`bd9e8a71`). Cổng parity trên cây có
+95 route Go: pha dev 309 kịch bản/9467 bước 0 khác biệt, 7489 bước do core trả lời, unserved=0; làn limiter 5/119 và pha prod 21/546 chạy lại ngoài cổng sau một INFRA do tải máy, đều 0 khác biệt; canary identity equal và probe 22 ca/11 ngoại lệ đã ghi; 95/156 route PORTED. Còn mở: chưa kịch bản nào phủ lần xem ĐẦU TIÊN một phiên bản không phải phiên bản hiện
+hành; bốn hành vi Python trông như lỗi đã ghi trong thẻ, ghi nhận chứ không sửa trong port — bản nháp chưa gửi của
+người kia hiện ra trong danh sách khi tuần đã trôi qua, xin tờ mới trả 409 nên lộ rằng nháp riêng đó tồn tại, id
+không có thật trả `paper_not_found` còn tờ của cặp khác trả `notebook_not_found` nên phân biệt được tồn tại, và vài
+`RepositoryConflict` không dịch thành 500.
+
+Lane Codex đóng (leader, 16/09) — ADR-0030: Claude sở hữu toàn bộ backend; `outings` không còn chờ thoả thuận
+đóng băng; không còn review chéo nên cổng của mỗi route là cổng parity chạy lại trong cây sạch tại đúng SHA, canary,
+probe và ít nhất hai đột biến do người gộp tự nghĩ; AGY-PASS gỡ khỏi thang trạng thái của ADR-0029.
+
+Sóng W7 (outings) đóng băng để ghi mốc, 11 route: `POST /outings/{outing_id}/itinerary/preview`,
+`PUT /outings/{outing_id}/itinerary`, `POST` và `GET /contexts/{context_id}/outings`,
+`PUT /outings/{outing_id}/timeline`, `POST /outing-stops/{stop_id}/checkins`, `GET /outings/{outing_id}/checkins`,
+`POST /outings/{outing_id}/invites`, `POST …/invites/{invite_id}/revoke`, `POST …/invites/{invite_id}/rotate`,
+`POST /outing-invites/{token}/accept`; cùng `app/domain/journey.py` và đường gọi Valhalla của preview.
+
+Sóng W10 (people) PORTED: 13 route do Go phục vụ làm candidate — domain (`ae8870e5`), thẻ và kịch bản (`f4daa5ee`),
+repository và xoá tài khoản (`a3ded0bf`), route (`6ce5c6be`). Cổng parity trên cây có 108 route Go: pha dev 309 kịch bản/9467 bước 0 khác biệt, 8959 bước do core trả lời, unserved=0, làn DB và làn kho ảnh
+đều bật; làn limiter 5/119 và pha prod 21/546 chạy lại ngoài cổng sau một INFRA do tải máy, đều 0 khác biệt;
+canary identity equal và probe 22 ca/11 ngoại lệ đã ghi. 108/156 route PORTED.
+Chi phí phải sửa: cổng này chạy 22.338 s so với 4.474 s của W8, vì làn kho ảnh băm lại toàn bộ kho sau mỗi
+bước — phải chuyển sang chỉ băm tệp đã đổi trước khi sóng sau chạy cổng.
+
+Ba chỗ hỏng của harness lộ ra trong sóng này, ghi để không quên:
+1. **Hạng `<ts#N>` trượt cả loạt.** Bộ chuẩn hoá xếp hạng mốc thời gian theo thứ tự đã quan sát trong từng kịch bản,
+   nên khi dữ liệu nền của hai stack rơi vào số lượng giá trị microsecond khác nhau thì mọi hạng sau đó lệch đều —
+   agent đo được 310 khác biệt ở đúng hai kịch bản, toàn bộ là lệch hạng 3, và chạy lại trên cặp stack sạch thì 0.
+   Nguy hiểm hai chiều: vừa đỏ giả, vừa có thể giấu một khác biệt thật trong đám nhiễu đó.
+2. **Một bind hỏng giết cả lượt chạy.** Đột biến biến 201 thành từ chối làm `bind … no key "id"` thành INFRA (exit 2),
+   và mọi kịch bản sau đó **không chạy** — nhưng lượt chạy vẫn kết thúc như thể đã phủ hết. Nên với lượt đột biến phải
+   chia danh sách kịch bản hoặc chạy lại phần còn thiếu, không được đọc «không thấy khác biệt» là đã phủ.
+3. **`free_port` trong parity_stacks.sh đụng cổng.** Một lần `up` cấp cùng cổng 44787 cho Postgres và API nên API
+   không bao giờ trả /healthz, `up` thoát 1 và bỏ lại một container.
+
+Bàn giao chiến dịch Go: `docs/claude/2026-09-16/ban-giao-chien-dich-go.md` — trạng thái 108/156, định nghĩa cổng,
+ba agent đang dở, thứ tự việc kế tiếp (stub định tuyến CHẶN sóng W7), công thức kiểm của người gộp, giao thức
+agy review trong ràng buộc ADR-0010 §6.4, và danh sách cái này KHÔNG chứng minh.
+
+Review nhánh `go/p0-w-con-lai` (17/09): verdict **REQUEST_CHANGES** —
+`docs/claude/2026-09-17/review-phan-con-lai-go.md`. Chấp nhận hai chỗ lệch (brain sau BrainDoor — bàn giao của tôi
+sai chỗ này; và port HTTP W7 khi chưa có stub, vì Python cũng trả `unavailable`). Ba blocker: nhãn `PORTED` hứa
+nhiều hơn bằng chứng ở 36 hàng mới; 10/11 package domain WAI có 0 tệp test và không golden cùng-hàm-Python;
+tầng repository mới chưa chạm Postgres thật. Chia việc còn lại: `docs/claude/2026-09-17/viec-con-lai-va-chia-viec.md`.
+
+**Quyết định (Claude, theo ADR-0030 — lane Codex đóng, không còn mục nào chờ Lead):**
+1. **agy** — AGY-PASS gỡ khỏi thang trạng thái ADR-0029. Cổng là cổng parity chạy lại trong cây sạch tại đúng SHA,
+   canary, probe, cộng ít nhất hai đột biến do người gộp tự nghĩ và đã kiểm tương đương. Bật lại agy thì mở ADR mới.
+2. **Docker subnet** — giữ host network cho harness vì nó đã chạy đúng suốt 95 route; dọn network rác để dành cho lúc
+   máy rảnh, không dọn khi còn agent đang chạy. Đây là việc bảo trì, không phải blocker.
+3. **Host chứa «/»** — gộp vào lớp ngoại lệ đã ghi MALFORMED-REQUEST-LINE. Lý do: net/http từ chối ngay ở dòng yêu cầu,
+   trước routing; không client nào của ta (app mobile, trình duyệt của khách) dựng được Host như vậy; tự viết bộ phân
+   tích dòng yêu cầu đặt trước net/http là chi phí thật mà không đổi lấy gì người dùng thấy được; và chính Python cũng
+   tự mâu thuẫn ở chỗ này. Bằng chứng: probe raw-socket 22 ca, 11 ca khác, cả 11 nằm trong danh sách ngoại lệ.
+4. **Định dạng ảnh — KHÔNG chốt theo hướng dễ.** Đã đo trong ảnh ghim: Pillow 12.2.0 mở được 40 định dạng, trong đó
+   `avif`, `jpg_2000`, `libtiff`, `webp` đều bật (`heif` tắt, nên HEIC hai bên cùng từ chối). Vậy Python **nhận thật**
+   một ảnh AVIF và trả 201, còn Go trả 415 — đó là đổi hành vi người dùng thấy được, mà luật chiến dịch cấm đổi ngữ
+   nghĩa bên trong một port. Quyết định:
+   - **không route ảnh nào được chuyển sang LIVE-GO khi Go còn trả 415 ở chỗ Python trả 201**;
+   - trước lúc cắt, Go phải hoặc giải được định dạng đó, hoặc chuyển đúng request đó cho Python qua cổng trước, kèm
+     bộ đếm để thấy nó bắn bao nhiêu lần;
+   - port trước các codec rẻ và có thật ngoài đời (TIFF qua x/image, ICO/CUR); AVIF và JPEG2000 đo nhu cầu trước khi
+     bỏ công vì chúng là bộ giải lớn;
+   - **harness phải sinh ít nhất một AVIF và một TIFF.** Đây mới là chỗ hỏng thật: corpus hiện sinh đúng những định
+     dạng Go đã hỗ trợ (JPEG, PNG, GIF, WebP, BMP, PNM), nên cổng không có cửa nào bắt được lỗ này — xanh ở đây không
+     nói gì về 34 định dạng còn lại.
+
+---
+
 ## 0. MỚI 2026-09-03 — ba việc từ nhánh `claude/p0-w-rudi-du-lieu-that`
 
 ### 0a. ĐÃ XONG — phiên đăng nhập ship ở #514. Còn một mảnh: nhóm nào?

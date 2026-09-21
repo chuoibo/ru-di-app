@@ -1,0 +1,114 @@
+# W1 cross replay · PUT /people/me/interests, a route that writes rows. The key
+# row, the stored response and the person_interests rows one implementation
+# wrote must be what the other replays over, in both directions.
+id: w1/crossreplay/put-interests
+routes: ['PUT /people/me/interests']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chọn khẩu vị (dữ liệu mẫu)"}'
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe","outdoor"],"budget_band":"tiet-kiem"}'
+  - id: core_replays_python_key_reordered
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"budget_band": "tiet-kiem", "interests": ["cafe", "outdoor"]}'
+  - id: core_refuses_python_key_other_body
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-a'
+        content-type: 'application/json'
+      body_raw: '{"interests":["outdoor","cafe"],"budget_band":"tiet-kiem"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-b'
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-b'
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife","an-uong"],"budget_band":"thoai-mai"}'
+  - id: python_refuses_core_key_other_body
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-b'
+        content-type: 'application/json'
+      body_raw: '{"interests":["nightlife"],"budget_band":null}'
+  # a refused write (unknown tag) releases the key on both sides
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-c'
+        content-type: 'application/json'
+      body_raw: '{"interests":["khong-co-the-nay"],"budget_band":null}'
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-c'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":null}'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/interests'
+      headers:
+        idempotency-key: 'x-interests-c'
+        content-type: 'application/json'
+      body_raw: '{"interests":["cafe"],"budget_band":null}'

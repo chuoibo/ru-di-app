@@ -1,0 +1,300 @@
+# W8 pair notebooks in prod auth mode (ADR-0014). The actor comes from the bearer
+# session and every session carries member, so X-Actor-ID and X-Actor-Roles change
+# nothing; a missing or junk bearer is 401 before the purpose, the kind or the pair is
+# looked at. The idempotency scope is the digest of the bearer: the same key under
+# another session runs again, and a refused request frees the key. Texts are sample data.
+id: w8/pair_notebooks/prod-auth
+routes: ['GET /contexts/{context_id}/notebook', 'POST /contexts/{context_id}/notebook/proposals', 'POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant', 'DELETE /contexts/{context_id}/notebook/consents/{purpose}', 'PUT /contexts/{context_id}/notebook/constraints/{kind}', 'DELETE /contexts/{context_id}/notebook/constraints/{kind}', 'POST /contexts/{context_id}/notebook/close/preview', 'POST /contexts/{context_id}/notebook/close']
+auth_mode: prod
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_reads
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook'
+  - id: anonymous_unknown_purpose
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/consents/khong_co'
+  - id: junk_bearer_proposes
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/proposals'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: dev_headers_without_bearer
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+        x-actor-roles: 'member'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: stranger_reads_claiming_owner
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+      headers:
+        x-actor-id: '{{persona.owner}}'
+  - id: owner_proposes_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        idempotency-key: 'w8-prod-de-nghi'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        idempotency-key: 'w8-prod-de-nghi'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: mate_same_key_own_session
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        idempotency-key: 'w8-prod-de-nghi'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: anonymous_with_owner_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        idempotency-key: 'w8-prod-de-nghi'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: junk_bearer_with_owner_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        idempotency-key: 'w8-prod-de-nghi'
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+  - id: stranger_grants
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_grants_own_offer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: mate_grants
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_reads_with_guest_roles_header
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+      headers:
+        x-actor-roles: 'guest'
+  - id: junk_bearer_grants
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: owner_puts_with_advancer_header
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        x-actor-roles: 'advancer'
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng hẹn sớm (dữ liệu mẫu)"}'
+  - id: mate_puts
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Không ăn cay (dữ liệu mẫu)"}'
+  - id: junk_bearer_puts
+    as: anonymous
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng (dữ liệu mẫu)"}'
+  - id: anonymous_puts_unknown_kind
+    as: anonymous
+    request:
+      method: PUT
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/constraints/so_thich'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Cà phê (dữ liệu mẫu)"}'
+  - id: stranger_puts
+    as: stranger
+    request:
+      method: PUT
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"content":"Đừng (dữ liệu mẫu)"}'
+  - id: mate_deletes
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/khong_an_duoc'
+  - id: junk_bearer_deletes_constraint
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/constraints/dung'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: owner_proposes_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      doc_chat: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_doc_chat
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{doc_chat}}/grant'
+  - id: owner_revokes_doc_chat
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: stranger_revokes
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+  - id: junk_bearer_revokes
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/doc_chat'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: mate_reads_open
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: stranger_previews
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+  - id: junk_bearer_previews
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+  - id: owner_previews
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: stranger_closes
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  - id: junk_bearer_closes
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        authorization: 'Bearer khong-phai-token-that'
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'

@@ -1,0 +1,306 @@
+# W1 · GET /contexts/{id}/preference-profile — tastes from check-ins, spend from the ledger.
+# Covers the empty profile, the six-taste cap with taste_count past it, scores 1.0 / 0.67 /
+# 0.5 / 0.33, trips that overlap (the same expense counted by two trips), a future trip
+# left out, and floor-divided avg_per_person_vnd.
+id: w1/preferences/get-preference-profile
+routes: ['GET /contexts/{context_id}/preference-profile']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/preference-profile'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/preference-profile'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/preference-profile'
+  # an unknown group is the same 403 is_group_member as a real one, never 404
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/preference-profile'
+  - id: stranger_uppercase_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/preference-profile'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/preference-profile'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/preference-profile'
+  - id: stranger_urn_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/preference-profile'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/preference-profile'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm hồ sơ khẩu vị (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_profile
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+      headers:
+        x-actor-roles: ''
+  - id: owner_roles_group_admin_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: owner_bad_contexts_header
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+      headers:
+        x-actor-contexts: 'khong-phai-uuid'
+  - id: stranger_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: stranger_claims_group_in_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+        x-actor-roles: 'member,group_admin'
+  - id: mate_invited_not_yet_active
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  # MemoryResponse.cursor is base64(created_at|id), opaque to the normaliser; binding it as a token replaces it with a named placeholder on both stacks
+  - id: checkin_bbq_lao
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-tiem-nuong-xom-lao"}'
+    bind:
+      cursor_checkin_bbq_lao: {from: body, pointer: /cursor, class: token}
+  - id: checkin_bbq_outdoor
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-nuong-ngoi-troi-thong"}'
+    bind:
+      cursor_checkin_bbq_outdoor: {from: body, pointer: /cursor, class: token}
+  - id: owner_profile_food_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: checkin_cafe_view
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+    bind:
+      cursor_checkin_cafe_view: {from: body, pointer: /cursor, class: token}
+  - id: checkin_cafe_vintage
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-an-cafe-da-lat"}'
+    bind:
+      cursor_checkin_cafe_vintage: {from: body, pointer: /cursor, class: token}
+  - id: checkin_cafe_old
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-ca-phe-vot-hem"}'
+    bind:
+      cursor_checkin_cafe_old: {from: body, pointer: /cursor, class: token}
+  - id: checkin_rooftop_bar
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-chill-dem-da-lat"}'
+    bind:
+      cursor_checkin_rooftop_bar: {from: body, pointer: /cursor, class: token}
+  - id: checkin_rooftop_music
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-the-hill-rooftop"}'
+    bind:
+      cursor_checkin_rooftop_music: {from: body, pointer: /cursor, class: token}
+  - id: checkin_park
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-dreampark"}'
+    bind:
+      cursor_checkin_park: {from: body, pointer: /cursor, class: token}
+  - id: outing_finished
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt tháng giêng","starts_on":"2020-01-01","ends_on":"2020-01-03","headcount":3,"budget_per_person_vnd":0}'
+  - id: outing_in_progress
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến dài chưa về","starts_on":"2020-01-02","ends_on":"2099-12-31","headcount":4,"budget_per_person_vnd":0}'
+  - id: outing_future
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến chưa bắt đầu","starts_on":"2099-06-01","ends_on":"2099-06-02","headcount":2,"budget_per_person_vnd":0}'
+  - id: propose_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: owner_profile_full
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: mate_profile_full
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile/'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a membership row with left_at set is not membership
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/preference-profile'

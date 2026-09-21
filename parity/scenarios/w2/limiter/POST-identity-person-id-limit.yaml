@@ -1,0 +1,259 @@
+# W2 limiter lane · POST /identity/person-id against person_id_limit (20 per
+# source address per 60 s, in memory, FixedWindowLimit in routes/identity.py).
+# `parity run --lane limiter` starts this file in a fresh window on each side,
+# so the 21st request that reaches the handler is refused on both; a port that
+# counts 19 or 21, spends after parsing the body, or shares the lookup limiter
+# moves the 429 and differs.
+#
+# Sample numbers (dữ liệu mẫu), split by JSON \t escapes so no digit run reaches
+# the repo.
+id: w2/limiter/post-identity-person-id-limit
+routes: ['POST /identity/person-id', 'POST /friends/lookup']
+auth_mode: dev
+lane: limiter
+personas:
+  caller: {}
+steps:
+  # spends 0: the idempotency middleware refuses before routing
+  - id: empty_idempotency_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 0: the router answers
+  - id: get_is_405
+    as: anonymous
+    request:
+      method: GET
+      path: '/identity/person-id'
+  # spends 0: the router answers
+  - id: trailing_slash_is_307
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 1 (1 of 20): stored, replayed after the limit
+  - id: mint_with_key
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'lane-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 1 (2 of 20): refused requests spend too: invalid_body
+  - id: spend_02_not_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # spends 1 (3 of 20): phone_required
+  - id: spend_03_phone_as_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":7}'
+  # spends 1 (4 of 20): phone_not_mobile
+  - id: spend_04_landline
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"02\t99\t00\t00\t01"}'
+  # spends 1 (5 of 20): json.loads keeps the last value: 200
+  - id: spend_05_duplicate_key_last_wins
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":7,"phone":"03\t99\t00\t00\t01"}'
+  # spends 1 (6 of 20): phone_required
+  - id: spend_06_duplicate_key_last_is_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01","phone":7}'
+  # spends 1 (7 of 20): json.loads accepts NaN: phone_required
+  - id: spend_07_nan_phone
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":NaN}'
+  # spends 1 (8 of 20): json.loads reads inf: phone_required
+  - id: spend_08_infinite_number
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":1e999}'
+  # spends 1 (9 of 20): a UTF-8 byte order mark is decoded away: 200
+  - id: spend_09_bom_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: "\ufeff{\"phone\":\"03\\t99\\t00\\t00\\t01\"}"
+  # spends 1 (10 of 20): request.json() ignores Content-Type: 200
+  - id: spend_10_text_plain_content_type
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 1 (11 of 20): separators and +84: 200
+  - id: spend_11_mint_other_spelling
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"+84\t(399)\t00.00-02"}'
+  # spends 1 (12 of 20): 0 comes off once, the rest is too long: phone_not_mobile
+  - id: spend_12_prefix_084
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"084\t399\t00\t00\t02"}'
+  # spends 1 (13 of 20): an empty body is invalid_body
+  - id: spend_13_empty_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: ''
+  # spends 1 (14 of 20): whitespace alone is invalid_body
+  - id: spend_14_whitespace_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: ' '
+  # spends 1 (15 of 20): not an object: phone_required
+  - id: spend_15_top_level_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '"03\t99\t00\t00\t01"'
+  # spends 1 (16 of 20): phone_required
+  - id: spend_16_nested_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":{"phone":"x"}}'
+  # spends 1 (17 of 20): phone_required
+  - id: spend_17_bool_phone
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":true}'
+  # spends 1 (18 of 20): phone_not_mobile
+  - id: spend_18_empty_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":""}'
+  # spends 1 (19 of 20): 200
+  - id: spend_19_mint_again
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # spends 1 (20 of 20): invalid_body
+  - id: spend_20_truncated_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":'
+  # 21st: 429 rate_limited
+  - id: over_limit_mint
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # the limiter runs before the body is parsed
+  - id: over_limit_not_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        content-type: 'application/json'
+      body_raw: 'nope'
+  # a stored answer is replayed by the middleware; the handler and its limiter never run
+  - id: over_limit_key_replay
+    as: caller
+    request:
+      method: POST
+      path: '/identity/person-id'
+      headers:
+        idempotency-key: 'lane-person-id-a'
+        content-type: 'application/json'
+      body_raw: '{"phone":"03\t99\t00\t00\t01"}'
+  # friend_lookup_limit is separate: 404 person_not_found, not 429
+  - id: lookup_has_its_own_limiter
+    as: caller
+    request:
+      method: POST
+      path: '/friends/lookup'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"phone":"09\t77\t00\t00\t09"}'

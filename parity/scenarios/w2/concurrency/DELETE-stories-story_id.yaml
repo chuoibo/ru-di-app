@@ -1,0 +1,67 @@
+# W2 concurrency · DELETE /stories/{id}. Copies are released together. Under one
+# key the burst deletes once and the other copies replay the 204 (through core
+# without content-length, ADR-0029 §2.4 RESPONSE-204-CONTENT-LENGTH).
+# Deleting one story twice at once without a key is not here, for the reason in
+# DELETE-posts-post_id-comments-comment_id.yaml: no row lock on either side, so
+# 204 or 404 for the second copy is scheduling. Texts and the 1x1 PPM photo are
+# sample data (dữ liệu mẫu).
+id: w2/concurrency/delete-stories-story_id
+routes: ['DELETE /stories/{story_id}']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả gỡ story cùng lúc (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_one
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"một"}'
+    bind:
+      story_one: {from: body, pointer: /id, class: uuid}
+  - id: author_creates_story_two
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"hai"}'
+    bind:
+      story_two: {from: body, pointer: /id, class: uuid}
+  - id: same_key_burst
+    as: author
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/stories/{{story_one}}'
+      headers:
+        idempotency-key: 'c-unstory-same'
+  - id: same_key_other_story_burst
+    as: author
+    concurrent: 2
+    request:
+      method: DELETE
+      path: '/stories/{{story_two}}'
+      headers:
+        idempotency-key: 'c-unstory-same'

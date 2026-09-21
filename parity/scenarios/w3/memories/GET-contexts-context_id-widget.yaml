@@ -1,0 +1,293 @@
+# W3 · GET /contexts/{id}/widget — the newest photograph of one group, or null.
+# Order: actor, path, role + ACTIVE membership (403 for unknown, empty and full
+# groups alike). Check-ins never blank it; the author's name is read now.
+id: w3/memories/get-contexts-context_id-widget
+routes: ['GET /contexts/{context_id}/widget']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/widget'
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/widget'
+  - id: actor_id_not_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/widget'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/widget'
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/widget'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_creates_empty_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chưa có ảnh (dữ liệu mẫu)"}'
+    bind:
+      ctx_empty: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_group_widget
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/widget'
+  - id: stranger_empty_group_widget
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/widget'
+  - id: mate_checks_in
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+  - id: owner_widget_only_checkins
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: leaver_posts_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":"Ảnh của người sẽ rời (dữ liệu mẫu)"}'
+  - id: mate_widget_first_photo
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: owner_checks_in_later
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-lung-chung-cafe"}'
+  - id: mate_widget_after_newer_checkin
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: owner_posts_photo_no_caption
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","place_id":"p-lung-chung-cafe"}'
+  - id: mate_widget_newest_photo
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: stranger_real_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: stranger_claims_context_header
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+      headers:
+        x-actor-contexts: '{{ctx}}'
+  - id: invitee_widget
+    as: invitee
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+      headers:
+        x-actor-roles: ''
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+      headers:
+        x-actor-roles: 'group_admin'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  - id: leaver_widget_after_leaving
+    as: leaver
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: mate_posts_newest_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa","caption":"Ảnh mới nhất (dữ liệu mẫu)"}'
+  - id: mate_renames_self
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm đổi tên (dữ liệu mẫu)"}'
+  - id: owner_widget_reads_name_now
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: mate_deletes_account
+    as: mate
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_widget_after_author_deleted
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget'
+  - id: undeclared_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget?kind=checkin'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/widget/'
+  - id: post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/widget'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

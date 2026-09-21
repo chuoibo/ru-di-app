@@ -1,0 +1,148 @@
+# W2 cross replay · POST /stories (201, one stories row). A story written through
+# one implementation with a key is replayed, not written twice, by the other;
+# another caption under the key is refused by the other; a 404 or 403 is not
+# stored by either side. The upload writes uploaded_images.storage_key, compared
+# as <hex32#n> by the database lane. Texts and the 1x1 PPM photo are sample data
+# (dữ liệu mẫu).
+id: w2/crossreplay/post-stories
+routes: ['POST /stories']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tác giả story chéo (dữ liệu mẫu)"}'
+  - id: upload_photo
+    as: author
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_raw: "--parityboundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"mau.ppm\"\r\nContent-Type: image/x-portable-pixmap\r\n\r\nP3\n1 1\n255\n200 120 40\n\r\n--parityboundary--\r\n"
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Hoàng hôn <b>&\"chéo\"</b> (dữ liệu mẫu)"}'
+  - id: core_replays_python_key
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Hoàng hôn <b>&\"chéo\"</b> (dữ liệu mẫu)"}'
+  - id: core_replays_python_key_reordered
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-a'
+        content-type: 'application/json'
+      body_raw: '{ "caption" : "Hoàng hôn <b>&\"chéo\"</b> (dữ liệu mẫu)", "image_url" : "/people/{{persona.author}}/photos/{{photo}}" }'
+  - id: core_refuses_python_key_other_caption
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-a'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Hoàng hôn khác (dữ liệu mẫu)"}'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo hai (dữ liệu mẫu)"}'
+  - id: python_replays_core_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo hai (dữ liệu mẫu)"}'
+  - id: python_refuses_core_key_other_caption
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-b'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}"}'
+  # a 404 (no such photo) is not stored: the real photo then writes on the other side
+  - id: python_refusal_releases_key
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff","caption":"Story chéo ba (dữ liệu mẫu)"}'
+  - id: core_uses_key_python_released
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-c'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo ba (dữ liệu mẫu)"}'
+  # a 403 (no role) is not stored: the same request then writes on the other side
+  - id: core_refusal_releases_key
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-d'
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo bốn (dữ liệu mẫu)"}'
+  - id: python_uses_key_core_released
+    as: author
+    via: python
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-d'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo bốn (dữ liệu mẫu)"}'
+  - id: core_replays_what_python_stored_after_release
+    as: author
+    request:
+      method: POST
+      path: '/stories'
+      headers:
+        idempotency-key: 'x-story-d'
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/people/{{persona.author}}/photos/{{photo}}","caption":"Story chéo bốn (dữ liệu mẫu)"}'

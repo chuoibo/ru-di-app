@@ -233,6 +233,61 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="7d692291339c065c",
         why="",
     ),
+    # --- test.yml: parity (ADR-0029) --------------------------------------
+    "test.yml::parity::Harness unit tests": Covered(
+        kind=GATE_KIND,
+        stages=("parity",),
+        body_sha="a8496b1836c1e6e4",
+        why="",
+    ),
+    # 2026-09-21: bước này từng chạy MỌI phase của cả hai chế độ auth trong một
+    # job dưới `timeout-minutes: 40`, và cần ~85 phút nên chưa một lần chạy tới
+    # cuối. Giờ nó là một ma trận bốn phase chạy song song, mỗi phase một cặp
+    # stack riêng. Chặng `parity` của scripts/gate.sh vẫn chạy đủ cả bốn, tuần
+    # tự, nên ánh xạ stages không đổi — CI chia việc, cổng ở máy thì không.
+    "test.yml::parity::One pair of stacks, then this phase": Covered(
+        kind=GATE_KIND,
+        stages=("parity",),
+        body_sha="25d40577ddf1c71a",
+        why="",
+    ),
+    # --- test.yml: core (ADR-0029) ----------------------------------------
+    "test.yml::core::Install": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        body_sha="5fb6f04e930e11ea",
+        why="pip install of the pinned dev requirements; the ownership gate imports the app",
+    ),
+    "test.yml::core::Format and vet": Covered(
+        kind=GATE_KIND,
+        stages=("go-vet",),
+        body_sha="25a261a675b568e7",
+        why="",
+    ),
+    "test.yml::core::Test": Covered(
+        kind=GATE_KIND,
+        stages=("go-test",),
+        body_sha="a8496b1836c1e6e4",
+        why="",
+    ),
+    "test.yml::core::Real-PostgreSQL tests on a disposable database": Covered(
+        kind=GATE_KIND,
+        stages=("go-postgres",),
+        body_sha="e9f9152379fb882b",
+        why="",
+    ),
+    "test.yml::core::Route manifest matches the app and the binary": Covered(
+        kind=GATE_KIND,
+        stages=("ownership",),
+        body_sha="9e90b526b63fd631",
+        why="",
+    ),
+    "test.yml::core::Python changes do not reach routes Go already serves": Covered(
+        kind=GATE_KIND,
+        stages=("python-touch",),
+        body_sha="9123ca8edcd742ae",
+        why="",
+    ),
     # --- test.yml: screens ------------------------------------------------
     # The third link in the chain `client-routes` and `server-routes` are the
     # first two of: whether a screen that calls its routes correctly is itself
@@ -292,7 +347,11 @@ INLINE_STEPS: dict[str, Covered] = {
     "test.yml::docker::The container actually serves /healthz": Covered(
         kind=GATE_KIND,
         stages=("docker",),
-        body_sha="732b09e74f85a7f0",
+        # 2026-09-21: bước này và chặng `docker` của gate.sh cùng được thêm
+        # MOBILE_INTERNAL_TOKEN. Cửa brain fail-closed nên container không
+        # token thì không bao giờ healthy; cổng này bắt đúng chỗ phải nhìn, và
+        # nhìn ra rằng gate.sh có y hệt lỗi ấy.
+        body_sha="afab580373def512",
         why="",
     ),
     "test.yml::docker::Image size": Covered(
@@ -300,6 +359,30 @@ INLINE_STEPS: dict[str, Covered] = {
         stages=(),
         body_sha="83312e5632b67af6",
         why="prints ::notice:: with the image size and has no threshold to fail against",
+    ),
+    "test.yml::docker::Core base images are pinned by digest": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="395ff271d1459ddc",
+        why="",
+    ),
+    "test.yml::docker::Build core": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="62f43c32a5a70fbc",
+        why="",
+    ),
+    "test.yml::docker::Core runs as a non-root user without a shell": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="157345d2e5e58ef5",
+        why="",
+    ),
+    "test.yml::docker::The core container reports healthy": Covered(
+        kind=GATE_KIND,
+        stages=("docker",),
+        body_sha="f37b9c2f2297fa73",
+        why="",
     ),
     # --- test.yml: shared -------------------------------------------------
     "test.yml::shared::present": Covered(

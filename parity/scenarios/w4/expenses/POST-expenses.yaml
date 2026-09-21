@@ -1,0 +1,491 @@
+# W4 · POST /expenses — allocate a proposal and create the expense identity.
+# No actor dependency: anyone, anonymous included, may propose. Order: the
+# idempotency key, JSON and body validation, the allocator (422 with the domain
+# code in capitals), then the expenses row (404 when the context does not
+# exist). Nothing reaches the ledger: one expenses row per 201.
+# Amounts are integer VND; texts are sample data (dữ liệu mẫu).
+id: w4/expenses/post-expenses
+routes: ['POST /expenses']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đề xuất chi (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  # no actor at all, and still 201: the route has no get_actor
+  - id: anonymous_even_split_remainder
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":100000,"items":[],"surcharges":[],"discounts":[]}'
+  # defaults: description, items, surcharges and discounts left out
+  - id: owner_minimal_body_defaults
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T19:00:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":1}'
+  # the payer is outside the split: warning advancer_not_participant, and the
+  # extra dong goes by byte order of the literal ids
+  - id: owner_advancer_outside_participants
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Trả hộ (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["dddddddd-dddd-4ddd-8ddd-dddddddddddd","bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":100,"items":[],"surcharges":[],"discounts":[]}'
+  - id: owner_zero_total
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Miễn phí (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-02T19:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":0,"items":[],"surcharges":[],"discounts":[]}'
+  # one participant shares no item: warning zero_share_participants
+  - id: owner_items_zero_share
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Quán phở (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.mate}}","verification_scope":"items_reviewed","occurred_at":"2030-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":90000,"items":[{"item_id":"pho","label":"Phở bò (dữ liệu mẫu)","amount_vnd":60000,"shared_by":["{{persona.owner}}"]},{"item_id":"tra","amount_vnd":30000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]}],"surcharges":[],"discounts":[]}'
+  # every stage: item discount, global discount, proportional and even
+  # surcharges, thirteenths and a largest-remainder dong
+  - id: owner_items_surcharges_discounts
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Lẩu (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":456000,"items":[{"item_id":"lau","amount_vnd":300000,"shared_by":["{{persona.owner}}","{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"]},{"item_id":"bia","amount_vnd":90000,"shared_by":["{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"]},{"item_id":"nuoc","amount_vnd":30000,"shared_by":["{{persona.owner}}"]}],"surcharges":[{"surcharge_id":"vat","kind":"VAT","amount_vnd":42000,"mode":"proportional"},{"surcharge_id":"phi","kind":"service","amount_vnd":30000,"mode":"even"},{"surcharge_id":"ship","kind":"shipping","amount_vnd":15000,"mode":"even"}],"discounts":[{"discount_id":"giam-lau","amount_vnd":30000,"scope":"item","item_id":"lau"},{"discount_id":"voucher","amount_vnd":21000,"scope":"global_proportional"}]}'
+  # the only item is discounted to zero, so a proportional surcharge has no
+  # basis: warning proportional_fallback_to_even
+  - id: owner_proportional_fallback_to_even
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-03T20:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":5001,"items":[{"item_id":"qua","amount_vnd":10000,"shared_by":["{{persona.owner}}"]}],"surcharges":[{"surcharge_id":"phi","kind":"service","amount_vnd":5001,"mode":"proportional"}],"discounts":[{"discount_id":"tang","amount_vnd":10000,"scope":"item","item_id":"qua"}]}'
+  # sixteen participants, 1000 dong: 62.5 each, eight gainers by remainder,
+  # then advancer, then byte order
+  - id: owner_sixteen_participants
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cả lớp (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaae","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaf","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaac","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaad","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaae","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa0a"],"total_amount_vnd":1000,"items":[],"surcharges":[],"discounts":[]}'
+  # uneven items across many people: remainders of different sizes win first
+  - id: owner_uneven_remainders
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","cccccccc-cccc-4ccc-8ccc-cccccccccccc","dddddddd-dddd-4ddd-8ddd-dddddddddddd","eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"],"total_amount_vnd":1003,"items":[{"item_id":"a","amount_vnd":700,"shared_by":["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","cccccccc-cccc-4ccc-8ccc-cccccccccccc","dddddddd-dddd-4ddd-8ddd-dddddddddddd"]},{"item_id":"b","amount_vnd":301,"shared_by":["cccccccc-cccc-4ccc-8ccc-cccccccccccc","dddddddd-dddd-4ddd-8ddd-dddddddddddd","eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"]}],"surcharges":[{"surcharge_id":"phi","kind":"service","amount_vnd":2,"mode":"proportional"}],"discounts":[]}'
+  # the allocator ceiling itself is accepted
+  - id: owner_total_at_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}","cccccccc-cccc-4ccc-8ccc-cccccccccccc"],"total_amount_vnd":1000000000000}'  # repo-guard: allow=long-number reason=allocator-ceiling-probe
+  # two spellings of one uuid parse to the same participant
+  - id: owner_duplicate_participant_two_spellings
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB"],"total_amount_vnd":1000}'
+  - id: owner_no_participants
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":[],"total_amount_vnd":1000}'
+  - id: owner_item_id_padded
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000,"items":[{"item_id":" pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}]}'
+  # 33 two-byte letters: 66 bytes, over the 64-byte id limit
+  - id: owner_item_id_over_64_bytes
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000,"items":[{"item_id":"ưưưưưưưưưưưưưưưưưưưưưưưưưưưưưưưưư","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}]}'
+  - id: owner_duplicate_item_id
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":2000,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]},{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}]}'
+  - id: owner_negative_total
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":-1}'
+  # precedence inside the structural group: NEGATIVE_AMOUNT before ZERO_AMOUNT
+  - id: owner_negative_total_and_zero_item
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":-1,"items":[{"item_id":"pho","amount_vnd":0,"shared_by":["{{persona.owner}}"]}]}'
+  - id: owner_zero_item_amount
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":0,"items":[{"item_id":"pho","amount_vnd":0,"shared_by":["{{persona.owner}}"]}]}'
+  - id: owner_total_over_ceiling
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000000000001}'  # repo-guard: allow=long-number reason=allocator-ceiling-probe
+  # a JSON integer past int64 is still an integer to pydantic: AMOUNT_TOO_LARGE
+  - id: owner_total_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":18446744073709551616}'  # repo-guard: allow=long-number reason=int64-overflow-probe
+  - id: owner_total_below_int64
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":-9223372036854775809}'  # repo-guard: allow=long-number reason=int64-overflow-probe
+  # an item past int64 next to a valid total
+  - id: owner_item_past_int64
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000,"items":[{"item_id":"pho","amount_vnd":9223372036854775808,"shared_by":["{{persona.owner}}"]}]}'  # repo-guard: allow=long-number reason=int64-overflow-probe
+  - id: owner_empty_surcharge_kind
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1100,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"surcharges":[{"surcharge_id":"phi","kind":"","amount_vnd":100,"mode":"even"}]}'
+  # 17 two-byte letters: 34 bytes, over the 32-byte kind limit
+  - id: owner_surcharge_kind_over_32_bytes
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1100,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"surcharges":[{"surcharge_id":"phi","kind":"ơơơơơơơơơơơơơơơơơ","amount_vnd":100,"mode":"even"}]}'
+  - id: owner_item_discount_without_target
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":900,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"discounts":[{"discount_id":"giam","amount_vnd":100,"scope":"item"}]}'
+  - id: owner_global_discount_with_target
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":900,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"discounts":[{"discount_id":"giam","amount_vnd":100,"scope":"global_proportional","item_id":"pho"}]}'
+  - id: owner_empty_shared_by
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":[]}]}'
+  - id: owner_duplicate_shared_by
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}","{{persona.owner}}"]}]}'
+  # referential before reconciliation: the total is also wrong here
+  - id: owner_unknown_participant_and_mismatch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":5,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.mate}}"]}]}'
+  - id: owner_unknown_item
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":900,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"discounts":[{"discount_id":"giam","amount_vnd":100,"scope":"item","item_id":"bun"}]}'
+  # arithmetic before reconciliation: the listed total is also wrong here
+  - id: owner_discount_exceeds_item_and_mismatch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":7,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"discounts":[{"discount_id":"giam","amount_vnd":1001,"scope":"item","item_id":"pho"}]}'
+  - id: owner_discount_exceeds_base
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":0,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"]}],"discounts":[{"discount_id":"giam","amount_vnd":1001,"scope":"global_proportional"}]}'
+  - id: owner_reconciliation_mismatch
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":1001,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}","{{persona.mate}}"]}]}'
+  # the allocator runs before the context is looked up
+  - id: owner_unknown_context_valid_split
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: owner_unknown_context_bad_split
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":[],"total_amount_vnd":1000}'
+  # pydantic refusals the generated corpus cannot reach for this body
+  - id: owner_occurred_at_without_offset
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: owner_total_as_float
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000.0}'
+  - id: owner_total_as_string
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":"1000"}'
+  - id: owner_item_amount_as_bool
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"items_reviewed","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1,"items":[{"item_id":"pho","amount_vnd":true,"shared_by":["{{persona.owner}}"]}]}'
+  - id: owner_unknown_scope_and_extra_item_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"everything","occurred_at":"2030-01-04T08:00:00+07:00","participants":["{{persona.owner}}","khong-phai-uuid"],"total_amount_vnd":1000,"items":[{"item_id":"pho","amount_vnd":1000,"shared_by":["{{persona.owner}}"],"price":1000}]}'
+  # idempotency: replay, key order and spacing, reuse, and a refusal that
+  # releases its key
+  - id: owner_key_first
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Có khoá (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":30001}'
+  - id: owner_key_replay_reordered
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-a'
+        content-type: 'application/json'
+      body_raw: '{ "total_amount_vnd": 30001, "participants": ["{{persona.owner}}", "{{persona.mate}}"], "occurred_at": "2030-01-05T08:00:00+07:00", "verification_scope": "totals_only", "paid_by_id": "{{persona.owner}}", "recorded_by_id": "{{persona.owner}}", "description": "Có khoá (dữ liệu mẫu)", "context_id": "{{ctx}}" }'
+  # participants reversed is another request: arrays keep their order
+  - id: owner_key_reused_participants_reversed
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-a'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Có khoá (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.mate}}","{{persona.owner}}"],"total_amount_vnd":30001}'
+  - id: owner_key_allocation_refused
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":[],"total_amount_vnd":1000}'
+  - id: owner_key_after_allocation_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-b'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: owner_key_unknown_context_refused
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: owner_key_after_unknown_context_refusal
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-c'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  # anonymous callers share one key scope, so the key carries this run's group id
+  - id: anonymous_key_first
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":1000}'
+  - id: anonymous_key_replay
+    as: anonymous
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":1000}'
+  # the same key under the owner's scope is a new request
+  - id: owner_uses_anonymous_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: 'w4-exp-anon-{{ctx}}'
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.mate}}","paid_by_id":"{{persona.mate}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.mate}}"],"total_amount_vnd":1000}'
+  - id: owner_empty_idempotency_key
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2030-01-05T08:00:00+07:00","participants":["{{persona.owner}}"],"total_amount_vnd":1000}'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/expenses'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

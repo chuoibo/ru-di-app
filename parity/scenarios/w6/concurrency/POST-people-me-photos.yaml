@@ -1,0 +1,48 @@
+# W6 concurrency · POST /people/me/photos. Three copies of one photo at once are
+# three rows and three urls; three copies under one header key are one row, one
+# 201 and two replays. Texts are sample data (dữ liệu mẫu).
+id: w6/concurrency/post-people-me-photos
+routes: ['POST /people/me/photos']
+auth_mode: dev
+personas:
+  author: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tải ảnh cá nhân cùng lúc (dữ liệu mẫu)"}'
+  - id: upload_three_at_once
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.gif, content_type: image/gif, image: {format: gif, width: 32, height: 24, seed: 106}}
+  - id: upload_same_key_at_once
+    as: author
+    concurrent: 3
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        idempotency-key: '{{persona.author}}-personal-burst'
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: mau.jpg, content_type: image/jpeg, image: {format: jpeg, width: 36, height: 24, seed: 107, orientation: 2}}
+  - id: upload_garbage_and_a_photo_at_once
+    as: author
+    concurrent: 2
+    request:
+      method: POST
+      path: '/people/me/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: 'mau-{{burst}}.jpg', content_type: image/jpeg, text: 'đây không phải ảnh (dữ liệu mẫu)'}

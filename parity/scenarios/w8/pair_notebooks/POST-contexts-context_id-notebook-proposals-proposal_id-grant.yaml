@@ -1,0 +1,367 @@
+# W8 · POST …/notebook/proposals/{id}/grant. The pair first (404 notebook_not_found), then
+# the proposal of the live cycle (404 consent_proposal_not_found, also for another
+# pair's offer and an offer of a closed cycle), then roles and is_invitee (403), then
+# proposal_in_force: a completed offer answers 409 consent_proposal_expired. A grant
+# completes an offer only while the asker's own grant is still live. bat_doi writes two
+# couple rows or refuses with 409 couple_slot_taken when one person is a couple in
+# another notebook. Texts are sample data (dữ liệu mẫu).
+id: w8/pair_notebooks/post-contexts-context_id-notebook-proposals-proposal_id-grant
+routes: ['POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  third: {}
+  stranger: {}
+steps:
+  - id: anonymous_grants
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/notebook/proposals/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/grant'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: register_third
+    as: third
+    request:
+      method: PUT
+      path: '/people/{{persona.third}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn thứ ba (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm bạn không phải sổ đôi (dữ liệu mẫu)"}'
+    bind:
+      grp: {from: body, pointer: /id, class: uuid}
+  - id: owner_asks_third_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.third}}"}'
+    bind:
+      fr_owner_third: {from: body, pointer: /id, class: uuid}
+  - id: third_accepts_owner_friendship
+    as: third
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_third}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: third_opens_other
+    as: third
+    request:
+      method: POST
+      path: '/people/{{persona.owner}}/dm'
+    bind:
+      other: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_unknown_on_fresh_pair
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/grant'
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_grants_own_offer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: stranger_grants
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: mate_grants_in_group
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{grp}}/notebook/proposals/{{lap_so}}/grant'
+  - id: mate_grants_unknown_proposal
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/grant'
+  - id: mate_grants_as_advancer
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: owner_proposes_lap_so_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so_2: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: mate_grants_lap_so_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  # a second lap_so offer, still pending, completes on an active cycle
+  - id: mate_grants_older_offer
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_2}}/grant'
+  - id: owner_proposes_bat_doi_a
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi_a: {from: body, pointer: /id, class: uuid}
+  - id: owner_revokes_bat_doi
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/bat_doi'
+  # owner took back their own yes: the offer is granted but not completed
+  - id: mate_grants_revoked_offer
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi_a}}/grant'
+  - id: owner_reads_half_couple
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'
+  - id: owner_grants_own_revoked_offer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi_a}}/grant'
+  - id: owner_proposes_bat_doi_b
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      bat_doi_b: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_bat_doi_b
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi_b}}/grant'
+  - id: mate_grants_bat_doi_b_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{bat_doi_b}}/grant'
+  - id: third_proposes_other_lap_so
+    as: third
+    request:
+      method: POST
+      path: '/contexts/{{other}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      other_lap_so: {from: body, pointer: /id, class: uuid}
+  - id: owner_grants_other_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{other}}/notebook/proposals/{{other_lap_so}}/grant'
+  - id: third_proposes_bat_doi
+    as: third
+    request:
+      method: POST
+      path: '/contexts/{{other}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"bat_doi"}'
+    bind:
+      other_bat_doi: {from: body, pointer: /id, class: uuid}
+  # owner is already a couple with mate
+  - id: owner_grants_second_couple
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{other}}/notebook/proposals/{{other_bat_doi}}/grant'
+  - id: mate_grants_other_pairs_offer
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{other_bat_doi}}/grant'
+  - id: owner_leaves_couple_with_mate
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{pair}}/notebook/consents/bat_doi'
+  - id: owner_grants_second_couple_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{other}}/notebook/proposals/{{other_bat_doi}}/grant'
+  - id: mate_proposes_doc_chat
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      doc_chat: {from: body, pointer: /id, class: uuid}
+  - id: owner_grants_doc_chat
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{doc_chat}}/grant'
+  - id: owner_proposes_doc_chat_stale
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"doc_chat"}'
+    bind:
+      stale_offer: {from: body, pointer: /id, class: uuid}
+  - id: owner_previews_close
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close/preview'
+    bind:
+      rev: {from: body, pointer: /revision, class: token}
+  - id: owner_closes
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/close'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"revision":"{{rev}}"}'
+  - id: owner_proposes_lap_so_new
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so_new: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_offer_of_closed_cycle
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{stale_offer}}/grant'
+  - id: mate_grants_lap_so_new
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_new}}/grant'
+  - id: owner_proposes_lap_so_keyed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so_keyed: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_with_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_keyed}}/grant'
+      headers:
+        idempotency-key: 'w8-dong-y-a'
+  # the offer is completed, yet the stored 200 answers first
+  - id: mate_replays_header_key
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_keyed}}/grant'
+      headers:
+        idempotency-key: 'w8-dong-y-a'
+  - id: mate_same_offer_other_key
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so_keyed}}/grant'
+      headers:
+        idempotency-key: 'w8-dong-y-b'
+  - id: owner_reads_end
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{pair}}/notebook'

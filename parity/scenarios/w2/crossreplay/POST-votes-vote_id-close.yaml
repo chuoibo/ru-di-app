@@ -1,0 +1,168 @@
+# W2 cross replay · POST /votes/{id}/close (200, one UPDATE of closed_at and
+# closed_by_id). The route reads no body, but the fingerprint covers the path and
+# any body: a close stored under a key by one implementation is replayed by the
+# other where a fresh close would be 409, and a body or another vote under the
+# key is refused by the other. A 403 is not stored by either side. Texts are
+# sample data (dữ liệu mẫu).
+id: w2/crossreplay/post-votes-vote_id-close
+routes: ['POST /votes/{vote_id}/close']
+auth_mode: dev
+personas:
+  owner: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm chốt phiếu chéo (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chốt phiếu chéo (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_one
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu một (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_one: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_two
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu hai (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_two: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_three
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu ba (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_three: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_vote_four
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/votes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"question":"Phiếu bốn (dữ liệu mẫu)","options":[{"label":"Có"},{"label":"Không"}]}'
+    bind:
+      vote_four: {from: body, pointer: /id, class: uuid}
+  # Python stores, Go answers
+  - id: python_stores_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote_one}}/close'
+      headers:
+        idempotency-key: 'x-close-a'
+  - id: core_replays_python_key
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_one}}/close'
+      headers:
+        idempotency-key: 'x-close-a'
+  - id: core_refuses_python_key_with_body
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_one}}/close'
+      headers:
+        idempotency-key: 'x-close-a'
+        content-type: 'application/json'
+      body_raw: '{"force":true}'
+  - id: core_refuses_python_key_other_vote
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_two}}/close'
+      headers:
+        idempotency-key: 'x-close-a'
+  # Go stores, Python answers
+  - id: core_stores_key
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_two}}/close'
+      headers:
+        idempotency-key: 'x-close-b'
+  - id: python_replays_core_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote_two}}/close'
+      headers:
+        idempotency-key: 'x-close-b'
+  - id: python_refuses_core_key_with_body
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote_two}}/close'
+      headers:
+        idempotency-key: 'x-close-b'
+        content-type: 'application/json'
+      body_raw: '{"force":true}'
+  # a 403 (no role) is not stored: the same close then runs on the other side
+  - id: python_refusal_releases_key
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote_three}}/close'
+      headers:
+        idempotency-key: 'x-close-c'
+        x-actor-roles: ''
+  - id: core_uses_key_python_released
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_three}}/close'
+      headers:
+        idempotency-key: 'x-close-c'
+  - id: core_refusal_releases_key
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_four}}/close'
+      headers:
+        idempotency-key: 'x-close-d'
+        x-actor-roles: ''
+  - id: python_uses_key_core_released
+    as: owner
+    via: python
+    request:
+      method: POST
+      path: '/votes/{{vote_four}}/close'
+      headers:
+        idempotency-key: 'x-close-d'
+  - id: core_replays_what_python_stored_after_release
+    as: owner
+    request:
+      method: POST
+      path: '/votes/{{vote_four}}/close'
+      headers:
+        idempotency-key: 'x-close-d'

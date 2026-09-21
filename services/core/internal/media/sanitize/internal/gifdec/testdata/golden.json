@@ -1,0 +1,83 @@
+[
+  {
+    "name": "palette-1x1-b1",
+    "result": "ok",
+    "mode": "P",
+    "width": 1,
+    "height": 1,
+    "pixels_sha256_prefix": "4bf5122f344554c5",
+    "palette_sha256_prefix": "acefdf4845ab8d8c"
+  },
+  {
+    "name": "palette-7x5-b2",
+    "result": "ok",
+    "mode": "P",
+    "width": 7,
+    "height": 5,
+    "pixels_sha256_prefix": "4626c04b2ced7f57",
+    "palette_sha256_prefix": "ac5c46f3d4a5214f",
+    "transparency": 2
+  },
+  {
+    "name": "palette-17x11-b4",
+    "result": "ok",
+    "mode": "P",
+    "width": 17,
+    "height": 11,
+    "pixels_sha256_prefix": "d7e039887cac74e4",
+    "palette_sha256_prefix": "9f607ae6c4166d88"
+  },
+  {
+    "name": "palette-64x33-b8",
+    "result": "ok",
+    "mode": "P",
+    "width": 64,
+    "height": 33,
+    "pixels_sha256_prefix": "deab03c3ae415775",
+    "palette_sha256_prefix": "5e6bb945c452007a",
+    "transparency": 2
+  },
+  {
+    "name": "gray-becomes-L",
+    "result": "ok",
+    "mode": "L",
+    "width": 12,
+    "height": 9,
+    "pixels_sha256_prefix": "93976fcf86f4350f"
+  },
+  {
+    "name": "local-palette-expands-screen",
+    "result": "ok",
+    "mode": "P",
+    "width": 13,
+    "height": 10,
+    "pixels_sha256_prefix": "af9e6e512fffdd73",
+    "palette_sha256_prefix": "c704b7ef6afdc24c",
+    "transparency": 4
+  },
+  {
+    "name": "truncated-data",
+    "result": "load-error"
+  },
+  {
+    "name": "header-only",
+    "result": "next-plugin"
+  },
+  {
+    "name": "lzw-early-end",
+    "result": "load-error"
+  },
+  {
+    "name": "zero-width-screen-expanded",
+    "result": "ok",
+    "mode": "P",
+    "width": 1,
+    "height": 4,
+    "pixels_sha256_prefix": "2b97de624883b293",
+    "palette_sha256_prefix": "5923363c48f4172e"
+  },
+  {
+    "name": "lzw-bits-13",
+    "result": "load-error"
+  }
+]

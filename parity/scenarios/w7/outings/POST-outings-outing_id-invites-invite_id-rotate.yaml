@@ -1,0 +1,323 @@
+# W7 · POST /outings/{outing_id}/invites/{invite_id}/rotate: a new secret on a named
+# invitation, for the member who lost their phone. Not a second invitation -- the partial
+# unique index allows one named row per person per trip, so the way back in is a new
+# secret on the row that already names them, and the person it names never changes.
+# Existence first (one 404 for an unknown trip, an unknown invite, or an invite of
+# another trip), then the SAME permission the mint uses, `invite_to_outing`, not the
+# revoke one. A link is refused with a 409 that says so. A revoked row is refused by the
+# repository, and the service turns every RepositoryConflict here into the 404 -- so
+# «this invitation was taken back» is reported as «there is no such invitation». Each
+# rotation hands back a fresh secret, bound and never written down. Texts are sample data
+# (dữ liệu mẫu).
+id: w7/outings/post-outings-outing_id-invites-invite_id-rotate
+routes: ['POST /outings/{outing_id}/invites/{invite_id}/rotate']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  friend: {}
+  stranger: {}
+steps:
+  - id: anonymous_rotates
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+  - id: anonymous_non_uuid_outing
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/khong-phai-uuid/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: owner_invite_path_not_uuid
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/khong-phai-uuid/rotate'
+  - id: owner_unknown_everything
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_friend
+    as: friend
+    request:
+      method: PUT
+      path: '/people/{{persona.friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn ngoài nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm xoay khoá (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate_to_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_creates_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt ba ngày (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      outing: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến thứ hai (dữ liệu mẫu)","starts_on":"2026-06-01","ends_on":"2026-06-02","headcount":3,"budget_per_person_vnd":300000}'
+    bind:
+      outing_two: {from: body, pointer: /id, class: uuid}
+  - id: owner_names_a_friend
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      invite_named: {from: body, pointer: /id, class: uuid}
+      token_named_one: {from: body, pointer: /invite_token, class: token}
+  - id: owner_names_the_mate
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"group","person_id":"{{persona.mate}}"}'
+    bind:
+      invite_mate: {from: body, pointer: /id, class: uuid}
+  - id: owner_mints_a_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"link"}'
+    bind:
+      invite_link: {from: body, pointer: /id, class: uuid}
+  - id: owner_names_a_friend_on_the_second_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_two}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+    bind:
+      invite_other_trip: {from: body, pointer: /id, class: uuid}
+  # existence first
+  - id: owner_rotates_an_unknown_invite
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa/rotate'
+  - id: owner_rotates_a_real_invite_on_an_unknown_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/invites/{{invite_named}}/rotate'
+  - id: owner_rotates_an_invite_of_another_trip
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_other_trip}}/rotate'
+  - id: stranger_rotates_a_real_invite
+    as: stranger
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  - id: friend_rotates_their_own_invitation
+    as: friend
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  - id: owner_rotates_as_guest_role
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+      headers:
+        x-actor-roles: 'guest'
+  # only a named invitation can be rotated
+  - id: owner_rotates_the_link
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/rotate'
+  # a fresh secret, twice, on the row that already names the person
+  - id: owner_rotates_the_named_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+    bind:
+      token_named_two: {from: body, pointer: /invite_token, class: token}
+  - id: owner_rotates_the_named_invitation_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+    bind:
+      token_named_three: {from: body, pointer: /invite_token, class: token}
+  # a rotated named secret is still refused at the link door
+  - id: friend_opens_the_first_secret_at_the_link_door
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_named_one}}/accept'
+  - id: friend_opens_the_newest_secret_at_the_link_door
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_named_three}}/accept'
+  - id: mate_rotates_the_named_invitation
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  # a second named invitation for the same person is refused: rotation is the way back
+  - id: owner_names_the_same_friend_again
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"source":"friend","person_id":"{{persona.friend}}"}'
+  # a revoked row answers «no such invitation», not «it was taken back»
+  - id: owner_revokes_the_mates_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_mate}}/revoke'
+  - id: owner_rotates_the_revoked_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_mate}}/rotate'
+  - id: mate_rotates_their_own_revoked_invitation
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_mate}}/rotate'
+  # the key header
+  - id: owner_rotates_with_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+      headers:
+        idempotency-key: 'c77f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+    bind:
+      token_named_four: {from: body, pointer: /invite_token, class: token}
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+      headers:
+        idempotency-key: 'c77f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_same_key_other_invite
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_link}}/rotate'
+      headers:
+        idempotency-key: 'c77f0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: friend_opens_the_replayed_secret_at_the_link_door
+    as: friend
+    request:
+      method: POST
+      path: '/outing-invites/{{token_named_four}}/accept'
+  # leaving closes the door
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  - id: mate_rotates_after_leaving
+    as: mate
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'
+  - id: owner_rotates_the_other_trips_invitation
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing_two}}/invites/{{invite_other_trip}}/rotate'
+  # framework
+  - id: trailing_slash
+    as: owner
+    request:
+      method: POST
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/outings/{{outing}}/invites/{{invite_named}}/rotate'

@@ -1,0 +1,261 @@
+# W2 · GET /people/{id}/friends — one's own accepted edges, newest decision
+# first. Pending, declined and blocked are not friendships; an ended account's
+# edges are erased with it.
+id: w2/friends/get-people-person_id-friends
+routes: ['GET /people/{person_id}/friends']
+auth_mode: dev
+personas:
+  me: {}
+  first_friend: {}
+  second_friend: {}
+  pending_asker: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friends'
+  - id: anonymous_non_uuid_person
+    as: anonymous
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friends'
+  - id: register_me
+    as: me
+    request:
+      method: PUT
+      path: '/people/{{persona.me}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Tôi (dữ liệu mẫu)"}'
+  - id: register_first_friend
+    as: first_friend
+    request:
+      method: PUT
+      path: '/people/{{persona.first_friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn một (dữ liệu mẫu)"}'
+  - id: register_second_friend
+    as: second_friend
+    request:
+      method: PUT
+      path: '/people/{{persona.second_friend}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn hai (dữ liệu mẫu)"}'
+  - id: register_pending_asker
+    as: pending_asker
+    request:
+      method: PUT
+      path: '/people/{{persona.pending_asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người còn chờ (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn sẽ rời (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: me_no_friends
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  # an unregistered id reading itself: the permission is is_self only
+  - id: unknown_person_reads_own_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/people/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/friends'
+      headers:
+        x-actor-id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: first_friend_asks_me
+    as: first_friend
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+    bind:
+      with_first: {from: body, pointer: /id, class: uuid}
+  - id: me_asks_second_friend
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.second_friend}}"}'
+    bind:
+      with_second: {from: body, pointer: /id, class: uuid}
+  - id: leaver_asks_me
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+    bind:
+      with_leaver: {from: body, pointer: /id, class: uuid}
+  - id: pending_asker_asks_me
+    as: pending_asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.me}}"}'
+  # a pending request is not a friendship
+  - id: me_friends_while_all_pending
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  # decision order is second, first, leaver; the list is newest decision first
+  - id: second_friend_accepts
+    as: second_friend
+    request:
+      method: POST
+      path: '/friends/requests/{{with_second}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: me_accepts_first
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests/{{with_first}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: me_accepts_leaver
+    as: me
+    request:
+      method: POST
+      path: '/friends/requests/{{with_leaver}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: me_three_friends
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: second_friend_sees_me
+    as: second_friend
+    request:
+      method: GET
+      path: '/people/{{persona.second_friend}}/friends'
+  - id: me_query_string_ignored
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends?direction=outgoing&limit=1'
+  - id: stranger_reads_my_friends
+    as: stranger
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: friend_reads_my_friends
+    as: first_friend
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: me_roles_guest_only
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+      headers:
+        x-actor-roles: 'guest'
+  - id: me_roles_unknown
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+      headers:
+        x-actor-roles: 'member,thief'
+  - id: stranger_non_uuid_person
+    as: stranger
+    request:
+      method: GET
+      path: '/people/khong-phai-uuid/friends'
+  - id: me_literal_me_path
+    as: me
+    request:
+      method: GET
+      path: '/people/me/friends'
+  - id: trailing_slash_redirects
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends/'
+  - id: post_not_allowed
+    as: me
+    request:
+      method: POST
+      path: '/people/{{persona.me}}/friends'
+  - id: first_friend_blocks_me
+    as: first_friend
+    request:
+      method: POST
+      path: '/friends/requests/{{with_first}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"block"}'
+  # a blocked edge is not a friendship, on either side
+  - id: me_friends_after_block
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: blocker_friends_after_block
+    as: first_friend
+    request:
+      method: GET
+      path: '/people/{{persona.first_friend}}/friends'
+  - id: first_friend_lifts_block
+    as: first_friend
+    request:
+      method: DELETE
+      path: '/people/{{persona.me}}/block'
+  # lifting a block gives back declined, not the friendship
+  - id: me_friends_after_unblock
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: me_friends_after_leaver_deleted
+    as: me
+    request:
+      method: GET
+      path: '/people/{{persona.me}}/friends'
+  - id: deleted_leaver_reads_own_friends
+    as: leaver
+    request:
+      method: GET
+      path: '/people/{{persona.leaver}}/friends'

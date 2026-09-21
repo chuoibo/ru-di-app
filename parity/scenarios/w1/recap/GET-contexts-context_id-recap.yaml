@@ -1,0 +1,314 @@
+# W1 · GET /contexts/{id}/recap — finished trips (ends_on desc) and the trip under way.
+# Money is summed from the newest confirmed expense version on the Vietnamese calendar day:
+# a 00:30 supper (17:30Z) lands on the next day, a corrected bill is not double counted,
+# an unconfirmed proposal and spending outside every trip count nowhere.
+id: w1/recap/get-recap
+routes: ['GET /contexts/{context_id}/recap']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/recap'
+  # get_actor is a dependency, so 401 wins over the path 422
+  - id: anonymous_non_uuid_context
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/recap'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn đồng hành (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/recap'
+  # an unknown group is the same 403 is_group_member as a real one, never 404
+  - id: stranger_unknown_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/recap'
+  - id: stranger_uppercase_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE/recap'
+  - id: stranger_unhyphenated_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaabbbb4ccc8dddeeeeeeeeeeee/recap'
+  - id: stranger_braced_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/%7Baaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee%7D/recap'
+  - id: stranger_urn_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/urn:uuid:aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/recap'
+  - id: stranger_short_uuid
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeee/recap'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: owner_empty_recap
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: owner_roles_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+      headers:
+        x-actor-roles: ''
+  - id: owner_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap?limit=1'
+  - id: stranger_real_group
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: mate_invited_not_yet_active
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: outing_future
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến chưa bắt đầu","starts_on":"2099-03-01","ends_on":"2099-03-05","headcount":2,"budget_per_person_vnd":0}'
+  - id: owner_recap_future_trip_only
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: outing_new_year
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Đà Lạt tháng giêng","starts_on":"2020-01-01","ends_on":"2020-01-03","headcount":3,"budget_per_person_vnd":0}'
+  - id: outing_one_day
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Một ngày Sài Gòn","starts_on":"2021-05-01","ends_on":"2021-05-01","headcount":2,"budget_per_person_vnd":0}'
+  - id: outing_under_way
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến dài chưa về","starts_on":"2020-01-02","ends_on":"2099-12-31","headcount":4,"budget_per_person_vnd":0}'
+  - id: owner_recap_trips_no_money
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: propose_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      dinner: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":200000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":100000,"{{persona.mate}}":100000},"acknowledge_as_advancer":true}'
+  - id: propose_supper
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Ăn khuya sau nửa đêm (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2021-04-30T17:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      supper: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_supper
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{supper}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Ăn khuya sau nửa đêm (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2021-04-30T17:30:00Z","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":90000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":45000,"{{persona.mate}}":45000},"acknowledge_as_advancer":true}'
+  - id: propose_day_after
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Cà phê hôm sau (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2021-05-02T09:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      day_after: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_day_after
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{day_after}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Cà phê hôm sau (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2021-05-02T09:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":60000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":30000,"{{persona.mate}}":30000},"acknowledge_as_advancer":true}'
+  - id: propose_before_trips
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Trước mọi chuyến (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2019-12-31T23:59:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      before_trips: {from: body, pointer: /expense_id, class: uuid}
+  - id: confirm_before_trips
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{before_trips}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Trước mọi chuyến (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2019-12-31T23:59:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":40000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":20000,"{{persona.mate}}":20000},"acknowledge_as_advancer":true}'
+  - id: propose_unconfirmed
+    as: owner
+    request:
+      method: POST
+      path: '/expenses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"context_id":"{{ctx}}","description":"Chưa xác nhận (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-03T08:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":80000,"items":[],"surcharges":[],"discounts":[]}'
+    bind:
+      unconfirmed: {from: body, pointer: /expense_id, class: uuid}
+  - id: owner_recap_with_money
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: correct_dinner
+    as: owner
+    request:
+      method: POST
+      path: '/expenses/{{dinner}}/confirm'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"proposal":{"context_id":"{{ctx}}","description":"Bữa tối (dữ liệu mẫu)","recorded_by_id":"{{persona.owner}}","paid_by_id":"{{persona.owner}}","verification_scope":"totals_only","occurred_at":"2020-01-02T12:00:00+07:00","participants":["{{persona.owner}}","{{persona.mate}}"],"total_amount_vnd":240000,"items":[],"surcharges":[],"discounts":[]},"expected_allocations":{"{{persona.owner}}":120000,"{{persona.mate}}":120000},"acknowledge_as_advancer":true}'
+  - id: owner_recap_after_correction
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  # MemoryResponse.cursor is base64(created_at|id), opaque to the normaliser; binding it as a token replaces it with a named placeholder on both stacks
+  - id: checkin_today
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-quan-oc-di-be"}'
+    bind:
+      cursor_checkin_today: {from: body, pointer: /cursor, class: token}
+  - id: owner_recap_final
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: mate_recap_final
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'
+  - id: trailing_slash_redirects
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap/'
+  - id: mate_leaves_group
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}'
+  # a membership row with left_at set is not membership
+  - id: mate_after_leaving
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/recap'

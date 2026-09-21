@@ -73,6 +73,8 @@ STAGE_CHECKERS: dict[str, str] = {
     "server-routes": "check_server_routes_called.py",
     "screens": "check_screens_reachable.py",
     "cors": "check_cors_contract.py",
+    "ownership": "check_route_ownership.py",
+    "python-touch": "check_go_owned_python_touch.py",
     "docker": "check_dockerfile_pinning.sh",
     "pinned-import": "check_pinned_import.sh",
 }

@@ -1,0 +1,316 @@
+# W3 · DELETE /contexts/{id}/memories/{memory_id}/reactions — take back one's own
+# heart; 204. Order: idempotency key shape, actor, both path ids, role + ACTIVE
+# membership, memory in this group (404 memory_not_found), then no heart of the
+# actor's is 404 reaction_not_found. There is no path to anybody else's heart.
+id: w3/memories/delete-contexts-context_id-memories-memory_id-reactions
+routes: ['DELETE /contexts/{context_id}/memories/{memory_id}/reactions']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  invitee: {}
+  leaver: {}
+  stranger: {}
+steps:
+  - id: anonymous_unknown
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: anonymous_non_uuid_both
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/reactions'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+      headers:
+        idempotency-key: ''
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời nhóm (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lạ (dữ liệu mẫu)"}'
+  - id: stranger_non_uuid_both
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/khong-phai-uuid/memories/khong-phai-uuid/reactions'
+  - id: stranger_unknown_both
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm kỷ niệm (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_creates_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm khác (dữ liệu mẫu)"}'
+    bind:
+      ctx_b: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+  - id: owner_invites_invitee
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+  - id: owner_posts_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+  - id: owner_posts_in_other_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_b}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_b}}/photos/cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa"}'
+    bind:
+      photo_b: {from: body, pointer: /id, class: uuid}
+  - id: stranger_real_memory
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: invitee_takes_back
+    as: invitee
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_unknown_memory
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/bbbbbbbb-cccc-4ddd-8eee-ffffffffffff/reactions'
+  - id: mate_other_groups_memory_via_this_context
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo_b}}/reactions'
+  # memory found, no heart of the actor's: the second 404
+  - id: mate_never_hearted
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_hearts_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: owner_hearts_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: leaver_hearts_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: owner_takes_back
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: owner_takes_back_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: owner_reads_wall
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/memories'
+  - id: mate_roles_empty
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        x-actor-roles: ''
+  - id: mate_malformed_body_ignored
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id": '
+  - id: mate_hearts_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: leaver_leaves
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+  # the heart of somebody who left stays and cannot be taken back
+  - id: leaver_takes_back_after_leaving
+    as: leaver
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: mate_roles_group_admin_only
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        x-actor-roles: 'group_admin'
+  # idempotency; a replayed 204 carries content-length: 0 from the middleware
+  - id: mate_hearts_for_idempotency
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: idem_first
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-unheart-a'
+  - id: idem_replay
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-unheart-a'
+  - id: idem_reuse_other_memory
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo_b}}/reactions'
+      headers:
+        idempotency-key: 'w3-unheart-a'
+  - id: idem_refusal_not_stored
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-unheart-b'
+  - id: mate_hearts_once_more
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+  - id: idem_same_key_after_refusal
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'w3-unheart-b'
+  - id: idem_key_too_long
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'
+      headers:
+        idempotency-key: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
+  - id: trailing_slash_redirects
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions/'
+  - id: put_not_allowed
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/memories/{{photo}}/reactions'

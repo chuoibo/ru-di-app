@@ -1,0 +1,107 @@
+# W9 · POST /auth/google, in the limiter lane. The address window is spent before the
+# body is read (`routes/auth.py:180-182`), so all ten go the same way as the OTP doors.
+#
+# What this file can and cannot prove. The parity stacks carry no Google client ids, so
+# `get_google_verifier` answers None (`deps.py:312-314`) and the service refuses with
+# 503 `google_not_configured` BEFORE it looks at the token (`service.py:4015-4019`).
+# That ordering is the whole of the security argument and it is exactly what is proved
+# here: the address window first, the JSON parse second, the unconfigured host third,
+# and the token never read. What is NOT proved on this host is everything past the
+# verifier -- `id_token_required`, `google_token_invalid`, and a first `sub` becoming a
+# new person. Those need a configured verifier and are named in the card as uncovered;
+# a green run here must not be read as evidence for them.
+id: w9/limiter/post-auth-google
+routes: ['POST /auth/google']
+auth_mode: dev
+lane: limiter
+steps:
+  # spends 1 (1 of 10): the body is not JSON
+  - id: spend_01_body_broken_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token": '
+  # spends 1 (2 of 10): JSON, but not an object
+  - id: spend_02_body_not_object
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '[]'
+  # spends 1 (3 of 10): a JSON string is not an object either
+  - id: spend_03_body_is_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '"khong-phai-doi-tuong"'
+  # spends 1 (4 of 10): an object with no id_token -- still 503, because the host is
+  # unconfigured and that is decided before the field is looked at
+  - id: spend_04_id_token_missing
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{}'
+  # spends 1 (5 of 10): id_token present but null
+  - id: spend_05_id_token_null
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":null}'
+  # spends 1 (6 of 10): id_token present but not a string
+  - id: spend_06_id_token_not_string
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":7}'
+  # spends 1 (7 of 10): a blank token
+  - id: spend_07_id_token_blank
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":"   "}'
+  # spends 1 (8 of 10): a token shaped like a JWT, never read on this host
+  - id: spend_08_token_shaped_like_jwt
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":"khong.phai.jwt"}'
+  # spends 1 (9 of 10): an unknown field alongside it changes nothing
+  - id: spend_09_extra_field
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":"khong.phai.jwt","email":"khong-doc"}'
+  # spends 1 (10 of 10): an empty body is not JSON
+  - id: spend_10_empty_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: ''
+  # the eleventh: nothing left in the window, refused before the body is read -- so a
+  # body that would have been a 422 answers 429 instead.
+  - id: eleventh_is_rate_limited
+    as: anonymous
+    request:
+      method: POST
+      path: '/auth/google'
+      headers: {content-type: 'application/json'}
+      body_raw: '{"id_token":"khong.phai.jwt"}'

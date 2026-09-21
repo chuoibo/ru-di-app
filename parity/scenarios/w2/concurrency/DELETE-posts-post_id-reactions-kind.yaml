@@ -1,0 +1,78 @@
+# W2 concurrency · DELETE /posts/{id}/reactions/{kind}. Copies are released
+# together. Under one key the burst removes once and the other copies replay.
+# Without a key, removing the same reaction three times at once: a copy that
+# reads the row before the winner commits issues its own DELETE, which waits
+# and matches no row (SQLAlchemy only warns); a copy that reads after finds
+# nothing. Both answer 200 with the recounted totals, so the multiset does not
+# depend on the interleaving. Texts are sample data (dữ liệu mẫu).
+id: w2/concurrency/delete-posts-post_id-reactions-kind
+routes: ['DELETE /posts/{post_id}/reactions/{kind}']
+auth_mode: dev
+personas:
+  author: {}
+  reader: {}
+steps:
+  - id: register_author
+    as: author
+    request:
+      method: PUT
+      path: '/people/{{persona.author}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người viết (dữ liệu mẫu)"}'
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người gỡ cảm xúc cùng lúc (dữ liệu mẫu)"}'
+  - id: author_posts_public
+    as: author
+    request:
+      method: POST
+      path: '/posts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"body":"Bài để gỡ cảm xúc cùng lúc (dữ liệu mẫu)","audience":"public"}'
+    bind:
+      post: {from: body, pointer: /id, class: uuid}
+  - id: reader_hearts
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: reader_wows
+    as: reader
+    request:
+      method: POST
+      path: '/posts/{{post}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"wow"}'
+  - id: same_key_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/heart'
+      headers:
+        idempotency-key: 'c-unreact-same'
+  - id: no_key_remove_thrice_burst
+    as: reader
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/wow'
+  - id: same_key_other_kind_burst
+    as: reader
+    concurrent: 2
+    request:
+      method: DELETE
+      path: '/posts/{{post}}/reactions/wow'
+      headers:
+        idempotency-key: 'c-unreact-same'

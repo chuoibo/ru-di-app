@@ -1,0 +1,291 @@
+# W10 · DELETE /people/me: the door to ending an account (ADR-0023 §2.1). JSON decoding,
+# then get_actor, then the body model ({"confirm": StrictBool}, extra forbidden), then
+# the member role, then confirm must be literally true (422 confirm_required), then the
+# row must exist (404, and the transaction rolls back). 204 with no body. In dev the
+# ended account's headers still reach every route: it reads its anonymised row, ends it
+# again (a second audit event), and nobody can register or rename the id. The rich world
+# and what other people see afterwards are in DELETE-people-me-world.yaml. Texts are
+# sample data (dữ liệu mẫu).
+id: w10/people/delete-people-me
+routes: ['DELETE /people/me']
+auth_mode: dev
+personas:
+  owner: {}
+  twice: {}
+  ghost: {}
+steps:
+  - id: anonymous_deletes
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":'
+  - id: anonymous_confirm_false
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'khong-co'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # the body model before roles, roles before confirm, confirm before the row
+  - id: ghost_body_missing
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+  - id: ghost_empty_object
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: ghost_confirm_string
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":"true"}'
+  - id: ghost_confirm_one
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":1}'
+  - id: ghost_confirm_null
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":null}'
+  - id: ghost_confirm_extra_field
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true,"reason":"Không dùng nữa (dữ liệu mẫu)"}'
+  - id: ghost_body_array
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '[true]'
+  - id: ghost_text_plain
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"confirm":true}'
+  - id: ghost_confirm_false_without_roles
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: ghost_confirm_true_without_roles
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_confirm_false
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: ghost_confirm_true_unregistered
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: ghost_confirm_true_no_content_type
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me'
+      body_raw: '{"confirm":true}'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá (dữ liệu mẫu)"}'
+  - id: register_twice
+    as: twice
+    request:
+      method: PUT
+      path: '/people/{{persona.twice}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người xoá hai lần (dữ liệu mẫu)"}'
+  - id: owner_writes_profile
+    as: owner
+    request:
+      method: PATCH
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"bio":"Giới thiệu sẽ mất (dữ liệu mẫu)","city":"Sa Pa (dữ liệu mẫu)"}'
+  - id: owner_confirm_false_registered
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  - id: owner_reads_before
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  # a header key stores the 204; a different body under it is reuse
+  - id: owner_deletes_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de1e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de1e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: owner_key_other_body
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        idempotency-key: 'de1e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+        content-type: 'application/json'
+      body_raw: '{"confirm":false}'
+  # after: dev headers still act as the ended account
+  - id: owner_reads_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/me'
+  - id: owner_reads_own_public_profile_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/{{persona.owner}}'
+  - id: owner_reclaims_name_after
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ xoá (dữ liệu mẫu)"}'
+  - id: twice_deletes_first
+    as: twice
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: twice_deletes_second
+    as: twice
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: twice_reads_after
+    as: twice
+    request:
+      method: GET
+      path: '/people/me'
+  # framework doors
+  - id: trailing_slash
+    as: twice
+    request:
+      method: DELETE
+      path: '/people/me/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  - id: post_not_allowed
+    as: twice
+    request:
+      method: POST
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'

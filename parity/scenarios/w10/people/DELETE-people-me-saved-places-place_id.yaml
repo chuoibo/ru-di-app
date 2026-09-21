@@ -1,0 +1,185 @@
+# W10 · DELETE /people/me/saved-places/{place_id}: remove a bookmark. The member role,
+# then the key must be in the catalogue (404 place_not_found otherwise, saved or not);
+# a known key is 204 whether or not it was saved, and whoever asks. Texts are sample
+# data (dữ liệu mẫu).
+id: w10/people/delete-people-me-saved-places-place_id
+routes: ['DELETE /people/me/saved-places/{place_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  other: {}
+  ghost: {}
+steps:
+  - id: anonymous_unsaves
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: anonymous_empty_idempotency_key
+    as: anonymous
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        idempotency-key: ''
+  - id: actor_id_not_uuid
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+  - id: roles_unknown
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+      headers:
+        x-actor-roles: 'khong-co'
+  - id: owner_unknown_place_without_roles
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        x-actor-roles: ''
+  - id: ghost_unsaves_known_unregistered
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: ghost_unsaves_unknown_unregistered
+    as: ghost
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/khong-co'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người lưu (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: owner_unsaves_never_saved
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_unsaves_unknown_place
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/khong-co'
+  - id: owner_unsaves_uppercase_place
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/P-TIEM-NUONG-XOM-LAO'
+  - id: owner_saves_first
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_saves_second
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  - id: other_saves_first
+    as: other
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_unsaves_first
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_unsaves_first_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-tiem-nuong-xom-lao'
+  - id: owner_lists_after
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: other_lists_after
+    as: other
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_unsaves_second_with_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_saves_second_again
+    as: owner
+    request:
+      method: PUT
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+  - id: owner_replays_key
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_after_replay
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places'
+  - id: owner_key_other_place
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        idempotency-key: 'c10e0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_unknown_with_key_two
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/khong-co'
+      headers:
+        idempotency-key: 'c10e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: owner_known_with_key_two
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-lung-chung-cafe'
+      headers:
+        idempotency-key: 'c10e0002-aaaa-4aaa-8aaa-aaaaaaaaaaa2'
+  - id: owner_unsaves_with_json_body
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"x":'
+  # framework doors
+  - id: trailing_slash
+    as: owner
+    request:
+      method: DELETE
+      path: '/people/me/saved-places/p-dreampark/'
+  - id: get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/saved-places/p-dreampark'

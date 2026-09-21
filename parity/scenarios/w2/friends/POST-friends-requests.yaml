@@ -1,0 +1,457 @@
+# W2 · POST /friends/requests — ask somebody; 201 means asked, never friends.
+# Order: JSON decode (422) -> actor (401/422) -> body model (422) -> role and
+# is_not_self (403) -> addressee exists (404) -> live edge either way (409
+# request_not_open, one code for pending / accepted / blocked) -> insert.
+id: w2/friends/post-friends-requests
+routes: ['POST /friends/requests']
+auth_mode: dev
+personas:
+  asker: {}
+  target: {}
+  other: {}
+  blocker: {}
+  leaver: {}
+  ghost: {}
+  idem_first: {}
+  idem_second: {}
+steps:
+  - id: anonymous_valid_body
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  # get_actor runs before the body model: 401, not the uuid_parsing 422
+  - id: anonymous_bad_addressee
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"khong-phai-uuid"}'
+  # JSON is decoded before dependencies: json_invalid beats 401
+  - id: anonymous_malformed_json
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id": '
+  - id: actor_id_not_uuid
+    as: anonymous
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: register_asker
+    as: asker
+    request:
+      method: PUT
+      path: '/people/{{persona.asker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người hỏi (dữ liệu mẫu)"}'
+  - id: register_target
+    as: target
+    request:
+      method: PUT
+      path: '/people/{{persona.target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được hỏi (dữ liệu mẫu)"}'
+  - id: register_other
+    as: other
+    request:
+      method: PUT
+      path: '/people/{{persona.other}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người khác (dữ liệu mẫu)"}'
+  - id: register_blocker
+    as: blocker
+    request:
+      method: PUT
+      path: '/people/{{persona.blocker}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người sẽ rời (dữ liệu mẫu)"}'
+  - id: register_idem_first
+    as: idem_first
+    request:
+      method: PUT
+      path: '/people/{{persona.idem_first}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thử khoá một (dữ liệu mẫu)"}'
+  - id: register_idem_second
+    as: idem_second
+    request:
+      method: PUT
+      path: '/people/{{persona.idem_second}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người thử khoá hai (dữ liệu mẫu)"}'
+  # is_not_self is a permission predicate, so the domain's 422 self_edge is unreachable
+  - id: asker_asks_self
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.asker}}"}'
+  # the role is checked before the predicate and before the person lookup
+  - id: roles_empty_self
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.asker}}"}'
+  - id: roles_empty_unknown_person
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        x-actor-roles: ''
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: roles_group_admin_only
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        x-actor-roles: 'group_admin'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: roles_unknown
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        x-actor-roles: 'member,thief'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: asker_unknown_person
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  # pydantic's lax UUID accepts unhyphenated and uppercase spellings: both reach the lookup
+  - id: asker_unknown_person_unhyphenated
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"aaaaaaaabbbb4ccc8dddeeeeeeeeeeee"}'
+  - id: asker_unknown_person_uppercase
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE"}'
+  - id: missing_addressee
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: addressee_null
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":null}'
+  - id: addressee_number
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":5}'
+  - id: addressee_not_uuid
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"khong-phai-uuid"}'
+  # the requester is the actor; a body field naming one is refused
+  - id: extra_requester_id
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}","requester_id":"{{persona.other}}"}'
+  - id: top_level_array
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '["{{persona.target}}"]'
+  - id: empty_body
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+  - id: text_plain_content_type
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'text/plain'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: asker_asks_target
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+    bind:
+      first_request: {from: body, pointer: /id, class: uuid}
+  - id: asker_asks_target_again
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  # the pair is unordered: the other direction is the same live edge
+  - id: target_asks_asker_back
+    as: target
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.asker}}"}'
+  - id: target_declines
+    as: target
+    request:
+      method: POST
+      path: '/friends/requests/{{first_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"decline"}'
+  # declined does not occupy the pair: asking again is a new row
+  - id: asker_asks_again_after_decline
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+    bind:
+      second_request: {from: body, pointer: /id, class: uuid}
+  - id: target_accepts_second
+    as: target
+    request:
+      method: POST
+      path: '/friends/requests/{{second_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: asker_asks_friend
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: asker_asks_other
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.other}}"}'
+  - id: blocker_blocks_other
+    as: blocker
+    request:
+      method: POST
+      path: '/people/{{persona.other}}/block'
+  # BLOCKED_IS_SILENT: the blocked side cannot tell a block from a duplicate
+  - id: blocked_asks_blocker
+    as: other
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+  - id: blocker_asks_blocked
+    as: blocker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.other}}"}'
+  - id: leaver_deletes_account
+    as: leaver
+    request:
+      method: DELETE
+      path: '/people/me'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"confirm":true}'
+  # BUG (reported): an ended account is still a valid addressee; the row names "Người dùng đã rời"
+  - id: asker_asks_deleted_person
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.leaver}}"}'
+  # dev trusts X-Actor-ID, so an ended account can still ask (prod answers 401)
+  - id: deleted_person_asks_blocker
+    as: leaver
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.blocker}}"}'
+  # an actor with no people row trips the foreign key, answered as request_not_open
+  - id: unregistered_actor_asks
+    as: ghost
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: get_not_allowed
+    as: asker
+    request:
+      method: GET
+      path: '/friends/requests'
+  - id: trailing_slash_redirects
+    as: asker
+    request:
+      method: POST
+      path: '/friends/requests/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: idem_first
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-a'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: idem_replay
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-a'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: idem_replay_reordered_spaces
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-a'
+        content-type: 'application/json'
+      body_raw: '{ "addressee_id" : "{{persona.target}}" }'
+  - id: idem_reuse_different_body
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-a'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.other}}"}'
+  # a 409 is not stored: the key is released
+  - id: idem_refusal_not_stored
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-b'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'
+  - id: idem_same_key_after_refusal
+    as: idem_first
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-b'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.idem_second}}"}'
+  # the scope is the raw X-Actor-ID: another actor's first use of the key is new
+  - id: idem_same_key_other_actor
+    as: idem_second
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: 'w2-friend-request-a'
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.other}}"}'
+  - id: idem_empty_key
+    as: idem_second
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        idempotency-key: ''
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.target}}"}'

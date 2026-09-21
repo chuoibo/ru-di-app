@@ -146,6 +146,10 @@ INEXACT_API_FIELDS_REVIEWED: dict[tuple[str, str], str] = {
     ("Understood", "max_distance_km"): "distance in km, not an amount",
     ("SuggestionPlace", "rating"): "0-5 star rating, not an amount",
     ("SuggestionPlace", "distance_km"): "distance in km, not an amount",
+    # W7: the meeting point an outing's itinerary suggests. A coordinate the
+    # routing service returned, never a sum of đồng.
+    ("MeetingPoint", "lat"): "geographic latitude, not an amount",
+    ("MeetingPoint", "lng"): "geographic longitude, not an amount",
     ("AreaSummary", "lat"): "geographic latitude, not an amount",
     ("AreaSummary", "lng"): "geographic longitude, not an amount",
     ("VisitedPlace", "lat"): "geographic latitude, not an amount",

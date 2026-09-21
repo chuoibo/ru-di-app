@@ -1,0 +1,46 @@
+# W10 concurrency · DELETE /people/{person_id}/block. Only the header-key burst: three
+# lifts under one key are one write and two replays of 200 «declined». Three keyless
+# lifts at once are left out: a loser answers 409 not_blocked when its unlocked read saw
+# the block and 403 is_blocker when it saw the lift, depending on timing. Texts are
+# sample data (dữ liệu mẫu).
+id: w10/concurrency/delete-people-person_id-block
+routes: ['DELETE /people/{person_id}/block']
+auth_mode: dev
+personas:
+  owner: {}
+  target: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người chặn (dữ liệu mẫu)"}'
+  - id: register_target
+    as: target
+    request:
+      method: PUT
+      path: '/people/{{persona.target}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người bị chặn (dữ liệu mẫu)"}'
+  - id: owner_blocks_target
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.target}}/block'
+  - id: owner_same_key_three_at_once
+    as: owner
+    concurrent: 3
+    request:
+      method: DELETE
+      path: '/people/{{persona.target}}/block'
+      headers:
+        idempotency-key: 'e40b0001-aaaa-4aaa-8aaa-aaaaaaaaaaa1'
+  - id: owner_lists_blocked
+    as: owner
+    request:
+      method: GET
+      path: '/people/me/blocked'

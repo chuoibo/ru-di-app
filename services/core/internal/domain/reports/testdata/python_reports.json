@@ -1,0 +1,2715 @@
+{
+ "generator": "scripts/render_domain_w1_goldens.py",
+ "module": "app.domain.reports",
+ "mode": "reports",
+ "python": "3.12.14",
+ "seed": 29,
+ "constants": {
+  "target_types": [
+   "person",
+   "post",
+   "message",
+   "comment",
+   "story"
+  ],
+  "reasons": [
+   "spam",
+   "harassment",
+   "inappropriate",
+   "impersonation",
+   "other"
+  ],
+  "max_note_length": 500,
+  "isspace": [
+   [
+    9,
+    13
+   ],
+   [
+    28,
+    32
+   ],
+   [
+    133,
+    133
+   ],
+   [
+    160,
+    160
+   ],
+   [
+    5760,
+    5760
+   ],
+   [
+    8192,
+    8202
+   ],
+   [
+    8232,
+    8233
+   ],
+   [
+    8239,
+    8239
+   ],
+   [
+    8287,
+    8287
+   ],
+   [
+    12288,
+    12288
+   ]
+  ]
+ },
+ "cases": [
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/person/spam",
+   "kwargs": {
+    "target_type": "person",
+    "reason": "spam"
+   },
+   "result": {
+    "ok": {
+     "target_type": "person",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/person/harassment",
+   "kwargs": {
+    "target_type": "person",
+    "reason": "harassment"
+   },
+   "result": {
+    "ok": {
+     "target_type": "person",
+     "reason": "harassment",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/person/inappropriate",
+   "kwargs": {
+    "target_type": "person",
+    "reason": "inappropriate"
+   },
+   "result": {
+    "ok": {
+     "target_type": "person",
+     "reason": "inappropriate",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/person/impersonation",
+   "kwargs": {
+    "target_type": "person",
+    "reason": "impersonation"
+   },
+   "result": {
+    "ok": {
+     "target_type": "person",
+     "reason": "impersonation",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/person/other",
+   "kwargs": {
+    "target_type": "person",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "person",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/post/spam",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/post/harassment",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "harassment"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "harassment",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/post/inappropriate",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "inappropriate"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "inappropriate",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/post/impersonation",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "impersonation"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "impersonation",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/post/other",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/message/spam",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "spam"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/message/harassment",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/message/inappropriate",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "inappropriate"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "inappropriate",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/message/impersonation",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "impersonation"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "impersonation",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/message/other",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/comment/spam",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam"
+   },
+   "result": {
+    "ok": {
+     "target_type": "comment",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/comment/harassment",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "harassment"
+   },
+   "result": {
+    "ok": {
+     "target_type": "comment",
+     "reason": "harassment",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/comment/inappropriate",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "inappropriate"
+   },
+   "result": {
+    "ok": {
+     "target_type": "comment",
+     "reason": "inappropriate",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/comment/impersonation",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "impersonation"
+   },
+   "result": {
+    "ok": {
+     "target_type": "comment",
+     "reason": "impersonation",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/comment/other",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "comment",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/story/spam",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "spam"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/story/harassment",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "harassment"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "harassment",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/story/inappropriate",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "inappropriate"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "inappropriate",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/story/impersonation",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "impersonation"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "impersonation",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_every_declared_combination_is_accepted/story/other",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_a_word_outside_the_vocabulary_is_refused/target_type/'trip'",
+   "kwargs": {
+    "target_type": "trip",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_a_word_outside_the_vocabulary_is_refused/target_type/None",
+   "kwargs": {
+    "target_type": null,
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_a_word_outside_the_vocabulary_is_refused/reason/'vi ph\u1ea1m'",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "vi ph\u1ea1m"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_a_word_outside_the_vocabulary_is_refused/reason/7",
+   "kwargs": {
+    "target_type": "post",
+    "reason": 7
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_the_note_is_optional_trimmed_and_bounded/blank",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "  "
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_the_note_is_optional_trimmed_and_bounded/trimmed",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": " n\u1ed9i dung x\u1ea5u "
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "n\u1ed9i dung x\u1ea5u"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_the_note_is_optional_trimmed_and_bounded/longest",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "other",
+    "note": {
+     "$str": [
+      [
+       "x",
+       500
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "other",
+     "note": {
+      "$str": [
+       [
+        "x",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_the_note_is_optional_trimmed_and_bounded/too_long",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "other",
+    "note": {
+     "$str": [
+      [
+       "x",
+       501
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "test_the_note_is_optional_trimmed_and_bounded/not_text",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "other",
+    "note": 12
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/omitted",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "other"
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/none",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "other",
+    "note": null
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/empty",
+   "kwargs": {
+    "target_type": "story",
+    "reason": "other",
+    "note": ""
+   },
+   "result": {
+    "ok": {
+     "target_type": "story",
+     "reason": "other",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/title_case",
+   "kwargs": {
+    "target_type": "Person",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/title_case",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "Person"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/trailing_space",
+   "kwargs": {
+    "target_type": "person ",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/trailing_space",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "person "
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/plural",
+   "kwargs": {
+    "target_type": "posts",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/plural",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "posts"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/empty",
+   "kwargs": {
+    "target_type": "",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/empty",
+   "kwargs": {
+    "target_type": "post",
+    "reason": ""
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/tuple",
+   "kwargs": {
+    "target_type": {
+     "$tuple": [
+      "person"
+     ]
+    },
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/tuple",
+   "kwargs": {
+    "target_type": "post",
+    "reason": {
+     "$tuple": [
+      "person"
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/list",
+   "kwargs": {
+    "target_type": [
+     "person"
+    ],
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/list",
+   "kwargs": {
+    "target_type": "post",
+    "reason": [
+     "person"
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/bytes",
+   "kwargs": {
+    "target_type": "$o:bytes",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/bytes",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "$o:bytes"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/true",
+   "kwargs": {
+    "target_type": true,
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/true",
+   "kwargs": {
+    "target_type": "post",
+    "reason": true
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/combining",
+   "kwargs": {
+    "target_type": "person\u0301",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/combining",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "person\u0301"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "target_type/fullwidth",
+   "kwargs": {
+    "target_type": "\uff50\uff4f\uff53\uff54",
+    "reason": "spam"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "reason/fullwidth",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "\uff50\uff4f\uff53\uff54"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "precedence/target_before_reason",
+   "kwargs": {
+    "target_type": "x",
+    "reason": "y",
+    "note": 1
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_TARGET_TYPE",
+     "code": "UNKNOWN_TARGET_TYPE"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "precedence/reason_before_note",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "y",
+    "note": 1
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "precedence/reason_before_long_note",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "y",
+    "note": {
+     "$str": [
+      [
+       "x",
+       900
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "UNKNOWN_REASON",
+     "code": "UNKNOWN_REASON"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/int",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": 12
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/float",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": "$f:0x1.8000000000000p+0"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/true",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": true
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/false",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": false
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/empty_list",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": []
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/list",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": [
+     "x"
+    ]
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/tuple",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": {
+     "$tuple": [
+      "x"
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/dict",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": {
+     "x": 1
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/not_text/bytes",
+   "kwargs": {
+    "target_type": "comment",
+    "reason": "spam",
+    "note": "$o:bytes"
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_NOT_TEXT",
+     "code": "NOTE_NOT_TEXT"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/ascii_500_trailing_space",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "x",
+       500
+      ],
+      [
+       " ",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "x",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/ascii_500_padded",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       " ",
+       3
+      ],
+      [
+       "x",
+       500
+      ],
+      [
+       "\u3000",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "x",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/ascii_499",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "x",
+       499
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "x",
+        499
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/precomposed_500",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u00e9",
+       500
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "\u00e9",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/precomposed_501",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u00e9",
+       501
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/combining_pairs_500",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "e\u0301",
+       250
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "e\u0301",
+        250
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/combining_pairs_501",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "e\u0301",
+       250
+      ],
+      [
+       "e",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/astral_500",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\ud83d\ude00",
+       500
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "\ud83d\ude00",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/astral_501",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\ud83d\ude00",
+       501
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/astral_half_ascii_half",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\ud83d\ude00",
+       250
+      ],
+      [
+       "x",
+       250
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "\ud83d\ude00",
+        250
+       ],
+       [
+        "x",
+        250
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/cjk_500",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u4e2d",
+       500
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "\u4e2d",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/vietnamese_501",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u1ec7",
+       501
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/file_separators_around_500",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u001c",
+       1
+      ],
+      [
+       "x",
+       500
+      ],
+      [
+       "\u001f",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "x",
+        500
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/unit_separator_after_499",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "x",
+       499
+      ],
+      [
+       "\u001f",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "x",
+        499
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/zero_width_around_499",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "\u200b",
+       1
+      ],
+      [
+       "x",
+       499
+      ],
+      [
+       "\u200b",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "raised": {
+     "type": "ReportError",
+     "message": "NOTE_TOO_LONG",
+     "code": "NOTE_TOO_LONG"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/interior_spaces",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": "a  \u3000 b"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": "a  \u3000 b"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/nul_kept",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": "\u0000a\u0000"
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": "\u0000a\u0000"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/length/dollar_prefix",
+   "kwargs": {
+    "target_type": "message",
+    "reason": "harassment",
+    "note": {
+     "$str": [
+      [
+       "$f:0x1.0p+0",
+       1
+      ]
+     ]
+    }
+   },
+   "result": {
+    "ok": {
+     "target_type": "message",
+     "reason": "harassment",
+     "note": {
+      "$str": [
+       [
+        "$f:0x1.0p+0",
+        1
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+0009",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\ta\t"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+0009",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\t\t\t"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+000A",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\na\n"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+000A",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\n\n\n"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+000B",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u000ba\u000b"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+000B",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u000b\u000b\u000b"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+000C",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\fa\f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+000C",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\f\f\f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+000D",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\ra\r"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+000D",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\r\r\r"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+001C",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001ca\u001c"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+001C",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001c\u001c\u001c"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+001D",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001da\u001d"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+001D",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001d\u001d\u001d"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+001E",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001ea\u001e"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+001E",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001e\u001e\u001e"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+001F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001fa\u001f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+001F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u001f\u001f\u001f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+0020",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": " a "
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+0020",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "   "
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+0085",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u0085a\u0085"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+0085",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u0085\u0085\u0085"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+00A0",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u00a0a\u00a0"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+00A0",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u00a0\u00a0\u00a0"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+1680",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u1680a\u1680"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+1680",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u1680\u1680\u1680"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2000",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2000a\u2000"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2000",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2000\u2000\u2000"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2001",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2001a\u2001"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2001",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2001\u2001\u2001"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2002",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2002a\u2002"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2002",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2002\u2002\u2002"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2003",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2003a\u2003"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2003",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2003\u2003\u2003"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2004",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2004a\u2004"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2004",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2004\u2004\u2004"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2005",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2005a\u2005"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2005",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2005\u2005\u2005"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2006",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2006a\u2006"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2006",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2006\u2006\u2006"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2007",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2007a\u2007"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2007",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2007\u2007\u2007"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2008",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2008a\u2008"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2008",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2008\u2008\u2008"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2009",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2009a\u2009"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2009",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2009\u2009\u2009"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+200A",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u200aa\u200a"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+200A",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u200a\u200a\u200a"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2028",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2028a\u2028"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2028",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2028\u2028\u2028"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+2029",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2029a\u2029"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+2029",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2029\u2029\u2029"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+202F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u202fa\u202f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+202F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u202f\u202f\u202f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+205F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u205fa\u205f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+205F",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u205f\u205f\u205f"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip/U+3000",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u3000a\u3000"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "a"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/strip_only/U+3000",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u3000\u3000\u3000"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": null
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+200B",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u200b"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\u200b"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+200D",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u200d"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\u200d"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+2060",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u2060"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\u2060"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+FEFF",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\ufeff"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\ufeff"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+180E",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u180e"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\u180e"
+    }
+   }
+  },
+  {
+   "fn": "validate_report",
+   "name": "note/no_strip/U+00AD",
+   "kwargs": {
+    "target_type": "post",
+    "reason": "spam",
+    "note": "\u00ad"
+   },
+   "result": {
+    "ok": {
+     "target_type": "post",
+     "reason": "spam",
+     "note": "\u00ad"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,261 @@
+# W8 · POST /papers/{id}/versions/{version}/viewed. The version must exist (404
+# paper_not_found «Không có phiên bản này.»), then roles, then is_not_version_sender
+# (409 paper_self_response). An unsent draft has no sender, so its owner may mark it.
+# The first look is the one kept; only a look at the current version of a da_gui sheet
+# moves it to da_xem. Path spellings of the version are probed against version 9, which
+# does not exist, so a spelling that parses writes nothing. Texts are sample data.
+id: w8/pair_papers/post-papers-paper_id-versions-version-viewed
+routes: ['POST /papers/{paper_id}/versions/{version}/viewed']
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: anonymous_views
+    as: anonymous
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/versions/1/viewed'
+  - id: stranger_views_unknown
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/versions/1/viewed'
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở sổ (dữ liệu mẫu)"}'
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người kia (dữ liệu mẫu)"}'
+  - id: owner_asks_mate_friendship
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      fr_owner_mate: {from: body, pointer: /id, class: uuid}
+  - id: mate_accepts_owner_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{fr_owner_mate}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+  - id: owner_opens_pair
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      pair: {from: body, pointer: /id, class: uuid}
+  - id: owner_proposes_lap_so
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"purpose":"lap_so"}'
+    bind:
+      lap_so: {from: body, pointer: /id, class: uuid}
+  - id: mate_grants_lap_so
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/notebook/proposals/{{lap_so}}/grant'
+  - id: owner_drafts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{pair}}/papers/draft'
+    bind:
+      paper: {from: body, pointer: /id, class: uuid}
+  - id: owner_views_own_draft
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: mate_views_owner_draft
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: stranger_views_real_paper
+    as: stranger
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: owner_sends
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/send'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"version":1}'
+  - id: owner_views_own_sent
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: mate_views_as_advancer
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+      headers:
+        x-actor-roles: 'advancer'
+  - id: mate_views_version_9
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9/viewed'
+  - id: mate_views_version_0
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/0/viewed'
+  - id: mate_views
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: owner_reads_seen
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: mate_views_again
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: owner_reads_first_look_kept
+    as: owner
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: mate_version_leading_zero
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/09/viewed'
+  - id: mate_version_plus
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/%2B9/viewed'
+  - id: mate_version_minus
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/-9/viewed'
+  - id: mate_version_space
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/%209/viewed'
+  - id: mate_version_decimal
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9.0/viewed'
+  - id: mate_version_underscore
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9_0/viewed'
+  - id: mate_version_exponent
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/9e0/viewed'
+  - id: mate_version_word
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/chin/viewed'
+  - id: mate_version_fullwidth
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/%EF%BC%99/viewed'
+  - id: mate_counter_proposes
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/responses'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"de_nghi_sua","content":{"ngay":"2026-09-01","chang":[{"gio":"19:00","viec":"Ăn tối (dữ liệu mẫu)"}]}}'
+  - id: mate_views_own_v2
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/viewed'
+  - id: owner_views_v2
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/viewed'
+  - id: owner_views_own_v1
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: mate_views_old_v1
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+  - id: mate_reads_two_versions
+    as: mate
+    request:
+      method: GET
+      path: '/papers/{{paper}}'
+  - id: owner_views_v2_with_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/viewed'
+      headers:
+        idempotency-key: 'w8-da-xem-a'
+  - id: owner_replays_header_key
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/viewed'
+      headers:
+        idempotency-key: 'w8-da-xem-a'
+  - id: owner_header_key_other_version
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/1/viewed'
+      headers:
+        idempotency-key: 'w8-da-xem-a'
+  - id: mate_skips
+    as: mate
+    request:
+      method: POST
+      path: '/papers/{{paper}}/skip'
+  - id: owner_views_cancelled
+    as: owner
+    request:
+      method: POST
+      path: '/papers/{{paper}}/versions/2/viewed'
