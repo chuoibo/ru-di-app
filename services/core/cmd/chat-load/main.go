@@ -28,6 +28,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/chatv2diag"
 )
 
 type device struct {
@@ -39,6 +40,10 @@ type receipt struct {
 	Envelope chatv2.Envelope
 	Start    time.Time
 	Actor    string
+}
+type sequenceID struct {
+	Conversation string
+	Sequence     int64
 }
 type socketClient struct {
 	Device     device
@@ -264,6 +269,10 @@ func (w *world) connect(ctx context.Context, c *socketClient, index int) (*webso
 }
 func (w *world) reader(ctx context.Context, c *socketClient, index int, wg *sync.WaitGroup) {
 	defer wg.Done()
+	// Each simulated device owns cancellation registration. Sharing one parent
+	// directly makes every WebSocket timeout contend on the generator's mutex.
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	first := true
 	for ctx.Err() == nil {
 		conn, e := w.connect(ctx, c, index)
@@ -320,11 +329,7 @@ func (w *world) reader(ctx context.Context, c *socketClient, index int, wg *sync
 						if !sameEnvelope(*event.Envelope, want.Envelope) || event.ActorID != want.Actor || event.Envelope.ConversationID != c.Device.Group {
 							w.Metrics.Corrupt.Add(1)
 						}
-						sequenceKey := c.Device.Group + ":" + fmt.Sprint(event.Sequence)
-						if prior, loaded := w.Sequences.LoadOrStore(sequenceKey, event.Envelope.LogicalSendID); loaded && prior != event.Envelope.LogicalSendID {
-							w.Metrics.Corrupt.Add(1)
-						}
-						if prior, loaded := w.LogicalSequences.LoadOrStore(event.Envelope.LogicalSendID, sequenceKey); loaded && prior != sequenceKey {
+						if !w.recordSequence(c.Device.Group, event.Sequence, event.Envelope.LogicalSendID) {
 							w.Metrics.Corrupt.Add(1)
 						}
 						w.Metrics.Delivery.add(time.Since(want.Start))
@@ -352,6 +357,25 @@ func (w *world) reader(ctx context.Context, c *socketClient, index int, wg *sync
 		time.Sleep(100 * time.Millisecond)
 	}
 }
+
+// Check both directions on every delivery. A read fast path avoids taking the
+// dirty-map insertion lock for hundreds of copies of the same event, while
+// LoadOrStore still arbitrates simultaneous first observations atomically.
+func consistentMapping(m *sync.Map, key, value any) bool {
+	prior, exists := m.Load(key)
+	if !exists {
+		prior, _ = m.LoadOrStore(key, value)
+	}
+	return prior == value
+}
+
+func (w *world) recordSequence(conversation string, sequence int64, logical string) bool {
+	key := sequenceID{Conversation: conversation, Sequence: sequence}
+	forward := consistentMapping(&w.Sequences, key, logical)
+	reverse := consistentMapping(&w.LogicalSequences, logical, key)
+	return forward && reverse
+}
+
 func (w *world) send(ctx context.Context, index int, replay bool, original *chatv2.Envelope) (chatv2.Envelope, error) {
 	d := w.Devices[index%len(w.Devices)]
 	var env chatv2.Envelope
@@ -423,9 +447,14 @@ func run() error {
 	devices := flag.Int("devices", 5, "devices per person")
 	lab := flag.String("lab-binary", "", "chat-lab binary")
 	flag.Parse()
-	if *people < 2 || *people > 200 || *devices < 1 || *devices > 5 || *rate < 1 || *rate > 100 || *duration < time.Second || *duration > 30*time.Minute || *lab == "" {
+	if *people < 2 || *people > 1000 || *devices < 1 || *devices > 5 || (*people)*(*devices) > 1000 || *rate < 1 || *rate > 300 || *duration < time.Second || *duration > 30*time.Minute || *lab == "" {
 		return errors.New("invalid bounded lab parameters")
 	}
+	stopProfile, profileErr := chatv2diag.Start("load", os.Getenv, os.Stderr)
+	if profileErr != nil {
+		return errors.New("cannot initialize load diagnostics")
+	}
+	defer stopProfile()
 	raw := os.Getenv("RUDI_CHAT_LOAD_DATABASE_URL")
 	ctx, cancel := context.WithTimeout(context.Background(), *duration+4*time.Minute)
 	defer cancel()
@@ -481,10 +510,10 @@ func run() error {
 	defer ticker.Stop()
 	jobs := make(chan int, 1000)
 	var workers sync.WaitGroup
-	// A five-second server deadline requires at least 500 in-flight slots to
-	// offer 100 requests/second even while the server is timing out. A small
-	// worker pool would measure generator backpressure instead of server load.
-	for i := 0; i < 512; i++ {
+	// Keep offering the configured rate even while every request reaches the
+	// five-second server deadline. Queue drops remain explicit gate failures.
+	workerCount := max(512, *rate*5+32)
+	for i := 0; i < workerCount; i++ {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
@@ -507,18 +536,25 @@ func run() error {
 	offered := 0
 	forced := 0
 	nextProgress := start.Add(10 * time.Second)
-	for time.Since(start) < *duration {
+	targetOffers := int(duration.Nanoseconds() * int64(*rate) / int64(time.Second))
+	for offered < targetOffers {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
 		}
-		offered++
-		select {
-		case jobs <- scheduled:
-			scheduled++
-		default:
-			w.Metrics.QueueDrops.Add(1)
+		// Tickers may coalesce under host contention. Account for every due
+		// arrival instead of quietly lowering the offered load on a busy host.
+		due := min(targetOffers, int(time.Since(start).Nanoseconds()*int64(*rate)/int64(time.Second)))
+		for offered < due {
+			n := offered
+			offered++
+			select {
+			case jobs <- n:
+				scheduled++
+			default:
+				w.Metrics.QueueDrops.Add(1)
+			}
 		}
 		if forced == 0 && time.Since(start) >= *duration/2 {
 			for i := 0; i < len(w.Clients); i += 10 {
@@ -537,6 +573,7 @@ func run() error {
 			nextProgress = time.Now().Add(10 * time.Second)
 		}
 	}
+	offeringElapsed := time.Since(start)
 	close(jobs)
 	workers.Wait()
 	elapsed := time.Since(start)
@@ -590,8 +627,8 @@ func run() error {
 	for _, c := range w.Clients {
 		expectedDeliveries += target[c.Device.Group]
 	}
-	result := map[string]any{"scope": "synthetic signed opaque envelopes, real HTTP/WebSocket/PostgreSQL, NOT MLS or mobile E2E", "people": *people, "devices_per_person": *devices, "groups": len(w.Groups), "connections": len(w.Clients), "peak_connections": w.Metrics.Peak.Load(), "duration_seconds": elapsed.Seconds(), "target_rate": *rate, "scheduled": scheduled, "offered": offered, "queue_drops": w.Metrics.QueueDrops.Load(), "send_duration_seconds": duration.Seconds(), "achieved_rate_including_drain": float64(w.Metrics.Sends.Load()) / elapsed.Seconds(), "sent": w.Metrics.Sends.Load(), "send_errors": w.Metrics.SendErrors.Load(), "replay_ok": w.Metrics.Replay.Load(), "replay_errors": w.Metrics.ReplayErrors.Load(), "http_status": statuses, "db_events": count, "db_outbox": outbox, "db_dedup": dedup, "expected_deliveries": expectedDeliveries, "received_deliveries": w.Metrics.Received.Load(), "missing_deliveries": missing, "duplicates": w.Metrics.Duplicate.Load(), "sequence_gaps": w.Metrics.Gap.Load(), "corrupt_envelopes": w.Metrics.Corrupt.Load(), "unexpected_disconnects": w.Metrics.ReadErrors.Load(), "dial_errors": w.Metrics.DialErrors.Load(), "planned_reconnects": forced, "reconnects": w.Metrics.Reconnects.Load(), "send_latency": w.Metrics.Send.result(), "delivery_latency": w.Metrics.Delivery.result(), "minimum_cursor": cursors[0], "maximum_cursor": cursors[len(cursors)-1]}
-	pass := offered >= int(duration.Seconds()*float64(*rate)*0.99) && w.Metrics.QueueDrops.Load() == 0 && missing == 0 && count == int64(scheduled) && count == outbox && count == dedup && w.Metrics.SendErrors.Load() == 0 && w.Metrics.ReplayErrors.Load() == 0 && w.Metrics.Gap.Load() == 0 && w.Metrics.Corrupt.Load() == 0 && w.Metrics.Duplicate.Load() == 0 && w.Metrics.ReadErrors.Load() == 0 && w.Metrics.DialErrors.Load() == 0 && w.Metrics.Peak.Load() == int64(len(w.Clients))
+	result := map[string]any{"scope": "synthetic signed opaque envelopes, real HTTP/WebSocket/PostgreSQL, NOT MLS or mobile E2E", "people": *people, "devices_per_person": *devices, "groups": len(w.Groups), "connections": len(w.Clients), "peak_connections": w.Metrics.Peak.Load(), "duration_seconds": elapsed.Seconds(), "target_rate": *rate, "sender_workers": workerCount, "scheduled": scheduled, "offered": offered, "offering_duration_seconds": offeringElapsed.Seconds(), "offered_rate": float64(offered) / offeringElapsed.Seconds(), "queue_drops": w.Metrics.QueueDrops.Load(), "send_duration_seconds": duration.Seconds(), "achieved_rate_including_drain": float64(w.Metrics.Sends.Load()) / elapsed.Seconds(), "sent": w.Metrics.Sends.Load(), "send_errors": w.Metrics.SendErrors.Load(), "replay_ok": w.Metrics.Replay.Load(), "replay_errors": w.Metrics.ReplayErrors.Load(), "http_status": statuses, "db_events": count, "db_outbox": outbox, "db_dedup": dedup, "expected_deliveries": expectedDeliveries, "received_deliveries": w.Metrics.Received.Load(), "missing_deliveries": missing, "duplicates": w.Metrics.Duplicate.Load(), "sequence_gaps": w.Metrics.Gap.Load(), "corrupt_envelopes": w.Metrics.Corrupt.Load(), "unexpected_disconnects": w.Metrics.ReadErrors.Load(), "dial_errors": w.Metrics.DialErrors.Load(), "planned_reconnects": forced, "reconnects": w.Metrics.Reconnects.Load(), "send_latency": w.Metrics.Send.result(), "delivery_latency": w.Metrics.Delivery.result(), "minimum_cursor": cursors[0], "maximum_cursor": cursors[len(cursors)-1]}
+	pass := float64(offered)/offeringElapsed.Seconds() >= float64(*rate)*0.99 && offered >= int(duration.Seconds()*float64(*rate)*0.99) && w.Metrics.QueueDrops.Load() == 0 && missing == 0 && count == int64(scheduled) && count == outbox && count == dedup && w.Metrics.SendErrors.Load() == 0 && w.Metrics.ReplayErrors.Load() == 0 && w.Metrics.Gap.Load() == 0 && w.Metrics.Corrupt.Load() == 0 && w.Metrics.Duplicate.Load() == 0 && w.Metrics.ReadErrors.Load() == 0 && w.Metrics.DialErrors.Load() == 0 && w.Metrics.Peak.Load() == int64(len(w.Clients))
 	latency := w.Metrics.Delivery.result()
 	latencyPassed := latency["p95_ms"] <= 800 && latency["p99_ms"] <= 2000
 	result["integrity_and_capacity_passed"] = pass

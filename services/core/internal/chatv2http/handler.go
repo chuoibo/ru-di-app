@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -27,6 +28,13 @@ type Store interface {
 	Send(context.Context, string, chatv2.Envelope) (chatv2.SendResult, error)
 	Events(context.Context, string, string, string, int64, int) (chatv2.Page, error)
 	Mark(context.Context, string, string, string, string, int64) (chatv2.Mark, error)
+}
+
+// SessionWriter binds queued mutations to their live bearer session inside
+// the write transaction. No grant obtained before admission can be reused.
+type SessionWriter interface {
+	SendSession(context.Context, string, []byte, chatv2.Envelope) (chatv2.SendResult, error)
+	MarkSession(context.Context, string, []byte, string, string, string, int64) (chatv2.Mark, error)
 }
 
 type Authenticate func(context.Context, http.Header) (string, error)
@@ -58,6 +66,8 @@ type Options struct {
 	AckTimeout        time.Duration
 	OperationTimeout  time.Duration
 	MaxConnections    int
+	// BatchSessions enables transactional batch authorization for real sessions.
+	BatchSessions bool
 }
 
 type Handler struct {
@@ -67,6 +77,7 @@ type Handler struct {
 	connections int
 	perActor    map[string]int
 	hub         *Hub
+	dispatch    *dispatcher
 }
 
 func New(o Options) *Handler {
@@ -86,6 +97,11 @@ func New(o Options) *Handler {
 		o.MaxConnections = 1000
 	}
 	h := &Handler{options: o, mux: http.NewServeMux(), perActor: map[string]int{}, hub: NewHub()}
+	if o.BatchSessions {
+		if store, ok := o.Store.(BatchStore); ok {
+			h.dispatch = newDispatcher(h, store)
+		}
+	}
 	h.mux.HandleFunc("POST /v2/chat/{conversation}/events", h.send)
 	h.mux.HandleFunc("GET /v2/chat/{conversation}/events", h.events)
 	h.mux.HandleFunc("PUT /v2/chat/{conversation}/marks", h.mark)
@@ -162,13 +178,25 @@ func (h *Handler) send(w http.ResponseWriter, r *http.Request) {
 		fail(w, chatv2.ErrInvalid)
 		return
 	}
-	if current, valid := h.actor(w, r); !valid {
-		return
-	} else if current != actor {
-		fail(w, ErrAuthentication)
-		return
+	var result chatv2.SendResult
+	var err error
+	if h.options.BatchSessions {
+		writer, ok := h.options.Store.(SessionWriter)
+		token, problem := auth.BearerToken(r.Header)
+		if !ok || problem != nil {
+			fail(w, ErrAuthentication)
+			return
+		}
+		result, err = writer.SendSession(r.Context(), actor, auth.TokenDigest(token), envelope)
+	} else {
+		if current, valid := h.actor(w, r); !valid {
+			return
+		} else if current != actor {
+			fail(w, ErrAuthentication)
+			return
+		}
+		result, err = h.options.Store.Send(r.Context(), actor, envelope)
 	}
-	result, err := h.options.Store.Send(r.Context(), actor, envelope)
 	if err != nil {
 		fail(w, err)
 		return
@@ -235,13 +263,25 @@ func (h *Handler) mark(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &in) {
 		return
 	}
-	if current, valid := h.actor(w, r); !valid {
-		return
-	} else if current != actor {
-		fail(w, ErrAuthentication)
-		return
+	var m chatv2.Mark
+	var err error
+	if h.options.BatchSessions {
+		writer, ok := h.options.Store.(SessionWriter)
+		token, problem := auth.BearerToken(r.Header)
+		if !ok || problem != nil {
+			fail(w, ErrAuthentication)
+			return
+		}
+		m, err = writer.MarkSession(r.Context(), actor, auth.TokenDigest(token), in.DeviceID, r.PathValue("conversation"), in.Kind, in.Sequence)
+	} else {
+		if current, valid := h.actor(w, r); !valid {
+			return
+		} else if current != actor {
+			fail(w, ErrAuthentication)
+			return
+		}
+		m, err = h.options.Store.Mark(r.Context(), actor, in.DeviceID, r.PathValue("conversation"), in.Kind, in.Sequence)
 	}
-	m, err := h.options.Store.Mark(r.Context(), actor, in.DeviceID, r.PathValue("conversation"), in.Kind, in.Sequence)
 	if err != nil {
 		fail(w, err)
 		return
@@ -296,9 +336,29 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	defer h.release(actor)
 	// Subscribe before reading: a commit between read and subscribe must not
 	// leave the connection asleep until another person sends a message.
-	wakeup, unsubscribe := h.hub.Subscribe(c)
-	defer unsubscribe()
-	page, err := h.options.Store.Events(r.Context(), actor, d, c, after, limit)
+	var wakeup <-chan struct{}
+	if h.dispatch == nil {
+		var unsubscribe func()
+		wakeup, unsubscribe = h.hub.Subscribe(c)
+		defer unsubscribe()
+	}
+	var page chatv2.Page
+	var sessionDigest []byte
+	if h.dispatch != nil {
+		token, invalid := auth.BearerToken(r.Header)
+		if invalid != nil {
+			fail(w, ErrAuthentication)
+			return
+		}
+		sessionDigest = auth.TokenDigest(token)
+		var deliveries []chatv2.Delivery
+		deliveries, err = h.dispatch.store.EventsBatch(r.Context(), c, []chatv2.Recipient{{ActorID: actor, DeviceID: d, SessionDigest: sessionDigest, After: after, Limit: limit}})
+		if err == nil {
+			page, err = deliveries[0].Page, deliveries[0].Err
+		}
+	} else {
+		page, err = h.options.Store.Events(r.Context(), actor, d, c, after, limit)
+	}
 	if err != nil {
 		fail(w, err)
 		return
@@ -313,6 +373,8 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	conn.SetReadLimit(1024)
 	acks := make(chan ack, 1)
+	var expectedAck atomic.Int64
+	expectedAck.Store(-1)
 	go func() {
 		defer cancel()
 		for {
@@ -320,7 +382,8 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 			if wsjson.Read(ctx, conn, &a) != nil {
 				return
 			}
-			if a.Type != "ack" || a.Sequence < 0 {
+			if a.Type != "ack" || a.Sequence < 0 || !expectedAck.CompareAndSwap(a.Sequence, -1) {
+				_ = conn.Close(websocket.StatusPolicyViolation, "invalid_ack")
 				return
 			}
 			select {
@@ -335,13 +398,34 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 	if err := writeFrame(ctx, conn, h.options.AckTimeout, frame{Type: "ready"}); err != nil {
 		return
 	}
-	ticker := time.NewTicker(h.options.ReconcileInterval)
-	defer ticker.Stop()
+	var tick <-chan time.Time
+	if h.dispatch == nil {
+		ticker := time.NewTicker(h.options.ReconcileInterval)
+		defer ticker.Stop()
+		tick = ticker.C
+	}
+	var shared *sharedFrame
+	defer func() { shared.release() }()
+
 	for {
 		if len(page.Events) > 0 {
-			if err := writeFrame(ctx, conn, h.options.AckTimeout, frame{Type: "events", Page: &page}); err != nil {
+			expectedAck.Store(page.NextSequence)
+			var writeErr error
+			if shared != nil {
+				writeCtx, writeCancel := context.WithTimeout(ctx, h.options.AckTimeout)
+				writeErr = conn.Write(writeCtx, websocket.MessageText, shared.data)
+				writeCancel()
+				shared.release()
+				shared = nil
+			} else {
+				writeErr = writeFrame(ctx, conn, h.options.AckTimeout, frame{Type: "events", Page: &page})
+			}
+			if writeErr != nil {
 				return
 			}
+			// Only the cursor survives the write; do not retain an entire shared
+			// decoded window while one device delays its ACK.
+			page.Events = nil
 			// One bounded page in flight. The client ACKs only after persisting
 			// ciphertext and crypto state; writes to a socket aren't delivery.
 			timer := time.NewTimer(h.options.AckTimeout)
@@ -361,16 +445,25 @@ func (h *Handler) stream(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			after = a.Sequence
-		} else {
+		} else if h.dispatch == nil {
 			select {
 			case <-wakeup:
-			case <-ticker.C:
+			case <-tick:
 			case <-ctx.Done():
 				return
 			case <-acks:
 				_ = conn.Close(websocket.StatusPolicyViolation, "unexpected_ack")
 				return
 			}
+		}
+		if h.dispatch != nil {
+			result, nextErr := h.dispatch.next(ctx, c, chatv2.Recipient{ActorID: actor, DeviceID: d, SessionDigest: sessionDigest, After: after, Limit: limit})
+			if nextErr != nil || result.err != nil {
+				_ = conn.Close(websocket.StatusPolicyViolation, "resync_required")
+				return
+			}
+			page, shared = result.page, result.frame
+			continue
 		}
 		// Reauthenticate on every catch-up, including quiet connections, and
 		// never reuse cached grants. Store rechecks membership/device as well.

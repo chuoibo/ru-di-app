@@ -3,6 +3,35 @@
 Ngày bắt đầu: 2026-09-21. Quyết định: ADR-0031. Nhánh triển khai:
 `codex/p0-w28-chat-go-e2ee`. Không phải bằng chứng phát hành.
 
+## Checkpoint triển khai mới nhất — 2026-09-21
+
+Đã có candidate Go với feed thay đổi bền vững cho reaction/xoá/poll,
+snapshot có revision, WebSocket ACK và catch-up. Frontend “Sổ hẹn của hội”
+đã nối feed; 20 phiên UI thật nhận đủ 400/400 lượt, không trùng, DOM p95
+670 ms / p99 717 ms trên loopback. Ảnh/sticker/reply/reaction/xoá/retry
+đạt 6/6; bình chọn tạo/đổi phiếu/đóng đạt 4/4; DM hai chiều và outsider
+403 đạt. Đây là browser E2E trên dữ liệu tổng hợp, chưa thay native.
+
+Luồng AI gọi rõ ràng qua Go job đã chạy bằng provider thật: đồng ý chia sẻ
+riêng lời nhờ → inference → card tới người bên kia → sửa giờ → xác nhận
+ngày/ngân sách → tạo một outing với timeline. Card nguồn của người đang
+mở chat đổi sang “Đã thành kèo”. Không tự đọc lịch sử. Endpoint này chỉ
+phục vụ compatibility legacy, từ chối context v2; chưa thay sealed result
+và grant từng tác giả của ADR-0031. Python thay đổi chỉ trong cửa inference.
+
+Go v2 đã tách dispatcher theo conversation, chia sẻ event/frame, dùng
+snapshot quyền nhất quán và chuyển NOTIFY khỏi transaction gửi tin sang
+outbox relay. Adapter Redis đã kiểm thực với Redis/PostgreSQL; chưa chứng
+minh toàn hệ thống qua broker chaos. Có lượt burst 18.000 tin / 9.000.000
+lượt nhận đủ nhưng p95 913 ms còn trượt; có lượt sau thất bại nặng, nên
+không lấy kết quả 60 giây tốt nhất làm kết luận production.
+
+Chi tiết feed: [triển khai và test](../codex/2026-09-21/chat-changes-implementation.md).
+Quy tắc snapshot mới: [ADR-0031](../decisions/ADR-0031-chat-realtime-e2ee-et-regles-go.md).
+Native MLS/crypto, voice mã hoá, iPhone/Android thật, soak 24 giờ, kiểm
+40/40 độc lập và cutover vẫn là cổng riêng chưa đóng. Manifest production
+không đổi writer chỉ vì candidate đạt test.
+
 ## Hiện trạng đã khảo sát
 
 - Baseline `24bc70f8`: 131 route decorator, 36 migration legacy.

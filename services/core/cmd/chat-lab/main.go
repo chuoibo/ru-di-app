@@ -15,7 +15,9 @@ import (
 	"syscall"
 	"time"
 
+	"mobile/services/core/internal/chatbus"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/chatv2diag"
 	"mobile/services/core/internal/chatv2http"
 	"mobile/services/core/internal/db"
 )
@@ -71,8 +73,40 @@ func run(args []string, getenv func(string) string) error {
 		}
 		return nil
 	}
-	h := chatv2http.New(chatv2http.Options{Store: chatv2.NewStore(pool), Authenticate: chatv2http.Sessions(pool), Experimental: true, Context: ctx})
+	stopProfile, err := chatv2diag.Start("server", getenv, os.Stderr)
+	if err != nil {
+		return errors.New("cannot initialize laboratory diagnostics")
+	}
+	defer stopProfile()
+	if getenv("RUDI_CHAT_PROFILE") == "1" {
+		// Pool counters contain no identifiers or payloads. They distinguish
+		// database work from queued acquisition during diagnostic load runs.
+		go func() {
+			ticker := time.NewTicker(time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					s := pool.Stat()
+					fmt.Fprintf(os.Stderr, "profile role=pool pid=%d acquired=%d constructing=%d total=%d max=%d empty_acquires=%d cancelled_acquires=%d acquire_milliseconds=%d\n", os.Getpid(), s.AcquiredConns(), s.ConstructingConns(), s.TotalConns(), s.MaxConns(), s.EmptyAcquireCount(), s.CanceledAcquireCount(), s.AcquireDuration().Milliseconds())
+				}
+			}
+		}()
+	}
+	h := chatv2http.New(chatv2http.Options{Store: chatv2.NewStore(pool), BatchSessions: true, Authenticate: chatv2http.Sessions(pool), Experimental: true, Context: ctx})
 	go h.Listen(ctx, pool)
+	bus := chatbus.Postgres()
+	if rawRedis := getenv("RUDI_CHAT_REDIS_URL"); rawRedis != "" {
+		bus, err = chatbus.New(rawRedis, getenv("RUDI_CHAT_REDIS_NAMESPACE"))
+		if err != nil {
+			return errors.New("invalid laboratory Redis configuration")
+		}
+		go bus.Listen(ctx, h.Wake, nil)
+	}
+	defer bus.Close()
+	go bus.Relay(ctx, pool)
 	srv := &http.Server{Addr: address, Handler: h, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	done := make(chan error, 1)
 	go func() { done <- srv.ListenAndServe() }()

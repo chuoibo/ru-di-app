@@ -55,7 +55,7 @@ func TestChatV2ProcessHelper(t *testing.T) {
 	if err := pool.Ping(ctx); err != nil {
 		t.Fatal("child database unavailable")
 	}
-	h := New(Options{Store: chatv2.NewStore(pool), Authenticate: Sessions(pool), Experimental: true,
+	h := New(Options{Store: chatv2.NewStore(pool), BatchSessions: true, Authenticate: Sessions(pool), Experimental: true,
 		Context: ctx, ReconcileInterval: 50 * time.Millisecond, OperationTimeout: 2 * time.Second})
 	go h.Listen(ctx, pool)
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")

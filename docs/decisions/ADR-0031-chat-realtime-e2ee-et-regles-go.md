@@ -69,3 +69,41 @@ production-ready khi chưa có bằng chứng native/crypto/tải/người dùng
 Nguồn: [MLS](https://www.rfc-editor.org/rfc/rfc9420),
 [application access control](https://www.rfc-editor.org/rfc/rfc9750.html#section-3.5),
 [OpenMLS native targets](https://latest.openmls.tech/doc/openmls/index.html).
+
+## Làm rõ khi triển khai dispatcher — 2026-09-21
+
+Đọc fanout theo lô có điểm tuyến tính hoá tại snapshot PostgreSQL
+`REPEATABLE READ, READ ONLY` đầu tiên. Session, người dùng chưa bị xoá,
+thiết bị, đúng lần gia nhập nhóm, epoch, watermark và event đều thuộc cùng
+snapshot đó. Không cache kết quả phân quyền qua các lô. Thu hồi đã commit
+trước snapshot phải bị từ chối; thu hồi đồng thời có thể commit trước khi
+trang được giao, nhưng trang đó không thể chứa event commit sau snapshot.
+Lô tiếp theo kiểm lại quyền bằng snapshot mới. Thời hạn session được kiểm
+lại bằng đồng hồ database trước khi trả trang. Send/Mark vẫn giữ khoá ghi.
+
+Feed/snapshot compatibility legacy áp dụng cùng ranh giới đọc nhất quán,
+kể cả ACL cặp bạn bè và toàn bộ projection message/reaction/poll. Quyết định
+này cũng loại chu kỳ khoá khi đọc DM đồng thời xoá tài khoản người bên kia.
+Không mở quyền plaintext mới, không thay writer và không cache permission.
+
+Đây là thay đổi có chủ đích so với bản thử giữ `FOR SHARE` trên từng hàng
+quyền tới cuối mỗi lần đọc. Test PostgreSQL giữ snapshot mở, commit revoke
+và event mới rồi mới thả reader; reader cũ chỉ thấy event cũ và lần đọc kế
+tiếp bị từ chối. Không diễn giải thành “revoke chờ mọi socket nhận xong”.
+Review độc lập và digest của bản đã kiểm nằm trong
+[báo cáo dispatcher](../codex/2026-09-21/chat-v2-batch-independent-review.md).
+
+Writer chỉ commit counter, event, dedup và outbox; `NOTIFY` được chuyển sang
+relay sau đó. Relay lấy tối đa 256 hàng bằng `SKIP LOCKED`, gộp wake theo
+conversation, rồi ghi checkpoint trong transaction relay. Redis chỉ chở
+conversation/sequence; mất thông báo được bù bằng cursor đọc PostgreSQL.
+Redis lỗi giữ outbox chưa publish; chế độ suy giảm dựa vào reconciliation
+1 giây, chưa có chứng cứ đạt p95 800 ms khi broker hỏng.
+
+Lý do chuyển NOTIFY có cả profile và mã nguồn: PostgreSQL 16 tuần tự hoá
+transaction gửi thông báo bằng khoá dùng chung tới commit; giữ nó trong
+writer gây hàng chờ giữa các nhóm. Xem
+[PostgreSQL async.c](https://github.com/postgres/postgres/blob/REL_16_STABLE/src/backend/commands/async.c).
+Việc tách fanout theo conversation và connection tham khảo
+[cách Slack phân phối realtime](https://slack.engineering/real-time-messaging/);
+đây là lựa chọn cho tải đã đo của repo, không phải tuyên bố đạt quy mô Slack.

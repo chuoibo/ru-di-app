@@ -12,9 +12,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Store struct{ pool *pgxpool.Pool }
+type Store struct {
+	pool   *pgxpool.Pool
+	writes *writeAdmission
+}
 
-func NewStore(pool *pgxpool.Pool) *Store { return &Store{pool: pool} }
+func NewStore(pool *pgxpool.Pool) *Store {
+	return &Store{pool: pool, writes: newWriteAdmission(pool.Config().MaxConns)}
+}
 
 type access struct {
 	key                []byte
@@ -29,30 +34,82 @@ func authorize(ctx context.Context, tx pgx.Tx, actor, device, conversation strin
 }
 
 func authorizeWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, exclusive bool) (access, error) {
+	return authorizeSessionWithLock(ctx, tx, actor, device, conversation, exclusive, nil)
+}
+
+func authorizeSessionWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, exclusive bool, sessionDigest []byte) (access, error) {
 	var a access
 	if !ValidID(actor) || !ValidID(device) || !ValidID(conversation) {
 		return a, ErrInvalid
 	}
-	var kind string
-	err := tx.QueryRow(ctx, `SELECT d.signing_key,cm.first_sequence,c.kind
- FROM chat_v2_devices d
- JOIN people p ON p.id=d.person_id
- JOIN chat_v2_members cm ON cm.device_id=d.id AND cm.context_id=$3
- JOIN memberships m ON m.id=cm.membership_id AND m.person_id=p.id AND m.context_id=cm.context_id
- JOIN contexts c ON c.id=cm.context_id
- WHERE p.id=$1 AND p.deleted_at IS NULL AND d.id=$2 AND d.revoked_at IS NULL
- AND m.state='active' AND m.left_at IS NULL FOR SHARE OF p,d,m,cm`, actor, device, conversation).Scan(&a.key, &a.first, &kind)
+	batch := &pgx.Batch{}
+	batch.Queue(`SELECT id::text FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE`, actor)
+	if sessionDigest != nil {
+		batch.Queue(`SELECT person_id::text FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`, sessionDigest, actor)
+	}
+	batch.Queue(`SELECT signing_key FROM chat_v2_devices WHERE id=$1 AND person_id=$2 AND revoked_at IS NULL FOR SHARE`, device, actor)
+	batch.Queue(`SELECT id::text FROM memberships WHERE context_id=$1 AND person_id=$2 AND state='active' AND left_at IS NULL ORDER BY id FOR SHARE`, conversation, actor)
+	batch.Queue(`SELECT membership_id::text,first_sequence FROM chat_v2_members WHERE context_id=$1 AND device_id=$2 FOR SHARE`, conversation, device)
+	batch.Queue(`SELECT kind FROM contexts WHERE id=$1`, conversation)
+	br := tx.SendBatch(ctx, batch)
+	defer br.Close()
+	var person, membership, kind string
+	err := br.QueryRow().Scan(&person)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return a, ErrForbidden
 	}
 	if err != nil {
 		return a, err
 	}
+	if sessionDigest != nil {
+		if err = br.QueryRow().Scan(&person); errors.Is(err, pgx.ErrNoRows) {
+			return a, ErrForbidden
+		} else if err != nil {
+			return a, err
+		}
+	}
+	if err = br.QueryRow().Scan(&a.key); errors.Is(err, pgx.ErrNoRows) {
+		return a, ErrForbidden
+	} else if err != nil {
+		return a, err
+	}
+	rows, err := br.Query()
+	if err != nil {
+		return a, err
+	}
+	active := map[string]bool{}
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			rows.Close()
+			return a, err
+		}
+		active[id] = true
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return a, err
+	}
+	if err = br.QueryRow().Scan(&membership, &a.first); errors.Is(err, pgx.ErrNoRows) {
+		return a, ErrForbidden
+	} else if err != nil {
+		return a, err
+	}
+	if err = br.QueryRow().Scan(&kind); err != nil {
+		return a, err
+	}
+	if err = br.Close(); err != nil {
+		return a, err
+	}
+	if !active[membership] {
+		return a, ErrForbidden
+	}
 	if kind == "pair" {
 		rows, e := tx.Query(ctx, `SELECT f.state FROM friend_requests f WHERE
    ((f.requester_id=$1 AND f.addressee_id IN (SELECT person_id FROM memberships WHERE context_id=$2))
    OR (f.addressee_id=$1 AND f.requester_id IN (SELECT person_id FROM memberships WHERE context_id=$2)))
-   FOR SHARE OF f`, actor, conversation)
+   ORDER BY f.id FOR SHARE OF f`, actor, conversation)
 		if e != nil {
 			return a, e
 		}
@@ -113,34 +170,62 @@ func decodeBody(e *Event, body []byte) error {
 	e.Mark = &Mark{}
 	return json.Unmarshal(body, e.Mark)
 }
-func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind string, body any) (Event, error) {
+
+type sendReceipt struct {
+	device, logical string
+	digest          []byte
+}
+
+func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind string, body any, receipt *sendReceipt) (Event, error) {
 	var e Event
 	encoded, err := json.Marshal(body)
 	if err != nil {
 		return e, err
 	}
-	err = tx.QueryRow(ctx, `UPDATE chat_v2_conversations SET last_sequence=last_sequence+1 WHERE context_id=$1 RETURNING last_sequence`, conversation).Scan(&e.Sequence)
+	// The sequence, event and outbox are one statement as well as one
+	// transaction. The outbox relay publishes wake hints after this commit;
+	// the writer must never acquire PostgreSQL's global NOTIFY commit lock.
+	// Returning the inserted row avoids another read round trip per envelope.
+	var bodyJSON []byte
+	var device, logical any
+	var digest []byte
+	if receipt != nil {
+		device, logical, digest = receipt.device, receipt.logical, receipt.digest
+	}
+	err = tx.QueryRow(ctx, `WITH bumped AS (
+ UPDATE chat_v2_conversations SET last_sequence=last_sequence+1 WHERE context_id=$1 RETURNING last_sequence
+), inserted AS (
+ INSERT INTO chat_v2_events(context_id,sequence,kind,actor_id,body)
+ SELECT $1,last_sequence,$2,$3,$4 FROM bumped
+ RETURNING sequence,kind,actor_id::text,body,created_at
+), queued AS (
+ INSERT INTO chat_v2_outbox(context_id,sequence) SELECT $1,sequence FROM inserted
+), deduplicated AS (
+ INSERT INTO chat_v2_sends(context_id,device_id,logical_send_id,digest,sequence)
+ SELECT $1,$5::uuid,$6::uuid,$7::bytea,sequence FROM inserted WHERE $5::uuid IS NOT NULL
+)
+SELECT sequence,kind,actor_id,body,created_at FROM inserted`, conversation, kind, actor, encoded, device, logical, digest).Scan(&e.Sequence, &e.Kind, &e.ActorID, &bodyJSON, &e.CreatedAt)
 	if err != nil {
 		return e, err
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO chat_v2_events(context_id,sequence,kind,actor_id,body) VALUES($1,$2,$3,$4,$5)`, conversation, e.Sequence, kind, actor, encoded)
-	if err != nil {
-		return e, err
-	}
-	_, err = tx.Exec(ctx, `INSERT INTO chat_v2_outbox(context_id,sequence) VALUES($1,$2)`, conversation, e.Sequence)
-	if err != nil {
-		return e, err
-	}
-	// NOTIFY is a latency hint emitted only on commit. Durable catch-up never
-	// depends on receiving it; the outbox remains available for future fanout.
-	_, err = tx.Exec(ctx, `SELECT pg_notify('rudi_chat_v2',$1)`, conversation)
-	if err != nil {
-		return e, err
-	}
-	return readEvent(ctx, tx, conversation, e.Sequence)
+	err = decodeBody(&e, bodyJSON)
+	return e, err
 }
 
 func (s *Store) Send(ctx context.Context, actor string, envelope Envelope) (SendResult, error) {
+	return s.send(ctx, actor, nil, envelope)
+}
+
+// SendSession revalidates the bearer grant after admission, under the same
+// transaction and lock order as membership, device and event persistence.
+func (s *Store) SendSession(ctx context.Context, actor string, digest []byte, envelope Envelope) (SendResult, error) {
+	if len(digest) != 32 {
+		return SendResult{}, ErrForbidden
+	}
+	return s.send(ctx, actor, digest, envelope)
+}
+
+func (s *Store) send(ctx context.Context, actor string, sessionDigest []byte, envelope Envelope) (SendResult, error) {
 	var result SendResult
 	preimage, err := SigningBytes(envelope)
 	if err != nil {
@@ -149,12 +234,20 @@ func (s *Store) Send(ctx context.Context, actor string, envelope Envelope) (Send
 	if len(envelope.Signature) != ed25519.SignatureSize {
 		return result, ErrInvalid
 	}
+	if !ValidID(actor) {
+		return result, ErrInvalid
+	}
+	release, err := s.writes.acquire(ctx, envelope.ConversationID)
+	if err != nil {
+		return result, err
+	}
+	defer release()
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return result, err
 	}
 	defer tx.Rollback(ctx)
-	a, err := authorize(ctx, tx, actor, envelope.DeviceID, envelope.ConversationID)
+	a, err := authorizeSessionWithLock(ctx, tx, actor, envelope.DeviceID, envelope.ConversationID, true, sessionDigest)
 	if err != nil {
 		return result, err
 	}
@@ -187,11 +280,7 @@ func (s *Store) Send(ctx context.Context, actor string, envelope Envelope) (Send
 	if envelope.Epoch != a.epoch {
 		return result, ErrEpoch
 	}
-	result.Event, err = appendEvent(ctx, tx, envelope.ConversationID, actor, "envelope", envelope)
-	if err != nil {
-		return result, err
-	}
-	_, err = tx.Exec(ctx, `INSERT INTO chat_v2_sends(context_id,device_id,logical_send_id,digest,sequence) VALUES($1,$2,$3,$4,$5)`, envelope.ConversationID, envelope.DeviceID, envelope.LogicalSendID, digest[:], result.Event.Sequence)
+	result.Event, err = appendEvent(ctx, tx, envelope.ConversationID, actor, "envelope", envelope, &sendReceipt{device: envelope.DeviceID, logical: envelope.LogicalSendID, digest: digest[:]})
 	if err != nil {
 		return result, err
 	}
@@ -255,16 +344,33 @@ func (s *Store) Events(ctx context.Context, actor, device, conversation string, 
 }
 
 func (s *Store) Mark(ctx context.Context, actor, device, conversation, kind string, sequence int64) (Mark, error) {
+	return s.mark(ctx, actor, device, conversation, kind, sequence, nil)
+}
+
+// MarkSession applies the same session boundary to durable receipt writes.
+func (s *Store) MarkSession(ctx context.Context, actor string, digest []byte, device, conversation, kind string, sequence int64) (Mark, error) {
+	if len(digest) != 32 {
+		return Mark{}, ErrForbidden
+	}
+	return s.mark(ctx, actor, device, conversation, kind, sequence, digest)
+}
+
+func (s *Store) mark(ctx context.Context, actor, device, conversation, kind string, sequence int64, sessionDigest []byte) (Mark, error) {
 	mark := Mark{DeviceID: device}
-	if (kind != "read" && kind != "delivered") || sequence < 0 {
+	if (kind != "read" && kind != "delivered") || sequence < 0 || !ValidID(actor) || !ValidID(device) {
 		return mark, ErrInvalid
 	}
+	release, err := s.writes.acquire(ctx, conversation)
+	if err != nil {
+		return mark, err
+	}
+	defer release()
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return mark, err
 	}
 	defer tx.Rollback(ctx)
-	a, err := authorize(ctx, tx, actor, device, conversation)
+	a, err := authorizeSessionWithLock(ctx, tx, actor, device, conversation, true, sessionDigest)
 	if err != nil {
 		return mark, err
 	}
@@ -293,7 +399,7 @@ func (s *Store) Mark(ctx context.Context, actor, device, conversation, kind stri
 	if err != nil {
 		return mark, err
 	}
-	if _, err = appendEvent(ctx, tx, conversation, actor, "mark", mark); err != nil {
+	if _, err = appendEvent(ctx, tx, conversation, actor, "mark", mark, nil); err != nil {
 		return mark, err
 	}
 	return mark, tx.Commit(ctx)

@@ -104,7 +104,7 @@ func liveExec(t *testing.T, p *pgxpool.Pool, q string, a ...any) {
 	}
 }
 func (f liveWorld) handler(ctx context.Context) *Handler {
-	return New(Options{Store: chatv2.NewStore(f.pool), Authenticate: Sessions(f.pool), Experimental: true, Context: ctx, ReconcileInterval: 20 * time.Millisecond})
+	return New(Options{Store: chatv2.NewStore(f.pool), BatchSessions: true, Authenticate: Sessions(f.pool), Experimental: true, Context: ctx, ReconcileInterval: 20 * time.Millisecond})
 }
 func (f liveWorld) envelope(i int) chatv2.Envelope {
 	p := f.people[i]

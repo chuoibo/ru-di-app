@@ -1027,6 +1027,20 @@ func TestPeopleRepositoryOracle(t *testing.T) {
 					}
 				}
 			}
+			// Go intentionally acquires the identity lock before erasure writes.
+			// Keep every legacy statement and probe; add only this documented
+			// security delta to the expected trace, at ErasePerson's entry.
+			if call == "erase_person" || call == "route.delete_own_account" {
+				for index, statement := range statements {
+					text, _ := statement.(string)
+					if strings.HasPrefix(text, "SELECT uploaded_images.id,") && strings.Contains(text, "WHERE uploaded_images.owner_person_id =") {
+						withLock := append([]any{}, statements[:index]...)
+						withLock = append(withLock, normalizeSQL("SELECT id FROM people WHERE id=$1::UUID FOR UPDATE"))
+						statements = append(withLock, statements[index:]...)
+						break
+					}
+				}
+			}
 			warnings := s.Warnings
 			if warnings == nil {
 				warnings = []any{}

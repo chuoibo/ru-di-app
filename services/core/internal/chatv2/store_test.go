@@ -396,7 +396,7 @@ func TestCatchupDoesNotSkipUncommittedSequence(t *testing.T) {
 	if _, err = authorize(ctx, tx, f.actor, f.device, f.conversation); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", f.envelope()); err != nil {
+	if _, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", f.envelope(), nil); err != nil {
 		t.Fatal(err)
 	}
 	done := make(chan error, 1)
