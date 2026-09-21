@@ -240,6 +240,15 @@ func migratedOracleSchema(t *testing.T, image, prefix string) (*pgxpool.Pool, st
 		t.Fatal(err)
 	}
 	config.ConnConfig.RuntimeParams["search_path"] = schema
+	// pgxpool defaults MaxConns to max(4, NumCPU), and the lock cases hold
+	// SEVEN transactions open at once to prove a row is locked against each of
+	// them. On a 16-core dev box the default is 16 and they all fit; on a
+	// 2-core CI runner it is 4, the fifth `pool.Begin` waits for a connection
+	// that nobody will free until the subtest ends, and the test hangs until
+	// the suite's deadline -- measured: "panic: test timed out after 30m0s",
+	// with TestGuestLinkLocksSerialiseRequests running 29m27s. Pinning it makes
+	// the tier behave the same on both, which is the point of a tier.
+	config.MaxConns = 16
 	pool, err := pgxpool.NewWithConfig(bg, config)
 	if err != nil {
 		t.Fatal(err)
