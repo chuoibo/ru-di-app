@@ -317,3 +317,25 @@ apps/mobile/.fe12-web/
 
 # Impeccable serve-question daemon state (per machine, per session)
 .impeccable/questions/
+
+# Cấu hình agent theo máy: `.claude/skills` là bộ skill vendor về, `.claude/qa-skills`
+# là bản clone của gói đó, `settings.local.json` là thiết lập riêng một máy. Không
+# phải nguồn của sản phẩm, và 12 MB này làm `git status` của mọi người nhiễu.
+.claude/
+
+# Impeccable: kết quả critique của một lần chạy (ảnh review đã ignore ở trên).
+.impeccable/critique/
+
+# Log của `thu-app.sh` khi chạy tay. `*.log` đã bị chặn, nhưng thư mục vẫn hiện
+# trong `git status` khi có file khác lọt vào.
+.thu-app-logs/
+
+# Ảnh phác thảo concept để trong lúc làm, không phải tài sản đã duyệt. Tài sản
+# duyệt rồi nằm ở `product/` hoặc `docs/assets/`.
+linhvat/
+
+# Mini-bảng Maestro theo vòng: bằng chứng của một lần chạy, không phải bộ flow.
+# Bộ thật là `apps/mobile/.maestro` (55 flow, có cổng gác trong gate.sh và CI).
+# 17 thư mục `-bs-*` đã commit nhầm rồi bị gỡ — báo cáo review đã ghi kết luận.
+apps/mobile/.maestro-bs*/
+apps/mobile/.maestro-ld/

@@ -1221,7 +1221,7 @@
     "evidence": {
       "blindReads": "docs/claude/2026-09-12/nen-to-giay/README.md (3 vòng, reviewer context mới, ảnh cắt không nhãn)",
       "native": "docs/claude/2026-09-12/nen-to-giay/anh/r18-99-{to-giay-tren,to-giay-chot,nep-manh-tren,nep-manh-duoi}-fs{1.0,2.0}-{sang,toi}.png",
-      "maestro": ".maestro-bs-r18/99-to-giay-ui-lab.yaml exit 0 × 4 cấu hình",
+      "maestro": ".maestro-bs-r18/99-to-giay-ui-lab.yaml exit 0 × 4 cấu hình (flow trong lịch sử Git @ 137c6c04)",
       "gates": [
         "tests/art-duong.test.mjs",
         "tests/so-ban-tinh-mot-cho.test.mjs",
