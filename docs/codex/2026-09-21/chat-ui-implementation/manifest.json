@@ -1,0 +1,61 @@
+{
+  "entry_asset": "entry-5c477e5372d98f5ce4adba7628905d24.js",
+  "entry_sha256": "0d2950e3c262fc57059d92063e7c484c374c282f78ac6bf7d149413c7f974673",
+  "provenance": "Ảnh gốc từ hai reviewer độc lập, OTP UI tới stack Go/PostgreSQL tổng hợp; không phải native.",
+  "screenshots": [
+    {
+      "path": "01-chat-light.png",
+      "sha256": "3fcdb32f453f962f08b993e4014ac0cb8b00f9dc777f88b90f4f374826e9fa60",
+      "original_runtime_path": "/tmp/rudi-chat-e2e.JpMlFu/design-a-confirm/01-chat-light.png",
+      "width": 430,
+      "height": 932,
+      "purpose": "A-confirm: chat sáng và thẻ đã thành kèo",
+      "metadata_keys": []
+    },
+    {
+      "path": "02-poll-restored.png",
+      "sha256": "41461477d5e255ac055080ba0f9af0b20853bc135c1cf5f665a6fb58fc238ab8",
+      "original_runtime_path": "/tmp/rudi-chat-e2e.JpMlFu/design-a-confirm/05-poll-restored.png",
+      "width": 430,
+      "height": 932,
+      "purpose": "A-confirm: bản nháp bình chọn sau trở lại phòng",
+      "metadata_keys": []
+    },
+    {
+      "path": "03-closed-poll.png",
+      "sha256": "4dd7838c423b537d79c649d4beb07db518884d7f2f4f5728869cc7fd3382a196",
+      "original_runtime_path": "/tmp/rudi-chat-e2e.JpMlFu/design-a-confirm/11-closed-poll-collapsed.png",
+      "width": 430,
+      "height": 932,
+      "purpose": "A-confirm: bình chọn đã đóng được thu gọn",
+      "metadata_keys": []
+    },
+    {
+      "path": "04-ai-consent-dark.png",
+      "sha256": "093ff20720d622210aa359819f0bdbffddd45334e3639fac049d5777ce4e85f8",
+      "original_runtime_path": "/tmp/rudi-chat-e2e.JpMlFu/design-a-confirm/17-dark-ai-form.png",
+      "width": 430,
+      "height": 932,
+      "purpose": "A-confirm: lời nhờ và phạm vi chia sẻ ở chế độ tối",
+      "metadata_keys": []
+    },
+    {
+      "path": "05-sheet-320.png",
+      "sha256": "3aa0401227783c94fa177deac2ed83b20b9a91a1a8c6ccd4268b2db245b067bf",
+      "original_runtime_path": "/tmp/rudi-chat-e2e.JpMlFu/design-b-confirm/05-settings-sheet-320.png",
+      "width": 320,
+      "height": 740,
+      "purpose": "B-confirm: sheet có đủ năm màu trong viewport320",
+      "metadata_keys": []
+    }
+  ],
+  "source_sha256": {
+    "apps/mobile/src/rudi/ui/GiaoDienProvider.tsx": "deb1dcf2ed849db358491812311036ffc059c2a0b601a2982c3f111b8173bad7",
+    "apps/mobile/src/rudi/theme.ts": "6fc4794f63b05d9168c11aaae3803579e08848b968c905bd2f173f2053368468",
+    "apps/mobile/src/rudi/ui/Sheet.tsx": "f49bda76bc84ae5aa71682ecbf59079f1403b4a251c0e0f6a74c4f5a156ed8ac",
+    "apps/mobile/src/rudi/screens/chat/CaiDatNhom.tsx": "cc0d01565fc189312da2232a64b910ba1702d3950fa17b25624a00a47109f58e",
+    "apps/mobile/src/rudi/screens/chat/GroupChatLive.tsx": "95766d0cabb900caf95c43eb971f6b5e7dc35d5676bb650360a1a5181a9c91b2",
+    "apps/mobile/src/rudi/screens/chat/SoHen.tsx": "d9f56e483cd3beebfecac3b3288bed0d2b5420d7d038c9adcfc8eb6f55f0fa56",
+    "apps/mobile/src/rudi/screens/keo/CreateOutingLive.tsx": "d5b7a1ef1ee92b325c520dd7ef42f7a60fdfaf656765018bca5c820cdafc854c"
+  }
+}
