@@ -1,0 +1,393 @@
+# WAI · the three photo reads of one place, in one file on purpose.
+#
+#   GET /places/{place_id}/photos              public, licensed, 404s
+#   GET /places/{place_id}/group-photos        private, gated, NEVER 404s
+#   GET /places/{place_id}/photos/{photo_id}   the bytes, public, cached
+#
+# ADR-0017 §2.4 keeps two photo sources apart, and the asymmetry between the
+# first two is the whole point of putting them side by side here: the public
+# gallery answers 404 for an id the catalogue has never heard of, while the
+# group route answers 200 with an empty list for the very same id. A port that
+# unified the two would leak «does this id exist» to anybody with a session,
+# and every ordinary test would stay green. Asking both with one unknown id in
+# one run turns that rule into a measured fact instead of a comment.
+#
+# The gate on group-photos lives in the SQL, not in a filter over rows already
+# fetched: a subselect over `memberships` restricted to ACTIVE with
+# `left_at IS NULL`, and `kind = PHOTO`. Four ways to get that wrong are worth
+# a step each, and none of them shows up in a happy-path read:
+#
+#   * another group's photograph of the same place;
+#   * a member who has since left;
+#   * an invitation never accepted;
+#   * a memory at the place that is not a photograph -- a check-in, which is a
+#     row in the same table with the same place_id and `kind = checkin`.
+#
+# Ordering is `created_at DESC, id DESC`, so three photographs posted in a row
+# pin both halves of that key.
+#
+# WHAT THIS FILE CANNOT REACH: the body of a place photograph. Rows in
+# `place_photos` come from the OSM importer and no route creates one, so the
+# public gallery is always empty here and `/photos/{photo_id}` can only be
+# driven to its 404 and its non-UUID 422. The bytes, their content type and
+# the `public, max-age=86400` header are therefore unproven by parity, and the
+# route card says so rather than letting an all-green run imply otherwise.
+id: wai/places/get-place-photos
+routes:
+  - 'GET /places/{place_id}/photos'
+  - 'GET /places/{place_id}/group-photos'
+  - 'GET /places/{place_id}/photos/{photo_id}'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  leaver: {}
+  invitee: {}
+  outsider: {}
+steps:
+  # --- every persona needs a people row before it may write --------------
+  # In `dev` the harness seeds sessions only for prod personas, so a write by
+  # an unregistered actor is a 409 `person_not_registered` rather than a row.
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_leaver
+    as: leaver
+    request:
+      method: PUT
+      path: '/people/{{persona.leaver}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người rời nhóm (dữ liệu mẫu)"}'
+
+  - id: register_invitee
+    as: invitee
+    request:
+      method: PUT
+      path: '/people/{{persona.invitee}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người được mời (dữ liệu mẫu)"}'
+
+  - id: register_outsider
+    as: outsider
+    request:
+      method: PUT
+      path: '/people/{{persona.outsider}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người nhóm khác (dữ liệu mẫu)"}'
+
+  # --- the public gallery, before anything exists ------------------------
+  - id: public_gallery_known_place
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/photos'
+
+  - id: public_gallery_unknown_place_is_404
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/khong-co-dia-diem-nay/photos'
+
+  - id: public_gallery_empty_segment
+    as: anonymous
+    request:
+      method: GET
+      path: '/places//photos'
+
+  # --- the bytes route, reachable only to its refusals -------------------
+  - id: photo_bytes_unknown_photo
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/photos/cadebeef-dcba-4eed-8fab-abcdefabcdef'
+
+  - id: photo_bytes_non_uuid_is_422
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/photos/khong-phai-uuid'
+
+  - id: photo_bytes_unknown_place
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/khong-co-dia-diem-nay/photos/cadebeef-dcba-4eed-8fab-abcdefabcdef'
+
+  # `/places/search` has no GET anywhere and lands here as a place id.
+  - id: search_path_lands_as_place_id
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/search/photos'
+
+  # --- group photos need a session ---------------------------------------
+  - id: group_photos_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: group_photos_before_any_group
+    as: outsider
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  # The asymmetry, asked with ONE id in ONE run: 200 here, 404 above.
+  - id: group_photos_unknown_place_is_not_404
+    as: outsider
+    request:
+      method: GET
+      path: '/places/khong-co-dia-diem-nay/group-photos'
+
+  # --- build two groups around one place ---------------------------------
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm ảnh quán (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+
+  - id: outsider_creates_their_own_group
+    as: outsider
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người ngoài (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  - id: owner_invites_leaver
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.leaver}}"}'
+    bind:
+      m_leaver: {from: body, pointer: /id, class: uuid}
+
+  - id: leaver_accepts
+    as: leaver
+    request:
+      method: POST
+      path: '/memberships/{{m_leaver}}/accept'
+
+  # Invited and never answered: never saw the wall, must not start now.
+  - id: owner_invites_invitee_who_never_accepts
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.invitee}}"}'
+
+  # --- three photographs at the place, to pin the ordering ---------------
+  - id: owner_posts_first_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d","caption":"Ảnh thứ nhất","place_id":"p-an-cafe-da-lat"}'
+
+  - id: mate_posts_second_photo
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e","caption":"Ảnh thứ hai","place_id":"p-an-cafe-da-lat"}'
+
+  - id: leaver_posts_third_photo
+    as: leaver
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f","caption":"Ảnh thứ ba","place_id":"p-an-cafe-da-lat"}'
+
+  # A photograph of the SAME place in a group the reader is not in.
+  - id: outsider_posts_photo_in_their_own_group
+    as: outsider
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx_other}}/photos/d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f8a","caption":"Ảnh của nhóm khác","place_id":"p-an-cafe-da-lat"}'
+
+  # A photograph in the reader's group with NO place: must not appear here.
+  - id: owner_posts_photo_with_no_place
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8a9b","caption":"Ảnh không gắn địa điểm"}'
+
+  # A CHECK-IN at the same place. It is a memory row with the same place_id
+  # and `kind = checkin`, so it is exactly what the kind filter exists to keep
+  # out of a photo list. Without this step a mutant that drops that filter goes
+  # unnoticed: photographs are the only memories the other steps create.
+  - id: owner_checks_in_at_the_same_place
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/checkins'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"place_id":"p-an-cafe-da-lat"}'
+
+  # A photograph at a DIFFERENT place: must not appear under this one.
+  - id: owner_posts_photo_at_another_place
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/memories'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image_url":"/contexts/{{ctx}}/photos/f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8a9b0c","caption":"Ảnh quán khác","place_id":"p-lung-chung-cafe"}'
+
+  # --- who sees what ------------------------------------------------------
+  - id: owner_sees_own_group_only
+    as: owner
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: mate_sees_the_same_wall
+    as: mate
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: outsider_sees_only_their_own
+    as: outsider
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: invitee_who_never_accepted_sees_nothing
+    as: invitee
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: leaver_sees_it_while_still_a_member
+    as: leaver
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: owner_removes_the_leaver
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/members/{{persona.leaver}}'
+
+  # The same reader, the same place, after leaving: the wall closes.
+  - id: leaver_stops_seeing_it
+    as: leaver
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  # Their photograph is still on the wall for those who remain.
+  - id: owner_still_sees_the_leavers_photo
+    as: owner
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos'
+
+  - id: other_place_shows_its_own_photo
+    as: owner
+    request:
+      method: GET
+      path: '/places/p-lung-chung-cafe/group-photos'
+
+  # The public gallery stayed empty through all of that: group photographs are
+  # never published as a venue's illustration.
+  - id: public_gallery_still_empty
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/photos'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: group_photos_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos/'
+
+  - id: group_photos_post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/places/p-an-cafe-da-lat/group-photos'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: group_photos_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/group-photos?limit=1&kind=video'
+
+  - id: public_gallery_junk_actor_headers
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/photos'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'
