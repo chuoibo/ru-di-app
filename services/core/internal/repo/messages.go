@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -247,7 +246,9 @@ func (r Repository) AddReaction(ctx context.Context, messageID, personID, kind s
 		if _, rb := r.Q.Exec(ctx, `ROLLBACK TO SAVEPOINT `+savepoint); rb != nil {
 			return false, rb
 		}
-		if pg := integrityViolation(err); pg != nil && strings.HasPrefix(pg.Code, "23") {
+		// Only replay of the reaction identity is an idempotent no-op. An
+		// outbox/check/FK failure must remain visible to the caller.
+		if pg := integrityViolation(err); pg != nil && pg.Code == "23505" && pg.ConstraintName == "uq_message_reactions_one_per_kind" {
 			return false, nil
 		}
 		return false, err
