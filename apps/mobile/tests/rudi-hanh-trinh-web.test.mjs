@@ -182,8 +182,21 @@ if (!existsSync(INDEX)) {
         label: "nút chọn điểm trong popup nhận được con trỏ",
         // Name what is on top instead of only saying the wait ran out.
         diagnose: () => {
+          // Chuỗi tổ tiên kèm position/z-index: z-index chỉ so được giữa các
+          // phần tử CÙNG một ngữ cảnh xếp lớp, nên "ai che ai" chỉ trả lời
+          // được khi thấy cả hai chuỗi.
+          const chain = (el) => {
+            const out = [];
+            for (let n = el; n && n !== document.documentElement; n = n.parentElement) {
+              const cs = getComputedStyle(n);
+              if (cs.position !== "static" || cs.zIndex !== "auto" || cs.transform !== "none") {
+                out.push(`${n.tagName}.${String(n.className).slice(0, 24)}[${cs.position},z=${cs.zIndex}]`);
+              }
+            }
+            return out;
+          };
           const list = document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]');
-          return [...(list ? list.querySelectorAll("button") : [])].map((b) => {
+          const buttons = [...(list ? list.querySelectorAll("button") : [])].map((b) => {
             const r = b.getBoundingClientRect();
             const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
             return {
@@ -192,8 +205,17 @@ if (!existsSync(INDEX)) {
               h: Math.round(r.height),
               hit: hit ? `${hit.tagName}.${hit.className}` : null,
               mine: hit ? b.contains(hit) : false,
+              hitChain: hit && !b.contains(hit) ? chain(hit) : null,
             };
           });
+          const popup = document.querySelector(".maplibregl-popup");
+          const mapEl = document.querySelector(".maplibregl-map");
+          const mr = mapEl ? mapEl.getBoundingClientRect() : null;
+          return {
+            buttons,
+            popupChain: popup ? chain(popup) : null,
+            mapBox: mr ? { y: Math.round(mr.y), h: Math.round(mr.height) } : null,
+          };
         },
       });
       await page.clickChu("3 · 20:00 · Chợ đêm Đà Lạt");
