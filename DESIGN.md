@@ -285,7 +285,7 @@ module «bản tính của sổ» (`so/ban-tinh.ts`). **Không màn người dù
 không token, không route**; mọi thứ mới chỉ lên bảng `app/dev/ui-lab.tsx`.
 Bằng chứng: ba vòng đọc mù (reviewer context mới, ảnh cắt không nhãn, trước
 khi mở packet) ghi ở `docs/claude/2026-09-12/nen-to-giay/README.md`, 16 PNG
-native `r18-99-*` ở `anh/` của cùng thư mục, Maestro `.maestro-bs-r18/99` exit 0
+native `r18-99-*` ở `anh/` của cùng thư mục, Maestro `.maestro-bs-r18/99` (flow còn trong lịch sử Git @ `137c6c04`) exit 0
 ở bốn cấu hình, và bốn cổng node: `art-duong` (baseline sha256 bản `trang`,
 `laDaiGap`, độ lấp đầy, bề dày dải), `so-ban-tinh-mot-cho`, `dau-gach-dai`,
 `rudi-khong-hex`. Bốn vòng đọc mù đã ghi trong README (vòng 4: «fix rồi
@@ -2264,7 +2264,7 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   live; iOS và tablet không có ảnh ở lát này.
 
 - **Phase 1 «Nếp truyền giấy» (12/09, head `137c6c04`)** chỉ có trên bảng
-  `app/dev/ui-lab.tsx` và Maestro `.maestro-bs-r18/99`; **không màn người
+  `app/dev/ui-lab.tsx` và Maestro `.maestro-bs-r18/99` (lịch sử Git @ `137c6c04`); **không màn người
   dùng nào** dựng `ToGiay`, `Nep gap="manh"`, `ThuGapBa` hay đọc `BAN_TINH`.
   Bố cục «ba tờ + lý do dưới tờ» là bố cục **lab**, không phải màn. Chuỗi
   `tuVung` của `hai-nguoi`/`doi` chưa render ở đâu.
