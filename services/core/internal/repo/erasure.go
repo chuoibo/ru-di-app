@@ -221,6 +221,12 @@ func (r Repository) ErasePerson(ctx context.Context, personID string, now time.T
 	if !erasureWipesSpellTheMap {
 		return ErasureReport{}, ErrErasureMapChanged
 	}
+	// Intentional security delta from legacy statement parity: lock identity
+	// before sessions/memberships so chat readers cannot deadlock erasure.
+	// A missing person is still refused at the original validation point.
+	if _, err := r.Q.Exec(ctx, `SELECT id FROM people WHERE id=$1::UUID FOR UPDATE`, personID); err != nil {
+		return ErasureReport{}, err
+	}
 	at := pythonInstant(now)
 	report := ErasureReport{Counts: []ErasureCount{}, StorageKeys: []string{}}
 	// Every wiped table appears once, so `counts.get(table, 0) + rowcount` is
