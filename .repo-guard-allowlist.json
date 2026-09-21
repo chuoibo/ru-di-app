@@ -3774,6 +3774,14 @@
         "controlled-artifact"
       ],
       "reason": "Ảnh kiểm chat Expo web với tài khoản và nội dung tổng hợp trên stack riêng; không có người tham gia thật hoặc credential. Ghim đúng byte bằng SHA-256."
+    },
+    {
+      "path": "packages/chat-crypto/Cargo.lock",
+      "sha256": "2f92268375658bdf5dd53cde29536fee58affce0f6983ce8b3175c725cacd4dd",
+      "rules": [
+        "vn-phone"
+      ],
+      "reason": "Lockfile OpenMLS spike: hai đoạn checksum autocfg 1.5.1 và regex-syntax 0.8.11 trùng mẫu số điện thoại. Root đã kiểm độc lập 197 registry archive SHA256 khớp lock ngày 2026-09-21; không có dữ liệu người tham gia. Chỉ miễn vn-phone cho đúng blob, không thay review crypto hoặc advisory audit."
     }
   ]
 }
