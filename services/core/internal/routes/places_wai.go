@@ -33,6 +33,18 @@ const (
 	publicPhotoCache = "public, max-age=86400"
 )
 
+// nearerDestination is the sort key Python spells `(distance, id)`. The id half
+// decides only a bit-exact tie, which needs two destinations at one point, so
+// the parity corpus cannot reach it: `GET-destinations.yaml` stays EQUAL when
+// this half is deleted. It is kept because production may hold such a pair, and
+// `places_wai_test.go` is what proves it still works.
+func nearerDestination(iKM float64, iID string, jKM float64, jID string) bool {
+	if iKM != jKM {
+		return iKM < jKM
+	}
+	return iID < jID
+}
+
 func listDestinations() Route {
 	return Route{ID: "GET /destinations", Status: 200, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
 		lat, err := optionalFloatParam(call, "lat")
@@ -77,10 +89,7 @@ func listDestinations() Route {
 			pairs = append(pairs, ranked{km: km, row: row})
 		}
 		sort.Slice(pairs, func(i, j int) bool {
-			if pairs[i].km != pairs[j].km {
-				return pairs[i].km < pairs[j].km
-			}
-			return pairs[i].row.ID < pairs[j].row.ID
+			return nearerDestination(pairs[i].km, pairs[i].row.ID, pairs[j].km, pairs[j].row.ID)
 		})
 		list := pyjson.List{}
 		for _, pair := range pairs {

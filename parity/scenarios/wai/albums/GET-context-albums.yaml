@@ -1,0 +1,290 @@
+# WAI · the album shelf and one album off it.
+#
+#   GET /contexts/{context_id}/albums              the shelf
+#   GET /contexts/{context_id}/albums/{outing_id}  one trip, read as an album
+#
+# The order of the checks in `trip_album` is its whole security argument, and
+# the service says so in as many words: membership of the context IN THE PATH
+# is proved first, so a stranger gets the same 403 whether or not `outing_id`
+# names anything. Reversing the two turns the pair into an oracle -- somebody
+# walking ids would learn which are real trips from 404-versus-403.
+#
+# That rule is only measurable as a COMPARISON, so the steps are written in
+# pairs: the same stranger asks with a real outing id and with one that names
+# nothing, and the two answers must be the same. A single step could not see
+# the difference, and neither could a test that only ever asks about ids it
+# already owns.
+#
+# The second layer is the one that stops an album being a way around the photo
+# gate: a member of group A passing group B's outing id must be refused, not
+# handed B's photographs, because the membership check would have passed on
+# their own group.
+#
+# The shelf itself reads from `group_recap`, so its counts cannot disagree with
+# the recap screen. An outing that has not started yet, one in progress and one
+# finished all render differently, and the shelf is newest first.
+id: wai/albums/get-context-albums
+routes:
+  - 'GET /contexts/{context_id}/albums'
+  - 'GET /contexts/{context_id}/albums/{outing_id}'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
+
+  # --- refusals before anything exists ------------------------------------
+  - id: shelf_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums'
+
+  - id: shelf_non_uuid_context
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/albums'
+
+  - id: album_non_uuid_outing
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums/khong-phai-uuid'
+
+  # --- two groups, each with a trip ---------------------------------------
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm có album (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người ngoài (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  # The shelf with no trips on it yet.
+  - id: shelf_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums'
+
+  - id: owner_creates_finished_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng ba lên rừng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      trip_done: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_creates_future_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng mười hai xuống biển (dữ liệu mẫu)","starts_on":"2026-12-05","ends_on":"2026-12-07","headcount":6,"budget_per_person_vnd":800000}'
+    bind:
+      trip_future: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_trip
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến của nhóm khác (dữ liệu mẫu)","starts_on":"2026-04-02","ends_on":"2026-04-04","headcount":3,"budget_per_person_vnd":300000}'
+    bind:
+      trip_other: {from: body, pointer: /id, class: uuid}
+
+  # --- the shelf, newest first --------------------------------------------
+  - id: owner_reads_shelf
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums'
+
+  - id: mate_reads_the_same_shelf
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums'
+
+  - id: stranger_cannot_read_the_shelf
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums'
+
+  # --- one album ----------------------------------------------------------
+  - id: owner_reads_finished_album
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_done}}'
+
+  - id: owner_reads_future_album
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_future}}'
+
+  - id: mate_reads_the_same_album
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_done}}'
+
+  # --- THE ORACLE PAIR ----------------------------------------------------
+  # Same stranger, same group, one real outing id and one that names nothing.
+  # The two answers must be identical: a port that checked the outing before
+  # the membership would answer 404 for the second and 403 for the first, and
+  # the difference is a directory of real trip ids.
+  - id: oracle_stranger_asks_with_a_real_outing
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_done}}'
+
+  - id: oracle_stranger_asks_with_a_made_up_outing
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/abcdefab-cdef-4abc-8def-abcdefabcdef'
+
+  # And the same pair from the anonymous side.
+  - id: oracle_anonymous_asks_with_a_real_outing
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_done}}'
+
+  - id: oracle_anonymous_asks_with_a_made_up_outing
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/abcdefab-cdef-4abc-8def-abcdefabcdef'
+
+  # --- the second layer ---------------------------------------------------
+  # A member of THIS group passing ANOTHER group's outing id. Membership
+  # passes; the outing must still be refused, or an album becomes a way around
+  # the photo gate.
+  - id: member_passes_another_groups_outing
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_other}}'
+
+  - id: mate_passes_another_groups_outing
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_other}}'
+
+  # The mirror: the stranger reading their own album is allowed, so the
+  # refusals above are about the gate and not about the route being broken.
+  - id: stranger_reads_their_own_album
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/albums/{{trip_other}}'
+
+  # An outing id from this group asked against the OTHER group's path.
+  - id: outing_asked_against_the_wrong_context
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx_other}}/albums/{{trip_done}}'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: shelf_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/'
+
+  - id: shelf_post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/albums'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: shelf_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums?limit=1&cursor=x'
+
+  - id: album_junk_actor_headers
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'

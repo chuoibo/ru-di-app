@@ -1,0 +1,376 @@
+# WAI · the chat read, the take-back, and the two reaction routes.
+#
+#   GET    /contexts/{id}/messages
+#   DELETE /contexts/{id}/messages/{message_id}
+#   POST   /contexts/{id}/messages/{message_id}/reactions
+#   DELETE /contexts/{id}/messages/{message_id}/reactions/{kind}
+#
+# Deleting is the shape worth pinning hardest. ADR-0021 §2.3 keeps the row and
+# turns it into `kind = 'deleted'` with no payload, because replies and read
+# marks still point at it; the route answers 204 rather than 200 with a body
+# that would have to describe an absence. A port that deleted the row would
+# answer the DELETE identically and only break LATER -- in the list read, in a
+# reply that now dangles, in a read mark pointing at nothing. So the delete is
+# always followed by a read, and there is a reply pointing at the message that
+# gets taken back.
+#
+# Reactions are idempotent per kind: a second tap of the same kind is the same
+# heart, not a second one, and both routes answer the message's WHOLE reaction
+# list, reader-aware. That means `viewer_has_reacted` differs between two
+# readers looking at the same row -- a port that computed the list once and
+# served it to everybody passes every single-reader test.
+#
+# `kind` in the path is a Literal of six, so a seventh is pydantic's 422 and
+# not a 404; the two are easy to swap in a port and impossible to tell apart
+# without asking.
+id: wai/messages/get-context-messages
+routes:
+  - 'GET /contexts/{context_id}/messages'
+  - 'DELETE /contexts/{context_id}/messages/{message_id}'
+  - 'POST /contexts/{context_id}/messages/{message_id}/reactions'
+  - 'DELETE /contexts/{context_id}/messages/{message_id}/reactions/{kind}'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
+
+  # --- refusals before the group exists -----------------------------------
+  - id: list_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/messages'
+
+  - id: list_non_uuid_context
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/messages'
+
+  # --- the group ----------------------------------------------------------
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm trò chuyện (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người ngoài (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  - id: empty_chat
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  # --- three messages -----------------------------------------------------
+  - id: owner_says_hello
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Chào cả nhà"}'
+    bind:
+      msg_first: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_answers
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tối nay đi đâu"}'
+    bind:
+      msg_second: {from: body, pointer: /id, class: uuid}
+
+  # A message that QUOTES the one that will be taken back, so the deletion has
+  # something still pointing at it.
+  - id: owner_quotes_the_second
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tuỳ mọi người","reply_to_id":"{{msg_second}}"}'
+    bind:
+      msg_reply: {from: body, pointer: /id, class: uuid}
+
+  - id: chat_with_three
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  # --- reactions ----------------------------------------------------------
+  - id: mate_hearts_the_first
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  # The same tap again: one heart, not two.
+  - id: mate_hearts_it_again
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  - id: owner_hearts_the_same_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  - id: owner_adds_a_second_kind
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+
+  # Reader-aware: the same row, two readers, different viewer_has_reacted.
+  - id: chat_as_the_mate
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  - id: chat_as_the_owner
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  - id: mate_takes_the_heart_back
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions/heart'
+
+  # Taking back one that was never given.
+  - id: mate_removes_a_reaction_never_given
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions/sad'
+
+  # A seventh kind is a 422 from the Literal, not a 404 from the lookup.
+  - id: seventh_reaction_kind_is_422
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions/khong-co-loai-nay'
+
+  - id: post_unknown_reaction_kind
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"khong-co-loai-nay"}'
+
+  - id: stranger_cannot_react
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  # --- taking a message back ----------------------------------------------
+  - id: stranger_cannot_delete
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_second}}'
+
+  # Somebody else's message is not yours to take back.
+  - id: owner_cannot_delete_the_mates_message
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_second}}'
+
+  - id: mate_deletes_own_message
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_second}}'
+
+  # THE measurement: the row must still be there, as `deleted` with no payload,
+  # and the reply that quotes it must still render.
+  - id: chat_after_the_deletion
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  - id: mate_deletes_it_twice
+    as: mate
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_second}}'
+
+  - id: react_to_a_deleted_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_second}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  # --- a message id from the other group ----------------------------------
+  - id: stranger_posts_in_their_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin của nhóm khác"}'
+    bind:
+      msg_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_reacts_to_a_foreign_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_other}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  - id: owner_deletes_a_foreign_message
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_other}}'
+
+  # --- paging -------------------------------------------------------------
+  - id: limit_below_range
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=0'
+
+  - id: limit_above_range
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=101'
+
+  - id: limit_not_a_number
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=nhieu'
+
+  - id: limit_at_both_edges
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=1'
+
+  - id: cursor_that_is_not_a_cursor
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?before=khong-phai-con-tro'
+
+  - id: both_cursors_at_once
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?before=x&after=y'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: list_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages/'
+
+  - id: put_not_allowed_on_the_list
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'

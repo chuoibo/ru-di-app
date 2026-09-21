@@ -1,0 +1,237 @@
+# WAI · GET /destinations — where RuDi knows places, and which one you stand in.
+#
+# No dependency but the repository: no actor, no session, so `prod` and `dev`
+# answer the same. The interesting shapes are all in the query pair:
+#
+#   * `lat`/`lng` are Query(ge/le) floats, so out of range is pydantic's 422
+#     while exactly one of the two is the route's own `coordinates_incomplete`;
+#   * with coordinates the rows sort by `(distance, id)`;
+#   * `distance_km` is `round(km, 1)`, a float, so standing on a destination
+#     must print `0.0` and never `0`;
+#   * `nearest` is null past NEAR_LIMIT_KM = 60.0, compared with `<=`.
+#
+# The parity seed holds exactly two destinations, d-da-lat (11.9404, 108.4583)
+# and d-tphcm (10.7769, 106.7009), about 200 km apart. That is enough to flip
+# the ordering and to put a caller inside and outside the limit. No step states
+# an expected answer: the boundary cases are worth most precisely because
+# whichever side they land on, both stacks must land on the same one.
+#
+# WHAT THIS FILE CANNOT REACH, measured rather than assumed: the `id` half of
+# the sort key. Go compares the distances with `!=`, so that half runs only on
+# a bit-exact float64 tie, which no choice of coordinates produces against two
+# destinations 200 km apart. A mutant that deleted the id tiebreak kept this
+# file EQUAL across all 28 steps, while a mutant that truncated the distance
+# instead of rounding it produced 8 differences -- so the file has teeth, and
+# this gap is real rather than a broken pipeline. A tie needs two destinations
+# at the same coordinates, and no route creates a destination: they come from
+# `seed_catalog` and the OSM importer. The tiebreak is therefore covered by a
+# Go unit test (`places_wai_test.go`) instead, and stays in the code because
+# production may well hold two rows at one point even though this seed does
+# not.
+id: wai/places/get-destinations
+routes: ['GET /destinations']
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: no_coordinates
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations'
+
+  - id: with_actor_same_answer
+    as: reader
+    request:
+      method: GET
+      path: '/destinations'
+
+  # Standing exactly on a destination: distance_km must render as 0.0.
+  - id: standing_on_da_lat
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11.9404&lng=108.4583'
+
+  - id: near_da_lat
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11.95&lng=108.46'
+
+  # Ordering must flip when the caller moves to the other city.
+  - id: standing_on_tphcm
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=10.7769&lng=106.7009'
+
+  # Measured, not guessed: from here the two distances are 115.58749 km and
+  # 115.58817 km -- one metre apart, and both render as 115.6. The raw float64
+  # values still differ, so the order is decided before the rounding. A port
+  # that sorted on the ROUNDED value would leave the order to whichever row its
+  # unstable sort touched first, and this step is where that shows.
+  - id: equidistant_rendered_distances_match
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11.35824&lng=107.57899'
+
+  # About 55 km north of Đà Lạt: inside the limit.
+  - id: inside_near_limit
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=12.4358&lng=108.4583'
+
+  # About 70 km north: outside it, so nearest is null while the list stays.
+  - id: outside_near_limit
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=12.5710&lng=108.4583'
+
+  # Solved for the boundary rather than eyeballed, and taken from both sides:
+  # 59.99975 km and 60.00087 km against a limit compared with `<=`, so the two
+  # steps sit twenty-five centimetres inside it and under a metre outside.
+  # Whether nearest comes back as the city or as null is not the point; that
+  # both stacks agree is, and a haversine differing in its last bits flips one.
+  - id: just_inside_the_boundary
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=12.47999&lng=108.4583'
+
+  - id: just_outside_the_boundary
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=12.48&lng=108.4583'
+
+  - id: far_from_everything
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=21.0285&lng=105.8542'
+
+  - id: southern_hemisphere
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=-33.8688&lng=151.2093'
+
+  # Half a coordinate is a caller bug, not a half answer: 422 from the route.
+  - id: lat_without_lng
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11.9404'
+
+  - id: lng_without_lat
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lng=108.4583'
+
+  # Out of range is pydantic's 422, a different body from the route's own.
+  - id: lat_above_ninety
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=91&lng=0'
+
+  - id: lat_below_minus_ninety
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=-90.0001&lng=0'
+
+  - id: lng_above_one_eighty
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=0&lng=181'
+
+  # The inclusive edges of both ranges must be accepted.
+  - id: poles_and_antimeridian
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=90&lng=180'
+
+  - id: lat_not_a_number
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=khong-phai-so&lng=108.4583'
+
+  - id: lat_empty_string
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=&lng='
+
+  # Integers, exponent form and a leading plus are all valid float literals to
+  # pydantic; a port that parses with a stricter grammar diverges here.
+  - id: integer_coordinates
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11&lng=108'
+
+  - id: exponent_notation
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=1.19404e1&lng=1.084583e2'
+
+  # Repeated parameters: which one wins is Starlette's answer, not ours.
+  - id: repeated_lat_parameter
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?lat=11.9404&lat=10.7769&lng=108.4583'
+
+  - id: unknown_query_parameter_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations?city=da-lat'
+
+  - id: junk_actor_headers_ignored
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'
+
+  - id: cors_simple_get
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations'
+      headers:
+        origin: 'http://127.0.0.1:19006'
+
+  - id: trailing_slash_redirects
+    as: anonymous
+    request:
+      method: GET
+      path: '/destinations/'
+
+  - id: head_not_allowed
+    as: anonymous
+    request:
+      method: HEAD
+      path: '/destinations'
+
+  - id: post_not_allowed
+    as: reader
+    request:
+      method: POST
+      path: '/destinations'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"id":"d-da-lat"}'

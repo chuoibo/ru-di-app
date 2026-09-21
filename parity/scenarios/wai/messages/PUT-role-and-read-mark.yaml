@@ -1,0 +1,401 @@
+# WAI · the two PUTs that hang off a chat.
+#
+#   PUT /contexts/{context_id}/members/{person_id}/role
+#   PUT /contexts/{context_id}/read-mark
+#
+# The read mark carries the same anti-oracle rule the album pair does, and the
+# service spells it out: a message from another group is a 404, NOT a 403,
+# because this door must not confirm that a message id exists. So it is
+# measured as a comparison again -- a foreign message id and an id that names
+# nothing at all must come back the same way. One step alone cannot see it.
+#
+# The mark is forward-only by construction, which is why the route is a PUT:
+# replaying it moves nothing. That is only visible if the scenario tries to
+# move it BACKWARDS after moving it forward, and then reads it again. A port
+# that simply stored whatever it was given would pass every forward-only test
+# and quietly lose unread counts the first time two devices raced.
+#
+# The role route wants `is_group_admin`, and the group must be a real group:
+# a direct-message context has two people and no ranks, so asking for a role
+# there is refused rather than silently accepted.
+id: wai/messages/put-role-and-read-mark
+routes:
+  - 'PUT /contexts/{context_id}/members/{person_id}/role'
+  - 'PUT /contexts/{context_id}/read-mark'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
+
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm có vai trò (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người ngoài (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  # --- three messages to aim the mark at ----------------------------------
+  - id: owner_first_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin thứ nhất"}'
+    bind:
+      msg_first: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_second_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin thứ hai"}'
+    bind:
+      msg_second: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_third_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin thứ ba"}'
+    bind:
+      msg_third: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_message_in_their_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin nhóm khác"}'
+    bind:
+      msg_other: {from: body, pointer: /id, class: uuid}
+
+  # --- the read mark ------------------------------------------------------
+  - id: mark_anonymous
+    as: anonymous
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_first}}"}'
+
+  - id: stranger_cannot_mark
+    as: stranger
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_first}}"}'
+
+  - id: mate_marks_the_second
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_second}}"}'
+
+  # Forward: allowed, and the mark moves.
+  - id: mate_marks_the_third
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_third}}"}'
+
+  # BACKWARDS: the call must be accepted as idempotent and move nothing. A port
+  # that stored what it was given would answer the same here and differ in the
+  # unread count the chat read returns next.
+  - id: mate_tries_to_move_the_mark_back
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_first}}"}'
+
+  # The chat read is where a mark that moved backwards would show up.
+  - id: chat_after_the_backwards_attempt
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  - id: mate_replays_the_third
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_third}}"}'
+
+  # --- THE ANTI-ORACLE PAIR -----------------------------------------------
+  # A real message from another group, and an id that names nothing anywhere.
+  # Both must answer the same way, or the door confirms which ids exist.
+  - id: oracle_mark_at_a_foreign_message
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_other}}"}'
+
+  - id: oracle_mark_at_an_invented_message
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"abcdefab-cdef-4abc-8def-abcdefabcdef"}'
+
+  - id: mark_with_a_non_uuid_message
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"khong-phai-uuid"}'
+
+  - id: mark_with_no_message_id
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  # --- roles --------------------------------------------------------------
+  - id: mate_cannot_promote_themselves
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  - id: stranger_cannot_set_a_role
+    as: stranger
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  - id: owner_promotes_the_mate
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  # Setting the role it already has: idempotent, not an error.
+  - id: owner_sets_the_same_role_again
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.mate}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  # Now an admin, the mate may demote the owner -- and then the owner may not
+  # promote themselves back. The pair proves the check reads the CURRENT role.
+  - id: new_admin_demotes_the_owner
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.owner}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
+
+  - id: demoted_owner_cannot_promote_themselves
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.owner}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  - id: role_outside_the_literal
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.owner}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"emperor"}'
+
+  - id: role_for_someone_not_in_the_group
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.stranger}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
+
+  - id: role_with_a_non_uuid_person
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/khong-phai-uuid/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
+
+  # --- a direct message context has no ranks ------------------------------
+  # A DM opens only between friends, and every refusal on that door is the same
+  # 404 -- it says nothing about why -- so the friendship has to be real first.
+  - id: owner_asks_to_be_friends
+    as: owner
+    request:
+      method: POST
+      path: '/friends/requests'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"addressee_id":"{{persona.mate}}"}'
+    bind:
+      friend_request: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts_the_friendship
+    as: mate
+    request:
+      method: POST
+      path: '/friends/requests/{{friend_request}}/respond'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"decision":"accept"}'
+
+  - id: owner_opens_a_dm
+    as: owner
+    request:
+      method: POST
+      path: '/people/{{persona.mate}}/dm'
+    bind:
+      dm: {from: body, pointer: /id, class: uuid}
+
+  - id: role_in_a_dm_is_refused
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{dm}}/members/{{persona.mate}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+
+  - id: read_mark_in_a_dm_is_fine
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{dm}}/messages'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: mark_trailing_slash
+    as: mate
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark/'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_third}}"}'
+
+  - id: mark_get_not_allowed
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/read-mark'
+
+  - id: role_post_not_allowed
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members/{{persona.owner}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
