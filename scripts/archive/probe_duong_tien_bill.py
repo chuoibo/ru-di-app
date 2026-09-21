@@ -104,10 +104,21 @@ class Probe:
     def sql(self, statement: str) -> str:
         return subprocess.run(
             [
-                "docker", "exec", self.args.pg_container, "psql",
-                "-U", self.args.pg_user, "-d", self.args.pg_db, "-tAF,", "-c", statement,
+                "docker",
+                "exec",
+                self.args.pg_container,
+                "psql",
+                "-U",
+                self.args.pg_user,
+                "-d",
+                self.args.pg_db,
+                "-tAF,",
+                "-c",
+                statement,
             ],
-            capture_output=True, text=True, check=True,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
 
     def ledger_snapshot(self) -> dict[str, int]:
@@ -134,8 +145,11 @@ class Probe:
     @staticmethod
     def item(key: str, name: str, total: int, who: list[str]) -> dict:
         return {
-            "item_key": key, "name": name, "quantity": 1,
-            "unit_price_vnd": total, "line_total_vnd": total,
+            "item_key": key,
+            "name": name,
+            "quantity": 1,
+            "unit_price_vnd": total,
+            "line_total_vnd": total,
             "suggested_participant_ids": who,
         }
 
@@ -147,21 +161,34 @@ class Probe:
 
         # 1 -- a remainder that cannot divide evenly by three.
         odd_total = 100001
-        status, bill = self.call("POST", "/bills", {
-            "context_id": self.ctx, "printed_total_vnd": odd_total,
-            "items_total_vnd": odd_total, "confidence": 91, "needs_review": False,
-            "items": [self.item("i1", "Lau chung", odd_total, people)],
-        })
+        status, bill = self.call(
+            "POST",
+            "/bills",
+            {
+                "context_id": self.ctx,
+                "printed_total_vnd": odd_total,
+                "items_total_vnd": odd_total,
+                "confidence": 91,
+                "needs_review": False,
+                "items": [self.item("i1", "Lau chung", odd_total, people)],
+            },
+        )
         if status != 201:
-            self.check("POST /bills tao duoc ban nhap", False, f"status={status} body={bill}")
+            self.check(
+                "POST /bills tao duoc ban nhap", False, f"status={status} body={bill}"
+            )
             return self.report()
         bill_id = bill["id"]
         self.check(
             "POST /bills khong tra confidence ra wire (ADR-0009 qd 4)",
-            "confidence" not in bill, f"keys={sorted(bill)}",
+            "confidence" not in bill,
+            f"keys={sorted(bill)}",
         )
-        self.call("PUT", f"/bills/{bill_id}/assignments",
-                  {"assignments": [{"item_key": "i1", "participant_ids": people}]})
+        self.call(
+            "PUT",
+            f"/bills/{bill_id}/assignments",
+            {"assignments": [{"item_key": "i1", "participant_ids": people}]},
+        )
         _, split = self.call("POST", f"/bills/{bill_id}/split", {"for_ledger": False})
         alloc = split["allocation"]["allocations"]
         self.check(
@@ -178,22 +205,41 @@ class Probe:
         # 2 -- per-dish, uneven: each person eats a different dish.
         amounts = [219000, 148000, 30000]
         total2 = sum(amounts)
-        _, bill2 = self.call("POST", "/bills", {
-            "context_id": self.ctx, "printed_total_vnd": total2,
-            "items_total_vnd": total2, "confidence": 88, "needs_review": False,
-            "items": [
-                self.item(k, n, a, [p])
-                for k, n, a, p in zip("abc", ["Suon", "Ba chi", "Pepsi"], amounts, people)
-            ],
-        })
+        _, bill2 = self.call(
+            "POST",
+            "/bills",
+            {
+                "context_id": self.ctx,
+                "printed_total_vnd": total2,
+                "items_total_vnd": total2,
+                "confidence": 88,
+                "needs_review": False,
+                "items": [
+                    self.item(k, n, a, [p])
+                    for k, n, a, p in zip(
+                        "abc", ["Suon", "Ba chi", "Pepsi"], amounts, people
+                    )
+                ],
+            },
+        )
         b2 = bill2["id"]
-        self.call("PUT", f"/bills/{b2}/assignments", {"assignments": [
-            {"item_key": k, "participant_ids": [p]} for k, p in zip("abc", people)
-        ]})
+        self.call(
+            "PUT",
+            f"/bills/{b2}/assignments",
+            {
+                "assignments": [
+                    {"item_key": k, "participant_ids": [p]}
+                    for k, p in zip("abc", people)
+                ]
+            },
+        )
         _, sp2 = self.call("POST", f"/bills/{b2}/split", {"for_ledger": False})
         a2 = sp2["allocation"]["allocations"]
-        self.check("mon rieng: sigma == tong", sum(a2.values()) == total2,
-                   f"sum={sum(a2.values())} alloc={a2}")
+        self.check(
+            "mon rieng: sigma == tong",
+            sum(a2.values()) == total2,
+            f"sum={sum(a2.values())} alloc={a2}",
+        )
         self.check(
             "mon rieng: ai an gi tra dung mon do",
             all(a2.get(p) == amt for p, amt in zip(people, amounts)),
@@ -201,13 +247,22 @@ class Probe:
         )
 
         # 3 -- an item nobody claimed must be refused, not shared with everyone.
-        status, bill3 = self.call("POST", "/bills", {
-            "context_id": self.ctx, "printed_total_vnd": 50000,
-            "items_total_vnd": 50000, "confidence": 95, "needs_review": False,
-            "items": [self.item("orphan", "Khong ai nhan", 50000, [])],
-        })
+        status, bill3 = self.call(
+            "POST",
+            "/bills",
+            {
+                "context_id": self.ctx,
+                "printed_total_vnd": 50000,
+                "items_total_vnd": 50000,
+                "confidence": 95,
+                "needs_review": False,
+                "items": [self.item("orphan", "Khong ai nhan", 50000, [])],
+            },
+        )
         if status == 201:
-            st3, body3 = self.call("POST", f"/bills/{bill3['id']}/split", {"for_ledger": False})
+            st3, body3 = self.call(
+                "POST", f"/bills/{bill3['id']}/split", {"for_ledger": False}
+            )
             code = body3.get("code") if isinstance(body3, dict) else None
             self.check(
                 "mon khong ai nhan bi TU CHOI (khong chia cho tat ca)",
@@ -215,16 +270,29 @@ class Probe:
                 f"status={st3} code={code}",
             )
         else:
-            self.check("mon khong ai nhan bi TU CHOI ngay o POST /bills",
-                       status in (400, 422), f"status={status}")
+            self.check(
+                "mon khong ai nhan bi TU CHOI ngay o POST /bills",
+                status in (400, 422),
+                f"status={status}",
+            )
 
         # 4 -- a scan that read no lines must be refused, not split evenly.
-        status, bill4 = self.call("POST", "/bills", {
-            "context_id": self.ctx, "printed_total_vnd": 200000,
-            "items_total_vnd": 0, "confidence": 40, "needs_review": True, "items": [],
-        })
+        status, bill4 = self.call(
+            "POST",
+            "/bills",
+            {
+                "context_id": self.ctx,
+                "printed_total_vnd": 200000,
+                "items_total_vnd": 0,
+                "confidence": 40,
+                "needs_review": True,
+                "items": [],
+            },
+        )
         if status == 201:
-            st4, body4 = self.call("POST", f"/bills/{bill4['id']}/split", {"for_ledger": False})
+            st4, body4 = self.call(
+                "POST", f"/bills/{bill4['id']}/split", {"for_ledger": False}
+            )
             code = body4.get("code") if isinstance(body4, dict) else None
             self.check(
                 "bill khong ra mon bi TU CHOI (khong lui ve chia deu)",
@@ -232,17 +300,30 @@ class Probe:
                 f"status={st4} code={code}",
             )
         else:
-            self.check("bill khong ra mon bi TU CHOI ngay o POST /bills",
-                       status in (400, 422), f"status={status}")
+            self.check(
+                "bill khong ra mon bi TU CHOI ngay o POST /bills",
+                status in (400, 422),
+                f"status={status}",
+            )
 
         # 5 -- an AI guess is not a decision, so it must not reach the ledger.
-        _, bill5 = self.call("POST", "/bills", {
-            "context_id": self.ctx, "printed_total_vnd": 60000,
-            "items_total_vnd": 60000, "confidence": 99, "needs_review": False,
-            "items": [self.item("s1", "Do AI doan", 60000, [people[0]])],
-        })
-        st5, body5 = self.call("POST", f"/bills/{bill5['id']}/split",
-                               {"for_ledger": True, "paid_by_id": people[0]})
+        _, bill5 = self.call(
+            "POST",
+            "/bills",
+            {
+                "context_id": self.ctx,
+                "printed_total_vnd": 60000,
+                "items_total_vnd": 60000,
+                "confidence": 99,
+                "needs_review": False,
+                "items": [self.item("s1", "Do AI doan", 60000, [people[0]])],
+            },
+        )
+        st5, body5 = self.call(
+            "POST",
+            f"/bills/{bill5['id']}/split",
+            {"for_ledger": True, "paid_by_id": people[0]},
+        )
         self.check(
             "goi y AI chua xac nhan KHONG duoc vao so",
             st5 == 422,
@@ -252,16 +333,22 @@ class Probe:
         # 6 -- invariant 3: none of the above may have moved the ledger.
         after = self.ledger_snapshot()
         drift = {k: (before[k], after[k]) for k in before if before[k] != after[k]}
-        self.check("bang bill la BAN NHAP: so cai khong doi mot hang nao",
-                   not drift, f"drift={drift or 'none'}")
+        self.check(
+            "bang bill la BAN NHAP: so cai khong doi mot hang nao",
+            not drift,
+            f"drift={drift or 'none'}",
+        )
 
         # ...and the counter-check that keeps the line above from passing
         # vacuously: the bill tables DID receive rows.
         counts = self.sql(
             "select (select count(*) from bills)||'/'||(select count(*) from bill_items)"
         )
-        self.check("... nhung bill/bill_items THI co ghi (phep do con song)",
-                   counts.split("/")[0] not in ("", "0"), f"bills/bill_items = {counts}")
+        self.check(
+            "... nhung bill/bill_items THI co ghi (phep do con song)",
+            counts.split("/")[0] not in ("", "0"),
+            f"bills/bill_items = {counts}",
+        )
         return self.report()
 
     def report(self) -> int:
