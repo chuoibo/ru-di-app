@@ -67,9 +67,11 @@ staging theo đường dẫn; không gom các artifact không liên quan trong w
   nhận APPROVE phạm vi hẹp sau khi sửa ba finding: kiểm lại session sau đọc
   body, giữ slot trước truy vấn socket ban đầu, đặt deadline cho auth/store.
   Không coi đây là crypto review hoặc phê duyệt phát hành.
-- Test nhiều replica hiện là **hai HTTP handler trong cùng process/pool**;
-  restart là tạo handler mới. Chưa chứng minh kill process, failover database
-  hoặc tải 1.000 socket. Thử ba người dùng tổng hợp không thay thử người thật.
+- Ca ban đầu dùng hai HTTP handler cùng process/pool. Đã bổ sung ca hai process
+  thật với pool/auth riêng: nhận tin cross-process, bỏ receipt đã commit, kill
+  writer, restart/retry không nhân đôi event/outbox; reconnect cursor đúng.
+  Chưa chứng minh kill giữa transaction, failover database hoặc tải 1.000
+  socket. Thử ba người dùng tổng hợp không thay thử người thật.
 - Mobile đang sửa mất draft khi gửi lỗi, retry theo attempt, read mark theo
   vùng nhìn thấy và UI Impeccable. Chưa nối mobile với v2. Archive plaintext
   hiện chỉ mới có nhãn; khóa ghi archive phụ thuộc cutover chưa thực hiện.

@@ -51,7 +51,8 @@ docker run --rm --network host \
 for sentinel in TestSendConcurrentReplayConflictAndCatchup \
   TestCatchupBoundsBytesWithoutSkippingLargeEnvelopes \
   TestPostgresTwoReplicasThreePeopleAndRestart \
-  TestPostgresSessionRevocationClosesQuietSocket; do
+  TestPostgresSessionRevocationClosesQuietSocket \
+  TestPostgresSeparateProcessesCommittedRetryAndReconnect; do
   if ! rg -q "^--- PASS: $sentinel " "$scratch/tests.log"; then
     echo "Thiếu bằng chứng PASS: $sentinel" >&2
     exit 1

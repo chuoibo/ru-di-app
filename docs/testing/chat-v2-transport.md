@@ -52,8 +52,14 @@ này qua `scripts/go_postgres_tier.sh` trong job Go; chưa có kết quả CI c�
 Ngày 2026-09-21 đã chạy thành công script này trên checkout triển khai:
 image dựng từ source hiện tại, migration legacy tới head, race tests đạt và
 không có ca skip. Review độc lập transport/lab nhận APPROVE phạm vi nền này.
-Ca nhiều replica chỉ dùng hai HTTP handler trong cùng process/pool; restart
-chỉ tạo handler mới, chưa phải kill tiến trình. Reconcile cũng đang bật nên
+Ca `TestPostgresTwoReplicasThreePeopleAndRestart` dùng hai HTTP handler trong
+cùng process/pool. Đã bổ sung và chạy độc lập với race detector ca
+`TestPostgresSeparateProcessesCommittedRetryAndReconnect`: hai tiến trình OS,
+mỗi tiến trình có pool/session auth riêng; nhận tin ở process khác, bỏ receipt,
+kill writer, dựng process mới rồi retry. Event trả lại đúng bản đã commit;
+database vẫn một event/outbox/send. Reconnect từ cursor 1 chỉ nhận sequence 2.
+Ca này kill **sau khi server đã trả response commit**; không chứng minh kill
+giữa transaction hoặc mất TCP trước khi server trả ACK. Reconcile vẫn bật nên
 không dùng ca đó để tuyên bố riêng kênh LISTEN đã được kiểm độc lập.
 
 Test đơn vị và transport socket thật:
