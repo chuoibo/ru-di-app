@@ -248,6 +248,22 @@ components:
 
 <!-- impeccable:design-schema 2 -->
 
+> **Đọc bằng chứng trong tài liệu này.** Mỗi khẳng định dưới đây dẫn về một bó
+> bằng chứng ở `docs/claude/<ngày>/<chủ đề>/` hoặc `docs/codex/<ngày>/...`.
+> Bài viết (`README.md`, báo cáo, bảng số đo), dump `hierarchy.xml` và mọi file
+> đo dạng text **vẫn nằm trong cây** — có cổng đọc chúng làm fixture. Riêng
+> **ảnh chụp màn** đã được gỡ ở đợt dọn repo và **chỉ còn trong lịch sử Git**.
+> Muốn xem lại ảnh của một bó, lấy ở commit mà chính bó đó ghi, ví dụ:
+>
+> ```bash
+> git show <sha>:docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs1.0-sang.png > /tmp/xem.png
+> git log --oneline --all -- docs/claude/2026-09-12/nen-to-giay/   # tìm sha nếu bó không ghi
+> ```
+>
+> Lý do gỡ: 382 file ảnh chiếm 191 MB, tức phần lớn dung lượng repo, và là kết
+> quả của một lần chạy chứ không phải nguồn. Kết luận của lần chạy nằm ở bài
+> viết — thứ được giữ lại. File text ở lại vì rẻ và vì có script đọc chúng.
+
 Hệ thiết kế v2 của **Rủ Đi**, ghi từ artifact **đã ship** của đợt «chuyển
 mình» (nhánh `claude/p0-w-ui2-bo-cuc-theo-nhiem-vu`, bảy commit `ab53e789` →
 `06a4722f`, 2026-09-06). Finish reviewer trả `ship` sau khi tám mục vật chất
