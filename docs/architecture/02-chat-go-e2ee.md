@@ -72,8 +72,11 @@ staging theo đường dẫn; không gom các artifact không liên quan trong w
   writer, restart/retry không nhân đôi event/outbox; reconnect cursor đúng.
   Chưa chứng minh kill giữa transaction, failover database hoặc tải 1.000
   socket. Thử ba người dùng tổng hợp không thay thử người thật.
-- Mobile đang sửa mất draft khi gửi lỗi, retry theo attempt, read mark theo
-  vùng nhìn thấy và UI Impeccable. Chưa nối mobile với v2. Archive plaintext
+- Mobile checkpoint `ad350d41` sửa mất draft khi gửi lỗi, retry theo attempt,
+  read mark theo vùng nhìn thấy (kể cả tin dài) và UI Impeccable. 50 test chat
+  đạt; đã thao tác vài ca trên Android với HTTP fixture tổng hợp, xem
+  [bằng chứng native](../../apps/mobile/docs/chat-native-evidence-2026-09-21.md).
+  Chưa nối mobile với v2. Archive plaintext
   hiện chỉ mới có nhãn; khóa ghi archive phụ thuộc cutover chưa thực hiện.
 
 MLS/Rust native, enrollment/rekey đáng tin cậy, khoá thiết bị, backup/recovery,
@@ -82,3 +85,15 @@ Manifest 156 route hiện vẫn `owner=python` (126 PORTED, 25 PORTED-UNPROVEN,
 5 DEFERRED); có mã Go không đồng nghĩa đã chuyển writer. Hai điện thoại sẵn
 có giúp chạy gate sau khi development build/signing và native crypto sẵn sàng.
 Expo Go không cung cấp module native tùy ý; không dùng nó để tuyên bố MLS đạt.
+
+Checkpoint đã lưu: `04311e20` vá bảo mật; `f894604b` nền Go v2;
+`63be9003` kiểm hai process thật; `ad350d41` mobile và hướng dẫn development
+build. Chưa push, merge hoặc deploy. PostgreSQL tạm đã dọn sau kiểm thử;
+`scripts/chat_v2_postgres.sh` dựng lại toàn bộ cổng riêng khi cần.
+
+Đã dựng lại development APK Android bằng JDK 21 cài tạm ngoài repo. Một lượt
+cold launch đạt; [năm ảnh native được giữ](../codex/2026-09-21/chat-native/README.md)
+có review Impeccable **ship trong phạm vi UI legacy đã chụp**. Chưa coi crash
+trước đó đã được giải quyết hoàn toàn; chưa kiểm iPhone, máy thật hoặc release
+build. Lịch sử local được sửa pin digest dependency trước publish; source của
+checkpoint mobile cũ `c0a50319` và mới `ad350d41` giống nhau.

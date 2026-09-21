@@ -1,0 +1,76 @@
+{
+  "captured_on": "2026-09-21",
+  "platform": "Android 15 x86_64 emulator-5560",
+  "source_checkpoint": "ad350d41",
+  "original_source_checkpoint": "c0a50319",
+  "source_note": "Same source bytes; local history rewrite only moved public Go dependency digest pins into the introducing commit.",
+  "api": "synthetic HTTP fixture, not production Go API",
+  "review": "Impeccable disposition ship, only captured legacy UI states",
+  "artifacts": [
+    {
+      "file": "31-rebuilt-keyboard-slash.png",
+      "sha256": "6b7ef7b2a519797c518c712cb7a5e9e64f32707e6f8d7a321b78e6119a68b637",
+      "width": 1080,
+      "height": 2400,
+      "chunks": [
+        "IHDR",
+        "sRGB",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "32-rebuilt-long-failed.png",
+      "sha256": "f1ca2661414e837e30d527f7a77968759c597cc72d2a071d4a4d394baef41942",
+      "width": 1080,
+      "height": 2400,
+      "chunks": [
+        "IHDR",
+        "sRGB",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "32b-rebuilt-dark-failure.png",
+      "sha256": "ed929f48df274b69d16062149173745770bcfa96519abbfc6b4b470470eb0b61",
+      "width": 1080,
+      "height": 2400,
+      "chunks": [
+        "IHDR",
+        "sRGB",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "33-rebuilt-retry-success.png",
+      "sha256": "298efbf52088cf20cf16d2624de2f5d0a65a51a5e3719880b27ee154a7af4602",
+      "width": 1080,
+      "height": 2400,
+      "chunks": [
+        "IHDR",
+        "sRGB",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "34-rebuilt-dark-font13.png",
+      "sha256": "0896fba14d9549e1f770b8df8081d4d03db99946d5c55ac52f6300633af09961",
+      "width": 1080,
+      "height": 2400,
+      "chunks": [
+        "IHDR",
+        "sRGB",
+        "sBIT",
+        "IDAT",
+        "IEND"
+      ]
+    }
+  ]
+}

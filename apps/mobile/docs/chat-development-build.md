@@ -7,12 +7,17 @@ client đang có chưa chứa MLS, chưa có voice và chưa chứng minh chat E
 ## Android: có thể build tại máy Linux, không cần tài khoản EAS
 
 <!-- repo-guard: allow=long-number reason=public-android-toolchain-version -->
-Máy làm việc hiện có SDK Android 35/36, NDK `27.1.12297006`, CMake `3.22.1` và Gradle wrapper của project. Java 21 hiện chỉ có runtime,
-thiếu `javac`: phải cài JDK 21 đầy đủ trước khi build. Lượt Gradle kiểm ngày
-21-09 dừng ở yêu cầu capability `JAVA_COMPILER`, chưa tạo APK mới. Chưa có điện thoại Android thật kết nối ở lần kiểm
-tra 21-09; thiết bị nhìn thấy là emulator. APK kiểm thử hiện có thuộc
-`android/app/build/outputs/apk/debug/app-debug.apk`; phải kiểm tra ABI trước khi
-đưa APK của emulator x86_64 sang điện thoại ARM.
+Máy làm việc có SDK Android 35/36, NDK `27.1.12297006`, CMake `3.22.1` và
+Gradle wrapper. Java hệ thống chỉ có runtime; JDK 21 đầy đủ đã được đặt riêng
+ngoài repo tại `/tmp/rudi-chat-jdk21/root/usr/lib/jvm/java-21-openjdk-amd64`.
+Package JDK từ Ubuntu noble-updates được đối chiếu SHA256 theo metadata apt;
+không đổi Java mặc định của máy. Build x86_64 với JDK này đã thành công ngày
+21-09 (539 task, 37 task thực thi). Khi máy khác hoặc thư mục tạm đã dọn, phải
+cài JDK 21 đầy đủ và đổi `JAVA_HOME` tương ứng, kiểm cả `java` lẫn `javac`.
+
+Chưa có điện thoại Android thật kết nối trong lượt kiểm; thiết bị là emulator.
+APK x86_64 này không phải artifact cho điện thoại ARM. Đường build output local
+là `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 1. Bật Developer options và USB debugging trên điện thoại, cắm USB, chấp nhận
    dấu vân tay máy tính trên điện thoại. Chọn đúng serial, không chạy nhầm emulator.
@@ -26,6 +31,8 @@ tra 21-09; thiết bị nhìn thấy là emulator. APK kiểm thử hiện có t
    Địa chỉ dưới đây chỉ là chỗ thay bằng URL thật của môi trường thử nghiệm:
 
    ```sh
+   JAVA_HOME=/tmp/rudi-chat-jdk21/root/usr/lib/jvm/java-21-openjdk-amd64 \
+   ANDROID_HOME=/home/lakiet/Android/Sdk \
    EXPO_NO_DOTENV=1 EXPO_PUBLIC_API_URL=https://api-test.example.invalid \
      npx expo run:android --device
    ```
