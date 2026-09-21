@@ -320,6 +320,13 @@ broker failure, slow readers, reconnect, ACK/read-receipt mix, fair queue và
 - Web nằm trong container task `chat-e2e-web-review`, host network/user1000,
   serve `/tmp/rudi-chat-e2e.JpMlFu/web-reviewfix` bằng Go SPA server.
   Bundle final 5c477… nêu trên. Container bền hơn exec background trước đó.
+- Kiểm cuối lúc 23:40: web8178 và API45801 `/healthz` trả HTTP200. Docker vẫn
+  gắn `unhealthy` cho web/API/core; chưa điều tra probe trong bàn giao này,
+  không coi HTTP200 là stack hoàn toàn khoẻ. Tên container task còn sống:
+  <!-- repo-guard: allow=long-number reason=synthetic-stack-container-timestamp-and-pid -->
+  `chat-e2e-web-review`, `chat-e2e-1790003699-142833-api`,
+  <!-- repo-guard: allow=long-number reason=synthetic-stack-container-timestamp-and-pid -->
+  `chat-e2e-1790003699-142833-core`, `chat-e2e-1790003699-142833-pg`.
 - Core binary đang chạy có AI/promotion nhưng **trước fix RR read-only cuối**.
   Muốn E2E final backend phải restart riêng core từ source đã kiểm:
 
@@ -454,3 +461,21 @@ handoff và checkpoint Git là phần bền vững, log tạm không được co
 
 **Cập nhật tiếp theo phải ghi ngày, checkout, SHA, PR URL, tests đã chạy và việc
 còn mở. Không sửa lượt FAIL/INTERRUPTED thành PASS; thêm lượt mới với provenance.**
+
+### Điểm dừng theo lệnh Lead — 23:40 ngày 21-09-2026
+
+- Draft PR thật: [#624](https://github.com/chuoibo/ru-di-app/pull/624). Chưa merge,
+  chưa có independent APPROVE cho toàn PR; chưa kết luận CI toàn bộ.
+- Checkpoint gốc tới `4db2f7a9` đã gồm backend/perf/Rust và handoff; docs có thể
+  có thêm commit sau để đồng bộ đoạn này. UI checkpoint riêng `c63a9471`.
+- Push hai nhánh checkpoint và branch PR; agent nhận việc dùng `git fetch origin`
+  rồi kiểm đúng SHA/branch remote. Không cherry-pick toàn nhánh gốc vào main.
+- Các canary/test vừa sửa sau lượt chạy chỉ là annotation guard và docs;
+  logic runtime không đổi sau các lượt source cuối đã ghi. PR01 được chạy lại
+  Go unit và PG/race trên worktree tích hợp main; Python rerun còn mở.
+- Không có load/crypto/browser test nào của lượt bàn giao được chủ động để chạy
+  tiếp. Stack synthetic được giữ để agent sau kiểm tra rồi tái sử dụng; `/tmp`
+  không bền qua reboot. Không có agent tiếp nối đã tự nhận việc.
+- Việc đầu tiên của người tiếp nối: lấy checkpoint, đọc mục10, kiểm CI PR624,
+  tách PR02/03, restart core với RR fix rồi chạy harness plan3người. Không cần
+  lặp lại từ đầu toàn bộ thiết kế hoặc các lượt test đã có bằng chứng.
