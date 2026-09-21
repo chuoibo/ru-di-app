@@ -240,10 +240,15 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="a8496b1836c1e6e4",
         why="",
     ),
-    "test.yml::parity::Canary and parity run, once per auth mode": Covered(
+    # 2026-09-21: bước này từng chạy MỌI phase của cả hai chế độ auth trong một
+    # job dưới `timeout-minutes: 40`, và cần ~85 phút nên chưa một lần chạy tới
+    # cuối. Giờ nó là một ma trận bốn phase chạy song song, mỗi phase một cặp
+    # stack riêng. Chặng `parity` của scripts/gate.sh vẫn chạy đủ cả bốn, tuần
+    # tự, nên ánh xạ stages không đổi — CI chia việc, cổng ở máy thì không.
+    "test.yml::parity::One pair of stacks, then this phase": Covered(
         kind=GATE_KIND,
         stages=("parity",),
-        body_sha="cf08694d910267b0",
+        body_sha="25d40577ddf1c71a",
         why="",
     ),
     # --- test.yml: core (ADR-0029) ----------------------------------------

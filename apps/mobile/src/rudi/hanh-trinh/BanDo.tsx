@@ -225,7 +225,13 @@ export function BanDo({
         const list = document.createElement("div");
         list.setAttribute("role", "group");
         list.setAttribute("aria-label", "Chọn điểm hẹn gần nhau");
-        list.style.cssText = `display:flex;flex-direction:column;max-height:220px;overflow:auto;background:${mauNen};padding:8px`;
+        // A popup cannot leave the map: `.maplibregl-map` clips at its box, so
+        // anything past that edge is invisible AND unclickable. Measured at
+        // 390x844 the map box is only 250px tall, so cap the list to what fits
+        // inside it instead of to a constant that happens to fit on a laptop.
+        const hopBanDo = map.getContainer().getBoundingClientRect();
+        const caoToiDa = Math.max(120, Math.round(hopBanDo.height) - 56);
+        list.style.cssText = `display:flex;flex-direction:column;max-height:${caoToiDa}px;overflow:auto;background:${mauNen};padding:8px`;
         for (const stop of group) {
           const button = document.createElement("button");
           button.type = "button";
@@ -235,32 +241,33 @@ export function BanDo({
           list.appendChild(button);
         }
         chooser.current = new Popup({ closeButton: true, maxWidth: "280px", focusAfterOpen: true }).setLngLat([moc.lng, moc.lat]).setDOMContent(list).addTo(map);
-        // The attribution strip sits at the map's bottom edge and MapLibre gives
-        // its control container a higher stacking order than a popup, so a chooser
-        // opened near that edge has its lower entries covered. Measured on the web
-        // build: the second item's centre hit-tested to
-        // `.maplibregl-ctrl-attrib-inner` ("© OpenStreetMap"), which means a real
-        // press picked the copyright line instead of the stop. Attribution has to
-        // stay clickable, so the popup is raised rather than the strip disabled.
-        chooser.current.getElement().style.zIndex = "10";
-        // Neutralise EVERY control, not the attribution alone: which one lands
-        // on top depends on where the chooser opened and how tall it is, so
-        // naming a single element leaves the next to be found by a user rather
-        // than by a test. They stay VISIBLE -- showing attribution is the
-        // obligation -- and only stop taking the pointer until the chooser closes.
-        // Đo được trên CI (chẩn đoán của waitFor in ra từng nút): mục thứ BA của
-        // chooser, ở y=464, bị một `BUTTON` mang class react-native-web che —
-        // tức một nút của APP, không phải control bản đồ. Popup neo ở mốc và tràn
-        // qua mép dưới khung bản đồ, rơi vào vùng điều khiển bên dưới.
+        // Đo trên CI: khung bản đồ y=201..451, mục thứ BA của chooser ở y=465 —
+        // NGOÀI bản đồ 14px. `.maplibregl-map` có `overflow: hidden` nên phần
+        // thò ra bị xén, và hit-test ở đó trả về một nút của app nằm dưới.
         //
-        // z-index trên chính popup không cứu được: nó nằm trong ngữ cảnh xếp lớp
-        // của khung bản đồ, mà khung ấy đứng dưới app chrome. Nên nâng CHÍNH
-        // KHUNG trong lúc chooser mở. Bản đồ không vẽ ra ngoài hộp của nó, nên
-        // thứ duy nhất được nâng lên thật sự là popup.
-        const khung = map.getContainer();
-        const khungTruoc = khung.style.zIndex;
-        khung.style.zIndex = "1000";
-        chooser.current.once("close", () => { khung.style.zIndex = khungTruoc; });
+        // Ba lần vá bằng z-index đều vô ích, và chuỗi tổ tiên nói vì sao: popup
+        // nằm trong `.maplibregl-map`, mà khung ấy lại nằm trong một
+        // `DIV[position:relative, z-index:0]` của react-native-web. Một phần tử
+        // như thế TẠO ngữ cảnh xếp lớp, nên mọi z-index bên trong bị nhốt lại và
+        // không bao giờ so được với nhánh chứa nút kia. Không con số nào cứu
+        // được; chỗ phải sửa là hình học.
+        //
+        // Nên: dời bản đồ đúng bằng phần tràn, để popup lọt hẳn vào trong khung.
+        // `panBy([0, d])` dời nội dung LÊN d pixel, nên tràn đáy dùng dấu dương.
+        // Chừa 26px ở đáy cho dải attribution và 8px ở đỉnh.
+        const hopPopup = chooser.current.getElement().getBoundingClientRect();
+        const khung = map.getContainer().getBoundingClientRect();
+        const tranDuoi = hopPopup.bottom - (khung.bottom - 26);
+        const tranTren = khung.top + 8 - hopPopup.top;
+        const tranPhai = hopPopup.right - (khung.right - 8);
+        const tranTrai = khung.left + 8 - hopPopup.left;
+        const dichY = tranDuoi > 0 ? tranDuoi : tranTren > 0 ? -tranTren : 0;
+        const dichX = tranPhai > 0 ? tranPhai : tranTrai > 0 ? -tranTrai : 0;
+        // `moveend` chỉ vẽ lại marker và giữ nguyên popup, nên không có vòng lặp.
+        if (dichX || dichY) map.panBy([dichX, dichY], { duration: 0 });
+        // Lớp phòng thủ thứ hai: dải attribution nằm trong bản đồ và MapLibre xếp
+        // nó trên popup. Nó phải LUÔN NHÌN THẤY -- đó là nghĩa vụ bản quyền -- nên
+        // chỉ ngừng nhận con trỏ trong lúc chooser mở, rồi trả lại y như cũ.
         const controls = [...map.getContainer().querySelectorAll<HTMLElement>(".maplibregl-ctrl")];
         const truoc = controls.map((el) => el.style.pointerEvents);
         for (const el of controls) el.style.pointerEvents = "none";
