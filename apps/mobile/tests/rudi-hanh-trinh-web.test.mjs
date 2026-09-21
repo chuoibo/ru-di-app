@@ -178,7 +178,24 @@ if (!existsSync(INDEX)) {
         if (!button) return false;
         const box = button.getBoundingClientRect();
         return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
-      }, { label: "nút chọn điểm trong popup nhận được con trỏ" });
+      }, {
+        label: "nút chọn điểm trong popup nhận được con trỏ",
+        // Name what is on top instead of only saying the wait ran out.
+        diagnose: () => {
+          const list = document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]');
+          return [...(list ? list.querySelectorAll("button") : [])].map((b) => {
+            const r = b.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+            return {
+              text: b.textContent,
+              y: Math.round(r.y),
+              h: Math.round(r.height),
+              hit: hit ? `${hit.tagName}.${hit.className}` : null,
+              mine: hit ? b.contains(hit) : false,
+            };
+          });
+        },
+      });
       await page.clickChu("3 · 20:00 · Chợ đêm Đà Lạt");
       await page.waitFor(() => document.querySelector('[data-testid="hanh-trinh-selected-stop"]')?.textContent === "Chợ đêm Đà Lạt" && !document.querySelector('[aria-label="Chọn điểm hẹn gần nhau"]'), { label: "chi tiết đúng điểm chọn từ cụm" });
       await page.clickLabel("Lịch trình");
