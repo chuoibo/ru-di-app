@@ -2,11 +2,11 @@
 
 ## Phạm vi và ngoại lệ Python
 
-Đây là ngoại lệ sửa bảo mật/hồi quy được AGENTS.md cho phép. Chưa chuyển
-quyền ghi production sang Go: manifest hiện vẫn giao các route legacy cho
-Python. Vì vậy sửa Go đơn độc không bảo vệ runtime hiện hành. Bản vá Python
-chỉ đóng cùng hai lỗi; không thêm tính năng backend Python mới, không đổi
-schema hoặc luật tiền.
+Đây là ngoại lệ sửa bảo mật/hồi quy được AGENTS.md cho phép. Khi tái đặt PR
+lên main `63959c1d`, manifest đã chuyển 126 route sang LIVE-GO qua PR #623.
+Bản vá Go bảo vệ đường chat hiện hành; bản vá Python đóng cùng hai lỗi ở
+runtime compatibility và giữ đối chiếu hồi quy. PR này không đổi manifest
+writer, không thêm tính năng backend Python mới, không đổi schema hoặc luật tiền.
 
 1. Idempotency từng trả nội dung chat đã cache mà bỏ qua phiên đăng nhập,
    membership và chặn DM hiện tại. Cả hai runtime nay đưa replay vào pipeline
@@ -58,6 +58,13 @@ CORE_REQUIRE_POSTGRES_TESTS=1 go test -race -tags postgres \
 ```
 
 ## Delta parity và giới hạn
+
+Kiểm lại khi đặt PR lên main `63959c1d`: Go unit packages `idem`, `routes`,
+`repo` đạt; tier PostgreSQL thật với `-race` báo 16 ca PASS (kể cả subtest),
+có `TestPostgresTierReachesDatabase`, không SKIP. Các ca tập trung replay nhóm,
+DM block, read mark contention/tie-break và dispatch reauth. Lượt đầu thiếu
+package chứa sentinel nên tier từ chối; lượt sửa lệnh đã đạt. Các kết quả Python
+ở trên thuộc checkpoint gốc, chưa được chạy lại trong worktree PR này.
 
 - Với quyền còn hiệu lực, response/body thành công giữ nguyên contract.
   Với quyền đã thu hồi, baseline cũ trả cache được thay bằng 401/403/409;
