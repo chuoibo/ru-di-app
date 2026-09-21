@@ -129,6 +129,8 @@ func Refuse(status int, code, detail string) error {
 
 // Call is what a route's Go implementation receives.
 type Call struct {
+	// ExplicitChatInvocation disables implicit history sharing in the candidate chat.
+	ExplicitChatInvocation bool
 	// Photos is the PhotoStorage get_photo_storage built for this request; nil
 	// for a route that does not depend on it.
 	Photos  *storage.PhotoStorage
@@ -178,7 +180,9 @@ type Serve func(ctx context.Context, call *Call) (Reply, error)
 
 // Env is what every route shares.
 type Env struct {
-	Mode Mode
+	// BeforeServe is an optional candidate-only transaction preparation hook.
+	BeforeServe func(context.Context, *Call) error
+	Mode        Mode
 	// NewUnit returns a fresh, unbegun unit for one request.
 	NewUnit func() *db.Unit
 	// Now is the clock a prod session's expiry is checked against.
@@ -323,6 +327,11 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	call.Values = result.Values
+	if h.env.BeforeServe != nil {
+		if err := h.env.BeforeServe(ctx, call); err != nil {
+			servererror.Raise(err)
+		}
+	}
 	reply, err := h.serve(ctx, call)
 	if errors.As(err, &refusal) {
 		_ = unit.Rollback(ctx)

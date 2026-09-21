@@ -118,6 +118,26 @@ def test_companion_plan_refuses_a_malformed_body(brain_client):
     assert response.json() == {"code": "brain_request_invalid"}
 
 
+def test_capabilities_require_internal_token_and_never_return_key(
+    brain_client, monkeypatch
+):
+    client, _app = brain_client
+    path = "/internal/brain/v1/capabilities"
+    assert client.post(path, json={}).status_code == 401
+    headers = {INTERNAL_TOKEN_HEADER: TEST_TOKEN}
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    unavailable = client.post(path, headers=headers, json={})
+    assert unavailable.status_code == 200
+    assert unavailable.json() == {
+        "plan": {"available": False, "reason": "provider_not_configured"}
+    }
+    monkeypatch.setenv("GEMINI_API_KEY", "synthetic-inference-configuration")
+    configured = client.post(path, headers=headers, json={})
+    assert configured.status_code == 200
+    assert configured.json() == {"plan": {"available": True, "reason": None}}
+    assert "synthetic-inference-configuration" not in configured.text
+
+
 def test_idempotency_key_does_not_reserve_a_brain_call(brain_client):
     """A write key on /internal must not open an idempotency transaction."""
 

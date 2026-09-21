@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 import binascii
 import logging
+import os
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, FastAPI, Header, Request
@@ -234,6 +235,21 @@ def companion_reply(
     except Exception:
         _LOGGER.warning("brain companion failed")
         raise _code_error(502, "companion_unavailable") from None
+
+
+@router.post("/capabilities")
+def inference_capabilities(
+    _: Annotated[None, Depends(require_internal_token)],
+) -> dict:
+    """Report inference configuration only; never expose credential values."""
+
+    configured = bool(os.environ.get("GEMINI_API_KEY", "").strip())
+    return {
+        "plan": {
+            "available": configured,
+            "reason": None if configured else "provider_not_configured",
+        }
+    }
 
 
 @router.post("/place-search")

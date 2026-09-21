@@ -6,6 +6,7 @@ package brain
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -97,6 +98,11 @@ func newClient(baseURL, token string) (*Client, error) {
 // PostJSON posts body to /internal/brain/v1/{action}. A non-2xx answer with
 // {"code":...} is *Error; anything else is a transport or decode failure.
 func (c *Client) PostJSON(action string, body pyjson.Value) (pyjson.Value, error) {
+	return c.PostJSONContext(context.Background(), action, body)
+}
+
+// PostJSONContext lets the job worker cancel an inference without leaking its input.
+func (c *Client) PostJSONContext(ctx context.Context, action string, body pyjson.Value) (pyjson.Value, error) {
 	if c == nil {
 		return nil, &Error{Status: 502, Code: "brain_unavailable"}
 	}
@@ -104,7 +110,7 @@ func (c *Client) PostJSON(action string, body pyjson.Value) (pyjson.Value, error
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, c.baseURL+"/internal/brain/v1/"+action, bytes.NewReader(encoded))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/internal/brain/v1/"+action, bytes.NewReader(encoded))
 	if err != nil {
 		return nil, err
 	}

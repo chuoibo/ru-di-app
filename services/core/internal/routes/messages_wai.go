@@ -580,6 +580,11 @@ func actOnMessageIntent(ctx context.Context, call *endpoint.Call, store repo.Rep
 	if intent == nil {
 		return out, nil
 	}
+	if call.ExplicitChatInvocation && intent.Intent != chatintent.Vote {
+		out.Set("intent", pyjson.String(intent.Intent))
+		out.Set("intent_error", pyjson.String("explicit_invocation_required"))
+		return out, nil
+	}
 	switch intent.Intent {
 	case chatintent.Plan, chatintent.Mention:
 		if err := spendActorWindow(call, call.Limits.MessageIntentLimiter); err != nil {
