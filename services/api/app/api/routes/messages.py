@@ -104,6 +104,7 @@ def get_message_intent_limiter(request: Request) -> FixedWindowLimiter:
     responses=ERRORS,
 )
 def post_context_message(
+    http: Request,
     context_id: UUID,
     request: MessageCreateRequest,
     actor: Annotated[Actor, Depends(get_actor)],
@@ -119,6 +120,8 @@ def post_context_message(
     rather than as 429: the message is already stored, and a 429 would make the
     client retry it into a duplicate.
     """
+    if replay := _authorized_chat_replay(http, repository, context_id, actor, None):
+        return replay
     service = ApiService(repository)
     posted = service.post_context_message(context_id, request, actor)
     return service.act_on_message_intent(
@@ -154,6 +157,7 @@ def list_context_messages(
     responses=ERRORS,
 )
 def delete_own_message(
+    http: Request,
     context_id: UUID,
     message_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
@@ -165,6 +169,10 @@ def delete_own_message(
     marks still point at it -- so this is a 204 on the message, not a 200 with
     a body that would have to describe an absence.
     """
+    if replay := _authorized_chat_replay(
+        http, repository, context_id, actor, message_id
+    ):
+        return replay
     ApiService(repository).delete_own_message(context_id, message_id, actor)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -176,6 +184,7 @@ def delete_own_message(
     responses=ERRORS,
 )
 def react_to_message(
+    http: Request,
     context_id: UUID,
     message_id: UUID,
     request: ReactionRequest,
@@ -184,6 +193,10 @@ def react_to_message(
 ) -> MessageReactionsResponse:
     """Add one reaction of one kind; a second tap of the same kind is the same
     heart. Answers the message's whole reaction list, reader-aware."""
+    if replay := _authorized_chat_replay(
+        http, repository, context_id, actor, message_id
+    ):
+        return replay
     return ApiService(repository).react_to_message(
         context_id, message_id, request, actor
     )
@@ -195,6 +208,7 @@ def react_to_message(
     responses=ERRORS,
 )
 def unreact_to_message(
+    http: Request,
     context_id: UUID,
     message_id: UUID,
     kind: ReactionKind,
@@ -203,6 +217,10 @@ def unreact_to_message(
 ) -> MessageReactionsResponse:
     """Take one reaction back. 200 with the remaining list, so the bubble can
     redraw from the server's answer rather than its own guess."""
+    if replay := _authorized_chat_replay(
+        http, repository, context_id, actor, message_id
+    ):
+        return replay
     return ApiService(repository).unreact_to_message(
         context_id, message_id, kind, actor
     )
@@ -222,6 +240,7 @@ def unreact_to_message(
     },
 )
 def create_chat_expense_draft(
+    http: Request,
     context_id: UUID,
     message_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
@@ -230,6 +249,10 @@ def create_chat_expense_draft(
     limiter: Annotated[FixedWindowLimiter, Depends(get_chat_expense_limiter)],
 ) -> ChatExpenseDraftResponse:
     """Return a draft only; this route never creates or allocates an expense."""
+    if replay := _authorized_chat_replay(
+        http, repository, context_id, actor, message_id
+    ):
+        return replay
 
     # Keep this outside the backend error boundary. `check` raises ApiProblem;
     # catching it as a reader failure would turn an honest 429 into a 502.
@@ -278,6 +301,7 @@ def create_chat_expense_draft(
     responses=ERRORS | {429: {"model": ErrorResponse}},
 )
 def take_companion_turn(
+    http: Request,
     context_id: UUID,
     actor: Annotated[Actor, Depends(get_actor)],
     companion: Annotated[Companion, Depends(get_companion)],
@@ -306,6 +330,8 @@ def take_companion_turn(
     route with a JSON content type over zero bytes, so a required model would
     turn every AI turn in the product into a 422.
     """
+    if replay := _authorized_chat_replay(http, repository, context_id, actor, None):
+        return replay
 
     limiter.check(actor.id)
     return ApiService(repository).take_companion_turn(
@@ -339,6 +365,7 @@ def set_context_member_role(
     responses=ERRORS,
 )
 def mark_context_read(
+    http: Request,
     context_id: UUID,
     request: ReadMarkRequest,
     actor: Annotated[Actor, Depends(get_actor)],
@@ -347,4 +374,31 @@ def mark_context_read(
     """Where this person has read up to. Forward-only; a message outside this
     group is a 404. PUT because the resource is the mark itself and the call is
     idempotent by construction -- replaying it moves nothing."""
+    if replay := _authorized_chat_replay(http, repository, context_id, actor, None):
+        return replay
     return ApiService(repository).mark_context_read(context_id, request, actor)
+
+
+def _authorized_chat_replay(
+    http: Request,
+    repository: ApiRepository,
+    context_id: UUID,
+    actor: Actor,
+    message_id: UUID | None,
+) -> Response | None:
+    """Return a cached response only after the normal authentication dependencies."""
+    replay = http.scope.get("chat_authorized_replay")
+    if replay is None:
+        return None
+    ApiService(repository).authorize_chat_replay(
+        context_id,
+        actor,
+        message_id=message_id,
+        deleting=http.method == "DELETE" and "/reactions/" not in http.url.path,
+    )
+    return Response(
+        content=replay.body,
+        status_code=replay.status_code,
+        media_type=replay.media_type,
+        headers={"Idempotency-Replayed": "true", "Cache-Control": "no-store"},
+    )

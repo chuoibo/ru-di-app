@@ -30,12 +30,16 @@ func devEnv() endpoint.Env {
 // core serves every route in All() from Go, through dispatch and the endpoint
 // pipeline, exactly as the binary would.
 func core(t *testing.T) http.Handler {
+	return coreWithEnv(t, devEnv(), func(next http.Handler) http.Handler { return next })
+}
+
+func coreWithEnv(t *testing.T, env endpoint.Env, middleware func(http.Handler) http.Handler) http.Handler {
 	t.Helper()
 	ir, err := pyval.Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	handlers, err := Handlers(ir, pyval.NewRegistry(), devEnv())
+	handlers, err := Handlers(ir, pyval.NewRegistry(), env)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +66,7 @@ func core(t *testing.T) http.Handler {
 	h, err := dispatch.New(dispatch.Options{
 		Router: table, Served: served, Handlers: handlers, Python: python,
 		CORS: cors.New("", false), Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Idempotency: func(next http.Handler) http.Handler { return next },
+		Idempotency: middleware,
 	})
 	if err != nil {
 		t.Fatal(err)

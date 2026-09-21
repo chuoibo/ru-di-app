@@ -834,3 +834,41 @@ func TestTheItineraryReplayIsHandedToTheHandler(t *testing.T) {
 		t.Fatal("a bare context must carry no replay")
 	}
 }
+
+func TestEveryChatWriteReplayMustReachAuthorization(t *testing.T) {
+	for _, test := range []struct{ method, path string }{
+		{"POST", "/contexts/abc/messages"},
+		{"DELETE", "/contexts/abc/messages/msg"},
+		{"POST", "/contexts/abc/messages/msg/reactions"},
+		{"DELETE", "/contexts/abc/messages/msg/reactions/like"},
+		{"POST", "/contexts/abc/messages/msg/expense-draft"},
+		{"POST", "/contexts/abc/ai-turn"},
+		{"PUT", "/contexts/abc/read-mark"},
+	} {
+		t.Run(test.method+test.path, func(t *testing.T) {
+			writes, replays := 0, 0
+			h := New(newMemoryStore())(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if _, ok := AuthorizedReplay(r.Context()); ok {
+					replays++
+					w.WriteHeader(http.StatusForbidden)
+					return
+				}
+				writes++
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write([]byte("private"))
+			}))
+			for i := 0; i < 2; i++ {
+				r := httptest.NewRequest(test.method, test.path, strings.NewReader(`{}`))
+				r.Header.Set(HeaderName, testKey)
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, r)
+				if i == 1 && (w.Code != http.StatusForbidden || w.Body.Len() != 0) {
+					t.Fatalf("cached body bypassed auth: %d %s", w.Code, w.Body.String())
+				}
+			}
+			if writes != 1 || replays != 1 {
+				t.Fatalf("writes=%d replays=%d", writes, replays)
+			}
+		})
+	}
+}
