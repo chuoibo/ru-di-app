@@ -1,5 +1,24 @@
 # CLAUDE.md
 
+## Quy tắc toàn repo: Go cho backend, Python chỉ cho AI
+
+Lead đã chốt ngày 2026-09-21 và yêu cầu triển khai ADR-0031: toàn bộ backend
+nghiệp vụ chuyển Go; Python chỉ inference/extraction/evaluation AI. API,
+auth, domain, persistence, realtime, điều phối media/bot, worker và migration
+mới dùng Go/SQL. Frontend giữ TypeScript, thư viện mã hoá native được dùng
+Rust. Không thêm backend nghiệp vụ Python. Runtime Python legacy chỉ được
+sửa lỗi bảo mật/hồi quy trong lúc chuyển đổi, có ghi rõ ngoại lệ; giữ test
+legacy để đối chiếu cho tới khi cổng tương đương chạy thật. Mỗi module có
+một writer; không coi proxy sang Python là hoàn tất migration.
+
+Chat v2 bắt buộc E2EE, không fallback plaintext; lịch sử cũ chỉ đọc và có
+nhãn. Server không giữ khoá giải mã chat. AI chỉ nhận nội dung được gọi/chia
+sẻ rõ ràng, không tự đọc chat/gu/lịch sử. Giữ ba luật tiền và tài liệu frozen.
+Native Android/iOS, crypto review độc lập, tải và người dùng thực là cổng
+riêng. SQLite không phải backend; kho mã hoá trên thiết bị là ngoại lệ đúng
+tầng. Tài liệu tiến độ: `docs/architecture/02-chat-go-e2ee.md`. Các mô tả
+Python-first bên dưới là hiện trạng legacy, không ghi đè quy tắc này.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 Ngôn ngữ: tài liệu và commit message viết tiếng Việt; comment/docstring trong code viết tiếng Anh. Giữ đúng quy ước đó.
