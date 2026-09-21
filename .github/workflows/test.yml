@@ -270,11 +270,52 @@ jobs:
           python3 scripts/check_go_owned_python_touch.py --base origin/main
 
   # ADR-0029: the parity harness. Same commands as the `parity` stage of
-  # scripts/gate.sh.
+  # scripts/gate.sh, but split across jobs that run at the same time.
+  #
+  # Why split. One job ran every phase of both auth modes in sequence, under
+  # `timeout-minutes: 40`. Measured on this runner: two stacks up in 41 SECONDS,
+  # then the dev main lane alone took 29m30s (339 scenarios, 10,369 steps), and
+  # the canary's first mode another 2m37s of fourteen. The job was cancelled at
+  # 40m every time -- not by a push, by its own budget, and the identical
+  # durations (40m14s, 40m15s, 40m19s) are what gave it away. The whole thing
+  # needs ~85 minutes, so it had never once run to the end.
+  #
+  # Raising the budget to 120 would work and cost every pull request an
+  # hour-and-a-half job. Splitting costs 41 seconds of stack per job instead,
+  # because provisioning is the cheap part here -- the phases are what is slow.
+  # Each phase gets its own pair of stacks, which also removes the ordering
+  # constraint the single job had to honour by hand: the canary leaves the two
+  # databases unequal, so it could never run before a main lane on the same
+  # stacks. Here it cannot, because it starts from its own.
   parity:
-    name: parity harness on two isolated stacks
+    name: parity harness (${{ matrix.phase }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      # One red phase must not hide the others: they answer different questions.
+      fail-fast: false
+      matrix:
+        include:
+          - phase: dev main lane and probe
+            mode: dev
+            lane: main
+            probe: "yes"
+            canary: "no"
+          - phase: dev canary
+            mode: dev
+            lane: none
+            probe: "no"
+            canary: "yes"
+          - phase: dev limiter lane
+            mode: dev
+            lane: limiter
+            probe: "no"
+            canary: "no"
+          - phase: prod main lane and canary
+            mode: prod
+            lane: main
+            probe: "no"
+            canary: "yes"
     steps:
       - uses: actions/checkout@v4
 
@@ -286,36 +327,32 @@ jobs:
         working-directory: parity
         run: go test -count=1 ./...
 
-      - name: Canary and parity run, once per auth mode
-        # One pair of stacks per mode: a scenario means something only against
-        # stacks started in the mode it was written for. `&&` inside the
-        # subshell: on the left of `||` errexit is off, and a failed canary
-        # followed by a passing run would otherwise read green.
-        # The run goes first: the canary leaves the two databases unequal
-        # (see scripts/gate.sh parity_phase). The limiter lane goes last, in
-        # dev only: each scenario waits for a fresh window and spends it.
+      - name: One pair of stacks, then this phase
+        env:
+          MODE: ${{ matrix.mode }}
+          LANE: ${{ matrix.lane }}
+          WANT_PROBE: ${{ matrix.probe }}
+          WANT_CANARY: ${{ matrix.canary }}
         run: |
           (cd parity && go run ./cmd/parity lint scenarios)
+          env_file="$(mktemp)"
+          scripts/parity_stacks.sh up --auth "$MODE" --env "$env_file"
+          . "$env_file"
           status=0
-          for mode in dev prod; do
-            env_file="$(mktemp)"
-            scripts/parity_stacks.sh up --auth "$mode" --env "$env_file"
-            . "$env_file"
-            (
-              cd parity &&
-                go run ./cmd/parity run --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
+          (
+            cd parity &&
+              { [ "$LANE" = none ] || go run ./cmd/parity run --lane "$LANE" --auth "$PARITY_AUTH" \
+                  --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
                   --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
-                  --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios &&
-                go run ./cmd/parity canary --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
-                  --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios &&
-                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity probe --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
-                { [ "$PARITY_AUTH" != dev ] || go run ./cmd/parity run --lane limiter --auth "$PARITY_AUTH" --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL" \
-                    --reference-dsn "$PARITY_REF_DSN" --candidate-dsn "$PARITY_CAND_DSN" \
-                    --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; }
-            ) || status=1
-            scripts/parity_stacks.sh down --env "$env_file"
-            [ "$status" -eq 0 ] || break
-          done
+                  --candidate-tap "$PARITY_CAND_TAP_URL" --served-routes "$PARITY_SERVED_ROUTES" \
+                  --candidate-python "$PARITY_CAND_PYTHON_TAP_URL" scenarios; } &&
+              { [ "$WANT_PROBE" != yes ] || go run ./cmd/parity probe \
+                  --reference "$PARITY_REF_URL" --candidate "$PARITY_CAND_URL"; } &&
+              { [ "$WANT_CANARY" != yes ] || go run ./cmd/parity canary --auth "$PARITY_AUTH" \
+                  --reference "$PARITY_REF_URL" --target "$PARITY_CAND_PYTHON_URL" \
+                  --reference-dsn "$PARITY_REF_DSN" --target-dsn "$PARITY_CAND_DSN" scenarios; }
+          ) || status=1
+          scripts/parity_stacks.sh down --env "$env_file"
           exit "$status"
 
   screens:
