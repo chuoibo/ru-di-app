@@ -248,6 +248,19 @@ export function BanDo({
         // naming a single element leaves the next to be found by a user rather
         // than by a test. They stay VISIBLE -- showing attribution is the
         // obligation -- and only stop taking the pointer until the chooser closes.
+        // Đo được trên CI (chẩn đoán của waitFor in ra từng nút): mục thứ BA của
+        // chooser, ở y=464, bị một `BUTTON` mang class react-native-web che —
+        // tức một nút của APP, không phải control bản đồ. Popup neo ở mốc và tràn
+        // qua mép dưới khung bản đồ, rơi vào vùng điều khiển bên dưới.
+        //
+        // z-index trên chính popup không cứu được: nó nằm trong ngữ cảnh xếp lớp
+        // của khung bản đồ, mà khung ấy đứng dưới app chrome. Nên nâng CHÍNH
+        // KHUNG trong lúc chooser mở. Bản đồ không vẽ ra ngoài hộp của nó, nên
+        // thứ duy nhất được nâng lên thật sự là popup.
+        const khung = map.getContainer();
+        const khungTruoc = khung.style.zIndex;
+        khung.style.zIndex = "1000";
+        chooser.current.once("close", () => { khung.style.zIndex = khungTruoc; });
         const controls = [...map.getContainer().querySelectorAll<HTMLElement>(".maplibregl-ctrl")];
         const truoc = controls.map((el) => el.style.pointerEvents);
         for (const el of controls) el.style.pointerEvents = "none";

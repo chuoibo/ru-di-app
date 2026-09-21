@@ -379,18 +379,23 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 		byStep := map[string][]string{}
 		dbByStep := map[string][]string{}
 		mediaByStep := map[string][]string{}
+		// Đếm riêng cho kịch bản này trước, vì một kịch bản hoá ra là SHIFT thì
+		// những khác biệt ấy KHÔNG được nằm trong tổng: mã thoát đọc tổng, nên để
+		// lại chúng là biến một nhãn "nhiễu nền" thành một lượt chạy đỏ. Đo được
+		// trên CI: scenarios_diff=0 mà differences=8, và job vẫn hỏng.
+		scenarioDifferences := 0
 		for _, d := range diffs {
 			for _, difference := range d.Differences {
 				byStep[d.StepID] = append(byStep[d.StepID], difference.String())
-				rep.Differences++
+				scenarioDifferences++
 			}
 			for _, difference := range d.Database {
 				dbByStep[d.StepID] = append(dbByStep[d.StepID], difference.String())
-				rep.Differences++
+				scenarioDifferences++
 			}
 			for _, difference := range d.Media {
 				mediaByStep[d.StepID] = append(mediaByStep[d.StepID], difference.String())
-				rep.Differences++
+				scenarioDifferences++
 			}
 		}
 		for _, step := range sc.Steps {
@@ -411,6 +416,7 @@ func compareStacks(args []string, stdout, stderr io.Writer) int {
 			rep.RankShifts = append(rep.RankShifts, fmt.Sprintf("%s (offset %+d)", sc.ID, offset))
 			fmt.Fprintf(stdout, "SHIFT %s: every difference is a constant %+d in <ts#N> and the equality structure is unchanged; a background collision, re-run this scenario alone to confirm it vanishes\n", sc.ID, offset)
 		} else {
+			rep.Differences += scenarioDifferences
 			rep.ScenariosDiff++
 			fmt.Fprintf(stdout, "DIFF  %s\n", sc.ID)
 			for _, d := range diffs {
