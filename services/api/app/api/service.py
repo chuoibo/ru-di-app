@@ -5254,6 +5254,35 @@ class ApiService:
             created_at=record.created_at,
         )
 
+    def authorize_chat_replay(
+        self,
+        context_id: uuid.UUID,
+        actor: Actor,
+        *,
+        message_id: uuid.UUID | None = None,
+        deleting: bool = False,
+    ) -> None:
+        """Recheck current access without performing the original mutation again."""
+        _require_permission(
+            "view_group_messages",
+            actor,
+            {"is_group_member": self.repository.is_member(context_id, actor.id)},
+        )
+        self._require_pair_is_alive(context_id, actor)
+        if message_id is not None:
+            message = self._message_in_context(context_id, message_id)
+            if deleting:
+                _require_permission(
+                    "delete_own_message",
+                    actor,
+                    {
+                        "is_group_member": True,
+                        "is_author": message.author_id == actor.id,
+                    },
+                )
+            elif message.kind == "deleted":
+                raise ApiProblem(409, "message_deleted", "Tin nhắn đã bị xoá.")
+
     def post_context_message(
         self,
         context_id: uuid.UUID,
