@@ -137,7 +137,12 @@ Lượt Reduce Motion (scale 0/0/0 ghi và đọc lại trước khi đo; pid 98
   `m1` đổi bốn tab ×5 · `m2` cuộn Khám phá xuống/lên ×4 · `m3` mở/đóng sheet «Tạo mới» ×5 · `m4` vào chi tiết địa điểm
   rồi Back ×5. Không `launchApp`/`stopApp` bên trong.
 - **Reduce Motion**: cùng bốn chuỗi với ba scale = 0 (đúng thứ «Remove animations» đặt và `isReduceMotionEnabled` đọc).
-- **Runner**: `do-motion.sh <ra> [thuong|reduce]`; canary `do-motion-canary.sh`. Số liệu lượt này: `dev-client-v2/`.
+- **Runner**: `scripts/do/do-motion.sh <ra> [thuong|reduce]`; canary
+  `scripts/do/do-motion-canary.sh`. Số liệu lượt này: `dev-client-v2/`.
+  *(Cả hai script đã chuyển từ thư mục này sang `scripts/do/` ở đợt dọn repo
+  2026-09-21: `tests/test_motion_measurement_gate.py` thi hành canary, nên nó là
+  hạ tầng cổng chứ không phải bằng chứng một lần. Dump green control
+  `m1-doi-tab.gfxinfo.txt` đi cùng sang `scripts/do/mau/` để cổng tự đứng được.)*
 
 ## Kết quả v2 — dev client, sau sửa R1 (stack cắt cảnh khi Reduce Motion)
 
@@ -184,11 +189,11 @@ Lượt Reduce Motion (scale 0/0/0, trả về 1/1/1 sau lượt — `scale-sau.
 
 ```bash
 # dev client đang nối Metro của cây này, app đã cài; runner tự warm-up bằng _vao-app-sach
-docs/claude/2026-09-10/motion/do-motion.sh <ra> thuong
-docs/claude/2026-09-10/motion/do-motion.sh <ra-reduce> reduce
-docs/claude/2026-09-10/motion/do-motion-canary.sh          # tự kiểm runner, không chạm máy
+scripts/do/do-motion.sh <ra> thuong
+scripts/do/do-motion.sh <ra-reduce> reduce
+scripts/do/do-motion-canary.sh          # tự kiểm runner, không chạm máy
 # live/release (khi có HTTPS local):
-FLOWS_DIR=.maestro-motion-live OTP_PHONE=<số> OTP_CODE=000000 docs/claude/2026-09-10/motion/do-motion.sh <ra> thuong
+FLOWS_DIR=.maestro-motion-live OTP_PHONE=<số> OTP_CODE=000000 scripts/do/do-motion.sh <ra> thuong
 ```
 
 ## Lịch sử (v1, 10/09) — giữ để đối chiếu, không dùng làm số

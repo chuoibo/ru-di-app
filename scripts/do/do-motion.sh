@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Frame-time gate, v4 (review 12/09 C1: strict buckets and verified scale windows).
 #
-#   docs/claude/2026-09-10/motion/do-motion.sh <out-dir> [thuong|reduce]
+#   scripts/do/do-motion.sh <out-dir> [thuong|reduce]
 #
 # The order is fixed and every step is verified before the next one runs:
 #   1. read the three animation scales; any value that is not a plain number
@@ -43,7 +43,7 @@ OUT="${1:?thư mục ra}"; MODE="${2:-thuong}"
 case "$MODE" in thuong|reduce) ;; *) echo "chế độ «$MODE» không có; dùng thuong|reduce" >&2; exit 2 ;; esac
 APP=com.lakiet.rudi
 DAY="$(cd "$(dirname "$0")" && pwd)"
-FLOWS="$(cd "$DAY/../../../../apps/mobile/${FLOWS_DIR:-.maestro-motion}" && pwd)"
+FLOWS="$(cd "$DAY/../../apps/mobile/${FLOWS_DIR:-.maestro-motion}" && pwd)"
 VAO="${VAO_FLOW:-$([ "${FLOWS_DIR:-}" = .maestro-motion-live ] && echo _vao-live.yaml || echo _vao-app-sach.yaml)}"
 THEM=()
 [ -n "${OTP_PHONE:-}" ] && THEM=(-e OTP_PHONE="$OTP_PHONE" -e OTP_CODE="${OTP_CODE:-000000}")

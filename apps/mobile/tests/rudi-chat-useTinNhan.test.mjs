@@ -16,7 +16,7 @@
  * module's ESM exports are immutable and the hook holds them by name.
  *
  * The reviewer reproduced the first case with a hand-rolled hook scheduler
- * (docs/codex/2026-09-09/native-audit-evidence/probe-late-context.mjs). These
+ * (scripts/do/probe-late-context.mjs). These
  * are the same scenario under React's own effect ordering, plus the cases that
  * probe did not reach: a late first page, a late FAILURE, unmount, a person
  * change, and the read mark. The retry case is the F32 contract this fix must

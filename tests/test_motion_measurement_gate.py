@@ -7,7 +7,7 @@ import subprocess
 def test_motion_gate_rejects_corrupt_measurements_and_restores_settings():
     root = Path(__file__).resolve().parents[1]
     result = subprocess.run(
-        ["bash", str(root / "docs/claude/2026-09-10/motion/do-motion-canary.sh")],
+        ["bash", str(root / "scripts/do/do-motion-canary.sh")],
         cwd=root,
         capture_output=True,
         text=True,
