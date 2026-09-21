@@ -2,7 +2,7 @@
 # Self-test of do-motion.sh's exit codes with a fake `adb` and a fake `maestro`
 # on PATH; no device is touched (re-audit 12/09 C1, runner v4).
 #
-#   docs/claude/2026-09-10/motion/do-motion-canary.sh
+#   scripts/do/do-motion-canary.sh
 #
 # Every red branch must make the runner exit with the documented non-zero code
 # AT THE END of the run, and the two green controls (a real gfxinfo capture from
@@ -19,7 +19,7 @@ DAY="$(cd "$(dirname "$0")" && pwd)"
 RUNNER="${MOTION_RUNNER:-$DAY/do-motion.sh}"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/bin"
-DUMP="$DAY/dev-client-v2/thuong/m1-doi-tab.gfxinfo.txt"
+DUMP="$DAY/mau/m1-doi-tab.gfxinfo.txt"
 [ -f "$DUMP" ] || { echo "thiếu dump mẫu $DUMP" >&2; exit 2; }
 # The fake pidof answers with the pid in the dump's own header, so the green
 # control proves the pid-in-dump check passes on real data.

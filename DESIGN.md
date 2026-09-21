@@ -1523,7 +1523,7 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   con). Sửa bằng layout, không bằng chữ: nút theo nội dung, hàng
   `flexWrap: "wrap"` canh phải, nên ở chữ lớn hai nút **xuống dòng** thay vì
   thu nhãn hay giấu «Thử lại». Cổng cho lỗi này không phải «có trong cây» mà là
-  **bounds**: `docs/claude/2026-09-10/native-r11/kiem-bounds.mjs` đòi mỗi nút có
+  **bounds**: `scripts/do/kiem-bounds.mjs` đòi mỗi nút có
   node chữ con nằm trong nút với lề ≥ 30px hai bên và nút nằm trong màn —
   `uiautomator` **kẹp** bounds về mép màn nên `x ≥ 0` không chứng minh gì, và
   chữ rơi khỏi màn thì **không có node**. Hệ quả thứ hai của `full={false}`,
@@ -2007,7 +2007,7 @@ phải thêm một sự thật mà dòng dưới nó chưa nói.
   tiết nói về **nhóm này** («Nhóm 8 người ngồi được một bàn…»), không đọc lại
   chip thành tính từ.
 - Cổng: `node --test tests/kham-pha-ly-do.test.mjs` (luật chọn) và
-  `node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>`
+  `node scripts/do/kiem-lap-loi.mjs <hierarchy.xml>`
   trên dump uiautomator của Khám phá fixture: đỏ khi còn node «hợp gu», khi
   tiêu đề mục không đúng một node, khi dẫn không có dòng lý do là một tag,
   hoặc mô tả lặp từ của lý do (`r14-80-kham-pha-*.kiem.txt`).
@@ -2061,7 +2061,7 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   (1.14:1 trên nền, thân giấy hoà vào nền) và `bong` là `line` #363b5e **sáng hơn** mặt giấy nên nếp gấp lộn trong ra
   ngoài — hình thành sơ đồ nét. **Thẻ, hàng, chữ giữ token cũ** (`card`, `line`, `ink`): bảng tương phản chữ không
   đổi; `paper`/`paperShade` sáng trùng `card`/`line` nên scheme sáng không đổi một pixel. Đo bằng
-  `docs/claude/2026-09-11/toi-giay-tren-vai/do-chat-lieu.py` trên cặp native cùng màn.
+  `scripts/do/do-chat-lieu.py` trên cặp native cùng màn.
 - **Do** để `CoverBand underStatusBar` khi màn có bề mặt `cover`, `StatusBar`
   sáng trên bìa, tối trên giấy sáng.
 - **Do** làm con dấu rộng bằng chữ, một vành, không mũi tên; `lon` trên bìa,
@@ -2323,7 +2323,7 @@ cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình củ
 cd apps/mobile && node --test tests/art-ky-hoa.test.mjs       # ký hoạ: lớp hợp lệ trong 288×96 ở cả hai khung đọc, đúng một lớp coral, bản gọn ⊂ bản đủ, ≤ 2 đạo cụ, câu a11y đổi ⇔ hình đổi
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/rudi-chat-sticker.test.mjs   # tám id khớp stickers.json; mọi lớp của mọi sticker ở cả hai cỡ đọc parse như Java; lớp tô kín, lớp nét dương; id lạ vẽ «khac»
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/kham-pha-ly-do.test.mjs tests/khong-mo-coi.test.mjs   # chonLyDo bỏ tag mô tả đã nói, guTheoTag trước guTheoLoai; khongMoCoi nối hai chữ cuối bằng NBSP
-node docs/claude/2026-09-11/native-r14/kiem-lap-loi.mjs <hierarchy.xml>   # dump uiautomator Khám phá fixture: 0 node «hợp gu», tiêu đề mục đúng một node, dẫn có một lý do là tag, mô tả không lặp từ
+node scripts/do/kiem-lap-loi.mjs <hierarchy.xml>   # dump uiautomator Khám phá fixture: 0 node «hợp gu», tiêu đề mục đúng một node, dẫn có một lý do là tag, mô tả không lặp từ
 cd apps/mobile && npx tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test tests/rudi-anh-ghi-cong.test.mjs   # ảnh catalogue chỉ tới Image trong ba khung in ghi công; không ai đọc trần anh.source, không ai gọi AnhChang
 python3 -m pytest tests/test_chat_lieu_tiles.py -q            # ô mực đo trên coral ở 0.26 nằm 6 đến 12 mức (gốc repo)
 cd apps/mobile && npx tsc -p tsconfig.test.json && node --test tests/art-duong.test.mjs   # thêm 12/09: bản trang trùng sha256 fixtures/nep-trang-baseline.json; manh đúng một dải coral (laDaiGap), không mực lên dải, dày ≥ 2.5/5.5; lấp đầy ≥ 0.87, tỉ lệ ≥ 0.94; ba pose mới một coral; thuGapBa 0 coral, 5 đỉnh, hai vết ở 1/3, 2/3
