@@ -3617,19 +3617,19 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "54f206c9e055ca7e018c0c024c51c5ee761447efbabdc9598a7d61983510c820",
+      "sha256": "238b295c67538a867d37e44c029775a7cea35be91dd367acd76becf4e215577f",
       "rules": [
         "long-number"
       ],
-      "reason": "go.mod của cửa trước Go services/core (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian commit upstream, không phải số tài khoản. Ghim 2026-09-14 khi thêm pgx v5.7.1 (v5.11 đòi go 1.25); go 1.23 / toolchain go1.23.4 giữ nguyên."
+      "reason": "go.mod của cửa trước Go services/core (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian commit upstream, không phải số tài khoản. Ghim 2026-09-14 khi thêm pgx v5.7.1 (v5.11 đòi go 1.25); go 1.23 / toolchain go1.23.4 giữ nguyên. Cập nhật 2026-09-21: thêm github.com/coder/websocket v1.8.15 cho chat lab; đã kiểm diff dependency/checksum. Giữ ngoại lệ đúng rule long-number cho timestamp module công khai, không nới phạm vi."
     },
     {
       "path": "services/core/go.sum",
-      "sha256": "4a03a26472c5df773653cf10ce6f08f1bbb7689138893bd0d39d0ffc67d36a28",
+      "sha256": "69e566cf8fffe275b53b3a803714dd250368db87b99b90a679f6c82b6b3a480c",
       "rules": [
         "long-number"
       ],
-      "reason": "Checksum Go của services/core (ADR-0029): github.com/jackc/pgx/v5 v5.7.1 và phụ thuộc gián tiếp (pgpassfile, pgservicefile, puddle/v2, golang.org/x/crypto, golang.org/x/text, golang.org/x/sync). Số dài là mốc thời gian trong pseudo-version Go module, không phải số tài khoản hay dữ liệu người tham gia. Ghim 2026-09-14; đổi phụ thuộc là đổi digest và phải review lại."
+      "reason": "Checksum Go của services/core (ADR-0029): github.com/jackc/pgx/v5 v5.7.1 và phụ thuộc gián tiếp (pgpassfile, pgservicefile, puddle/v2, golang.org/x/crypto, golang.org/x/text, golang.org/x/sync). Số dài là mốc thời gian trong pseudo-version Go module, không phải số tài khoản hay dữ liệu người tham gia. Ghim 2026-09-14; đổi phụ thuộc là đổi digest và phải review lại. Cập nhật 2026-09-21: thêm github.com/coder/websocket v1.8.15 cho chat lab; đã kiểm diff dependency/checksum. Giữ ngoại lệ đúng rule long-number cho timestamp module công khai, không nới phạm vi."
     }
   ]
 }
