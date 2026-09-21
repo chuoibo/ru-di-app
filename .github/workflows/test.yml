@@ -516,8 +516,16 @@ jobs:
 
       - name: The core container reports healthy
         # Any upstream will do: core's healthcheck never goes through Python.
+        # The database URL became required once the manifest started giving Go
+        # routes of its own, and an unreachable one is the right thing here:
+        # the pool is lazy (pgxpool connects on first use) and /healthz
+        # deliberately never touches the database, so this step still asks only
+        # what it means to ask -- does the image boot and report healthy.
         run: |
-          docker run -d --name core --health-interval 2s -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 mobile-core:ci
+          docker run -d --name core --health-interval 2s \
+            -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 \
+            -e MOBILE_DATABASE_URL=postgresql://none@127.0.0.1:9/none \
+            mobile-core:ci
           for i in $(seq 1 60); do
             status=$(docker inspect --format '{{.State.Health.Status}}' core)
             case "$status" in
