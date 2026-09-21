@@ -1,0 +1,92 @@
+=== RUN   TestCatchupReadersShareConversationWithoutWeakeningRevocation
+--- PASS: TestCatchupReadersShareConversationWithoutWeakeningRevocation (0.33s)
+=== RUN   TestSigningBindsEnvelope
+=== RUN   TestSigningBindsEnvelope/conversation
+=== RUN   TestSigningBindsEnvelope/device
+=== RUN   TestSigningBindsEnvelope/logical
+=== RUN   TestSigningBindsEnvelope/epoch
+=== RUN   TestSigningBindsEnvelope/ciphertext
+--- PASS: TestSigningBindsEnvelope (0.00s)
+=== RUN   TestEnvelopeBounds
+--- PASS: TestEnvelopeBounds (0.00s)
+=== RUN   TestSendConcurrentReplayConflictAndCatchup
+--- PASS: TestSendConcurrentReplayConflictAndCatchup (0.45s)
+=== RUN   TestConcurrentUniqueSendsOrdered
+--- PASS: TestConcurrentUniqueSendsOrdered (0.57s)
+=== RUN   TestAuthorizationBeforeReplayAndRekey
+=== RUN   TestAuthorizationBeforeReplayAndRekey/membership
+=== RUN   TestAuthorizationBeforeReplayAndRekey/device
+=== RUN   TestAuthorizationBeforeReplayAndRekey/account
+=== RUN   TestAuthorizationBeforeReplayAndRekey/block
+=== RUN   TestAuthorizationBeforeReplayAndRekey/other_member
+--- PASS: TestAuthorizationBeforeReplayAndRekey (1.20s)
+=== RUN   TestEpochForgeryAndHistoryBoundary
+--- PASS: TestEpochForgeryAndHistoryBoundary (0.26s)
+=== RUN   TestMonotonicMarksAndBounds
+--- PASS: TestMonotonicMarksAndBounds (0.54s)
+=== RUN   TestOutboxFailureRollsBackSend
+--- PASS: TestOutboxFailureRollsBackSend (0.29s)
+=== RUN   TestCatchupDoesNotSkipUncommittedSequence
+--- PASS: TestCatchupDoesNotSkipUncommittedSequence (0.27s)
+=== RUN   TestRejoinCannotReviveOldDeviceMembership
+--- PASS: TestRejoinCannotReviveOldDeviceMembership (0.25s)
+=== RUN   TestRevocationWaitsForAuthorizedTransaction
+--- PASS: TestRevocationWaitsForAuthorizedTransaction (0.29s)
+=== RUN   TestMigrationDetectsDrift
+--- PASS: TestMigrationDetectsDrift (0.22s)
+=== RUN   TestInvalidatedGateStaysClosed
+--- PASS: TestInvalidatedGateStaysClosed (0.22s)
+=== RUN   TestCatchupBoundsBytesWithoutSkippingLargeEnvelopes
+--- PASS: TestCatchupBoundsBytesWithoutSkippingLargeEnvelopes (0.46s)
+PASS
+ok  	mobile/services/core/internal/chatv2	6.375s
+=== RUN   TestDisabledTransportCannotBeEnabledByRequest
+--- PASS: TestDisabledTransportCannotBeEnabledByRequest (0.00s)
+=== RUN   TestStrictWireAndReplayAuthorization
+--- PASS: TestStrictWireAndReplayAuthorization (0.00s)
+=== RUN   TestWebsocketReceivesReconciledEventsAndResumes
+--- PASS: TestWebsocketReceivesReconciledEventsAndResumes (0.01s)
+=== RUN   TestQuietWebsocketReauthenticates
+--- PASS: TestQuietWebsocketReauthenticates (0.01s)
+=== RUN   TestWebsocketRejectsFutureAckAndCrossOrigin
+--- PASS: TestWebsocketRejectsFutureAckAndCrossOrigin (0.00s)
+=== RUN   TestBackendErrorDoesNotExposeCredentials
+--- PASS: TestBackendErrorDoesNotExposeCredentials (0.00s)
+=== RUN   TestHubCoalescesAndUnsubscribes
+--- PASS: TestHubCoalescesAndUnsubscribes (0.00s)
+=== RUN   TestPostgresSlowConsumerIsolationResumeAndLiveRevocation
+--- PASS: TestPostgresSlowConsumerIsolationResumeAndLiveRevocation (12.49s)
+=== RUN   TestPostgresTwoReplicasThreePeopleAndRestart
+--- PASS: TestPostgresTwoReplicasThreePeopleAndRestart (0.39s)
+=== RUN   TestPostgresSessionRevocationClosesQuietSocket
+--- PASS: TestPostgresSessionRevocationClosesQuietSocket (0.29s)
+=== RUN   TestChatV2ProcessHelper
+--- PASS: TestChatV2ProcessHelper (0.00s)
+=== RUN   TestPostgresSeparateProcessesCommittedRetryAndReconnect
+--- PASS: TestPostgresSeparateProcessesCommittedRetryAndReconnect (2.56s)
+=== RUN   TestMutationReauthenticatesAfterBodyDecode
+=== RUN   TestMutationReauthenticatesAfterBodyDecode/POST/revoked
+=== RUN   TestMutationReauthenticatesAfterBodyDecode/POST/changed_actor
+=== RUN   TestMutationReauthenticatesAfterBodyDecode/PUT/revoked
+=== RUN   TestMutationReauthenticatesAfterBodyDecode/PUT/changed_actor
+--- PASS: TestMutationReauthenticatesAfterBodyDecode (0.00s)
+=== RUN   TestConnectionOverflowDoesNotReadStore
+--- PASS: TestConnectionOverflowDoesNotReadStore (0.00s)
+=== RUN   TestHTTPStoreOperationDeadline
+--- PASS: TestHTTPStoreOperationDeadline (0.02s)
+=== RUN   TestWebsocketStoreOperationDeadline
+--- PASS: TestWebsocketStoreOperationDeadline (0.03s)
+=== RUN   TestWebsocketAuthenticationOperationDeadline
+--- PASS: TestWebsocketAuthenticationOperationDeadline (0.03s)
+PASS
+ok  	mobile/services/core/internal/chatv2http	16.873s
+=== RUN   TestLaboratoryRefusesProductionConfiguration
+=== RUN   TestLaboratoryRefusesProductionConfiguration/RUDI_CHAT_LAB
+=== RUN   TestLaboratoryRefusesProductionConfiguration/RUDI_CHAT_LAB_LISTEN0.0.0.0:8198
+=== RUN   TestLaboratoryRefusesProductionConfiguration/RUDI_CHAT_LAB_LISTEN:8198
+=== RUN   TestLaboratoryRefusesProductionConfiguration/RUDI_CHAT_LAB_LISTEN127.0.0.1:0
+=== RUN   TestLaboratoryRefusesProductionConfiguration/RUDI_CHAT_LAB_DATABASE_URLpostgresql://localhost/mobile
+--- PASS: TestLaboratoryRefusesProductionConfiguration (0.00s)
+PASS
+ok  	mobile/services/core/cmd/chat-lab	1.017s
+Đạt cổng PostgreSQL/transport chat thử nghiệm; chưa chứng minh MLS hoặc native.

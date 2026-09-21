@@ -1,0 +1,60 @@
+{
+  "achieved_rate_including_drain": 97.809,
+  "adr0031_latency_passed": false,
+  "connections": 1000,
+  "corrupt_envelopes": 0,
+  "db_dedup": 5996,
+  "db_events": 5996,
+  "db_outbox": 5996,
+  "delivery_latency": {
+    "count": 2998000,
+    "max_ms": 3713,
+    "p50_ms": 1609,
+    "p95_ms": 2427,
+    "p99_ms": 3023
+  },
+  "devices_per_person": 5,
+  "dial_errors": 0,
+  "duplicates": 0,
+  "duration_seconds": 61.303,
+  "expected_deliveries": 2998000,
+  "groups": 2,
+  "http_status": {
+    "200": 60,
+    "201": 5996
+  },
+  "integrity_and_capacity_passed": true,
+  "maximum_cursor": 2998,
+  "minimum_cursor": 2998,
+  "missing_deliveries": 0,
+  "offered": 5996,
+  "passed": false,
+  "peak_connections": 1000,
+  "people": 200,
+  "planned_reconnects": 100,
+  "queue_drops": 0,
+  "received_deliveries": 2998000,
+  "reconnects": 100,
+  "replay_errors": 0,
+  "replay_ok": 60,
+  "sampled_peak_rss_kib_by_pid": {
+    "741642": 85924,
+    "741692": 106544,
+    "741702": 101876
+  },
+  "scheduled": 5996,
+  "scope": "synthetic signed opaque envelopes, real HTTP/WebSocket/PostgreSQL, NOT MLS or mobile E2E",
+  "send_duration_seconds": 60,
+  "send_errors": 0,
+  "send_latency": {
+    "count": 6056,
+    "max_ms": 2570,
+    "p50_ms": 1251,
+    "p95_ms": 1856,
+    "p99_ms": 2324
+  },
+  "sent": 5996,
+  "sequence_gaps": 0,
+  "target_rate": 100,
+  "unexpected_disconnects": 0
+}

@@ -1,0 +1,11 @@
+chat transport laboratory started; native MLS and production gates remain closed
+chat transport laboratory started; native MLS and production gates remain closed
+load servers pids=741692,741702 people=200 sockets=1000
+{"active":1000,"delivery":{"count":0,"max_ms":0,"p50_ms":0,"p95_ms":0,"p99_ms":0},"received":0,"rss_kib":{"741642":40064,"741692":35456,"741702":36224},"send_errors":0,"sent":0,"socket_errors":0,"stage":"all_ready"}
+{"active":1000,"delivery":{"count":425986,"max_ms":2184,"p50_ms":1364,"p95_ms":1760,"p99_ms":1889},"received":425986,"rss_kib":{"741642":68864,"741692":95864,"741702":86328},"send_errors":0,"sent":887,"socket_errors":0,"stage":"sending"}
+{"active":1000,"delivery":{"count":920641,"max_ms":2184,"p50_ms":1417,"p95_ms":1788,"p99_ms":1905},"received":920641,"rss_kib":{"741642":72032,"741692":89740,"741702":89812},"send_errors":0,"sent":1870,"socket_errors":0,"stage":"sending"}
+{"active":900,"delivery":{"count":1394922,"max_ms":3653,"p50_ms":1570,"p95_ms":2733,"p99_ms":3169},"received":1394922,"rss_kib":{"741642":78816,"741692":106544,"741702":101876},"send_errors":0,"sent":2831,"socket_errors":0,"stage":"sending"}
+{"active":1000,"delivery":{"count":1912545,"max_ms":3713,"p50_ms":1603,"p95_ms":2611,"p99_ms":3121},"received":1912545,"rss_kib":{"741642":82092,"741692":95100,"741702":91416},"send_errors":0,"sent":3863,"socket_errors":0,"stage":"sending"}
+{"active":1000,"delivery":{"count":2411552,"max_ms":3713,"p50_ms":1613,"p95_ms":2514,"p99_ms":3075},"received":2411546,"rss_kib":{"741642":83744,"741692":95896,"741702":95896},"send_errors":0,"sent":4859,"socket_errors":0,"stage":"sending"}
+{"active":1000,"delivery":{"count":2991012,"max_ms":3713,"p50_ms":1610,"p95_ms":2427,"p99_ms":3024},"received":2990992,"rss_kib":{"741642":85924,"741692":93136,"741702":93040},"send_errors":0,"sent":5996,"socket_errors":0,"stage":"draining"}
+load gate failed; measured result above

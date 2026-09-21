@@ -1,0 +1,11 @@
+08e346dcec4993e8d448f14a31292c6e758da2fd
+00f3641f5765e9cda02b3f749e458fedd75e3d7ded5fd96647e50e27b2f002b3  services/core/internal/chatv2/store.go
+0e3314fa8cbcfd04c247d27ba5e81491fd929a0eca579c86a71a53eedb305d03  services/core/internal/chatv2http/handler.go
+ecd4ba9e93d351cc3507837beb12c94d04a472490bc41b3e9a74a7c0092b1b20  services/core/cmd/chat-load/main.go
+b10863f64ac1332e6acdf61397890e4afc56e992c1fbb293caaa32b4d91ceea9  services/core/cmd/chat-load/resources.go
+go version go1.23.4 linux/amd64
+Linux 6.6.87.2-microsoft-standard-WSL2
+16
+               total        used        free      shared  buff/cache   available
+Mem:           20000       12878         497         114        7013        7121
+Swap:           8192        4494        3697

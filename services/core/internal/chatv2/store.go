@@ -25,6 +25,10 @@ type access struct {
 // membership/device invalidation triggers use this same order. No persisted
 // receipt is read until the current membership and device have been checked.
 func authorize(ctx context.Context, tx pgx.Tx, actor, device, conversation string) (access, error) {
+	return authorizeWithLock(ctx, tx, actor, device, conversation, true)
+}
+
+func authorizeWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, exclusive bool) (access, error) {
 	var a access
 	if !ValidID(actor) || !ValidID(device) || !ValidID(conversation) {
 		return a, ErrInvalid
@@ -71,7 +75,14 @@ func authorize(ctx context.Context, tx pgx.Tx, actor, device, conversation strin
 		}
 	}
 	var ready bool
-	err = tx.QueryRow(ctx, `SELECT epoch,last_sequence,ready FROM chat_v2_conversations WHERE context_id=$1 FOR UPDATE`, conversation).Scan(&a.epoch, &a.last, &ready)
+	// Readers must hold a stable epoch/permission boundary, but they must not
+	// serialize with every other recipient. SHARE still excludes sequence
+	// writers and roster invalidation until this read transaction finishes.
+	lock := " FOR SHARE"
+	if exclusive {
+		lock = " FOR UPDATE"
+	}
+	err = tx.QueryRow(ctx, `SELECT epoch,last_sequence,ready FROM chat_v2_conversations WHERE context_id=$1`+lock, conversation).Scan(&a.epoch, &a.last, &ready)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return a, ErrNotReady
 	}
@@ -197,7 +208,7 @@ func (s *Store) Events(ctx context.Context, actor, device, conversation string, 
 		return page, err
 	}
 	defer tx.Rollback(ctx)
-	a, err := authorize(ctx, tx, actor, device, conversation)
+	a, err := authorizeWithLock(ctx, tx, actor, device, conversation, false)
 	if err != nil {
 		return page, err
 	}
