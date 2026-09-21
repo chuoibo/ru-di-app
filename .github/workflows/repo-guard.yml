@@ -13,11 +13,11 @@ jobs:
   repo-guard:
     name: repo-guard
     runs-on: ubuntu-latest
-    # 10 phút đủ cho một PR thường, nhưng `range` quét TỪNG commit, và một PR
-    # mang 150 commit x ~3860 file thì chạm trần đúng ở 10m15s -- hết giờ của
-    # job, không phải guard chặn thứ gì. Nới lên 30 để một PR lớn vẫn được quét
-    # đủ; vẫn có trần, vì một lượt quét chạy mãi cũng là một lượt quét hỏng.
-    timeout-minutes: 60
+    # `range` từng quét TRỌN CÂY ở từng commit, nên một PR 151 commit ra 497.785
+    # lượt quét và chạy quá cả trần 60 phút. Giờ nó chỉ quét những file mỗi
+    # commit CHẠM -- cùng phán quyết, 1.814 lượt quét, 41 giây ở máy dev. 20
+    # phút là chỗ rộng cho một PR lớn hơn nữa, và vẫn là một cái trần.
+    timeout-minutes: 20
 
     steps:
       - name: Check out complete history

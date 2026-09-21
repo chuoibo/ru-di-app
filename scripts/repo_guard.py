@@ -980,11 +980,24 @@ def config_from_entries(repo: Path, entries: Mapping[bytes, GitEntry]) -> GuardC
     return load_config(raw)
 
 
-def scan_tree(repo: Path, ref: str, commit_label: str | None = None) -> ScanResult:
+def scan_tree(
+    repo: Path,
+    ref: str,
+    commit_label: str | None = None,
+    only: set[bytes] | None = None,
+) -> ScanResult:
+    """Scan the tree at `ref`, or only `only` of its paths.
+
+    `only` exists for `scan_commits`. The allowlist is still read from the WHOLE
+    tree, because an entry that pins a path by sha256 has to be found wherever
+    it lives, not only where this commit happened to touch.
+    """
+
     entries = parse_tree(repo, ref)
     config = config_from_entries(repo, entries)
     result = ScanResult(findings=[])
-    for file_number, path in enumerate(sorted(entries), start=1):
+    wanted = sorted(entries) if only is None else sorted(set(entries) & only)
+    for file_number, path in enumerate(wanted, start=1):
         entry = entries[path]
         raw = read_object(repo, entry)
         result.files_scanned += 1
@@ -1055,10 +1068,45 @@ def list_commits(repo: Path, revision: str) -> list[str]:
     return commits
 
 
+def changed_paths(repo: Path, commit: str) -> set[bytes]:
+    """The paths this commit touched, against its first parent.
+
+    A root commit has no parent, so every path in it is "touched".
+    """
+
+    out = run_git(
+        repo,
+        "diff-tree",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        "-m",
+        "--root",
+        "-z",
+        commit,
+    )
+    # Bytes, không phải str: khoá của `parse_tree` là bytes, và một tên file
+    # không hợp lệ UTF-8 vẫn phải so khớp được. `-z` để tên có dấu cách hay
+    # xuống dòng không bị git bọc trong nháy.
+    return {line for line in out.split(b"\0") if line}
+
+
 def scan_commits(repo: Path, commits: Sequence[str]) -> ScanResult:
+    """Scan each commit, but only the paths that commit changed.
+
+    Scanning the whole tree at every commit re-reads every unchanged blob once
+    per commit: a 151-commit pull request came to 497,785 file scans and ran
+    past a 60-minute CI job. It also finds nothing extra. A blob that offends
+    has to ENTER the range through some commit, and that commit touches its
+    path; one that was already in the base is not introduced here at all, and
+    the separate `tree HEAD` step covers it.
+    """
+
     result = ScanResult(findings=[])
     for commit in commits:
-        commit_result = scan_tree(repo, commit, commit_label=commit)
+        commit_result = scan_tree(
+            repo, commit, commit_label=commit, only=changed_paths(repo, commit)
+        )
         commit_result.commits_scanned = 1
         result.extend(commit_result)
         if len(result.findings) >= MAX_FINDINGS_TO_PRINT:

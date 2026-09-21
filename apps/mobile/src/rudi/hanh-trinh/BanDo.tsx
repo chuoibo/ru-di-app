@@ -243,6 +243,17 @@ export function BanDo({
         // press picked the copyright line instead of the stop. Attribution has to
         // stay clickable, so the popup is raised rather than the strip disabled.
         chooser.current.getElement().style.zIndex = "10";
+        // z-index alone does not settle it: the control container is
+        // `pointer-events: none`, but `.maplibregl-ctrl-attrib-inner` turns them
+        // back on so its links stay clickable, and that inner element still wins
+        // the hit test wherever it overlaps. While a chooser is open the strip
+        // stays VISIBLE -- the attribution obligation is to show it -- and only
+        // stops taking the pointer; `remove` puts it back.
+        const attrib = map.getContainer().querySelector<HTMLElement>(".maplibregl-ctrl-attrib-inner");
+        if (attrib) {
+          attrib.style.pointerEvents = "none";
+          chooser.current.once("close", () => { attrib.style.pointerEvents = ""; });
+        }
         const content = chooser.current.getElement().querySelector<HTMLElement>(".maplibregl-popup-content");
         if (content) { content.style.background = mauNen; content.style.color = cbs.current.mauDuong; }
       });
