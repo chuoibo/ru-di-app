@@ -1,6 +1,6 @@
 """QA evidence that claims to be reproducible must reproduce somewhere else.
 
-Every verdict under `docs/claude/` points at a script in `tests/qa/` and invites
+Every verdict under `docs/archive/claude/` points at a script in `tests/qa/` and invites
 the reader to re-run it. The repository is public now, so "the reader" is no
 longer only the four processes on this laptop.
 

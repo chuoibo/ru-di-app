@@ -19,7 +19,7 @@
 # it mutates before exiting, including on failure.
 #
 # Exit 0 = every row landed where it should. Exit 1 = at least one row moved,
-# which means the conclusion in docs/claude/2026-08-30/qa-tt-0010-*.md no longer
+# which means the conclusion in docs/archive/claude/2026-08-30/qa-tt-0010-*.md no longer
 # describes this tree.
 
 set -uo pipefail

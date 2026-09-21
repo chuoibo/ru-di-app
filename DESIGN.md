@@ -249,15 +249,15 @@ components:
 <!-- impeccable:design-schema 2 -->
 
 > **Đọc bằng chứng trong tài liệu này.** Mỗi khẳng định dưới đây dẫn về một bó
-> bằng chứng ở `docs/claude/<ngày>/<chủ đề>/` hoặc `docs/codex/<ngày>/...`.
+> bằng chứng ở `docs/archive/claude/<ngày>/<chủ đề>/` hoặc `docs/archive/codex/<ngày>/...`.
 > Bài viết (`README.md`, báo cáo, bảng số đo), dump `hierarchy.xml` và mọi file
 > đo dạng text **vẫn nằm trong cây** — có cổng đọc chúng làm fixture. Riêng
 > **ảnh chụp màn** đã được gỡ ở đợt dọn repo và **chỉ còn trong lịch sử Git**.
 > Muốn xem lại ảnh của một bó, lấy ở commit mà chính bó đó ghi, ví dụ:
 >
 > ```bash
-> git show <sha>:docs/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs1.0-sang.png > /tmp/xem.png
-> git log --oneline --all -- docs/claude/2026-09-12/nen-to-giay/   # tìm sha nếu bó không ghi
+> git show <sha>:docs/archive/claude/2026-09-12/nen-to-giay/anh/r18-99-to-giay-tren-fs1.0-sang.png > /tmp/xem.png
+> git log --oneline --all -- docs/archive/claude/2026-09-12/nen-to-giay/   # tìm sha nếu bó không ghi
 > ```
 >
 > Lý do gỡ: 382 file ảnh chiếm 191 MB, tức phần lớn dung lượng repo, và là kết
@@ -300,7 +300,7 @@ của sổ hai người: tờ thư gấp ba (`ui/ToGiay.tsx`), Nếp bản **m�
 module «bản tính của sổ» (`so/ban-tinh.ts`). **Không màn người dùng nào đổi,
 không token, không route**; mọi thứ mới chỉ lên bảng `app/dev/ui-lab.tsx`.
 Bằng chứng: ba vòng đọc mù (reviewer context mới, ảnh cắt không nhãn, trước
-khi mở packet) ghi ở `docs/claude/2026-09-12/nen-to-giay/README.md`, 16 PNG
+khi mở packet) ghi ở `docs/archive/claude/2026-09-12/nen-to-giay/README.md`, 16 PNG
 native `r18-99-*` ở `anh/` của cùng thư mục, Maestro `.maestro-bs-r18/99` (flow còn trong lịch sử Git @ `137c6c04`) exit 0
 ở bốn cấu hình, và bốn cổng node: `art-duong` (baseline sha256 bản `trang`,
 `laDaiGap`, độ lấp đầy, bề dày dải), `so-ban-tinh-mot-cho`, `dau-gach-dai`,
@@ -619,7 +619,7 @@ tỉ lệ 2.8804), không còn `fontStyle: "italic"` giả wordmark
 và chữ con dấu, đứng trên body system trung tính. Bricolage có trục `wdth`
 (instance Condensed cho tem) và `tnum` (số tiền tabular). Bộ chữ Việt 527
 glyph, đã kiểm «ế ự ỡ ạ ổ ầ ẫ ỹ Đ» ở 12/17/28/40 sp trên emulator ở font 1.0
-và 1.3 (ảnh trong `docs/claude/2026-09-05/`). Body giữ system là **quyết định**
+và 1.3 (ảnh trong `docs/archive/claude/2026-09-05/`). Body giữ system là **quyết định**
 (ADR-0020 §2.3): dấu tiếng Việt và cỡ chữ hệ thống chắc chắn, đổi face không
 cần rebuild dev client.
 
@@ -787,7 +787,7 @@ này là màu phẳng:
 |---|---|---|---|
 | Vải bìa | `vai-bia.png` | 0.30 | ≈ 8 mức trên `cover`, đều từ y 200 đến 2300 |
 | Giấy | `giay-trang.png` | 0.45 (chỉ nền sáng) | ≈ 2 mức trên `ground` sáng; **ở nền tối 0.30 đo 0.8–2.1 = phẳng, đã bỏ (11/09)** |
-| Vải trên nền tối | `vai-bia.png` | 0.30 | ≈ 8.1–8.6 mức trên `ground` tối (Khám phá, khay, màn lỗi — `docs/claude/2026-09-11/toi-giay-tren-vai/`) |
+| Vải trên nền tối | `vai-bia.png` | 0.30 | ≈ 8.1–8.6 mức trên `ground` tối (Khám phá, khay, màn lỗi — `docs/archive/claude/2026-09-11/toi-giay-tren-vai/`) |
 | Mực dấu | `muc-in.png` | 0.26 | ≈ 8.6 mức trên coral; ô giấy ở đây đo 2.1 nên có ô riêng |
 
 Ô trắng đen trung bình trung tính nên trên nền **cỡ trung** màu token bên dưới đo
@@ -1280,7 +1280,7 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
   thống; Nếp-hệ-thống vẫn không đứng cạnh ledger, lỗi, conflict hay xác nhận
   tiền. Muốn cấm cả sticker thì trình Lead, không vừa ghi cấm vừa vẽ tám mẫu.
   Sticker đầu tiên theo ngoại lệ này đã có: `cho-ti` (mục Chat bên dưới);
-  bằng chứng khay/bubble sáng-tối ở `docs/claude/2026-09-08/tra-loi-sticker-cho-ti.md`.
+  bằng chứng khay/bubble sáng-tối ở `docs/archive/claude/2026-09-08/tra-loi-sticker-cho-ti.md`.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
@@ -1569,7 +1569,7 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
 - **Nghĩa hình phải tự đứng; sửa bằng hành động, không bằng chi tiết** (audit
   native 09/09, F45). Bốn hình đọc sai nghĩa được sửa theo cùng một phép: dựng
   ứng viên bằng chính primitives, render cạnh bản cũ, **nhìn** rồi chọn
-  (`docs/claude/2026-09-10/nghia-hinh/`). «Kẹt xe»: xe + mặt mệt chỉ nói «đi
+  (`docs/archive/claude/2026-09-10/nghia-hinh/`). «Kẹt xe»: xe + mặt mệt chỉ nói «đi
   xe»; nay **đuôi xe buýt** (khối cao, dải kính `bong`, một vạch cản) chạm bánh
   trước và người **chống cằm** (`ngoi-xe` đổi tay, mắt chúc xuống) — hai đèn hậu
   coral bị loại vì hai chấm trên một vạch **thành khuôn mặt**; vệt khói sau bánh
@@ -1590,7 +1590,7 @@ căn cứ); vòng 2 (08/09) bỏ cặp `photo` + `attribution` rời nhau, thay 
   10/10 cảnh với mốc trước khi đổi pose nào. Việc còn của team: kiểm chứng
   **không nhãn** với người chưa đọc brief bằng `khong-nhan-sang/toi.png`.
   **Vòng 2 (11/09**, tái audit Codex 10/09: F45 mới đóng một phần, R4;
-  `docs/claude/2026-09-11/nghia-hinh-v2/`): «Kẹt xe» — khối 10/09 đọc ra kiosk,
+  `docs/archive/claude/2026-09-11/nghia-hinh-v2/`): «Kẹt xe» — khối 10/09 đọc ra kiosk,
   nay **xe buýt có bánh** (hai bánh mực trên sàn) + một vạch đèn hậu coral,
   người nhỏ hơn để xe cao hơn đầu. «Trả tiền nè» — tờ trên mang **ô bầu dục +
   khung đôi**, không ký hiệu tiền. `chua-co-tin-nhan` — ý «vẽ trước người để
@@ -1952,9 +1952,9 @@ scale 0). Chứng minh bằng **số khung, không bằng `rc=0`**: quay `screen
 quanh một flow, tách 30 fps, đếm chuỗi khung đổi liên tiếp, có đối chứng hai
 chiều **trong cùng một phiên app** (scale 1 trượt 7–9 khung → scale 0 cắt 1
 khung → scale 1 trượt lại) cho push stack, sheet `transparentModal` và
-`presentation: modal` — `docs/claude/2026-09-11/motion-v2/README.md`; phương
+`presentation: modal` — `docs/archive/claude/2026-09-11/motion-v2/README.md`; phương
 pháp đo v2 (warm-up ngoài cửa sổ, kiểm pid, fail-closed, trap trả scale, p99 là
-nhãn bucket) ở `docs/claude/2026-09-10/motion/README.md`.
+nhãn bucket) ở `docs/archive/claude/2026-09-10/motion/README.md`.
 
 **Luật Một Cú Đóng Mỗi Sự Kiện.** `dong` chỉ truyền cho **hàng người đó vừa
 bấm** (`vuaTra`, `vuaToi`, `vuaNhan` là state của màn, không phải của dữ
@@ -1994,7 +1994,7 @@ mỗi sự thật có **một** chỗ trên màn.
   món… hoặc hỏi Rủ Đi AI»), không đoạn hướng dẫn dưới ô.
 
 **Luật Một Dấu Cho Một Địa Điểm** (11/09, tái audit Codex 10/09 R3 —
-`docs/codex/2026-09-10/reaudit-evidence/`): một địa điểm mang **lý do hoặc
+`docs/archive/codex/2026-09-10/reaudit-evidence/`): một địa điểm mang **lý do hoặc
 con dấu, không cả hai**; **tiêu đề mục** («Gần bạn, đúng gu») là nơi **duy
 nhất** nói lời hứa, nên lý do không mở bằng «Hợp gu…» và con dấu «HỢP GU»
 không đứng cạnh một dòng lý do; **mô tả không nhắc lại từ của lý do** — lý do
@@ -2051,7 +2051,7 @@ trọng; chụp lại ở font 1.3 trước khi nói «không cắt».
   Hàng và cặp so sánh **giữ ô giấy loại nơi**: một khoảnh khắc hình mỗi màn. Không thay ảnh thật có ghi công khi có.
   Đọc mù (agent context mới, chưa biết brief) trên bản v2 đã đánh trượt: bát treo dưới mép bàn, vạch mái = thước, cửa
   kính = laptop có biểu đồ, thông = mũi tên, mây = Venn, móc dây = icon refresh — v3 sửa từng thứ; những gì người ngoài
-  đọc được vẫn là câu hỏi cho team (`docs/claude/2026-09-11/ky-hoa-trong-so/`).
+  đọc được vẫn là câu hỏi cho team (`docs/archive/claude/2026-09-11/ky-hoa-trong-so/`).
 - **Bản tối là sổ đóng trên bàn** (11/09, review Codex A3 «bản tối giữ màu thương hiệu nhưng chưa giữ cảm giác giấy»):
   ngày là trang giấy mở (`ground` có vân `giayTrang` 0.45); **đêm là cuốn sổ đóng lại trên bàn** — nền tối trải vân
   **vải bìa** (`Grain vaiBia` 0.30, đo trên nền tối stddev ≈ 8.1–8.6 mức, trước đó vân giấy 0.30 chỉ ≈ 0.8–2.1),
@@ -2235,7 +2235,7 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
   `toi-1.3/` chụp **trước** loạt sửa; cảnh trong `EmptyState`, cặp so sánh
   và ô gu ở dark chưa có ảnh.
   **11/09:** ba màn tối (Khám phá, khay sticker, màn lỗi có cảnh) đã có cặp native trước/sau ở
-  `docs/claude/2026-09-11/toi-giay-tren-vai/`; câu hỏi «bản tối mất chất giấy» đóng bằng vải nền + giấy đêm, không
+  `docs/archive/claude/2026-09-11/toi-giay-tren-vai/`; câu hỏi «bản tối mất chất giấy» đóng bằng vải nền + giấy đêm, không
   phải bằng token. Còn chưa chụp: các cảnh còn lại của `EmptyState` ở tối, cặp so sánh, Album.
 - Album theo ngày chỉ ở `AlbumLive.tsx` và chỉ đọc từ mã; album fixture
   `Memories.tsx` vẫn lưới đều ba cột (ảnh `bs-18-album`), là hai nhịp của
@@ -2243,7 +2243,7 @@ Có trong cây nhưng không phải hệ; người sau đừng lấy làm mẫu:
 - *Lịch sử tới 08/09 (`a03f563d`):* hai cảnh `chua-co-hoi`, `chua-co-ban` và
   bốn tư thế Nếp ngoài `moi`, `ghi-lai` mới có trên bảng art, chưa màn nào
   gọi. **Hiện hành (09/09, #588):** mười cảnh đều đã nối vào màn — xem mục
-  «Mười cảnh» và bảng ở `docs/claude/2026-09-09/tra-loi-canh-moi-im-lang.md`.
+  «Mười cảnh» và bảng ở `docs/archive/claude/2026-09-09/tra-loi-canh-moi-im-lang.md`.
 - *Lịch sử tới 08/09:* bảy sticker cũ (khối màu lớn, chỉ lớp tô) và `cho-ti`
   (nét + hai mảng sắc độ) là hai ngữ pháp trong một khay, chờ quyết định.
   **Hiện hành (09/09, #587):** cả tám cùng một ngữ pháp nét–giấy–nếp gấp, hai cỡ
@@ -2317,7 +2317,7 @@ python3 -m pytest services/api/tests/web -q                   # token guest.css 
 python3 scripts/sinh_token_ui_v2.py                           # đổi màu: sinh lại 4 gương, không gõ tay
 cd apps/mobile && node --test tests/rudi-khong-hex.test.mjs   # không file nào trong vỏ RuDi tự gõ mã màu ngoài theme.ts
 cd apps/mobile && node --test tests/duong-svg.test.mjs        # đường SVG parse được theo cách Java parse
-cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/claude/2026-09-11/motion-v2/
+cd apps/mobile && node --test tests/motion.test.mjs           # stackAnimation → none khi Reduce Motion, giữ nguyên khi không; durationFor/moneyCountUpMs; cổng khung hình thật ở docs/archive/claude/2026-09-11/motion-v2/
 cd apps/mobile && node --test tests/rudi-khong-card-trong-cai-dat.test.mjs   # không file nào trong screens/cai-dat import Card; NhomHang có trong kit; in các màn còn dùng Card (nợ có tên)
 cd apps/mobile && node --test tests/art-duong.test.mjs        # mọi hình của lớp vẽ (Nếp, gu, motif, cảnh) chỉ M/L/C/Z tuyệt đối, vai màu hợp lệ
 cd apps/mobile && node --test tests/art-ky-hoa.test.mjs       # ký hoạ: lớp hợp lệ trong 288×96 ở cả hai khung đọc, đúng một lớp coral, bản gọn ⊂ bản đủ, ≤ 2 đạo cụ, câu a11y đổi ⇔ hình đổi

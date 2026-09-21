@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Two-way control for the three 403s reported against F43 / F44 / F45.
 
-The report `docs/claude/2026-08-31/qa2-022247-con-thieu-gi-va-vi-sao.md` listed
+The report `docs/archive/claude/2026-08-31/qa2-022247-con-thieu-gi-va-vi-sao.md` listed
 three rows as TAC (blocked):
 
     F43  GET  403 /contexts/1aa00000-aaaa-4aaa-8aaa-0000a0000001/map

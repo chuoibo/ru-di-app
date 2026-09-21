@@ -25,7 +25,10 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-TRANG = REPO / "docs/claude/2026-08-31/qa3-093210-da-do-duoc-gi-va-chua-do-duoc-gi.md"
+TRANG = (
+    REPO
+    / "docs/archive/claude/2026-08-31/qa3-093210-da-do-duoc-gi-va-chua-do-duoc-gi.md"
+)
 
 BO_QUA = {"11": "make e2e dựng cả stack — trang đã tự khai KHÔNG chạy lại lượt này"}
 

@@ -27,7 +27,7 @@ diagnose from a log.
 
 Everything below is deterministic: the fake reader replays reading shapes
 observed from the real model, so no network, no key, and no rate is involved.
-The observed shapes are in `docs/claude/2026-08-30/rd-qa-38-do-lai-do-tin-cay.md`.
+The observed shapes are in `docs/archive/claude/2026-08-30/rd-qa-38-do-lai-do-tin-cay.md`.
 """
 
 from __future__ import annotations

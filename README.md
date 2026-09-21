@@ -578,7 +578,7 @@ chính được làm đúng vỏ và dán nhãn. Giấu chuyện nó là vỏ m�
 
 **Rủ Đi thôi!**
 
-[`PRODUCT.md`](PRODUCT.md) · [`DESIGN.md`](DESIGN.md) · [`CLAUDE.md`](CLAUDE.md) · [`AGENTS.md`](AGENTS.md) · [`docs/codex/QUEUE.md`](docs/codex/QUEUE.md)
+[`PRODUCT.md`](PRODUCT.md) · [`DESIGN.md`](DESIGN.md) · [`CLAUDE.md`](CLAUDE.md) · [`AGENTS.md`](AGENTS.md) · [`docs/team/hang-doi.md`](docs/team/hang-doi.md)
 
 Giấy phép [MIT](LICENSE) · © 2026
 

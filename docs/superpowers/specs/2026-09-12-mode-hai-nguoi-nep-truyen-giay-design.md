@@ -8,7 +8,7 @@ hai — C1, C2, C3 — đã hợp nhất trong bản này (mục 22.4). **Bốn 
 Lead chấp nhận ADR-0027 và khoản bổ sung ADR-0019/0021 (11.4) · Lead **khép
 C1–C2** phiên 12/09 (20.4). Bước tiếp theo là **kế hoạch triển khai lát 1**.
 Nguồn: tầm nhìn của Lead (phiên 12/09) · bản vision của team về Relationship
-Twin · **phản biện của Codex** `docs/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
+Twin · **phản biện của Codex** `docs/archive/codex/2026-09-12/review-mode-hai-nguoi-nep-truyen-giay.md`
 (PR #607, REQUEST_CHANGES; sáu mâu thuẫn C1–C6, tám điểm tranh luận D1–D8).
 Sở hữu: màn hình và câu chữ là của Claude (`apps/mobile/`); mọi bảng và route
 là của Codex, phải mở ADR trước (mục 11).

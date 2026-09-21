@@ -19,7 +19,7 @@ Hai vế sau không đúng theo nghĩa đen, và nói cho chính xác thì mới
 
 - **Có test:** 228 test đang xanh, chia đúng tầng, có bảng "chứng minh gì / không
   chứng minh gì" trong `CLAUDE.md`.
-- **Có review:** `ADR-0005`, `ADR-0007`, 11 review doc trong `docs/claude/` và `docs/codex/`.
+- **Có review:** `ADR-0005`, `ADR-0007`, 11 review doc trong `docs/archive/claude/` và `docs/archive/codex/`.
 
 Nhưng vế đầu thì đúng, và đúng theo một cách nguy hiểm hơn cả cách leader mô tả:
 

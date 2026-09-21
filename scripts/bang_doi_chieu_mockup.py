@@ -19,7 +19,7 @@ Usage, from the repo root::
 
     python3 scripts/bang_doi_chieu_mockup.py \\
         --run apps/mobile/.impeccable/review/native/<run-id> [--run ...] \\
-        [--out docs/claude/<date>/bang-doi-chieu-mockup.md] [--sheet-dir <dir>] \\
+        [--out docs/archive/claude/<date>/bang-doi-chieu-mockup.md] [--sheet-dir <dir>] \\
         [--may "AVD rudi / Android 15 / 1080x2400@420"] [--che-do "dark, font 1.3"]
 
 Exit codes: 0 every mockup has a capture · 2 at least one cell is CHƯA CHỤP /

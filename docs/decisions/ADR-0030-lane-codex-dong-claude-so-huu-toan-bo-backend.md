@@ -17,7 +17,7 @@ Leader đóng lane Codex ngày 2026-09-16.
 1. **Claude sở hữu toàn bộ backend** (`db/`, `api/`, `domain/`, test backend) từ 2026-09-16. Ranh giới sở hữu chốt
    2026-08-27 hết hiệu lực.
 2. **`outings` không còn cần thoả thuận đóng băng với lane khác.** Việc đóng băng do chính người port ghi vào
-   `docs/codex/QUEUE.md` trước khi ghi mốc kịch bản, đúng luật đóng băng của ADR-0029.
+   `docs/team/hang-doi.md` trước khi ghi mốc kịch bản, đúng luật đóng băng của ADR-0029.
 3. **Không còn review chéo.** Cổng bằng chứng để một route đi tới LIVE-GO là, và chỉ là:
    - cổng parity đầy đủ chạy lại trong **cây sạch tại đúng SHA** (không phải cây của agent);
    - canary đỏ hết mọi kiểu phá được áp dụng, identity xanh, cùng SHA harness;
@@ -35,7 +35,7 @@ Leader đóng lane Codex ngày 2026-09-16.
 - Đi nhanh hơn: không còn chờ thoả thuận giữa hai lane, không còn hàng đợi review.
 - **Mất lớp người thứ hai.** Người viết code cũng là người gác. Bù lại bằng: đột biến độc lập của người gộp, canary,
   probe, replay chéo, làn DB và làn kho ảnh — đều là phép đo máy chạy được, không phải ý kiến.
-- `docs/codex/QUEUE.md` giữ tên cũ nhưng từ nay là nhật ký chiến dịch của một lane.
+- `docs/team/hang-doi.md` giữ tên cũ nhưng từ nay là nhật ký chiến dịch của một lane.
 
 ## 4. Cái này KHÔNG chứng minh
 

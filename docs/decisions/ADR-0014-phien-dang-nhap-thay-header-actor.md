@@ -1,7 +1,7 @@
 # ADR-0014 — Phiên đăng nhập thay header `X-Actor-ID` khi chạy production
 
 - **Trạng thái:** 🟢 **ĐÃ CHẤP NHẬN VÀ ĐÃ HIỆN THỰC** 2026-09-03 — Lead chấp nhận, và cho phép Claude vượt ranh giới sở hữu sang `api/` + `db/` cho lượt này thay vì chờ Codex.
-- **Hiện thực:** PR #514, merge vào `main` tại `6aad3cf`. Đọc `docs/claude/2026-09-03/pha-b-hien-thuc.md` trước khi đụng lại `api/` / `db/`: ở đó có bảng đột biến, các chỗ hợp đồng đổi, và **một đột biến còn sống**.
+- **Hiện thực:** PR #514, merge vào `main` tại `6aad3cf`. Đọc `docs/archive/claude/2026-09-03/pha-b-hien-thuc.md` trước khi đụng lại `api/` / `db/`: ở đó có bảng đột biến, các chỗ hợp đồng đổi, và **một đột biến còn sống**.
 - **Sửa:** 2026-09-02 cấp phiên bằng lời mời đích danh, không đổi person-id; re-login xoay digest. 2026-09-03 ghi lại bốn chỗ hợp đồng đổi khi hiện thực (mục "Đã hiện thực" ở cuối).
 - **DRI:** Claude (lane `apps/mobile/`) · **Hiện thực server:** Claude, được Lead uỷ quyền · **Cổng ADR:** Lead
 - **Review chính thức (ADR-0007):** Lead uỷ quyền merge #514 cho Claude **với điều kiện có e2e thật ở chế độ production**, không phải smoke test. Điều kiện đó được đáp bằng `scripts/e2e_slice.sh` chạy uvicorn ở `prod` với phiên thật (9/9, chạy trong CI). Ghi lại vì đây là ngoại lệ có điều kiện, không phải luật mới.
@@ -216,5 +216,5 @@ Rút ra, và đã dựng thành cổng: một bộ test mà **mọi** ca đều 
 
 2915 ca python · `postgres_tier.sh` ĐẠT cả `tests/postgres` lẫn `tests/qa` · 1048 ca mobile · **`e2e_slice.sh` 9/9 trên uvicorn chế độ prod với phiên thật** · ba workflow CI xanh trên `main`.
 
-**Vẫn không chứng minh:** chưa ai chạy trên máy thật, chưa có build EAS, e2e chạy `fetch` của node nên không có CORS thật, và một đột biến còn sống (bỏ dòng chặn lời mời link ở tầng service vẫn xanh vì repository chặn cùng luật — chi tiết ở `docs/claude/2026-09-03/pha-b-hien-thuc.md`).
+**Vẫn không chứng minh:** chưa ai chạy trên máy thật, chưa có build EAS, e2e chạy `fetch` của node nên không có CORS thật, và một đột biến còn sống (bỏ dòng chặn lời mời link ở tầng service vẫn xanh vì repository chặn cùng luật — chi tiết ở `docs/archive/claude/2026-09-03/pha-b-hien-thuc.md`).
 
