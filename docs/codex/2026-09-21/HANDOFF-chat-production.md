@@ -1,6 +1,6 @@
 # Bàn giao chat: tiếp tục từ checkpoint, không làm lại từ đầu
 
-**Cập nhật ngày 21-09-2026, khoảng 23:30 giờ Việt Nam.** Tài liệu được tạo theo
+**Cập nhật ngày 21-09-2026; khởi tạo khoảng 23:30 giờ Việt Nam.** Tài liệu được tạo theo
 yêu cầu trực tiếp của Lead khi phiên làm việc sắp hết quota. Đây là trạng thái
 công việc thực tế, không phải tuyên bố hoàn thành. Mục cuối ghi các cập nhật sau
 mốc này; kiểm lại Git, process và PR trước khi tiếp tục vì chúng có thể đã đổi.
@@ -13,6 +13,10 @@ người gửi đồng thời; bot tạo plan thật; Go backend hiệu quả; E
 người dùng và tải thật. Lead đã yêu cầu **bắt đầu tạo PR dần** và tài liệu này.
 Tiếp tục triển khai, tạo checkpoint, push và mở PR trong phạm vi đó. **Chưa có
 lệnh merge**; cần reviewer độc lập APPROVE theo AGENTS.md trước khi merge.
+
+Chỉ dẫn cuối của Lead: **tạo xong PR và handoff thì agent hiện tại được dừng,
+giao công việc còn lại cho agent khác**. Không có agent tiếp nối tự chạy ngầm.
+Agent nhận bàn giao bắt đầu từ mục 10; không hiểu việc dừng này là feature xong.
 
 - Repo chính: `/home/lakiet/mobile`. Không reset/clean hay checkout đổi nhánh
   trong cây này: có rất nhiều file chưa tracked thuộc các công việc khác.
@@ -34,10 +38,15 @@ lệnh merge**; cần reviewer độc lập APPROVE theo AGENTS.md trước khi 
 
 | Vị trí/nhánh | Trạng thái tại bàn giao |
 |---|---|
-| `/home/lakiet/mobile`, `codex/p0-w28-chat-go-e2ee` | HEAD `e1501346`; backend candidate đã commit; perf/UI/Rust còn một phần chưa commit tại đây |
+| `/home/lakiet/mobile`, `codex/p0-w28-chat-go-e2ee` | Code checkpoint cuối `db1e7e2e`; backend candidate, perf và Rust đã commit; có docs commit bổ sung phía sau; UI dirty có bản sao Git đầy đủ ở branch UI |
 | `origin/main` | Đã fetch tới `63959c1d`; 14 commit mới từ ancestor `534c0fd1` |
-| `/tmp/rudi-chat-pr-security`, `codex/chat-01-security` | Tạo từ main mới; cherry-pick thành công hai commit thành `38087902`, `6e325b00`; kiểm tích hợp/push/PR đang làm |
-| `/tmp/rudi-chat-pr-ui`, `codex/chat-04-so-hen` | Checkpoint `c63a9471846791c1443eaf6629af148d91453573`, sạch, parent `63959c1d`; chưa push; phải đặt lên PR backend trước khi mở PR phụ thuộc |
+| `/tmp/rudi-chat-pr-security`, `codex/chat-01-security` | [Draft PR #624](https://github.com/chuoibo/ru-di-app/pull/624); base63959c1d; security commits38087902/6e325b00 và kiểm tích hợp0a2265ae; handoff được thêm sau |
+| `/tmp/rudi-chat-pr-ui`, `codex/chat-04-so-hen` | Checkpoint `c63a9471846791c1443eaf6629af148d91453573`, sạch, parent `63959c1d`; nhánh remote dùng lưu checkpoint; phải đặt lên PR backend trước khi mở PR phụ thuộc |
+
+GitHub đã đổi tên repo thành **`chuoibo/ru-di-app`**; origin URL cũ
+`https://github.com/chuoibo/mobile.git` vẫn redirect. Dùng tên mới trong `gh`.
+Nhánh gốc và UI được push làm checkpoint phục hồi, chưa phải PR sẵn sàng merge.
+39 file frontend source/harness của commit UI đã so byte với cây gốc: khớp đủ.
 
 `main` mới đã dọn nhiều tài liệu/ảnh, di chuyển probes, thu allowlist từ 453 còn
 71 entry, và PR #623 đã chuyển 126 route sang LIVE-GO. **Không chép nguyên cây
@@ -58,6 +67,10 @@ Các checkpoint cũ trên nhánh gốc, theo thứ tự phụ thuộc:
 9. `ef1ee46d`: 20-user E2E và các cổng còn đỏ.
 10. `e1501346`: feed legacy, AI queue/promotion, snapshot/revocation fix;
     29 file, 3.633 dòng thêm. Đã qua staged guard + commit hook.
+11. `85091fd8`: handoff đầu, 437 dòng.
+12. `e49cfcd1`: perf/relay/admission/erasure, 27 file; guard và diff-check đạt.
+13. `db1e7e2e`: Rust spike + kết quả Android, 15 file; guard/diff-check đạt;
+    root kiểm độc lập 197 archive checksum trước pin lockfile.
 
 Chuỗi PR dự định (chưa có nghĩa mọi PR đã mở):
 
@@ -89,7 +102,7 @@ body tạm ngoài repo; cập nhật link thật ở cuối tài liệu. Chưa t
 
 ## 4. Backend đã làm và đường dẫn cần tiếp tục
 
-### 4.1 Go v2 perf/transport — còn chưa commit ở cây gốc
+### 4.1 Go v2 perf/transport — checkpoint `e49cfcd1`
 
 Các file task, không gom file ngoài danh sách bằng wildcard toàn repo:
 
@@ -175,7 +188,7 @@ multi-author grants hoặc encrypted result distribution.
 
 ## 5. UI cuối và công việc thiết kế còn mở
 
-Agent `/root/chat_frontend` đang chép đúng task vào worktree UI riêng. Bao gồm
+Agent `/root/chat_frontend` đã commit đúng task vào worktree UI riêng. Bao gồm
 26 tracked file thay đổi từ ancestor và 13 file mới, cả draft/read-cursor fix
 cũ; không chỉ delta sau `e1501346`.
 
@@ -216,7 +229,7 @@ bằng tự đánh giá hoặc chỉ sửa copy dài hơn. Không cho Nếp xen 
 ## 6. Crypto Rust: spike chạy thật, chưa tích hợp app
 
 Owner `/root/chat_changes`, source `packages/chat-crypto`; README mô tả đúng
-giới hạn, agent đang ghi `RESULTS.md`. OpenMLS 0.9.0/provider 0.6, Rust 1.98.1.
+giới hạn, `RESULTS.md` đã có. OpenMLS 0.9.0/provider 0.6, Rust 1.98.1.
 
 - Create/join/Welcome/add/remove/rekey; ACK commit riêng; private MLS messages;
   text/reaction/delete/vote typed operations; outer Ed25519 đúng Go signing bytes.
@@ -249,11 +262,12 @@ Xem README trước chạy `scripts/check_go_interop.sh`, `check_android*.sh`;
 NDK `/home/lakiet/Android/Sdk/ndk/27.1.12297006`; ADB server 5038 có emulator
 `emulator-5554`. Không restart ADB server, reboot emulator hay đổi APK của việc khác.
 
-**Guard còn pending**: Cargo.lock hai checksum bị bắt nhầm số điện thoại;
-agent đã đối chiếu 197 archive SHA256. Cần reviewer khác kiểm rồi mới thêm
-allowlist đúng path + digest + duy nhất rule `vn-phone` theo repo policy.
-Digest đang báo: `2f92268375658bdf5dd53cde29536fee58affce0f6983ce8b3175c725cacd4dd`.
-Không tự miễn cả thư mục/lockfile mọi rule. Chưa checkpoint Rust trước review này.
+**Guard đã đóng riêng phần lockfile:** Cargo.lock hai checksum bị bắt nhầm số
+điện thoại; root đã đối chiếu độc lập 197 archive SHA256 và pin đúng path +
+digest + duy nhất rule `vn-phone`. Digest:
+`2f92268375658bdf5dd53cde29536fee58affce0f6983ce8b3175c725cacd4dd`.
+Checkpoint `db1e7e2e` qua guard; điều này không phải review crypto. Khi tách PR,
+chỉ mang entry này sang allowlist main mới, không copy toàn allowlist cây gốc.
 
 ## 7. Tải: lần cuối đã gián đoạn, cần chạy lại có giám sát bền vững
 
@@ -369,13 +383,16 @@ cd /home/lakiet/mobile
 GOMAXPROCS=2 scripts/chat_v2_postgres.sh
 # Các package ngoài script cần PG thật + migration; dùng tier này với sentinel.
 GOMAXPROCS=2 scripts/go_postgres_tier.sh -- -race \
-  ./internal/testdb ./internal/chatlegacychange ./internal/chatassist ./internal/chatbus
+  ./internal/db ./internal/chatlegacychange ./internal/chatassist ./internal/chatbus
 ```
 
 **Chú ý:** `go_postgres_tier.sh` là correctness tier có fsync/synchronous_commit
 OFF để nhanh, không dùng số latency tier này làm tải production. Mọi test phải
 có `CORE_REQUIRE_POSTGRES_TESTS=1`, `CORE_TEST_DATABASE_URL`; không SKIP. Script
 chat_v2 có sentinel riêng. Khi đổi `-run` phải giữ sentinel của tier đang dùng.
+Sentinel `TestPostgresTierReachesDatabase` nằm ở `internal/db`, không phải
+`internal/testdb` (package helper). Lượt PR01 đầu thiếu package db nên tier từ
+chối dù sáu ca security pass; đã giữ log và chạy lại với đúng sentinel.
 
 Log ngoài repo (đọc result/PASS/FAIL; không giả rằng file tồn tại mãi):
 
@@ -399,10 +416,12 @@ handoff và checkpoint Git là phần bền vững, log tạm không được co
 
 1. Đọc AGENTS.md, tài liệu này và cập nhật cuối; kiểm `git status` theo path,
    `git log -5`, `gh pr list` từng head, không quét mọi branch hàng trăm trang.
-2. Hoàn tất PR01 từ `/tmp/rudi-chat-pr-security`: sửa docs ownership lỗi thời,
-   chạy targeted tests trên main mới + guard; push và mở draft. Giữ link tại đây.
-3. Thu checkpoint frontend/Rust từ agent; ghi commit/digest. Commit perf bằng
-   path cụ thể, bảo toàn root dirty UI/unrelated assets. Chưa có final perf review.
+2. Kiểm CI/review [PR01 #624](https://github.com/chuoibo/ru-di-app/pull/624),
+   chưa merge. Docs ownership đã cập nhật; Go unit và 16 ca PG/race đạt trên
+   main mới; range guard20file/3commit đạt trước thêm handoff. Python cần rerun
+   nếu reviewer/CI yêu cầu; bằng chứng cũ không thay kiểm tích hợp mới.
+3. Dùng checkpoint frontend/Rust/perf đã ghi ở mục2. Bảo toàn root dirty UI
+   và unrelated assets. Chưa có final perf integration review.
 4. Dựng PR02/03 theo chuỗi, preserve cleanup/manifest main. Test trên **cây PR**,
    không chỉ root dirty. Cần baseline/contract/PG thật trước production ownership.
 5. Restart core synthetic với RR fix; chạy harness 3-user plan, cập nhật UI PR
@@ -421,7 +440,7 @@ handoff và checkpoint Git là phần bền vững, log tạm không được co
 
 - `chat_frontend`: đã commit `c63a9471846791c1443eaf6629af148d91453573`, 58 file;
   fresh TS + 66/66 test, guard/hook pass, worktree sạch. Allowlist chỉ thêm 10
-  digest (71 → 81). Chưa push/PR; vẫn cần đặt trên PR03. Handoff riêng:
+  digest (71 → 81). Chỉ push checkpoint, chưa mở PR; vẫn cần đặt trên PR03. Handoff riêng:
   `docs/codex/2026-09-21/chat-ui-implementation/README.md` ở worktree UI.
 - `chat_visual_a`: hoàn tất A-confirm32/40, browser đóng.
 - `chat_visual_b`: hoàn tất B-confirm scoped APPROVE12assertion; browser/detector
@@ -429,7 +448,7 @@ handoff và checkpoint Git là phần bền vững, log tạm không được co
 - `chat_changes`: Rust source đóng băng, chuỗi fmt/clippy/interop/ARM64/Android
   cuối session56170 exit0; `RESULTS.md` đã có. Fingerprint source
   `a2b56e299a3a60e8e2d62c98bf2e44b4c8a3ab5d4ec0714565babd4978221d7f`.
-  Không còn task nền; chờ review/guard lockfile, chưa commit.
+  Không còn task nền; root đã review guard lockfile, commit `db1e7e2e`.
 - `chat_v2_perf`: đã bàn giao; session tải39596 không còn; không coi agent idle
   nghĩa là load vẫn chạy. Nên kiểm process/container theo ID trước thao tác.
 
