@@ -68,8 +68,8 @@ ROWS = [
         "CONTROL",
         "unknown place id falls back to a real row instead of 404",
         PLACES_ROUTE,
-        '    place = find_place(place_id)\n'
-        '    if place is None:\n'
+        "    place = find_place(place_id)\n"
+        "    if place is None:\n"
         '        raise ApiProblem(404, "place_not_found", '
         '"Không tìm thấy địa điểm này.")',
         "    place = find_place(place_id) or PLACES[0]",
@@ -120,13 +120,13 @@ ROWS = [
         "CONTROL",
         "map stops checking membership",
         SERVICE,
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_social_map",\n'
         "            actor,\n"
         '            {"is_group_member": self.repository.is_member('
         "context_id, actor.id)},\n"
         "        )",
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_social_map",\n'
         "            actor,\n"
         '            {"is_group_member": True},\n'
@@ -176,13 +176,13 @@ ROWS = [
         "CONTROL",
         "heatmap stops checking membership",
         SERVICE,
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_group_heatmap",\n'
         "            actor,\n"
         '            {"is_group_member": self.repository.is_member('
         "context_id, actor.id)},\n"
         "        )",
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_group_heatmap",\n'
         "            actor,\n"
         '            {"is_group_member": True},\n'
@@ -234,13 +234,13 @@ ROWS = [
         "CONTROL",
         "meeting point stops checking membership",
         SERVICE,
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_meeting_point",\n'
         "            actor,\n"
         '            {"is_group_member": self.repository.is_member('
         "context_id, actor.id)},\n"
         "        )",
-        '        _require_permission(\n'
+        "        _require_permission(\n"
         '            "view_meeting_point",\n'
         "            actor,\n"
         '            {"is_group_member": True},\n'
@@ -321,7 +321,16 @@ def _clear_pycache() -> None:
 
 def run_tests(selection: list[str]) -> tuple[int, str]:
     proc = subprocess.run(
-        [sys.executable, "-m", "pytest", *selection, "-q", "--no-header", "-p", "no:cacheprovider"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            *selection,
+            "-q",
+            "--no-header",
+            "-p",
+            "no:cacheprovider",
+        ],
         cwd=API,
         env=_env(),
         capture_output=True,
@@ -335,7 +344,9 @@ def run_tests(selection: list[str]) -> tuple[int, str]:
 
 
 def main() -> int:
-    originals = {path: path.read_text(encoding="utf-8") for path in {r[4] for r in ROWS}}
+    originals = {
+        path: path.read_text(encoding="utf-8") for path in {r[4] for r in ROWS}
+    }
 
     # Anchors first, before anything is written. A table that discovers a stale
     # anchor halfway through has already reported rows built on a tree it was
@@ -357,8 +368,10 @@ def main() -> int:
     for selection in selections:
         rc, summary = run_tests(list(selection))
         baseline[selection] = (rc, summary)
-        print(f"{'BASE':<8} {'-':<7} {' '.join(selection):<58} "
-              f"expect GREEN  got {'GREEN' if rc == 0 else 'RED':<5}  {summary}")
+        print(
+            f"{'BASE':<8} {'-':<7} {' '.join(selection):<58} "
+            f"expect GREEN  got {'GREEN' if rc == 0 else 'RED':<5}  {summary}"
+        )
         if rc != 0:
             print("BASELINE IS RED -- every row below would be uninterpretable.")
             return 2
