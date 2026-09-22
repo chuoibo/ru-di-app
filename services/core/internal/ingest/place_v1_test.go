@@ -77,9 +77,6 @@ func TestEachDefectGetsItsOwnReason(t *testing.T) {
 		{"a kind the feed does not have", RejectUnknownKind, func(r map[string]any) {
 			r["loai"] = "khach_san"
 		}},
-		{"a dish is not a place", RejectDish, func(r map[string]any) {
-			r["loai"] = "mon_an"
-		}},
 		{"no posts to anchor identity on", RejectNoPosts, func(r map[string]any) {
 			r["posts"] = []any{}
 		}},
@@ -217,6 +214,9 @@ func TestSevenKindsBecomeFour(t *testing.T) {
 		want     string
 	}{
 		{"cafe", nil, "cafe"},
+		// Named after the dish, but an eatery: every row the feed labels
+		// `mon_an` has an address and its own free-text label says `quan_an`.
+		{"mon_an", nil, "quan-an-local"},
 		{"quan_an", nil, "quan-an-local"},
 		{"khu_am_thuc", nil, "quan-an-local"},
 		{"diem_tham_quan", nil, "vui-choi"},

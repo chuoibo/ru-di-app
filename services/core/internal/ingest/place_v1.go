@@ -19,7 +19,6 @@ const (
 	RejectNoPlaceID       = "thieu_place_id"
 	RejectNoName          = "thieu_ten"
 	RejectUnknownKind     = "loai_khong_biet"
-	RejectDish            = "loai_la_mon_an"
 	RejectNoPosts         = "thieu_posts"
 	RejectPostNoPlatform  = "post_thieu_platform"
 	RejectPostBadPlatform = "post_platform_la"
@@ -35,9 +34,19 @@ const (
 	RejectVerbatimQuote   = "lot_trich_nguyen_van"
 )
 
-// The feed's seven kinds. `mon_an` is a dish rather than a place and is
-// dropped: it has no address, cannot be visited, and would sit in the
-// catalogue as something nobody can go to.
+// The feed's seven kinds.
+//
+// `mon_an` translates as "dish", and it was dropped here on the strength of
+// that word: a dish has no address and cannot be visited. Then the five rows
+// carrying it were read. Every one is an eatery -- "Cháo Lòng Cái Tắc" with
+// six posts behind it, "Hủ tiếu lắc Chợ nổi Cái Răng" on the floating market
+// -- each with an address, coordinates, and the feed's own free-text label
+// reading `quan_an`.
+//
+// They are named after the dish they sell, which is how Vietnamese street
+// eateries are named. The label was wrong upstream; dropping them was wrong
+// here, and it was wrong for the worse reason: reasoning from what a field is
+// called instead of from what is in it.
 var feedKinds = map[string]bool{
 	"quan_an": true, "cafe": true, "khu_am_thuc": true, "diem_tham_quan": true,
 	"trai_nghiem": true, "giai_tri": true, "mon_an": true,
@@ -295,11 +304,6 @@ func (r *Record) validate() *Reject {
 	if !feedKinds[r.Loai] {
 		return &Reject{RejectUnknownKind, r.Loai}
 	}
-	// A dish is not somewhere to go. Dropping it here rather than mapping it to
-	// a category keeps the catalogue answerable to "can I visit this".
-	if r.Loai == "mon_an" {
-		return &Reject{RejectDish, r.TenChuan}
-	}
 	if len(r.Posts) == 0 {
 		return &Reject{RejectNoPosts, r.PlaceID}
 	}
@@ -470,7 +474,9 @@ func (r *Record) CategoryFor() string {
 	switch r.Loai {
 	case "cafe":
 		return "cafe"
-	case "quan_an", "khu_am_thuc":
+	case "quan_an", "khu_am_thuc", "mon_an":
+		// `mon_an` lands here because every row that carries it is an eatery
+		// named after its dish, not a dish. See the note on feedKinds.
 		return "quan-an-local"
 	case "giai_tri":
 		if r.isNightlife() {

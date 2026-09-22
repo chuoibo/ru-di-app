@@ -123,7 +123,7 @@ func TestLandingIsIdempotent(t *testing.T) {
 	path := writeDelivery(t, []map[string]any{
 		probeRow("plc_a", nil),
 		probeRow("plc_b", nil),
-		probeRow("plc_c", func(r map[string]any) { r["loai"] = "mon_an" }),
+		probeRow("plc_c", func(r map[string]any) { r["posts"] = []any{} }),
 	}, nil)
 	manifest, err := ReadManifest(path)
 	if err != nil {
@@ -142,8 +142,8 @@ func TestLandingIsIdempotent(t *testing.T) {
 	if first.Landed != 2 {
 		t.Errorf("landed %d rows, want 2", first.Landed)
 	}
-	if first.Rejected[RejectDish] != 1 {
-		t.Errorf("rejects: %v, want one %s", first.Rejected, RejectDish)
+	if first.Rejected[RejectNoPosts] != 1 {
+		t.Errorf("rejects: %v, want one %s", first.Rejected, RejectNoPosts)
 	}
 	if first.AlreadyLanded {
 		t.Error("a first landing must not report itself as a repeat")
