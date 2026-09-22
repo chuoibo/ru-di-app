@@ -274,6 +274,26 @@ func TestToHenNhapChung(t *testing.T) {
 		if settled.Str(t, "status") != "promoted" {
 			t.Fatalf("tờ hẹn vẫn ở %q sau khi chốt", settled.Str(t, "status"))
 		}
+
+		// The card is what a screen reads, and it used to disagree with the
+		// row: outing_id set while the embedded draft block still said "open".
+		// A screen believing the card then offered to keep editing a sheet that
+		// was already a kèo.
+		anchor := peer.Expect(200, "POST", "/contexts/"+group+"/changes/snapshot",
+			map[string]any{"message_ids": []string{created.Str(t, "message_id")}, "vote_ids": []string{}})
+		message := messageOf(t, anchor, created.Str(t, "message_id"))
+		card, _ := message["card"].(map[string]any)
+		payload, _ := card["payload"].(map[string]any)
+		if payload["outing_id"] == nil {
+			t.Fatalf("thẻ sau khi chốt không mang outing_id: %v", payload)
+		}
+		draft, _ := payload["draft"].(map[string]any)
+		if draft == nil {
+			t.Fatalf("thẻ mất khối bản nháp sau khi chốt: %v", payload)
+		}
+		if draft["status"] != "promoted" {
+			t.Fatalf("thẻ tự mâu thuẫn: outing_id đã có nhưng draft.status = %v", draft["status"])
+		}
 	})
 
 	t.Run("D6 người ngoài không thấy và không sửa được tờ hẹn", func(t *testing.T) {

@@ -209,7 +209,12 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 	}
 	// Bind the visible source sheet in the same transaction. Its normal change
 	// event updates every reader, including the pinned sheet and quoted card.
-	_, err = tx.Exec(r.Context(), `UPDATE messages SET card=jsonb_set(jsonb_set(card,'{payload,outing_id}',to_jsonb($2::text)),'{payload,timeline_revision}',to_jsonb($3::bigint)) WHERE id=$1`, in.Source, outing.ID, outing.TimelineRevision)
+	// The card carries the sheet's state as well as the outing binding. Leaving
+	// `draft.status` at "open" here made a promoted card contradict itself on
+	// the wire -- outing_id set, draft still open -- so a screen could offer to
+	// keep editing a sheet that is already a kèo. `create_missing=false` makes
+	// the last step a no-op for an AI card, which has no draft block.
+	_, err = tx.Exec(r.Context(), `UPDATE messages SET card=jsonb_set(jsonb_set(jsonb_set(card,'{payload,outing_id}',to_jsonb($2::text)),'{payload,timeline_revision}',to_jsonb($3::bigint)),'{payload,draft,status}','"promoted"'::jsonb,false) WHERE id=$1`, in.Source, outing.ID, outing.TimelineRevision)
 	if err != nil {
 		failure(w, err)
 		return
