@@ -1,0 +1,253 @@
+# WAI · the two suggestion reads.
+#
+#   GET /contexts/{context_id}/suggestion             from the group's history
+#   GET /contexts/{context_id}/contextual-suggestion  from what was just said
+#
+# Each carries its own in-memory limiter (`suggestion_limiter`,
+# `contextual_suggestion_limiter`), which is why the manifest keeps them apart
+# rather than in one group: they meter different questions.
+#
+# WHAT THIS FILE PROVES. The parity stacks hold no Gemini key, so both routes
+# take the branch where no model answered -- and, measured rather than assumed,
+# that branch is a shaped 200 rather than an error:
+#
+#   /suggestion             -> suggested:false, reason:"no_history", source:"none"
+#   /contextual-suggestion  -> suggested:false, reason:"no_conversation"
+#
+# with a `basis` object carrying the counts the refusal was computed from. Both
+# sides are deterministic, so those shapes are compared exactly -- including
+# the counts, which is the part a port is most likely to get subtly wrong: a
+# `basis` assembled from a different query answers the same `suggested:false`
+# while disagreeing about how many outings or speakers it saw.
+#
+# WHAT IT CANNOT PROVE: the branch where a model answered. That needs a real
+# key and a reply that is not deterministic. The route card says so; a green
+# run here is not evidence about the AI path.
+#
+# The refusal REASON is the interesting axis, and it changes with the group's
+# state, so the scenario builds three groups: one empty, one with a finished
+# trip and no conversation, one with a conversation. A port that always said
+# "no_history" would pass a single-group test.
+id: wai/suggestions/get-suggestions
+routes:
+  - 'GET /contexts/{context_id}/suggestion'
+  - 'GET /contexts/{context_id}/contextual-suggestion'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
+
+  # --- refusals before anything exists ------------------------------------
+  - id: suggestion_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/suggestion'
+
+  - id: contextual_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/contextual-suggestion'
+
+  - id: suggestion_non_uuid_context
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/suggestion'
+
+  - id: contextual_non_uuid_context
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/khong-phai-uuid/contextual-suggestion'
+
+  # --- an empty group: no history, no conversation ------------------------
+  - id: owner_creates_empty_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm chưa đi đâu (dữ liệu mẫu)"}'
+    bind:
+      ctx_empty: {from: body, pointer: /id, class: uuid}
+
+  - id: suggestion_on_empty_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/suggestion'
+
+  - id: contextual_on_empty_group
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/contextual-suggestion'
+
+  - id: stranger_cannot_read_suggestion
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/suggestion'
+
+  - id: stranger_cannot_read_contextual
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx_empty}}/contextual-suggestion'
+
+  # --- a group with a trip but no talk ------------------------------------
+  - id: owner_creates_group_with_a_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm đã đi (dữ liệu mẫu)"}'
+    bind:
+      ctx_trip: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_creates_the_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_trip}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng ba lên rừng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+
+  # `basis` must now count one outing: the refusal reason may be the same while
+  # the counts behind it differ, and that is exactly the drift worth catching.
+  - id: suggestion_after_a_trip
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/suggestion'
+
+  - id: contextual_after_a_trip_but_no_talk
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/contextual-suggestion'
+
+  # --- a group that has been talking --------------------------------------
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_trip}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  - id: owner_says_something
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_trip}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Cuối tuần này rảnh không"}'
+
+  # One speaker only: `basis.speaker_count` must say 1, not 2.
+  - id: contextual_with_one_speaker
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/contextual-suggestion'
+
+  - id: mate_answers
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx_trip}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Rảnh, đi đâu cũng được"}'
+
+  - id: contextual_with_two_speakers
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/contextual-suggestion'
+
+  # The same group read by the other member: the answer is about the group,
+  # so both members must see the same counts.
+  - id: contextual_read_by_the_owner
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/contextual-suggestion'
+
+  - id: suggestion_read_by_the_mate
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/suggestion'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: suggestion_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/suggestion/'
+
+  - id: suggestion_post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx_trip}}/suggestion'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: suggestion_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/suggestion?limit=1&force=true'
+
+  - id: contextual_query_ignored
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx_trip}}/contextual-suggestion?since=x'
