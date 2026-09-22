@@ -146,7 +146,17 @@ func (h *Handler) prepare(ctx context.Context, j work) (pyjson.List, error) {
 		return nil, &denied{409, "invocation_cancelled"}
 	}
 	// The catalogue is public. Never select chat, roster, taste, or outing history.
-	rows, err := tx.Query(ctx, `SELECT jsonb_strip_nulls(jsonb_build_object('id',id,'name',name,'address',address,'price_min_vnd',price_min_vnd,'price_max_vnd',price_max_vnd,'open_hours',open_hours,'category',category)) FROM places ORDER BY id LIMIT 40`)
+	//
+	// Filtered to one destination, the same one v1 used: the first by sort order.
+	// Without it the model was handed the first 40 rows by id, so asking about
+	// Hà Nội could be answered entirely out of Đà Nẵng. The NOT EXISTS arm keeps
+	// v1's behaviour on a database with no destinations at all, where the filter
+	// has nothing to mean and every place is a candidate.
+	rows, err := tx.Query(ctx, `WITH mac_dinh AS (SELECT id FROM destinations ORDER BY sort_order, id LIMIT 1)
+		SELECT jsonb_strip_nulls(jsonb_build_object('id',id,'name',name,'address',address,'price_min_vnd',price_min_vnd,'price_max_vnd',price_max_vnd,'open_hours',open_hours,'category',category))
+		FROM places
+		WHERE NOT EXISTS (SELECT 1 FROM mac_dinh) OR destination_id = (SELECT id FROM mac_dinh)
+		ORDER BY id LIMIT 40`)
 	if err != nil {
 		return nil, err
 	}

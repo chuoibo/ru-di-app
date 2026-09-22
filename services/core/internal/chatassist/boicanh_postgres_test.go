@@ -285,3 +285,47 @@ func TestDiaDiemMangLenhKhongToiDuocModel(t *testing.T) {
 		t.Fatal("bộ lọc đã vứt luôn hàng lành, tức là nó chặn quá tay")
 	}
 }
+
+// The catalogue the model sees is one city's, not the first forty rows by id.
+// Without this a group in Hà Nội could be answered entirely out of Đà Nẵng, and
+// nothing on screen would say why the suggestions felt wrong.
+func TestCatalogueChiMangDiaDiemCuaDiemDenMacDinh(t *testing.T) {
+	var payload map[string]any
+	f := setup(t, func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Error(err)
+		}
+		reply(w, 200, map[string]any{"kind": "text", "payload": map[string]string{"text": "Synthetic provider fixture"}})
+	})
+	ctx := context.Background()
+	for _, d := range []struct {
+		id  string
+		thu int
+		ten string
+	}{{"dest-gan", 1, "Điểm đến mặc định"}, {"dest-xa", 2, "Điểm đến khác"}} {
+		if _, err := f.pool.Exec(ctx, `INSERT INTO destinations(id,name,lat,lng,bbox_south,bbox_west,bbox_north,bbox_east,sort_order) VALUES($1,$2,10.7,106.7,10.6,106.6,10.8,106.8,$3)`, d.id, d.ten, d.thu); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, p := range []struct{ id, dest, ten string }{
+		{"place-gan", "dest-gan", "Quán trong thành phố này"},
+		{"place-xa", "dest-xa", "Quán ở thành phố khác"},
+	} {
+		if _, err := f.pool.Exec(ctx, `INSERT INTO places(id,destination_id,name,category,kinds,lat,lng,source) VALUES($1,$2,$3,'food','{}',10.77,106.7,'seed')`, p.id, p.dest, p.ten); err != nil {
+			t.Fatal(err)
+		}
+	}
+	requireCode(t, f.request("POST", f.route(), f.token, map[string]any{
+		"logical_id": newID(), "command": "plan", "prompt": "Tối nay ăn gì",
+	}), 202)
+	if ok, err := f.handler.ProcessOne(ctx); err != nil || !ok {
+		t.Fatalf("worker: %v %v", ok, err)
+	}
+	raw, _ := json.Marshal(payload)
+	if !bytes.Contains(raw, []byte("Quán trong thành phố này")) {
+		t.Fatal("địa điểm của điểm đến mặc định không tới được model")
+	}
+	if bytes.Contains(raw, []byte("Quán ở thành phố khác")) {
+		t.Fatal("địa điểm của thành phố khác lọt vào catalogue gửi model")
+	}
+}

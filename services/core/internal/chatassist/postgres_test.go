@@ -48,7 +48,7 @@ func setup(t *testing.T, model http.HandlerFunc) fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "outings", "outing_stops"} {
+	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "destinations", "outings", "outing_stops"} {
 		if _, err = pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}
