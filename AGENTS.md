@@ -26,25 +26,93 @@ Theo dõi tiến độ thật tại `docs/architecture/02-chat-go-e2ee.md`.
 
 ## Project Structure & Module Organization
 
-Product code lives under `services/api/app/`: `domain/` holds pure rules, `db/` holds SQLAlchemy and Alembic, `api/` exposes FastAPI routes, and `web/` serves guests. There is no payment rail: the product names each person's share and stops, so bank accounts and VietQR left the codebase. Layer-aligned tests live in `services/api/tests/`; root `tests/` covers the repo guard. Consult `docs/decisions/` before behavior changes and `docs/architecture/` before boundary changes. `phase0/` and `docs/protocol/v1/` are frozen. CI treats currently absent `apps/mobile/` and `packages/shared/` as conditional.
+The backend is **mid-migration and both halves are live**. Do not read either one
+as "the" backend.
+
+- **`services/core/`** — Go 1.23, the public front door and the core being ported
+  (ADR-0029). `cmd/` + `internal/<package>`, no ORM. **It serves 126 of the 156
+  routes today** (`state: LIVE-GO`); the rest it proxies to Python.
+- **`services/api/`** — FastAPI, Python 3.12. Legacy runtime, still serving 30
+  routes, and still the **oracle** the parity gate compares Go against. Do not
+  delete Python code to "finish" a port: that deletes the evidence that the port
+  is correct.
+- **`services/core/ownership/routes.json` is the source of truth for who serves
+  what.** Read it, not a directory tree — `scripts/check_route_ownership.py`
+  gates it.
+- **`parity/`** — a separate Go module, black-box: it boots both stacks, replays
+  scenarios, and diffs HTTP bytes, DB rows and the media store. It is **forbidden
+  from importing `services/core`** (`tests/test_parity_is_black_box.py`).
+
+Inside `services/api/app/`: `domain/` holds pure rules, `db/` holds SQLAlchemy
+and Alembic, `api/` exposes routes, `web/` serves guests. **There is no
+`payments/`** — it was removed by ADR-0015; the product names each person's share
+and stops.
+
+Frontend: **`apps/mobile/`** (Expo + TypeScript, ~610 files) and
+**`packages/shared/`** (6 files, a cross-language contract for money format,
+tokens and stickers). Both have been on `main` since 2026-08-30. The `shared` and
+`mobile` CI jobs still detect the directory before running — **keep it that way**;
+that guard is deliberate, not a leftover to "fix".
+
+Tests split by what they measure, not by layer alone: `services/api/tests/`
+(~523 files with the app) is the product suite; **root `tests/` is 66 meta-tests
+about the repo itself** — gates, workflows, ruff, the repo guard, client↔server
+vocabulary drift — plus `tests/qa/` (284 files), a QA evidence archive that
+`scripts/postgres_tier.sh` runs as a second pytest process.
+
+Consult `docs/decisions/` before behavior changes and `docs/architecture/` before
+boundary changes. `docs/README.md` is the index. `phase0/` and
+`docs/protocol/v1/` are frozen.
 
 ## Build, Test, and Development Commands
 
-- `pip install -r services/api/requirements-dev.txt` installs pinned Python 3.12 dependencies.
-- `docker compose up -d postgres` starts PostgreSQL 16 for migrations and tests.
-- `cd services/api && alembic upgrade head` migrates the configured local database.
-- `cd services/api && uvicorn app.api.main:app --reload` runs the API with reload.
-- `cd services/api && python3 -m app.web.preview` previews the guest page without a database.
-- `python3 -m pytest services/api/tests tests -q` runs the standard suite.
-- `cd services/api && ruff check . && ruff format --check .` checks style and formatting.
+`make gate` runs the local mirror of all of CI (25 stages); `make gate-merge`
+runs it on the **merge result** with `main`. Prefer those over hand-picking.
+
+Go (`services/core`, and `parity` is its own module):
+
+- `cd services/core && go test -count=1 ./...` — unit tests.
+- `cd services/core && gofmt -l . && go vet ./...` — **`gofmt -l` exits 0 even
+  when it lists files**; use `test -z "$(gofmt -l .)"`.
+- `scripts/go_postgres_tier.sh` — `go test -tags postgres`; **a skip or a missing
+  sentinel fails**, a skip is not green.
+- `python3 scripts/check_route_ownership.py` — who serves what still adds up.
+- `make parity` — the differential gate against the Python oracle.
+
+Python (`services/api`):
+
+- `pip install -r services/api/requirements-dev.txt` — pinned 3.12 deps.
+- `docker compose up -d postgres` · `cd services/api && alembic upgrade head`.
+- `cd services/api && python3 -m app.web.preview` — guest page, **no DB needed**.
+- `python3 -m pytest services/api/tests tests -q` — product suite **plus** the
+  repo meta-tests. Run both paths: listing sub-directories skips gates that live
+  at the root of `services/api/tests`.
+- `$(scripts/ruff_pinned.sh) check <file>` — use the **pinned** ruff; a different
+  ruff can call a file dirty that CI calls clean.
+
+Repo guard — run **both**, they answer different questions:
+
+- `python3 scripts/repo_guard.py staged` — only the diff.
+- `python3 scripts/repo_guard.py tree HEAD` — every tracked file against the
+  allowlist. **`staged` can pass while `tree HEAD` fails**: changing one byte of
+  an allowlisted file invalidates its `sha256`, and the pre-commit hook will not
+  catch it.
 
 Copy `.env.example` to `.env` for local configuration; never commit `.env`.
 
 ## Coding Style & Naming Conventions
 
-Use four-space indentation, double quotes, an 88-character line limit, and Python 3.12 syntax. Ruff enforces `E4`, `E7`, `E9`, `F`, `I`, `UP`, and `B`. Use `snake_case` for modules/functions/variables, `PascalCase` for classes, and `UPPER_SNAKE_CASE` for constants. `domain/` must not import `db`, `api`, or `payments`.
+**Go** is the default for new backend work: `gofmt`, standard package layout,
+`internal/` for everything not meant to be imported outside the module.
 
-Represent VND as integers, preserve exact allocation totals, and derive balances from the ledger. Propose an ADR before changing these invariants.
+**Python** (legacy runtime and AI only): four-space indentation, double quotes,
+88-character lines, 3.12 syntax. Ruff enforces `E4`, `E7`, `E9`, `F`, `I`, `UP`,
+`B`. `snake_case` for modules/functions/variables, `PascalCase` for classes,
+`UPPER_SNAKE_CASE` for constants. `app/domain/` must not import `app.db` or
+`app.api`.
+
+Represent VND as integers, preserve exact allocation totals, and derive balances
+from the ledger. Propose an ADR before changing these invariants.
 
 ## Testing Guidelines
 
@@ -89,8 +157,9 @@ never queries. Every module has exactly one writer. These are enforced by tests,
 not by an assignment table.
 
 **Layer boundary, enforced by AST parsing, not by promise.** `app/domain/` must
-not import `app.db`, `app.api`, `app.payments`, `sqlalchemy`, `fastapi`,
-`alembic`, or `pydantic`. See `services/api/tests/test_import_boundary.py`.
+not import `app.db`, `app.api`, `sqlalchemy`, `fastapi`, `alembic`, or
+`pydantic`. See `services/api/tests/test_import_boundary.py`. The Go side has its
+own purity test at `services/core/tools/boundary/domainpure_test.go`.
 
 **Never put in Git, and never send to an external service**: bill photos, bank
 account numbers, participant names, raw transcripts, exports, a real `.env`.
