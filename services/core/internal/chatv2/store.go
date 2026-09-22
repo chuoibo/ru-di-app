@@ -9,6 +9,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -26,6 +27,22 @@ type access struct {
 	epoch, last, first int64
 }
 
+// convLock is how far a caller goes on the conversation row itself. Every
+// message in a group passes through that one row, so whatever a caller holds
+// on it, every other member of the group queues behind.
+//
+// lockNone is not a weaker check. The send path re-states its epoch and
+// readiness conditions inside the sequence bump, where PostgreSQL re-evaluates
+// them against the version it just locked; the guarantee moves into one
+// statement instead of spanning three client round trips.
+type convLock int
+
+const (
+	lockNone convLock = iota
+	lockShare
+	lockUpdate
+)
+
 // authorize locks the live permission rows before the sequence row. The
 // membership/device invalidation triggers use this same order. No persisted
 // receipt is read until the current membership and device have been checked.
@@ -34,10 +51,14 @@ func authorize(ctx context.Context, tx pgx.Tx, actor, device, conversation strin
 }
 
 func authorizeWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, exclusive bool) (access, error) {
-	return authorizeSessionWithLock(ctx, tx, actor, device, conversation, exclusive, nil)
+	mode := lockShare
+	if exclusive {
+		mode = lockUpdate
+	}
+	return authorizeSessionWithLock(ctx, tx, actor, device, conversation, mode, nil)
 }
 
-func authorizeSessionWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, exclusive bool, sessionDigest []byte) (access, error) {
+func authorizeSessionWithLock(ctx context.Context, tx pgx.Tx, actor, device, conversation string, mode convLock, sessionDigest []byte) (access, error) {
 	var a access
 	if !ValidID(actor) || !ValidID(device) || !ValidID(conversation) {
 		return a, ErrInvalid
@@ -135,8 +156,11 @@ func authorizeSessionWithLock(ctx context.Context, tx pgx.Tx, actor, device, con
 	// Readers must hold a stable epoch/permission boundary, but they must not
 	// serialize with every other recipient. SHARE still excludes sequence
 	// writers and roster invalidation until this read transaction finishes.
-	lock := " FOR SHARE"
-	if exclusive {
+	lock := ""
+	switch mode {
+	case lockShare:
+		lock = " FOR SHARE"
+	case lockUpdate:
 		lock = " FOR UPDATE"
 	}
 	err = tx.QueryRow(ctx, `SELECT epoch,last_sequence,ready FROM chat_v2_conversations WHERE context_id=$1`+lock, conversation).Scan(&a.epoch, &a.last, &ready)
@@ -176,7 +200,7 @@ type sendReceipt struct {
 	digest          []byte
 }
 
-func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind string, body any, receipt *sendReceipt) (Event, error) {
+func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind string, epoch int64, body any, receipt *sendReceipt) (Event, error) {
 	var e Event
 	encoded, err := json.Marshal(body)
 	if err != nil {
@@ -193,7 +217,7 @@ func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind strin
 		device, logical, digest = receipt.device, receipt.logical, receipt.digest
 	}
 	err = tx.QueryRow(ctx, `WITH bumped AS (
- UPDATE chat_v2_conversations SET last_sequence=last_sequence+1 WHERE context_id=$1 RETURNING last_sequence
+ UPDATE chat_v2_conversations SET last_sequence=last_sequence+1 WHERE context_id=$1 AND ready AND epoch=$8 RETURNING last_sequence
 ), inserted AS (
  INSERT INTO chat_v2_events(context_id,sequence,kind,actor_id,body)
  SELECT $1,last_sequence,$2,$3,$4 FROM bumped
@@ -204,12 +228,42 @@ func appendEvent(ctx context.Context, tx pgx.Tx, conversation, actor, kind strin
  INSERT INTO chat_v2_sends(context_id,device_id,logical_send_id,digest,sequence)
  SELECT $1,$5::uuid,$6::uuid,$7::bytea,sequence FROM inserted WHERE $5::uuid IS NOT NULL
 )
-SELECT sequence,kind,actor_id,body,created_at FROM inserted`, conversation, kind, actor, encoded, device, logical, digest).Scan(&e.Sequence, &e.Kind, &e.ActorID, &bodyJSON, &e.CreatedAt)
+SELECT sequence,kind,actor_id,body,created_at FROM inserted`, conversation, kind, actor, encoded, device, logical, digest, epoch).Scan(&e.Sequence, &e.Kind, &e.ActorID, &bodyJSON, &e.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		// The guard matched nothing: between authorization and this statement
+		// the conversation was rekeyed or a roster change cleared `ready`. Read
+		// the row back to say which, so the caller sees the same error it would
+		// have seen had the check happened under a lock held the whole way.
+		return e, appendGuardError(ctx, tx, conversation, epoch)
+	}
 	if err != nil {
 		return e, err
 	}
 	err = decodeBody(&e, bodyJSON)
 	return e, err
+}
+
+// appendGuardError runs only on the rare losing race, so it may spend a round
+// trip to be precise rather than collapse two different causes into one code.
+func appendGuardError(ctx context.Context, tx pgx.Tx, conversation string, epoch int64) error {
+	var current int64
+	var ready bool
+	err := tx.QueryRow(ctx, `SELECT epoch,ready FROM chat_v2_conversations WHERE context_id=$1`, conversation).Scan(&current, &ready)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrNotReady
+	}
+	if err != nil {
+		return err
+	}
+	if !ready {
+		return ErrNotReady
+	}
+	if current != epoch {
+		return ErrEpoch
+	}
+	// The row still satisfies the guard, so the bump should have matched. Do
+	// not report success on a write that did not happen.
+	return errors.New("chat_v2_sequence_bump_vanished")
 }
 
 func (s *Store) Send(ctx context.Context, actor string, envelope Envelope) (SendResult, error) {
@@ -237,6 +291,27 @@ func (s *Store) send(ctx context.Context, actor string, sessionDigest []byte, en
 	if !ValidID(actor) {
 		return result, ErrInvalid
 	}
+	// Two copies of one logical send can now reach the receipt insert together,
+	// because the conversation row no longer serializes them beforehand. The
+	// primary key still decides, and the loser re-runs once: its second attempt
+	// finds the receipt and takes the replay path, which compares digests and
+	// so can still tell a genuine retry from a different message reusing an id.
+	result, err = s.sendOnce(ctx, actor, sessionDigest, envelope, preimage)
+	if isDuplicateReceipt(err) {
+		return s.sendOnce(ctx, actor, sessionDigest, envelope, preimage)
+	}
+	return result, err
+}
+
+// isDuplicateReceipt reports the one race the send path retries. Any other
+// unique violation is a real defect and must not be replayed into silence.
+func isDuplicateReceipt(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "chat_v2_sends_pkey"
+}
+
+func (s *Store) sendOnce(ctx context.Context, actor string, sessionDigest []byte, envelope Envelope, preimage []byte) (SendResult, error) {
+	var result SendResult
 	release, err := s.writes.acquire(ctx, envelope.ConversationID)
 	if err != nil {
 		return result, err
@@ -247,7 +322,7 @@ func (s *Store) send(ctx context.Context, actor string, sessionDigest []byte, en
 		return result, err
 	}
 	defer tx.Rollback(ctx)
-	a, err := authorizeSessionWithLock(ctx, tx, actor, envelope.DeviceID, envelope.ConversationID, true, sessionDigest)
+	a, err := authorizeSessionWithLock(ctx, tx, actor, envelope.DeviceID, envelope.ConversationID, lockNone, sessionDigest)
 	if err != nil {
 		return result, err
 	}
@@ -280,7 +355,7 @@ func (s *Store) send(ctx context.Context, actor string, sessionDigest []byte, en
 	if envelope.Epoch != a.epoch {
 		return result, ErrEpoch
 	}
-	result.Event, err = appendEvent(ctx, tx, envelope.ConversationID, actor, "envelope", envelope, &sendReceipt{device: envelope.DeviceID, logical: envelope.LogicalSendID, digest: digest[:]})
+	result.Event, err = appendEvent(ctx, tx, envelope.ConversationID, actor, "envelope", a.epoch, envelope, &sendReceipt{device: envelope.DeviceID, logical: envelope.LogicalSendID, digest: digest[:]})
 	if err != nil {
 		return result, err
 	}
@@ -370,7 +445,7 @@ func (s *Store) mark(ctx context.Context, actor, device, conversation, kind stri
 		return mark, err
 	}
 	defer tx.Rollback(ctx)
-	a, err := authorizeSessionWithLock(ctx, tx, actor, device, conversation, true, sessionDigest)
+	a, err := authorizeSessionWithLock(ctx, tx, actor, device, conversation, lockUpdate, sessionDigest)
 	if err != nil {
 		return mark, err
 	}
@@ -399,7 +474,7 @@ func (s *Store) mark(ctx context.Context, actor, device, conversation, kind stri
 	if err != nil {
 		return mark, err
 	}
-	if _, err = appendEvent(ctx, tx, conversation, actor, "mark", mark, nil); err != nil {
+	if _, err = appendEvent(ctx, tx, conversation, actor, "mark", a.epoch, mark, nil); err != nil {
 		return mark, err
 	}
 	return mark, tx.Commit(ctx)
