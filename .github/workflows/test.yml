@@ -695,6 +695,55 @@ jobs:
   # The script provisions its own PostgreSQL and its own uvicorn, pins
   # EXPO_PUBLIC_API_URL at them, and sets MOBILE_REQUIRE_E2E=1 so an
   # unreachable server is a failure rather than a skip.
+  crypto:
+    name: the MLS crate builds and its canaries bite
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: present
+        # Same rule as every other suite here: skip an absence, fail a defect.
+        # Deleting the canaries must never be the thing that turns this green.
+        run: |
+          if [ ! -d packages/chat-crypto ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::packages/chat-crypto is not on this branch, skipping"
+          elif [ -f packages/chat-crypto/tests/mls_canaries.rs ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::packages/chat-crypto exists but its canaries do not -- refusing to skip"
+            exit 1
+          fi
+
+      # rustup ships on the runner image; `rust-toolchain.toml` in the crate
+      # pins the version, so this installs exactly what the authors used.
+      - if: steps.present.outputs.found == 'true'
+        run: rustup show
+
+      - if: steps.present.outputs.found == 'true'
+        run: cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check
+
+      - if: steps.present.outputs.found == 'true'
+        run: cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings
+
+      # A crate whose tests all vanished still passes `cargo test`, so count
+      # them: the canaries are the reason this job exists.
+      - if: steps.present.outputs.found == 'true'
+        run: |
+          set -o pipefail
+          cargo test --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
+          passed=$(grep -oE '^test result: ok\. [0-9]+ passed' /tmp/crypto.log | awk '{s+=$4} END {print s+0}')
+          echo "canaries passed: $passed"
+          if [ "$passed" -lt 20 ]; then
+            echo "::error::only $passed canaries ran; this crate had 21 -- a shrinking suite is not a passing one"
+            exit 1
+          fi
+          if grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' /tmp/crypto.log; then
+            echo "::error::a canary failed or was ignored"
+            exit 1
+          fi
+
   chat-e2e:
     name: chat end to end on the Go front door
     runs-on: ubuntu-latest

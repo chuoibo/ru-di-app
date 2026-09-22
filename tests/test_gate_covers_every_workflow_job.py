@@ -120,6 +120,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
     # Docker, and the way that gets resolved is by deleting the slice.
     "e2e": ("e2e",),
     "chat-e2e": ("chat-e2e",),
+    "crypto": ("crypto",),
 }
 
 # Stages that deliberately have no workflow job, because the question they ask

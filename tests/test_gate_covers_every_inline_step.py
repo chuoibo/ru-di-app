@@ -474,6 +474,38 @@ INLINE_STEPS: dict[str, Covered] = {
         why="",
     ),
     # --- test.yml: e2e ----------------------------------------------------
+    "test.yml::crypto::present": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="15cc225748fd287e",
+        why="",
+    ),
+    "test.yml::crypto::rustup show": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        # `rust-toolchain.toml` in the crate pins the version; this only makes
+        # rustup materialise it. It asserts nothing about the tree.
+        why="rustup materialises the pinned toolchain; asserts nothing",
+        body_sha="75c0fa7b71e29a14",
+    ),
+    "test.yml::crypto::cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="7598449b7e31dafc",
+        why="",
+    ),
+    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="de3cabd55ad98e02",
+        why="",
+    ),
+    "test.yml::crypto::set -o pipefail": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="101ff0a4ff076804",
+        why="",
+    ),
     "test.yml::chat-e2e::present": Covered(
         kind=GATE_KIND,
         stages=("chat-e2e",),

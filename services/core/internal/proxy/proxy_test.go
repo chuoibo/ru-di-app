@@ -214,7 +214,18 @@ func crashingUpstream(t *testing.T) *url.URL {
 				_, _ = io.Copy(io.Discard, req.Body)
 				_, _ = io.WriteString(conn, "HTTP/1.1 500 Internal Server Error\r\n"+
 					"Content-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nInternal Server Error")
-				time.Sleep(300 * time.Millisecond)
+				// Hold the connection open, then drop it. The window has to
+				// outlast the client's second request, and the race runs the
+				// way round that is easy to get backwards: if the drop lands
+				// FIRST, the transport finds a dead idle connection, treats the
+				// request as unstarted and retries it on a fresh one -- so the
+				// caller sees a second 500 and the reproduction reads as
+				// "changed". The 502 only appears when the request is already
+				// in flight on the connection that dies. 300ms was enough on a
+				// quiet laptop and not on a loaded CI runner, which is why this
+				// test failed four pull requests in a row for the machine's
+				// speed rather than the proxy's behaviour.
+				time.Sleep(5 * time.Second)
 			}(conn)
 		}
 	}()
