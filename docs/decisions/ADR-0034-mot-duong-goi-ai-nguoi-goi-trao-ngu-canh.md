@@ -89,8 +89,8 @@ Cùng lúc, `chat-ui-contract.md` đang hứa với người dùng: *"Lịch s�
   theo lời nhờ, và máy chủ băm `command + prompt`. Cùng câu hỏi với đoạn chat mới sẽ trùng
   digest, và máy chủ trả lại **kết quả cũ** kèm mã 200. Người dùng tưởng AI vừa đọc tin mới.
   Đây là hỏng **im lặng**, nên nó là hệ quả phải ghi ra chứ không phải chi tiết thi công.
-- Hợp đồng `POST /contexts/{id}/messages` mất các trường `intent`, `companion`, `vote`,
-  `expense_card`, `intent_error`.
+- Hợp đồng `POST /contexts/{id}/messages` mất `companion` và `expense_card`; `intent` và
+  `intent_error` **thu hẹp** chứ không biến mất, vì nhánh `/vote` ở lại (xem 3b).
 - Câu "Các lệnh AI đang có là dấu vết legacy, không xác lập quyền đọc chat cho AI ở v2"
   trong `chat-ui-contract.md` **giữ nguyên, không sửa**. Nó vẫn đúng và đang là cách phát
   biểu gọn nhất về lõi của quyết định này: AI không được trao **quyền đọc**; client được trao
@@ -100,6 +100,26 @@ Cùng lúc, `chat-ui-contract.md` đang hứa với người dùng: *"Lịch s�
   mất sạch AI, và không cổng nào bắt được vì không ca nào chạy với cờ tắt rồi hỏi lại.
 - Engine có hai worker. Thêm Nếp làm người gọi thứ ba, mà Nếp nổi trên mọi màn, nhân nhu cầu
   lên trên một nguồn cung không đổi. Cách chữa rẻ là nâng số worker, không phải tách hàng đợi.
+
+## 3b. Ba điều đo được, ghi ra vì chúng đổi hình dạng việc
+
+- **`/vote` KHÔNG phải đường AI và phải sống.** Vỏ RuDi đang ship tạo bình chọn bằng cách
+  gửi chuỗi `/vote ...` qua `POST /messages` (`SoHen.tsx:129` → `GroupChatLive.tsx:873`).
+  Nhánh đó không gọi model và không tiêu hạn mức nào. Xoá nguyên hàm xử lý lệnh trong tin
+  nhắn là làm hỏng bình chọn trên máy người dùng, và **không cổng nào bắt**: không kịch bản
+  parity nào gửi lệnh gạch chéo. Chỉ ba nhánh AI bị xoá; nhánh vote ở lại và nên được thêm
+  vào kịch bản parity trước khi đụng vào.
+
+- **Xoá Python phải đi cùng commit với xoá Go và sửa manifest.** Cửa trước Go proxy mọi
+  request không khớp route Go sang Python, nên bỏ bản Go trước là làm đường cũ sống lại
+  nguyên vẹn dưới quyền Python, với mọi cổng vẫn xanh. Bỏ bản Python trước thì cổng quyền
+  sở hữu đỏ vì Go còn handler mà manifest hết hàng. Không có thứ tự nào khác xanh. Điều này
+  cũng là lý do CLAUDE.md được bổ sung một ngoại lệ có tên.
+
+- **Đừng xoá một cổng chất lượng dưới danh nghĩa dọn dẹp.** Trần lượt gọi đổi từ 30 mỗi
+  phút xuống 8, và mã từ chối đổi tên; nhưng mã mới chưa có câu tiếng Việt nào. Cổng giữ bất
+  biến "mọi mã từ chối của máy chủ đều có câu người đọc" lại nằm đúng trong tập file sẽ xoá.
+  Bất biến phải được chuyển sang chỗ mới **trước**, không phải sau.
 
 ## 4. Cái này KHÔNG cho phép
 
