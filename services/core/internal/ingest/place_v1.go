@@ -98,6 +98,12 @@ type Geo struct {
 	NguonToaDo string   `json:"nguon_toa_do"`
 	TruyVan    string   `json:"truy_van"`
 	TaLoaiBo   string   `json:"ta_loai_bo"`
+
+	// The coordinates as they were written. A float cannot tell 10 from
+	// 10.0000 apart, and the difference between them is a hundred kilometres
+	// of claimed knowledge.
+	LatRaw string `json:"-"`
+	LngRaw string `json:"-"`
 }
 
 // Record is one line of the feed, in the shape this side reads it.
@@ -160,7 +166,8 @@ var knownKeys = map[string]bool{
 var knownGeoKeys = map[string]bool{
 	"lat": true, "lng": true, "precision": true, "evidence": true,
 	"nguon": true, "nguon_toa_do": true, "truy_van": true, "ta_loai_bo": true,
-	"ward_code": true, "ward_name": true, "ward_nguon": true,
+	"resolved_at": true,
+	"ward_code":   true, "ward_name": true, "ward_nguon": true,
 }
 
 // Reject is one reason one line did not become a catalogue row.
@@ -216,6 +223,10 @@ func Parse(line []byte) (*Record, []string, *Reject) {
 				if !knownGeoKeys[key] {
 					unknown = append(unknown, "geo."+key)
 				}
+			}
+			if rec.Geo != nil {
+				rec.Geo.LatRaw = string(looseGeo["lat"])
+				rec.Geo.LngRaw = string(looseGeo["lng"])
 			}
 		}
 	}
@@ -354,6 +365,61 @@ func (r *Record) validateGeo() *Reject {
 		return &Reject{RejectGeoBadSource, source}
 	}
 	return nil
+}
+
+// decimalsFor counts the digits after the point in a raw JSON number.
+func decimalsFor(raw string) int {
+	if dot := strings.IndexByte(raw, '.'); dot >= 0 {
+		return len(raw) - dot - 1
+	}
+	return 0
+}
+
+// precisionFloor is the finest level a coordinate with this many decimals can
+// honestly claim. Four decimals is about eleven metres; two is about a
+// kilometre; fewer than two is tens of kilometres and names a province at best.
+func precisionFloor(decimals int) map[string]bool {
+	switch {
+	case decimals >= 4:
+		return nil // any level
+	case decimals >= 2:
+		return map[string]bool{"rooftop": true, "street": true}
+	default:
+		return map[string]bool{
+			"rooftop": true, "street": true, "ward_centroid": true}
+	}
+}
+
+// CapPrecision lowers a claimed precision the coordinates cannot support, and
+// reports whether it had to.
+//
+// Lowered rather than refused. The place is real and its coordinates are
+// usable; only the label overstated them, and the honest label is computable.
+// Throwing the row away would lose somewhere real over a wrong word, and
+// keeping the word would let a screen promise a doorway and hand over a
+// district. Neither is better than correcting it and saying so.
+//
+// Called once, during landing, and the correction is counted.
+func (r *Record) CapPrecision() (string, bool) {
+	if r.Geo == nil || r.Geo.Lat == nil {
+		return "", false
+	}
+	decimals := decimalsFor(r.Geo.LatRaw)
+	if lng := decimalsFor(r.Geo.LngRaw); lng < decimals {
+		decimals = lng
+	}
+	tooFine := precisionFloor(decimals)
+	if !tooFine[r.Geo.Precision] {
+		return r.Geo.Precision, false
+	}
+	was := r.Geo.Precision
+	switch {
+	case decimals >= 2:
+		r.Geo.Precision = "ward_centroid"
+	default:
+		r.Geo.Precision = "province_centroid"
+	}
+	return was, true
 }
 
 // HasPoint reports whether this row carries coordinates at all.

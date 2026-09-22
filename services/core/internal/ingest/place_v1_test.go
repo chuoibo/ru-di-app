@@ -329,3 +329,45 @@ func TestAnAbsentEvidenceFieldIsNotDrift(t *testing.T) {
 		t.Errorf("reject=%v unknown=%v", reject, unknown)
 	}
 }
+
+// TestAClaimedPrecisionIsLoweredNotRefused. One row arrived as lat=10 labelled
+// `street`. A whole degree is about 111 km, so the label promised a road and
+// delivered a province. The place is real and the coordinate is usable; only
+// the word was wrong, and the right word is computable -- so it is corrected
+// and counted, not thrown away.
+func TestAClaimedPrecisionIsLoweredNotRefused(t *testing.T) {
+	cases := []struct {
+		name      string
+		lat, lng  any
+		claimed   string
+		want      string
+		corrected bool
+	}{
+		{"a whole degree calling itself a street", 10, 106, "street", "province_centroid", true},
+		{"a whole degree calling itself a ward", 10, 106, "ward_centroid", "province_centroid", true},
+		{"a whole degree is honest about a province", 10, 106, "province_centroid", "province_centroid", false},
+		{"three decimals calling itself a rooftop", 10.758, 106.660, "rooftop", "ward_centroid", true},
+		{"three decimals is honest about a ward", 10.758, 106.660, "ward_centroid", "ward_centroid", false},
+		{"four decimals may claim a rooftop", 10.7584, 106.6601, "rooftop", "rooftop", false},
+		{"one coordinate rounded drags the pair down", 10.7584, 106, "rooftop", "province_centroid", true},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+				r["geo"] = map[string]any{
+					"lat": testCase.lat, "lng": testCase.lng,
+					"precision": testCase.claimed}
+			}))
+			if reject != nil {
+				t.Fatalf("a real place must not be lost over a label: %s", reject)
+			}
+			_, corrected := rec.CapPrecision()
+			if corrected != testCase.corrected {
+				t.Errorf("corrected=%v, want %v", corrected, testCase.corrected)
+			}
+			if rec.Geo.Precision != testCase.want {
+				t.Errorf("precision %s, want %s", rec.Geo.Precision, testCase.want)
+			}
+		})
+	}
+}
