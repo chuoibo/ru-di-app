@@ -730,10 +730,19 @@ do_crypto() {
   cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check || return 1
   cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings || return 1
   cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release || return 1
-  if rustup target list --installed 2>/dev/null | grep -q x86_64-linux-android; then
-    cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target x86_64-linux-android || return 1
+  # `rustup target add` cho std của target và KHÔNG cho gì khác: linker và
+  # sysroot đến từ NDK. Thiếu chúng thì link hỏng ở `-llog`, `-lunwind`.
+  # `packages/chat-crypto/scripts/check_android.sh` đã ghi đúng ba biến này.
+  local ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
+  if rustup target list --installed 2>/dev/null | grep -q x86_64-linux-android \
+     && [ -n "$ndk" ] && [ -d "$ndk" ]; then
+    local bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+    CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
+    CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
+    AR_x86_64_linux_android="$bin/llvm-ar" \
+      cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target x86_64-linux-android || return 1
   else
-    echo "chưa cài target x86_64-linux-android; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
+    echo "thiếu target x86_64-linux-android hoặc ANDROID_NDK_ROOT; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
   fi
   # A cdylib that exports nothing is a file, not a bridge.
   local so; so="$(find target -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"

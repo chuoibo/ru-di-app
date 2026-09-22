@@ -524,14 +524,11 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="ab4c03cd34b7d32b",
         why="",
     ),
-    "test.yml::crypto::rustup target add aarch64-linux-android x86_64-linux-android": Covered(
-        kind=SETUP_KIND,
-        stages=(),
-        # Installs a compilation target; asserts nothing about the tree. The
-        # local stage skips the Android build when the target is absent rather
-        # than installing it behind the caller's back.
-        why="rustup materialises an Android target; asserts nothing",
-        body_sha="7e09e5276b2b597f",
+    "test.yml::crypto::ndk=\"${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}\"": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="3ba0e459ca00d91e",
+        why="",
     ),
     "test.yml::crypto::so=$(find target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
         kind=GATE_KIND,
