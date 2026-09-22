@@ -126,7 +126,9 @@ func readTripReel() Route {
 			return silent("unavailable"), nil
 		}
 		cardValue, _ := obj.Get("card")
-		if cardValue == nil {
+		// `Null{}` is not a Go nil; without this the fallback never fires and a
+		// model that answered null would be ground as if it were a card.
+		if pyjson.IsNull(cardValue) {
 			cardValue = obj
 		}
 		grounded, err := reel.Ground(treejson.To(cardValue), offered)
@@ -135,8 +137,10 @@ func readTripReel() Route {
 		}
 		titleVal, _ := grounded.Get("title")
 		picksVal, _ := grounded.Get("picks")
+		// `From` already collapses both a Go nil and a tree Null into
+		// `pyjson.Null{}`, so ask the converted value rather than the tree one.
 		wiredPicks := treejson.From(picksVal)
-		if picksVal == nil {
+		if pyjson.IsNull(wiredPicks) {
 			wiredPicks = pyjson.List{}
 		}
 		body := pyjson.NewOrderedMap()

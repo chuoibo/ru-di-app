@@ -111,7 +111,10 @@ func readGroupSuggestion() Route {
 			return silent("unavailable"), nil
 		}
 		card, _ := obj.Get("card")
-		if card == nil {
+		// A decoded JSON null is `Null{}`, a struct, so `card == nil` is false
+		// and the model saying "nothing" would reach grounding and answer
+		// "ungrounded" where Python stops at None and answers "unavailable".
+		if pyjson.IsNull(card) {
 			return silent("unavailable"), nil
 		}
 		grounded, err := suggestion.Ground(treejson.To(card), treejson.MapsTo(places))
@@ -209,7 +212,10 @@ func readContextualSuggestion() Route {
 			return silent("unavailable"), nil
 		}
 		card, _ := obj.Get("card")
-		if card == nil {
+		// A decoded JSON null is `Null{}`, a struct, so `card == nil` is false
+		// and the model saying "nothing" would reach grounding and answer
+		// "ungrounded" where Python stops at None and answers "unavailable".
+		if pyjson.IsNull(card) {
 			return silent("unavailable"), nil
 		}
 		grounded, err := suggestion.Ground(treejson.To(card), treejson.MapsTo(places))
@@ -255,7 +261,7 @@ func wireSuggestion(contextID string, grounded *pyjson.OrderedMap, basis *pyjson
 	title, _ := payload.Get("title")
 	when, _ := payload.Get("when_text")
 	stops, _ := payload.Get("stops")
-	if stops == nil {
+	if pyjson.IsNull(stops) {
 		stops = pyjson.List{}
 	}
 	out := pyjson.NewOrderedMap()
