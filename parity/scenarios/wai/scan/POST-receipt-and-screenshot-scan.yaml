@@ -1,0 +1,219 @@
+# WAI · the two reads that take an upload and give back no pixels.
+#
+#   POST /receipts/scan     a bill photographed
+#   POST /screenshots/scan  somebody else's screen, shared into the app
+#
+# They are twins on purpose and the refusals are where they earn their keep:
+# both promise never to echo the image back, never to echo an upstream failure,
+# and to charge the rate limit BEFORE reading the body -- «a 429 raised after
+# the vision call has already spent what it was refusing». That ordering is
+# invisible in a happy path and invisible in a single refusal; it shows only
+# when the same caller is refused for two different reasons in a row.
+#
+# WHAT THIS FILE PROVES. The parity stacks carry no Gemini key, so both routes
+# take the branch where no model answered. That branch is deterministic on both
+# sides, so parity compares it byte for byte -- the status, the problem code,
+# and the promise that neither the bytes nor the upstream error text come back.
+#
+# WHAT IT CANNOT PROVE: a real reading of a real bill. That needs a key and a
+# reply that is not deterministic. The route card says so. A green run here is
+# evidence about the REFUSALS and about the wire, not about the extraction.
+#
+# The 429 branch is not reachable here either: it needs a fresh limiter window
+# per scenario, which is the `lane: limiter` corpus, not this one.
+id: wai/scan/post-receipt-and-screenshot-scan
+routes:
+  - 'POST /receipts/scan'
+  - 'POST /screenshots/scan'
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người quét (dữ liệu mẫu)"}'
+
+  # --- no session ---------------------------------------------------------
+  # 401 must come before anything reads the upload: an anonymous caller must
+  # not be able to make the server spend a model call or even a file read.
+  - id: receipt_anonymous
+    as: anonymous
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 91}}
+
+  - id: screenshot_anonymous
+    as: anonymous
+    request:
+      method: POST
+      path: '/screenshots/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: man-hinh.png, content_type: image/png, image: {format: png, width: 48, height: 64, seed: 92}}
+
+  # --- a real upload, no model ---------------------------------------------
+  - id: receipt_with_a_jpeg
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 93}}
+
+  - id: receipt_with_a_png
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.png, content_type: image/png, image: {format: png, width: 40, height: 30, seed: 94, alpha: true}}
+
+  - id: screenshot_with_a_png
+    as: reader
+    request:
+      method: POST
+      path: '/screenshots/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: man-hinh.png, content_type: image/png, image: {format: png, width: 48, height: 64, seed: 95}}
+
+  # A second upload from the same caller: whatever the refusal is, it must be
+  # the same one twice. A limiter counting when it should not would differ here.
+  - id: receipt_again_same_caller
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 93}}
+
+  # --- the shape of the upload itself --------------------------------------
+  - id: receipt_no_field_at_all
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts: []
+
+  - id: receipt_wrong_field_name
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: anh, filename: bill.jpg, content_type: image/jpeg, image: {format: jpeg, width: 32, height: 24, seed: 96}}
+
+  - id: receipt_two_images
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: mot.jpg, content_type: image/jpeg, image: {format: jpeg, width: 32, height: 24, seed: 97}}
+        - {name: image, filename: hai.jpg, content_type: image/jpeg, image: {format: jpeg, width: 32, height: 24, seed: 98}}
+
+  # A format the sanitizer does not accept: 415, and the sentence must not
+  # carry the file name back.
+  - id: receipt_a_gif
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.gif, content_type: image/gif, image: {format: gif, width: 32, height: 24, seed: 99}}
+
+  # Bytes that are not an image at all, announced as one.
+  - id: receipt_text_pretending_to_be_a_jpeg
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.jpg, content_type: image/jpeg, text: 'khong-phai-anh'}
+
+  - id: screenshot_text_pretending_to_be_a_png
+    as: reader
+    request:
+      method: POST
+      path: '/screenshots/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: man-hinh.png, content_type: image/png, text: 'khong-phai-anh'}
+
+  # JSON where a multipart was expected.
+  - id: receipt_json_body
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image":"bill.jpg"}'
+
+  - id: screenshot_json_body
+    as: reader
+    request:
+      method: POST
+      path: '/screenshots/scan'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"image":"man-hinh.png"}'
+
+  - id: receipt_no_body
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: receipt_get_not_allowed
+    as: reader
+    request:
+      method: GET
+      path: '/receipts/scan'
+
+  - id: screenshot_get_not_allowed
+    as: reader
+    request:
+      method: GET
+      path: '/screenshots/scan'
+
+  - id: receipt_trailing_slash
+    as: reader
+    request:
+      method: POST
+      path: '/receipts/scan/'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: image, filename: bill.jpg, content_type: image/jpeg, image: {format: jpeg, width: 32, height: 24, seed: 100}}

@@ -355,6 +355,19 @@ func wirePaper(view pairsteps.PaperView) *pyjson.OrderedMap {
 }
 
 // wirePaperVersion is PaperVersionResponse.
+//
+// Note the shape of this function, because it is load-bearing: every object is
+// built field by field, in the order `class PaperContent` and `class PaperStop`
+// declare. That is what keeps it correct, not luck.
+//
+// `content` and `nguon` are jsonb columns, and jsonb does not keep the order it
+// was written in -- Postgres sorts keys by length and then bytewise. Python
+// never sees that order because the row passes through a nested model on its
+// way out. Rewriting this to echo the column straight through would be shorter,
+// would serve the same JSON, and would ship a different wire: measured on the
+// two places columns that DID echo, the bodies were byte-for-byte the same
+// LENGTH (5694 against 5694) and differed from byte 489. Only a byte comparison
+// notices, so every test but parity would stay green.
 func wirePaperVersion(version pairsteps.VersionView) *pyjson.OrderedMap {
 	stops := pyjson.List{}
 	for _, stop := range version.Content.Chang {
