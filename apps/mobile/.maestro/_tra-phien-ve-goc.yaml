@@ -1,0 +1,29 @@
+# Đưa máy về trạng thái CHƯA ĐĂNG NHẬP sau một flow đỏ, dù flow ấy bỏ app lại ở
+# đâu — khay đang mở, hộp thoại, hay màn lạ.
+#
+# Vì sao cần: phiên đăng nhập là biến TOÀN CỤC của bảng. Phần lớn flow dùng
+# khuôn «đăng nhập nếu đang đăng xuất» (`runFlow ... when: visible "Rủ Đi
+# thôi!"`), nên khi app đã đăng nhập sẵn thì bước đăng nhập bị SKIPPED và flow
+# chạy tiếp dưới danh nghĩa người đang có. Nếu một flow neo — flow tự đăng xuất
+# rồi đăng nhập một người cụ thể — hỏng TRƯỚC bước đăng xuất, mọi flow sau thừa
+# hưởng người sai và đỏ ra thành «không tìm thấy người», đọc y hệt lỗi sản phẩm.
+#
+# Đo được ngày 22-09-2026: flow 36 đăng nhập E (người mới, chưa đặt tên) rồi
+# xanh; flow 37 hỏng ngay assertion đầu, trước bước đăng xuất; sáu flow 41-45 và
+# 47 sau đó đỏ vì chạy bằng E — ảnh flow 44 cho thấy hồ sơ «Thành viên mới».
+#
+# Không dùng `clearState`/`pm clear`: nó đưa dev client về launcher và xoá bundle.
+# Đi đúng đường đăng xuất của sản phẩm, như `_dang-xuat-neu-co.yaml` đã làm.
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+# `_dang-xuat-neu-co` dùng `when:` mà `when:` KHÔNG chờ, nên phải đợi màn ổn định
+# trước, đúng như tài liệu của chính nó dặn.
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 120000
+- runFlow: _dang-xuat-neu-co.yaml
+# Chốt hạ: phải thật sự ở màn chào thì flow sau mới đăng nhập đúng người nó khai.
+- assertVisible: "Rủ Đi thôi!"

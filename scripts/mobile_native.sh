@@ -2126,6 +2126,35 @@ in_man_dang_thay() {
     | grep -oE 'text="[^"]{2,80}"' | head -12 || true
 }
 
+# Sau một flow đỏ, đưa máy về màn chào để flow SAU đăng nhập đúng người nó khai.
+#
+# Phiên đăng nhập là biến TOÀN CỤC của bảng và phần lớn flow dùng khuôn «đăng
+# nhập nếu đang đăng xuất»: app đã đăng nhập sẵn thì bước đăng nhập bị SKIPPED và
+# flow chạy tiếp dưới danh nghĩa người đang có. Một flow neo hỏng TRƯỚC bước đăng
+# xuất của nó sẽ để lại người sai, và mọi flow sau đỏ ra thành «không tìm thấy
+# người» — N lỗi sản phẩm giả từ MỘT lỗi thật.
+#
+# Đo 22-09-2026: flow 36 (người mới E) xanh, flow 37 hỏng ở assertion đầu trước
+# khi kịp đăng xuất, rồi 41-45 và 47 đỏ vì chạy bằng E; ảnh flow 44 cho thấy hồ
+# sơ «Thành viên mới».
+tra_phien_ve_goc() {
+  local ten="$1" ra rc
+  ra="$(mktemp)"
+  set +e
+  maestro --device "$SERIAL" test -e TREE_FINGERPRINT="$DAU_VAN" --test-output-dir "$ANH_DIR" \
+    "$FLOWS/_tra-phien-ve-goc.yaml" > "$ra" 2>&1
+  rc=$?
+  if [ "$rc" -eq 0 ]; then
+    echo "sau $ten đỏ: đã trả phiên về màn chào; flow sau đăng nhập lại từ đầu" >&2
+  else
+    # Không che: nếu không trả được về gốc thì flow sau vẫn thừa hưởng người sai,
+    # và người đọc phải biết điều đó trước khi tin màu của chúng.
+    echo "sau $ten đỏ: KHÔNG trả được phiên về màn chào — các flow sau chạy bằng người của lượt trước, đừng đọc màu của chúng như lỗi sản phẩm" >&2
+    tail -5 "$ra" >&2
+  fi
+  rm -f "$ra"
+}
+
 chay_flow() {
   local f="$1" ra rc
   local -a them=()
@@ -2151,6 +2180,7 @@ chay_flow() {
     rm -f "$ra"; return 99
   fi
   [ "$rc" -eq 0 ] || in_man_dang_thay "$(basename "$f" .yaml)"
+  [ "$rc" -eq 0 ] || tra_phien_ve_goc "$(basename "$f" .yaml)"
   rm -f "$ra"; return "$rc"
 }
 
