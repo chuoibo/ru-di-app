@@ -280,3 +280,41 @@ steps:
     request:
       method: GET
       path: '/contexts/{{ctx}}/messages/'
+  # Lệnh gạch chéo trong thân tin nhắn. Trước bản này KHÔNG kịch bản nào gửi
+  # lệnh nào, nên cả nhánh xử lý lệnh của `POST /messages` chưa từng được
+  # parity so -- một người dọn dẹp xoá nhầm nhánh đó sẽ thấy mọi cổng xanh
+  # trong khi bình chọn hỏng trên máy người dùng. Vỏ RuDi tạo bình chọn đúng
+  # bằng đường này (`SoHen.tsx` gửi `/vote <câu hỏi>? A | B`), nên nó là
+  # đường sản phẩm, không phải một lối tắt của người gõ lệnh.
+  - id: owner_sends_vote_command
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"/vote Tối nay ăn gì? Lẩu | Nướng | Bún"}'
+  # Hỏng thì phải hỏng giống nhau: `intent_error` là `vote_malformed`, và tin
+  # vẫn được lưu như một tin thường chứ không bị từ chối.
+  - id: owner_sends_vote_malformed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"/vote Chỉ có một lựa chọn? Lẩu"}'
+  # Người không phải chủ phòng cũng mở được bình chọn.
+  - id: member_sends_vote_command
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"/binh-chon Đi mấy giờ? 18h | 19h"}'
+  - id: owner_lists_after_votes
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
