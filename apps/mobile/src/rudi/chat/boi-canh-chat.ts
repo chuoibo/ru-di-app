@@ -42,7 +42,7 @@ function chuTheAi(card: unknown): string {
 
 function luotCua(tin: Tin, personId: string, biDanh: Map<string, string>): LuotBoiCanh {
   const vai = vaiCua(tin, personId);
-  const chung = { vai, luc: tin.created_at } as const;
+  const chung = { id: tin.id, vai, luc: tin.created_at } as const;
   if (vai === "ban" && tin.author_id !== null && !biDanh.has(tin.author_id)) {
     biDanh.set(tin.author_id, `Bạn ${biDanh.size + 1}`);
   }

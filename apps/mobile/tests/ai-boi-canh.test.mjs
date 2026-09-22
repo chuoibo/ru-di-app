@@ -88,6 +88,16 @@ test("Tên tài khoản không lên dây; bí danh ổn định trong MỘT gói
   assert.ok(!day.includes(ban) && !day.includes(banHai) && !day.includes(toi));
 });
 
+test("Mỗi lượt mang id tin để máy chủ kiểm được, nhưng id người thì không", () => {
+  // The id is what lets the server confirm every turn is a real message of this
+  // room before it publishes a card saying «đã đọc N tin» to everyone else.
+  // Account ids stay off the wire; a message id is something the server already
+  // owns and the model never sees.
+  const bc = gom([tin("2"), tin("1")]);
+  assert.deepEqual(bc.luot.map((l) => l.id), ["1", "2"]);
+  assert.ok(!JSON.stringify(bc).includes(ban));
+});
+
 test("Vượt hạn byte thì bỏ lượt CŨ nhất, không đụng lượt mới nhất", () => {
   // The newest turn is the one the person was looking at when they pressed
   // send. It is the last thing that may be touched.
