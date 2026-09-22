@@ -400,3 +400,91 @@ func TestARegionalSpecialityNeverGetsAPin(t *testing.T) {
 			rec.CategoryFor())
 	}
 }
+
+// TestTheProjectionRefusesToCallAnAreaAnAddress. `dia_chi_day_du` is named
+// "full address" and on real rows holds "Phường Tân Mai, Biên Hòa, Đồng Nai".
+// Reading that name instead of that content is the mistake this guards.
+func TestTheProjectionRefusesToCallAnAreaAnAddress(t *testing.T) {
+	rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+		r["dia_chi"] = nil
+		r["dia_chi_day_du"] = "Phường Tân Mai, Biên Hòa, Đồng Nai"
+	}))
+	if reject != nil {
+		t.Fatal(reject)
+	}
+	if got := Project(rec); got.Address != nil {
+		t.Errorf("an area became an address: %q", *got.Address)
+	}
+
+	rec, _, _ = Parse(validLine(t, func(r map[string]any) {
+		r["dia_chi"] = "248/5 Đường Phan Trung"
+	}))
+	projection := Project(rec)
+	if projection.Address == nil || *projection.Address != "248/5 Đường Phan Trung" {
+		t.Errorf("a real address was dropped: %v", projection.Address)
+	}
+}
+
+// TestARegionalSpecialityKeepsNoCoordinates. Leaving the columns empty is a
+// stronger guarantee than a rule every future reader has to remember.
+func TestARegionalSpecialityKeepsNoCoordinates(t *testing.T) {
+	rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+		r["loai"] = "mon_an"
+		r["geo"] = map[string]any{
+			"lat": 10.7584, "lng": 106.6601, "precision": "street"}
+	}))
+	if reject != nil {
+		t.Fatal(reject)
+	}
+	projection := Project(rec)
+	if projection.Lat != nil || projection.Lng != nil {
+		t.Error("a dish was given coordinates the catalogue could draw")
+	}
+	if projection.Category != "quan-an-local" {
+		t.Errorf("listed under %s", projection.Category)
+	}
+
+	// An ordinary place keeps its point and says how good it is.
+	rec, _, _ = Parse(validLine(t, func(r map[string]any) {
+		r["geo"] = map[string]any{
+			"lat": 10.7584, "lng": 106.6601, "precision": "street",
+			"evidence": "Phạm Văn Hai, Hồ Chí Minh"}
+	}))
+	projection = Project(rec)
+	if projection.Lat == nil || projection.GeoPrecision == nil {
+		t.Fatal("an ordinary place lost its point")
+	}
+	if *projection.GeoPrecision != "street" {
+		t.Errorf("precision came through as %q", *projection.GeoPrecision)
+	}
+}
+
+// TestTheProjectionNeverCarriesARating. The feed scores each row out of ten,
+// by model, after reading the posts. Nobody rated anything.
+func TestTheProjectionNeverCarriesARating(t *testing.T) {
+	rec, _, _ := Parse(validLine(t, func(r map[string]any) {
+		r["diem_xep_hang_llm"] = 8.8
+	}))
+	projection := Project(rec)
+	blob, err := json.Marshal(projection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range []string{"Rating", "rating", "8.8"} {
+		if strings.Contains(string(blob), forbidden) {
+			t.Errorf("the projection carries %q: %s", forbidden, blob)
+		}
+	}
+}
+
+// TestTheCatalogueIdIsStable: projecting the same row twice is the same row.
+func TestTheCatalogueIdIsStable(t *testing.T) {
+	first, _, _ := Parse(validLine(t, nil))
+	second, _, _ := Parse(validLine(t, nil))
+	if Project(first).ID != Project(second).ID {
+		t.Error("the same row projected to two ids")
+	}
+	if got := PlaceID("plc_abc123"); got != "vnl-abc123" {
+		t.Errorf("id %q", got)
+	}
+}
