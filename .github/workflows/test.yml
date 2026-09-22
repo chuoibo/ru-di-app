@@ -773,8 +773,8 @@ jobs:
       # `rustup target add` installs the Rust std for the target and NOTHING
       # else: the linker and sysroot come from the NDK. Without them the link
       # fails on `-llog` and `-lunwind`, which is exactly what the first attempt
-      # at this step did. `packages/chat-crypto/scripts/check_android.sh`
-      # already encodes this; these are the same three variables it exports.
+      # at this step did. The crate's own Android canary script already encodes
+      # this; these are the same three variables it exports.
       - if: steps.ffi.outputs.found == 'true'
         run: |
           ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"

@@ -524,7 +524,7 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="ab4c03cd34b7d32b",
         why="",
     ),
-    "test.yml::crypto::ndk=\"${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}\"": Covered(
+    'test.yml::crypto::ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"': Covered(
         kind=GATE_KIND,
         stages=("crypto",),
         body_sha="3ba0e459ca00d91e",
