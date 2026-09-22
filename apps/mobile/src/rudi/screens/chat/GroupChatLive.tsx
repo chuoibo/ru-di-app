@@ -66,6 +66,7 @@ import { NoiDungBaoCao } from "../nguoi/NoiDungBaoCao";
 import { MenuTin } from "./MenuTin";
 import { TheAiView } from "./TheAi";
 import { CongCuChat, ToHen, type KhayChat } from "./SoHen";
+import { gomBoiCanhChat } from "../../chat/boi-canh-chat";
 import { KhayToHenChung } from "./ToHenChungKhay";
 import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
@@ -237,6 +238,11 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
 
   const tinHien = useMemo(() => tinChoHoiThoai(chat.tin), [chat.tin]);
   const hang = useMemo(() => nhomTheoNgay(tinHien), [tinHien]);
+  // Built from `tinHien`, the list the screen is drawing, not from `chat.tin`.
+  // `tinChoHoiThoai` hides a `/vote` command once its poll card exists, so that
+  // command is not on screen -- and "this is what you are looking at" has to be
+  // true in the literal sense. One place decides what is visible.
+  const boiCanhAi = useMemo(() => gomBoiCanhChat({ tin: tinHien, personId }), [tinHien, personId]);
   const toHen = useMemo(() => {
     if (nhanRieng) return null;
     const dangMo = (tin: Tin) => {
@@ -865,13 +871,13 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           xacNhanBo={xacNhanBoToHen}
         />
       ) : null}
-      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy}
+      {!khongNhanTin && !toHenChung.sheet ? <CongCuChat personId={personId} contextId={contextId} panel={khay} onPanel={setKhay} capabilities={ai.capabilities} busy={dangGui || ai.busy} boiCanh={boiCanhAi}
         initialPrompt={promptAi}
         error={ai.error}
         onImage={() => { setKhay(null); void guiAnh(); }}
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
-        onPlan={async (prompt) => { const draft = nhapRef.current; const sent = await ai.send(prompt); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
+        onPlan={async (prompt, boiCanh) => { const draft = nhapRef.current; const sent = await ai.send(prompt, boiCanh); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
         onManual={() => { setKhay(null); moToHen(); }} /> : null}
       {khongNhanTin ? (
         <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>

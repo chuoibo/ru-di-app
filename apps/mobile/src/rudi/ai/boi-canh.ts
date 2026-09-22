@@ -50,6 +50,21 @@ export type VaiLuot = "toi" | "ban" | "ai";
 export type LoaiLuot = "chu" | "anh" | "sticker" | "the" | "da-xoa";
 
 export type LuotBoiCanh = {
+  /**
+   * The server message id, and the only field here the server can check.
+   *
+   * It is not a privacy cost: the server already owns these ids, and they never
+   * reach the model. It buys one thing, and that thing matters because other
+   * people read it. The published card says «Nếp đã đọc N tin», and everyone in
+   * the room sees that line. Without an id per turn, N is a number the caller
+   * asserted about itself; with one, the server can confirm every turn is a real
+   * message of THIS room before it lets that sentence be published.
+   *
+   * It does not make the text truthful -- a member can still paste anything into
+   * the prompt -- and the server does not pretend otherwise. It makes the COUNT
+   * truthful, which is the part addressed to third parties.
+   */
+  id: string;
   vai: VaiLuot;
   /** Stable inside ONE bundle only. Not an identity, and not reused across calls. */
   biDanh?: string;
@@ -161,4 +176,16 @@ export function cauBoiCanh(bc: BoiCanh | null): string {
     return `${bc.luot.length} tin gần nhất trong ${bc.tongLuot} tin bạn đang thấy, kèm lời nhờ trong ô này. Phần cũ hơn mình để lại.`;
   }
   return `${bc.luot.length} tin gần nhất bạn đang thấy, kèm lời nhờ trong ô này.`;
+}
+
+/**
+ * The speaker label the SCREEN shows. Deliberately not the same string the
+ * server puts in front of the model: on screen "toi" is the person reading, so
+ * it reads «Bạn»; in the payload it reads «Mình», because there the reader is
+ * the model. Two audiences, two words, one source of truth for the role.
+ */
+export function nhanVai(l: LuotBoiCanh): string {
+  if (l.vai === "toi") return "Bạn";
+  if (l.vai === "ai") return "Rủ Đi AI";
+  return l.biDanh ?? "Một người trong nhóm";
 }
