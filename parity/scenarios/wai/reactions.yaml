@@ -1,0 +1,226 @@
+# WAI · reactions: thêm và bỏ một cảm xúc trên tin của nhóm.
+#
+# Sáu loại hợp lệ (heart, haha, like, wow, sad, fire). Một người chỉ có một
+# cảm xúc mỗi loại trên mỗi tin, nên chạm lại cùng loại là cùng trái tim chứ
+# không phải trái tim thứ hai. Câu trả lời là toàn bộ danh sách cảm xúc của
+# tin, đã biết người đọc là ai.
+#
+# Hai người thả cùng một loại ở hai bước liên tiếp nên thứ tự trong danh sách
+# không rơi vào id ngẫu nhiên.
+id: wai/reactions
+routes: ['POST /contexts/{context_id}/messages/{message_id}/reactions', 'DELETE /contexts/{context_id}/messages/{message_id}/reactions/{kind}']
+auth_mode: dev
+personas:
+  owner: {}
+  member: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở phòng cảm xúc (dữ liệu mẫu)"}'
+  - id: register_member
+    as: member
+    request:
+      method: PUT
+      path: '/people/{{persona.member}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên thả tim (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài thả tim (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Phòng cảm xúc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_member
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.member}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: member_accepts
+    as: member
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: owner_sends_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin để thả cảm xúc"}'
+    bind:
+      msg: {from: body, pointer: /id, class: uuid}
+  - id: owner_sends_doomed_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin sẽ bị xoá"}'
+    bind:
+      msg_doomed: {from: body, pointer: /id, class: uuid}
+
+  # Ai không được thả
+  - id: anonymous_reacts
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: stranger_reacts
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  # Thân không hợp lệ
+  - id: owner_reacts_unknown_kind
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"trai-tim"}'
+  - id: owner_reacts_missing_kind
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: owner_reacts_unknown_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+
+  # Đường hạnh phúc
+  - id: owner_reacts_heart
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: owner_reacts_heart_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: member_reacts_heart
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: member_reacts_fire
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"fire"}'
+  - id: owner_lists_after_reactions
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: member_lists_after_reactions
+    as: member
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  # Bỏ cảm xúc
+  - id: stranger_unreacts
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions/heart'
+  - id: owner_unreacts_kind_never_given
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions/wow'
+  - id: owner_unreacts_unknown_kind
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions/trai-tim'
+  - id: owner_unreacts_heart
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions/heart'
+  - id: owner_unreacts_heart_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}/reactions/heart'
+  - id: owner_unreacts_unknown_message
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/reactions/heart'
+
+  # Tin đã xoá không nhận cảm xúc mới
+  - id: owner_deletes_doomed
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_doomed}}'
+  - id: member_reacts_deleted_message
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg_doomed}}/reactions'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"heart"}'
+  - id: owner_lists_final
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
