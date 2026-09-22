@@ -419,6 +419,39 @@ class Contract:
     spelling: dict[str, str] = field(default_factory=dict)
 
 
+#: Go handlers that register chat routes the Python API does not declare.
+#: These are served by `services/core` in front of the proxy (ADR-0031), so a
+#: client calling them is right and the OpenAPI document is simply not the whole
+#: server any more.
+GO_CHAT_HANDLERS = (
+    "services/core/internal/chatassist/handler.go",
+    "services/core/internal/chatlegacychange/handler.go",
+)
+
+#: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
+GO_ROUTE = re.compile(
+    r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"'
+)
+
+
+def read_go_routes() -> dict[str, set[str]]:
+    """Routes the Go core serves itself, read out of the handlers that register them.
+
+    Parsed rather than listed by hand on purpose: a hand-written allowlist would
+    keep a client call green after the Go route behind it was deleted, which is
+    the exact failure this whole check exists to catch. Delete the handler line
+    and the client call goes red again, as it should.
+    """
+    found: dict[str, set[str]] = {}
+    for relative in GO_CHAT_HANDLERS:
+        source = REPO_ROOT / relative
+        if not source.exists():
+            continue
+        for method, raw in GO_ROUTE.findall(source.read_text(encoding="utf-8")):
+            found.setdefault(normalise(raw), set()).add(method.upper())
+    return found
+
+
 def read_contract(spec: dict) -> Contract:
     contract = Contract()
     for raw_path, operations in spec.get("paths", {}).items():
@@ -428,6 +461,9 @@ def read_contract(spec: dict) -> Contract:
             if method.lower() not in ("get", "post", "put", "patch", "delete"):
                 continue
             contract.routes.setdefault(key, set()).add(method.upper())
+    for key, methods in read_go_routes().items():
+        contract.spelling.setdefault(key, key)
+        contract.routes.setdefault(key, set()).update(methods)
     return contract
 
 
