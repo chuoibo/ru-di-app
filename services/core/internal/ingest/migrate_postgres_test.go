@@ -256,3 +256,56 @@ func TestSeedProvincesIsIdempotent(t *testing.T) {
 		t.Errorf("code 79 is %q, expected Ho Chi Minh City", name)
 	}
 }
+
+// TestProvinceDestinationsDoNotDisturbTheCuratedOnes. The catalogue already
+// holds fifteen destinations somebody wrote descriptions for, and one of them
+// is Ho Chi Minh City. A province row that claimed the same id would replace
+// it, so province ids are prefixed rather than slugged from the name.
+func TestProvinceDestinationsDoNotDisturbTheCuratedOnes(t *testing.T) {
+	pool := testdb.Pool(t)
+	ctx := context.Background()
+	if err := Migrate(ctx, pool); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+	tx := testdb.Tx(t)
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO destinations (id, name, province, lat, lng,
+		  bbox_south, bbox_west, bbox_north, bbox_east, blurb, sort_order)
+		VALUES ('d-tphcm', 'TP. Hồ Chí Minh', 'TP. Hồ Chí Minh',
+		  10.7769, 106.7009, 10.72, 106.65, 10.83, 106.75,
+		  'Một câu ai đó viết tay', 20)
+		ON CONFLICT (id) DO NOTHING`); err != nil {
+		t.Fatal(err)
+	}
+	for _, box := range ProvinceBoxes {
+		if id := ProvinceDestinationID(box.Code); id == "d-tphcm" {
+			t.Fatalf("province %d claims the curated id %s", box.Code, id)
+		}
+	}
+
+	// Seeding runs on the pool, outside this transaction, so it is done last
+	// and cleaned up by id.
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM destinations WHERE id LIKE 'd-tinh-%'`)
+	})
+	if _, err := SeedProvinceDestinations(ctx, pool); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	if _, err := SeedProvinceDestinations(ctx, pool); err != nil {
+		t.Fatalf("second seed: %v", err)
+	}
+	var rows int
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*) FROM destinations WHERE id LIKE 'd-tinh-%'`).Scan(&rows); err != nil {
+		t.Fatal(err)
+	}
+	if rows != len(ProvinceBoxes) {
+		t.Errorf("%d province destinations, want %d", rows, len(ProvinceBoxes))
+	}
+	// Bac Ninh has no boundary in the extract and is written down as missing
+	// rather than quietly absent: a place there cannot be projected yet, and
+	// the next person needs to know it is the boundary that is missing.
+	if _, noted := ProvincesWithoutBox[24]; !noted {
+		t.Error("a province without a box must say so")
+	}
+}
