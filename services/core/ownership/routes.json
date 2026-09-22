@@ -1476,8 +1476,44 @@
       "evidence": "docs/migration/routes/recap/GET-contexts-context_id-recap.md"
     },
     {
-      "id": "POST /reports",
+      "id": "POST /me/nep/media",
       "order": 111,
+      "kind": "route",
+      "method": "POST",
+      "path": "/me/nep/media",
+      "group": "nep",
+      "class": "core",
+      "owner": "python",
+      "python": "live",
+      "state": "PY"
+    },
+    {
+      "id": "GET /me/nep/media/{job_id}",
+      "order": 112,
+      "kind": "route",
+      "method": "GET",
+      "path": "/me/nep/media/{job_id}",
+      "group": "nep",
+      "class": "core",
+      "owner": "python",
+      "python": "live",
+      "state": "PY"
+    },
+    {
+      "id": "GET /me/nep/media/{job_id}/file",
+      "order": 113,
+      "kind": "route",
+      "method": "GET",
+      "path": "/me/nep/media/{job_id}/file",
+      "group": "nep",
+      "class": "core",
+      "owner": "python",
+      "python": "live",
+      "state": "PY"
+    },
+    {
+      "id": "POST /reports",
+      "order": 114,
       "kind": "route",
       "method": "POST",
       "path": "/reports",
@@ -1490,7 +1526,7 @@
     },
     {
       "id": "POST /receipts/scan",
-      "order": 112,
+      "order": 115,
       "kind": "route",
       "method": "POST",
       "path": "/receipts/scan",
@@ -1506,7 +1542,7 @@
     },
     {
       "id": "POST /screenshots/scan",
-      "order": 113,
+      "order": 116,
       "kind": "route",
       "method": "POST",
       "path": "/screenshots/scan",
@@ -1522,7 +1558,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/suggestion",
-      "order": 114,
+      "order": 117,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/suggestion",
@@ -1538,7 +1574,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/contextual-suggestion",
-      "order": 115,
+      "order": 118,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/contextual-suggestion",
@@ -1554,7 +1590,7 @@
     },
     {
       "id": "GET /areas",
-      "order": 116,
+      "order": 119,
       "kind": "route",
       "method": "GET",
       "path": "/areas",
@@ -1567,7 +1603,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/map",
-      "order": 117,
+      "order": 120,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/map",
@@ -1580,7 +1616,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/heatmap",
-      "order": 118,
+      "order": 121,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/heatmap",
@@ -1593,7 +1629,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/meet",
-      "order": 119,
+      "order": 122,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/meet",
@@ -1606,7 +1642,7 @@
     },
     {
       "id": "POST /stories",
-      "order": 120,
+      "order": 123,
       "kind": "route",
       "method": "POST",
       "path": "/stories",
@@ -1619,7 +1655,7 @@
     },
     {
       "id": "GET /stories",
-      "order": 121,
+      "order": 124,
       "kind": "route",
       "method": "GET",
       "path": "/stories",
@@ -1632,7 +1668,7 @@
     },
     {
       "id": "POST /stories/{story_id}/seen",
-      "order": 122,
+      "order": 125,
       "kind": "route",
       "method": "POST",
       "path": "/stories/{story_id}/seen",
@@ -1645,7 +1681,7 @@
     },
     {
       "id": "DELETE /stories/{story_id}",
-      "order": 123,
+      "order": 126,
       "kind": "route",
       "method": "DELETE",
       "path": "/stories/{story_id}",
@@ -1658,7 +1694,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/votes",
-      "order": 124,
+      "order": 127,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/votes",
@@ -1671,7 +1707,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/votes",
-      "order": 125,
+      "order": 128,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/votes",
@@ -1684,7 +1720,7 @@
     },
     {
       "id": "GET /votes/{vote_id}",
-      "order": 126,
+      "order": 129,
       "kind": "route",
       "method": "GET",
       "path": "/votes/{vote_id}",
@@ -1697,7 +1733,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/ballots",
-      "order": 127,
+      "order": 130,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/ballots",
@@ -1710,7 +1746,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/close",
-      "order": 128,
+      "order": 131,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/close",
@@ -1723,7 +1759,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums",
-      "order": 129,
+      "order": 132,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums",
@@ -1736,7 +1772,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}",
-      "order": 130,
+      "order": 133,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}",
@@ -1749,7 +1785,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}/reel",
-      "order": 131,
+      "order": 134,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}/reel",
@@ -1765,7 +1801,7 @@
     },
     {
       "id": "GET /interests",
-      "order": 132,
+      "order": 135,
       "kind": "route",
       "method": "GET",
       "path": "/interests",
@@ -1778,7 +1814,7 @@
     },
     {
       "id": "PUT /people/me/interests",
-      "order": 133,
+      "order": 136,
       "kind": "route",
       "method": "PUT",
       "path": "/people/me/interests",
@@ -1791,7 +1827,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/preference-profile",
-      "order": 134,
+      "order": 137,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/preference-profile",
@@ -1804,7 +1840,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/photos/{photo_id}/face-boxes",
-      "order": 135,
+      "order": 138,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/photos/{photo_id}/face-boxes",
@@ -1820,7 +1856,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/notebook",
-      "order": 136,
+      "order": 139,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/notebook",
@@ -1833,7 +1869,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals",
-      "order": 137,
+      "order": 140,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals",
@@ -1846,7 +1882,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
-      "order": 138,
+      "order": 141,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
@@ -1859,7 +1895,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/consents/{purpose}",
-      "order": 139,
+      "order": 142,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/consents/{purpose}",
@@ -1872,7 +1908,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 140,
+      "order": 143,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1885,7 +1921,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 141,
+      "order": 144,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1898,7 +1934,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close/preview",
-      "order": 142,
+      "order": 145,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close/preview",
@@ -1911,7 +1947,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close",
-      "order": 143,
+      "order": 146,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close",
@@ -1924,7 +1960,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/papers",
-      "order": 144,
+      "order": 147,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/papers",
@@ -1937,7 +1973,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/papers/draft",
-      "order": 145,
+      "order": 148,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/papers/draft",
@@ -1950,7 +1986,7 @@
     },
     {
       "id": "GET /papers/{paper_id}",
-      "order": 146,
+      "order": 149,
       "kind": "route",
       "method": "GET",
       "path": "/papers/{paper_id}",
@@ -1963,7 +1999,7 @@
     },
     {
       "id": "PATCH /papers/{paper_id}/draft",
-      "order": 147,
+      "order": 150,
       "kind": "route",
       "method": "PATCH",
       "path": "/papers/{paper_id}/draft",
@@ -1976,7 +2012,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/send",
-      "order": 148,
+      "order": 151,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/send",
@@ -1989,7 +2025,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/viewed",
-      "order": 149,
+      "order": 152,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/viewed",
@@ -2002,7 +2038,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/responses",
-      "order": 150,
+      "order": 153,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/responses",
@@ -2015,7 +2051,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/withdraw",
-      "order": 151,
+      "order": 154,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/withdraw",
@@ -2028,7 +2064,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/skip",
-      "order": 152,
+      "order": 155,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/skip",
@@ -2041,7 +2077,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/done",
-      "order": 153,
+      "order": 156,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/done",
@@ -2054,7 +2090,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/keeps",
-      "order": 154,
+      "order": 157,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/keeps",
@@ -2067,7 +2103,7 @@
     },
     {
       "id": "GET /healthz",
-      "order": 155,
+      "order": 158,
       "kind": "route",
       "method": "GET",
       "path": "/healthz",

@@ -45,6 +45,7 @@ from app.api.routes import (
     identity,
     memories,
     messages,
+    nep,
     obligations,
     outings,
     pair_notebooks,
@@ -229,6 +230,7 @@ def create_app(
     application.include_router(places.router)
     application.include_router(finance.router)
     application.include_router(recap.router)
+    application.include_router(nep.router)
     application.include_router(reports.router)
     application.include_router(receipts.router)
     application.include_router(screenshots.router)
