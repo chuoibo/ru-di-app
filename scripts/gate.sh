@@ -102,7 +102,7 @@ stage_help() {
     go-postgres) echo "Go core tests on a disposable PostgreSQL migrated by Alembic; a skip or a missing sentinel is a failure (ADR-0029)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
     chat-e2e)  echo "chat qua HTTP và WebSocket thật vào cửa trước Go, trên stack nó tự dựng (test.yml: chat-e2e)" ;;
-    crypto)    echo "crate MLS dựng được, clippy sạch, và 21 canary vẫn cắn (test.yml: crypto)" ;;
+    crypto)    echo "crate MLS dựng được, clippy sạch, 21 canary vẫn cắn, và cầu C ABI xuất đủ ký hiệu (test.yml: crypto)" ;;
   esac
 }
 
@@ -719,7 +719,42 @@ do_crypto() {
   passed="$(grep -oE '^test result: ok\. [0-9]+ passed' "$log" | awk '{s+=$4} END {print s+0}')"
   echo "canary MLS: $passed ca"
   [ "$passed" -ge 20 ] || { echo "chỉ $passed canary chạy; crate này có 21 — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
-  ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log"
+  ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log" || return 1
+
+  # The C ABI lives in its own crate so the audited core keeps
+  # `#![forbid(unsafe_code)]`. It is the only `unsafe` in this repository, so it
+  # gets clippy at deny level, and it is built for the Android target the app
+  # will dlopen it from -- building only for the host would prove nothing about
+  # the thing that actually has to load.
+  [ -d packages/chat-crypto-ffi ] || return 0
+  cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check || return 1
+  cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings || return 1
+  cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release || return 1
+  # `rustup target add` cho std của target và KHÔNG cho gì khác: linker và
+  # sysroot đến từ NDK. Thiếu chúng thì link hỏng ở `-llog`, `-lunwind`.
+  # `packages/chat-crypto/scripts/check_android.sh` đã ghi đúng ba biến này.
+  local ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
+  if rustup target list --installed 2>/dev/null | grep -q x86_64-linux-android \
+     && [ -n "$ndk" ] && [ -d "$ndk" ]; then
+    local bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+    CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
+    CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
+    AR_x86_64_linux_android="$bin/llvm-ar" \
+      cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release --target x86_64-linux-android || return 1
+  else
+    echo "thiếu target x86_64-linux-android hoặc ANDROID_NDK_ROOT; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
+  fi
+  # A cdylib that exports nothing is a file, not a bridge.
+  local so; so="$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
+  [ -n "$so" ] || { echo "không sinh ra thư viện dùng chung nào" >&2; return 1; }
+  local sym missing=0
+  for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
+             rudi_chat_crypto_string_free rudi_chat_crypto_identity \
+             rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
+             rudi_chat_crypto_receive; do
+    nm -D --defined-only "$so" | grep -q " $sym\$" || { echo "$sym không được xuất" >&2; missing=1; }
+  done
+  [ "$missing" -eq 0 ]
 }
 
 do_chat-e2e() {

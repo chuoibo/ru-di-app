@@ -500,6 +500,42 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="de3cabd55ad98e02",
         why="",
     ),
+    "test.yml::crypto::ffi": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="73401e8e7198f08c",
+        why="",
+    ),
+    "test.yml::crypto::cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="14890b5d4120d614",
+        why="",
+    ),
+    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="01c9bd354cac9ab0",
+        why="",
+    ),
+    "test.yml::crypto::cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="ab4c03cd34b7d32b",
+        why="",
+    ),
+    'test.yml::crypto::ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"': Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="3ba0e459ca00d91e",
+        why="",
+    ),
+    "test.yml::crypto::so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="f05c6c09ea3c028e",
+        why="",
+    ),
     "test.yml::crypto::set -o pipefail": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
