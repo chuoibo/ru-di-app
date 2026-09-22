@@ -1930,6 +1930,17 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
   fi
+  # Nếp vẽ đè lên mọi route và dock của nó kéo được, nên vùng chạm của nó rơi
+  # được lên bất kỳ nút nào của bất kỳ màn nào. Bảng `--otp` 22-09 đã dính:
+  # dock nuốt cú bấm «Đồng ý» ở flow 25, lời mời không được nhận, và chín flow
+  # sau đỏ vì một lý do chẳng liên quan gì tới thứ chúng đo.
+  #
+  # Tắt Nếp cho bảng để hai mươi lăm flow kia tất định trở lại. ĐỔI LẠI: bảng
+  # này không còn phủ Nếp chút nào, và Nếp vẫn cần flow riêng của nó — ghi ở
+  # `apps/mobile/src/rudi/nep/qa-nep.ts`, chưa làm trong thay đổi này.
+  if [ "$OTP" = 1 ] || [ "$LIVE" = 1 ]; then
+    export EXPO_PUBLIC_QA_TAT_NEP=1
+  fi
   if [ -n "$API_PORT" ]; then
     export EXPO_PUBLIC_API_URL="http://localhost:$API_PORT"
   fi
