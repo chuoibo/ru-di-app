@@ -371,3 +371,32 @@ func TestAClaimedPrecisionIsLoweredNotRefused(t *testing.T) {
 		})
 	}
 }
+
+// TestARegionalSpecialityNeverGetsAPin. The feed's `mon_an` rows describe a
+// dish a region is known for, without naming anywhere that serves it: four of
+// the five carry no address at all, none has a confirmed one, and the two that
+// resolved to `street` include one that landed on an insurance office.
+//
+// They are kept, because six posts stand behind one of them and that is real.
+// They are never drawn, because a restaurant marker in the middle of a city
+// for a dish is the same lie in the same voice as a rating nobody gave.
+func TestARegionalSpecialityNeverGetsAPin(t *testing.T) {
+	rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+		r["loai"] = "mon_an"
+		r["geo"] = map[string]any{
+			"lat": 10.7584, "lng": 106.6601, "precision": "street"}
+	}))
+	if reject != nil {
+		t.Fatalf("a regional speciality is real information: %s", reject)
+	}
+	if !rec.HasPoint() {
+		t.Error("the row does carry coordinates")
+	}
+	if rec.MappablePoint() {
+		t.Error("a dish was given a pin")
+	}
+	if rec.CategoryFor() != "quan-an-local" {
+		t.Errorf("listed under %s; somebody looking for it looks under food",
+			rec.CategoryFor())
+	}
+}

@@ -36,17 +36,29 @@ const (
 
 // The feed's seven kinds.
 //
-// `mon_an` translates as "dish", and it was dropped here on the strength of
-// that word: a dish has no address and cannot be visited. Then the five rows
-// carrying it were read. Every one is an eatery -- "Cháo Lòng Cái Tắc" with
-// six posts behind it, "Hủ tiếu lắc Chợ nổi Cái Răng" on the floating market
-// -- each with an address, coordinates, and the feed's own free-text label
-// reading `quan_an`.
+// `mon_an` took three readings to get right, and the record is kept here
+// because each wrong turn was a different mistake.
 //
-// They are named after the dish they sell, which is how Vietnamese street
-// eateries are named. The label was wrong upstream; dropping them was wrong
-// here, and it was wrong for the worse reason: reasoning from what a field is
-// called instead of from what is in it.
+// First these rows were dropped, on the strength of the word alone: a dish has
+// no address and cannot be visited. That was reasoning from a field's name.
+//
+// Then they were mapped to `quan-an-local`, because each one appeared to have
+// an address and the feed's own free-text label read `quan_an`. That was
+// reasoning from a field's name too -- the one called `dia_chi_day_du`, "full
+// address", which for these rows holds an area: "Phường Tân Mai, Biên Hòa".
+// The actual `dia_chi` is null on four of the five, `dia_chi_xac_nhan` is
+// false on all five, three resolve no finer than a province centroid, and
+// "Gỏi cá Tân Mai" geocodes to an insurance office.
+//
+// The label is right. The feed's clustering step writes its reason down, and
+// it says so: a regional speciality that the posts describe without naming any
+// one place that serves it.
+//
+// So the rows are kept -- six posts stand behind "Cháo Lòng Cái Tắc" and that
+// is real knowledge -- and they are never given a pin. Listing them as
+// somewhere to walk into would put a restaurant marker in the middle of Cần
+// Thơ for a dish, which is the same lie in the same voice as a rating nobody
+// gave.
 var feedKinds = map[string]bool{
 	"quan_an": true, "cafe": true, "khu_am_thuc": true, "diem_tham_quan": true,
 	"trai_nghiem": true, "giai_tri": true, "mon_an": true,
@@ -450,6 +462,12 @@ var unmappable = map[string]bool{"province_centroid": true, "suy_luan": true, "n
 // Deliberately narrower than HasPoint: having a latitude and being somewhere
 // findable are different claims, and the map may only make the second one.
 func (r *Record) MappablePoint() bool {
+	// A regional speciality has coordinates for the region, not for a door.
+	// Two of these resolved to `street` and one of those landed on an
+	// insurance office, so the precision alone does not keep them off the map.
+	if r.Loai == "mon_an" {
+		return false
+	}
 	return r.HasPoint() && !unmappable[r.Geo.Precision]
 }
 
@@ -475,8 +493,8 @@ func (r *Record) CategoryFor() string {
 	case "cafe":
 		return "cafe"
 	case "quan_an", "khu_am_thuc", "mon_an":
-		// `mon_an` lands here because every row that carries it is an eatery
-		// named after its dish, not a dish. See the note on feedKinds.
+		// `mon_an` is listed among the eateries because that is where somebody
+		// looking for it would look, and never mapped. See feedKinds.
 		return "quan-an-local"
 	case "giai_tri":
 		if r.isNightlife() {
