@@ -14,7 +14,7 @@ use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
 
-use rudi_chat_crypto::{Client, Envelope, Operation};
+use rudi_chat_crypto::{Client, Envelope, IdentityCard, Operation};
 
 /// Opaque handle. The app holds the pointer and gives it back; it never reads
 /// through it, and the layout is deliberately not part of the ABI.
@@ -35,6 +35,26 @@ fn reply(value: serde_json::Value) -> *mut c_char {
 
 fn fail(kind: &str) -> *mut c_char {
     reply(serde_json::json!({ "error": kind }))
+}
+
+/// A stable code per error variant.
+///
+/// `Error` derives its `Display` from `thiserror`, so `to_string()` gives prose
+/// meant for a person: "message authentication failed". Sending that across the
+/// ABI would make the app branch on a sentence, and any wording change would
+/// silently break the branch. These codes are the contract instead.
+fn code(error: &rudi_chat_crypto::Error) -> &'static str {
+    use rudi_chat_crypto::Error;
+    match error {
+        Error::Invalid => "invalid",
+        Error::Authentication => "authentication",
+        Error::Roster => "roster",
+        Error::State => "state",
+        Error::Conflict => "conflict",
+        Error::Capacity => "capacity",
+        Error::Mls => "mls",
+        Error::Checkpoint => "checkpoint",
+    }
 }
 
 /// Every entry point funnels through here: a panic must not unwind across the
@@ -137,7 +157,7 @@ pub unsafe extern "C" fn rudi_chat_crypto_create_group(
         };
         match client.create_group(conversation) {
             Ok(()) => reply(serde_json::json!({ "ok": true })),
-            Err(e) => fail(&e.to_string()),
+            Err(e) => fail(code(&e)),
         }
     })
 }
@@ -168,19 +188,33 @@ pub unsafe extern "C" fn rudi_chat_crypto_encrypt(
                 Ok(value) => reply(value),
                 Err(_) => fail("encoding"),
             },
-            Err(e) => fail(&e.to_string()),
+            Err(e) => fail(code(&e)),
         }
     })
 }
 
 /// Decrypt one envelope.
 ///
+/// `verified_roster_json` is a JSON array of `IdentityCard`, or null. It is not
+/// a convenience argument and it is deliberately not defaulted here: the core
+/// crate treats a supplied roster as an **authorization assertion by the
+/// caller's trusted enrollment layer**, because an MLS BasicCredential does not
+/// by itself prove which account a device belongs to.
+///
+/// Passing null is safe and means "I have verified nothing": an application
+/// message still decrypts, and a commit — the message that would change who is
+/// in the group — is refused with `{"error":"roster"}` rather than merged. Hiding
+/// this argument inside the bridge would turn that refusal into a silent
+/// accept, which is the one thing this whole crate exists to prevent.
+///
 /// # Safety
-/// `handle` must be live and `envelope_json` a valid C string.
+/// `handle` must be live, `envelope_json` a valid C string, and
+/// `verified_roster_json` either null or a valid C string.
 #[no_mangle]
 pub unsafe extern "C" fn rudi_chat_crypto_receive(
     handle: *mut ClientHandle,
     envelope_json: *const c_char,
+    verified_roster_json: *const c_char,
 ) -> *mut c_char {
     guard(|| {
         let (Some(client), Some(raw)) = (client(handle), borrow(envelope_json)) else {
@@ -189,9 +223,16 @@ pub unsafe extern "C" fn rudi_chat_crypto_receive(
         let Ok(envelope) = serde_json::from_str::<Envelope>(raw) else {
             return fail("invalid_envelope");
         };
-        match client.receive(&envelope) {
+        let roster = match borrow(verified_roster_json) {
+            None => None,
+            Some(text) => match serde_json::from_str::<Vec<IdentityCard>>(text) {
+                Ok(cards) => Some(cards),
+                Err(_) => return fail("invalid_roster"),
+            },
+        };
+        match client.receive(&envelope, roster.as_deref()) {
             Ok(received) => reply(describe(received)),
-            Err(e) => fail(&e.to_string()),
+            Err(e) => fail(code(&e)),
         }
     })
 }
