@@ -72,7 +72,7 @@ REPO_ROOT="$PWD"
 
 # Every stage, in run order: cheapest and most likely to fail first, so a
 # broken tree is reported in seconds rather than after a docker build.
-STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres e2e chat-e2e)
+STAGES=(guard guard-range ruff contract client-routes server-routes screens cors ownership python-touch go-vet go-test api migration pinned-import demo-watch hero-walk shared mobile mobile-native docker parity postgres go-postgres e2e chat-e2e crypto)
 
 stage_help() {
   case "$1" in
@@ -102,6 +102,7 @@ stage_help() {
     go-postgres) echo "Go core tests on a disposable PostgreSQL migrated by Alembic; a skip or a missing sentinel is a failure (ADR-0029)" ;;
     e2e)       echo "the vertical slice through src/api.ts against an API and database it provisions itself (test.yml: e2e)" ;;
     chat-e2e)  echo "chat qua HTTP và WebSocket thật vào cửa trước Go, trên stack nó tự dựng (test.yml: chat-e2e)" ;;
+    crypto)    echo "crate MLS dựng được, clippy sạch, và 21 canary vẫn cắn (test.yml: crypto)" ;;
   esac
 }
 
@@ -706,6 +707,21 @@ do_postgres() {
   scripts/postgres_tier.sh -q
 }
 
+do_crypto() {
+  # The OpenMLS spike had no gate at all: it could stop compiling, or lose every
+  # canary, and nothing in the repository would notice. Counting the canaries is
+  # the point -- `cargo test` passes just as happily with none left.
+  local log; log="$(mktemp)"
+  cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check || return 1
+  cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings || return 1
+  cargo test --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee "$log" || return 1
+  local passed
+  passed="$(grep -oE '^test result: ok\. [0-9]+ passed' "$log" | awk '{s+=$4} END {print s+0}')"
+  echo "canary MLS: $passed ca"
+  [ "$passed" -ge 20 ] || { echo "chỉ $passed canary chạy; crate này có 21 — bộ test teo lại không phải bộ test xanh" >&2; return 1; }
+  ! grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' "$log"
+}
+
 do_chat-e2e() {
   # The only stage that drives the chat surface the way a phone does: real
   # HTTP, a real WebSocket, a real session, against the Go front door. The
@@ -946,6 +962,12 @@ check_prereq() {
         echo "docker daemon không chạy và chưa đặt MOBILE_TEST_DATABASE_URL"; return 1; }
       docker image inspect "${MOBILE_TEST_POSTGRES_IMAGE:-postgres:16-alpine}" >/dev/null 2>&1 || {
         echo "chưa có ảnh postgres tại máy (docker pull postgres:16-alpine)"; return 1; } ;;
+    crypto)
+      # An absence skips, a defect fails: the crate missing is an absence, the
+      # crate present without its canaries is not.
+      [ -d packages/chat-crypto ] || { echo "packages/chat-crypto không có trên nhánh này"; return 1; }
+      [ -f packages/chat-crypto/tests/mls_canaries.rs ] || return 2
+      have cargo || { echo "không có cargo"; return 1; } ;;
     chat-e2e)
       # Same rule as e2e: an absence skips, a defect fails. Deleting the cases
       # must never be the thing that turns this stage green.
@@ -989,6 +1011,7 @@ broken_why() {
     mobile-native) echo "apps/mobile có mặt nhưng thiếu .maestro -- xoá bảng flow không được biến chặng này thành xanh" ;;
     e2e) echo "apps/mobile có mặt nhưng thiếu tests/e2e/vertical-slice.test.mjs -- từ chối bỏ qua" ;;
     chat-e2e) echo "có services/core/e2e/chat nhưng thiếu scripts/chat_e2e_go.sh -- từ chối bỏ qua" ;;
+    crypto) echo "có packages/chat-crypto nhưng thiếu tests/mls_canaries.rs -- từ chối bỏ qua" ;;
     ownership|go-vet|go-test) echo "services/core có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;
     python-touch) echo "services/core có mặt nhưng thiếu ownership/routes.json -- từ chối bỏ qua" ;;
     parity) echo "parity/ có mặt nhưng thiếu go.mod -- từ chối bỏ qua" ;;

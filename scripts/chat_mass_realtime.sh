@@ -2,7 +2,10 @@
 # Drive actual chat-lab processes against a private disposable PostgreSQL.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-for tool in docker go rg; do command -v "$tool" >/dev/null || { echo "Thiếu $tool" >&2; exit 2; }; done
+# Only the tools this script actually calls. `rg` was listed here and never
+# used, which blocked every non-interactive runner: it is a shell function on
+# this machine, not an installed binary.
+for tool in docker go; do command -v "$tool" >/dev/null || { echo "Thiếu $tool" >&2; exit 2; }; done
 scratch="$(mktemp -d /tmp/rudi-chat-mass.XXXXXXXX)"
 {
   git rev-parse HEAD

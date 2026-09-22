@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-for tool in docker go rg; do
+for tool in docker go; do
   command -v "$tool" >/dev/null || { echo "Thiếu $tool" >&2; exit 2; }
 done
 scratch="$(mktemp -d /tmp/rudi-chat-pg.XXXXXXXX)"
@@ -53,12 +53,12 @@ for sentinel in TestSendConcurrentReplayConflictAndCatchup \
   TestPostgresTwoReplicasThreePeopleAndRestart \
   TestPostgresSessionRevocationClosesQuietSocket \
   TestPostgresSeparateProcessesCommittedRetryAndReconnect; do
-  if ! rg -q "^--- PASS: $sentinel " "$scratch/tests.log"; then
+  if ! grep -qE "^--- PASS: $sentinel " "$scratch/tests.log"; then
     echo "Thiếu bằng chứng PASS: $sentinel" >&2
     exit 1
   fi
 done
-if rg -q '^\s*--- SKIP:' "$scratch/tests.log"; then
+if grep -qE '^[[:space:]]*--- SKIP:' "$scratch/tests.log"; then
   echo 'Có test bị bỏ qua; cổng không đạt' >&2
   exit 1
 fi
