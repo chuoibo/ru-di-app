@@ -1,5 +1,10 @@
-# Backlog Giai đoạn 0 — phân công
+# Backlog Giai đoạn 0 — phân công *(lịch sử)*
 
+> **Bảng `DRI` / `Reviewer` dưới đây hết hiệu lực từ 2026-09-22 (`ADR-0032`).** Không còn hai lane,
+> không còn review chéo: mọi hàng đều thuộc về một vai fullstack, và cổng là phép đo máy
+> (`ADR-0030` §3). Giữ nguyên bảng để đọc được *ai từng làm gì* và *cái gì từng chặn cái gì* —
+> hai cột đó vẫn đúng về mặt lịch sử.
+>
 > Chốt 2026-08-26 sau 4 vòng debate. Đổi phân công cần ADR.
 > Căn cứ: `docs/superpowers/specs/2026-08-25-group-hangout-ai-design.md` mục 13, 15, 16.
 

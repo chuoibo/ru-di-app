@@ -52,7 +52,7 @@ Pytest files and functions use `test_*.py` and `test_*`. Add tests beside the af
 
 ## Commit & Pull Request Guidelines
 
-History uses scoped summaries such as `api: ...`, `domain: ...`, `test: ...`, `fix(ci): ...`, and `docs: ...`; keep subjects short, imperative, and focused. PR descriptions must explain what changed and why, list validation performed, link relevant issues or ADRs, and include screenshots for UI changes. Do not self-review. Merge only after an independent reviewer records `APPROVE`; return `REQUEST_CHANGES` work to the author.
+History uses scoped summaries such as `api: ...`, `domain: ...`, `test: ...`, `fix(ci): ...`, and `docs: ...`; keep subjects short, imperative, and focused. Since ADR-0032 (2026-09-22) there is no mandatory pull request: commit straight to `main`, and open a PR only when you actually want someone to read the change first. The leader reads `main`, so the **commit message** carries the whole explanation — what changed, why, and the numbers from the gates you ran. Include screenshots for UI changes. `APPROVE` / `REQUEST_CHANGES` / `REJECT` remain the only three verdict values, but apply only when a real reviewer is involved.
 
 ## Security & Data Handling
 
@@ -60,7 +60,7 @@ Run `scripts/setup-hooks.sh` to enable the staged repo guard. Never place real p
 
 ## Shared Team Invariants (all agents read this file)
 
-This section is the minimum every agent — Claude, Codex, agy — must know before
+This section is the minimum every agent that touches this repo must know before
 touching anything. It is duplicated from `CLAUDE.md` on purpose: a clean checkout
 must carry the rules, not depend on one harness loading one file.
 
@@ -76,10 +76,17 @@ Also: editing an expense creates a **new version**, never an overwrite.
 `receiver_confirmed` is **not** bank evidence. `completed` is produced only by a
 domain transition — there is no "mark as done" button.
 
-**Ownership boundaries** (settled 2026-08-27). Claude owns `app/web/` and
-`apps/mobile/`. Codex owns `db/`, `api/`, `payments/`, `domain/` and backend
-tests. agy owns no product source — it files findings, not diffs. On the guest
-page, routing and data access belong to Codex; a template never queries.
+**One fullstack role** (ADR-0032, 2026-09-22). There is no per-person ownership
+table any more. Whoever picks up a task owns the whole vertical slice of it: Go
+backend, SQL and migrations, Python AI, TypeScript frontend, mobile native, and
+tests at every layer. One task belongs to one person start to finish; split a
+large one into **runnable vertical slices**, never by layer. agy is still QA and
+still owns no product source — it files findings, not diffs.
+
+**The boundaries that remain are LAYER boundaries, not people boundaries.** On
+the guest page, routing and data access live outside the template and a template
+never queries. Every module has exactly one writer. These are enforced by tests,
+not by an assignment table.
 
 **Layer boundary, enforced by AST parsing, not by promise.** `app/domain/` must
 not import `app.db`, `app.api`, `app.payments`, `sqlalchemy`, `fastapi`,
@@ -101,19 +108,29 @@ delete. `protocol_version` is an immutable snapshot.
 leader decision. Read the "proves / does not prove" table in `CLAUDE.md` before
 trusting any green mark.
 
-## Team roles (ADR-0010, 2026-08-27)
-
-Four members: leader (human) plus three agents.
+## Team roles (ADR-0032, 2026-09-22 — supersedes the two-lane split of ADR-0010)
 
 | Role | Who | Owns |
 |---|---|---|
 | Leader | product owner | Gate decisions |
-| Engineer | Claude | `app/web/`, `apps/mobile/` |
-| Engineer | Codex | `db/`, `api/`, `payments/`, `domain/`, backend tests |
-| QA | agy (Gemini) | Product testing — visual, exploratory, API, regression. **Files findings, not diffs. Owns no product source file.** |
+| Engineer | one fullstack role | The entire product: Go backend, SQL and migrations, Python AI, TypeScript frontend, `apps/mobile/`, the guest page, tests at every layer |
+| QA | agy (Gemini) | Product testing — visual, exploratory, API, regression, running **in parallel** with engineering work. **Files findings, not diffs. Owns no product source file.** |
 
-All three agents run **two streams at once**: their own planned task, and
-reviewing/checking someone else's work. Never sequential, never queued.
+The Codex lane closed on 2026-09-16 (ADR-0030); ADR-0032 extended that to the
+whole repo. There is no cross-review left, so **the second pair of eyes is gone**
+— machine gates replace it, and for UI, opening the screenshot and looking at it
+replaces it. Both are weaker than an independent reviewer. That is written down
+so nobody reads this as a quality upgrade.
+
+**What a change must carry before it lands on `main`** (ADR-0030 §3, now applied
+to frontend and mobile too):
+
+- the gate re-run in a **clean tree at the exact SHA** — never the agent's tree;
+- the canary red where predicted, identity green, same harness SHA;
+- **at least two mutants you thought of yourself**, checked for equivalence
+  first, each one red at the step you predicted;
+- for UI: **open the screenshot and look at it**. A green table is not visual evidence;
+- the numbers written into the commit message, not left in a log.
 
 **agy boundaries** (full text in ADR-0010 §6):
 

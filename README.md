@@ -524,12 +524,18 @@ Nguồn sự thật: [`docs/team/charter.md`](docs/team/charter.md) ·
 [`docs/architecture/00-layout-va-so-huu.md`](docs/architecture/00-layout-va-so-huu.md).
 Đọc trước khi đổi hành vi.
 
-- **Ranh giới sở hữu.** Claude giữ `app/web/` và `apps/mobile/`. Codex giữ `db/`,
-  `api/`, `payments/`, `domain/` và test backend. Ở trang khách: route và truy cập
-  dữ liệu là của Codex, template không bao giờ tự query.
-- **Nhánh**: `<owner>/p0-w<N>-<slug>`, slug phải là Work ID cụ thể.
-- **PR** (ADR-0007): review sống trên GitHub PR. Verdict đúng ba giá trị:
-  `APPROVE` / `REQUEST_CHANGES` / `REJECT`. **Không tự review PR của chính mình.**
+- **Một vai fullstack** (ADR-0032, 2026-09-22). Không còn bảng sở hữu theo người.
+  Ai nhận việc thì làm trọn lát cắt: Go backend · SQL và migration · Python AI ·
+  TypeScript frontend · mobile native · test mọi tầng.
+- **Ranh giới còn lại là ranh giới TẦNG**: `domain/` không import `db`/`api`; ở
+  trang khách template không bao giờ tự query; mỗi module có đúng một writer.
+  Cưỡng chế bằng test, không bằng phân công.
+- **Nhánh**: slug phải là Work ID cụ thể; tiền tố chủ sở hữu không còn bắt buộc.
+- **Không còn PR bắt buộc** (ADR-0032 thay ADR-0007): commit thẳng lên `main`, mở
+  PR chỉ khi muốn người khác đọc trước. Leader chỉ đọc `main` nên **commit message**
+  phải nói *cái gì đổi và vì sao*, kèm số đo của cổng đã chạy.
+- **Cổng thay chỗ chữ ký người** (ADR-0030 §3): cây sạch đúng SHA · canary đỏ ·
+  hai đột biến tự nghĩ · với UI thì mở ảnh chụp ra nhìn · số đo vào commit message.
 - **Blocker chỉ hợp lệ** khi thuộc 5 loại: vi phạm spec/cổng · sai tiền ·
   quyền riêng tư/bảo mật/consent · hỏng tính hợp lệ thí nghiệm · không tái lập được.
   Đặt tên và "tôi thích cách kia hơn" là suggestion, không phải blocker.

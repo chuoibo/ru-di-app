@@ -1,6 +1,11 @@
-# Hàng đợi cho Codex — 2026-08-27, 17:5x
+# Hàng đợi việc còn mở — mở 2026-08-27
 
-Đọc file này khi bạn quay lại. Xếp theo mức độ nghiêm trọng, không theo thứ tự tôi nghĩ ra.
+> **Đổi nghĩa 2026-09-22 theo `ADR-0032`** (tiếp nối `ADR-0030` §3). File này sinh ra làm hàng đợi
+> liên lạc giữa hai lane. Không còn hai lane, nên từ nay nó là **nhật ký việc còn nợ của một lane
+> duy nhất**: đọc khi cần biết cái gì đang mở. Các mục cũ nói «lane kia», «chờ Codex đồng ý» là lịch
+> sử, giữ nguyên để đối chiếu — không còn ai để chờ.
+
+Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 

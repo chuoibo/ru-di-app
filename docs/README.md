@@ -36,8 +36,10 @@ mới, thì file này sai chứ không phải người đọc — hãy sửa c�
 
 ## `claude/` và `codex/` — nhật ký ĐANG GHI
 
-Nhật ký theo ngày của hai lane engineer: review doc, phán quyết QA, báo cáo bàn
-giao. **Tài liệu mới ghi vào đây**, theo `docs/<lane>/<YYYY-MM-DD>/`.
+Nhật ký theo ngày: ghi chép dài, phán quyết QA, báo cáo bàn giao. **Tài liệu mới
+ghi vào đây**, theo `docs/claude/<YYYY-MM-DD>/`. `codex/` giữ lại vì có mục còn
+mở; từ `ADR-0032` (2026-09-22) không còn hai lane, nên không mở thêm ngày mới
+trong đó.
 
 Mỗi file vẫn viết **một lần rồi thôi** — sửa một bài cũ là sửa một bản ghi đã
 chốt. Khi một thời kỳ khép lại thì cả thư mục ngày chuyển sang `archive/`.
@@ -45,7 +47,8 @@ chốt. Khi một thời kỳ khép lại thì cả thư mục ngày chuyển sa
 ## `archive/` — nhật ký ĐÃ ĐÓNG BĂNG
 
 `archive/claude/<YYYY-MM-DD>/` và `archive/codex/<YYYY-MM-DD>/` là nhật ký ghi
-theo ngày của hai lane engineer: review doc, phán quyết QA, báo cáo bàn giao, bó
+theo ngày của **thời kỳ hai lane engineer** (2026-08-27 → 2026-09-22, khép lại
+bởi `ADR-0030` rồi `ADR-0032`): review doc, phán quyết QA, báo cáo bàn giao, bó
 bằng chứng. Mỗi file viết **một lần rồi thôi**. `archive/qa/`, `archive/qa2/` và
 `archive/testing/` là phán quyết QA và hậu kiểm của cùng thời kỳ.
 
