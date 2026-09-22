@@ -205,6 +205,12 @@ const CHO_PHEP = new Map([
     // Which group the tab shell is showing. An argument to navigation.
     "nhom?.id ?? nhomId",
   ]],
+  ["rudi/nep/NepBang.tsx", [
+    // Ai đang hỏi Nếp. Đi thẳng vào `useNepAnh` làm khoá xác thực của request
+    // và không bao giờ tới mắt người đọc: bảng Nếp không in id của ai cả.
+    // `null` là câu trả lời thật cho bản trải nghiệm, nơi chưa có ai đăng nhập.
+    'nguon.kieu === "live" ? nguon.actorId : null',
+  ]],
   ["participants.ts", [
     // Clearing the advancer when that person is removed. Stored, never drawn.
     "roster.advancerId === id ? null : roster.advancerId",

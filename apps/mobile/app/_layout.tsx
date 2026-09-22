@@ -10,6 +10,8 @@ import { datLoiMoiDen } from "../src/rudi/loi-moi-den";
 import { useRudiFonts } from "../src/rudi/fonts";
 import { stackAnimation } from "../src/rudi/motion";
 import { RudiSessionProvider, useRudiSession } from "../src/rudi/session";
+import { NepNoi } from "../src/rudi/nep/NepNoi";
+import { NepProvider } from "../src/rudi/nep/NepProvider";
 import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
@@ -161,6 +163,10 @@ function RootInner() {
           swapped for the ADR-0027 routes in Phase 4. Inside the session so it can
           later read the bearer; outside the Stack so every route sees one notebook. */}
       <SoDoiProvider>
+      {/* Nếp (ADR-0032): one assistant for every route. Inside the session so it
+          can read `phien`/`cheDo`, outside the Stack so a push does not remount it
+          and lose where the person parked it. */}
+      <NepProvider>
         <StatusBar style={dark ? "light" : "dark"} />
         <LegacyFragmentAdapter />
         <Stack
@@ -196,6 +202,9 @@ function RootInner() {
             options={{ animation: chuyen("fade"), presentation: "fullScreenModal" }}
           />
         </Stack>
+        {/* Last child: the dock paints over whatever route is open. */}
+        <NepNoi />
+      </NepProvider>
       </SoDoiProvider>
       </RudiSessionProvider>
     </SafeAreaProvider>

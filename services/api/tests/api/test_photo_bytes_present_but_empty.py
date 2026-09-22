@@ -194,8 +194,43 @@ def _byte_serving_route_functions() -> dict[str, int]:
                     continue
                 if _is_idempotency_replay(inner):
                     continue
+                if _never_opens_photo_storage(node):
+                    continue
                 found[node.name] = inner.lineno
     return found
+
+
+def _never_opens_photo_storage(
+    func: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> bool:
+    """A route that hands back bytes it never read off this API's disk.
+
+    Same reasoning as `_is_idempotency_replay` right below, applied to the
+    other shape of it. The failure this file exists for is a LEDGER/DISK DRIFT:
+    a row whose `byte_size` says one thing and whose file under `PhotoStorage`
+    says another. A route that never touches `PhotoStorage` cannot drift from
+    a ledger it never reads.
+
+    `file_media` in `routes/nep.py` is the case that prompted this: it forwards
+    an upstream response from the media proxy, and the bytes never exist on
+    this API's disk at all. Giving it a row in `ROUTES` would mean inventing a
+    `not_found_code` for a storage read it does not perform, and the row would
+    go green while measuring nothing.
+
+    Matched by SHAPE, not by route name -- the same rule the helper below
+    follows, and for the same reason: naming one route lets the next arrive
+    silently, which is exactly what this file exists to prevent. A route that
+    does open storage keeps at least one of these names in its body; all four
+    covered routes carry two each.
+    """
+
+    ten: set[str] = set()
+    for node in ast.walk(func):
+        if isinstance(node, ast.Name):
+            ten.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            ten.add(node.attr)
+    return not (ten & {"PhotoStorage", "get_photo_storage", "photo_storage", "storage"})
 
 
 def _is_idempotency_replay(call: ast.Call) -> bool:

@@ -1,0 +1,22 @@
+import { NepBang } from "./NepBang";
+import { NepDock } from "./NepDock";
+import { useNep } from "./NepProvider";
+
+/**
+ * The two halves of Nếp mounted together, once, above the navigator.
+ *
+ * Kept separate from `NepProvider` so the provider can sit high in the tree
+ * (inside the session, outside `<Stack>`) while the drawing sits last and
+ * paints over whatever route is open. `chuyen` already knows that one tap from
+ * the edge only brings Nếp out and the next one opens the panel, so neither
+ * child decides that for itself.
+ */
+export function NepNoi() {
+  const { dock, gui } = useNep();
+  return (
+    <>
+      <NepDock />
+      <NepBang onClose={() => gui({ kieu: "dong" })} open={dock.trangThai === "mo"} />
+    </>
+  );
+}
