@@ -793,7 +793,7 @@ jobs:
       # A cdylib that exports nothing is a file, not a bridge.
       - if: steps.ffi.outputs.found == 'true'
         run: |
-          so=$(find target -name 'librudi_chat_crypto_ffi.so' | head -1)
+          so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)
           test -n "$so" || { echo "::error::no shared object was produced"; exit 1; }
           missing=0
           for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \

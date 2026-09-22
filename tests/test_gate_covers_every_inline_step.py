@@ -530,10 +530,10 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="3ba0e459ca00d91e",
         why="",
     ),
-    "test.yml::crypto::so=$(find target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
+    "test.yml::crypto::so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
-        body_sha="d776d77a6a53b8a4",
+        body_sha="f05c6c09ea3c028e",
         why="",
     ),
     "test.yml::crypto::set -o pipefail": Covered(

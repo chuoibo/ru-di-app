@@ -745,7 +745,7 @@ do_crypto() {
     echo "thiếu target x86_64-linux-android hoặc ANDROID_NDK_ROOT; bỏ qua bước dựng cho Android (CI vẫn dựng)" >&2
   fi
   # A cdylib that exports nothing is a file, not a bridge.
-  local so; so="$(find target -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
+  local so; so="$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' 2>/dev/null | head -1)"
   [ -n "$so" ] || { echo "không sinh ra thư viện dùng chung nào" >&2; return 1; }
   local sym missing=0
   for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
