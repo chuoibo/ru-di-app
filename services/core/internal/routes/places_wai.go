@@ -344,7 +344,7 @@ func getPlaceWAI() Route {
 		}
 		card.Set("description", textOrNull(place.Description))
 		card.Set("activities", jsonListOrEmpty(place.Activities))
-		card.Set("reviews", jsonListOrEmpty(place.Reviews))
+		card.Set("reviews", wireReviews(place.Reviews))
 		count := int64(0)
 		if v, ok := cards[0].Get("photo_count"); ok {
 			if n, ok := v.(pyjson.Int); ok {
@@ -665,13 +665,13 @@ func placeRow(row repo.Place) *pyjson.OrderedMap {
 	out.Set("travel_minutes", intOrNull(row.TravelMinutes))
 	out.Set("photo_count", pyjson.NewInt(row.PhotoCount))
 	out.Set("traits", stringList(row.Traits))
-	out.Set("group_fit", cardValue(row.GroupFit))
+	out.Set("group_fit", wireGroupFit(row.GroupFit))
 	out.Set("activities", jsonListOrEmpty(row.Activities))
 	out.Set("flag", textOrNull(row.Flag))
 	out.Set("lat", pyjson.Float(row.Lat))
 	out.Set("lng", pyjson.Float(row.Lng))
 	out.Set("description", textOrNull(row.Description))
-	out.Set("reviews", jsonListOrEmpty(row.Reviews))
+	out.Set("reviews", wireReviews(row.Reviews))
 	out.Set("source", pyjson.String(row.Source))
 	out.Set("license", textOrNull(row.License))
 	return out

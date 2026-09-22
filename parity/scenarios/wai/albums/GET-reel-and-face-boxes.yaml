@@ -1,0 +1,280 @@
+# WAI · the last two AI reads: the reel off an album, and faces in one photo.
+#
+#   GET  /contexts/{id}/albums/{outing_id}/reel
+#   POST /contexts/{id}/photos/{photo_id}/face-boxes
+#
+# Both charge a rate limit BEFORE doing the expensive thing, and both say so in
+# the same words: «a 429 raised afterwards has already spent the CPU it was
+# refusing». A port that charged afterwards answers the same 429 with the same
+# body, having already paid -- no happy path and no single refusal can see it.
+#
+# `face-boxes` has NO REQUEST BODY, deliberately: there is no field through
+# which a caller could name a person, supply a candidate list or pick a
+# detector. The only inputs are two path ids and the actor header. The steps
+# below try to send a body anyway, because "the route ignores what it is given"
+# is a property, and a port that started reading a body would pass every test
+# that never sent one.
+#
+# The reel inherits the album's check order, so the anti-oracle pair from
+# GET-context-albums applies here too and is repeated: a stranger asking with a
+# real outing id and with an invented one must get the same answer, or the pair
+# becomes a directory of which trips exist.
+#
+# WHAT THIS FILE PROVES: the refusals, the gate, and the wire on the branch
+# where no model answered -- the parity stacks hold no Gemini key, so the reel
+# takes its unavailable path deterministically on both sides.
+#
+# WHAT IT CANNOT PROVE: a real reel picked by a real model, and real faces found
+# by a real cascade. The first needs a key and a non-deterministic reply. The
+# second needs a photograph with a face in it, and the harness generates images
+# from a seed -- they are coloured noise, so the detector finds nothing on both
+# sides and that agreement is about the empty answer, not about detection. The
+# route cards say both.
+id: wai/albums/get-reel-and-face-boxes
+routes:
+  - 'GET /contexts/{context_id}/albums/{outing_id}/reel'
+  - 'POST /contexts/{context_id}/photos/{photo_id}/face-boxes'
+auth_mode: dev
+personas:
+  owner: {}
+  mate: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Chủ nhóm (dữ liệu mẫu)"}'
+
+  - id: register_mate
+    as: mate
+    request:
+      method: PUT
+      path: '/people/{{persona.mate}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Bạn cùng nhóm (dữ liệu mẫu)"}'
+
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài (dữ liệu mẫu)"}'
+
+  # --- refusals before anything exists ------------------------------------
+  - id: reel_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums/abcdefab-cdef-4abc-8def-abcdefabcdef/reel'
+
+  - id: faces_anonymous
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/photos/abcdefab-cdef-4abc-8def-abcdefabcdef/face-boxes'
+
+  - id: reel_non_uuid_outing
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/albums/khong-phai-uuid/reel'
+
+  - id: faces_non_uuid_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/abcdefab-cdef-4abc-8def-abcdefabcdef/photos/khong-phai-uuid/face-boxes'
+
+  # --- a group with a trip and a photograph -------------------------------
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm có cuốn phim (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_group
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Nhóm của người ngoài (dữ liệu mẫu)"}'
+    bind:
+      ctx_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_invites_mate
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}"}'
+    bind:
+      m_mate: {from: body, pointer: /id, class: uuid}
+
+  - id: mate_accepts
+    as: mate
+    request:
+      method: POST
+      path: '/memberships/{{m_mate}}/accept'
+
+  - id: owner_creates_the_trip
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Tháng ba lên rừng (dữ liệu mẫu)","starts_on":"2026-03-14","ends_on":"2026-03-16","headcount":4,"budget_per_person_vnd":450000}'
+    bind:
+      trip: {from: body, pointer: /id, class: uuid}
+
+  - id: stranger_creates_their_own_trip
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx_other}}/outings'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"title":"Chuyến nhóm khác (dữ liệu mẫu)","starts_on":"2026-04-02","ends_on":"2026-04-04","headcount":3,"budget_per_person_vnd":300000}'
+    bind:
+      trip_other: {from: body, pointer: /id, class: uuid}
+
+  - id: owner_uploads_a_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos'
+      headers:
+        content-type: 'multipart/form-data; boundary=parityboundary'
+      body_parts:
+        - {name: file, filename: anh.jpg, content_type: image/jpeg, image: {format: jpeg, width: 64, height: 48, seed: 111}}
+    bind:
+      photo: {from: body, pointer: /id, class: uuid}
+
+  # --- the reel -----------------------------------------------------------
+  - id: reel_on_an_empty_album
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
+
+  - id: reel_read_by_the_mate
+    as: mate
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
+
+  # The same reader twice: whatever the refusal is, it must not change between
+  # two reads. A limiter charged in the wrong order would differ on the second.
+  - id: reel_read_again
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
+
+  # THE ORACLE PAIR, inherited from the album's check order.
+  - id: oracle_stranger_reel_with_a_real_outing
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
+
+  - id: oracle_stranger_reel_with_an_invented_outing
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/abcdefab-cdef-4abc-8def-abcdefabcdef/reel'
+
+  - id: member_passes_another_groups_outing_to_the_reel
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip_other}}/reel'
+
+  # --- faces --------------------------------------------------------------
+  - id: faces_on_the_groups_own_photo
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+
+  - id: faces_read_by_the_mate
+    as: mate
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+
+  - id: stranger_cannot_detect_faces
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+
+  - id: faces_on_a_photo_that_does_not_exist
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/abcdefab-cdef-4abc-8def-abcdefabcdef/face-boxes'
+
+  # The route takes NO body. Sending one must change nothing: a port that
+  # started reading one would answer differently here and nowhere else.
+  - id: faces_with_a_json_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.mate}}","detector":"khac"}'
+
+  - id: faces_with_a_broken_json_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id": '
+
+  - id: faces_with_a_query_string
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes?detector=khac&limit=1'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: reel_post_not_allowed
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: faces_get_not_allowed
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/photos/{{photo}}/face-boxes'
+
+  - id: reel_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/albums/{{trip}}/reel/'
