@@ -1,9 +1,17 @@
 # Mục lục `docs/`
 
-Cây này có hai nửa và **nhầm lẫn giữa chúng là lỗi hay gặp nhất**: nửa trên là
-tài liệu **đang sống** — đọc nó trước khi đổi hành vi; nửa dưới (`archive/`) là
-**nhật ký đóng băng**, ghi lại một lần chạy hoặc một phán quyết đã xong, giữ để
-truy nguyên chứ không phải để làm theo.
+Cây này có **ba trạng thái**, và nhầm lẫn giữa chúng là lỗi hay gặp nhất:
+
+1. **Tài liệu đang sống** (`decisions/`, `architecture/`, `migration/`, `team/`…)
+   — đọc trước khi đổi hành vi, và sửa khi sự thật đổi.
+2. **Nhật ký đang ghi** (`claude/`, `codex/`) — tài liệu mới vào đây, mỗi file
+   viết một lần rồi thôi.
+3. **Nhật ký đã đóng băng** (`archive/`) — giữ để truy nguyên, **không thêm file
+   mới vào đây**.
+
+Ranh giới 2↔3 dễ trượt nhất: một chỗ lưu trữ mà vẫn được ghi thêm thì thôi là
+chỗ lưu trữ. Nếu `CLAUDE.md` và file này có lúc nói khác nhau về chỗ ghi nhật ký
+mới, thì file này sai chứ không phải người đọc — hãy sửa cả hai cùng lúc.
 
 ## Đang sống — đọc trước khi đổi hành vi
 
@@ -26,10 +34,21 @@ truy nguyên chứ không phải để làm theo.
 |---|---|
 | `protocol/v1/` | Giao thức nghiên cứu v1. `protocol_version` là **ảnh chụp bất biến**: cần đổi thì ADR cho phép tạo `v2`, không sửa `v1`. Cùng luật với `phase0/` ở gốc repo. |
 
-## `archive/` — nhật ký đóng băng
+## `claude/` và `codex/` — nhật ký ĐANG GHI
+
+Nhật ký theo ngày: ghi chép dài, phán quyết QA, báo cáo bàn giao. **Tài liệu mới
+ghi vào đây**, theo `docs/claude/<YYYY-MM-DD>/`. `codex/` giữ lại vì có mục còn
+mở; từ `ADR-0032` (2026-09-22) không còn hai lane, nên không mở thêm ngày mới
+trong đó.
+
+Mỗi file vẫn viết **một lần rồi thôi** — sửa một bài cũ là sửa một bản ghi đã
+chốt. Khi một thời kỳ khép lại thì cả thư mục ngày chuyển sang `archive/`.
+
+## `archive/` — nhật ký ĐÃ ĐÓNG BĂNG
 
 `archive/claude/<YYYY-MM-DD>/` và `archive/codex/<YYYY-MM-DD>/` là nhật ký ghi
-theo ngày của hai lane engineer: review doc, phán quyết QA, báo cáo bàn giao, bó
+theo ngày của **thời kỳ hai lane engineer** (2026-08-27 → 2026-09-22, khép lại
+bởi `ADR-0030` rồi `ADR-0032`): review doc, phán quyết QA, báo cáo bàn giao, bó
 bằng chứng. Mỗi file viết **một lần rồi thôi**. `archive/qa/`, `archive/qa2/` và
 `archive/testing/` là phán quyết QA và hậu kiểm của cùng thời kỳ.
 

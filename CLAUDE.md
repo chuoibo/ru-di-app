@@ -114,12 +114,16 @@ SQLite bị từ chối có chủ ý: schema production dựa vào JSONB, partia
 
 Nguồn sự thật: `docs/team/charter.md`, `docs/decisions/ADR-*.md`, `docs/architecture/00-layout-va-so-huu.md`. Đọc trước khi đổi hành vi.
 
-- **Ranh giới sở hữu** (chốt 2026-08-27): Claude giữ `app/web/` (template, câu chữ, style) và `apps/mobile/`. Codex giữ `db/`, `api/`, `domain/` và test backend. Ở trang khách: route và truy cập dữ liệu là của Codex, template không bao giờ tự query.
-- **Nhánh**: `<owner>/p0-w<N>-<slug>`, slug phải là Work ID cụ thể — `backend`/`research` là sai.
-- **PR (ADR-0007)**: review sống trên GitHub PR, không phải file. Verdict đúng ba giá trị: `APPROVE` / `REQUEST_CHANGES` / `REJECT`. `APPROVE` → merge ngay, ai bấm nút không quan trọng. `REQUEST_CHANGES` → trả về cho tác giả, không thương lượng qua comment rồi merge lén. **Không tự review PR của chính mình.** Leader chỉ đọc `main`, nên mô tả PR phải nói *cái gì đổi và vì sao*, đừng bắt người đọc suy từ diff.
+- **Một vai fullstack** (ADR-0032, chốt 2026-09-22): không còn bảng sở hữu theo người, không còn lane Claude/Codex. Ai nhận việc thì làm trọn lát cắt: Go backend · SQL và migration · Python AI · TypeScript frontend · mobile native · test mọi tầng · tự chạy cổng. Một việc là của một người từ đầu đến cuối; việc lớn thì cắt theo **lát cắt dọc chạy được**, không cắt theo tầng.
+- **Ranh giới còn lại là ranh giới TẦNG, không phải ranh giới người**: `domain/` không import `db`/`api`; ở trang khách route và truy cập dữ liệu nằm ngoài template, template không bao giờ tự query; mỗi module có đúng một writer. Cưỡng chế bằng test, không bằng phân công.
+- **Không còn PR bắt buộc** (ADR-0032 thay luật merge của ADR-0007): commit thẳng lên `main`. Mở PR chỉ khi thật sự muốn người khác đọc trước. Verdict vẫn đúng ba giá trị `APPROVE` / `REQUEST_CHANGES` / `REJECT`, nhưng chỉ dùng khi có reviewer thật.
+- **Leader chỉ đọc `main`, và giờ chỉ còn commit message để đọc.** Commit message phải nói *cái gì đổi và vì sao*, kèm số đo của cổng đã chạy. Đừng bắt người đọc suy từ diff.
+- **Cổng bằng chứng thay chỗ chữ ký người** (ADR-0030 §3, nay áp cho cả frontend/mobile): chạy lại trong **cây sạch đúng SHA** · canary phải đỏ ở chỗ đã dự đoán, identity xanh · **ít nhất hai đột biến tự nghĩ**, kiểm tương đương trước, mỗi cái đỏ ở đúng bước đã dự đoán · với UI thì **mở ảnh chụp ra nhìn**, bảng xanh không phải bằng chứng hình ảnh · **số đo viết thẳng vào commit message**. Digest của agent không phải bằng chứng.
+- **Nhánh**: slug phải là Work ID cụ thể — `backend`/`research` là sai. Tiền tố chủ sở hữu không còn bắt buộc.
 - **Blocker chỉ hợp lệ** khi thuộc 5 loại: vi phạm spec/cổng · sai tiền · quyền riêng tư/bảo mật/consent · hỏng tính hợp lệ thí nghiệm · không tái lập được. Đặt tên, phong cách, "tôi thích cách kia hơn" là suggestion. Blocker phải kèm dẫn chứng · hậu quả · tiêu chí gỡ chặn.
-- **Review doc dài** (khi cần lập luận hơn một comment) commit lên chính nhánh đang được review, đặt ở `docs/archive/claude/<YYYY-MM-DD>/` hoặc `docs/archive/codex/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict · blocker còn mở · bằng chứng đã xem.
-- `docs/team/hang-doi.md` là hàng đợi việc đang mở giữa hai engineer — đọc khi cần biết cái gì còn nợ.
+- **Ghi chép dài** (khi cần lập luận hơn một dòng commit) đặt ở `docs/claude/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict nếu có · cái gì còn mở · bằng chứng đã xem. **Nhật ký mới luôn ghi vào đó, KHÔNG ghi vào `docs/archive/`** — archive là lịch sử đã đóng băng, thêm file vào đó thì nó thôi là archive. Nhật ký cũ của hai lane ở `docs/archive/claude/` và `docs/archive/codex/`: đọc được, không sửa, không di chuyển (repo guard ghim sha256 theo đúng đường dẫn đó).
+- `docs/team/hang-doi.md` là hàng đợi việc còn nợ — đọc khi cần biết cái gì đang mở.
+- **agy vẫn là QA/QC chạy song song** (ADR-0010): nộp phát hiện, không nộp diff, không sở hữu file mã nguồn sản phẩm nào, không ký verdict, không sinh đáp án tiền. Người giao việc chạy lại cổng trong cây sạch.
 
 ## Bẫy đã biết
 

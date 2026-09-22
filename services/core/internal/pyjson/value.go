@@ -34,6 +34,24 @@ type Value interface {
 // Null is Python None.
 type Null struct{}
 
+// IsNull reports whether v is absent or Python None.
+//
+// Read this together with the note on Value above: a nil Value encodes as Null,
+// but nothing that comes back from `Loads` is ever a nil Value. A decoded null
+// is `Null{}`, a struct, so the interface holding it is NOT nil and `v == nil`
+// is false. Guarding a decoded document with `== nil` therefore lets every JSON
+// null through.
+//
+// That is not a rare shape: with no model key configured the brain answers
+// `{"card": null}`, so the guard meant to stop there is the one that does not.
+func IsNull(v Value) bool {
+	if v == nil {
+		return true
+	}
+	_, null := v.(Null)
+	return null
+}
+
 // Bool is Python bool.
 type Bool bool
 

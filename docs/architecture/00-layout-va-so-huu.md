@@ -1,6 +1,9 @@
-# Layout monorepo và quyền sở hữu
+# Layout monorepo và ranh giới tầng
 
-> Chốt 2026-08-27 theo `ADR-0006`. Mục đích: hai engineer làm song song mà **không chạm cùng file**.
+> Bản 2026-08-27 (`ADR-0006`) chia cây theo **hai người**, để hai engineer làm song song mà không chạm
+> cùng file. **Viết lại 2026-09-22 theo `ADR-0032`**: chỉ còn một vai fullstack, nên cây này chia theo
+> **tầng**, không chia theo người. Ranh giới còn lại là ranh giới kỹ thuật — và chúng được cưỡng chế
+> bằng test, không bằng bảng phân công.
 
 ## Cây thư mục
 
@@ -14,26 +17,25 @@ services/core/                      Go 1.23 — cửa trước + lõi đang chuy
 parity/                             module Go riêng, hộp đen: so Python trước / Go sau
 services/api/                       FastAPI, Python 3.12+ (đang chuyển; cuối cùng chỉ còn brain AI)
   app/
-    domain/                         ← CLAUDE. Thuần, không I/O, không framework
+    domain/                         Thuần, không I/O, không framework
       allocator.py                  hiện thực ADR-0004
       contract.py                   hằng số + exception (từ phase0)
       ledger.py                     bất biến sổ, số dư tính lại được
       collection.py                 máy trạng thái đợt thu (spec mục 8)
-    db/                             ← CODEX
+    db/
       models.py · migrations/ · repository.py
-    api/                            ← CODEX
+    api/
       routes/ · deps.py · main.py
   tests/
-    domain/                         ← CLAUDE
-    db/ · api/                      ← CODEX
+    domain/ · db/ · api/            test đi cùng tầng nó kiểm
 
-services/api/app/web/                ← CLAUDE. Trang cho khách, render từ server
+services/api/app/web/                Trang cho khách, render từ server
   templates/ · static/               Khách KHÔNG cài gì — nên đây là web, không phải RN
 
-apps/mobile/                        ← CLAUDE. Expo + TypeScript, làm SAU trang khách
+apps/mobile/                        Expo + TypeScript
 phase0/                             ĐÓNG BĂNG TẠI CHỖ. Không sửa, không xoá
 docs/protocol/v1/                   ĐÓNG BĂNG TẠI CHỖ
-scripts/repo_guard.py               ← CODEX (đã xong)
+scripts/repo_guard.py               repo guard — fail closed
 ```
 
 ## Nguyên tắc phân tầng — không thương lượng
@@ -44,27 +46,38 @@ Lý do là bất biến 3 của spec mục 6.8: *số dư luôn tính lại đư
 
 Kiểm bằng test import, không bằng lời hứa.
 
-## Ranh giới giữa hai người
+## Ranh giới giữa các tầng
 
-> **Đổi ngày 2026-08-27 theo quyết định của leader.** Trước đó không ai sở hữu UI — đó là lỗ thật trong bảng phân công. Leader chốt: Claude làm UI, Codex giữ backend.
+> **Đổi ngày 2026-09-22 theo `ADR-0032`.** Bảng sở hữu theo người hết hiệu lực. Một vai fullstack
+> nhận trọn lát cắt: Go backend · SQL và migration · Python AI · TypeScript frontend · `apps/mobile/` ·
+> trang khách · test mọi tầng.
+
+Không có bảng «ai được viết file nào» nữa. Ba ranh giới dưới đây là **ranh giới kỹ thuật**, và chúng
+không mềm đi chút nào khi chỉ còn một người — ngược lại, chúng là thứ duy nhất còn lại:
+
+| Ranh giới | Cưỡng chế bằng |
+|---|---|
+| `domain/` không import `db` / `api` / framework | `tests/test_import_boundary.py` — parse AST, không phải lời hứa |
+| Trang khách: template không bao giờ tự query; route và truy cập dữ liệu nằm ngoài template | test rò rỉ ở `app/web/guest_view.py`, không nằm trong file Jinja |
+| Mỗi module có **đúng một writer** | `ADR-0031` — trong lúc chuyển Go, hai writer trên cùng một module là lỗi |
+
+Domain là **thuần**: nhận `dict`, trả `dict`, ném `AllocationError`. Adapter sống ở `db/` và `api/`;
+**không sửa domain để cho vừa framework**.
+
+### Bảng sở hữu cũ, giữ để đối chiếu
+
+Hai lane chạy từ 2026-08-27 tới 2026-09-16 (`ADR-0030` đóng lane backend) và tới 2026-09-22
+(`ADR-0032` đóng phần còn lại):
 
 | | Claude | Codex |
 |---|---|---|
-| Sở hữu | `web/` (trang khách), `apps/mobile/` | `db/`, `api/`, `payments/`, `domain/`, `tests/` phía backend |
+| ~~Sở hữu~~ | ~~`web/` (trang khách), `apps/mobile/`~~ | ~~`db/`, `api/`, `payments/`, `domain/`, test backend~~ |
+| ~~Đụng vào của nhau~~ | ~~qua PR + review, không sửa thẳng~~ | ~~như trên~~ |
+| ~~Nhánh~~ | ~~`claude/*`~~ | ~~`codex/*`~~ |
 
-**`domain/` bàn giao sang Codex.** Đã xong: `allocator` · `ledger` · `collection` · `permissions` · `visibility`. Còn thiếu: vòng đời `OffsetProposal` (mục 8.8) và quy tắc phạm vi capability của `GuestLink` (mục 8.2, bất biến 6). Hai cái đó giờ thuộc Codex.
-
-**Ranh giới ở trang khách:** Claude sở hữu **template, câu chữ, style**. Codex sở hữu **route và truy cập dữ liệu**. Route gọi vào template; template không bao giờ tự query.
-
-### Bảng cũ, giữ để đối chiếu
-
-| | Claude | Codex |
-|---|---|---|
-| ~~Sở hữu~~ | ~~`domain/`, `tests/domain/`~~ | ~~`db/`, `api/`, `payments/`~~ |
-| Đụng vào của nhau | qua PR + review, không sửa thẳng | như trên |
-| Nhánh | `claude/api-domain-*` | `codex/api-infra-*` |
-
-Domain là **thuần**: nhận `dict`, trả `dict`, ném `AllocationError`. Codex viết adapter ở `db/` và `api/`, **không sửa domain để cho vừa framework**.
+Hai mảnh domain từng ghi là «còn thiếu, thuộc Codex» — vòng đời `OffsetProposal` (spec mục 8.8) và
+phạm vi capability của `GuestLink` (mục 8.2, bất biến 6) — nay không thuộc về ai riêng: chúng là việc
+còn nợ, nằm trong `docs/team/hang-doi.md`.
 
 ## Lát cắt dọc đầu tiên
 
