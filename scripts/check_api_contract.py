@@ -459,6 +459,27 @@ def read_contract(spec: dict) -> Contract:
             if method.lower() not in ("get", "post", "put", "patch", "delete"):
                 continue
             contract.routes.setdefault(key, set()).add(method.upper())
+    return contract
+
+
+def live_contract() -> Contract:
+    """The whole server this repository actually serves: OpenAPI plus Go.
+
+    The Python document is no longer the entire server (ADR-0031), so a gate
+    asking "does this route exist" has to ask both writers. Only callers that
+    mean the live repository use this. Fixtures build their contract with
+    `read_contract`, which stays pure: a gate that exercises itself against a
+    synthetic spec must not have the real repository leak into its fixture.
+    """
+    contract = read_contract(load_openapi())
+    # Checked on the Python half alone, and here rather than at the callers.
+    # Go routes are merged in below, so a caller asking "is the contract empty"
+    # after the merge would be answered by the Go handlers and would never
+    # notice an OpenAPI document that failed to build.
+    if not contract.routes:
+        raise RuntimeError(
+            "OpenAPI dựng được nhưng không có route nào -- từ chối coi là đạt"
+        )
     for key, methods in read_go_routes().items():
         contract.spelling.setdefault(key, key)
         contract.routes.setdefault(key, set()).update(methods)
@@ -1142,11 +1163,7 @@ def check() -> tuple[list[Finding], dict]:
     if not API_ROOT.is_dir():
         raise RuntimeError("services/api không có trên nhánh này")
 
-    contract = read_contract(load_openapi())
-    if not contract.routes:
-        raise RuntimeError(
-            "OpenAPI dựng được nhưng không có route nào -- từ chối coi là đạt"
-        )
+    contract = live_contract()
 
     findings: list[Finding] = []
     total_paths = 0
