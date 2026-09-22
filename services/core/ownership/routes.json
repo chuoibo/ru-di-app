@@ -790,13 +790,13 @@
       "path": "/contexts/{context_id}/messages",
       "group": "messages",
       "class": "mixed",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "message_intent_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/messages",
@@ -806,10 +806,10 @@
       "path": "/contexts/{context_id}/messages",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "DELETE /contexts/{context_id}/messages/{message_id}",
@@ -819,10 +819,10 @@
       "path": "/contexts/{context_id}/messages/{message_id}",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /contexts/{context_id}/messages/{message_id}/reactions",
@@ -832,10 +832,10 @@
       "path": "/contexts/{context_id}/messages/{message_id}/reactions",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "DELETE /contexts/{context_id}/messages/{message_id}/reactions/{kind}",
@@ -845,10 +845,10 @@
       "path": "/contexts/{context_id}/messages/{message_id}/reactions/{kind}",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /contexts/{context_id}/messages/{message_id}/expense-draft",
@@ -858,13 +858,13 @@
       "path": "/contexts/{context_id}/messages/{message_id}/expense-draft",
       "group": "messages",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "chat_expense_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /contexts/{context_id}/ai-turn",
@@ -874,13 +874,13 @@
       "path": "/contexts/{context_id}/ai-turn",
       "group": "messages",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "companion_turn_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "PUT /contexts/{context_id}/members/{person_id}/role",
@@ -890,10 +890,10 @@
       "path": "/contexts/{context_id}/members/{person_id}/role",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "PUT /contexts/{context_id}/read-mark",
@@ -903,10 +903,10 @@
       "path": "/contexts/{context_id}/read-mark",
       "group": "messages",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /batches",
@@ -1357,10 +1357,10 @@
       "path": "/destinations",
       "group": "places",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /places",
@@ -1370,13 +1370,13 @@
       "path": "/places",
       "group": "places",
       "class": "mixed",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "reason_writer"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /places/{place_id}/photos",
@@ -1386,10 +1386,10 @@
       "path": "/places/{place_id}/photos",
       "group": "places",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /places/{place_id}/group-photos",
@@ -1399,10 +1399,10 @@
       "path": "/places/{place_id}/group-photos",
       "group": "places",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /places/{place_id}/photos/{photo_id}",
@@ -1412,10 +1412,10 @@
       "path": "/places/{place_id}/photos/{photo_id}",
       "group": "places",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /places/{place_id}",
@@ -1425,13 +1425,13 @@
       "path": "/places/{place_id}",
       "group": "places",
       "class": "mixed",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "reason_writer"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /places/search",
@@ -1441,13 +1441,13 @@
       "path": "/places/search",
       "group": "places",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "search_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /people/{person_id}/finance",
@@ -1532,13 +1532,13 @@
       "path": "/receipts/scan",
       "group": "receipts",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "receipt_scan_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "POST /screenshots/scan",
@@ -1548,13 +1548,13 @@
       "path": "/screenshots/scan",
       "group": "screenshots",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "screenshot_scan_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/suggestion",
@@ -1564,13 +1564,13 @@
       "path": "/contexts/{context_id}/suggestion",
       "group": "suggestions",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "suggestion_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/contextual-suggestion",
@@ -1580,13 +1580,13 @@
       "path": "/contexts/{context_id}/contextual-suggestion",
       "group": "suggestions",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "contextual_suggestion_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /areas",
@@ -1765,10 +1765,10 @@
       "path": "/contexts/{context_id}/albums",
       "group": "albums",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}",
@@ -1778,10 +1778,10 @@
       "path": "/contexts/{context_id}/albums/{outing_id}",
       "group": "albums",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}/reel",
@@ -1791,13 +1791,13 @@
       "path": "/contexts/{context_id}/albums/{outing_id}/reel",
       "group": "albums",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "reel_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /interests",
@@ -1846,13 +1846,13 @@
       "path": "/contexts/{context_id}/photos/{photo_id}/face-boxes",
       "group": "faces",
       "class": "ai",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
       "in_memory": [
         "face_detection_limiter"
       ],
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
       "id": "GET /contexts/{context_id}/notebook",
@@ -2109,10 +2109,10 @@
       "path": "/healthz",
       "group": "main",
       "class": "core",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "PORTED-UNPROVEN",
-      "evidence": "docs/migration/ported-unproven-w7-wai.md"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/live-go-25-route-wai.md"
     }
   ]
 }
