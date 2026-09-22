@@ -1,0 +1,282 @@
+# WAI · messages: gửi, đọc, lật trang, xoá. Nhóm có người tạo, một thành viên
+# đã nhận lời mời, và một người ngoài không ở nhóm nào.
+#
+# Chín hàng `messages` mang nhãn PORTED-UNPROVEN vì chưa có kịch bản nào —
+# `docs/migration/ported-unproven-w7-wai.md`: "trạng thái đo bằng kịch bản chứ
+# không đo bằng mã". Đây là kịch bản cho ba route chính của nhóm đó.
+#
+# Các tin được gửi lần lượt qua HTTP nên `created_at` của chúng khác nhau; thứ
+# tự đọc lại không rơi vào id ngẫu nhiên. Đừng gộp chúng vào một bước đồng thời.
+id: wai/messages-flow
+routes: ['POST /contexts/{context_id}/messages', 'GET /contexts/{context_id}/messages', 'DELETE /contexts/{context_id}/messages/{message_id}']
+auth_mode: dev
+personas:
+  owner: {}
+  member: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở phòng (dữ liệu mẫu)"}'
+  - id: register_member
+    as: member
+    request:
+      method: PUT
+      path: '/people/{{persona.member}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên nhắn tin (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài phòng (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Phòng nhắn tin (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_member
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.member}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: member_accepts
+    as: member
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+
+  # Ai được đọc phòng này
+  - id: anonymous_lists
+    as: anonymous
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: stranger_lists
+    as: stranger
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: owner_lists_empty
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+
+  # Thân yêu cầu không hợp lệ
+  - id: owner_sends_unknown_kind
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"video","body":"Không có kiểu này"}'
+  - id: owner_sends_deleted_kind
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"deleted"}'
+  - id: owner_sends_text_without_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text"}'
+  - id: owner_sends_text_with_image_url
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Vừa chữ vừa ảnh","image_url":"/photos/khong-co.jpg"}'
+  - id: owner_sends_sticker_bad_slug
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"sticker","body":"Nhãn Có Dấu"}'
+  - id: stranger_sends
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Không thuộc phòng này"}'
+  - id: anonymous_sends
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Không có ai cả"}'
+
+  # Đường hạnh phúc
+  - id: owner_sends_first
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"  Tối nay cả nhà rảnh không?  "}'
+    bind:
+      msg_first: {from: body, pointer: /id, class: uuid}
+  - id: member_sends_second
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Mình rảnh sau bảy giờ"}'
+    bind:
+      msg_second: {from: body, pointer: /id, class: uuid}
+  - id: member_replies_to_first
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Trả lời tin đầu","reply_to_id":"{{msg_first}}"}'
+    bind:
+      msg_reply: {from: body, pointer: /id, class: uuid}
+  - id: owner_sends_sticker
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"sticker","body":"di-thoi"}'
+    bind:
+      msg_sticker: {from: body, pointer: /id, class: uuid}
+
+  # Trả lời một tin không thuộc phòng, và trả lời chính mình
+  - id: owner_replies_to_unknown
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Trích tin lạ","reply_to_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+
+  # Đọc và lật trang
+  - id: owner_lists_all
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: member_lists_all
+    as: member
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: owner_lists_first_page
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=2'
+    bind:
+      page_cursor: {from: body, pointer: /next_cursor, class: token}
+  - id: owner_lists_before_cursor
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=2&before={{page_cursor}}'
+  - id: owner_lists_after_cursor
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=2&after={{page_cursor}}'
+  - id: owner_lists_limit_zero
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=0'
+  - id: owner_lists_limit_too_large
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?limit=101'
+  - id: owner_lists_bad_cursor
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages?before=khong-phai-con-tro'
+
+  # Xoá
+  - id: stranger_deletes
+    as: stranger
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}'
+  - id: member_deletes_owner_message
+    as: member
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}'
+  - id: owner_deletes_unknown
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  - id: owner_deletes_own
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}'
+  - id: owner_deletes_own_again
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg_first}}'
+  - id: owner_lists_after_delete
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages'
+  - id: member_replies_to_deleted
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Trích tin đã xoá","reply_to_id":"{{msg_first}}"}'
+  - id: messages_trailing_slash
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/messages/'
