@@ -78,7 +78,7 @@ GATE_BLIND = "cong-mu"
 
 def real_inputs():
     """The same three inputs the gate feeds itself on a normal run."""
-    contract = gate.twin.read_contract(gate.twin.load_openapi())
+    contract = gate.twin.live_contract()
     if not contract.routes:
         raise RuntimeError("OpenAPI không có route nào — từ chối coi là đạt")
     mentions = gate.client_mentions()

@@ -2189,6 +2189,11 @@ for f in "$FLOWS"/*.yaml; do
     30-*) [ "$OTP" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
     38-*)        [ "$OTP" = 1 ] && [ "$ANH" = 1 ] || continue ;;
     40-*)        [ "$OTP" = 1 ] && [ "$AI" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
+    # 48 gõ vào ô soạn tin để tạo bình chọn, nên dưới đối chứng âm của bàn phím
+    # nó chỉ đỏ vì đúng thứ phép đo kia đang đo — cùng lý do với 30 và 40.
+    # Nó chạy sau 30 trong cùng lượt và thừa hưởng nhóm «Hoi QA» của flow đó,
+    # nên không cần bước chuẩn bị riêng.
+    48-*)        [ "$OTP" = 1 ] && [ "$TAT_KAV" = 0 ] || continue ;;
     *)           { [ "$LIVE" = 1 ] || [ "$DANG_NHAP" = 1 ] || [ "$OTP" = 1 ]; } && continue ;;
   esac
   # Flow 34 cần một tấm ảnh CÓ THẬT trong nhóm trước khi mở màn: bộ chọn ảnh của

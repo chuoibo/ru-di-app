@@ -49,7 +49,11 @@ appId: com.lakiet.rudi
     visible: "Ô soạn tin"
     timeout: 60000
 # Sticker từ khay: một tin không bong bóng, hình vẽ bằng vector.
-- tapOn: "Gửi sticker"
+- tapOn: "Thêm vào cuộc trò chuyện"
+- extendedWaitUntil:
+    visible: "Sticker"
+    timeout: 15000
+- tapOn: "Sticker"
 - extendedWaitUntil:
     visible: "Khay sticker"
     timeout: 15000

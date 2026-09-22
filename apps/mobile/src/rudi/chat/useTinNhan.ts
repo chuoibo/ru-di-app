@@ -3,12 +3,12 @@
  *
  * - First page (newest 50) on mount; older pages on demand (`napCuHon`).
  * - Forward poll every 4 s while focused and the app is active, and once
- *   right after a send, using the newest cursor held. The server echoes the
+ *   right after a send, using a separate cursor advanced only by GET pages.
+ *   A send acknowledgement cannot skip concurrent peer messages. The server echoes the
  *   cursor on an empty page (BE6), so a quiet group polls in place instead of
  *   re-reading the top.
- * - Read mark: the newest message id goes to `PUT /read-mark` whenever the
- *   held list changes while focused, so the conversation list's unread counts
- *   fall as the person reads.
+ * - Read marks follow viewport reports, never fetched messages. Writes are
+ *   serialized and acknowledged only after success while active and focused.
  *
  * State is a plain object rather than a reducer: five fields, one owner.
  *
@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../api";
+import type { AnhChupChat } from "./thay-doi";
 import {
   boKhoiHang,
   danhDauLoi,
@@ -33,6 +34,7 @@ import {
 } from "./hang-cho";
 import {
   boPhanUng,
+  apDungAnhChup,
   cursorCuNhat,
   cursorMoiNhat,
   danhDauDaDoc,
@@ -61,8 +63,8 @@ export type TrangThaiChat = {
   loi: string | null;
   /**
    * What is on its way or has failed, newest first. Deliberately NOT part of
-   * `tin`: that list is the server's, and `cursorMoiNhat` polls from its head,
-   * so a row with an invented cursor at the front would poison every poll.
+   * `tin`: that list is confirmed server data; pending rows have no server
+   * cursor and never advance the separate receive boundary.
    */
   hangCho: TinChoGui[];
 };
@@ -76,22 +78,25 @@ const TRANG_DAU: TrangThaiChat = { tin: [], dangNap: true, dangNapCu: false, het
 export function useTinNhan(contextId: string, personId: string) {
   const [trang, setTrang] = useState<TrangThaiChat>(TRANG_DAU);
   const tinRef = useRef<Tin[]>(TRANG_DAU.tin);
+  // A POST acknowledgement is not a contiguous receive cursor: other people
+  // may have committed messages just before it. Advance only from GET pages.
+  const cursorDaNhan = useRef<string | null>(null);
+  const dangNhan = useRef<number | null>(null);
   // Held in a ref as well as in state, for the same reason `tin` is: a
   // re-render between the press and the reply must not be able to lose the
   // key and turn a retry into a second write (`api.ts`, `attemptFor`).
   const hangRef = useRef<TinChoGui[]>([]);
-  // The words of a failed text send, held only for their key. Not in `hangCho`:
-  // the composer gets the words back and the notice says why, so a row would be
-  // the same news twice -- and an invisible one used to eat the empty state.
-  const banNhapRef = useRef<TinChoGui | null>(null);
   const dangFocus = useRef(false);
   const daDanhDau = useRef<string | null>(null);
+  const daThay = useRef<string | null>(null);
+  const dangGhiDoc = useRef<number | null>(null);
   // Which conversation, and which mount, the requests in flight belong to.
   // Read before the first await of every async path below and compared after
   // each one; a mismatch means the reply is for a conversation that has left
   // the screen, and it is dropped in full -- success, failure, and the poll a
   // success would have triggered.
   const theHeRef = useRef(0);
+  const chuSoHuu = useRef({ contextId, personId, active: true });
 
   const dat = useCallback((tin: Tin[], phan: Partial<TrangThaiChat> = {}) => {
     tinRef.current = tin;
@@ -119,40 +124,69 @@ export function useTinNhan(contextId: string, personId: string) {
   // switch loses its retry button, and coming back to A re-reads the first
   // page, where anything that did land is already waiting.
   useEffect(() => {
+    chuSoHuu.current = { contextId, personId, active: true };
     tinRef.current = TRANG_DAU.tin;
+    cursorDaNhan.current = null;
+    dangNhan.current = null;
     hangRef.current = [];
-    banNhapRef.current = null;
+    daThay.current = null;
+    dangGhiDoc.current = null;
     daDanhDau.current = null;
     setTrang(TRANG_DAU);
     return () => {
+      chuSoHuu.current.active = false;
       theHeRef.current += 1;
     };
   }, [contextId, personId]);
 
   const napDau = useCallback(async () => {
     const theHe = theHeRef.current;
+    if (dangNhan.current === theHe) return;
+    dangNhan.current = theHe;
     try {
       const page = await docTrangTin(contextId, personId);
       if (theHe !== theHeRef.current) return;
-      dat(gopTin([], page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null });
+      if (cursorDaNhan.current === null) cursorDaNhan.current = cursorMoiNhat(page.messages);
+      dat(gopTin(tinRef.current, page.messages), { dangNap: false, hetTinCu: !page.has_more, loi: null });
     } catch (error) {
       if (theHe !== theHeRef.current) return;
       setTrang((cu) => ({ ...cu, dangNap: false, loi: loiRaChu(error) }));
+    } finally {
+      if (dangNhan.current === theHe) dangNhan.current = null;
     }
   }, [contextId, personId, dat]);
 
   const napMoi = useCallback(async () => {
     const theHe = theHeRef.current;
-    const after = cursorMoiNhat(tinRef.current);
+    if (dangNhan.current === theHe) return;
+    dangNhan.current = theHe;
     try {
-      const page = after === null
-        ? await docTrangTin(contextId, personId)
-        : await docTrangTin(contextId, personId, { after });
-      if (theHe !== theHeRef.current) return;
-      if (page.messages.length > 0) dat(gopTin(tinRef.current, page.messages), { loi: null });
+      // Drain bounded forward pages, retaining the receive boundary between
+      // ticks. Initial history remains paginated separately by napCuHon.
+      for (let pageIndex = 0; pageIndex < 5; pageIndex += 1) {
+        const after = cursorDaNhan.current;
+        const page = after === null
+          ? await docTrangTin(contextId, personId)
+          : await docTrangTin(contextId, personId, { after });
+        if (theHe !== theHeRef.current) return;
+        if (page.messages.length > 0) {
+          // Initial pages are newest-first; forward pages are oldest-first.
+          cursorDaNhan.current = after === null ? cursorMoiNhat(page.messages) : page.next_cursor;
+          dat(gopTin(tinRef.current, page.messages), {
+            dangNap: false,
+            loi: null,
+            ...(after === null ? { hetTinCu: !page.has_more } : {}),
+          });
+        } else if (after === null) {
+          setTrang((cu) => ({ ...cu, dangNap: false, loi: null, hetTinCu: !page.has_more }));
+        }
+        if (after === null || !page.has_more || page.messages.length === 0) break;
+      }
     } catch {
       // A missed poll is not an error the person needs to read; the next tick
       // tries again and a send surfaces its own failure.
+    } finally {
+      if (dangNhan.current === theHe) dangNhan.current = null;
     }
   }, [contextId, personId, dat]);
 
@@ -173,26 +207,28 @@ export function useTinNhan(contextId: string, personId: string) {
    * group with the new group's cursor. Callers treat `null` as «not ours».
    */
   const chay = useCallback(
-    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>, hienHang = true): Promise<TinDaGui | null> => {
+    async (cho: TinChoGui, goi: (attempt: Attempt) => Promise<TinDaGui>): Promise<TinDaGui | null> => {
+      const chu = chuSoHuu.current;
+      if (!chu.active || chu.contextId !== contextId || chu.personId !== personId) return null;
       const theHe = theHeRef.current;
-      if (hienHang) datHang(themVaoHang(hangRef.current, cho));
+      datHang(themVaoHang(hangRef.current, cho));
       try {
         const daGui = await goi(cho.attempt);
         if (theHe !== theHeRef.current) return null;
         const them: Tin[] = [daGui];
         if (daGui.companion?.message) them.push(daGui.companion.message);
         if (daGui.expense_card) them.push(daGui.expense_card);
-        if (hienHang) datHang(boKhoiHang(hangRef.current, cho.attempt.key));
+        datHang(boKhoiHang(hangRef.current, cho.attempt.key));
         dat(gopTin(tinRef.current, them), { loi: null });
         void napMoi();
         return daGui;
       } catch (error) {
         if (theHe !== theHeRef.current) return null;
-        if (hienHang) datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
+        datHang(danhDauLoi(hangRef.current, cho.attempt.key, loiRaChu(error), maLoi(error)));
         throw error;
       }
     },
-    [dat, datHang, napMoi],
+    [contextId, personId, dat, datHang, napMoi],
   );
 
   const napCuHon = useCallback(async () => {
@@ -210,17 +246,51 @@ export function useTinNhan(contextId: string, personId: string) {
     }
   }, [contextId, personId, dat, trang.hetTinCu, trang.dangNapCu]);
 
+  // One in-flight read acknowledgement per conversation. A failed request
+  // leaves the target pending; polling/focus/visibility retries it. Never
+  // advance the local acknowledged watermark before the server answers.
+  const ghiDaDoc = useCallback(async () => {
+    if (dangGhiDoc.current !== null || !dangFocus.current || AppState.currentState !== "active") return;
+    const theHe = theHeRef.current;
+    dangGhiDoc.current = theHe;
+    try {
+      while (theHe === theHeRef.current && dangFocus.current && AppState.currentState === "active") {
+        const id = daThay.current;
+        if (id === null || id === daDanhDau.current) break;
+        await danhDauDaDoc(contextId, personId, id);
+        if (theHe !== theHeRef.current) return;
+        daDanhDau.current = id;
+      }
+    } catch {
+      // Retain the target for the next active tick, without blocking reading.
+    } finally {
+      if (theHe === theHeRef.current) dangGhiDoc.current = null;
+    }
+  }, [contextId, personId]);
+
+  const danhDauHienThi = useCallback((ids: readonly string[]) => {
+    if (!dangFocus.current || AppState.currentState !== "active") return;
+    const theHeTin = tinRef.current;
+    const thay = new Set(ids);
+    const moi = theHeTin.findIndex((t) => thay.has(t.id));
+    if (moi < 0) return;
+    const cu = theHeTin.findIndex((t) => t.id === daThay.current);
+    if (cu < 0 || moi < cu) daThay.current = theHeTin[moi].id;
+    void ghiDaDoc();
+  }, [ghiDaDoc]);
+
   useEffect(() => {
     void napDau();
   }, [napDau]);
 
-  // Poll while focused and the app is in the foreground.
   useFocusEffect(
     useCallback(() => {
       dangFocus.current = true;
       let hen: ReturnType<typeof setInterval> | null = null;
+      const dongBo = () => { void napMoi(); void ghiDaDoc(); };
       const bat = () => {
-        if (hen === null) hen = setInterval(() => void napMoi(), NHIP_POLL_MS);
+        if (hen === null) hen = setInterval(dongBo, NHIP_POLL_MS);
+        dongBo();
       };
       const tat = () => {
         if (hen !== null) clearInterval(hen);
@@ -228,55 +298,23 @@ export function useTinNhan(contextId: string, personId: string) {
       };
       if (AppState.currentState === "active") bat();
       const sub = AppState.addEventListener("change", (s) => (s === "active" ? bat() : tat()));
-      void napMoi();
       return () => {
         dangFocus.current = false;
         tat();
         sub.remove();
       };
-    }, [napMoi]),
+    }, [napMoi, ghiDaDoc]),
   );
-
-  // Read mark follows the newest message the person has in front of them.
-  // On the commit that switches conversation this effect still sees the OLD
-  // list under the NEW context id; `tinRef` was just reset, so a list that is
-  // not the one the ref holds is not this conversation's and is not marked.
-  useEffect(() => {
-    const moiNhat = trang.tin[0]?.id;
-    if (!moiNhat || !dangFocus.current || daDanhDau.current === moiNhat || trang.tin !== tinRef.current) return;
-    daDanhDau.current = moiNhat;
-    void danhDauDaDoc(contextId, personId, moiNhat).catch(() => undefined);
-  }, [trang.tin, contextId, personId]);
 
   const gui = useCallback(
     async (body: string, traLoi: TrichDan | null = null): Promise<TinDaGui | null> => {
-      // Pressing send again after a failure, with the same words and the same
-      // quoted message, is the SAME send: it reuses the key, so if the first
-      // request actually landed the second one replays it instead of writing a
-      // second message. Anything different is a different send and mints a new
-      // key -- the same key with different bytes would be a 422 aimed at
-      // somebody who did nothing wrong.
-      //
-      // The draft lives in a ref rather than in the visible queue, because the
-      // composer already holds the words and the notice already says why: a
-      // row here would be the same news twice.
-      const replyToId = traLoi?.id ?? null;
-      const attempt = khoaDungLai(banNhapRef.current, body, replyToId) ?? newAttempt();
-      const nhap: TinChoGui = { attempt, kind: "text", than: body, phuDe: null, traLoi, trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString() };
-      banNhapRef.current = nhap;
-      try {
-        const daGui = await chay(nhap, (a) => guiTin(contextId, personId, body, a, { replyToId }), false);
-        // Not ours any more: the ref was reset with the conversation, and
-        // writing this draft back would hand A's key to a same-words send in B
-        // (`422 idempotency_key_reuse`, since the path is part of the fingerprint).
-        if (daGui === null) return null;
-        banNhapRef.current = null;
-        return daGui;
-      } catch (error) {
-        // Only a live failure reaches here: `chay` swallows a stale one.
-        banNhapRef.current = { ...nhap, trangThai: "that-bai" };
-        throw error;
-      }
+      // A deliberate send is a new logical message. Failed messages keep
+      // their original bytes and key in the visible queue, where retry lives.
+      const nhap: TinChoGui = {
+        attempt: newAttempt(), kind: "text", than: body, phuDe: null, traLoi,
+        trangThai: "dang-gui", loi: null, thuLaiDuoc: true, luc: new Date().toISOString(),
+      };
+      return chay(nhap, (a) => guiTin(contextId, personId, body, a, { replyToId: traLoi?.id ?? null }));
     },
     [contextId, personId, chay],
   );
@@ -327,20 +365,20 @@ export function useTinNhan(contextId: string, personId: string) {
   const thuLaiMot = useCallback(
     async (khoa: string): Promise<TinDaGui | null> => {
       const cho = timTrongHang(hangRef.current, khoa);
-      if (cho === null || cho.trangThai !== "that-bai") return null;
+      if (cho === null || cho.trangThai !== "that-bai" || !cho.thuLaiDuoc) return null;
       datHang(danhDauThuLai(hangRef.current, khoa));
-      // Only stickers and pictures are ever queued: the composer holds the
-      // words, so there is no text row here to retry.
       const goi = (a: Attempt): Promise<TinDaGui> =>
         cho.kind === "image"
           ? guiAnh(contextId, personId, cho.than, cho.phuDe, a)
-          : guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
+          : cho.kind === "text"
+            ? guiTin(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null })
+            : guiSticker(contextId, personId, cho.than, a, { replyToId: cho.traLoi?.id ?? null });
       return chay({ ...cho, trangThai: "dang-gui", loi: null }, goi);
     },
     [contextId, personId, chay, datHang],
   );
 
-  /** Give up on a row that failed: it leaves the queue and nothing was written. */
+  /** Dismiss a failed row locally. A lost response may still have committed. */
   const boQua = useCallback((khoa: string) => datHang(boKhoiHang(hangRef.current, khoa)), [datHang]);
 
   /**
@@ -382,5 +420,12 @@ export function useTinNhan(contextId: string, personId: string) {
     [contextId, personId, dat],
   );
 
-  return { ...trang, napCuHon, napMoi, gui, guiAnhMoi, guiSticker: guiStickerMoi, thuLaiMot, boQua, xoaTin: xoaTinCuaToi, doiPhanUng, taiLai: napDau };
+  const nhanAnhChup = useCallback((snapshot: AnhChupChat) => {
+    const owner = chuSoHuu.current;
+    if (owner.active && owner.contextId === snapshot.context_id && owner.personId === personId) {
+      dat(apDungAnhChup(tinRef.current, snapshot.messages));
+    }
+  }, [dat, personId]);
+
+  return { ...trang, nhanAnhChup, danhDauHienThi, napCuHon, napMoi, gui, guiAnhMoi, guiSticker: guiStickerMoi, thuLaiMot, boQua, xoaTin: xoaTinCuaToi, doiPhanUng, taiLai: napDau };
 }

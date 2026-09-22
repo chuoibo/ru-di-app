@@ -419,6 +419,37 @@ class Contract:
     spelling: dict[str, str] = field(default_factory=dict)
 
 
+#: Go handlers that register chat routes the Python API does not declare.
+#: These are served by `services/core` in front of the proxy (ADR-0031), so a
+#: client calling them is right and the OpenAPI document is simply not the whole
+#: server any more.
+GO_CHAT_HANDLERS = (
+    "services/core/internal/chatassist/handler.go",
+    "services/core/internal/chatlegacychange/handler.go",
+)
+
+#: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
+GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
+
+
+def read_go_routes() -> dict[str, set[str]]:
+    """Routes the Go core serves itself, read out of the handlers that register them.
+
+    Parsed rather than listed by hand on purpose: a hand-written allowlist would
+    keep a client call green after the Go route behind it was deleted, which is
+    the exact failure this whole check exists to catch. Delete the handler line
+    and the client call goes red again, as it should.
+    """
+    found: dict[str, set[str]] = {}
+    for relative in GO_CHAT_HANDLERS:
+        source = REPO_ROOT / relative
+        if not source.exists():
+            continue
+        for method, raw in GO_ROUTE.findall(source.read_text(encoding="utf-8")):
+            found.setdefault(normalise(raw), set()).add(method.upper())
+    return found
+
+
 def read_contract(spec: dict) -> Contract:
     contract = Contract()
     for raw_path, operations in spec.get("paths", {}).items():
@@ -428,6 +459,30 @@ def read_contract(spec: dict) -> Contract:
             if method.lower() not in ("get", "post", "put", "patch", "delete"):
                 continue
             contract.routes.setdefault(key, set()).add(method.upper())
+    return contract
+
+
+def live_contract() -> Contract:
+    """The whole server this repository actually serves: OpenAPI plus Go.
+
+    The Python document is no longer the entire server (ADR-0031), so a gate
+    asking "does this route exist" has to ask both writers. Only callers that
+    mean the live repository use this. Fixtures build their contract with
+    `read_contract`, which stays pure: a gate that exercises itself against a
+    synthetic spec must not have the real repository leak into its fixture.
+    """
+    contract = read_contract(load_openapi())
+    # Checked on the Python half alone, and here rather than at the callers.
+    # Go routes are merged in below, so a caller asking "is the contract empty"
+    # after the merge would be answered by the Go handlers and would never
+    # notice an OpenAPI document that failed to build.
+    if not contract.routes:
+        raise RuntimeError(
+            "OpenAPI dựng được nhưng không có route nào -- từ chối coi là đạt"
+        )
+    for key, methods in read_go_routes().items():
+        contract.spelling.setdefault(key, key)
+        contract.routes.setdefault(key, set()).update(methods)
     return contract
 
 
@@ -1108,11 +1163,7 @@ def check() -> tuple[list[Finding], dict]:
     if not API_ROOT.is_dir():
         raise RuntimeError("services/api không có trên nhánh này")
 
-    contract = read_contract(load_openapi())
-    if not contract.routes:
-        raise RuntimeError(
-            "OpenAPI dựng được nhưng không có route nào -- từ chối coi là đạt"
-        )
+    contract = live_contract()
 
     findings: list[Finding] = []
     total_paths = 0

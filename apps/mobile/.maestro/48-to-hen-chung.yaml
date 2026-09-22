@@ -1,0 +1,113 @@
+# Tờ hẹn chung của hội, trên máy thật.
+#
+# Chạy SAU flow 30 trong cùng lượt: C đã có nhóm «Hoi QA» và đã gõ được tin.
+# Chuỗi đo ở đây là đúng chuỗi người soát giao diện đặt ra làm tiêu chí đóng:
+# bình chọn đã chốt → mở tờ hẹn chung → sửa → chính tờ đó thành kèo.
+#
+# Vì sao flow này tồn tại dù web đã xanh: mọi cổng chat khác của `apps/mobile`
+# chạy trên react-native-web. Ba thứ ở đây web không đo được — bàn phím thật
+# đẩy khay lên, vùng bấm 48dp của chặng cuối trong thẻ, và việc `Ionicons` vẽ
+# đúng dấu người thay vì tia lấp lánh trên font của máy.
+#
+# Ca âm đi trước ca dương ở mỗi bước: tờ chưa tồn tại thì màn KHÔNG được có
+# «Sửa cùng hội», và sau khi chốt thì KHÔNG được còn mời sửa tiếp.
+appId: com.lakiet.rudi
+---
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Tin nhắn|Khám phá"
+    timeout: 120000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Hoi QA"
+    timeout: 30000
+- tapOn: "Hoi QA"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 30000
+
+# Nhãn quyền riêng tư phải luôn có mặt; chat không được im lặng tụt về plaintext.
+- assertVisible: ".*Chưa mã hoá đầu cuối.*"
+
+# Một bình chọn, rồi chốt nó. Trước khi chốt, màn KHÔNG được mời mở tờ hẹn chung.
+- tapOn: "Ô soạn tin"
+- inputText: "/vote Cuoi tuan di dau? Da Lat | Vung Tau"
+- hideKeyboard
+- tapOn: "Gửi tin nhắn"
+- extendedWaitUntil:
+    visible: ".*Cuoi tuan di dau.*"
+    timeout: 45000
+- takeScreenshot: 48-binh-chon-con-mo
+- assertNotVisible: ".*Mở tờ hẹn chung.*"
+- tapOn: "Bỏ phiếu Da Lat"
+- extendedWaitUntil:
+    visible: ".*1 phiếu.*"
+    timeout: 30000
+- tapOn: "Chốt bình chọn"
+- extendedWaitUntil:
+    visible: "Sau khi đóng, mọi người không thể đổi phiếu."
+    timeout: 20000
+- tapOn: "Đóng bình chọn"
+- extendedWaitUntil:
+    visible: ".*đã đóng.*"
+    timeout: 30000
+- takeScreenshot: 48-binh-chon-da-chot
+
+# Đã chốt thì lối vào tờ hẹn chung phải hiện ra.
+- assertVisible: "Mở tờ hẹn chung cho lựa chọn này"
+- tapOn: "Mở tờ hẹn chung cho lựa chọn này"
+- extendedWaitUntil:
+    visible: "Tờ hẹn chung của hội"
+    timeout: 45000
+- takeScreenshot: 48-khay-to-hen
+
+# Khay phải sửa được, và phải nói rõ đây là bản mấy.
+- assertVisible: ".*Cả hội sửa được tờ này.*"
+- tapOn: "Ô số người của tờ hẹn"
+- eraseText
+- inputText: "7"
+- hideKeyboard
+
+# Một tờ hẹn chưa có ngày thì KHÔNG chốt được, và màn phải nói vì sao chứ không
+# im lặng. Đo cửa từ chối trước, rồi mới điền cho qua: lượt đầu chạy flow này
+# trên máy thật đỏ ở đây, và đỏ đúng -- flow mới là cái sai.
+- tapOn: "Chốt thành kèo"
+- extendedWaitUntil:
+    visible: "Thêm ngày đi và ngày về trước khi chốt."
+    timeout: 20000
+- takeScreenshot: 48-chua-co-ngay-thi-khong-chot
+- assertVisible: "Tờ hẹn chung của hội"
+
+# Điền ngày theo lối Việt: đây cũng là phép đo `ngayVeISO` trên bàn phím thật.
+- tapOn: "Ô ngày đi của tờ hẹn"
+- inputText: "03/10/2026"
+- hideKeyboard
+- tapOn: "Ô ngày về của tờ hẹn"
+- inputText: "04/10/2026"
+- hideKeyboard
+- tapOn: "Lưu cho cả hội"
+- extendedWaitUntil:
+    visible: ".*Cả hội sửa được tờ này.*"
+    timeout: 45000
+- takeScreenshot: 48-da-luu
+
+# Bỏ tờ hẹn là việc phá, nên phải hỏi lại trước khi làm.
+- tapOn: "Bỏ tờ hẹn"
+- extendedWaitUntil:
+    visible: ".*Cả hội sẽ không sửa tiếp được.*"
+    timeout: 20000
+- takeScreenshot: 48-hoi-truoc-khi-bo
+- tapOn: "Giữ lại"
+- assertVisible: "Lưu cho cả hội"
+
+# Chốt ngay trong khay: thẻ trong luồng phải đổi tại chỗ.
+- tapOn: "Chốt thành kèo"
+- extendedWaitUntil:
+    visible: ".*đã thành kèo.*"
+    timeout: 60000
+- takeScreenshot: 48-da-thanh-keo
+
+# Sau khi thành kèo, màn không được còn mời sửa tiếp.
+- assertVisible: "Mở kèo của hội"
+- assertNotVisible: "Sửa cùng hội"

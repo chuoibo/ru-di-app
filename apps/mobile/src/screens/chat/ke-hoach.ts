@@ -124,14 +124,19 @@ function soThuc(value: unknown): number | null {
 /** Exported for `binh-chon.ts`, whose place-backed options carry the same
  *  server-owned place shape. A second copy of this parser would be a second
  *  answer to "is this place readable", and the two would drift. */
-export function docDiaDiem(raw: unknown): DiaDiem | null {
+export function docDiaDiem(raw: unknown, choPhepKhongId = false): DiaDiem | null {
   const o = asRecord(raw);
   if (!o) return null;
   const id = chuoi(o.id);
   const ten = chuoi(o.name);
-  // Without an id and a name there is nothing to show and nothing to link to.
-  if (!id || !ten) return null;
-  const diaDiem: DiaDiem = { id, ten };
+  // A suggestion always names a catalogue place: without an id there is
+  // nothing to link to, so the row is dropped. A stop somebody typed on the
+  // group's own sheet is the other case -- it has a name to show and no
+  // catalogue entry behind it, which is not a broken row. Callers that can
+  // receive such a stop opt in; nothing else does.
+  if (!ten) return null;
+  if (!id && !choPhepKhongId) return null;
+  const diaDiem: DiaDiem = { id: id ?? "", ten };
   const diaChi = chuoi(o.address);
   if (diaChi) diaDiem.diaChi = diaChi;
   const giaMin = nguyenDong(o.price_min_vnd);
@@ -153,8 +158,8 @@ function docChang(raw: unknown): Chang | null {
   const o = asRecord(raw);
   if (!o) return null;
   const gio = chuoi(o.time_text);
-  const diaDiem = docDiaDiem(o.place);
-  // A stage with no time or no place would render the word "undefined" on the
+  const diaDiem = docDiaDiem(o.place, true);
+  // A stage with no time or no name would render the word "undefined" on the
   // timeline. Dropping the row is the whole point of parsing first.
   if (!gio || !diaDiem) return null;
   const chang: Chang = { gio, diaDiem };
@@ -183,7 +188,7 @@ export function theTuCard(card: unknown): TheAi | null {
   if (o.kind === "places") {
     if (!Array.isArray(payload.places)) return null;
     const diaDiem = payload.places
-      .map(docDiaDiem)
+      .map((place) => docDiaDiem(place))
       .filter((d): d is DiaDiem => d !== null);
     if (diaDiem.length === 0) return null;
     const the: Extract<TheAi, { kind: "places" }> = { kind: "places", diaDiem };

@@ -33,7 +33,16 @@ appId: com.lakiet.rudi
     timeout: 60000
 - assertVisible: "Ảnh: Anh tu QA"
 - assertNotVisible: "Ảnh này máy không mở được."
-- assertVisible: "Gửi ảnh"
+# The composer collapsed its send buttons into one tray: the way to an image
+# is «Thêm vào cuộc trò chuyện» then «Ảnh», and the tray must close again.
+- assertVisible: "Thêm vào cuộc trò chuyện"
+- tapOn: "Thêm vào cuộc trò chuyện"
+- extendedWaitUntil:
+    visible: "Ảnh"
+    timeout: 15000
+- assertVisible: "Sticker"
+- tapOn: "Đóng công cụ chat"
+- assertNotVisible: "Sticker"
 - takeScreenshot: 34-anh-trong-chat
 - tapOn: "Ô soạn tin"
 - inputText: "Dep qua"
