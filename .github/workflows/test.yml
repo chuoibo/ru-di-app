@@ -744,6 +744,51 @@ jobs:
             exit 1
           fi
 
+      # The C ABI is a separate crate so the audited core can keep
+      # `#![forbid(unsafe_code)]`. It is the only place in this repository that
+      # writes `unsafe`, which is exactly why it gets clippy at deny level and
+      # is built for the Android target the app will load it from.
+      - id: ffi
+        if: steps.present.outputs.found == 'true'
+        run: |
+          if [ -d packages/chat-crypto-ffi ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::packages/chat-crypto-ffi is not on this branch, skipping"
+          fi
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release
+
+      # Building for the host proves it compiles; building for Android proves it
+      # can be loaded by the app, which is the whole point of the crate.
+      - if: steps.ffi.outputs.found == 'true'
+        run: |
+          rustup target add aarch64-linux-android x86_64-linux-android
+          cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml \
+            --release --target x86_64-linux-android
+
+      # A cdylib that exports nothing is a file, not a bridge.
+      - if: steps.ffi.outputs.found == 'true'
+        run: |
+          so=$(find target -name 'librudi_chat_crypto_ffi.so' | head -1)
+          test -n "$so" || { echo "::error::no shared object was produced"; exit 1; }
+          missing=0
+          for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
+                     rudi_chat_crypto_string_free rudi_chat_crypto_identity \
+                     rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
+                     rudi_chat_crypto_receive; do
+            nm -D --defined-only "$so" | grep -q " $sym\$" || { echo "::error::$sym is not exported"; missing=1; }
+          done
+          test "$missing" -eq 0
+
   chat-e2e:
     name: chat end to end on the Go front door
     runs-on: ubuntu-latest

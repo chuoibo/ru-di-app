@@ -500,6 +500,45 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="de3cabd55ad98e02",
         why="",
     ),
+    "test.yml::crypto::ffi": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="73401e8e7198f08c",
+        why="",
+    ),
+    "test.yml::crypto::cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="14890b5d4120d614",
+        why="",
+    ),
+    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="01c9bd354cac9ab0",
+        why="",
+    ),
+    "test.yml::crypto::cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="ab4c03cd34b7d32b",
+        why="",
+    ),
+    "test.yml::crypto::rustup target add aarch64-linux-android x86_64-linux-android": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        # Installs a compilation target; asserts nothing about the tree. The
+        # local stage skips the Android build when the target is absent rather
+        # than installing it behind the caller's back.
+        why="rustup materialises an Android target; asserts nothing",
+        body_sha="7e09e5276b2b597f",
+    ),
+    "test.yml::crypto::so=$(find target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="d776d77a6a53b8a4",
+        why="",
+    ),
     "test.yml::crypto::set -o pipefail": Covered(
         kind=GATE_KIND,
         stages=("crypto",),
