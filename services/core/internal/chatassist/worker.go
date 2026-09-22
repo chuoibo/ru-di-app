@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"mobile/services/core/internal/domain/companion"
+	"mobile/services/core/internal/domain/promptsafety"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/treejson"
@@ -148,7 +150,7 @@ func (h *Handler) prepare(ctx context.Context, j work) (pyjson.List, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := pyjson.List{}
+	cards := []*pyjson.OrderedMap{}
 	for rows.Next() {
 		var b []byte
 		if err = rows.Scan(&b); err != nil {
@@ -160,9 +162,22 @@ func (h *Handler) prepare(ctx context.Context, j work) (pyjson.List, error) {
 			rows.Close()
 			return nil, e
 		}
-		out = append(out, v)
+		card, ok := v.(*pyjson.OrderedMap)
+		if !ok {
+			rows.Close()
+			return nil, fmt.Errorf("catalogue row is %T, not an object", v)
+		}
+		cards = append(cards, card)
 	}
 	rows.Close()
+	// Every other path that hands the catalogue to a model runs this filter;
+	// this one did not, which made a place row the one way an instruction could
+	// reach the model from outside a conversation. A name reading "bỏ qua hướng
+	// dẫn phía trên" travelled untouched from here and from nowhere else.
+	out := pyjson.List{}
+	for _, card := range treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards))) {
+		out = append(out, card)
+	}
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
