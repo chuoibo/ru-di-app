@@ -48,3 +48,42 @@ API/worker không log token, body, ciphertext, URL ký hay nội dung AI.
 Từng checkpoint phải bổ sung lệnh đã chạy, kết quả, phạm vi chứng minh và
 blocker còn lại vào tài liệu này hoặc báo cáo được liên kết. Commit có guard,
 staging theo đường dẫn; không gom các artifact không liên quan trong worktree.
+
+## Checkpoint 22-09-2026 — bốn PR lên main, tầng E2E và tờ hẹn chung
+
+Bốn lát đầu của chuỗi đã lên `main`, mỗi lát kèm lệnh đã chạy và phạm vi
+chứng minh. Ghi ở đây để lượt sau đọc delta thay vì chạy lại từ đầu.
+
+| PR | Nội dung | Bằng chứng |
+|---|---|---|
+| #624 | Replay authorization, read watermark nguyên tử | 16/16 check CI |
+| #626 | Nền realtime Go v2: store, transport, admission, relay | `go_postgres_tier.sh` **1960 ca PASS**, 0 SKIP |
+| #627 | Feed thay đổi bền + AI chỉ chạy khi được gọi rõ | `go_postgres_tier.sh` **1985 ca PASS**, 0 SKIP |
+| #628 | Tầng E2E chat qua HTTP/WebSocket thật vào cửa trước Go | **31 ca PASS**, sentinel có mặt, 0 SKIP |
+| #629 | Tờ hẹn nháp chung + kịch bản parity nhóm `messages` | **40 ca PASS**; parity dev **10.484 bước, 0 DIFF** |
+
+### Tầng E2E: nó đóng lỗ nào
+
+Mọi test Go khác dừng ở biên gói. Tầng `services/core/e2e/chat` chỉ biết một
+base URL và một bearer, nên nó là chỗ duy nhất chứng minh được rằng một yêu
+cầu đi qua dây, router, middleware phiên, lớp idempotency và quyết định proxy
+vẫn ra cùng câu trả lời. Sentinel đòi một route **chỉ Go mới có**
+(`/contexts/{id}/changes`) trả 200, nên tầng biết nó vừa ghi lại hành vi của
+tiến trình nào — không phải của Python qua proxy.
+
+Một câu hỏi còn treo trong bàn giao đã được trả lời bằng đo: bàn giao ghi
+«phản ứng, xoá tin và kiểm phiếu chưa đồng bộ sang client khác» như blocker
+thực nghiệm. Cả bốn đều tới. Feed mang **con trỏ** chứ không mang nội dung,
+nên ai đọc thân câu trả lời của socket sẽ tưởng là rỗng.
+
+### Điều chưa đạt, không được đọc thành đã xong
+
+- **Tải vẫn trượt cổng ADR-0031.** p95 2427 ms so với ngưỡng 800 ms ở 1.000
+  kết nối; burst 300/s còn FAIL; chưa có soak 24h.
+- **Nhóm `messages` vẫn `PORTED-UNPROVEN`.** Đã có bốn kịch bản parity đầu
+  tiên (`parity/scenarios/wai/`, trước đó thư mục này không tồn tại), nhưng
+  lật nhãn cần một lượt cổng đầy đủ trên SHA sạch và sẽ đi riêng.
+- **Chat v2 vẫn chỉ mở trong `chat-lab` loopback.** App đang chạy trên lane
+  legacy có nhãn «Chưa mã hoá đầu cuối».
+- **`packages/chat-crypto` chưa có cổng CI nào.**
+- Native Android/iOS và crypto review độc lập vẫn là cổng riêng.
