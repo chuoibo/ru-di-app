@@ -429,9 +429,7 @@ GO_CHAT_HANDLERS = (
 )
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`
-GO_ROUTE = re.compile(
-    r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"'
-)
+GO_ROUTE = re.compile(r'HandleFunc\(\s*"(GET|POST|PUT|PATCH|DELETE)\s+(/[^"\s]*)"')
 
 
 def read_go_routes() -> dict[str, set[str]]:
