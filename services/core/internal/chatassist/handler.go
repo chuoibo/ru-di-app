@@ -351,7 +351,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 429, "invocation_rate_limited")
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,share_expires_at,status) VALUES($1,$2,$3,$4,$5,$6,$7,'plan',$8,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt))
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,'plan',$8,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt))
 	if err != nil {
 		failure(w, err)
 		return

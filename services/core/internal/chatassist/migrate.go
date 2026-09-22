@@ -22,6 +22,12 @@ var schemaSQL string
 //go:embed schema_drafts.sql
 var draftsSQL string
 
+// Version 3 adds the personal scope and the context the caller hands over.
+// A third file, for the reason version 2 was a second one.
+//
+//go:embed schema_scope.sql
+var scopeSQL string
+
 // Migrate is run explicitly by the candidate migration command, never a request.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)
@@ -55,6 +61,9 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	if err = migrateDrafts(ctx, tx); err != nil {
 		return err
 	}
+	if err = migrateScope(ctx, tx); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
 
@@ -77,5 +86,27 @@ func migrateDrafts(ctx context.Context, tx pgx.Tx) error {
 		return err
 	}
 	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(2,$1)`, digest)
+	return err
+}
+
+// migrateScope installs version 3 on top of version 2: the personal scope and
+// the caller-supplied context column. Same shape as migrateDrafts, and it runs
+// inside the same transaction, so a database arrives at one version or none.
+func migrateScope(ctx context.Context, tx pgx.Tx) error {
+	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(scopeSQL)))
+	var old string
+	if err := tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM chat_ai_schema_migrations WHERE version=3),'')`).Scan(&old); err != nil {
+		return err
+	}
+	if old != "" {
+		if old != digest {
+			return fmt.Errorf("chat AI scope migration checksum mismatch")
+		}
+		return nil
+	}
+	if _, err := tx.Exec(ctx, scopeSQL); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO chat_ai_schema_migrations VALUES(3,$1)`, digest)
 	return err
 }
