@@ -43,7 +43,7 @@ export function useChatAi(contextId: string, personId: string) {
   }, [contextId, personId]));
   const send = async (prompt: string) => {
     if (sending.current) return false;
-    if (!capabilities?.ai.plan.available) { setError("AI chưa sẵn sàng. Bạn có thể tự viết tờ hẹn."); return false; }
+    if (!capabilities?.ai.plan.available) { setError("AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."); return false; }
     if (!attempt.current || attempt.current.prompt !== prompt) attempt.current = { prompt, id: newAttempt().key };
     const version = generation.current;
     sending.current = true; setBusy(true); setError(null);

@@ -1,12 +1,23 @@
 # Nhánh của flow 30 khi máy chủ KHÔNG có khoá mô hình (AI=0): lời gọi AI và
-# /chia-bill đều nhận câu nói thật từ máy chủ, không im lặng vô danh.
+# /chia-bill đều nhận câu nói thật, không im lặng vô danh.
+#
+# `@Rủ Đi` KHÔNG còn gửi một tin rồi chờ máy chủ trả lời. Nó mở khay lời nhờ,
+# nơi người ta viết rõ điều muốn hỏi — đúng luật ADR-0031: AI chỉ nhận thứ được
+# đưa cho nó, không tự đọc lịch sử chat. Flow này đo đúng đường ấy.
 appId: com.lakiet.rudi
 ---
+# Lời hứa riêng tư phải nằm ngay trên màn, không chỉ trong tài liệu.
 - extendedWaitUntil:
-    visible: "Rủ Đi AI chưa nối được mô hình trên máy chủ này."
+    visible: "Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ."
     timeout: 60000
-- hideKeyboard
+# Không có khoá thì khay nói thẳng, và vẫn chừa đường tự làm.
+- assertVisible: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."
+- assertVisible: "Tự tạo kèo"
 - takeScreenshot: 30-ai-im-lang-that
+- tapOn: "Đóng công cụ chat"
+- extendedWaitUntil:
+    visible: "Ô soạn tin"
+    timeout: 20000
 - tapOn: "Ô soạn tin"
 - inputText: "/chia-bill"
 - tapOn: "Gửi tin nhắn"
