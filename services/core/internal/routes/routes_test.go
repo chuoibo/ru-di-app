@@ -187,3 +187,38 @@ func TestHandlersRefuseADuplicateOrUnboundRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// `core routes --json` answers the ownership gate with ImplementedIDs, and the
+// binary answers requests with the handler map. If those two disagree, the gate
+// compares the manifest against a list that is not what the binary serves.
+//
+// This is not hypothetical: MOUNT /static had a handler and was NOT in the
+// list, and the gate said "manifest gives 'MOUNT /static' to Go but the binary
+// has no handler" while the binary was in fact answering it.
+func TestImplementedIDsAreExactlyTheHandlersTheBinaryBuilds(t *testing.T) {
+	ir, err := pyval.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	handlers, err := Handlers(ir, pyval.NewRegistry(), devEnv())
+	if err != nil {
+		t.Fatal(err)
+	}
+	listed := map[string]bool{}
+	for _, id := range ImplementedIDs() {
+		if listed[id] {
+			t.Errorf("%s is listed twice", id)
+		}
+		listed[id] = true
+	}
+	for id := range handlers {
+		if !listed[id] {
+			t.Errorf("the binary handles %s but ImplementedIDs does not list it", id)
+		}
+	}
+	for id := range listed {
+		if handlers[id] == nil {
+			t.Errorf("ImplementedIDs lists %s but the binary has no handler for it", id)
+		}
+	}
+}

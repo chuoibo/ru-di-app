@@ -122,3 +122,52 @@ Go phải viết `float64(sec) + float64(nsec)*1e-9`, rồi in bằng
   được *hình dạng* chứ không bao giờ chứng minh được *byte*.
 - Hành vi khi hai file khác `content-type` cùng lúc, và khi tên file có ký tự
   không ASCII: chưa đo.
+
+## Bằng chứng để lật sang Go (LIVE-GO)
+
+Cổng đầy đủ `scripts/gate.sh parity` chạy trên **cây SẠCH tại `336700ac`**
+(`git status` rỗng), bốn pha, mỗi pha một cặp stack cô lập. Kết quả
+`ĐẠT 1 · HỎNG 0 · BỎ QUA 0`, mất 2 giờ 20 phút:
+
+| Pha | Kết quả |
+|---|---|
+| dev main + làn DB + làn ảnh | 353 kịch bản · 10797 bước · **0 khác biệt** · tap `answered_in_core=10232`, `served_routes=151`, `unserved=0` |
+| canary | `identity equal, every exercised damage caught` |
+| probe | 22 ca · 10 lệch · **10 đều là ngoại lệ đã khai** · `unexpected=0 stale=0` |
+| limiter | 9 · 209 · 0 |
+| prod main + canary | 23 · 604 · 0 · `every exercised damage caught` |
+
+Hai ngoại lệ ADR-0029 §2.4 đều **kích hoạt**, tức không cái nào đã hết lý do:
+
+```
+RESPONSE-204-CONTENT-LENGTH = 28   (w0/replay-204)
+STATIC-VALIDATOR-VALUE      = 12   (static/get-static-files)
+```
+
+12 khớp chính xác số bước mang validator: 12 bước 200/206/304, 8 bước còn lại
+(416, 404, 405, dựng người) không mang etag nên không có gì để nhận.
+
+`main` đã nhích sang `fdad3129` trong lúc chạy, nhưng hai commit ấy chỉ chạm
+`apps/mobile/**` và `scripts/mobile_native.sh` — **0 file** trong
+`services/core/` hay `parity/`, nên số đo trên `336700ac` còn đúng cho cây
+backend hiện tại.
+
+### Đột biến tự nghĩ, đều đỏ đúng chỗ
+
+| Đột biến | Kết quả |
+|---|---|
+| 304 kèm thêm `last-modified` | 2 ca đỏ — «go sent last-modified, python sent none» |
+| 405 kèm header `Allow` | 1 ca đỏ — «header allow: python "", go "GET, HEAD"» |
+| etag không bám nội dung | 1 ca đỏ — «does not track the content» |
+| khôi phục mặt nạ `<hex32#n>` | in ra `python "<hex32#1>", go "<hex32#1>"` |
+| thêm handler không có hàng manifest | «152 of 153 handlers are in the manifest» |
+
+### Cái này vẫn KHÔNG chứng minh
+
+- **Nội dung ba file.** Đo cơ chế phục vụ, không đọc CSS. Ca đối chiếu bản nhúng
+  với cây Python chỉ nói hai bản GIỐNG NHAU, không nói bản nào đúng.
+- **Trình duyệt thật dùng lại cache.** Mới đo bằng `curl` và bằng parity.
+- **`boundary` của multi-range.** Ngẫu nhiên hai phía; Go trả nguyên file.
+- **Etag của route khác.** Toàn corpus chạy với etag KHÔNG che và 0 khác biệt,
+  nhưng điều đó nói mọi bước ĐÃ CHẠY không lệch — không nói route nào đó không
+  thể lệch ở một nhánh chưa có kịch bản.
