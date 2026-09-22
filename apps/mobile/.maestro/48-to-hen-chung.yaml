@@ -68,6 +68,24 @@ appId: com.lakiet.rudi
 - eraseText
 - inputText: "7"
 - hideKeyboard
+
+# Một tờ hẹn chưa có ngày thì KHÔNG chốt được, và màn phải nói vì sao chứ không
+# im lặng. Đo cửa từ chối trước, rồi mới điền cho qua: lượt đầu chạy flow này
+# trên máy thật đỏ ở đây, và đỏ đúng -- flow mới là cái sai.
+- tapOn: "Chốt thành kèo"
+- extendedWaitUntil:
+    visible: "Thêm ngày đi và ngày về trước khi chốt."
+    timeout: 20000
+- takeScreenshot: 48-chua-co-ngay-thi-khong-chot
+- assertVisible: "Tờ hẹn chung của hội"
+
+# Điền ngày theo lối Việt: đây cũng là phép đo `ngayVeISO` trên bàn phím thật.
+- tapOn: "Ô ngày đi của tờ hẹn"
+- inputText: "03/10/2026"
+- hideKeyboard
+- tapOn: "Ô ngày về của tờ hẹn"
+- inputText: "04/10/2026"
+- hideKeyboard
 - tapOn: "Lưu cho cả hội"
 - extendedWaitUntil:
     visible: ".*Cả hội sửa được tờ này.*"

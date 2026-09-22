@@ -318,6 +318,19 @@ s.close()")" || return 2
   # MOBILE_PERSON_ID_KEY failed the slice at its first login. Same for the media
   # root, which the W6 photo routes write through. The rule to keep: whatever
   # the API is started with, core is started with.
+  # The chat candidate owns its own schema and refuses to serve without it, so
+  # the migration travels with the flag that asks for it -- the same rule the
+  # comment above states for OTP and the media root. A setting that reaches one
+  # process and not another leaves a stack that looks healthy and 404s the one
+  # thing under test.
+  if [ "${MOBILE_CHAT_CHANGES_CANDIDATE:-}" = "1" ]; then
+    if ! MOBILE_CHAT_CHANGES_CANDIDATE=1 MOBILE_DATABASE_URL="$DATABASE_URL" \
+        "$core_bin" migrate-chat-candidate >>"$core_log" 2>&1; then
+      echo 'không migrate được lược đồ chat candidate:' >&2
+      tail -3 "$core_log" >&2
+      return 2
+    fi
+  fi
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \
   MOBILE_PYTHON_UPSTREAM="$API_URL" \
@@ -327,6 +340,7 @@ s.close()")" || return 2
   MOBILE_MEDIA_ROOT="$WORK_DIR/media" \
   MOBILE_OTP_DEBUG_CODE="000000" \
   MOBILE_OTP_LOG_CODES="1" \
+  MOBILE_CHAT_CHANGES_CANDIDATE="${MOBILE_CHAT_CHANGES_CANDIDATE:-}" \
   MOBILE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
     "$core_bin" serve >"$core_log" 2>&1 &
   CORE_PID=$!
