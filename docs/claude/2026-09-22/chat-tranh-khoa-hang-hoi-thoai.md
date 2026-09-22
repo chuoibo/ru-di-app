@@ -127,11 +127,91 @@ goroutine cùng `Send`. Nó **xanh cả khi đã tắt vòng chạy lại** (3/3
 goroutine chỉ thay phiên nhau, đua không bao giờ xảy ra. Đã thay bằng ca ép
 đúng thứ tự xen kẽ.
 
-## 5. Còn nợ
+## 5. Baseline 30 phút: ĐẠT, và vẫn còn hai sự cố
 
-Lượt burst xanh **không** đóng cổng ADR-0031. Bản ghi cũ tự nói: *"lượt ngắn
-không thay được lượt dài"* — sự cố lượt 30 phút rơi vào phút 26. Baseline
-30 phút @100/s phải chạy lại trên chính bản sửa này; kết quả ghi tiếp ở đây.
+Chạy trên đúng SHA đã commit, 100/s, 30 phút, 1.000 socket.
+
+| | đo được | ngưỡng ADR-0031 |
+|---|---|---|
+| `passed` | **true** | |
+| `adr0031_latency_passed` | **true** | |
+| `integrity_and_capacity_passed` | **true** | |
+| delivery p50 | 39 ms | — |
+| delivery p95 | **106 ms** | ≤ 800 ms |
+| delivery p99 | **1.441 ms** | ≤ 2.000 ms |
+| delivery max | 3.773 ms | — |
+| send p95 · p99 | 38 ms · 1.382 ms | — |
+| nhịp đạt | 99,998/s | mời 100/s |
+| deliveries | **90.000.000 / 90.000.000** | |
+| thiếu · trùng · hụt · hỏng | **0 · 0 · 0 · 0** | |
+| `503` · rớt hàng đợi · rớt bất ngờ | **0 · 0 · 0** | |
+| `http_status` | `{201: 180.000, 200: 1.800}` | |
+| replay | 1.800 đạt, 0 lỗi | |
+
+So với lượt 30 phút trước khi sửa: p99 **2.323 → 1.441 ms**, max **7.991 →
+3.773 ms**, và **381 lần `503` → 0**.
+
+**Nhưng cổng đạt không có nghĩa là hết chuyện.** Bảng theo phút, đọc từ
+`pg-locks.txt` bằng `phan-tich-khoa.py`, cho thấy đúng **hai** cửa sổ sự cố
+trong ba mươi phút — và giữa chúng là im lặng tuyệt đối:
+
+| phút | lượt chờ | khoá tuple | kẻ giữ nhiều nhất |
+|---|---|---|---|
+| 07:21–07:30 | 0–2 | **0** | `IO/WALSync` ở `commit`, 1–2 mẫu |
+| **07:31–07:33** | **61 · 68 · 30** | **20 · 19 · 11** | `Lock/transactionid` ở CTE, `LWLock/WALWrite` ở `commit` **×17–20** |
+| 07:34–07:44 | 0–5 | **0** | 1–2 mẫu |
+| **07:45–07:47** | **36 · 185 · 79** | **10 · 52 · 29** | `Lock/transactionid` ×53, `LWLock/WALWrite` ở `commit` **×48** |
+| 07:48–07:50 | 0–1 | **0** | 1 mẫu |
+
+Hai điều đọc được ngay:
+
+1. **Vùng tới hạn cũ đã biến mất thật.** Cả lượt chỉ còn **8 mẫu** bắt được kẻ
+   giữ ở `idle in transaction` — trước khi sửa con số ấy là **115** chỉ riêng ở
+   câu `FOR UPDATE`, cộng 98 ở câu kiểm trùng. Không còn ai giữ khoá hàng để
+   chờ vòng mạng.
+2. **Cái còn lại là `commit`.** `LWLock/WALWrite` khi kẻ giữ đang `commit` nhảy
+   từ **1–2 mẫu mỗi phút** lúc im lặng lên **48 mẫu** trong phút tệ nhất. Cộng
+   `IO/WALSync` là 210/368 mẫu kẻ giữ của cả lượt.
+
+Hai cửa sổ cách nhau **14 phút**. Đó là hình dạng của một thứ chạy theo chu kỳ
+làm chậm ghi WAL, chứ không phải suy giảm dần theo tải — và khi ghi WAL chậm
+lại, cái fsync nằm **trong** khoá hàng kéo cả nhóm xếp hàng theo.
+
+### Nghi can, và vì sao lần này chưa kết luận
+
+Checkpoint khớp cả chu kỳ lẫn chữ ký. Nhưng bản ghi trước đã một lần loại
+checkpoint bằng lý do "nó chạy suốt lượt" — đúng về **sự có mặt**, không nói gì
+về **cường độ**: một checkpoint muộn có nhiều buffer bẩn hơn một checkpoint sớm.
+
+Lượt này **không** lấy mẫu checkpoint nên tôi không kết luận. Thay vì đoán, bộ
+lấy mẫu đã được nối thêm hai câu — `pg_stat_bgwriter` (số checkpoint theo giờ
+và theo yêu cầu, `checkpoint_write_time`, `checkpoint_sync_time`,
+`buffers_checkpoint`) và `pg_stat_wal` (`wal_bytes`, `wal_sync`,
+`wal_sync_time`) — đã chạy thử trên PostgreSQL 16.15 thật để chắc cột tồn tại,
+vì cả khối sampler nuốt stderr và một câu sai cú pháp sẽ im lặng thành "không
+có dữ liệu". Lượt sau trả lời được câu hỏi này bằng số.
+
+### Đòn bẩy tiếp theo, nếu cần
+
+Nếu xác nhận là fsync, cách sửa **không** phải vặn nút database mà là **chia
+một fsync cho nhiều tin**: gom vài lần gửi của cùng hội thoại vào một giao dịch,
+tăng dãy một lần cho cả cụm. Đúng thứ bản ghi trước gọi là "gom nhiều tin vào
+một lần tăng". Đó là thay đổi thiết kế, cần đo riêng.
+
+**Ngưỡng ADR-0031 giữ nguyên.** Cổng đạt với biên rộng ở p95 (106/800) và biên
+hẹp hơn ở p99 (1.441/2.000); ghi ở đây để lượt sau biết p99 mỏng ở chỗ nào.
+
+## 6. Còn nợ
 
 `Mark` vẫn giữ `FOR UPDATE` suốt năm vòng mạng. Harness hiện không đánh vào
 biên nhận đọc nên chưa có số; đừng sửa khi chưa đo được.
+
+Soak 24 giờ chưa chạy.
+
+**Một lượt đo đã hỏng và bị bỏ:** trong lúc baseline này chạy tôi có chạy
+`pytest` và hai cổng hợp đồng trên **cùng máy**, đúng cửa sổ 07:31. Ban đầu tôi
+đã quy sự cố ấy cho chính mình. Sự cố thứ hai lúc 07:45 xảy ra khi máy hoàn
+toàn rảnh, cùng một chữ ký — nên câu đúng là **không quy trách nhiệm được cho
+cửa sổ đầu**, chứ không phải "do tôi". Nhật ký việc đã chạy nằm ở
+`/tmp/rudi-chat-load-locks/nhieu-host.txt`. Bài học giữ lại: máy đo phải im
+lặng, và khi nó không im lặng thì nói ra chứ đừng suy.
