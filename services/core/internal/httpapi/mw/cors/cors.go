@@ -208,6 +208,9 @@ func (w *simpleWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+// Unwrap preserves HTTP upgrade support through the CORS middleware.
+func (w *simpleWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }
+
 func (w *simpleWriter) Flush() {
 	w.apply()
 	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
