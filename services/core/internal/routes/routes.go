@@ -9,6 +9,7 @@ import (
 
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyval"
+	staticweb "mobile/services/core/internal/web/static"
 )
 
 // Route is one Go implementation.
@@ -195,5 +196,12 @@ func Handlers(contract *pyval.Contract, registry *pyval.Registry, env endpoint.E
 		}
 		handlers[route.ID] = handler
 	}
+	// MOUNT /static does not go through the endpoint pipeline: it has no
+	// pydantic contract to bind, no body model and no reply to frame. It still
+	// runs inside the same chain dispatch wraps every Go route in.
+	if _, dup := handlers[staticweb.RouteID]; dup {
+		return nil, fmt.Errorf("routes: %s is implemented twice", staticweb.RouteID)
+	}
+	handlers[staticweb.RouteID] = staticweb.Handler()
 	return handlers, nil
 }
