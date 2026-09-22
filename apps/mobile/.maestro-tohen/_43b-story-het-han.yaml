@@ -1,0 +1,34 @@
+# Nửa sau của flow 43, chạy bởi harness SAU khi kiem_may_chu_sau_43 đã tua
+# story của người kia qua hạn thẳng trong cơ sở dữ liệu (--db-url). Mở lại app
+# với người đang đăng nhập: dải story phải không còn vòng của người kia. Tên có
+# dấu gạch dưới để vòng lặp bảng không tự chạy nó — thứ tự của nó là «sau phép
+# kiểm máy chủ», không phải «sau flow 43».
+appId: com.lakiet.rudi
+---
+- stopApp
+- launchApp
+- runFlow: _bo-qua-dev-menu.yaml
+- extendedWaitUntil:
+    visible: "Rủ Đi thôi!|Khám phá|Chưa có nhóm nào"
+    timeout: 150000
+# Flow này chạy SAU cả bảng, và flow cuối bảng (46) kết thúc bằng một máy đã
+# đăng xuất — nó vừa xoá một tài khoản qua đúng đường của sản phẩm. Nên tự
+# đăng nhập lấy, bằng số C: người xem story ở flow 43 là C, và nếu đăng nhập
+# nhầm người thì phép «vòng story đã biến mất» xanh mà không chứng minh gì
+# (story là của người kia, và trên máy của chính tác giả nó mang nhãn khác).
+- runFlow:
+    when:
+      visible: "Rủ Đi thôi!"
+    file: _dang-nhap-c.yaml
+- extendedWaitUntil:
+    visible: "Khám phá"
+    timeout: 60000
+- tapOn: "Tin nhắn"
+- extendedWaitUntil:
+    visible: "Đăng story"
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible: "Story của (An|Ban) QA, (chưa|đã) xem"
+    timeout: 30000
+- assertNotVisible: "Story QA"
+- takeScreenshot: 43b-story-het-han

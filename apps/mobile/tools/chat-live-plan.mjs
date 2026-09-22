@@ -2,6 +2,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import puppeteer from 'puppeteer-core';
+// The pinned Chrome lives in the puppeteer cache under whoever's HOME this
+// is; a path through one person's home directory is a machine, not a default.
+// repo-guard: allow=long-number reason=public-chrome-version
+const chromeMacDinh = () => process.env.CHROME_PATH ?? `${process.env.HOME ?? ''}/.cache/puppeteer/chrome/linux-148.0.7778.97/chrome-linux64/chrome`;
 
 const fixture = JSON.parse(fs.readFileSync(process.env.CHAT_E2E_SESSIONS, 'utf8'));
 const output = process.env.CHAT_E2E_OUTPUT;
@@ -12,7 +16,7 @@ const result = { mockResponses: false, provider: 'configured real inference', st
 const save = () => fs.writeFileSync(path.join(output, 'plan.json'), JSON.stringify(result, null, 2));
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 // repo-guard: allow=long-number reason=public-chrome-version
-const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH ?? '/home/lakiet/.cache/puppeteer/chrome/linux-148.0.7778.97/chrome-linux64/chrome', headless: true, args: ['--no-sandbox', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
+const browser = await puppeteer.launch({ executablePath: chromeMacDinh(), headless: true, args: ['--no-sandbox', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
 const fill = async (page, selector, value) => {
   await page.click(selector); await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control'); await page.keyboard.type(value);
 };

@@ -38,7 +38,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: ".*Cuoi tuan di dau.*"
     timeout: 45000
-- takeScreenshot: 42-binh-chon-con-mo
+- takeScreenshot: 48-binh-chon-con-mo
 - assertNotVisible: ".*Mở tờ hẹn chung.*"
 - tapOn: "Bỏ phiếu Da Lat"
 - extendedWaitUntil:
@@ -52,7 +52,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: ".*đã đóng.*"
     timeout: 30000
-- takeScreenshot: 42-binh-chon-da-chot
+- takeScreenshot: 48-binh-chon-da-chot
 
 # Đã chốt thì lối vào tờ hẹn chung phải hiện ra.
 - assertVisible: "Mở tờ hẹn chung cho lựa chọn này"
@@ -60,7 +60,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Tờ hẹn chung của hội"
     timeout: 45000
-- takeScreenshot: 42-khay-to-hen
+- takeScreenshot: 48-khay-to-hen
 
 # Khay phải sửa được, và phải nói rõ đây là bản mấy.
 - assertVisible: ".*Cả hội sửa được tờ này.*"
@@ -72,14 +72,14 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: ".*Cả hội sửa được tờ này.*"
     timeout: 45000
-- takeScreenshot: 42-da-luu
+- takeScreenshot: 48-da-luu
 
 # Bỏ tờ hẹn là việc phá, nên phải hỏi lại trước khi làm.
 - tapOn: "Bỏ tờ hẹn"
 - extendedWaitUntil:
     visible: ".*Cả hội sẽ không sửa tiếp được.*"
     timeout: 20000
-- takeScreenshot: 42-hoi-truoc-khi-bo
+- takeScreenshot: 48-hoi-truoc-khi-bo
 - tapOn: "Giữ lại"
 - assertVisible: "Lưu cho cả hội"
 
@@ -88,7 +88,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: ".*đã thành kèo.*"
     timeout: 60000
-- takeScreenshot: 42-da-thanh-keo
+- takeScreenshot: 48-da-thanh-keo
 
 # Sau khi thành kèo, màn không được còn mời sửa tiếp.
 - assertVisible: "Mở kèo của hội"

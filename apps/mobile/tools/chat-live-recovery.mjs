@@ -3,6 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer-core';
+// The pinned Chrome lives in the puppeteer cache under whoever's HOME this
+// is; a path through one person's home directory is a machine, not a default.
+// repo-guard: allow=long-number reason=public-chrome-version
+const chromeMacDinh = () => process.env.CHROME_PATH ?? `${process.env.HOME ?? ''}/.cache/puppeteer/chrome/linux-148.0.7778.97/chrome-linux64/chrome`;
 const fixture=JSON.parse(fs.readFileSync(process.env.CHAT_E2E_SESSIONS,'utf8'));
 const output=process.env.CHAT_E2E_OUTPUT;
 if(!output?.startsWith('/tmp/'))throw Error('Synthetic evidence must stay outside checkout.');
@@ -11,7 +15,7 @@ const web=process.env.CHAT_E2E_WEB??'http://127.0.0.1:8178';
 const result={mockResponses:false,steps:[],errors:[]};
 const save=()=>fs.writeFileSync(path.join(output,'recovery.json'),JSON.stringify(result,null,2));
 // repo-guard: allow=long-number reason=public-chrome-version
-const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH??'/home/lakiet/.cache/puppeteer/chrome/linux-148.0.7778.97/chrome-linux64/chrome',headless:true,args:['--no-sandbox','--disable-background-timer-throttling']});
+const browser=await puppeteer.launch({executablePath:chromeMacDinh(),headless:true,args:['--no-sandbox','--disable-background-timer-throttling']});
 const p=await browser.newPage();await p.setViewport({width:430,height:932});
 p.on('pageerror',e=>result.errors.push(e.message));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
