@@ -1,10 +1,17 @@
 import { newAttempt, translatedAsActor } from "../../api";
+import type { BoiCanh } from "../ai/boi-canh";
 import type { BodyTaoBuoiDi, ChangGui } from "../../screens/len-plan/buoi-di";
 
 export type ChatCapabilities = {
   protocol: "legacy";
   realtime: { available: boolean };
-  ai: { plan: { available: boolean; reason: string | null }; share_scope: "invocation_only" };
+  /**
+   * `share_scope` is the GATE, not a label. While a server still says
+   * `invocation_only` the client attaches no bundle at all, so an old server
+   * keeps receiving exactly the old body and its tests stay green. That is the
+   * whole rollout plan; there is no second feature flag.
+   */
+  ai: { plan: { available: boolean; reason: string | null }; share_scope: "invocation_only" | "caller_attached" };
   media: { image: boolean; sticker: boolean; voice: boolean };
 };
 export type AiInvocation = {
@@ -22,9 +29,34 @@ export function docChatCapabilities(contextId: string, personId: string) {
 export function docAiInvocations(contextId: string, personId: string) {
   return translatedAsActor<{ invocations: AiInvocation[] }>({}, `/contexts/${contextId}/ai-invocations?limit=20`, { ...options(contextId, personId), method: "GET" });
 }
-export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string) {
-  return translatedAsActor<AiInvocation>({}, `/contexts/${contextId}/ai-invocations`, {
-    ...options(contextId, personId), method: "POST", body: { logical_id: logicalId, command: "plan", prompt },
+/**
+ * Refusals this route can return, in words a person can act on.
+ *
+ * Without this table every 4xx lands on the generic sentence, which says the
+ * fault is the app's. For a bundle that is too large that sentence is simply
+ * wrong: the person can fix it, by sending fewer messages.
+ */
+export const LOI_GOI_AI: Record<string, string> = {
+  boi_canh_qua_lon: "Đoạn chat gửi kèm dài quá. Bạn chọn «Chỉ gửi lời nhờ», hoặc thử lại để mình gửi ít tin hơn.",
+  boi_canh_sai_dang: "Bản app này gửi bối cảnh theo kiểu máy chủ chưa đọc được. Cập nhật app rồi thử lại.",
+  boi_canh_mismatch: "Có tin trong đoạn gửi kèm không thuộc nhóm này. Bạn thử lại nhé.",
+  invocation_conflict: "Lời nhờ này đã gửi rồi với nội dung khác. Đợi kết quả cũ xong rồi gửi lại nhé.",
+  invocation_rate_limited: "Bạn hỏi hơi nhanh. Chờ một chút rồi nhờ tiếp nhé.",
+  invocation_not_retryable: "Lời nhờ này hết hạn chia sẻ rồi. Bạn viết lại một lời nhờ mới nhé.",
+  provider_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
+  chat_ai_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
+  group_plan_only: "Chỗ này chưa nhờ AI phác kèo được.",
+};
+
+/**
+ * @param boiCanh the bundle the person just saw above the send button. Omitted
+ *   entirely when the server still declares `invocation_only`, so the body on
+ *   the wire is byte for byte the old one.
+ */
+export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string, boiCanh?: BoiCanh) {
+  return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations`, {
+    ...options(contextId, personId), method: "POST",
+    body: { logical_id: logicalId, command: "plan", prompt, ...(boiCanh ? { boi_canh: boiCanh } : {}) },
   });
 }
 export function thuLaiAi(contextId: string, personId: string, id: string) {
