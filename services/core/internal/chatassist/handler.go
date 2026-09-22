@@ -52,13 +52,17 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations/{id}/cancel", h.cancel)
 	h.mux.HandleFunc("POST /contexts/{context}/plan-promotions", h.promote)
 	h.mux.HandleFunc("GET /contexts/{context}/plan-promotions/{id}", h.promotion)
+	h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", h.draftCreate)
+	h.mux.HandleFunc("GET /contexts/{context}/shared-drafts/{id}", h.draftGet)
+	h.mux.HandleFunc("PATCH /contexts/{context}/shared-drafts/{id}", h.draftPatch)
+	h.mux.HandleFunc("POST /contexts/{context}/shared-drafts/{id}/discard", h.draftDiscard)
 	return h
 }
 
 // Matches also seals the old automatic-history entry points in this candidate.
 func Matches(path string) bool {
 	p := strings.Split(strings.Trim(path, "/"), "/")
-	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "ai-turn" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
+	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || p[2] == "ai-turn" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

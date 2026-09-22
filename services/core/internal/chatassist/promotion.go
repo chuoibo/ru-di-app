@@ -146,7 +146,14 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 	if in.Stops == nil {
 		for _, s := range source.Payload.Stops {
 			id, name := s.Place.ID, s.Place.Name
-			in.Stops = append(in.Stops, planStop{At: s.At, Label: name, PlaceID: &id, PlaceName: &name})
+			stop := planStop{At: s.At, Label: name, PlaceName: &name}
+			// A stop somebody typed on a group sheet has no catalogue place.
+			// Binding an empty id here would send "" to GetPlace and refuse a
+			// perfectly good plan with plan_place_unavailable.
+			if id != "" {
+				stop.PlaceID = &id
+			}
+			in.Stops = append(in.Stops, stop)
 		}
 	}
 	if len(in.Stops) == 0 || len(in.Stops) > 50 {
@@ -204,6 +211,15 @@ func (h *Handler) promote(w http.ResponseWriter, r *http.Request) {
 	// event updates every reader, including the pinned sheet and quoted card.
 	_, err = tx.Exec(r.Context(), `UPDATE messages SET card=jsonb_set(jsonb_set(card,'{payload,outing_id}',to_jsonb($2::text)),'{payload,timeline_revision}',to_jsonb($3::bigint)) WHERE id=$1`, in.Source, outing.ID, outing.TimelineRevision)
 	if err != nil {
+		failure(w, err)
+		return
+	}
+	// A group sheet that becomes a kèo stops being a draft, in the same
+	// transaction that created the kèo. Nothing happens for an AI card, which
+	// has no row here.
+	if _, err = tx.Exec(r.Context(),
+		`UPDATE chat_shared_drafts SET status='promoted',revision=revision+1,updated_at=clock_timestamp()
+		  WHERE message_id=$1 AND status='open'`, in.Source); err != nil {
 		failure(w, err)
 		return
 	}
