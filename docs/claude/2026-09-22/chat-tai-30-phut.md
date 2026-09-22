@@ -87,6 +87,13 @@ lần gửi phải tăng bộ đếm dãy của **chính hội thoại đó** �
 nhóm đều xếp hàng sau nhau trên đúng một hàng. Lượt này có 1.000 socket chia
 cho hai nhóm.
 
+## Đã làm xong ba việc dưới đây
+
+Xem `chat-tranh-khoa-hang-hoi-thoai.md` cùng thư mục: giả thuyết bộ đếm đã được
+xác nhận bằng `pg_locks` có tên quan hệ, vùng tới hạn đã được thu lại, và lượt
+burst 300/s đã đo lại — `passed: true`, p95 2.309 ms → 90 ms, ngưỡng giữ nguyên.
+Baseline 30 phút vẫn phải chạy lại trên bản sửa.
+
 ## Việc tiếp theo, theo thứ tự
 
 1. **Xác nhận giả thuyết bộ đếm** bằng `pg_locks` gắn tên quan hệ trong lúc sự

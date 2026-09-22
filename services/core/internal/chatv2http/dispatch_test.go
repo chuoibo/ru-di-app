@@ -66,9 +66,21 @@ func TestDispatcherCoalescesAndReleasesSharedFrames(t *testing.T) {
 	if s.calls.Load() >= 20 || len(frames) >= 20 {
 		t.Fatalf("failed to coalesce: calls=%d encodings=%d", s.calls.Load(), len(frames))
 	}
-	if used := h.dispatch.bytes.Load(); used != 0 {
-		t.Fatalf("retained frame bytes: %d", used)
+	// Every reservation has to come back, but not necessarily by the time the
+	// last recipient has been handed its frame: the encoding cache holds one
+	// reference of its own and drops it in a `defer`, after the final reply is
+	// sent. Reading the counter at that instant races that defer -- delaying it
+	// by 50ms makes this exact assertion fail every run with the same 234 bytes
+	// CI saw. A real leak still fails here; it simply never reaches zero.
+	deadline := time.Now().Add(5 * time.Second)
+	var used int64
+	for time.Now().Before(deadline) {
+		if used = h.dispatch.bytes.Load(); used == 0 {
+			return
+		}
+		time.Sleep(time.Millisecond)
 	}
+	t.Fatalf("retained frame bytes: %d", used)
 }
 func TestDispatcherQuietReconciliationAndMemoryBound(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
