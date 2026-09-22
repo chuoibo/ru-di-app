@@ -43,7 +43,7 @@ appId: com.lakiet.rudi
     timeout: 60000
 - tapOn: "Hoi QA"
 - extendedWaitUntil:
-    visible: "Chưa có tin nhắn nào"
+    visible: "Có hội rồi. Mở lời thôi."
     timeout: 60000
 - assertVisible: "Ô soạn tin"
 - takeScreenshot: 30-chat-rong
@@ -54,7 +54,7 @@ appId: com.lakiet.rudi
 - extendedWaitUntil:
     visible: "Toi nay an gi moi nguoi"
     timeout: 30000
-- assertNotVisible: "Chưa có tin nhắn nào"
+- assertNotVisible: "Có hội rồi. Mở lời thôi."
 - hideKeyboard
 - takeScreenshot: 30-da-gui
 # Tắt mở lại: tin đến từ máy chủ, không phải từ state của lần gửi.

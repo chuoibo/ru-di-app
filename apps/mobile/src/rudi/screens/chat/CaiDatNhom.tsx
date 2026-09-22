@@ -211,7 +211,7 @@ export function CaiDatNhomSheet({
 
 const styles = StyleSheet.create({
   khoi: { gap: 8, paddingBottom: 8 },
-  themes: { flexDirection: "row", gap: 10, paddingVertical: 8 },
+  themes: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingVertical: 8 },
   oTheme: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
   hangCongTac: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   hangChu: { flex: 1, gap: 2 },

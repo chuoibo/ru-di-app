@@ -5,11 +5,28 @@
  * trả lời, cả cây chạy ở «theo hệ thống» — cùng đúng cái app làm trước lát
  * này, nên không có khung hình nào nhấp nháy sai màu rồi mới đúng.
  */
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
 
-import { docCheDoGiaoDien, KHOA_GIAO_DIEN, type CheDoGiaoDien } from "../giao-dien";
+import { Appearance, Platform } from "react-native";
+
+import { toiHay, docCheDoGiaoDien, KHOA_GIAO_DIEN, type CheDoGiaoDien } from "../giao-dien";
 import { docGiaoDienAsync, ghiGiaoDienAsync } from "../kho";
 import { GiaoDienContext } from "../theme";
+
+/** One external-store snapshot prevents mounted and newly opened panels diverging. */
+const readSystemDark = () => Platform.OS === "web" && typeof window !== "undefined"
+  ? window.matchMedia("(prefers-color-scheme: dark)").matches
+  : Appearance.getColorScheme() === "dark";
+const subscribeSystemScheme = (notify: () => void) => {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    query.addEventListener("change", notify);
+    return () => query.removeEventListener("change", notify);
+  }
+  const subscription = Appearance.addChangeListener(notify);
+  return () => subscription.remove();
+};
+const serverDark = () => false;
 
 type DoiGiaoDien = { cheDo: CheDoGiaoDien; datCheDo: (che: CheDoGiaoDien) => void; daDoc: boolean };
 
@@ -24,6 +41,8 @@ export function useGiaoDien(): DoiGiaoDien {
 }
 
 export function GiaoDienProvider({ children }: { children: React.ReactNode }) {
+  const systemDark = useSyncExternalStore(subscribeSystemScheme, readSystemDark, serverDark);
+  const resolved = (choice: CheDoGiaoDien) => toiHay(choice, systemDark) ? "toi" : "sang";
   const [cheDo, setCheDo] = useState<CheDoGiaoDien>("he-thong");
   const [daDoc, setDaDoc] = useState(false);
 
@@ -47,7 +66,7 @@ export function GiaoDienProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <DoiContext.Provider value={{ cheDo, datCheDo, daDoc }}>
-      <GiaoDienContext.Provider value={cheDo}>{children}</GiaoDienContext.Provider>
+      <GiaoDienContext.Provider value={resolved(cheDo)}>{children}</GiaoDienContext.Provider>
     </DoiContext.Provider>
   );
 }

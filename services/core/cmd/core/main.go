@@ -17,9 +17,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/chatassist"
+	"mobile/services/core/internal/chatlegacychange"
 	"mobile/services/core/internal/config"
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/googleid"
@@ -54,6 +59,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return healthcheck(getenv, stderr)
 	case "routes":
 		return listRoutes(args[1:], stdout, stderr)
+	case "migrate-chat-candidate":
+		return migrateChatCandidate(getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -83,6 +90,19 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		return 1
 	}
 	served := append(manifest.GoServed(force), candidates...)
+	chatCandidate := getenv(chatlegacychange.CandidateEnv) == "1"
+	if raw := getenv(chatlegacychange.CandidateEnv); raw != "" && raw != "0" && raw != "1" {
+		logger.Error("refusing to start", "error", "MOBILE_CHAT_CHANGES_CANDIDATE must be 0 or 1")
+		return 1
+	}
+	if chatCandidate {
+		if err := validateChatCandidate(cfg.AuthMode, manifest.Routes, served); err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+	}
+	candidateCtx, stopCandidate := context.WithCancel(context.Background())
+	defer stopCandidate()
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
 	table, err := router.New(manifest.Routes)
@@ -110,8 +130,9 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		Google:       googleid.FromEnv(getenv),
 	}
 	var idempotency func(http.Handler) http.Handler
-	if len(served) > 0 {
-		pool, err := db.Open(context.Background(), getenv(db.EnvDatabaseURL))
+	var pool *pgxpool.Pool
+	if len(served) > 0 || chatCandidate {
+		pool, err = db.Open(context.Background(), getenv(db.EnvDatabaseURL))
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
 			return 1
@@ -122,6 +143,17 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		// the outermost layer; raising keeps it there instead of inside CORS.
 		idempotency = idem.New(idem.NewPostgresStore(pool), idem.WithErrorHandler(
 			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) }))
+	}
+	if chatCandidate {
+		ctx, cancel := context.WithTimeout(candidateCtx, 5*time.Second)
+		var installed bool
+		err := pool.QueryRow(ctx, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+		cancel()
+		if err != nil || !installed {
+			logger.Error("refusing to start", "error", "chat candidate migration is required")
+			return 1
+		}
+		env.BeforeServe = chatlegacychange.BeforeWrite
 	}
 	contract, err := pyval.Load()
 	if err != nil {
@@ -148,12 +180,38 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
+	if chatCandidate {
+		var allowedOrigins []string
+		if origins != "" {
+			allowedOrigins = strings.Split(origins, ",")
+		}
+		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, candidateCtx, allowedOrigins)
+		assistant := chatassist.New(pool, brain.Configured())
+		go changes.Listen()
+		go assistant.Run(candidateCtx)
+		fallback := front
+		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if chatlegacychange.Matches(r.URL.Path) {
+				changes.ServeHTTP(w, r)
+				return
+			}
+			assistant.ServeHTTP(w, r)
+		}))
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if chatlegacychange.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
+				feature.ServeHTTP(w, r)
+				return
+			}
+			fallback.ServeHTTP(w, r)
+		})
+	}
 	logger.Info("core starting",
 		"listen", cfg.Listen,
 		"liveness", cfg.LivenessListen,
 		"python_upstream", cfg.PythonUpstream.String(),
 		"go_served", len(served),
 		"candidates", len(candidates),
+		"chat_candidate", chatCandidate,
 		"auth_mode", cfg.AuthMode,
 		"manifest_routes", len(manifest.Routes),
 		"force_python", force.Tokens,
@@ -193,6 +251,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("listener failed", "error", err.Error())
 		exit = 1
 	}
+	stopCandidate()
 	shutdown, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	_ = public.Shutdown(shutdown)
@@ -271,5 +330,47 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
+	return 0
+}
+
+// validateChatCandidate prevents the privacy and lock-order hooks from being
+// bypassed through Python while the opt-in extension is enabled.
+func validateChatCandidate(mode string, all, served []ownership.Route) error {
+	if mode != "prod" {
+		return errors.New("chat candidate requires real bearer sessions (MOBILE_AUTH_MODE=prod)")
+	}
+	inGo := map[string]bool{}
+	for _, route := range served {
+		inGo[route.ID] = true
+	}
+	for _, route := range all {
+		if (route.Group == "messages" || route.Group == "votes" || route.Group == "outings") && !inGo[route.ID] {
+			return fmt.Errorf("chat candidate requires the complete Go messages, votes and outings candidates; missing %s", route.ID)
+		}
+	}
+	return nil
+}
+
+func migrateChatCandidate(getenv func(string) string, stdout, stderr io.Writer) int {
+	if getenv(chatlegacychange.CandidateEnv) != "1" {
+		fmt.Fprintln(stderr, "migration requires MOBILE_CHAT_CHANGES_CANDIDATE=1")
+		return 1
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
+	if err != nil {
+		fmt.Fprintln(stderr, "chat migration: invalid database configuration")
+		return 1
+	}
+	defer pool.Close()
+	if err = chatlegacychange.Migrate(ctx, pool); err == nil {
+		err = chatassist.Migrate(ctx, pool)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, "chat migration failed:", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, "Đã áp dụng migration chat candidate; ownership production giữ nguyên.")
 	return 0
 }

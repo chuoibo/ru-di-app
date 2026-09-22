@@ -338,6 +338,13 @@
     // written into B. That is a claim about effect ordering and closures,
     // which only the real hook under the real React can settle.
     "src/rudi/chat/useTinNhan.ts",
+    "src/rudi/chat/useChatChanges.ts",
+    "src/rudi/chat/ban-nhap-cong-cu.ts",
+    "src/rudi/chat/chat-route.ts",
+    "src/rudi/chat/ai-invocations.ts",
+    "src/rudi/chat/to-hen-chung.ts",
+    "src/rudi/chat/useBanNhap.ts",
+    "src/rudi/chat/viewability.ts",
     // F44 (audit native 09/09). The kit text field, split out of `ui.tsx` (which
     // cannot load under node) so a test can read the markup its placeholder
     // really emits: the claim is that the input carries NO native hint and the
@@ -364,6 +371,32 @@
     "src/rudi/giao-dien.ts",
     // Re-exported by `nhom-cai-dat.ts`: role and leave calls the settings sheet
     // reuses. Compiled so the test can prove they go through the bearer.
+    // Nếp dock (ADR-0033). Máy trạng thái an/nghi/he/mo. Compile chứ không đọc
+    // nguồn vì hai luật nó mang đều là luật PHỦ ĐỊNH: màn tiền ép Nếp lui và
+    // CẤM hé ra một dòng, và rời màn tiền thì trả về đúng lựa chọn của người
+    // dùng chứ không về mặc định. Đọc nguồn thấy `if (luiLai)` là xong, nhưng
+    // cái hỏng là Nếp bật lên cạnh màn quyết toán, và chỉ chạy hàm mới biết.
+    "src/rudi/nep/trang-thai.ts",
+    // Ray dọc của dock. Compile vì luật nó mang là số học và phủ định: Nếp
+    // KHÔNG được đè lên `FAB = 56` của RudiTabBar, một cửa sổ quá thấp KHÔNG
+    // được sinh ray lộn ngược (clamp sẽ chọn nhầm đầu và đẩy Nếp xuống dưới
+    // thanh tab), và tỉ lệ hỏng đọc từ đĩa KHÔNG thành toạ độ hỏng.
+    "src/rudi/nep/dock-vi-tri.ts",
+    // Phiếu ngữ cảnh: cổng riêng tư của Nếp. Compile vì mọi luật nó mang đều
+    // là luật PHỦ ĐỊNH — khoá lạ KHÔNG đi kèm sang máy chủ, tiền KHÔNG đi dưới
+    // bất kỳ khoá nào, và `financial-report` KHÔNG bị nhầm là màn tiền. Đọc
+    // nguồn thấy chữ "whitelist" là xong; cái hỏng là một khoá lọt qua.
+    "src/rudi/nep/phieu.ts",
+    // Chỗ đứng của Nếp trên đĩa. Cùng cách tách như `luu-tru.ts` cạnh `kho.ts`:
+    // compile để chạy hàm thật trên blob cố tình hỏng. Luật nó mang là phủ
+    // định — `coViec`, `luiLai`, `trangThai` KHÔNG được xuống đĩa, và một blob
+    // hỏng KHÔNG được ném (bài học `rudi.phien.v1`).
+    "src/rudi/nep/luu-dock.ts",
+    // Client media của Nếp. Compile vì nhịp hỏi lại và cách dựng đường file là
+    // số học và phủ định: nhịp phải CÓ TRẦN (một tấm ảnh 99 giây, hỏi mỗi 2
+    // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
+    // đường đi ra ngoài.
+    "src/rudi/nep/media.ts",
     "src/screens/quan-tri/quan-tri.ts"
   ]
 }

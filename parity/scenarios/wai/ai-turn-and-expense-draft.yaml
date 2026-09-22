@@ -1,0 +1,174 @@
+# WAI · ai-turn và expense-draft: hai lối vào AI cũ của chat.
+#
+# Không stack nào trong tầng parity được cấp khoá provider, nên cả hai bên đều
+# tất định: suggester trả None và brain trả thẻ rỗng. Đó chính là thứ đáng so —
+# cùng một hình dạng từ chối, cùng một mã, cùng một chỗ dừng trước khi tiêu tiền.
+# Không cần stub: thiếu khoá là một câu trả lời, không phải một lỗ hổng đo đạc.
+#
+# Ghi chú cho người đọc sau: khi cờ `MOBILE_CHAT_CHANGES_CANDIDATE` bật, hai
+# route này bị `internal/chatassist` niêm phong thành `403
+# explicit_invocation_required` — một đổi hành vi **có chủ ý** theo ADR-0031,
+# không phải hồi quy. Tầng parity chạy với cờ đó tắt, nên ở đây chúng vẫn là
+# cổng cũ và vẫn phải khớp Python.
+id: wai/ai-turn-and-expense-draft
+routes: ['POST /contexts/{context_id}/ai-turn', 'POST /contexts/{context_id}/messages/{message_id}/expense-draft']
+auth_mode: dev
+personas:
+  owner: {}
+  member: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở phòng AI (dữ liệu mẫu)"}'
+  - id: register_member
+    as: member
+    request:
+      method: PUT
+      path: '/people/{{persona.member}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên gọi AI (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài gọi AI (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Phòng gọi AI (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_member
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.member}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: member_accepts
+    as: member
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+  - id: owner_sends_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tối qua cả nhóm ăn hết một trăm nghìn"}'
+    bind:
+      msg: {from: body, pointer: /id, class: uuid}
+
+  # ai-turn
+  - id: anonymous_takes_turn
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/ai-turn'
+      headers:
+        content-type: 'application/json'
+  - id: stranger_takes_turn
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/ai-turn'
+      headers:
+        content-type: 'application/json'
+  - id: owner_takes_turn_no_body
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/ai-turn'
+      headers:
+        content-type: 'application/json'
+  - id: owner_takes_turn_requested
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/ai-turn'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"requested":true}'
+  - id: member_takes_turn
+    as: member
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/ai-turn'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"requested":true}'
+  - id: owner_takes_turn_unknown_context
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/ai-turn'
+      headers:
+        content-type: 'application/json'
+
+  # expense-draft
+  - id: anonymous_drafts_expense
+    as: anonymous
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/expense-draft'
+      headers:
+        content-type: 'application/json'
+  - id: stranger_drafts_expense
+    as: stranger
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/expense-draft'
+      headers:
+        content-type: 'application/json'
+  - id: owner_drafts_expense
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/expense-draft'
+      headers:
+        content-type: 'application/json'
+  - id: owner_drafts_expense_again
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/expense-draft'
+      headers:
+        content-type: 'application/json'
+  - id: owner_drafts_expense_unknown_message
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/expense-draft'
+      headers:
+        content-type: 'application/json'
+  - id: owner_deletes_message
+    as: owner
+    request:
+      method: DELETE
+      path: '/contexts/{{ctx}}/messages/{{msg}}'
+  - id: owner_drafts_expense_on_deleted
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages/{{msg}}/expense-draft'
+      headers:
+        content-type: 'application/json'

@@ -214,7 +214,18 @@ func crashingUpstream(t *testing.T) *url.URL {
 				_, _ = io.Copy(io.Discard, req.Body)
 				_, _ = io.WriteString(conn, "HTTP/1.1 500 Internal Server Error\r\n"+
 					"Content-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nInternal Server Error")
-				time.Sleep(300 * time.Millisecond)
+				// Hold the connection open, then drop it. The window has to
+				// outlast the client's second request, and the race runs the
+				// way round that is easy to get backwards: if the drop lands
+				// FIRST, the transport finds a dead idle connection, treats the
+				// request as unstarted and retries it on a fresh one -- so the
+				// caller sees a second 500 and the reproduction reads as
+				// "changed". The 502 only appears when the request is already
+				// in flight on the connection that dies. 300ms was enough on a
+				// quiet laptop and not on a loaded CI runner, which is why this
+				// test failed four pull requests in a row for the machine's
+				// speed rather than the proxy's behaviour.
+				time.Sleep(5 * time.Second)
 			}(conn)
 		}
 	}()
@@ -238,12 +249,42 @@ func TestAPythonCrashNeverTurnsTheNextRequestInto502(t *testing.T) {
 
 	// The reproduction: with keep-alive upstream, the request after a 500 is
 	// written onto the dropped connection and core answers 502 itself.
-	reusing := New(target, logger).(*httputil.ReverseProxy)
-	reusing.Transport = newTransport(true)
-	withKeepAlive := httptest.NewServer(reusing)
-	defer withKeepAlive.Close()
-	if first, second := postStatus(t, withKeepAlive.URL), postStatus(t, withKeepAlive.URL); first != 500 || second != http.StatusBadGateway {
-		t.Fatalf("reproduction changed: got %d then %d, expected 500 then 502", first, second)
+	//
+	// The attempt loop is not padding and must not be "cleaned up" into a
+	// single pair of calls. Whether the second request reproduces the hazard
+	// depends on something this test cannot command: net/http returns a used
+	// connection to its idle pool from a goroutine that runs after the body is
+	// closed, so the second request either finds the poisoned connection and
+	// dies in flight on it (502, the hazard) or finds an empty pool, dials a
+	// fresh one and gets a clean second 500. Sleeping does not fix that -- the
+	// window here was already raised from 300ms to 5s and the test still
+	// failed on loaded runners, because the race is about goroutine ordering
+	// and not about elapsed time.
+	//
+	// So each attempt gets its own proxy, and therefore its own connection
+	// pool, and the loop asks for the hazard several times rather than once.
+	// The assertion itself is unchanged and still exact: a second 500 is not
+	// accepted as a pass, it just means this attempt did not reuse. Only
+	// never reproducing at all is a failure, and that is the signal worth
+	// having -- it would mean the hazard this whole test exists to document
+	// has genuinely gone away.
+	const attempts = 8
+	reproduced := false
+	var lastFirst, lastSecond int
+	for i := 0; i < attempts && !reproduced; i++ {
+		reusing := New(target, logger).(*httputil.ReverseProxy)
+		reusing.Transport = newTransport(true)
+		withKeepAlive := httptest.NewServer(reusing)
+		lastFirst, lastSecond = postStatus(t, withKeepAlive.URL), postStatus(t, withKeepAlive.URL)
+		withKeepAlive.Close()
+		if lastFirst != 500 {
+			t.Fatalf("attempt %d: upstream answered %d, want Python's 500", i, lastFirst)
+		}
+		reproduced = lastSecond == http.StatusBadGateway
+	}
+	if !reproduced {
+		t.Fatalf("reproduction changed: %d attempts, last was %d then %d, expected a 502 on the reused connection",
+			attempts, lastFirst, lastSecond)
 	}
 
 	fixed := httptest.NewServer(New(target, logger))

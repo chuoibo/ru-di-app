@@ -393,10 +393,11 @@ func TestCatchupDoesNotSkipUncommittedSequence(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback(ctx)
-	if _, err = authorize(ctx, tx, f.actor, f.device, f.conversation); err != nil {
+	a, err := authorize(ctx, tx, f.actor, f.device, f.conversation)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", f.envelope(), nil); err != nil {
+	if _, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", a.epoch, f.envelope(), nil); err != nil {
 		t.Fatal(err)
 	}
 	done := make(chan error, 1)
@@ -554,5 +555,178 @@ func TestCatchupBoundsBytesWithoutSkippingLargeEnvelopes(t *testing.T) {
 	}
 	if len(single.Events) != 1 || !single.HasMore || single.NextSequence != 2 {
 		t.Fatal(single.NextSequence, single.HasMore, len(single.Events))
+	}
+}
+
+// The send path no longer holds `FOR UPDATE` on the conversation row from
+// authorization to commit: every message in a group passes through that row, so
+// holding it across three client round trips put the whole group in one queue.
+// The epoch and readiness conditions moved into the sequence bump itself, where
+// PostgreSQL re-evaluates them against the version it locked. These two tests
+// are what stands in for the lock -- delete the guard from the statement and
+// they are the ones that go red.
+func TestASupersededEpochCannotStillAppend(t *testing.T) {
+	f := setup(t, "group")
+	ctx := context.Background()
+	tx, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(ctx)
+	a, err := authorizeSessionWithLock(ctx, tx, f.actor, f.device, f.conversation, lockNone, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.epoch != 1 {
+		t.Fatalf("fixture epoch changed: %d", a.epoch)
+	}
+	// A rekey commits on another connection while this transaction is between
+	// its authorization read and its write. Without the lock this is possible;
+	// the point is that it stays refused.
+	if _, err = f.pool.Exec(ctx, `UPDATE chat_v2_conversations SET epoch=epoch+1 WHERE context_id=$1`, f.conversation); err != nil {
+		t.Fatal(err)
+	}
+	_, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", a.epoch, f.envelope(), nil)
+	if !errors.Is(err, ErrEpoch) {
+		t.Fatalf("stale epoch appended, want ErrEpoch, got %v", err)
+	}
+	var events int
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_events WHERE context_id=$1`, f.conversation).Scan(&events); err != nil {
+		t.Fatal(err)
+	}
+	if events != 0 {
+		t.Fatalf("refused append still wrote %d event(s)", events)
+	}
+}
+
+func TestARosterInvalidationCannotStillAppend(t *testing.T) {
+	f := setup(t, "group")
+	ctx := context.Background()
+	tx, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(ctx)
+	a, err := authorizeSessionWithLock(ctx, tx, f.actor, f.device, f.conversation, lockNone, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// This is what the membership and device triggers do when the roster moves.
+	if _, err = f.pool.Exec(ctx, `UPDATE chat_v2_conversations SET ready=false WHERE context_id=$1`, f.conversation); err != nil {
+		t.Fatal(err)
+	}
+	_, err = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", a.epoch, f.envelope(), nil)
+	if !errors.Is(err, ErrNotReady) {
+		t.Fatalf("append onto an invalidated conversation, want ErrNotReady, got %v", err)
+	}
+}
+
+// Without the conversation lock, two copies of one logical send can reach the
+// receipt insert together. Forcing that interleaving by hand is the only way to
+// see it: run the two sends as goroutines and they simply take turns, which is
+// why the concurrent test below stays green even with the retry removed. This
+// one holds the first transaction open until the second is past its duplicate
+// check, so the primary key really does fire.
+//
+// What it pins is the classification. If the code or constraint name ever
+// stops matching, `isDuplicateReceipt` returns false, no retry happens, and a
+// routine client retry surfaces as a 500 instead of a replay.
+func TestTheDuplicateReceiptRaceIsRecognisedAsItself(t *testing.T) {
+	f := setup(t, "group")
+	ctx := context.Background()
+	envelope := f.envelope()
+	receipt := &sendReceipt{device: envelope.DeviceID, logical: envelope.LogicalSendID, digest: make([]byte, 32)}
+
+	first, err := f.pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer first.Rollback(ctx)
+	a, err := authorizeSessionWithLock(ctx, first, f.actor, f.device, f.conversation, lockNone, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = appendEvent(ctx, first, f.conversation, f.actor, "envelope", a.epoch, envelope, receipt); err != nil {
+		t.Fatal(err)
+	}
+
+	// The second transaction has already missed in `chat_v2_sends` -- that read
+	// takes no lock now -- and blocks on the sequence bump instead.
+	second := make(chan error, 1)
+	go func() {
+		tx, e := f.pool.Begin(ctx)
+		if e != nil {
+			second <- e
+			return
+		}
+		defer tx.Rollback(ctx)
+		b, e := authorizeSessionWithLock(ctx, tx, f.actor, f.device, f.conversation, lockNone, nil)
+		if e != nil {
+			second <- e
+			return
+		}
+		_, e = appendEvent(ctx, tx, f.conversation, f.actor, "envelope", b.epoch, envelope, receipt)
+		second <- e
+	}()
+	select {
+	case e := <-second:
+		t.Fatalf("second send did not wait for the first: %v", e)
+	case <-time.After(300 * time.Millisecond):
+	}
+	if err = first.Commit(ctx); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case e := <-second:
+		if !isDuplicateReceipt(e) {
+			t.Fatalf("duplicate receipt not recognised, so no retry would happen: %v", e)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("second send never returned after the first committed")
+	}
+	var events int
+	if err = f.pool.QueryRow(ctx, `SELECT count(*) FROM chat_v2_events WHERE context_id=$1`, f.conversation).Scan(&events); err != nil {
+		t.Fatal(err)
+	}
+	if events != 1 {
+		t.Fatalf("want one committed event, got %d", events)
+	}
+}
+
+func TestOneLogicalSendTwiceAtOnceStaysOneEvent(t *testing.T) {
+	f := setup(t, "group")
+	ctx := context.Background()
+	envelope := f.envelope()
+	results := make([]SendResult, 2)
+	errs := make([]error, 2)
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for i := range results {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			results[i], errs[i] = f.store.Send(ctx, f.actor, envelope)
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+	for i, err := range errs {
+		if err != nil {
+			t.Fatalf("send %d failed: %v", i, err)
+		}
+	}
+	if results[0].Event.Sequence != results[1].Event.Sequence {
+		t.Fatalf("one logical send produced two sequences: %d and %d", results[0].Event.Sequence, results[1].Event.Sequence)
+	}
+	if results[0].Replayed == results[1].Replayed {
+		t.Fatalf("want exactly one replay, got replayed=%v and %v", results[0].Replayed, results[1].Replayed)
+	}
+	var events, last int64
+	if err := f.pool.QueryRow(ctx, `SELECT (SELECT count(*) FROM chat_v2_events WHERE context_id=$1),last_sequence FROM chat_v2_conversations WHERE context_id=$1`, f.conversation).Scan(&events, &last); err != nil {
+		t.Fatal(err)
+	}
+	if events != 1 || last != 1 {
+		t.Fatalf("want one event and last_sequence 1, got %d event(s) and %d", events, last)
 	}
 }

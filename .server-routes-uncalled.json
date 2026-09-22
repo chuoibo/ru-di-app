@@ -80,6 +80,16 @@
   ],
   "uncalled": [
     {
+      "route": "/contexts/{context_id}/ai-invocations/{id}",
+      "loai": "cong-mu",
+      "reason": "Đọc MỘT lời nhờ AI. Client hiện chỉ hỏi danh sách (`docAiInvocations`) rồi lọc, nên route một-bản-ghi chưa có màn nào gọi. Nó xuất hiện ở đây lần đầu vì `check_api_contract.py` vừa học đọc route do Go phục vụ; trước đó cổng không nhìn thấy nhóm route này chút nào — nợ cũ được lộ ra, không phải nợ mới."
+    },
+    {
+      "route": "/contexts/{context_id}/ai-invocations/{id}/cancel",
+      "loai": "cong-mu",
+      "reason": "Huỷ một lời nhờ AI đang chạy. Chưa có nút nào trên màn: người dùng hiện chỉ chờ hoặc thử lại. Backend đã có vì worker cần đường dừng job, nhưng với người dùng thì route này chưa tồn tại. Trả nợ bằng một nút huỷ trên thẻ AI đang chạy."
+    },
+    {
       "route": "/contexts/{context_id}/budget",
       "loai": "cong-mu",
       "reason": "F34 ngân sách. ĐÃ CÓ NGƯỜI GỌI THẬT từ #382: apps/mobile/src/screens/ai-hieu-nhom/ai-hieu-nhom.ts:225 gọi `${prefix}/budget`, với prefix dựng ở dòng 214 là `${base}/contexts/${contextId}`. Cổng không thấy được vì nó đọc từng literal một: nó thấy '/budget' và thấy '/contexts/', không bao giờ thấy đường dẫn ghép. Đường bấm: chat/TinNhan.tsx:636 (nút 'AI hiểu nhóm') -> onMoAiHieu (460) -> AiHieuNhom (466) -> napAiHieuNhom (203). Lý do cũ ghi 'chưa màn nào hiện' đã hết hiệu lực kể từ #382."

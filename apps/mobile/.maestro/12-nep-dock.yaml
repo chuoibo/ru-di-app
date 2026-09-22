@@ -1,0 +1,70 @@
+# Nếp nổi trên mép màn (ADR-0033), trên bản trải nghiệm nên không cần đăng nhập.
+#
+# Số 12 chứ không phải 60: quy ước đánh số của `scripts/mobile_native.sh` là
+# 00-19 cho bảng MẶC ĐỊNH (chạy trên fixture, không cần máy chủ, đi qua nhánh
+# `*)`), 20-89 cho bảng SỐNG và mỗi số ở đó phải tự khai trong `case`. Flow này
+# không cần máy chủ nào nên nó thuộc khoảng đầu;
+# `tests/test_maestro_flows_are_all_reachable.py` gác đúng chuyện đó.
+#
+# Chứng minh theo đúng thứ tự người dùng gặp:
+#   1. Nếp có mặt sẵn ở tab đầu, không phải gọi ra;
+#   2. vuốt sang phải thì Nếp nằm gọn trong mép — đĩa mất, chỉ còn mép giấy;
+#   3. chạm mép thì Nếp quay ra nhưng CHƯA mở bảng;
+#   4. chạm lần nữa mới mở bảng, và bảng nói đúng màn đang đứng;
+#   5. Back đóng bảng mà Nếp vẫn còn đó, không biến mất theo.
+#
+# Bước 3 là lý do flow này tồn tại. Nếu một chạm vừa lôi Nếp ra vừa bung bảng
+# thì một cú vuốt lỡ tay sẽ che mất màn người ta đang đọc, và đó đúng là kiểu
+# hỏng không ai báo bug mà chỉ thấy khó chịu.
+#
+# Không dùng `clearState`: `appId` ở đây là Expo Go dùng chung với lane khác
+# (xem đầu `_vao-app-sach.yaml`).
+appId: com.lakiet.rudi
+---
+- runFlow: _vao-app.yaml
+
+# 1. Nếp có mặt sẵn
+- extendedWaitUntil:
+    visible:
+      id: "nep-dia"
+    timeout: 30000
+
+# 2. vuốt ra mép
+- swipe:
+    from:
+      id: "nep-dia"
+    direction: RIGHT
+- extendedWaitUntil:
+    visible:
+      id: "nep-mep"
+    timeout: 10000
+- assertNotVisible:
+    id: "nep-dia"
+
+# 3. một chạm chỉ lôi Nếp ra, KHÔNG mở bảng
+- tapOn:
+    id: "nep-mep"
+- extendedWaitUntil:
+    visible:
+      id: "nep-dia"
+    timeout: 10000
+- assertNotVisible:
+    id: "nep-o-nhap"
+
+# 4. chạm lần nữa mới mở bảng, và bảng biết đang ở đâu
+- tapOn:
+    id: "nep-dia"
+- extendedWaitUntil:
+    visible:
+      id: "nep-ngu-canh"
+    timeout: 10000
+- assertVisible: "Khám phá"
+
+# 5. Back đóng bảng, Nếp vẫn còn
+- back
+- extendedWaitUntil:
+    visible:
+      id: "nep-dia"
+    timeout: 10000
+- assertNotVisible:
+    id: "nep-o-nhap"

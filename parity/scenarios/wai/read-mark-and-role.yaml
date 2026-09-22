@@ -1,0 +1,255 @@
+# WAI · read-mark và vai trò thành viên.
+#
+# Mốc đã đọc chỉ tiến, không lùi: một thiết bị chậm ACK một tin cũ không được
+# làm sống lại những tin người ta đã đọc. `unread_count` trong câu trả lời là
+# thứ hai bên phải khớp, không chỉ mốc.
+#
+# Vai trò nằm cùng nhóm route `messages` trong manifest, nên nó đi cùng file
+# này thay vì phải dựng lại một nhóm thứ hai chỉ để đổi một chữ.
+id: wai/read-mark-and-role
+routes: ['PUT /contexts/{context_id}/read-mark', 'PUT /contexts/{context_id}/members/{person_id}/role']
+auth_mode: dev
+personas:
+  owner: {}
+  member: {}
+  stranger: {}
+steps:
+  - id: register_owner
+    as: owner
+    request:
+      method: PUT
+      path: '/people/{{persona.owner}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người mở phòng mốc đọc (dữ liệu mẫu)"}'
+  - id: register_member
+    as: member
+    request:
+      method: PUT
+      path: '/people/{{persona.member}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Thành viên đọc tin (dữ liệu mẫu)"}'
+  - id: register_stranger
+    as: stranger
+    request:
+      method: PUT
+      path: '/people/{{persona.stranger}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người ngoài mốc đọc (dữ liệu mẫu)"}'
+  - id: owner_creates_group
+    as: owner
+    request:
+      method: POST
+      path: '/contexts'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Phòng mốc đọc (dữ liệu mẫu)"}'
+    bind:
+      ctx: {from: body, pointer: /id, class: uuid}
+  - id: owner_invites_member
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/members'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"person_id":"{{persona.member}}"}'
+    bind:
+      membership: {from: body, pointer: /id, class: uuid}
+  - id: member_accepts
+    as: member
+    request:
+      method: POST
+      path: '/memberships/{{membership}}/accept'
+
+  - id: owner_sends_older
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin cũ hơn"}'
+    bind:
+      msg_older: {from: body, pointer: /id, class: uuid}
+  - id: owner_sends_newer
+    as: owner
+    request:
+      method: POST
+      path: '/contexts/{{ctx}}/messages'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"kind":"text","body":"Tin mới hơn"}'
+    bind:
+      msg_newer: {from: body, pointer: /id, class: uuid}
+
+  # Mốc đã đọc
+  - id: anonymous_marks
+    as: anonymous
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_newer}}"}'
+  - id: stranger_marks
+    as: stranger
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_newer}}"}'
+  - id: member_marks_missing_body
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+  - id: member_marks_not_uuid
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"khong-phai-uuid"}'
+  - id: member_marks_unknown_message
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"}'
+  - id: member_marks_newer
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_newer}}"}'
+  # Lùi về tin cũ: mốc phải đứng yên, không quay lại
+  - id: member_marks_older_after_newer
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_older}}"}'
+  - id: member_marks_newer_again
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_newer}}"}'
+  - id: owner_marks_first_time
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/read-mark'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"message_id":"{{msg_older}}"}'
+  - id: owner_reads_contexts_after_mark
+    as: owner
+    request:
+      method: GET
+      path: '/contexts'
+  - id: member_reads_contexts_after_mark
+    as: member
+    request:
+      method: GET
+      path: '/contexts'
+
+  # Vai trò
+  - id: anonymous_sets_role
+    as: anonymous
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: stranger_sets_role
+    as: stranger
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: member_promotes_self
+    as: member
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: owner_sets_unknown_role
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"chu-phong"}'
+  - id: owner_sets_role_on_stranger
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.stranger}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: owner_promotes_member
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: owner_promotes_member_again
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"admin"}'
+  - id: owner_lists_members_after_promotion
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'
+  - id: owner_demotes_member
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.member}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
+  - id: owner_demotes_self
+    as: owner
+    request:
+      method: PUT
+      path: '/contexts/{{ctx}}/members/{{persona.owner}}/role'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"role":"member"}'
+  - id: owner_lists_members_final
+    as: owner
+    request:
+      method: GET
+      path: '/contexts/{{ctx}}/members'

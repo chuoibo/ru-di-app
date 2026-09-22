@@ -19,6 +19,7 @@ import {
   type KeHoach,
   type TheAi as TheKeHoach,
 } from "../../screens/chat/ke-hoach";
+import { docKhoiNhap, type KhoiNhapTrongThe } from "./to-hen-chung";
 
 export type LoaiPhanUng = "heart" | "haha" | "like" | "wow" | "sad" | "fire";
 
@@ -48,6 +49,7 @@ export type TrichDan = {
 };
 
 export type Tin = {
+  revision?: number;
   id: string;
   context_id: string;
   author_id: string | null;
@@ -248,11 +250,31 @@ export async function danhDauDaDoc(contextId: string, personId: string, messageI
 /** Newest first, no duplicates. Both inputs may be in either order. */
 export function gopTin(dangGiu: Tin[], them: Tin[]): Tin[] {
   const theoId = new Map<string, Tin>();
-  for (const t of [...dangGiu, ...them]) theoId.set(t.id, t);
-  return [...theoId.values()].sort((a, b) => {
+  for (const t of [...dangGiu, ...them]) {
+    const held = theoId.get(t.id);
+    if (held?.kind === "deleted" && t.kind !== "deleted") continue;
+    if (held?.revision !== undefined && (t.revision ?? -1) < held.revision) continue;
+    theoId.set(t.id, t);
+  }
+  const result = [...theoId.values()].map((t) => t.reply_to && theoId.get(t.reply_to.id)?.kind === "deleted"
+    ? { ...t, reply_to: { ...t.reply_to, kind: "deleted" as const, preview: "Tin nhắn đã bị xoá" } } : t);
+  return result.sort((a, b) => {
     if (a.created_at === b.created_at) return a.id < b.id ? 1 : -1;
     return a.created_at < b.created_at ? 1 : -1;
   });
+}
+
+/** Invalidations must not widen the loaded history past unread pages. */
+export function apDungAnhChup(current: Tin[], incoming: Tin[]): Tin[] {
+  if (current.length === 0) return gopTin(current, incoming);
+  const known = new Set(current.map((message) => message.id));
+  const oldest = current[current.length - 1];
+  const admitted = incoming.filter((message) => known.has(message.id) || message.created_at > oldest.created_at ||
+    message.created_at === oldest.created_at && message.id >= oldest.id);
+  const deleted = new Set(incoming.filter((message) => message.kind === "deleted").map((message) => message.id));
+  return gopTin(current, admitted).map((message) => message.reply_to && deleted.has(message.reply_to.id)
+    ? { ...message, reply_to: { ...message.reply_to, kind: "deleted" as const, preview: "Tin nhắn đã bị xoá" } }
+    : message);
 }
 
 /** The cursor of the newest message held, for `?after=` polling. */
@@ -265,9 +287,9 @@ export function cursorCuNhat(tin: Tin[]): string | null {
   return tin.length === 0 ? null : tin[tin.length - 1].cursor;
 }
 
-/** Replace one message's reactions after the server answered. */
+/** Unversioned legacy ACKs cannot overwrite a versioned feed snapshot. */
 export function thayPhanUng(tin: Tin[], messageId: string, reactions: PhanUngTomTat[]): Tin[] {
-  return tin.map((t) => (t.id === messageId ? { ...t, reactions } : t));
+  return tin.map((t) => (t.id === messageId && t.revision === undefined ? { ...t, reactions } : t));
 }
 
 /**
@@ -350,7 +372,7 @@ export function gioPhut(iso: string): string {
 export type TheAi =
   | { loai: "text"; text: string }
   | { loai: "places"; the: Extract<TheKeHoach, { kind: "places" }> }
-  | { loai: "itinerary"; the: KeHoach }
+  | { loai: "itinerary"; the: KeHoach; outingId?: string; nhapChung?: KhoiNhapTrongThe }
   | { loai: "poll"; vote_id: string; question: string; options: { id: string; label: string }[] }
   | {
       loai: "expense_draft";
@@ -372,6 +394,24 @@ export function khoaHang(hang: HangHienThi): string {
   return `tin-${hang.tin.id}`;
 }
 
+/** Hide only a poll command that has a matching persisted poll card. */
+export function tinChoHoiThoai(messages: readonly Tin[]): Tin[] {
+  const polls = new Map<string, number[]>();
+  for (const message of messages) {
+    const card = docTheAi(message.card);
+    if (card.loai !== "poll") continue;
+    const question = card.question.replace(/\?$/, "").trim();
+    const times = polls.get(question) ?? [];
+    times.push(Date.parse(message.created_at));
+    polls.set(question, times);
+  }
+  return messages.filter((message) => {
+    if (message.kind !== "text" || !message.body?.startsWith("/vote ")) return true;
+    const question = message.body.slice(6).split("?")[0].trim();
+    return !(polls.get(question) ?? []).some((at) => Math.abs(at - Date.parse(message.created_at)) < 30000);
+  });
+}
+
 /** Read a server card without trusting its shape. Anything odd is `khac`. */
 export function docTheAi(card: unknown): TheAi {
   if (!laBanGhi(card) || !laBanGhi(card.payload)) return { loai: "khac" };
@@ -386,7 +426,10 @@ export function docTheAi(card: unknown): TheAi {
       const the = theTuCard(card);
       if (the === null || the.kind === "text") return { loai: "khac" };
       if (the.kind === "places") return { loai: "places", the };
-      return { loai: "itinerary", the };
+      // A shared sheet is an itinerary card too; the `draft` block is what
+      // says the group may still edit it, rather than accept it.
+      const nhapChung = docKhoiNhap(card);
+      return { loai: "itinerary", the, ...(typeof p.outing_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.outing_id) ? { outingId: p.outing_id } : {}), ...(nhapChung ? { nhapChung } : {}) };
     }
     case "poll": {
       const options = Array.isArray(p.options)

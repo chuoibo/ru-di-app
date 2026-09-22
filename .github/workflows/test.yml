@@ -695,6 +695,152 @@ jobs:
   # The script provisions its own PostgreSQL and its own uvicorn, pins
   # EXPO_PUBLIC_API_URL at them, and sets MOBILE_REQUIRE_E2E=1 so an
   # unreachable server is a failure rather than a skip.
+  crypto:
+    name: the MLS crate builds and its canaries bite
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: present
+        # Same rule as every other suite here: skip an absence, fail a defect.
+        # Deleting the canaries must never be the thing that turns this green.
+        run: |
+          if [ ! -d packages/chat-crypto ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::packages/chat-crypto is not on this branch, skipping"
+          elif [ -f packages/chat-crypto/tests/mls_canaries.rs ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::packages/chat-crypto exists but its canaries do not -- refusing to skip"
+            exit 1
+          fi
+
+      # rustup ships on the runner image; `rust-toolchain.toml` in the crate
+      # pins the version, so this installs exactly what the authors used.
+      - if: steps.present.outputs.found == 'true'
+        run: rustup show
+
+      - if: steps.present.outputs.found == 'true'
+        run: cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check
+
+      - if: steps.present.outputs.found == 'true'
+        run: cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings
+
+      # A crate whose tests all vanished still passes `cargo test`, so count
+      # them: the canaries are the reason this job exists.
+      - if: steps.present.outputs.found == 'true'
+        run: |
+          set -o pipefail
+          cargo test --manifest-path packages/chat-crypto/Cargo.toml --all-targets 2>&1 | tee /tmp/crypto.log
+          passed=$(grep -oE '^test result: ok\. [0-9]+ passed' /tmp/crypto.log | awk '{s+=$4} END {print s+0}')
+          echo "canaries passed: $passed"
+          if [ "$passed" -lt 20 ]; then
+            echo "::error::only $passed canaries ran; this crate had 21 -- a shrinking suite is not a passing one"
+            exit 1
+          fi
+          if grep -qE '^test result: .*[1-9][0-9]* (failed|ignored)' /tmp/crypto.log; then
+            echo "::error::a canary failed or was ignored"
+            exit 1
+          fi
+
+      # The C ABI is a separate crate so the audited core can keep
+      # `#![forbid(unsafe_code)]`. It is the only place in this repository that
+      # writes `unsafe`, which is exactly why it gets clippy at deny level and
+      # is built for the Android target the app will load it from.
+      - id: ffi
+        if: steps.present.outputs.found == 'true'
+        run: |
+          if [ -d packages/chat-crypto-ffi ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::packages/chat-crypto-ffi is not on this branch, skipping"
+          fi
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings
+
+      - if: steps.ffi.outputs.found == 'true'
+        run: cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release
+
+      # Building for the host proves it compiles; building for Android proves it
+      # can be loaded by the app, which is the whole point of the crate.
+      #
+      # `rustup target add` installs the Rust std for the target and NOTHING
+      # else: the linker and sysroot come from the NDK. Without them the link
+      # fails on `-llog` and `-lunwind`, which is exactly what the first attempt
+      # at this step did. The crate's own Android canary script already encodes
+      # this; these are the same three variables it exports.
+      - if: steps.ffi.outputs.found == 'true'
+        run: |
+          ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"
+          if [ -z "$ndk" ] || [ ! -d "$ndk" ]; then
+            echo "::error::no Android NDK on this runner; the cross build cannot be faked into passing"
+            exit 1
+          fi
+          bin="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          rustup target add x86_64-linux-android
+          CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$bin/x86_64-linux-android26-clang" \
+          CC_x86_64_linux_android="$bin/x86_64-linux-android26-clang" \
+          AR_x86_64_linux_android="$bin/llvm-ar" \
+            cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml \
+              --release --target x86_64-linux-android
+
+      # A cdylib that exports nothing is a file, not a bridge.
+      - if: steps.ffi.outputs.found == 'true'
+        run: |
+          so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)
+          test -n "$so" || { echo "::error::no shared object was produced"; exit 1; }
+          missing=0
+          for sym in rudi_chat_crypto_client_new rudi_chat_crypto_client_free \
+                     rudi_chat_crypto_string_free rudi_chat_crypto_identity \
+                     rudi_chat_crypto_create_group rudi_chat_crypto_encrypt \
+                     rudi_chat_crypto_receive; do
+            nm -D --defined-only "$so" | grep -q " $sym\$" || { echo "::error::$sym is not exported"; missing=1; }
+          done
+          test "$missing" -eq 0
+
+  chat-e2e:
+    name: chat end to end on the Go front door
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: present
+        # Same rule as the other suites: skip an absence, fail a defect. The
+        # tier disappearing must never be the thing that turns this green.
+        run: |
+          if [ ! -d services/core/e2e/chat ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::services/core/e2e/chat is not on this branch, skipping"
+          elif [ -x scripts/chat_e2e_go.sh ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::the chat E2E cases exist but scripts/chat_e2e_go.sh does not -- refusing to skip"
+            exit 1
+          fi
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/core/go.mod
+
+      - if: steps.present.outputs.found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Drives a real stack -- PostgreSQL, the Python API, and the Go core with
+      # the chat candidate on -- over HTTP and WebSocket. The script refuses a
+      # run with no sentinel, any SKIP, or a stack that never came up.
+      - if: steps.present.outputs.found == 'true'
+        run: scripts/chat_e2e_go.sh
+
   e2e:
     name: the vertical slice, client against a real API
     runs-on: ubuntu-latest

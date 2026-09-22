@@ -105,7 +105,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
     </>
   );
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, cuoi && !onPress && styles.rowCuoiTinh]}>
       <Text numberOfLines={1} style={[typography.label, styles.gio, { color: colors.ink }]}>{gio}</Text>
       <View style={styles.axis}>
         <View
@@ -126,11 +126,11 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
         )}
       </View>
       {onPress ? (
-        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" accessibilityState={{ selected: chon }} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, pressed && styles.pressed]}>
+        <Pressable accessibilityLabel={accessibilityLabel ?? tieuDe} accessibilityRole="button" accessibilityState={{ selected: chon }} aria-selected={chon} onPress={onPress} style={({ pressed }) => [styles.body, cuoi && styles.bodyCuoi, pressed && styles.pressed]}>
           {body}
         </Pressable>
       ) : (
-        <View style={styles.body}>{body}</View>
+        <View style={[styles.body, cuoi && styles.bodyCuoi, cuoi && styles.bodyCuoiTinh]}>{body}</View>
       )}
       {anh ? (
         <View style={styles.phai}>
@@ -145,6 +145,7 @@ export function HangChang({ gio, tieuDe, phu, phuTone = "inkSoft", ghiChu, daToi
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "stretch", gap: 10, minHeight: 64 },
+  rowCuoiTinh: { minHeight: 0 },
   // Intrinsic width: every hour is five tabular digits, so the column lines up
   // without a fixed width, and at font 1.3 «07:00» stays on one line.
   gio: { minWidth: 46, flexShrink: 0, textAlign: "right", paddingTop: 2, fontVariant: ["tabular-nums"] },
@@ -155,6 +156,11 @@ const styles = StyleSheet.create({
   node: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, marginTop: 4 },
   line: { flex: 1, width: 2, marginTop: 4, marginBottom: -4, minHeight: 20 },
   body: { flex: 1, gap: 2, paddingBottom: 18, minHeight: 48 },
+  // Last stop: no connector below it, so no room to leave for one. The
+  // 48dp minimum stays -- `body` is the Pressable when `onPress` is given.
+  bodyCuoi: { paddingBottom: 0 },
+  // Only a row nobody can tap may drop the floor as well.
+  bodyCuoiTinh: { minHeight: 0 },
   pressed: { opacity: 0.7 },
   phai: { justifyContent: "flex-start", paddingTop: 0, flexShrink: 0 },
 });

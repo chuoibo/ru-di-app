@@ -49,6 +49,7 @@ import {
   themChang,
 } from "../../keo/keo";
 import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
+import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
@@ -170,6 +171,23 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
     [danhMuc],
   );
   const stopsHien = trang.pha === "xong" ? (draft?.stops ?? trang.keo.stops) : [];
+
+  // The context slip. Declared here rather than in the route adapter because
+  // this is where the outing's own facts live. What travels is the title the
+  // person is already reading, the trip's tempo, and two counts -- never the
+  // member list and never a đồng. `tests/nep-phieu-kin.test.mjs` keeps that
+  // true at the call site; `phieu.ts` keeps it true at runtime.
+  useNepNguCanh(
+    trang.pha === "xong"
+      ? {
+          man: "outings/[id]",
+          tieuDe: trang.keo.title,
+          nhip: nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()),
+          soLieu: { soNguoi: trang.keo.headcount, soChang: stopsHien.length },
+          goiY: ["Chặng này đi bao lâu?", "Thêm chỗ ăn gần đây", "Nhắc mình trước khi đi"],
+        }
+      : null,
+  );
   const hanh = useMemo(() => chieuTuChang(stopsHien, cho), [stopsHien, cho]);
 
   if (contextId === null) return <Redirect href="/(tabs)/plan" />;

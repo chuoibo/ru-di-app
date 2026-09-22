@@ -188,9 +188,28 @@ const CHO_PHEP = new Map([
     "d.start_stop_id === id ? null : d.start_stop_id",
     "d.end_stop_id === id ? null : d.end_stop_id",
   ]],
+  // A stored reference read back out of a card's JSON. Neither branch is a
+  // display value: the sheet either points at the poll it came from, or it
+  // points at nothing. Same shape as the ke-hoach.ts anchors above.
+  ["rudi/chat/to-hen-chung.ts", [
+    'typeof row.source_vote_id === "string" ? row.source_vote_id : null',
+  ]],
+  // Which creation call to make, and the outing id to navigate to afterwards.
+  // The id is an argument to the router, never drawn for a reader. Present
+  // since the sheet branch was written; the gate only sees it now because the
+  // handoff ran the chat tests rather than the whole suite.
+  ["rudi/screens/keo/CreateOutingLive.tsx", [
+    "sourceMessageId ? (await taoKeoTuChat(contextId, phien.person_id, sourceMessageId, kq.body, reviewTime ? stops : undefined)).outing_id : (await taoKeo(contextId, phien.person_id, kq.body, attempt.current!)).id",
+  ]],
   ["navigation/VoTab.tsx", [
     // Which group the tab shell is showing. An argument to navigation.
     "nhom?.id ?? nhomId",
+  ]],
+  ["rudi/nep/NepBang.tsx", [
+    // Ai đang hỏi Nếp. Đi thẳng vào `useNepAnh` làm khoá xác thực của request
+    // và không bao giờ tới mắt người đọc: bảng Nếp không in id của ai cả.
+    // `null` là câu trả lời thật cho bản trải nghiệm, nơi chưa có ai đăng nhập.
+    'nguon.kieu === "live" ? nguon.actorId : null',
   ]],
   ["participants.ts", [
     // Clearing the advancer when that person is removed. Stored, never drawn.

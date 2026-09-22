@@ -474,6 +474,86 @@ INLINE_STEPS: dict[str, Covered] = {
         why="",
     ),
     # --- test.yml: e2e ----------------------------------------------------
+    "test.yml::crypto::present": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="15cc225748fd287e",
+        why="",
+    ),
+    "test.yml::crypto::rustup show": Covered(
+        kind=SETUP_KIND,
+        stages=(),
+        # `rust-toolchain.toml` in the crate pins the version; this only makes
+        # rustup materialise it. It asserts nothing about the tree.
+        why="rustup materialises the pinned toolchain; asserts nothing",
+        body_sha="75c0fa7b71e29a14",
+    ),
+    "test.yml::crypto::cargo fmt --manifest-path packages/chat-crypto/Cargo.toml --check": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="7598449b7e31dafc",
+        why="",
+    ),
+    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto/Cargo.toml --all-targets -- -D warnings": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="de3cabd55ad98e02",
+        why="",
+    ),
+    "test.yml::crypto::ffi": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="73401e8e7198f08c",
+        why="",
+    ),
+    "test.yml::crypto::cargo fmt --manifest-path packages/chat-crypto-ffi/Cargo.toml --check": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="14890b5d4120d614",
+        why="",
+    ),
+    "test.yml::crypto::cargo clippy --manifest-path packages/chat-crypto-ffi/Cargo.toml --all-targets -- -D warnings": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="01c9bd354cac9ab0",
+        why="",
+    ),
+    "test.yml::crypto::cargo build --manifest-path packages/chat-crypto-ffi/Cargo.toml --release": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="ab4c03cd34b7d32b",
+        why="",
+    ),
+    'test.yml::crypto::ndk="${ANDROID_NDK_ROOT:-${ANDROID_NDK_LATEST_HOME:-}}"': Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="3ba0e459ca00d91e",
+        why="",
+    ),
+    "test.yml::crypto::so=$(find packages/chat-crypto-ffi/target -name 'librudi_chat_crypto_ffi.so' | head -1)": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="f05c6c09ea3c028e",
+        why="",
+    ),
+    "test.yml::crypto::set -o pipefail": Covered(
+        kind=GATE_KIND,
+        stages=("crypto",),
+        body_sha="101ff0a4ff076804",
+        why="",
+    ),
+    "test.yml::chat-e2e::present": Covered(
+        kind=GATE_KIND,
+        stages=("chat-e2e",),
+        body_sha="7cf360b2a7c5e880",
+        why="",
+    ),
+    "test.yml::chat-e2e::scripts/chat_e2e_go.sh": Covered(
+        kind=GATE_KIND,
+        stages=("chat-e2e",),
+        body_sha="ae5fe8951003d463",
+        why="",
+    ),
     "test.yml::e2e::present": Covered(
         kind=GATE_KIND,
         stages=("e2e",),

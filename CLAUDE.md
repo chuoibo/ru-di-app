@@ -70,7 +70,17 @@ command.upgrade(c,'head',sql=True)" >/dev/null && echo ok
 
 ## Kiến trúc
 
-Lát cắt dọc duy nhất đang chạy: `POST /expenses` → allocator chia tiền → `confirm` ghi vào sổ → `POST /batches` gom nghĩa vụ → `publish` sinh envelope → `GET /g/{token}` trang khách → khách báo đã chuyển → người nhận `confirm-receipt`. Chưa có Home, chưa có tab (spec mục 14.3 cấm thiết kế Home trước khi biết hành động nào tồn tại).
+**Backend đang ở giữa đợt chuyển, và CẢ HAI nửa đều đang chạy** — đừng đọc nửa nào là "backend".
+
+| | |
+|---|---|
+| `services/core/` | Go 1.23, cửa trước công khai. **Phục vụ 126/156 route** (`LIVE-GO`), phần còn lại proxy về Python |
+| `services/api/` | FastAPI legacy, còn phục vụ 30 route, **và là oracle** để cổng parity so Go |
+| `parity/` | Module Go riêng, hộp đen: dựng hai stack, phát lại kịch bản, so byte HTTP + hàng DB + kho ảnh |
+
+**Nguồn sự thật về ai phục vụ route nào là `services/core/ownership/routes.json`**, không phải cây thư mục — `scripts/check_route_ownership.py` gác nó. Xoá mã Python để "xong port" là xoá luôn bằng chứng port đúng.
+
+Mô tả dưới đây là **tầng phía Python**, giữ vì nó vẫn chạy và vẫn là oracle.
 
 Tầng, từ trong ra ngoài:
 
@@ -104,9 +114,15 @@ Thêm: sửa khoản chi tạo **phiên bản mới** chứ không ghi đè; `re
 | `tests/api/` với fake repository (`tests/api/conftest.py`) | Orchestration HTTP ↔ domain | Bất kỳ câu SQL, index, view, trigger nào |
 | `tests/postgres/` | `SqlAlchemyApiRepository` thật sau khi Alembic migrate một schema riêng | Mọi method, mọi race, mọi query plan |
 | `tests/db/test_migration_matches_models.py` | Migration khớp models, không cần DB | — |
+| `go test ./...` trong `services/core` | Đơn vị và golden phía Go | Go có khớp Python không — golden do chính Go tự giữ |
+| `scripts/go_postgres_tier.sh` | `SqlAlchemyApiRepository` phía Go trên PostgreSQL thật, `-tags postgres` | **Skip là ĐỎ ở tầng này**: thiếu sentinel coi như hỏng, đừng đọc skip thành xanh |
+| `make parity` — hộp đen Go ↔ Python | Hai stack trả **byte giống nhau**: wire HTTP, hàng DB từng bước, kho ảnh | Python có đúng không — Python là **oracle**, parity chỉ chứng minh Go khớp nó. Oracle sai thì cả hai cùng sai |
+| `scripts/check_route_ownership.py` | Manifest khớp mã và evidence có thật | Route Go phục vụ có đúng hành vi không — đó là việc của parity |
 | QA hình ảnh + thăm dò (agy) — ADR-0010 | Trang render được, đọc được, không lộ dữ liệu người khác, ở các trạng thái và thiết bị **đã quét** | **Mã QR có quét được bằng app ngân hàng thật không** · người thật có hiểu không · ô nào **chưa** quét · rằng agy không tự sửa môi trường để ra xanh |
 
-Hàng cuối cần đọc kỹ cột phải. Tác giả plugin đã quan sát được agy **tự sửa môi trường của chính nó** (vá package đã cài, mock-stub dependency) để ép một lệnh pass. Digest của agy **không phải bằng chứng**; người giao việc chạy lại cổng trong cây sạch.
+Hai hàng đáng đọc kỹ nhất: **parity chỉ chứng minh Go khớp Python, không chứng minh Python đúng** — nó là phép so, không phải phép kiểm; và **skip ở tầng `go_postgres_tier.sh` là đỏ**, không phải xanh.
+
+Hàng cuối cũng cần đọc kỹ cột phải. Tác giả plugin đã quan sát được agy **tự sửa môi trường của chính nó** (vá package đã cài, mock-stub dependency) để ép một lệnh pass. Digest của agy **không phải bằng chứng**; người giao việc chạy lại cổng trong cây sạch.
 
 SQLite bị từ chối có chủ ý: schema production dựa vào JSONB, partial unique index, view và trigger append-only. Thêm hành vi persistence mới thì **thêm ca live tương ứng**; mở rộng fake rồi coi đó là bằng chứng DB là nói dối.
 
@@ -114,16 +130,21 @@ SQLite bị từ chối có chủ ý: schema production dựa vào JSONB, partia
 
 Nguồn sự thật: `docs/team/charter.md`, `docs/decisions/ADR-*.md`, `docs/architecture/00-layout-va-so-huu.md`. Đọc trước khi đổi hành vi.
 
-- **Ranh giới sở hữu** (chốt 2026-08-27): Claude giữ `app/web/` (template, câu chữ, style) và `apps/mobile/`. Codex giữ `db/`, `api/`, `domain/` và test backend. Ở trang khách: route và truy cập dữ liệu là của Codex, template không bao giờ tự query.
-- **Nhánh**: `<owner>/p0-w<N>-<slug>`, slug phải là Work ID cụ thể — `backend`/`research` là sai.
-- **PR (ADR-0007)**: review sống trên GitHub PR, không phải file. Verdict đúng ba giá trị: `APPROVE` / `REQUEST_CHANGES` / `REJECT`. `APPROVE` → merge ngay, ai bấm nút không quan trọng. `REQUEST_CHANGES` → trả về cho tác giả, không thương lượng qua comment rồi merge lén. **Không tự review PR của chính mình.** Leader chỉ đọc `main`, nên mô tả PR phải nói *cái gì đổi và vì sao*, đừng bắt người đọc suy từ diff.
+- **Một vai fullstack** (ADR-0032, chốt 2026-09-22): không còn bảng sở hữu theo người, không còn lane Claude/Codex. Ai nhận việc thì làm trọn lát cắt: Go backend · SQL và migration · Python AI · TypeScript frontend · mobile native · test mọi tầng · tự chạy cổng. Một việc là của một người từ đầu đến cuối; việc lớn thì cắt theo **lát cắt dọc chạy được**, không cắt theo tầng.
+- **Ranh giới còn lại là ranh giới TẦNG, không phải ranh giới người**: `domain/` không import `db`/`api`; ở trang khách route và truy cập dữ liệu nằm ngoài template, template không bao giờ tự query; mỗi module có đúng một writer. Cưỡng chế bằng test, không bằng phân công.
+- **Không còn PR bắt buộc** (ADR-0032 thay luật merge của ADR-0007): commit thẳng lên `main`. Mở PR chỉ khi thật sự muốn người khác đọc trước. Verdict vẫn đúng ba giá trị `APPROVE` / `REQUEST_CHANGES` / `REJECT`, nhưng chỉ dùng khi có reviewer thật.
+- **Leader chỉ đọc `main`, và giờ chỉ còn commit message để đọc.** Commit message phải nói *cái gì đổi và vì sao*, kèm số đo của cổng đã chạy. Đừng bắt người đọc suy từ diff.
+- **Cổng bằng chứng thay chỗ chữ ký người** (ADR-0030 §3, nay áp cho cả frontend/mobile): chạy lại trong **cây sạch đúng SHA** · canary phải đỏ ở chỗ đã dự đoán, identity xanh · **ít nhất hai đột biến tự nghĩ**, kiểm tương đương trước, mỗi cái đỏ ở đúng bước đã dự đoán · với UI thì **mở ảnh chụp ra nhìn**, bảng xanh không phải bằng chứng hình ảnh · **số đo viết thẳng vào commit message**. Digest của agent không phải bằng chứng.
+- **Nhánh**: slug phải là Work ID cụ thể — `backend`/`research` là sai. Tiền tố chủ sở hữu không còn bắt buộc.
 - **Blocker chỉ hợp lệ** khi thuộc 5 loại: vi phạm spec/cổng · sai tiền · quyền riêng tư/bảo mật/consent · hỏng tính hợp lệ thí nghiệm · không tái lập được. Đặt tên, phong cách, "tôi thích cách kia hơn" là suggestion. Blocker phải kèm dẫn chứng · hậu quả · tiêu chí gỡ chặn.
-- **Review doc dài** (khi cần lập luận hơn một comment) commit lên chính nhánh đang được review, đặt ở `docs/archive/claude/<YYYY-MM-DD>/` hoặc `docs/archive/codex/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict · blocker còn mở · bằng chứng đã xem.
-- `docs/team/hang-doi.md` là hàng đợi việc đang mở giữa hai engineer — đọc khi cần biết cái gì còn nợ.
+- **Ghi chép dài** (khi cần lập luận hơn một dòng commit) đặt ở `docs/claude/<YYYY-MM-DD>/`, kèm commit SHA · protocol_version · verdict nếu có · cái gì còn mở · bằng chứng đã xem. **Nhật ký mới luôn ghi vào đó, KHÔNG ghi vào `docs/archive/`** — archive là lịch sử đã đóng băng, thêm file vào đó thì nó thôi là archive. Nhật ký cũ của hai lane ở `docs/archive/claude/` và `docs/archive/codex/`: đọc được, không sửa, không di chuyển (repo guard ghim sha256 theo đúng đường dẫn đó).
+- `docs/team/hang-doi.md` là hàng đợi việc còn nợ — đọc khi cần biết cái gì đang mở.
+- **agy vẫn là QA/QC chạy song song** (ADR-0010): nộp phát hiện, không nộp diff, không sở hữu file mã nguồn sản phẩm nào, không ký verdict, không sinh đáp án tiền. Người giao việc chạy lại cổng trong cây sạch.
 
 ## Bẫy đã biết
 
-- **`apps/mobile/` (378 file) và `packages/shared/` ĐÃ ở trên `main`** từ 2026-08-30; dòng cũ nói ngược là sai. Hai job `shared` và `mobile` trong `.github/workflows/test.yml` vẫn tự phát hiện thư mục trước khi chạy — giữ nguyên cách đó, đừng "sửa" thành vô điều kiện. **Và `apps/mobile/` chứa HAI app**: vỏ RuDi expo-router (`app/**` → `src/rudi/`, cái ship) và cây legacy (`App.tsx` → `src/screens/**`, chỉ tới qua `/legacy`); ADR-0016 quyết hội tụ về vỏ RuDi và xoá legacy theo từng mảng.
+- **`apps/mobile/` (610 file) và `packages/shared/` ĐÃ ở trên `main`** từ 2026-08-30. Hai job `shared` và `mobile` trong `.github/workflows/test.yml` vẫn tự phát hiện thư mục trước khi chạy — giữ nguyên cách đó, đừng "sửa" thành vô điều kiện.
+- **`apps/mobile/` chỉ còn MỘT app.** Dòng cũ nói "chứa HAI app" với cây legacy `App.tsx` → `src/screens/**` là **sai**: `App.tsx` không tồn tại trên `main`, `package.json` khai `"main": "expo-router/entry"`, và `app/[...legacy].tsx` chỉ là một redirect 9 dòng. Việc hội tụ theo ADR-0016 đã xong phần vỏ. `src/screens/` còn **31 file, toàn `.ts`, 0 file `.tsx`** — đó là **tầng nghiệp vụ** mà vỏ RuDi import 29/31 module, không phải màn hình. Đổi tên nó cho đúng là việc còn nợ; đừng xoá nó như "legacy".
 - **`phase0/` và `docs/protocol/v1/` đóng băng tại chỗ.** Không sửa, không xoá. `protocol_version` là snapshot bất biến: cần đổi thì ADR cho phép tạo `v2`, không sửa `v1`.
 - **Repo guard fail closed** với binary, file text > 2 MiB, symlink, gitlink mới. Muốn thêm artifact thì pin `path` + `sha256` + `rules` + `reason` vào `.repo-guard-allowlist.json` — đổi một byte là phải review lại.
 - **Không bao giờ đưa vào Git**: ảnh bill, số tài khoản, tên người tham gia, transcript thô, file export, `.env` thật. `.gitignore` không phải nơi lưu an toàn; dữ liệu thật nằm ngoài repo và ngoài mọi worktree.

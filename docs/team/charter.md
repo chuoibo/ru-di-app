@@ -1,6 +1,8 @@
-# Điều lệ làm việc — team 2 engineer + leader
+# Điều lệ làm việc — một engineer fullstack + leader
 
-> Kết quả hội tụ sau 4 vòng debate Claude ↔ Codex, 2026-08-26.
+> Bản gốc là kết quả hội tụ sau 4 vòng debate Claude ↔ Codex, 2026-08-26.
+> **Viết lại 2026-09-22 theo `ADR-0032`**: lane Codex đã đóng (`ADR-0030`, 16/09), không còn chia
+> nhiệm vụ theo tầng, không còn review chéo, không còn PR bắt buộc.
 > Tài liệu này là **nguồn sự thật về quy trình**. Đổi nó cần một ADR trong `docs/decisions/`.
 
 ## 1. Vai
@@ -8,34 +10,46 @@
 | Vai | Ai | Chịu trách nhiệm |
 |---|---|---|
 | Leader | Chủ sản phẩm | Tuyển nhóm, chỉ định/đóng vai operator, thuê counsel, ngân sách và khuyến khích, giám sát tiền thật giữa participant, xử lý sự cố thực địa, **ký quyết định gate** |
-| Engineer | Claude | Giao thức đo, thiết kế thí nghiệm, chính sách dữ liệu, phân tích và gate packet |
-| Engineer | Codex | Study instrument, threat model, repo guard, OCR harness |
-| QA | agy | Kiểm thử sản phẩm: hình ảnh, thăm dò, API, hồi quy. **Nộp phát hiện, không nộp diff — không sở hữu file mã nguồn sản phẩm nào** *(ADR-0010)* |
+| Engineer | Một vai fullstack | **Toàn bộ sản phẩm**: Go backend · SQL và migration · Python AI · TypeScript frontend · `apps/mobile/` · trang khách · test mọi tầng · giao thức đo, thiết kế thí nghiệm, chính sách dữ liệu, threat model, repo guard, gate packet |
+| QA | agy | Kiểm thử sản phẩm: hình ảnh, thăm dò, API, hồi quy — **chạy song song** với việc engineering. **Nộp phát hiện, không nộp diff — không sở hữu file mã nguồn sản phẩm nào** *(ADR-0010)* |
 
-**Cả ba agent chạy hai luồng việc song song cùng lúc**: task của mình theo plan, và review/kiểm việc của người khác. Không tuần tự, không xếp hàng, không để việc pending trong lúc đang thảo luận.
+**Một việc là của một người từ đầu đến cuối** *(ADR-0032)*. Không chia đôi theo tầng, không bàn giao nửa chừng, không chờ lane khác đồng ý. Việc lớn thì cắt theo **lát cắt dọc chạy được**, không cắt theo tầng.
 
-**Leader lane là đường găng thật.** Hai engineer chỉ sản xuất *công cụ* và *giao thức*. Không engineer nào bù được việc chưa tuyển được nhóm hoặc chưa có operator bằng cách viết thêm code.
+**Vẫn chạy hai luồng song song**: task của mình, và kiểm việc đã làm — nhưng luồng thứ hai giờ là *tự kiểm bằng phép đo máy*, không phải chữ ký của người khác. Không xếp hàng, không để việc pending trong lúc đang thảo luận.
+
+**Leader lane là đường găng thật.** Engineer không bù được việc chưa tuyển được nhóm hoặc chưa có operator bằng cách viết thêm code.
 
 Engineer không phủi trách nhiệm kỹ thuật khi công cụ lỗi, kể cả công cụ dùng một lần.
 
 ## 2. Nhánh
 
 ```
-<owner>/p0-w<N>-<slug>            ví dụ  codex/p0-w9a-repo-guard
-<owner>/review-p0-w<N>-<slug>     ví dụ  claude/review-p0-w9a-repo-guard
+p0-w<N>-<slug>                    ví dụ  p0-w9a-repo-guard
 ```
 
-`<slug>` mơ hồ kiểu `backend` / `research` là sai. **Work ID là thứ nối branch ↔ review ↔ nhật ký ↔ protocol_version.**
+Tiền tố chủ sở hữu **không còn bắt buộc** *(ADR-0032)*. `<slug>` mơ hồ kiểu `backend` / `research` vẫn là sai. **Work ID là thứ nối branch ↔ nhật ký ↔ protocol_version.**
 
-### Review doc đi đường nào
+### `main` và PR
 
-> **Review doc đi kèm chính thứ nó review.** Reviewer commit file review lên **nhánh đang được review**; nó vào `main` qua chính PR của nhánh đó.
+> **Không còn PR bắt buộc** *(ADR-0032, thay luật merge của ADR-0007)*. Commit thẳng lên `main`.
 
-Không PR riêng cho review. Không ngoại lệ. Không direct push. Vòng lặp "review-only PR cần được review" biến mất vì **không còn PR nào chỉ chứa review**.
+Mở PR chỉ khi thật sự muốn người khác đọc trước khi vào `main`. Khi đó verdict vẫn đúng ba giá trị `APPROVE` / `REQUEST_CHANGES` / `REJECT`, và `REQUEST_CHANGES` vẫn chặn merge.
 
-Với thứ đã nằm trên `main`: review đi kèm **nhánh sửa** nó.
+**Leader chỉ đọc `main`, và giờ chỉ còn commit message để đọc.** Nên commit message phải nói *cái gì đổi và vì sao*, kèm số đo của cổng đã chạy. Đừng bắt người đọc suy từ diff.
 
-Hệ quả: verdict `REQUEST_CHANGES` **chặn merge về mặt cơ học**, vì review nằm trong cùng PR. *(ADR-0005 — thay thế cách làm ở ADR-0003, vốn mâu thuẫn với W9a-E.)*
+Ghi chép dài (khi cần lập luận hơn một dòng commit) đặt ở `docs/claude/<YYYY-MM-DD>/` và đi cùng commit mà nó nói về.
+
+### Cái gì thay chỗ con mắt thứ hai
+
+Không còn review chéo, nên cổng là phép đo máy chạy được *(ADR-0030 §3, nay áp cho cả frontend và mobile)*:
+
+- cổng chạy lại trong **cây sạch tại đúng SHA** — không phải cây của agent;
+- canary đỏ ở đúng chỗ đã dự đoán, identity xanh, cùng SHA harness;
+- **ít nhất hai đột biến tự nghĩ**, kiểm tương đương trước, mỗi cái đỏ ở đúng bước đã dự đoán;
+- với UI: **mở ảnh chụp ra nhìn**. Bảng xanh không phải bằng chứng hình ảnh;
+- **số đo viết thẳng vào commit message**, không để chỉ nằm trong log.
+
+Digest của agent không phải bằng chứng. Người giao việc chạy lại.
 
 ## 3. Hai cổng tách biệt
 
@@ -59,7 +73,7 @@ Hai trạng thái khác nhau và **chỉ trạng thái thứ hai mới mở đư
 
 | Trạng thái | Nghĩa | Ai làm |
 |---|---|---|
-| `artifact_complete` | Scanner, hook, workflow file, allowlist, runbook đã tồn tại và test xanh | Codex |
+| `artifact_complete` | Scanner, hook, workflow file, allowlist, runbook đã tồn tại và test xanh | Engineer |
 | `enforcement_active` | Required status check `repo-guard` đã **bật** · PR bắt buộc · **chặn direct push** (hoặc giới hạn bypass rõ ràng) · đã chạy **một PR dry-run âm tính** và nó thực sự bị chặn · bằng chứng cấu hình (không chứa PII) đã lưu vào gate packet | **LEADER** |
 
 Lý do phải tách: hook local bị bỏ qua bằng `--no-verify`. Có workflow file trong repo mà required check chưa bật thì scanner đỏ vẫn merge được — và FIELD-GATE sẽ bị hiểu nhầm là đã mở trong khi hàng rào server chưa hề enforce.
@@ -78,9 +92,9 @@ Mọi thứ khác — đặt tên, phong cách, "tôi thích cách kia hơn" —
 
 Blocker phải kèm: dẫn chứng · hậu quả · tiêu chí cụ thể để gỡ chặn.
 
-**SLA 1 ngày làm việc cho phản hồi review đầu tiên** (không phải cho phê duyệt). Quá hạn → leader can thiệp.
+Không còn reviewer thứ hai nên **không còn SLA review** *(ADR-0032)*. Blocker giờ chủ yếu do chính người làm tự đặt lên việc của mình, hoặc do leader đặt khi đọc `main`. Một blocker tự đặt vẫn phải kèm đủ ba thứ trên và vẫn chặn — tự gỡ chặn bằng cách viết lại tiêu chí là gian lận với chính mình.
 
-Review hai lần: **protocol/contract trước khi implement hoặc thu dữ liệu**, và **artifact trước khi merge**. Review sau khi đã thu dữ liệu người thật không sửa được thiết kế thí nghiệm.
+Vẫn kiểm hai lần, nhưng là hai lần **đo**, không phải hai lần người: **protocol/contract trước khi implement hoặc thu dữ liệu**, và **cổng bằng chứng trước khi vào `main`**. Kiểm sau khi đã thu dữ liệu người thật không sửa được thiết kế thí nghiệm.
 
 Leader phá được thế bế tắc về đánh đổi sản phẩm. Leader **không** phá được bằng cách: miễn consent · chấp nhận sai tiền · đổi ngưỡng sau khi đã thấy kết quả. Đổi protocol thì tăng `protocol_version` và **không gộp dữ liệu cũ**.
 
@@ -89,17 +103,20 @@ Leader phá được thế bế tắc về đánh đổi sản phẩm. Leader **
 ```
 docs/protocol/              giao thức thực địa — có version, snapshot bất biến
 docs/decisions/             ADR — mọi thay đổi protocol/gate/phạm vi
-docs/team/                  điều lệ + backlog
-docs/archive/claude/<YYYY-MM-DD>/   nhật ký + review việc của Codex
-docs/archive/codex/<YYYY-MM-DD>/    nhật ký + review việc của Claude
+docs/team/                  điều lệ + backlog + hàng đợi việc còn mở
+docs/claude/<YYYY-MM-DD>/   nhật ký và ghi chép dài của việc đang làm
+docs/archive/claude/        nhật ký cũ của lane Claude — đọc được, KHÔNG sửa, KHÔNG di chuyển
+docs/archive/codex/         nhật ký cũ của lane Codex — như trên
 docs/superpowers/specs/     spec sản phẩm — ĐÓNG BĂNG cho tới sau gate
 ```
 
 Mỗi `protocol_version` là **snapshot bất biến**. Không sửa `v1` tại chỗ; ADR cho phép tạo `v2` và dữ liệu mới trỏ tới `v2`. ADR phải được duyệt **trước** khi thay đổi có hiệu lực — không hợp thức hoá hậu nghiệm.
 
-Review doc bắt buộc có: **commit SHA · protocol_version · verdict · blocker còn mở · bằng chứng đã xem.**
+Ghi chép dài bắt buộc có: **commit SHA · protocol_version · cái gì còn mở · bằng chứng đã xem** — và `verdict` khi thật sự có reviewer.
 
 `verdict` dùng đúng ba giá trị, không dùng câu tự do: **`APPROVE`** · **`REQUEST_CHANGES`** · **`REJECT`**. *(Suggestion 1 của Codex, 2026-08-26 — để tự động hoá review không phải suy diễn text.)*
+
+`docs/archive/claude/` và `docs/archive/codex/` là **lịch sử đóng băng tại chỗ**: `.repo-guard-allowlist.json` ghim `sha256` theo đúng những đường dẫn đó, nên đổi tên hay di chuyển chúng làm `repo_guard tree HEAD` đỏ cả cây.
 
 Nhật ký là nhật ký, **không phải nguồn quyết định**. Quyết định sống ở `docs/decisions/`.
 

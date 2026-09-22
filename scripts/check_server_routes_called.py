@@ -359,11 +359,7 @@ def check() -> tuple[list[Finding], list[Accounted], list[str], dict]:
     if not twin.API_ROOT.is_dir():
         raise RuntimeError("services/api không có trên nhánh này")
 
-    contract = twin.read_contract(twin.load_openapi())
-    if not contract.routes:
-        raise RuntimeError(
-            "OpenAPI dựng được nhưng không có route nào -- từ chối coi là đạt"
-        )
+    contract = twin.live_contract()
 
     mentions = client_mentions()
     # Zero is what a broken reader prints, and it is also what a client with no

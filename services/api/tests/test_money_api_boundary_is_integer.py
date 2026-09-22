@@ -186,6 +186,10 @@ ROUTES_WITHOUT_RESPONSE_VALIDATION: dict[tuple[str, str], str] = {
     ("DELETE", "/sessions/{session_id}"): "204, no body; signing a device out",
     ("DELETE", "/people/me"): "204, no body; the account ended",
     ("GET", "/people/{person_id}/photos/{photo_id}"): "bytes",
+    (
+        "GET",
+        "/me/nep/media/{job_id}/file",
+    ): "raw media bytes from the proxy, no body model",
     ("DELETE", "/sessions/current"): "204, no body; signing out returns nothing",
     ("DELETE", "/contexts/{context_id}/memories/{memory_id}/reactions"): "204, no body",
     ("DELETE", "/people/me/saved-places/{place_id}"): "204, no body",

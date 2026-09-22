@@ -1,0 +1,266 @@
+# WAI · the catalogue, one card off it, and the search that asks the model.
+#
+#   GET  /places              mixed: scored rows, then optional model reasons
+#   GET  /places/{place_id}   mixed: one card, `match` only for a session
+#   POST /places/search       ai: the model reads the question
+#
+# The two GETs share the in-process `reason_writer` cache, which is why the
+# manifest keeps them in one `in_memory` group and why they move together.
+#
+# WHAT THIS FILE PROVES, and what it cannot:
+#
+# The parity stacks run with NO Gemini key, so every model path takes its
+# unavailable branch -- and, measured rather than assumed, that branch is not
+# an error but a shaped answer: `/places/search` comes back 200 with
+# `understood: null`, `places: []`, `source: "none"`, and the two GETs return
+# the full catalogue with the reason fields simply absent. Both sides are
+# deterministic there, so parity compares them exactly.
+#
+# What no parity run can reach is the branch where a real model answered. That
+# needs a real key and a reply that is not deterministic by nature. Those
+# fields are unproven here and the route card says so; an all-green run on this
+# file must not be read as "the AI path matches".
+#
+# `match` is the other half worth pinning: signed out it is null, because a
+# match percentage is a statement about particular people and an anonymous
+# reader is nobody. Same row, two readers, two answers -- a port that computed
+# the card once and served it to everybody passes every anonymous test.
+id: wai/places/get-places-and-search
+routes:
+  - 'GET /places'
+  - 'GET /places/{place_id}'
+  - 'POST /places/search'
+auth_mode: dev
+personas:
+  reader: {}
+steps:
+  - id: register_reader
+    as: reader
+    request:
+      method: PUT
+      path: '/people/{{persona.reader}}'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"display_name":"Người đọc (dữ liệu mẫu)"}'
+
+  # --- the catalogue ------------------------------------------------------
+  - id: catalogue_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/places'
+
+  - id: catalogue_with_session
+    as: reader
+    request:
+      method: GET
+      path: '/places'
+
+  - id: catalogue_by_destination
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?destination=d-da-lat'
+
+  - id: catalogue_other_destination
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?destination=d-tphcm'
+
+  - id: catalogue_unknown_destination
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?destination=khong-co-noi-nay'
+
+  - id: catalogue_by_category
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?category=cafe'
+
+  - id: catalogue_category_nobody_used
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?category=khong-ai-dung-loai-nay'
+
+  - id: catalogue_free_text
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?q=cafe'
+
+  - id: catalogue_free_text_no_match
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?q=khong-tim-thay-gi-het'
+
+  # `context_id` is accepted and not yet used; it must still validate.
+  - id: catalogue_with_context_id
+    as: reader
+    request:
+      method: GET
+      path: '/places?context_id=abcdefab-cdef-4abc-8def-abcdefabcdef'
+
+  - id: catalogue_context_id_not_uuid
+    as: reader
+    request:
+      method: GET
+      path: '/places?context_id=khong-phai-uuid'
+
+  - id: catalogue_every_filter_at_once
+    as: reader
+    request:
+      method: GET
+      path: '/places?destination=d-da-lat&category=cafe&q=vintage'
+
+  - id: catalogue_empty_query_values
+    as: anonymous
+    request:
+      method: GET
+      path: '/places?destination=&category=&q='
+
+  # --- one card -----------------------------------------------------------
+  # Signed out the card carries `match: null`; with a session it carries a
+  # score. Two readers, one row.
+  - id: card_anonymous
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat'
+
+  - id: card_with_session
+    as: reader
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat'
+
+  - id: card_unknown_place
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/khong-co-dia-diem-nay'
+
+  # `/places/search` has no GET, so Starlette's scan lands it here as a place
+  # id and it answers 404 -- the right answer for a path with no GET.
+  - id: search_path_as_a_place_id
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/search'
+
+  - id: card_trailing_slash
+    as: anonymous
+    request:
+      method: GET
+      path: '/places/p-an-cafe-da-lat/'
+
+  # --- the search that asks the model -------------------------------------
+  - id: search_anonymous
+    as: anonymous
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":"quán cà phê yên tĩnh"}'
+
+  - id: search_with_session
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":"quán cà phê yên tĩnh","destination_id":"d-da-lat"}'
+
+  - id: search_empty_query
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":""}'
+
+  - id: search_missing_query
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: search_query_is_not_text
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":42}'
+
+  - id: search_unknown_destination
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":"cà phê","destination_id":"khong-co-noi-nay"}'
+
+  - id: search_broken_json
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query": '
+
+  - id: search_wrong_content_type
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'text/plain'
+      body_raw: 'cà phê'
+
+  - id: search_extra_field
+    as: reader
+    request:
+      method: POST
+      path: '/places/search'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{"query":"cà phê","khong-co-truong-nay":true}'
+
+  # --- framework shapes ---------------------------------------------------
+  - id: catalogue_post_not_allowed
+    as: reader
+    request:
+      method: POST
+      path: '/places'
+      headers:
+        content-type: 'application/json'
+      body_raw: '{}'
+
+  - id: search_get_not_allowed
+    as: reader
+    request:
+      method: GET
+      path: '/places/search/'
+
+  - id: catalogue_junk_actor_headers
+    as: anonymous
+    request:
+      method: GET
+      path: '/places'
+      headers:
+        x-actor-id: 'khong-phai-uuid'
+        x-actor-roles: 'emperor'

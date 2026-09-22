@@ -562,5 +562,52 @@ class TheGateItselfStops(unittest.TestCase):
         self.assertEqual(contract_gate.verdict([]), contract_gate.EXIT_OK)
 
 
+class TheGoHalfOfTheServerIsRead(unittest.TestCase):
+    """`services/api` stopped being the whole server; the gate has to know.
+
+    These two directions exist because the merge shipped untested and the
+    absence cost thirteen red cases: `read_contract` was quietly reading the
+    real repository, so every fixture in the twin gate's self-test inherited
+    the live chat routes.
+    """
+
+    def test_a_route_only_go_serves_is_part_of_the_live_contract(self):
+        contract = contract_gate.live_contract()
+        # Registered in `chatassist/handler.go`, absent from the OpenAPI
+        # document. Delete the handler line and this goes red, which is the
+        # point of parsing rather than listing.
+        key = contract_gate.normalise("/contexts/{context}/shared-drafts")
+        self.assertIn(key, contract.routes, "Go route missing from live contract")
+        self.assertIn("POST", contract.routes[key])
+
+    def test_an_empty_openapi_document_is_still_refused(self):
+        """The check the merge nearly swallowed.
+
+        `live_contract` merges Go routes, so asking "is the contract empty"
+        after the merge would be answered by the Go handlers and an OpenAPI
+        document that failed to build would sail through. The refusal has to
+        look at the Python half by itself.
+        """
+        original = contract_gate.load_openapi
+        contract_gate.load_openapi = lambda: {"paths": {}}
+        try:
+            with self.assertRaises(RuntimeError):
+                contract_gate.live_contract()
+        finally:
+            contract_gate.load_openapi = original
+
+    def test_a_fixture_contract_never_inherits_the_repository(self):
+        """The direction that broke: a synthetic spec must contain only itself."""
+        contract = contract_gate.read_contract({"paths": {"/places": {"get": {}}}})
+        self.assertEqual(set(contract.routes), {contract_gate.normalise("/places")})
+
+    def test_the_go_reader_finds_routes_in_the_handlers_it_names(self):
+        found = contract_gate.read_go_routes()
+        self.assertTrue(found, "no Go route parsed; the reader has gone blind")
+        for key, methods in found.items():
+            self.assertTrue(key.startswith("/"), key)
+            self.assertTrue(methods <= {"GET", "POST", "PUT", "PATCH", "DELETE"}, key)
+
+
 if __name__ == "__main__":
     unittest.main()
