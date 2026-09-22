@@ -70,7 +70,17 @@ command.upgrade(c,'head',sql=True)" >/dev/null && echo ok
 
 ## Kiến trúc
 
-Lát cắt dọc duy nhất đang chạy: `POST /expenses` → allocator chia tiền → `confirm` ghi vào sổ → `POST /batches` gom nghĩa vụ → `publish` sinh envelope → `GET /g/{token}` trang khách → khách báo đã chuyển → người nhận `confirm-receipt`. Chưa có Home, chưa có tab (spec mục 14.3 cấm thiết kế Home trước khi biết hành động nào tồn tại).
+**Backend đang ở giữa đợt chuyển, và CẢ HAI nửa đều đang chạy** — đừng đọc nửa nào là "backend".
+
+| | |
+|---|---|
+| `services/core/` | Go 1.23, cửa trước công khai. **Phục vụ 126/156 route** (`LIVE-GO`), phần còn lại proxy về Python |
+| `services/api/` | FastAPI legacy, còn phục vụ 30 route, **và là oracle** để cổng parity so Go |
+| `parity/` | Module Go riêng, hộp đen: dựng hai stack, phát lại kịch bản, so byte HTTP + hàng DB + kho ảnh |
+
+**Nguồn sự thật về ai phục vụ route nào là `services/core/ownership/routes.json`**, không phải cây thư mục — `scripts/check_route_ownership.py` gác nó. Xoá mã Python để "xong port" là xoá luôn bằng chứng port đúng.
+
+Mô tả dưới đây là **tầng phía Python**, giữ vì nó vẫn chạy và vẫn là oracle.
 
 Tầng, từ trong ra ngoài:
 
@@ -104,9 +114,15 @@ Thêm: sửa khoản chi tạo **phiên bản mới** chứ không ghi đè; `re
 | `tests/api/` với fake repository (`tests/api/conftest.py`) | Orchestration HTTP ↔ domain | Bất kỳ câu SQL, index, view, trigger nào |
 | `tests/postgres/` | `SqlAlchemyApiRepository` thật sau khi Alembic migrate một schema riêng | Mọi method, mọi race, mọi query plan |
 | `tests/db/test_migration_matches_models.py` | Migration khớp models, không cần DB | — |
+| `go test ./...` trong `services/core` | Đơn vị và golden phía Go | Go có khớp Python không — golden do chính Go tự giữ |
+| `scripts/go_postgres_tier.sh` | `SqlAlchemyApiRepository` phía Go trên PostgreSQL thật, `-tags postgres` | **Skip là ĐỎ ở tầng này**: thiếu sentinel coi như hỏng, đừng đọc skip thành xanh |
+| `make parity` — hộp đen Go ↔ Python | Hai stack trả **byte giống nhau**: wire HTTP, hàng DB từng bước, kho ảnh | Python có đúng không — Python là **oracle**, parity chỉ chứng minh Go khớp nó. Oracle sai thì cả hai cùng sai |
+| `scripts/check_route_ownership.py` | Manifest khớp mã và evidence có thật | Route Go phục vụ có đúng hành vi không — đó là việc của parity |
 | QA hình ảnh + thăm dò (agy) — ADR-0010 | Trang render được, đọc được, không lộ dữ liệu người khác, ở các trạng thái và thiết bị **đã quét** | **Mã QR có quét được bằng app ngân hàng thật không** · người thật có hiểu không · ô nào **chưa** quét · rằng agy không tự sửa môi trường để ra xanh |
 
-Hàng cuối cần đọc kỹ cột phải. Tác giả plugin đã quan sát được agy **tự sửa môi trường của chính nó** (vá package đã cài, mock-stub dependency) để ép một lệnh pass. Digest của agy **không phải bằng chứng**; người giao việc chạy lại cổng trong cây sạch.
+Hai hàng đáng đọc kỹ nhất: **parity chỉ chứng minh Go khớp Python, không chứng minh Python đúng** — nó là phép so, không phải phép kiểm; và **skip ở tầng `go_postgres_tier.sh` là đỏ**, không phải xanh.
+
+Hàng cuối cũng cần đọc kỹ cột phải. Tác giả plugin đã quan sát được agy **tự sửa môi trường của chính nó** (vá package đã cài, mock-stub dependency) để ép một lệnh pass. Digest của agy **không phải bằng chứng**; người giao việc chạy lại cổng trong cây sạch.
 
 SQLite bị từ chối có chủ ý: schema production dựa vào JSONB, partial unique index, view và trigger append-only. Thêm hành vi persistence mới thì **thêm ca live tương ứng**; mở rộng fake rồi coi đó là bằng chứng DB là nói dối.
 
@@ -127,7 +143,8 @@ Nguồn sự thật: `docs/team/charter.md`, `docs/decisions/ADR-*.md`, `docs/ar
 
 ## Bẫy đã biết
 
-- **`apps/mobile/` (378 file) và `packages/shared/` ĐÃ ở trên `main`** từ 2026-08-30; dòng cũ nói ngược là sai. Hai job `shared` và `mobile` trong `.github/workflows/test.yml` vẫn tự phát hiện thư mục trước khi chạy — giữ nguyên cách đó, đừng "sửa" thành vô điều kiện. **Và `apps/mobile/` chứa HAI app**: vỏ RuDi expo-router (`app/**` → `src/rudi/`, cái ship) và cây legacy (`App.tsx` → `src/screens/**`, chỉ tới qua `/legacy`); ADR-0016 quyết hội tụ về vỏ RuDi và xoá legacy theo từng mảng.
+- **`apps/mobile/` (610 file) và `packages/shared/` ĐÃ ở trên `main`** từ 2026-08-30. Hai job `shared` và `mobile` trong `.github/workflows/test.yml` vẫn tự phát hiện thư mục trước khi chạy — giữ nguyên cách đó, đừng "sửa" thành vô điều kiện.
+- **`apps/mobile/` chỉ còn MỘT app.** Dòng cũ nói "chứa HAI app" với cây legacy `App.tsx` → `src/screens/**` là **sai**: `App.tsx` không tồn tại trên `main`, `package.json` khai `"main": "expo-router/entry"`, và `app/[...legacy].tsx` chỉ là một redirect 9 dòng. Việc hội tụ theo ADR-0016 đã xong phần vỏ. `src/screens/` còn **31 file, toàn `.ts`, 0 file `.tsx`** — đó là **tầng nghiệp vụ** mà vỏ RuDi import 29/31 module, không phải màn hình. Đổi tên nó cho đúng là việc còn nợ; đừng xoá nó như "legacy".
 - **`phase0/` và `docs/protocol/v1/` đóng băng tại chỗ.** Không sửa, không xoá. `protocol_version` là snapshot bất biến: cần đổi thì ADR cho phép tạo `v2`, không sửa `v1`.
 - **Repo guard fail closed** với binary, file text > 2 MiB, symlink, gitlink mới. Muốn thêm artifact thì pin `path` + `sha256` + `rules` + `reason` vào `.repo-guard-allowlist.json` — đổi một byte là phải review lại.
 - **Không bao giờ đưa vào Git**: ảnh bill, số tài khoản, tên người tham gia, transcript thô, file export, `.env` thật. `.gitignore` không phải nơi lưu an toàn; dữ liệu thật nằm ngoài repo và ngoài mọi worktree.

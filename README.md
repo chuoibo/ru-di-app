@@ -6,7 +6,7 @@
 Một app, một vòng lặp, và đúng **một** phép chia tiền trong toàn hệ.
 
 ![Trạng thái](https://img.shields.io/badge/tr%E1%BA%A1ng_th%C3%A1i-PoC_%C2%B7_l%C3%A1t_c%E1%BA%AFt_d%E1%BB%8Dc_ch%E1%BA%A1y_%C4%91%C6%B0%E1%BB%A3c-c93900?style=flat-square&labelColor=1f2230)
-![Test](https://img.shields.io/badge/test-3625_ca-00756b?style=flat-square&labelColor=1f2230)
+![Test](https://img.shields.io/badge/test-4474_ca-00756b?style=flat-square&labelColor=1f2230)
 ![API](https://img.shields.io/badge/API-FastAPI_0.115_%C2%B7_Python_3.12-0f766e?style=flat-square&labelColor=1f2230)
 ![App](https://img.shields.io/badge/app-Expo_57_%C2%B7_RN_0.86_%C2%B7_TS_strict-7d49ef?style=flat-square&labelColor=1f2230)
 ![Database](https://img.shields.io/badge/database-PostgreSQL_16-336791?style=flat-square&labelColor=1f2230)
@@ -277,13 +277,13 @@ cưỡng chế nó. Lý do là luật tiền số 3 ở trên.
 
 ```bash
 git rev-parse --short HEAD                                    # f3d4ede khi đo
-python3 -m pytest services/api/tests tests -q --collect-only   # 3625 ca
+python3 -m pytest services/api/tests tests -q --collect-only   # 4474 ca
 python3 -c "import sys; sys.path.insert(0,'services/api')
 from app.api.main import app; from fastapi.routing import APIRoute
-print(len([r for r in app.routes if isinstance(r, APIRoute)]))"   # 103 route
-ls services/api/app/api/routes/*.py | wc -l                    # 29 module route
-ls services/api/app/domain/*.py | wc -l                        # 29 module domain
-find apps/mobile/src -name '*.ts*' | wc -l                     # 115 file
+print(len([r for r in app.routes if isinstance(r, APIRoute)]))"   # 156 route (126 do Go phục vụ)
+ls services/api/app/api/routes/*.py | wc -l                    # 34 module route
+ls services/api/app/domain/*.py | wc -l                        # 42 module domain
+find apps/mobile/src -name '*.ts*' | wc -l                     # 260 file
 find apps/mobile/src -name '*.ts*' | xargs cat | wc -l         # 28304 dòng
 python3 -c "import json,glob; print(sum(len(json.load(open(f))) for f in glob.glob('services/api/tests/domain/golden/*.json')))"   # 41 golden vector
 ```
@@ -504,14 +504,19 @@ chính bộ mockup đó để README nhẹ.
 ## Bố cục repo
 
 ```
-services/api/app/domain/     thuần: tiền, sổ, đợt thu, quyền, hiển thị (29 module)
+services/core/               Go 1.23 — cửa trước công khai, PHỤC VỤ 126/156 route (LIVE-GO)
+services/core/ownership/     routes.json — NGUỒN SỰ THẬT ai phục vụ route nào
+parity/                      module Go riêng, hộp đen: so byte Go ↔ Python
+services/api/app/domain/     thuần: tiền, sổ, đợt thu, quyền, hiển thị (42 module)
 services/api/app/db/         SQLAlchemy + Alembic
-services/api/app/api/        FastAPI, 103 route trên 29 module
+services/api/app/api/        FastAPI legacy, 34 module route — còn phục vụ 30/156 route, và là oracle của cổng parity
 services/api/app/web/        trang khách, render từ server
-apps/mobile/                 Expo + TypeScript (115 file, ~28.3k dòng)
+apps/mobile/                 Expo + TypeScript (260 file trong src/, ~48.9k dòng)
 packages/shared/             token thiết kế, định dạng tiền
 docs/assets/                 ảnh của README, pin sha256 trong repo guard allowlist
+docs/README.md               mục lục docs: đang sống / nhật ký đang ghi / archive
 docs/decisions/              ADR — đọc trước khi đổi hành vi
+docs/migration/             thẻ route cho đợt chuyển Go — MÁY ĐỌC, cổng ownership gác
 phase0/  docs/protocol/v1/   ĐÓNG BĂNG tại chỗ, không sửa, không xoá
 ```
 
