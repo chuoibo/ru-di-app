@@ -57,8 +57,11 @@ func coreWithEnv(t *testing.T, env endpoint.Env, middleware func(http.Handler) h
 			served = append(served, row)
 		}
 	}
-	if len(served) != len(All()) {
-		t.Fatalf("%d of %d routes are in the manifest", len(served), len(All()))
+	// Every handler must have a manifest row. Spelling this as len(All()) held
+	// only while every handler came from the endpoint pipeline; MOUNT /static
+	// has a handler and no All() entry, and it still needs its row.
+	if len(served) != len(handlers) {
+		t.Fatalf("%d of %d handlers are in the manifest", len(served), len(handlers))
 	}
 	python := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("%s %s went to Python", r.Method, r.RequestURI)

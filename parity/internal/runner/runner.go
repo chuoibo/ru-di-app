@@ -76,8 +76,11 @@ var ErrSetup = errors.New("parity setup")
 // StepResult is one step's response, raw and normalised.
 type StepResult struct {
 	StepID string
-	Raw    httpclient.Response
-	Norm   compare.Exchange
+	// Path is the scenario's declared request path, carried so an accepted
+	// divergence can be scoped to the route it was decided for.
+	Path string
+	Raw  httpclient.Response
+	Norm compare.Exchange
 	// Change is what the step wrote to the stack's database; nil without a DB.
 	Change     *dbsnap.Change
 	NormChange *dbsnap.Change
@@ -228,7 +231,7 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 				}
 			}
 		}
-		result := StepResult{StepID: step.ID, PythonRequests: -1}
+		result := StepResult{StepID: step.ID, Path: step.Request.Path, PythonRequests: -1}
 		if step.Concurrent > 0 {
 			result.Burst = responses
 		} else {
@@ -284,10 +287,10 @@ func Execute(ctx context.Context, sc *scenario.Scenario, stack Stack, nonce stri
 	for i := range run.Steps {
 		if run.Steps[i].Burst != nil {
 			for _, raw := range run.Steps[i].Burst {
-				run.Steps[i].BurstNorm = append(run.Steps[i].BurstNorm, normaliseExchange(binder, raw))
+				run.Steps[i].BurstNorm = append(run.Steps[i].BurstNorm, normaliseExchange(binder, run.Steps[i].Path, raw))
 			}
 		} else {
-			run.Steps[i].Norm = normaliseExchange(binder, run.Steps[i].Raw)
+			run.Steps[i].Norm = normaliseExchange(binder, run.Steps[i].Path, run.Steps[i].Raw)
 		}
 		if run.Steps[i].Change != nil {
 			run.Steps[i].NormChange = run.Steps[i].Change.Normalise(binder.Apply)
@@ -758,14 +761,25 @@ func exchangeText(exchange compare.Exchange) string {
 	return fmt.Sprintf("%03d\n%s\n\n%s", exchange.Status, strings.Join(lines, "\n"), exchange.Body)
 }
 
-func normaliseExchange(binder *normalize.Binder, raw httpclient.Response) compare.Exchange {
+func normaliseExchange(binder *normalize.Binder, path string, raw httpclient.Response) compare.Exchange {
 	header := http.Header{}
 	for name, values := range raw.Header {
 		for _, value := range values {
+			if strings.EqualFold(name, "etag") {
+				// An ETag is a validator, not an id: it must be COMPARED.
+				// Masked, a 32-hex digest is numbered <hex32#n> per stack, so
+				// two DIFFERENT digests both become <hex32#1> and the etag
+				// silently stops being compared at all -- the same shape of
+				// hole <digest#n> once gave fingerprint drift. Measured: with
+				// the mask on, Python's mtime-derived etag and Go's
+				// content-derived etag compared equal on every /static step.
+				header[name] = append(header[name], value)
+				continue
+			}
 			header[name] = append(header[name], binder.Apply(value))
 		}
 	}
-	return compare.Exchange{Status: raw.Status, Header: header, Body: binder.Apply(string(raw.Body))}
+	return compare.Exchange{Path: path, Status: raw.Status, Header: header, Body: binder.Apply(string(raw.Body))}
 }
 
 // compareBursts compares two bursts response by response in their ordered form.
