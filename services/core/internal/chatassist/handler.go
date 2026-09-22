@@ -102,11 +102,14 @@ type denied struct {
 func (e *denied) Error() string { return e.code }
 func invalid(code string) error { return &denied{400, code} }
 
-func readBody(w http.ResponseWriter, r *http.Request, v any) error {
+// The ceiling is per route, not per package. Only the invocation route carries
+// a context bundle; raising the shared limit would widen the blast radius of
+// every other body for no reason.
+func readBody(w http.ResponseWriter, r *http.Request, v any, tran int64) error {
 	if strings.Split(r.Header.Get("Content-Type"), ";")[0] != "application/json" {
 		return &denied{415, "json_required"}
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 32<<10)
+	r.Body = http.MaxBytesReader(w, r.Body, tran)
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
 	if err := d.Decode(v); err != nil {
@@ -281,17 +284,26 @@ func newID() string {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		LogicalID string `json:"logical_id"`
-		Command   string `json:"command"`
-		Prompt    string `json:"prompt"`
+		LogicalID string  `json:"logical_id"`
+		Command   string  `json:"command"`
+		Prompt    string  `json:"prompt"`
+		BoiCanh   *bundle `json:"boi_canh"`
 	}
-	if err := readBody(w, r, &in); err != nil {
+	if err := readBody(w, r, &in, maxBodyWithBundle); err != nil {
 		failure(w, err)
 		return
 	}
 	if !chatv2.ValidID(in.LogicalID) || in.Command != "plan" || strings.TrimSpace(in.Prompt) == "" || !utf8.ValidString(in.Prompt) || utf8.RuneCountInString(in.Prompt) > 4000 {
 		failure(w, invalid("invalid_invocation"))
 		return
+	}
+	// Bounds are pure, so they run before anything opens a transaction: an
+	// oversized body never reaches the database and never probes the provider.
+	if in.BoiCanh != nil {
+		if err := kiemBoiCanh(in.BoiCanh, in.Prompt); err != nil {
+			failure(w, err)
+			return
+		}
 	}
 	if err := h.preflight(r); err != nil {
 		failure(w, err)
@@ -313,7 +325,18 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	sum := sha256.Sum256([]byte(in.Command + "\x00" + in.Prompt))
+	var goi []byte
+	if in.BoiCanh != nil {
+		if err = thuocPhong(r.Context(), tx, r.PathValue("context"), in.BoiCanh); err != nil {
+			failure(w, err)
+			return
+		}
+		if goi, err = canonical(in.BoiCanh); err != nil {
+			failure(w, err)
+			return
+		}
+	}
+	sum := sha256.Sum256(append([]byte(in.Command+"\x00"+in.Prompt+"\x00"), goi...))
 	var oldHash []byte
 	var oldMember, oldID string
 	err = tx.QueryRow(r.Context(), `SELECT id,input_digest,membership_id FROM chat_ai_invocations WHERE context_id=$1 AND person_id=$2 AND logical_id=$3`, r.PathValue("context"), g.person, in.LogicalID).Scan(&oldID, &oldHash, &oldMember)
@@ -351,7 +374,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		refuse(w, 429, "invocation_rate_limited")
 		return
 	}
-	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,'plan',$8,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt))
+	v, err := scan(tx.QueryRow(r.Context(), `INSERT INTO chat_ai_invocations(id,scope,context_id,person_id,membership_id,session_digest,logical_id,input_digest,command,prompt,boi_canh,share_expires_at,status) VALUES($1,'group',$2,$3,$4,$5,$6,$7,'plan',$8,$9,clock_timestamp()+interval '15 minutes','queued') RETURNING `+columns, newID(), r.PathValue("context"), g.person, g.member, g.digest, in.LogicalID, sum[:], in.Prompt, goiHoacNull(goi)))
 	if err != nil {
 		failure(w, err)
 		return
@@ -455,7 +478,7 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			refuse(w, 409, "invocation_already_published")
 			return
 		}
-		_, err = tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='cancelled',code='cancelled',prompt=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1`, v.ID)
+		_, err = tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='cancelled',code='cancelled',prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1`, v.ID)
 		if err != nil {
 			failure(w, err)
 			return

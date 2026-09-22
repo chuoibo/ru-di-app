@@ -17,6 +17,9 @@ import (
 type work struct {
 	id, conversation, person, member, prompt, lease string
 	digest                                          []byte
+	// The context the caller handed over, exactly as it was stored. Nil when the
+	// caller sent none, which is still the shape an older client produces.
+	goi []byte
 }
 
 // Run owns two bounded inference workers. Leases recover a crashed worker;
@@ -51,7 +54,7 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	}
 	defer tx.Rollback(ctx)
 	// Bound plaintext retention to the explicit sharing window, including failed jobs.
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
 	if err != nil {
 		return work{}, false, err
 	}
@@ -61,7 +64,7 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	}
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.context_id,j.person_id,j.membership_id,j.session_digest,j.prompt`, j.lease).Scan(&j.id, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt)
+	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.context_id,j.person_id,j.membership_id,j.session_digest,j.prompt,j.boi_canh`, j.lease).Scan(&j.id, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -83,12 +86,17 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	conversation := pyjson.NewOrderedMap()
-	conversation.Set("author_kind", pyjson.String("human"))
-	conversation.Set("kind", pyjson.String("text"))
-	conversation.Set("body", pyjson.String(j.prompt))
+	conversation, err := hoiThoai(j.goi, j.prompt)
+	if err != nil {
+		return true, h.finishFailure(ctx, j, "invalid_ai_result")
+	}
 	payload := pyjson.NewOrderedMap()
-	payload.Set("conversation", pyjson.List{conversation})
+	payload.Set("conversation", conversation)
+	// Deliberately empty, and it stays empty. The client pseudonymised the
+	// speakers on the way out; the server holds the real names and could put
+	// them back, but undoing a caller's privacy decision from the other side of
+	// the wire is worse than either choice made openly. The speaker labels
+	// inside each turn carry what a planner actually needs.
 	payload.Set("members", pyjson.List{})
 	payload.Set("places", catalogue)
 	payload.Set("budget_per_person_vnd", pyjson.Null{})
@@ -198,7 +206,7 @@ func (h *Handler) publish(ctx context.Context, j work, card json.RawMessage) err
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',message_id=$3,prompt=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2`, j.id, j.lease, message.ID)
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='succeeded',message_id=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2`, j.id, j.lease, message.ID)
 	if err != nil {
 		return err
 	}
