@@ -230,6 +230,52 @@ func TestToHenNhapChung(t *testing.T) {
 		}
 	})
 
+	t.Run("D7 chốt bằng đúng hình dạng client gửi", func(t *testing.T) {
+		// D4 chốt bằng hình dạng thuận tay của một bài test: không có `stops`,
+		// để máy chủ tự dựng chặng từ thẻ. Màn hình thì gửi chặng của chính tờ
+		// hẹn, với `at`/`label`/`place_name`. Hai đường đó khác nhau, và lượt
+		// trước đường của màn hình chưa từng được chạy ở tầng nào — nên khi nó
+		// hỏng thì mọi cổng vẫn xanh.
+		vote := author.Expect(201, "POST", "/contexts/"+group+"/votes", map[string]any{
+			"question": "E2E D7 đi đâu? " + newKey()[:6],
+			"options":  []any{map[string]any{"label": "Đà Lạt"}, map[string]any{"label": "Vũng Tàu"}},
+		}, Idem(newKey()))
+		voteID := vote.Str(t, "id")
+		options := vote.List(t, "options")
+		first, _ := options[0].(map[string]any)
+		peer.Expect(200, "POST", "/votes/"+voteID+"/ballots",
+			map[string]any{"option_id": first["id"]}, Idem(newKey()))
+		author.Expect(200, "POST", "/votes/"+voteID+"/close", nil, Idem(newKey()))
+
+		created := author.Expect(201, "POST", "/contexts/"+group+"/shared-drafts",
+			body(map[string]any{"from_vote_id": voteID}), Idem(newKey()))
+
+		stops := []any{}
+		for _, raw := range created.List(t, "stops") {
+			stop, _ := raw.(map[string]any)
+			stops = append(stops, map[string]any{
+				"at": stop["time_text"], "label": stop["label"], "place_name": nil,
+			})
+		}
+		promoted := author.Expect(201, "POST", "/contexts/"+group+"/plan-promotions", map[string]any{
+			"source_message_id":     created.Str(t, "message_id"),
+			"title":                 created.Str(t, "title"),
+			"starts_on":             created.JSON["starts_on"],
+			"ends_on":               created.JSON["ends_on"],
+			"headcount":             created.JSON["headcount"],
+			"budget_per_person_vnd": created.JSON["budget_per_person_vnd"],
+			"stops":                 stops,
+		}, Idem(newKey()))
+		if promoted.Str(t, "outing_id") == "" {
+			t.Fatalf("chốt bằng hình dạng client không trả kèo: %s", promoted.trim())
+		}
+		settled := author.Expect(200, "GET",
+			"/contexts/"+group+"/shared-drafts/"+created.Str(t, "id"), nil)
+		if settled.Str(t, "status") != "promoted" {
+			t.Fatalf("tờ hẹn vẫn ở %q sau khi chốt", settled.Str(t, "status"))
+		}
+	})
+
 	t.Run("D6 người ngoài không thấy và không sửa được tờ hẹn", func(t *testing.T) {
 		outsider := stack.As(t, len(stack.Users)-1)
 		for _, call := range []struct {
