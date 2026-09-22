@@ -150,6 +150,19 @@ var knownKeys = map[string]bool{
 	"created_at":       true, "updated_at": true,
 }
 
+// knownGeoKeys is the evidence bag's vocabulary.
+//
+// Watched separately from the top level because this is where the feed is
+// still growing: `ward_code`, `ta_loai_bo` and `truy_van` all arrived after
+// the first delivery. A field here is present only when that step produced
+// something, which is a different statement from producing nothing -- so an
+// absent key is never drift, and an unrecognised one always is.
+var knownGeoKeys = map[string]bool{
+	"lat": true, "lng": true, "precision": true, "evidence": true,
+	"nguon": true, "nguon_toa_do": true, "truy_van": true, "ta_loai_bo": true,
+	"ward_code": true, "ward_name": true, "ward_nguon": true,
+}
+
 // Reject is one reason one line did not become a catalogue row.
 type Reject struct {
 	Code   string
@@ -196,6 +209,14 @@ func Parse(line []byte) (*Record, []string, *Reject) {
 	if raw, ok := loose["geo"]; ok && string(raw) != "null" {
 		if err := json.Unmarshal(raw, &rec.Geo); err != nil {
 			return nil, unknown, &Reject{RejectGeoNoPrecision, "geo: " + err.Error()}
+		}
+		var looseGeo map[string]json.RawMessage
+		if json.Unmarshal(raw, &looseGeo) == nil {
+			for key := range looseGeo {
+				if !knownGeoKeys[key] {
+					unknown = append(unknown, "geo."+key)
+				}
+			}
 		}
 	}
 

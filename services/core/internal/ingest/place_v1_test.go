@@ -300,3 +300,32 @@ func TestOnlyRooftopDuplicatesAreSuspect(t *testing.T) {
 		}
 	}
 }
+
+// TestDriftInsideTheEvidenceBagIsSeenToo. The feed grows `geo` faster than it
+// grows the top level: ward_code, ta_loai_bo and truy_van all arrived after
+// the first delivery. A drift detector that only watched the top level would
+// have missed every one of them.
+func TestDriftInsideTheEvidenceBagIsSeenToo(t *testing.T) {
+	_, unknown, reject := Parse(validLine(t, func(r map[string]any) {
+		r["geo"] = map[string]any{
+			"lat": 10.5, "lng": 106.5, "precision": "rooftop",
+			"ward_code": 26743, "do_cao_met": 12,
+		}
+	}))
+	if reject != nil {
+		t.Fatalf("a new evidence field must not refuse the row: %s", reject)
+	}
+	if len(unknown) != 1 || unknown[0] != "geo.do_cao_met" {
+		t.Errorf("drift inside geo not reported: %v", unknown)
+	}
+}
+
+// An absent evidence field is not drift: it means that step produced nothing.
+func TestAnAbsentEvidenceFieldIsNotDrift(t *testing.T) {
+	_, unknown, reject := Parse(validLine(t, func(r map[string]any) {
+		r["geo"] = map[string]any{"lat": 10.5, "lng": 106.5, "precision": "street"}
+	}))
+	if reject != nil || len(unknown) != 0 {
+		t.Errorf("reject=%v unknown=%v", reject, unknown)
+	}
+}
