@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Platform, TextStyle, useColorScheme, ViewStyle } from "react-native";
+import { Appearance, Platform, TextStyle, ViewStyle } from "react-native";
 
 import tokens from "../../../../packages/shared/tokens.json";
 import { toiHay, type CheDoGiaoDien } from "./giao-dien";
@@ -23,8 +23,8 @@ export type RudiPalette = typeof tokens.color.light;
 export const GiaoDienContext = createContext<CheDoGiaoDien>("he-thong");
 
 export function useRudiTheme() {
-  const scheme = useColorScheme();
-  const dark = toiHay(useContext(GiaoDienContext), scheme === "dark");
+  // The provider resolves the system scheme once for the whole tree.
+  const dark = toiHay(useContext(GiaoDienContext), Appearance.getColorScheme() === "dark");
   const colors = dark ? tokens.color.dark : tokens.color.light;
 
   return {

@@ -323,6 +323,9 @@ type RequestShape = {
   body?: unknown;
   /** Required for writes. A write without one is unprotected against retries. */
   attempt?: Attempt;
+  /** Optional deadline for small realtime/control requests, including body reads. */
+  timeoutMs?: number;
+  signal?: AbortSignal;
 };
 
 /**
@@ -410,7 +413,19 @@ async function callAnonymous<T>(path: string, options: AnonymousCallOptions): Pr
 async function send<T>(
   path: string,
   actorHeadersOrNone: Record<string, string>,
-  { method = "POST", body, attempt }: RequestShape,
+  options: RequestShape,
+): Promise<T> {
+  if (options.timeoutMs === undefined) return sendRequest<T>(path, actorHeadersOrNone, options);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs);
+  try { return await sendRequest<T>(path, actorHeadersOrNone, { ...options, signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
+
+async function sendRequest<T>(
+  path: string,
+  actorHeadersOrNone: Record<string, string>,
+  { method = "POST", body, attempt, signal }: RequestShape,
 ): Promise<T> {
   const headers: Record<string, string> = { ...actorHeadersOrNone };
   // The header the server's middleware keys off. Without it the middleware
@@ -430,6 +445,7 @@ async function send<T>(
     response = await fetch(BASE_URL + path, {
       method,
       headers,
+      ...(signal ? { signal } : {}),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {

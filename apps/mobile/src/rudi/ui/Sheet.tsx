@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -22,6 +23,7 @@ export interface SheetProps {
 }
 
 /** Past this drag (dp) or this speed (dp/s) a release closes the sheet. */
+const webSheetStack: symbol[] = [];
 const KEO_DONG_DP = 90;
 const KEO_DONG_TOC = 900;
 
@@ -51,6 +53,57 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // Mounted while open, and until the close animation has finished: React
   // state, not a shared value read during render (Reanimated strict mode).
   const [hien, setHien] = useState(open);
+  const panelRef = useRef<View>(null);
+  const wrapperRef = useRef<View>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (!open || !hien || Platform.OS !== "web") return;
+    const identity = Symbol("sheet");
+    webSheetStack.push(identity);
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const element = panelRef.current as unknown as HTMLElement | null;
+    const hidden: { element: HTMLElement; inert: boolean; ariaHidden: string | null }[] = [];
+    let branch = wrapperRef.current as unknown as HTMLElement | null;
+    while (branch?.parentElement) {
+      for (const sibling of Array.from(branch.parentElement.children)) {
+        if (sibling !== branch && sibling instanceof HTMLElement && !["SCRIPT", "STYLE", "LINK"].includes(sibling.tagName)) {
+          hidden.push({ element: sibling, inert: sibling.inert, ariaHidden: sibling.getAttribute("aria-hidden") });
+          sibling.inert = true;
+          sibling.setAttribute("aria-hidden", "true");
+        }
+      }
+      if (branch.parentElement === document.body) break;
+      branch = branch.parentElement;
+    }
+    const focusable = () => Array.from(element?.querySelectorAll<HTMLElement>('button,input,textarea,select,[tabindex]:not([tabindex="-1"])') ?? []).filter((node) => node.getAttribute("aria-disabled") !== "true" && !node.hasAttribute("disabled") && node.getClientRects().length > 0);
+    const frame = requestAnimationFrame(() => focusable()[0]?.focus());
+    const onKey = (event: KeyboardEvent) => {
+      if (webSheetStack.at(-1) !== identity) return;
+      if (event.key === "Escape") {
+        event.preventDefault(); event.stopImmediatePropagation(); closeRef.current();
+      } else if (event.key === "Tab") {
+        const targets = focusable();
+        const current = targets.indexOf(document.activeElement as HTMLElement);
+        if (targets.length && (current < 0 || (!event.shiftKey && current === targets.length - 1) || (event.shiftKey && current === 0))) {
+          event.preventDefault(); targets[event.shiftKey ? targets.length - 1 : 0]?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onKey, true);
+      webSheetStack.splice(webSheetStack.indexOf(identity), 1);
+      for (const saved of hidden) {
+        saved.element.inert = saved.inert;
+        if (saved.ariaHidden === null) saved.element.removeAttribute("aria-hidden");
+        else saved.element.setAttribute("aria-hidden", saved.ariaHidden);
+      }
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [open, hien]);
 
   const dongXong = () => {
     setHien(false);
@@ -107,11 +160,15 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   // sheet was closing (board 2026-09-06, flow 39). A real native view never
   // has to be re-parented.
   return (
-    <View collapsable={false} style={StyleSheet.absoluteFill} pointerEvents={open ? "auto" : "none"} testID={testID}>
+    <View ref={wrapperRef} collapsable={false} style={StyleSheet.absoluteFill} pointerEvents={open ? "auto" : "none"} testID={testID}>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: lopPhu.toi(0.42) }, scrim]}>
         <Pressable accessibilityLabel="Đóng" accessibilityRole="button" onPress={onClose} style={StyleSheet.absoluteFill} />
       </Animated.View>
       <Animated.View
+        ref={panelRef}
+        role={Platform.OS === "web" ? "dialog" : undefined}
+        aria-modal={Platform.OS === "web" ? true : undefined}
+        onAccessibilityEscape={onClose}
         accessibilityViewIsModal
         accessibilityLabel={accessibilityLabel}
         style={[
@@ -127,11 +184,17 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
           style,
         ]}
       >
-        <GestureDetector gesture={keoXuong}>
-          <View accessibilityHint="Kéo xuống để đóng" accessibilityLabel="Tay cầm" style={styles.vungKeo}>
-            <View style={[styles.handle, { backgroundColor: colors.lineStrong }]} />
-          </View>
-        </GestureDetector>
+        <View style={styles.handleRow}>
+          <View style={styles.closeSpace} />
+          <GestureDetector gesture={keoXuong}>
+            <View accessibilityHint="Kéo xuống để đóng" accessibilityLabel="Tay cầm" style={styles.vungKeo}>
+              <View style={[styles.handle, { backgroundColor: colors.lineStrong }]} />
+            </View>
+          </GestureDetector>
+          <Pressable accessibilityRole="button" accessibilityLabel="Đóng bảng" onPress={onClose} style={styles.closeSpace}>
+            <Ionicons name="close" size={22} color={colors.ink} />
+          </Pressable>
+        </View>
         <ScrollView bounces={false} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ maxHeight: tran }}>
           {children}
         </ScrollView>
@@ -143,6 +206,8 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
 const styles = StyleSheet.create({
   panel: { position: "absolute", left: 0, right: 0, bottom: 0 },
   // A grab zone the width of the panel and taller than the bar it shows.
-  vungKeo: { alignItems: "center", justifyContent: "center", minHeight: 36, marginBottom: 4 },
+  handleRow: { flexDirection: "row", alignItems: "center" },
+  closeSpace: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
+  vungKeo: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: 36, marginBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2 },
 });

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { datChuSoHuuBanNhap } from "./chat/ban-nhap-cong-cu";
 import {
   BILL_ITEMS,
   COLLECTOR_INDEX,
@@ -214,6 +215,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
       .then((phien) => {
         if (!song) return;
         if (phien !== null) datTokenPhien(phien.token);
+        datChuSoHuuBanNhap(phien?.person_id ?? null);
         setPhien(phien);
         setPhienDaDoc(true);
       })
@@ -221,6 +223,7 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
         // An unreadable store is indistinguishable from a first launch, and
         // both answers are the same: no session, experience build.
         if (!song) return;
+        datChuSoHuuBanNhap(null);
         setPhien(null);
         setPhienDaDoc(true);
       });
@@ -288,9 +291,11 @@ export function RudiSessionProvider({ children }: { children: ReactNode }) {
       // the way in, but a caller that reached here with a record read from
       // somewhere else must not leave the bearer pointing at the old one.
       datTokenPhien(moi.token);
+      datChuSoHuuBanNhap(moi.person_id);
       setPhien(moi);
     },
     resetSession: () => {
+      datChuSoHuuBanNhap(null);
       setState(seed());
       // The debounced write above would land on the seed anyway; this is for
       // the case where the app is killed inside those 400ms. "Đăng xuất xoá
