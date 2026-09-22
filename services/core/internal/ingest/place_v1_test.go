@@ -244,3 +244,59 @@ func TestSevenKindsBecomeFour(t *testing.T) {
 		})
 	}
 }
+
+// TestHavingAPointAndBeingFindableAreDifferentClaims. Nearly half the located
+// rows carry a province centroid, because their address was a landmark rather
+// than a location. They have coordinates. They are not anywhere.
+func TestHavingAPointAndBeingFindableAreDifferentClaims(t *testing.T) {
+	cases := []struct {
+		precision string
+		mappable  bool
+	}{
+		{"rooftop", true},
+		{"street", true},
+		{"ward_centroid", true},
+		{"province_centroid", false},
+		{"suy_luan", false},
+		{"none", false},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.precision, func(t *testing.T) {
+			rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+				r["geo"] = map[string]any{
+					"lat": 10.5, "lng": 106.5, "precision": testCase.precision}
+			}))
+			if reject != nil {
+				t.Fatalf("refused: %s", reject)
+			}
+			if !rec.HasPoint() {
+				t.Fatal("the row does carry coordinates")
+			}
+			if got := rec.MappablePoint(); got != testCase.mappable {
+				t.Errorf("%s: mappable=%v, want %v",
+					testCase.precision, got, testCase.mappable)
+			}
+		})
+	}
+}
+
+// TestOnlyRooftopDuplicatesAreSuspect. Seventeen places on one street share
+// that street's point, and that is what `street` means. Treating those as
+// duplicates would merge a whole road into one restaurant.
+func TestOnlyRooftopDuplicatesAreSuspect(t *testing.T) {
+	for precision, suspect := range map[string]bool{
+		"rooftop": true, "street": false,
+		"ward_centroid": false, "province_centroid": false,
+	} {
+		rec, _, reject := Parse(validLine(t, func(r map[string]any) {
+			r["geo"] = map[string]any{
+				"lat": 10.5, "lng": 106.5, "precision": precision}
+		}))
+		if reject != nil {
+			t.Fatalf("%s refused: %s", precision, reject)
+		}
+		if got := rec.DuplicateCoordinatesAreSuspect(); got != suspect {
+			t.Errorf("%s: suspect=%v, want %v", precision, got, suspect)
+		}
+	}
+}

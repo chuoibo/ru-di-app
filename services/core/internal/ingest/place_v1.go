@@ -146,7 +146,8 @@ var knownKeys = map[string]bool{
 	"dia_chi_day_du": true, "dia_chi_khac": true, "geo": true,
 	"diem_xep_hang_llm": true, "do_tin": true, "so_bai": true, "review": true,
 	"tom_luoc": true, "posts": true, "frames": true, "trung_lap_voi": true,
-	"created_at": true, "updated_at": true,
+	"trung_toa_do_voi": true,
+	"created_at":       true, "updated_at": true,
 }
 
 // Reject is one reason one line did not become a catalogue row.
@@ -334,9 +335,42 @@ func (r *Record) validateGeo() *Reject {
 	return nil
 }
 
-// HasPoint reports whether this row carries usable coordinates.
+// HasPoint reports whether this row carries coordinates at all.
 func (r *Record) HasPoint() bool {
 	return r.Geo != nil && r.Geo.Lat != nil && r.Geo.Lng != nil
+}
+
+// unmappable are the precisions whose coordinates exist but must not be drawn.
+//
+// A province centroid is the middle of a province. The feed produces one when
+// the address was a landmark rather than a location -- "in front of the high
+// school", "down the alley by the pagoda, then right" -- which is a real way
+// people describe places and nothing a geocoder can resolve. Nearly half of
+// the located rows are like that, and all of them share one point.
+//
+// Drawing them would put several thousand pins on one spot in the middle of a
+// city, each claiming to be a restaurant that is not there. `suy_luan` is the
+// same problem from the other direction: a model's guess with no address
+// behind it. Both are better shown as "we do not know where this is".
+var unmappable = map[string]bool{"province_centroid": true, "suy_luan": true, "none": true}
+
+// MappablePoint reports whether this row's coordinates are worth drawing.
+//
+// Deliberately narrower than HasPoint: having a latitude and being somewhere
+// findable are different claims, and the map may only make the second one.
+func (r *Record) MappablePoint() bool {
+	return r.HasPoint() && !unmappable[r.Geo.Precision]
+}
+
+// DuplicateCoordinatesAreSuspect reports whether two rows sharing this row's
+// point is a sign of a duplicated place rather than ordinary geography.
+//
+// Only at rooftop. Seventeen places on one street legitimately share that
+// street's representative point, and every place in a ward shares its centroid
+// -- that is what those levels mean. Sharing a building is the only one worth
+// looking at.
+func (r *Record) DuplicateCoordinatesAreSuspect() bool {
+	return r.HasPoint() && r.Geo.Precision == "rooftop"
 }
 
 // Category maps the feed's seven kinds onto the four the client knows.
