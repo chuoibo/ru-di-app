@@ -99,6 +99,16 @@ INEXACT_COLUMNS_REVIEWED: dict[tuple[str, str], str] = {
     ("places", "lng"): "geographic longitude of a place, not an amount",
     ("places", "rating"): "0-5 star rating, not an amount",
     ("places", "distance_km"): "distance in km, not an amount",
+    # The external place feed. None of these is an amount, and the one that
+    # looks most like a score is the one most worth naming: `confidence` is how
+    # far the feed trusts its own extraction, and it never reaches a screen as
+    # a rating.
+    ("places", "confidence"): "0-1 trust the feed places in its own row",
+    (
+        "place_photos",
+        "frame_second",
+    ): "offset in seconds into the video a frame was taken from",
+    ("place_photos", "score"): "the feed's own ranking of a frame, not an amount",
 }
 
 # jsonb is untyped as far as money is concerned. These are pinned so that a new

@@ -25,6 +25,7 @@ from sqlalchemy import (
     Index,
     Integer,
     LargeBinary,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -1491,6 +1492,15 @@ class UploadedImage(Base):
             "byte_size > 0 AND width > 0 AND height > 0",
             name="image_dimensions_positive",
         ),
+        # A digest of the stored bytes, recorded but never made the key.
+        # Duplicate bytes are worth knowing about and not worth collapsing:
+        # the storage key is unique, and one row per object is what keeps the
+        # answer to an erasure request a single sentence.
+        CheckConstraint(
+            "content_sha256 IS NULL OR content_sha256 ~ '^[0-9a-f]{64}$'",
+            name="uploaded_images_content_sha256_shape",
+        ),
+        Index("ix_uploaded_images_content_sha256", "content_sha256"),
         Index(
             "ix_uploaded_images_context",
             "context_id",
@@ -1527,6 +1537,7 @@ class UploadedImage(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     storage_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    content_sha256: Mapped[str | None] = mapped_column(Text)
     context_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("contexts.id", name="fk_uploaded_images_context"),
@@ -1591,11 +1602,25 @@ class PlacePhoto(Base):
             "byte_size > 0 AND width > 0 AND height > 0",
             name="place_photo_dimensions_positive",
         ),
+        # Where the photograph came from stays mandatory. Who made it and
+        # under what terms are recorded when they are known and left null when
+        # they are not: a blank string is not a weaker answer than null, it is
+        # a false one.
         CheckConstraint(
-            "length(btrim(author)) > 0 AND length(btrim(license)) > 0 "
-            "AND length(btrim(source_url)) > 0",
+            "length(btrim(source_url)) > 0 "
+            "AND (author IS NULL OR length(btrim(author)) > 0) "
+            "AND (license IS NULL OR length(btrim(license)) > 0)",
             name="place_photo_cites_its_source",
         ),
+        CheckConstraint(
+            "platform IS NULL OR platform IN ('tiktok', 'threads')",
+            name="place_photo_platform_known",
+        ),
+        CheckConstraint(
+            "content_sha256 IS NULL OR content_sha256 ~ '^[0-9a-f]{64}$'",
+            name="place_photos_content_sha256_shape",
+        ),
+        Index("ix_place_photos_content_sha256", "content_sha256"),
         Index("ix_place_photos_place", "place_id", "sort_order"),
     )
 
@@ -1612,9 +1637,15 @@ class PlacePhoto(Base):
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     #: Who took it, which licence it is under, and where it came from. Shown
     #: under the photograph on screen -- not kept for an audit nobody reads.
-    author: Mapped[str] = mapped_column(Text, nullable=False)
-    license: Mapped[str] = mapped_column(Text, nullable=False)
+    author: Mapped[str | None] = mapped_column(Text)
+    license: Mapped[str | None] = mapped_column(Text)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
+    platform: Mapped[str | None] = mapped_column(Text)
+    post_id: Mapped[str | None] = mapped_column(Text)
+    frame_second: Mapped[float | None] = mapped_column(Float)
+    score: Mapped[float | None] = mapped_column(Float)
+    subject: Mapped[str | None] = mapped_column(Text)
+    content_sha256: Mapped[str | None] = mapped_column(Text)
     #: The file's own caption, when it has one. Never invented.
     title: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(
@@ -2615,7 +2646,48 @@ class Place(Base):
         CheckConstraint("lat >= -90 AND lat <= 90", name="place_lat_range"),
         CheckConstraint("lng >= -180 AND lng <= 180", name="place_lng_range"),
         CheckConstraint(
-            "source IN ('seed', 'osm', 'curated')", name="place_source_known"
+            "source IN ('seed', 'osm', 'curated', 'vnlocal')",
+            name="place_source_known",
+        ),
+        # A feed row must point back at what produced it; that pointer is what
+        # makes the next delivery an update rather than a second copy.
+        CheckConstraint(
+            "source <> 'vnlocal' OR source_ref IS NOT NULL",
+            name="place_vnlocal_row_cites_its_source",
+        ),
+        # Coordinates are optional because the feed has none for about a
+        # quarter of its rows, and will never have them: pavement stalls and
+        # carts have no address anywhere to find. But a point that IS present
+        # must say how it was arrived at -- a rooftop match and a model's guess
+        # must not be indistinguishable on a map.
+        CheckConstraint("num_nonnulls(lat, lng) <> 1", name="place_point_is_whole"),
+        CheckConstraint(
+            "lat IS NULL OR geo_precision IS NOT NULL",
+            name="place_point_states_its_precision",
+        ),
+        CheckConstraint(
+            "geo_precision IS NULL OR geo_precision IN ('rooftop', 'street', "
+            "'ward_centroid', 'province_centroid', 'suy_luan', 'none')",
+            name="place_geo_precision_known",
+        ),
+        CheckConstraint(
+            "status IN ('active', 'hidden', 'superseded', 'stale')",
+            name="place_status_known",
+        ),
+        # A merged row must name its successor. Saved places and outing stops
+        # point at rows like these, so a merge that leaves readers nowhere to
+        # follow breaks somebody's trip rather than a report.
+        CheckConstraint(
+            "status <> 'superseded' OR superseded_by IS NOT NULL",
+            name="place_superseded_names_successor",
+        ),
+        CheckConstraint(
+            "confidence IS NULL OR (confidence >= 0 AND confidence <= 1)",
+            name="place_confidence_range",
+        ),
+        CheckConstraint(
+            "evidence_posts IS NULL OR evidence_posts >= 0",
+            name="place_evidence_posts_sane",
         ),
         # An imported row has to say where it came from, and under what licence.
         # Attribution is a condition of ODbL, not a nicety, so the database is
@@ -2637,6 +2709,8 @@ class Place(Base):
         ),
         UniqueConstraint("source", "source_ref", name="uq_places_source_ref"),
         Index("ix_places_destination", "destination_id", "category", "id"),
+        Index("ix_places_province", "province_code", "category", "id"),
+        Index("ix_places_status", "status"),
     )
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
@@ -2651,8 +2725,8 @@ class Place(Base):
         JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
     )
     address: Mapped[str | None] = mapped_column(Text)
-    lat: Mapped[float] = mapped_column(Float, nullable=False)
-    lng: Mapped[float] = mapped_column(Float, nullable=False)
+    lat: Mapped[float | None] = mapped_column(Float)
+    lng: Mapped[float | None] = mapped_column(Float)
     rating: Mapped[float | None] = mapped_column(Float)
     rating_count: Mapped[int | None] = mapped_column(Integer)
     price_min_vnd: Mapped[int | None] = mapped_column(BigInteger)
@@ -2680,6 +2754,20 @@ class Place(Base):
     source: Mapped[str] = mapped_column(Text, nullable=False)
     source_ref: Mapped[str | None] = mapped_column(Text)
     license: Mapped[str | None] = mapped_column(Text)
+    # Where the row came from upstream, and how far to trust it.
+    province_code: Mapped[int | None] = mapped_column(SmallInteger)
+    geo_precision: Mapped[str | None] = mapped_column(Text)
+    geo_evidence: Mapped[str | None] = mapped_column(Text)
+    source_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    source_kind: Mapped[str | None] = mapped_column(Text)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    evidence_posts: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default="active", default="active"
+    )
+    superseded_by: Mapped[str | None] = mapped_column(
+        Text, ForeignKey("places.id", name="fk_places_superseded_by")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

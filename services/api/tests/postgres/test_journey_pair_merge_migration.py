@@ -3,10 +3,12 @@
 from uuid import uuid4
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.schema import CreateSchema, DropSchema
 
-from tests.postgres.conftest import _configured_url, _schema_url
+from tests.postgres.conftest import API_ROOT, _configured_url, _schema_url
 from tests.postgres.test_pair_migration_round_trip_postgres import (
     BANG,
     HAM,
@@ -21,6 +23,19 @@ COMMON_BASE = "9a5e1c7b3f86"
 PAIR_HEAD = "c4f27a90d1e3"
 JOURNEY_HEAD = "27a9b83e10c4"
 MERGE_HEAD = "d6a2f93b81e7"
+
+
+def _head() -> str:
+    """Whatever head is right now.
+
+    This used to be `MERGE_HEAD`, frozen in place, and every later migration
+    turned this test red for saying so. What the test is actually about is that
+    both deployed branches converge and survive a round trip -- not that the
+    merge is the last revision anybody will ever write.
+    """
+    return ScriptDirectory.from_config(
+        Config(str(API_ROOT / "alembic.ini"))
+    ).get_current_head()
 JOURNEY_COLUMNS = {
     ("outings", "timeline_revision"),
     ("outings", "itinerary_version"),
@@ -76,11 +91,11 @@ def test_each_branch_merges_downgrades_and_upgrades_again(starting_head):
             journey=starting_head == JOURNEY_HEAD,
         )
         _alembic(scoped, "head")
-        assert_schema(engine, MERGE_HEAD, pair=True, journey=True)
+        assert_schema(engine, _head(), pair=True, journey=True)
         _alembic_xuong(scoped, COMMON_BASE)
         assert_schema(engine, COMMON_BASE, pair=False, journey=False)
         _alembic(scoped, "head")
-        assert_schema(engine, MERGE_HEAD, pair=True, journey=True)
+        assert_schema(engine, _head(), pair=True, journey=True)
     finally:
         engine.dispose()
         if created:

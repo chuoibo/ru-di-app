@@ -28,6 +28,7 @@ def _place(**overrides) -> Place:
         address=None,
         lat=11.94,
         lng=108.44,
+        geo_precision="rooftop",
         traits=[],
         source="osm",
         source_ref="node/777",
