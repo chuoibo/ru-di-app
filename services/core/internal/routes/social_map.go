@@ -10,7 +10,6 @@ import (
 
 	"mobile/services/core/internal/domain/scoring"
 	"mobile/services/core/internal/domain/socialmap"
-	"mobile/services/core/internal/domain/taste"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
@@ -60,7 +59,7 @@ func socialMap() Route {
 		for _, entry := range visited {
 			seen[entry.PlaceID] = true
 		}
-		group, err := groupTaste(ctx, store, contextID, time.Now().UTC())
+		group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -169,54 +168,4 @@ func mapPlace(id, name string, lat, lng float64, rating *float64, ratingCount *i
 	item.Set("rating", pyjson.Float(*rating))
 	item.Set("rating_count", pyjson.NewInt(*ratingCount))
 	return item, nil
-}
-
-// groupTaste is ApiService.group_taste: a pair whose chat consent is not active
-// has no readable taste; otherwise the active members' own answers, summed.
-func groupTaste(ctx context.Context, store repo.Repository, contextID string, now time.Time) (taste.Profile, error) {
-	consent, err := service.PairChatConsent(ctx, store, contextID, now)
-	if err != nil {
-		return taste.Profile{}, err
-	}
-	if consent != nil && !*consent {
-		return taste.Unknown(), nil
-	}
-	members, err := store.ListMembers(ctx, contextID)
-	if err != nil {
-		return taste.Profile{}, err
-	}
-	var people []string
-	for _, membership := range members {
-		if membership.State == "active" {
-			people = append(people, membership.PersonID)
-		}
-	}
-	interestRows, err := store.InterestsByPerson(ctx, people)
-	if err != nil {
-		return taste.Profile{}, err
-	}
-	bandRows, err := store.BudgetBandsByPerson(ctx, people)
-	if err != nil {
-		return taste.Profile{}, err
-	}
-	interests := map[string][]string{}
-	for _, row := range interestRows {
-		interests[row.PersonID] = row.Tags
-	}
-	bands := map[string]string{}
-	for _, row := range bandRows {
-		bands[row.PersonID] = row.Band
-	}
-	profiles := make([]taste.Member, 0, len(people))
-	for _, person := range people {
-		member := taste.Member{Interests: interests[person]}
-		if interests[person] == nil {
-			member.Interests = []string{}
-		}
-		if band, ok := bands[person]; ok {
-			member.BandID = &band
-		}
-		profiles = append(profiles, member)
-	}
-	return taste.ProfileForGroup(profiles), nil
 }

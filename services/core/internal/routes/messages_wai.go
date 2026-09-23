@@ -116,11 +116,11 @@ func postContextMessage() Route {
 		}
 		var storedCard pyjson.Value
 		if kind == "ai_card" {
-			group, err := groupTaste(ctx, store, contextID, time.Now().UTC())
+			group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
-			places, err := modelPlaceRows(ctx, store, group)
+			places, err := service.ModelPlaceRows(ctx, store, group)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}
@@ -844,11 +844,11 @@ func takeCompanionTurn(ctx context.Context, call *endpoint.Call, store repo.Repo
 		entry.Set("display_name", pyjson.String(person.DisplayName))
 		members = append(members, entry)
 	}
-	group, err := groupTaste(ctx, store, contextID, time.Now().UTC())
+	group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
 	if err != nil {
 		return nil, err
 	}
-	places, err := modelPlaceRows(ctx, store, group)
+	places, err := service.ModelPlaceRows(ctx, store, group)
 	if err != nil {
 		return nil, err
 	}
