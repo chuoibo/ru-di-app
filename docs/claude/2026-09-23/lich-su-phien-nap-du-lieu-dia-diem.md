@@ -35,7 +35,7 @@ Phiên kết thúc bằng commit, push, PR #645 và tài liệu bàn giao. Máy 
 |---|---|
 | Người dùng | Leader, người quyết mọi thứ. Viết tiếng Việt không dấu câu, ngắn. Muốn thấy app chạy thật trên máy, không tin dấu xanh của test |
 | Session bên data | Lúc đầu tên «Crawled data storage», id `b1d0449d-871f-4249-b2fe-8856adb43c27`, sau hiện là `automate-84`. Giữ kho crawl `/home/lakiet/automate`. Trả lời bằng số đo, và đã sửa tôi ba lần bằng bằng chứng |
-| Tiến trình song sinh | Tiến trình `claude` thứ hai mang **cùng session id** (sinh 22/09 23:09, socket 6693, ref `c82986`). Nó làm trong cùng `~/wt-ingest` và commit `9ed2e658`. Hai bên không biết nhau cho tới khi phiên `chat-backend-go-migration` phát hiện. Sau khi máy khởi động lại, nó không còn |
+| Tiến trình song sinh | Tiến trình `claude` thứ hai mang **cùng session id** (sinh 22/09 23:09, socket 6693, ref `c82986`). Nó làm trong cùng `~/wt-ingest`; theo phiên chat-backend, `9ed2e658` là do nó commit, tôi chưa tự kiểm. Hai bên không biết nhau cho tới khi phiên `chat-backend-go-migration` phát hiện. Sau khi máy khởi động lại, nó không còn |
 | `chat-backend-go-migration` | Lane chat. Dùng máy ảo `rudi` (emulator-5554); phát hiện chuyện hai tiến trình trùng id |
 | `nep-floating-assistant` / `ai-engine-unification` | Lane dock Nếp. Nút Nếp nổi thuộc lane này |
 
