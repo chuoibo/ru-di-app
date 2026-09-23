@@ -166,7 +166,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
             return (
               <View key={nhom.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
                 <Pressable
-                  accessibilityLabel={`Mở nhóm ${tenCuocTroChuyen(nhom)}`}
+                  accessibilityLabel={laPair(nhom) ? `Mở cuộc trò chuyện với ${tenCuocTroChuyen(nhom)}` : `Mở nhóm ${tenCuocTroChuyen(nhom)}`}
                   accessibilityRole="button"
                   disabled={nhom.my_state !== "active" || dangBam !== null}
                   onPress={() => void moNhom(nhom)}

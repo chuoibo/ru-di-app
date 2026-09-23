@@ -125,6 +125,9 @@ export const LOI_TO_GIAY: Record<string, string> = {
   consent_missing: "Cả hai cùng đồng ý lập sổ trước đã.",
   consent_proposal_expired: "Lời đề nghị này đã hết hạn.",
   consent_proposal_not_found: "Không có lời đề nghị này.",
+  // The other person already proposed the same thing: answer theirs, do not
+  // file a second one (a second one used to light the rung with no agreement).
+  consent_proposal_pending: "Người ấy vừa đề nghị đúng việc này. Mở lại để đồng ý lời đề nghị của họ.",
   consent_purpose_unknown: "Không có mục đích này.",
   couple_slot_taken: "Một trong hai người đang là một đôi ở sổ khác.",
   constraint_kind_unknown: "Không có ô này.",

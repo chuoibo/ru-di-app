@@ -9,6 +9,34 @@
 import type { ToGiay } from "./to-giay";
 import type { MucDich, SoHaiNguoi, ToTomTat } from "./to-giay-song";
 
+/**
+ * Write the two constraint boxes: in order, one at a time, and only the box
+ * that changed; stop at the first write that does not land.
+ *
+ * The live notebook runs one command at a time and answers `false` to a second
+ * one started while the first is in flight. The provider used to start both
+ * together, so «Đừng» never reached the server while the sheet closed as if it
+ * had -- for every person, on every save (QA 23/09).
+ */
+export async function ghiRangBuocTuanTu(
+  hienTai: RangBuocDoc,
+  moi: Partial<RangBuocDoc>,
+  buoc: {
+    dat: (kind: keyof RangBuocDoc, noiDung: string) => Promise<boolean>;
+    xoa: (kind: keyof RangBuocDoc) => Promise<boolean>;
+  },
+): Promise<boolean> {
+  for (const kind of ["khong_an_duoc", "dung"] as const) {
+    const vao = moi[kind];
+    if (vao === undefined) continue;
+    const noiDung = vao.trim();
+    if (noiDung === hienTai[kind].trim()) continue;
+    const daXong = noiDung ? await buoc.dat(kind, noiDung) : await buoc.xoa(kind);
+    if (!daXong) return false;
+  }
+  return true;
+}
+
 /** Neither line written. Not «unknown»: the notebook simply holds nothing here. */
 export const KHONG_RANG_BUOC = { khong_an_duoc: "", dung: "" } as const;
 

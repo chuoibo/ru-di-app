@@ -29,3 +29,9 @@ test("fixture chỉ sống trong ChonNguoiTraiNghiem", () => {
   const dungFixture = ngoai.split("\n").filter((d) => /CAP_DEMO|NGUOI_KIA_DEMO/.test(d) && !d.startsWith("import"));
   assert.deepEqual(dungFixture, []);
 });
+
+// QA 23/09: the conversation list read a direct conversation as «Mở nhóm Linh».
+test("hàng nhắn riêng đọc là cuộc trò chuyện, không phải nhóm", () => {
+  const ds = readFileSync(new URL("../src/rudi/screens/groups/Conversations.tsx", import.meta.url), "utf8");
+  assert.match(ds, /laPair\(nhom\) \? `Mở cuộc trò chuyện với \$\{tenCuocTroChuyen\(nhom\)\}`/);
+});

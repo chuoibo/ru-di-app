@@ -89,7 +89,7 @@ appId: com.lakiet.rudi
 # Phía NGƯỜI NHẬN: một câu nói ai đề nghị, và một nút để trả lời. Bản đầu hiện
 # «chờ người ấy đồng ý» cho cả hai phía, nên người nhận không có việc gì bấm.
 - extendedWaitUntil:
-    visible: "Người ấy đã đề nghị.*"
+    visible: ".*đã đề nghị\. Bạn đồng ý thì sổ mở.*"
     timeout: 30000
 - takeScreenshot: 47c-ho-de-nghi
 - tapOn: "Đồng ý"

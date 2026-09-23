@@ -66,6 +66,15 @@ export interface TrangThaiSoDoi {
    */
   deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
+  /** The command in flight, by name, or null. The fixture never waits. */
+  dangLam: string | null;
+  /**
+   * Why the last command was refused, in the reader's words, or null.
+   *
+   * Before 23/09 nothing read this: a refused or dropped write left the screen
+   * as if it had worked (the «Đừng» box lost every save without a word).
+   */
+  loiLenh: string | null;
 }
 
 export interface SoDoiApi extends TrangThaiSoDoi {
@@ -90,12 +99,13 @@ export interface SoDoiApi extends TrangThaiSoDoi {
   deNghiLapSo: () => void;
   deNghiBatDoi: () => void;
   thuHoiBatDoi: () => void;
-  datRangBuoc: (rb: Partial<RangBuoc>) => void;
+  /** Resolves true once every changed box has landed; false if any did not. */
+  datRangBuoc: (rb: Partial<RangBuoc>) => Promise<boolean>;
   /** `revision` is the one the person just read. The fixture ignores it. */
   dongSo: (revision: string) => void;
 
   /** Đồng ý một lời đề nghị người kia vừa gửi. */
-  dongYDeNghi: (id: string) => void;
+  dongYDeNghi: (id: string) => Promise<boolean>;
 
   /** «Rủ đi chơi»: Nếp drafts a sheet for me. */
   ruDiChoi: () => void;
@@ -138,6 +148,8 @@ function seed(): TrangThaiSoDoi {
     toGiay: TO_GIAY_CU,
     deNghiCho: [],
     daDong: false,
+    dangLam: null,
+    loiLenh: null,
   };
 }
 
@@ -171,12 +183,18 @@ export function SoDoiProvider({ children }: { children: ReactNode }) {
       deNghiLapSo: () => setS((c) => (c.lapSo || c.deNghiCho.some((d) => d.purpose === "lap_so") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-lap-so-${c.deNghiCho.length + 1}`, purpose: "lap_so", cuaToi: true }] })),
       deNghiBatDoi: () => setS((c) => (!c.lapSo || c.batDoi || c.deNghiCho.some((d) => d.purpose === "bat_doi") ? c : { ...c, deNghiCho: [...c.deNghiCho, { id: `dn-bat-doi-${c.deNghiCho.length + 1}`, purpose: "bat_doi", cuaToi: true }] })),
       thuHoiBatDoi: () => setS((c) => ({ ...c, batDoi: false, deNghiCho: c.deNghiCho.filter((d) => d.purpose !== "bat_doi") })),
-      datRangBuoc: (rb) => setS((c) => ({ ...c, rangBuoc: { ...c.rangBuoc, toi: { ...c.rangBuoc.toi, ...rb } } })),
+      datRangBuoc: async (rb) => {
+        setS((c) => ({ ...c, rangBuoc: { ...c.rangBuoc, toi: { ...c.rangBuoc.toi, ...rb } } }));
+        return true;
+      },
       dongSo: () => setS((c) => ({ ...c, daDong: true, deNghiCho: [], toGiay: dongSo(c.toGiay) })),
 
       // Trên bản trải nghiệm, lời đề nghị luôn là của tôi, nên «đồng ý» ở đây
       // là việc của người kia — cùng một đường với nút dưới `nguoiKia`.
-      dongYDeNghi: (id: string) => api.nguoiKia?.dongYDeNghi(id),
+      dongYDeNghi: async (id: string) => {
+        api.nguoiKia?.dongYDeNghi(id);
+        return true;
+      },
 
       ruDiChoi: () => {
         if (s.daDong || daCoToMo) return null;
