@@ -4,15 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"mobile/services/core/internal/domain/companion"
-	"mobile/services/core/internal/domain/promptsafety"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
 )
 
@@ -84,7 +83,7 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil || !ok {
 		return ok, err
 	}
-	catalogue, err := h.prepare(ctx, j)
+	dap, err := h.prepare(ctx, j)
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "sharing_unavailable")
 	}
@@ -92,27 +91,26 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "invalid_ai_result")
 	}
+	catalogue := pyjson.List{}
+	for _, place := range dap.places {
+		catalogue = append(catalogue, place)
+	}
 	payload := pyjson.NewOrderedMap()
 	payload.Set("conversation", conversation)
-	// Deliberately empty, and it stays empty. The client pseudonymised the
-	// speakers on the way out; the server holds the real names and could put
-	// them back, but undoing a caller's privacy decision from the other side of
-	// the wire is worse than either choice made openly. The speaker labels
-	// inside each turn carry what a planner actually needs.
-	payload.Set("members", pyjson.List{})
+	payload.Set("members", dap.members)
 	payload.Set("places", catalogue)
-	payload.Set("budget_per_person_vnd", pyjson.Null{})
+	if dap.budget == nil {
+		payload.Set("budget_per_person_vnd", pyjson.Null{})
+	} else {
+		payload.Set("budget_per_person_vnd", pyjson.NewInt(*dap.budget))
+	}
 	inference, cancel := context.WithTimeout(ctx, 60*time.Second)
 	raw, err := h.brain.PostJSONContext(inference, "companion-reply", payload)
 	cancel()
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "provider_unavailable")
 	}
-	places := make([]*pyjson.OrderedMap, 0, len(catalogue))
-	for _, v := range catalogue {
-		places = append(places, v.(*pyjson.OrderedMap))
-	}
-	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(places))
+	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(dap.places))
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "invalid_ai_result")
 	}
@@ -123,75 +121,62 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	return true, h.publish(ctx, j, card)
 }
 
-func (h *Handler) prepare(ctx context.Context, j work) (pyjson.List, error) {
+// dapThem is what the server lays on top of the caller's bundle (ADR-0034
+// §2.3): only things it owns and never encrypted. It never holds a word of the
+// conversation; that arrives from the client or not at all.
+type dapThem struct {
+	// The catalogue the model may choose from, best match for the group first.
+	places []*pyjson.OrderedMap
+	// Who is in the room, in the caller's own pseudonyms (see roster).
+	members pyjson.List
+	// The group's stated per-person budget, nil when nobody answered.
+	budget *int64
+}
+
+func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	defer tx.Rollback(ctx)
 	g, err := authority(ctx, tx, j.conversation, j.digest)
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	if g.member != j.member || g.person != j.person || g.kind != "group" {
-		return nil, &denied{403, "sharing_unavailable"}
+		return dapThem{}, &denied{403, "sharing_unavailable"}
 	}
 	var live bool
 	if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM chat_ai_invocations WHERE id=$1 AND status='running' AND lease_id=$2 AND lease_until>clock_timestamp() AND share_expires_at>clock_timestamp())`, j.id, j.lease).Scan(&live); err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
 	if !live {
-		return nil, &denied{409, "invocation_cancelled"}
+		return dapThem{}, &denied{409, "invocation_cancelled"}
 	}
-	// The catalogue is public. Never select chat, roster, taste, or outing history.
+	// Roster, taste, budget and the public catalogue: the four things the
+	// server owns and never encrypted. Never the conversation.
 	//
-	// Filtered to one destination, the same one v1 used: the first by sort order.
-	// Without it the model was handed the first 40 rows by id, so asking about
-	// Hà Nội could be answered entirely out of Đà Nẵng. The NOT EXISTS arm keeps
-	// v1's behaviour on a database with no destinations at all, where the filter
-	// has nothing to mean and every place is a candidate.
-	rows, err := tx.Query(ctx, `WITH mac_dinh AS (SELECT id FROM destinations ORDER BY sort_order, id LIMIT 1)
-		SELECT jsonb_strip_nulls(jsonb_build_object('id',id,'name',name,'address',address,'price_min_vnd',price_min_vnd,'price_max_vnd',price_max_vnd,'open_hours',open_hours,'category',category))
-		FROM places
-		WHERE NOT EXISTS (SELECT 1 FROM mac_dinh) OR destination_id = (SELECT id FROM mac_dinh)
-		ORDER BY id LIMIT 40`)
+	// The catalogue is the one v1 handed the model, computed by the same code:
+	// the default destination's places, ranked by the group's own taste, cut
+	// to forty, through promptsafety. The earlier version here took the first
+	// forty rows by id, so a group that only drinks coffee could be handed
+	// forty restaurants and no café, and the model had nothing better to pick.
+	store := repo.Repository{Q: tx}
+	group, err := service.GroupTaste(ctx, store, j.conversation, time.Now().UTC())
 	if err != nil {
-		return nil, err
+		return dapThem{}, err
 	}
-	cards := []*pyjson.OrderedMap{}
-	for rows.Next() {
-		var b []byte
-		if err = rows.Scan(&b); err != nil {
-			rows.Close()
-			return nil, err
-		}
-		v, e := pyjson.Loads(b)
-		if e != nil {
-			rows.Close()
-			return nil, e
-		}
-		card, ok := v.(*pyjson.OrderedMap)
-		if !ok {
-			rows.Close()
-			return nil, fmt.Errorf("catalogue row is %T, not an object", v)
-		}
-		cards = append(cards, card)
+	places, err := service.ModelPlaceRows(ctx, store, group)
+	if err != nil {
+		return dapThem{}, err
 	}
-	rows.Close()
-	// Every other path that hands the catalogue to a model runs this filter;
-	// this one did not, which made a place row the one way an instruction could
-	// reach the model from outside a conversation. A name reading "bỏ qua hướng
-	// dẫn phía trên" travelled untouched from here and from nowhere else.
-	out := pyjson.List{}
-	for _, card := range treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards))) {
-		out = append(out, card)
+	members, err := roster(ctx, tx, store, j.conversation, j.person, j.goi)
+	if err != nil {
+		return dapThem{}, err
 	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	return out, tx.Commit(ctx)
+	return dapThem{places: places, members: members, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
 func (h *Handler) finishFailure(ctx context.Context, j work, code string) error {

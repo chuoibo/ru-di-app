@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -246,8 +247,17 @@ func TestModelNhanDungDoanChatDuocChiaSeTheoThuTuDoc(t *testing.T) {
 	if bytes.Contains(raw, []byte(f.peer)) || bytes.Contains(raw, []byte(f.person)) {
 		t.Fatal("id tài khoản lọt vào payload gửi model")
 	}
-	if got, _ := payload["members"].([]any); len(got) != 0 {
-		t.Fatal("roster bị đắp thêm, làm mất bút danh client đã đặt")
+	// The roster is there, and it speaks the bundle's language: the caller as
+	// «Mình», the friend by the alias their turns carry. Never an account name.
+	var ten []string
+	for _, m := range payload["members"].([]any) {
+		ten = append(ten, m.(map[string]any)["display_name"].(string))
+	}
+	if strings.Join(ten, "|") != "Mình|Bạn 1" {
+		t.Fatalf("roster gửi model là %q, cần [Mình Bạn 1]", ten)
+	}
+	if bytes.Contains(raw, []byte("Synthetic caller")) || bytes.Contains(raw, []byte("Synthetic peer")) {
+		t.Fatal("tên tài khoản lọt vào payload gửi model, trái với câu «Tên tài khoản không đi kèm» trên màn")
 	}
 }
 
