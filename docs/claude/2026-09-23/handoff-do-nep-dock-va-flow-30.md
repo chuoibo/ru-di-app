@@ -11,7 +11,17 @@ quan trọng hơn phần «đã làm», nên nó nằm trước.
 
 Họ đã commit dock Nếp và nhờ đo hộ vì họ không lái máy ảo. Nhánh
 `claude/p0-w30-nep-dock-trong-le`, SHA **`656c1235`** (trên `e4e98ae0`, rẽ từ
-main `01f58872`). Nhánh **chưa lên main**.
+main `01f58872`), mở thành **PR #646**. Nhánh **chưa lên main**.
+
+Phiên ấy cũng đã bàn giao, ở **PR #643**
+(`docs/claude/2026-09-23/ban-giao-mot-engine-ai-va-dock-nep.md`). Hai tài liệu
+trỏ sang nhau: phần chuẩn bị máy nằm ở đây, phần thiết kế dock nằm bên họ.
+
+Mục 4 bên họ ban đầu chép trạng thái máy từ tin tôi gửi **trước** lần khởi động
+lại 21:41, nên có lúc nói «`emulator-5554` đang chạy». Họ đã sửa ở commit
+`416c2654`. Ghi lại ở đây không phải để trách, mà vì nó là bài học đúng cho
+người đọc: **một bảng trạng thái máy bắt đầu sai ngay khi ai đó dán nó đi chỗ
+khác.** Đừng tin bảng nào, kể cả mục 2 của tài liệu này — kiểm bằng `ps` trước.
 
 | # | Phép đo | Kỳ vọng |
 |---|---|---|
@@ -155,6 +165,10 @@ Phiên sót của lượt trước làm lượt sau đỏ giả.
 `ai-engine-unification` là phiên đang chờ ba phép đo ở mục 1a. Họ đã nói rõ họ
 không lái máy ảo và sẽ không đo trên máy thật khi chưa hỏi. Khi có kết quả thì
 báo lại cho họ kèm số đo, đừng chỉ nói đạt hay không đạt.
+
+Phiên ấy **cũng đã bàn giao** (PR #643), nên người nhận kết quả sẽ là phiên sau
+của họ, không phải họ. Các PR còn mở của lane đó: #644 tải realtime, #646 dock
+Nếp, #647 engine ADR-0034, #648 luôn bật, #649 chất lượng AI.
 
 Họ cũng đang chờ phản hồi về một luật mới trong `scripts/a11y_native_audit.py`:
 node tương tác sát cạnh màn, cao ít nhất 48dp, được xếp riêng là `mep` thay vì
