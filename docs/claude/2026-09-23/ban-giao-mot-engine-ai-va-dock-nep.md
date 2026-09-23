@@ -1,7 +1,7 @@
 # Bàn giao 23-09: một engine AI, «luôn bật», chất lượng trả lời, dock Nếp
 
 Người viết: phiên `ai-engine-unification`. Viết để một agent khác làm tiếp mà không
-phải đọc lại hội thoại. Mọi SHA dưới đây đã có trên `origin`.
+phải đọc lại hội thoại. Mọi SHA dưới đây đã có trên `origin`. PR của chính tài liệu này: #643.
 
 ## 1. Leader đã quyết gì (đừng hỏi lại)
 
@@ -17,13 +17,13 @@ phải đọc lại hội thoại. Mọi SHA dưới đây đã có trên `origi
 
 ## 2. Các nhánh và PR, theo thứ tự nên merge
 
-| # | Nhánh | Base | Nội dung | Trạng thái |
+| # | Nhánh (PR) | Base | Nội dung | Trạng thái |
 |---|---|---|---|---|
-| 1 | `claude/p0-w31-chat-tai-tranh-khoa` | main | Sửa script phân tích khoá, đo lại tải, sửa dòng tiến độ cũ | Xong. Chỉ có docs và script |
-| 2 | `claude/p0-w30-nep-dock-trong-le` | main | Dock Nếp thiết kế lại | Code xong. **Chưa qua reviewer vòng 2, chưa đo native** (mục 4) |
-| 3 | `claude/p0-w30-mot-engine-loi-goi-ai` | main | ADR-0034, lược đồ v3, gói bối cảnh, khối «Mình đang thấy», promptsafety, cổng không đọc chat | Xong. **Đi sau main 18 commit, cần merge main** |
-| 4 | `claude/p0-w30-ai-luon-bat` | #3 | Cờ mặc định bật ở prod, `core migrate-chat`, service compose `migrate-chat` | Xong, trừ một lượt tầng Postgres chưa chạy lại (mục 5) |
-| 5 | `claude/p0-w30-ai-chat-luong` | #3 | Gu, ngân sách, roster như v1; bộ corpus chấm chất lượng | Xong. **Còn một quyết định leader** (mục 6) |
+| 1 | `claude/p0-w31-chat-tai-tranh-khoa` (#644) | main | Sửa script phân tích khoá, đo lại tải, sửa dòng tiến độ cũ | Xong. Chỉ có docs và script |
+| 2 | `claude/p0-w30-nep-dock-trong-le` (#646) | main | Dock Nếp thiết kế lại | Code xong. **Chưa qua reviewer vòng 2, chưa đo native** (mục 4) |
+| 3 | `claude/p0-w30-mot-engine-loi-goi-ai` (#647) | main | ADR-0034, lược đồ v3, gói bối cảnh, khối «Mình đang thấy», promptsafety, cổng không đọc chat | Xong. **Đi sau main 18 commit, cần merge main** |
+| 4 | `claude/p0-w30-ai-luon-bat` (#648) | #3 | Cờ mặc định bật ở prod, `core migrate-chat`, service compose `migrate-chat` | Xong, trừ một lượt tầng Postgres chưa chạy lại (mục 5) |
+| 5 | `claude/p0-w30-ai-chat-luong` (#649) | #3 | Gu, ngân sách, roster như v1; bộ corpus chấm chất lượng | Xong. **Còn một quyết định leader** (mục 6) |
 
 Hai nhánh #4 và #5 đều rẽ từ #3 và không đụng cùng file. Merge #3 trước, rồi đổi base của #4
 và #5 sang main.
