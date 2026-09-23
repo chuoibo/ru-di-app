@@ -758,8 +758,10 @@ class PlaceRecord:
     category: str
     kinds: list[str]
     address: str | None
-    lat: float
-    lng: float
+    #: Null together, or not at all. A quarter of the fed catalogue has no
+    #: coordinates and never will.
+    lat: float | None
+    lng: float | None
     rating: float | None
     rating_count: int | None
     price_min_vnd: int | None
@@ -805,11 +807,15 @@ class PlaceRecord:
             "flag": self.flag,
             "lat": self.lat,
             "lng": self.lng,
+            "geo_precision": self.geo_precision,
             "description": self.description,
             "reviews": list(self.reviews or []),
             "source": self.source,
             "license": self.license,
         }
+    #: How the point was arrived at, so a map can tell a doorway from a
+    #: province. Both are "has coordinates"; only one may be drawn.
+    geo_precision: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -4151,6 +4157,7 @@ class SqlAlchemyApiRepository:
             address=row.address,
             lat=row.lat,
             lng=row.lng,
+            geo_precision=row.geo_precision,
             rating=row.rating,
             rating_count=row.rating_count,
             price_min_vnd=row.price_min_vnd,

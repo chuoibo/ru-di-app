@@ -143,11 +143,23 @@ export type Place = {
   groupFit: GroupFit | null;
   /** "new" | "hot" ribbon in the mockup's top-left. Null is the normal case. */
   flag: "new" | "hot" | null;
-  lat: number;
-  lng: number;
+  /** Null together, or not at all. Roughly a quarter of the catalogue has no
+   *  coordinates and never will. */
+  lat: number | null;
+  lng: number | null;
+  /** How the point was arrived at. A rooftop match and a province centroid are
+   *  both "has coordinates" and only one belongs on a map. */
+  geoPrecision:
+    | "rooftop" | "street" | "ward_centroid"
+    | "province_centroid" | "suy_luan" | "none" | null;
   /** Where the row came from. ODbL makes attribution a condition for `osm`,
-   *  so the screen has to be able to name the source. */
-  source: "seed" | "osm" | "curated";
+   *  so the screen has to be able to name the source.
+   *
+   *  Third copy of a vocabulary the database also holds and the server schema
+   *  also holds. The server's copy went out of step once and every read of a
+   *  fed row answered 500; this one is a type rather than a runtime check, so
+   *  it would have gone out of step silently instead. */
+  source: "seed" | "osm" | "curated" | "vnlocal";
   license: string | null;
   /** Null when the server could not score this place for this group. The
    *  card then shows no badge at all rather than a zero. */
