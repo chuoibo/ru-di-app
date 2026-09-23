@@ -32,10 +32,19 @@ for line in open(path, encoding="utf-8", errors="replace"):
     if line.startswith("  WAIT tuple"):
         minute[current]["tuple"] += 1
     elif line.startswith("  HOLDER "):
-        parts = line.split()
-        event = parts[2] if len(parts) > 2 else "?"
-        wait = parts[3] if len(parts) > 3 else "?"
-        minute[current]["holder"][f"{event}/{wait}"] += 1
+        # The state can be several words ("idle in transaction"), so split the
+        # query off first and take the wait event as the last token before it.
+        # Splitting on whitespace alone labelled every such holder
+        # "in/transaction" and hid what it was waiting for.
+        head, _, query = line.partition(" q=")
+        tokens = head.split()[1:]
+        wait = tokens[-1] if tokens else "?"
+        state = " ".join(tokens[:-1]) or "?"
+        verb = query.split()[0] if query.split() else "?"
+        label = f"{wait}/q={verb}"
+        if state != "active":
+            label = f"{state}: {label}"
+        minute[current]["holder"][label] += 1
 
 print(f"{'phút':6} {'tick':>5} {'chờ':>6} {'tuple':>6}  kẻ giữ (top 2)")
 for key in sorted(minute):
