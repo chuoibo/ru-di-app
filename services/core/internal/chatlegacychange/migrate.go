@@ -13,7 +13,8 @@ import (
 //go:embed schema.sql
 var migration string
 
-// Migrate installs opt-in capture atomically; normal server startup never runs DDL.
+// Migrate installs change capture atomically. `core migrate-chat` runs it;
+// normal server startup never runs DDL.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {

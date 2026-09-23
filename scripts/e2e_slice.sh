@@ -318,18 +318,16 @@ s.close()")" || return 2
   # MOBILE_PERSON_ID_KEY failed the slice at its first login. Same for the media
   # root, which the W6 photo routes write through. The rule to keep: whatever
   # the API is started with, core is started with.
-  # The chat candidate owns its own schema and refuses to serve without it, so
-  # the migration travels with the flag that asks for it -- the same rule the
-  # comment above states for OTP and the media root. A setting that reaches one
-  # process and not another leaves a stack that looks healthy and 404s the one
-  # thing under test.
-  if [ "${MOBILE_CHAT_CHANGES_CANDIDATE:-}" = "1" ]; then
-    if ! MOBILE_CHAT_CHANGES_CANDIDATE=1 MOBILE_DATABASE_URL="$DATABASE_URL" \
-        "$core_bin" migrate-chat-candidate >>"$core_log" 2>&1; then
-      echo 'không migrate được lược đồ chat candidate:' >&2
-      tail -3 "$core_log" >&2
-      return 2
-    fi
+  # This stack runs prod, where core serves the chat change feed and the AI
+  # engine by default and refuses to start without their schema (serving never
+  # runs DDL). So the chat migration always runs, flag or no flag. A caller can
+  # still pass MOBILE_CHAT_CHANGES_CANDIDATE=0 below to measure a stack without
+  # them.
+  if ! MOBILE_DATABASE_URL="$DATABASE_URL" \
+      "$core_bin" migrate-chat >>"$core_log" 2>&1; then
+    echo 'không migrate được lược đồ chat (feed thay đổi + AI nhóm):' >&2
+    tail -3 "$core_log" >&2
+    return 2
   fi
   MOBILE_CORE_LISTEN="127.0.0.1:$port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$liveness" \

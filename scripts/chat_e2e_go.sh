@@ -5,7 +5,7 @@
 #
 # Every other Go test in this repository stops at a package boundary. This tier
 # starts a real stack -- PostgreSQL, the Python API for the routes Go still
-# proxies, and the Go core with the chat candidate on -- seeds synthetic
+# proxies, and the Go core with the chat features on by default -- seeds synthetic
 # accounts through the real OTP flow, and then talks to it the way a phone
 # would. A case that passes here passes for a client.
 #

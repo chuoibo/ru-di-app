@@ -199,6 +199,14 @@ cmd_up() {
   # mode and on the database of the Python behind it. Every route whose Go code
   # is merged (manifest PORTED or later) is served from Go: that is what the
   # candidate stack is for.
+  #
+  # The chat change feed and the AI engine are turned off here, explicitly.
+  # They are Go-only by design (ADR-0031): Python has no such routes, their
+  # triggers add tables the row snapshot would report as a diff, and they seal
+  # ai-turn/expense-draft on purpose. Parity compares the legacy path against
+  # the Python oracle; the chat features are measured by scripts/chat_e2e_go.sh.
+  # Without this line a prod-mode run refuses to start: the features are on by
+  # default in prod and this database has no chat schema.
   MOBILE_CORE_LISTEN="127.0.0.1:$core_port" \
   MOBILE_CORE_LIVENESS_LISTEN="127.0.0.1:$live_port" \
   MOBILE_PYTHON_UPSTREAM="http://127.0.0.1:$tap_port" \
@@ -212,6 +220,7 @@ cmd_up() {
   MOBILE_VALHALLA_URL="${routing_url[cand]}" \
   MOBILE_ROUTING_GRAPH_VERSION="$graph_version" \
   MOBILE_CORE_CANDIDATE_ROUTES="${PARITY_CANDIDATE_ROUTES:-ported}" \
+  MOBILE_CHAT_CHANGES_CANDIDATE=0 \
     nohup "$work/core" serve >"$work/core.log" 2>&1 &
   local core_pid=$!
   wait_http "http://127.0.0.1:$core_port/healthz" "core"

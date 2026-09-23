@@ -776,7 +776,7 @@ jobs:
           node-version: "22"
 
       # Drives a real stack -- PostgreSQL, the Python API, and the Go core with
-      # the chat candidate on -- over HTTP and WebSocket. The script refuses a
+      # the chat features on by default -- over HTTP and WebSocket. The script refuses a
       # run with no sentinel, any SKIP, or a stack that never came up.
       - if: steps.present.outputs.found == 'true'
         run: scripts/chat_e2e_go.sh

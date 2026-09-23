@@ -28,7 +28,7 @@ var draftsSQL string
 //go:embed schema_scope.sql
 var scopeSQL string
 
-// Migrate is run explicitly by the candidate migration command, never a request.
+// Migrate is run explicitly by `core migrate-chat`, never by a request.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
