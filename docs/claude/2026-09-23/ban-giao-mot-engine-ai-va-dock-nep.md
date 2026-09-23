@@ -2,6 +2,7 @@
 
 Người viết: phiên `ai-engine-unification`. Viết để một agent khác làm tiếp mà không
 phải đọc lại hội thoại. Mọi SHA dưới đây đã có trên `origin`. PR của chính tài liệu này: #643.
+Câu chuyện đầy đủ của phiên (giao gì, làm gì, vì sao) ở `lich-su-phien-ai-engine-unification.md` cùng thư mục.
 
 ## 1. Leader đã quyết gì (đừng hỏi lại)
 
