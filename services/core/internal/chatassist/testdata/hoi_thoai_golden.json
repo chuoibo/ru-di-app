@@ -1,0 +1,38 @@
+{
+  "vi_sao": "Hình dạng `conversation` worker gửi sang brain, viết tay một lần và đọc bởi CẢ HAI phía: hoi_thoai_golden_test.go giữ hoiThoai của Go, services/api/tests/skills/test_tra_loi_trong_nhom.py giữ bộ đo chất lượng. Bộ đo mà dựng hội thoại khác worker thì đo một model đọc thứ production không bao giờ gửi.",
+  "cases": [
+    {
+      "ten": "du-cac-vai-va-loai",
+      "goi": {
+        "ban": 1,
+        "nguon": "chat-nhom",
+        "luot": [
+          {"id": "abcdefab-cdef-4abc-8def-abcdefabcdea", "vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": "2026-09-20T12:00:00Z", "chu": "Tao dị ứng hải sản nha"},
+          {"id": "abcdefab-cdef-4abc-8def-abcdefabcdeb", "vai": "toi", "loai": "chu", "luc": "2026-09-20T12:01:00Z", "chu": "Ok nhớ rồi"},
+          {"id": "abcdefab-cdef-4abc-8def-abcdefabcdec", "vai": "ai", "loai": "the", "luc": "2026-09-20T12:02:00Z", "chu": "Tờ hẹn: Tối thứ Sáu"},
+          {"id": "abcdefab-cdef-4abc-8def-abcdefabcded", "vai": "ban", "loai": "anh", "luc": "2026-09-20T12:03:00Z", "chu": "Ảnh"},
+          {"id": "abcdefab-cdef-4abc-8def-abcdefabcdee", "vai": "ban", "biDanh": "Bạn 2", "loai": "da-xoa", "luc": "2026-09-20T12:04:00Z", "chu": "Tin nhắn đã bị xoá"}
+        ],
+        "tongLuot": 5,
+        "daCat": false
+      },
+      "prompt": "Tối nay ăn gì?",
+      "conversation": [
+        {"author_kind": "human", "kind": "text", "speaker": "Bạn 1", "body": "Tao dị ứng hải sản nha", "created_at": "2026-09-20T12:00:00Z"},
+        {"author_kind": "human", "kind": "text", "speaker": "Mình", "body": "Ok nhớ rồi", "created_at": "2026-09-20T12:01:00Z"},
+        {"author_kind": "ai", "kind": "text", "speaker": "Rủ Đi AI", "body": "Tờ hẹn: Tối thứ Sáu", "created_at": "2026-09-20T12:02:00Z"},
+        {"author_kind": "human", "kind": "text", "speaker": "Một người trong nhóm", "body": "Ảnh", "created_at": "2026-09-20T12:03:00Z"},
+        {"author_kind": "human", "kind": "text", "speaker": "Bạn 2", "body": "Tin nhắn đã bị xoá", "created_at": "2026-09-20T12:04:00Z"},
+        {"author_kind": "human", "kind": "text", "speaker": "Mình", "body": "Tối nay ăn gì?"}
+      ]
+    },
+    {
+      "ten": "chi-gui-loi-nho",
+      "goi": null,
+      "prompt": "Gợi ý quán cà phê",
+      "conversation": [
+        {"author_kind": "human", "kind": "text", "speaker": "Mình", "body": "Gợi ý quán cà phê"}
+      ]
+    }
+  ]
+}

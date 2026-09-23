@@ -1,0 +1,631 @@
+"""Answer-quality harness for the group AI: one real model call per case.
+
+Every other gate on the group AI measures the plumbing. The Postgres tier proves
+what is stored, scrubbed and refused; ``chat-e2e`` runs against a deterministic
+stub brain; parity proves Go matches Python. None of them reads an answer. This
+module does: it hands the real ``companion-reply`` brain the payload the Go
+worker would send for each handwritten case in
+``corpus/tra-loi-trong-nhom.json``, keeps the raw card, and grades what a
+machine can grade.
+
+What it proves when it runs
+---------------------------
+* The model saw what production sends. The conversation is built by
+  ``hoi_thoai``, which is held to the SAME handwritten golden as the Go worker's
+  ``hoiThoai`` (``services/core/internal/chatassist/testdata/``), key order
+  included. The roster follows the worker's ``roster``: pseudonyms, never an
+  account name.
+* Per case: every ``place_id`` is in the catalogue it was handed, no money field
+  appears, the answer is Vietnamese, forbidden place tags are absent, prices,
+  districts and opening hours fit what the group typed, required words appear,
+  planted words do not, and ambiguous requests come back as a question.
+
+What it does not prove
+----------------------
+That an answer is natural, fair to two people who disagree, or actually useful.
+Those rows are printed for a person under ``phai_ton_trong`` / ``khong_duoc``.
+Nor is one run a rate: temperature is 0.0 and each case runs ``--lap`` times,
+which bounds nothing. "Passed the machine checks" means "no failure observed in
+these samples".
+
+Run it from ``services/api``::
+
+    set -a && . /path/to/.env && set +a
+    python -m tests.skills.tra_loi_trong_nhom --out /tmp/tra-loi-trong-nhom
+
+Model output is written under ``--out`` only. It is never committed: it is a
+model's words about a synthetic conversation, and a checked-in answer would
+start being read as the expected one.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import secrets
+import sys
+import unicodedata
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+CORPUS_PATH = Path(__file__).parent / "corpus" / "tra-loi-trong-nhom.json"
+GOLDEN_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "core"
+    / "internal"
+    / "chatassist"
+    / "testdata"
+    / "hoi_thoai_golden.json"
+)
+DEFAULT_OUT = Path("/tmp/tra-loi-trong-nhom")
+
+# The three speaker labels of chatassist/boicanh.go nhanNguoiNoi, and the
+# caller's label that chatassist/roster.go shares with it.
+TOI_LA = "Mình"
+AI_LA = "Rủ Đi AI"
+KHONG_TEN = "Một người trong nhóm"
+
+MONEY_KEYS = frozenset({"expense", "amount_vnd", "obligation", "split", "total_vnd"})
+_VIETNAMESE = re.compile(
+    "[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹáàãéèíìóòõúùýđ]",
+    re.IGNORECASE,
+)
+_BASE_TIME = datetime(2026, 9, 20, 11, 0, tzinfo=UTC)
+
+
+# --- the payload, built the way the worker builds it ---------------------
+
+
+def load_corpus(path: Path = CORPUS_PATH) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def bundle_for(case: dict) -> tuple[dict, dict[str, str]]:
+    """The bundle the client would attach, plus each turn's author.
+
+    Mirrors ``gomBoiCanhChat`` for text messages: the caller's own lines are
+    ``toi``, everybody else is ``ban`` with an alias minted by first appearance.
+    The author map stands in for the ``messages.author_id`` column the worker
+    reads to line the roster up with those aliases.
+    """
+
+    alias: dict[str, str] = {}
+    luot = []
+    author_of = {}
+    for index, message in enumerate(case["messages"]):
+        author = message["author"]
+        author_of[message["id"]] = author
+        luc = (_BASE_TIME + timedelta(minutes=index)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        turn = {"id": message["id"], "vai": "toi", "luc": luc}
+        if author != case["caller"]:
+            alias.setdefault(author, f"Bạn {len(alias) + 1}")
+            turn = {
+                "id": message["id"],
+                "vai": "ban",
+                "luc": luc,
+                "biDanh": alias[author],
+            }
+        turn.update({"loai": "chu", "chu": message["text"]})
+        luot.append(turn)
+    goi = {
+        "ban": 1,
+        "nguon": "chat-nhom",
+        "luot": luot,
+        "tongLuot": len(luot),
+        "daCat": False,
+    }
+    return goi, author_of
+
+
+def _speaker(turn: dict) -> str:
+    vai = turn.get("vai")
+    if vai == "toi":
+        return TOI_LA
+    if vai == "ai":
+        return AI_LA
+    return turn.get("biDanh") or KHONG_TEN
+
+
+def hoi_thoai(goi: dict | None, prompt: str) -> list[dict]:
+    """``chatassist.hoiThoai``, field for field and in the same key order."""
+
+    out = []
+    for turn in (goi or {}).get("luot", []):
+        out.append(
+            {
+                "author_kind": "ai" if turn.get("vai") == "ai" else "human",
+                "kind": "text",
+                "speaker": _speaker(turn),
+                "body": turn.get("chu", ""),
+                "created_at": turn.get("luc", ""),
+            }
+        )
+    out.append(
+        {"author_kind": "human", "kind": "text", "speaker": TOI_LA, "body": prompt}
+    )
+    return out
+
+
+def roster(
+    caller: str, active: list[str], goi: dict | None, author_of: dict[str, str]
+) -> list[dict]:
+    """``chatassist.roster``: every active member once, in the bundle's aliases."""
+
+    used = {TOI_LA}
+    alias: dict[str, str] = {}
+    for turn in (goi or {}).get("luot", []):
+        label = turn.get("biDanh")
+        if turn.get("vai") != "ban" or not label:
+            continue
+        taken = label in used
+        used.add(label)
+        person = author_of.get(turn["id"])
+        if person is None or person == caller or taken:
+            continue
+        alias.setdefault(person, label)
+    counter = 0
+
+    def fresh() -> str:
+        nonlocal counter
+        while True:
+            counter += 1
+            label = f"Bạn {counter}"
+            if label not in used:
+                used.add(label)
+                return label
+
+    out = [{"display_name": TOI_LA}]
+    for member in active:
+        if member == caller:
+            continue
+        out.append({"display_name": alias.get(member) or fresh()})
+    return out
+
+
+def model_places(catalogue: list[dict]) -> list[dict]:
+    """What ``service.ModelPlaceRows`` hands the model: nine fields, promptsafety first.
+
+    The grading fields (``nhan``, ``khu``) never reach the model.
+    """
+
+    from app.api.companion_places import load_place_catalogue
+
+    return load_place_catalogue(catalogue)
+
+
+def payload_for(corpus: dict, case: dict) -> dict:
+    goi, author_of = bundle_for(case)
+    return {
+        "conversation": hoi_thoai(goi, case["prompt"]),
+        "members": roster(case["caller"], case["members"], goi, author_of),
+        "places": model_places(corpus["catalogue"]),
+        "budget_per_person_vnd": case.get("budget_per_person_vnd"),
+    }
+
+
+def call_brain(payload: dict) -> tuple[int, dict]:
+    """POST the payload to the real brain route, exactly as the worker does."""
+
+    from fastapi.testclient import TestClient
+
+    from app.api.internal_token import INTERNAL_TOKEN_HEADER
+    from app.api.routes.brain import build_brain_app
+
+    token = secrets.token_hex(16)
+    with TestClient(build_brain_app(token)) as client:
+        response = client.post(
+            "/internal/brain/v1/companion-reply",
+            json=payload,
+            headers={INTERNAL_TOKEN_HEADER: token},
+        )
+    try:
+        body = response.json()
+    except ValueError:
+        body = {}
+    return response.status_code, body if isinstance(body, dict) else {}
+
+
+# --- grading --------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Check:
+    ten: str
+    ket_qua: str  # "dat" | "truot" | "khong_ap_dung"
+    chi_tiet: str = ""
+
+
+def _fold(text: str) -> str:
+    return unicodedata.normalize("NFC", text).casefold()
+
+
+def _payload(card: dict) -> dict:
+    payload = card.get("payload")
+    return payload if isinstance(payload, dict) else {}
+
+
+def chosen_ids(card: dict) -> list[str]:
+    payload = _payload(card)
+    ids = [pid for pid in payload.get("place_ids") or [] if isinstance(pid, str)]
+    for stop in payload.get("stops") or []:
+        if isinstance(stop, dict) and isinstance(stop.get("place_id"), str):
+            ids.append(stop["place_id"])
+    return ids
+
+
+def answer_text(card: dict) -> str:
+    """Every sentence a reader of the card would see."""
+
+    payload = _payload(card)
+    parts = [payload.get(key) for key in ("text", "intro", "title")]
+    for stop in payload.get("stops") or []:
+        if isinstance(stop, dict):
+            parts += [stop.get("time_text"), stop.get("note")]
+    return "\n".join(part for part in parts if isinstance(part, str) and part)
+
+
+def _minutes(hhmm: str) -> int:
+    hours, minutes = hhmm.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def _opening(place: dict) -> tuple[int, int] | None:
+    match = re.fullmatch(
+        r"\s*(\d{1,2}:\d{2})\s*[–-]\s*(\d{1,2}:\d{2})\s*", place.get("open_hours") or ""
+    )
+    if not match:
+        return None
+    start, end = _minutes(match.group(1)), _minutes(match.group(2))
+    if end <= start:  # past midnight
+        end += 24 * 60
+    return start, end
+
+
+def open_at(place: dict, hhmm: str) -> bool:
+    span = _opening(place)
+    if span is None:
+        return False
+    t = _minutes(hhmm)
+    start, end = span
+    return start <= t < end or start <= t + 24 * 60 < end
+
+
+def open_within(place: dict, window: list[str]) -> bool:
+    span = _opening(place)
+    if span is None:
+        return False
+    lo, hi = _minutes(window[0]), _minutes(window[1])
+    start, end = span
+    return start < hi and lo < end
+
+
+def grade(corpus: dict, case: dict, card: dict | None) -> list[Check]:
+    """Every machine check for one answer. Never stops at the first failure."""
+
+    if not isinstance(card, dict) or not card:
+        return [Check("co_tra_loi", "truot", "brain không trả thẻ nào")]
+    rules = case["expected"].get("may_cham", {})
+    by_id = {place["id"]: place for place in corpus["catalogue"]}
+    ids = chosen_ids(card)
+    known = [by_id[pid] for pid in ids if pid in by_id]
+    text = answer_text(card)
+    folded = _fold(text)
+    whole = _fold(json.dumps(card, ensure_ascii=False))
+    kind = card.get("kind")
+    checks: list[Check] = []
+
+    def verdict(name: str, ok: bool, detail: str = "") -> None:
+        checks.append(Check(name, "dat" if ok else "truot", "" if ok else detail))
+
+    def not_applicable(name: str, why: str) -> None:
+        checks.append(Check(name, "khong_ap_dung", why))
+
+    invented = [pid for pid in ids if pid not in by_id]
+    verdict(
+        "khong_bia_dia_diem", not invented, f"id không có trong catalogue: {invented}"
+    )
+    money = sorted(MONEY_KEYS & set(_payload(card)))
+    verdict("khong_truong_tien", not money, f"thẻ mang trường tiền: {money}")
+    verdict(
+        "tieng_viet", bool(_VIETNAMESE.search(text)), "không thấy chữ tiếng Việt có dấu"
+    )
+
+    if "loai_hop_le" in rules:
+        verdict(
+            "loai_hop_le",
+            kind in rules["loai_hop_le"],
+            f"loại thẻ {kind!r}, cần một trong {rules['loai_hop_le']}",
+        )
+    if rules.get("nen_goi_y_dia_diem"):
+        verdict(
+            "nen_goi_y_dia_diem",
+            kind in {"places", "itinerary"} and bool(ids),
+            f"loại thẻ {kind!r} không gợi ý địa điểm nào",
+        )
+    if rules.get("nen_hoi_lai"):
+        # A question mark alone is not a question back. Observed live: five
+        # places and "xem sao nha?" -- a guess with a rhetorical tail. When the
+        # facts are missing, the answer is a text card that asks.
+        verdict(
+            "nen_hoi_lai",
+            kind == "text" and "?" in text,
+            f"loại thẻ {kind!r}, {'có' if '?' in text else 'không có'} dấu hỏi: đoán thay vì hỏi lại",
+        )
+
+    place_rules = {
+        "cam_nhan",
+        "phai_co_nhan_mot",
+        "gia_giua_toi_da_vnd",
+        "khu_hop_le",
+        "mo_luc",
+        "diem_dau_mo_luc",
+        "mo_trong_khung",
+    }
+    for name in sorted(place_rules & set(rules)):
+        if not known:
+            not_applicable(name, "thẻ không chọn địa điểm nào trong catalogue")
+            continue
+        value = rules[name]
+        if name == "cam_nhan":
+            bad = [(p["id"], tag) for p in known for tag in p["nhan"] if tag in value]
+            verdict(name, not bad, f"chọn địa điểm mang nhãn bị cấm: {bad}")
+        elif name == "phai_co_nhan_mot":
+            verdict(
+                name,
+                any(set(p["nhan"]) & set(value) for p in known),
+                f"không chỗ nào mang một trong {value}",
+            )
+        elif name == "gia_giua_toi_da_vnd":
+            bad = [
+                p["id"]
+                for p in known
+                if (p["price_min_vnd"] + p["price_max_vnd"]) // 2 > value
+            ]
+            verdict(name, not bad, f"giá giữa vượt {value}: {bad}")
+        elif name == "khu_hop_le":
+            bad = [f"{p['id']} ({p['khu']})" for p in known if p["khu"] not in value]
+            verdict(name, not bad, f"ngoài khu {value}: {bad}")
+        elif name == "mo_luc":
+            # An itinerary is a sequence of times; only its first stop has to be
+            # open when the group arrives. A list of places is a set of
+            # alternatives, and every one of them has to be.
+            subject = known[:1] if kind == "itinerary" else known
+            bad = [
+                f"{p['id']} ({p['open_hours']})"
+                for p in subject
+                if not open_at(p, value)
+            ]
+            verdict(name, not bad, f"đóng cửa lúc {value}: {bad}")
+        elif name == "diem_dau_mo_luc":
+            first = known[0]
+            verdict(
+                name,
+                open_at(first, value),
+                f"điểm đầu {first['id']} ({first['open_hours']}) đóng lúc {value}",
+            )
+        elif name == "mo_trong_khung":
+            bad = [
+                f"{p['id']} ({p['open_hours']})"
+                for p in known
+                if not open_within(p, value)
+            ]
+            verdict(name, not bad, f"không mở trong khung {value}: {bad}")
+
+    if "phai_co_id" in rules:
+        missing = [pid for pid in rules["phai_co_id"] if pid not in ids]
+        verdict("phai_co_id", not missing, f"thiếu {missing}")
+    if "phai_nhac" in rules:
+        missing = [
+            group
+            for group in rules["phai_nhac"]
+            if not any(_fold(term) in folded for term in group)
+        ]
+        verdict(
+            "phai_nhac", not missing, f"không nhắc tới nhóm chữ nào trong {missing}"
+        )
+    if "khong_duoc_nhac" in rules:
+        found = [term for term in rules["khong_duoc_nhac"] if _fold(term) in whole]
+        verdict("khong_duoc_nhac", not found, f"có nhắc {found}")
+    return checks
+
+
+def ground_status(card: dict | None, places: list[dict]) -> str:
+    """What the worker would do with this card: publish it, or refuse it."""
+
+    from app.domain.companion import CompanionError, ground_card
+
+    if not isinstance(card, dict):
+        return "khong_co_the"
+    try:
+        ground_card(card, places)
+    except CompanionError as exc:
+        return f"tu_choi:{exc.code}"
+    except Exception as exc:  # noqa: BLE001 -- the harness reports, never raises
+        return f"tu_choi:{type(exc).__name__}"
+    return "dang_duoc"
+
+
+# --- the run --------------------------------------------------------------
+
+
+def _cell(text: str) -> str:
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def render_markdown(results: list[dict], meta: dict) -> str:
+    lines = [
+        "# Bảng điểm «trả lời trong nhóm»",
+        "",
+        f"- Model: `{meta['model']}` · lượt mỗi ca: {meta['lap']} · lúc chạy: {meta['luc']}",
+        f"- Ca qua mọi phép máy chấm: **{meta['qua']}/{meta['tong']}** lượt",
+        "- Máy chỉ chấm được phần ghi ở `may_cham`. Cột «Người chấm» là việc còn lại, chưa ai làm.",
+        "",
+        "| Ca | Lượt | Thẻ | Địa điểm chọn | Worker đăng? | Máy chấm | Trượt ở |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for row in results:
+        failed = [c for c in row["cham"] if c["ket_qua"] == "truot"]
+        passed = sum(1 for c in row["cham"] if c["ket_qua"] == "dat")
+        total = sum(1 for c in row["cham"] if c["ket_qua"] != "khong_ap_dung")
+        lines.append(
+            "| {ca} | {lap} | {the} | {dd} | {ground} | {ok}/{total} | {fail} |".format(
+                ca=row["case_id"],
+                lap=row["lap"],
+                the=row["kind"] or f"HTTP {row['http']}",
+                dd=_cell(", ".join(row["dia_diem"]) or "(không)"),
+                ground=row["ground"],
+                ok=passed,
+                total=total,
+                fail=_cell("; ".join(c["ten"] for c in failed) or "—"),
+            )
+        )
+    lines += ["", "## Từng ca", ""]
+    for row in results:
+        lines += [
+            f"### {row['case_id']} · lượt {row['lap']}",
+            "",
+            f"- Câu nhờ: {row['prompt']}",
+            f"- Thẻ: `{row['kind']}` · địa điểm: {', '.join(row['dia_diem']) or '(không)'}",
+            "",
+            "```text",
+            row["chu"] or "(không có chữ)",
+            "```",
+            "",
+            "Máy chấm:",
+            "",
+        ]
+        for check in row["cham"]:
+            mark = {
+                "dat": "đạt",
+                "truot": "**TRƯỢT**",
+                "khong_ap_dung": "không áp dụng",
+            }[check["ket_qua"]]
+            detail = f" ({check['chi_tiet']})" if check["chi_tiet"] else ""
+            lines.append(f"- `{check['ten']}`: {mark}{detail}")
+        lines += ["", "Người chấm:", ""]
+        lines += [f"- [ ] Tôn trọng: {item}" for item in row["phai_ton_trong"]]
+        lines += [f"- [ ] Không: {item}" for item in row["khong_duoc"]]
+        lines.append("")
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument(
+        "--ca", action="append", default=[], help="chỉ chạy ca có case_id này"
+    )
+    parser.add_argument("--lap", type=int, default=1, help="số lượt gọi mỗi ca")
+    parser.add_argument(
+        "--cham-lai",
+        type=Path,
+        help="chấm lại ket-qua.json của một lượt đã chạy bằng corpus hiện tại, không gọi model",
+    )
+    args = parser.parse_args(argv)
+
+    corpus = load_corpus()
+    if args.cham_lai:
+        return _regrade(corpus, args.cham_lai)
+    cases = [c for c in corpus["cases"] if not args.ca or c["case_id"] in args.ca]
+    if not cases:
+        print(f"Không có ca nào khớp {args.ca}", file=sys.stderr)
+        return 2
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+    out = args.out / stamp
+    out.mkdir(parents=True, exist_ok=True)
+    payloads = {case["case_id"]: payload_for(corpus, case) for case in cases}
+    (out / "payload-gui-brain.json").write_text(
+        json.dumps(payloads, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    if not os.environ.get("GEMINI_API_KEY", "").strip():
+        print(
+            f"Không có GEMINI_API_KEY: đã dựng {len(payloads)} payload đúng hình worker gửi "
+            f"ở {out / 'payload-gui-brain.json'}, dừng TRƯỚC bước gọi model. "
+            "Không có bảng điểm nào; đây không phải một lượt xanh.",
+            file=sys.stderr,
+        )
+        return 2
+
+    from app.api.companion_gemini import DEFAULT_MODEL
+
+    model = os.environ.get("MOBILE_GEMINI_MODEL") or DEFAULT_MODEL
+    results = []
+    for case in cases:
+        places = payloads[case["case_id"]]["places"]
+        for lap in range(1, args.lap + 1):
+            status, card = call_brain(payloads[case["case_id"]])
+            card = card if status == 200 else None
+            checks = grade(corpus, case, card)
+            by_id = {p["id"]: p for p in corpus["catalogue"]}
+            results.append(
+                {
+                    "case_id": case["case_id"],
+                    "lap": lap,
+                    "prompt": case["prompt"],
+                    "http": status,
+                    "kind": (card or {}).get("kind"),
+                    "the_tho": card,
+                    "dia_diem": [
+                        by_id[pid]["name"] if pid in by_id else f"{pid} (BỊA)"
+                        for pid in chosen_ids(card or {})
+                    ],
+                    "chu": answer_text(card or {}),
+                    "ground": ground_status(card, places),
+                    "cham": [asdict(check) for check in checks],
+                    "phai_ton_trong": case["expected"]["phai_ton_trong"],
+                    "khong_duoc": case["expected"]["khong_duoc"],
+                }
+            )
+            print(f"{case['case_id']} lượt {lap}: HTTP {status}", file=sys.stderr)
+
+    passed = sum(
+        1 for row in results if not any(c["ket_qua"] == "truot" for c in row["cham"])
+    )
+    meta = {
+        "model": model,
+        "lap": args.lap,
+        "luc": stamp,
+        "qua": passed,
+        "tong": len(results),
+    }
+    (out / "ket-qua.json").write_text(
+        json.dumps({"meta": meta, "ket_qua": results}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    (out / "bang-diem.md").write_text(render_markdown(results, meta), encoding="utf-8")
+    print(
+        f"{passed}/{len(results)} lượt qua mọi phép máy chấm · bảng điểm: {out / 'bang-diem.md'}"
+    )
+    return 0
+
+
+def _regrade(corpus: dict, path: Path) -> int:
+    """Grade saved cards again: a grader fix must be measurable without a model."""
+
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    cases = {case["case_id"]: case for case in corpus["cases"]}
+    results = []
+    for row in saved["ket_qua"]:
+        case = cases[row["case_id"]]
+        row = dict(row)
+        row["cham"] = [asdict(check) for check in grade(corpus, case, row["the_tho"])]
+        row["phai_ton_trong"] = case["expected"]["phai_ton_trong"]
+        row["khong_duoc"] = case["expected"]["khong_duoc"]
+        results.append(row)
+    passed = sum(
+        1 for row in results if not any(c["ket_qua"] == "truot" for c in row["cham"])
+    )
+    meta = dict(saved["meta"], qua=passed, tong=len(results))
+    meta["luc"] = f"{saved['meta']['luc']} (chấm lại, không gọi model)"
+    out = path.with_name("bang-diem-cham-lai.md")
+    out.write_text(render_markdown(results, meta), encoding="utf-8")
+    print(f"{passed}/{len(results)} lượt qua mọi phép máy chấm · bảng điểm: {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
