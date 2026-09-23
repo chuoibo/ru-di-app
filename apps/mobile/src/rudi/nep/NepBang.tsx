@@ -70,7 +70,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
       </View>
 
       <View style={[styles.the, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-        <Text style={[typography.label, { color: colors.aiInk }]}>Mình đang thấy</Text>
+        <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
         <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
           {dongNgucCanh(phieu)}
         </Text>

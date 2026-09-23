@@ -201,14 +201,14 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
              from the message list: a preview rebuilt from the screen would be a
              picture OF the payload instead of the payload. */
           <View style={[styles.thay, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-            <Text style={[typography.label, { color: colors.aiInk }]}>Mình đang thấy</Text>
+            <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
             <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID="chat-boi-canh">
               {cauBoiCanh(dinhKem ? boiCanh : null)}
             </Text>
             {dinhKem && boiCanh !== null && boiCanh.luot.length > 0 ? (
               <>
                 <Pressable accessibilityRole="button" accessibilityState={{ expanded: moRong }} onPress={() => setMoRong((cu) => !cu)} testID="chat-boi-canh-mo">
-                  <Text style={[typography.caption, { color: colors.aiInk }]}>{moRong ? "Thu lại" : "Xem đúng thứ sắp gửi"}</Text>
+                  <Text style={[typography.caption, { color: colors.ai }]}>{moRong ? "Thu lại" : "Xem đúng thứ sắp gửi"}</Text>
                 </Pressable>
                 {moRong ? (
                   <View style={styles.luot} testID="chat-boi-canh-luot">
