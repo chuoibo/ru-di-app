@@ -91,3 +91,7 @@ Chạy với làn DB bật; `cursor` (câu trả lời và `idempotency_keys.res
 - Float `lat`/`lng`: Python in theo `repr` ngắn nhất (`11.9512`), đọc từ cột `double precision`. Mode `float-lost-point` của canary không áp được vì các toạ độ trong catalogue không có dạng `x.0`; một toạ độ nguyên sẽ là chỗ Go dễ in `11` thay vì `11.0`.
 - Độ dài `caption` 2000 tính theo code point; corpus sinh tự động dò các biên độ dài bằng chữ 3 byte, emoji 4 byte và surrogate escape (các bước `caption_len_*`).
 - 409 in-flight chưa phủ.
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này nằm trong vùng chạm của `check_go_owned_python_touch.py` do đồ thị gọi so theo tên hàm trần (`ApiService.pair_notebook` trùng tên module `pair_notebook`); mã của route không đọc đồng ý của sổ đôi. Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).

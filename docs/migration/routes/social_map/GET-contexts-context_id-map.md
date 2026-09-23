@@ -82,3 +82,7 @@ Chỉ đọc: SELECT `memories` theo trang, `places`, `memberships`, `person_int
 - Snapshot tên và toạ độ lấy từ check-in mới nhất: nếu bản Go gộp bằng `GROUP BY` thì phải chọn đúng dòng mới nhất theo `(created_at DESC, id DESC)`.
 - `score_place` dùng `Fraction`, hoà điểm phá bằng `place_id`; bản Go phải dùng số hữu tỉ hoặc số nguyên, không float.
 - Float `lat`/`lng`/`rating` phải giữ `repr` ngắn nhất và `.0` cho giá trị nguyên.
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này đọc đồng ý của sổ đôi (qua `_pair_chat_consent`/gu nhóm hoặc trực tiếp): kết quả chỉ đổi khi một pair mang hai lời đề nghị cùng bậc song song, khi đó bậc KHÔNG còn được tính là đã bật (trước là bật nhầm) (với `live-go-25-route-wai.md`: áp cho các route AI/gợi ý đọc gu nhóm của pair; các route khác trong tệp chỉ bị chạm theo tên). Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).

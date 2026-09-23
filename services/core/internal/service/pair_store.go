@@ -509,6 +509,7 @@ func PairNotebookOf(notebook *repo.PairNotebook) *pairsteps.Notebook {
 	}
 	for _, row := range notebook.Consents {
 		out.Consents = append(out.Consents, pairsteps.Consent{
+			ProposalID:        row.ProposalID,
 			PersonID:          row.PersonID,
 			Purpose:           row.Purpose,
 			GrantedAt:         row.GrantedAt,

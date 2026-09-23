@@ -185,6 +185,27 @@ func (p *pairRoute) proposeConsent() error {
 	if purpose != "lap_so" && (notebook.CycleState == nil || *notebook.CycleState != "active") {
 		return refuse(409, "consent_missing")
 	}
+	// One offer per rung (2026-09-23): the other person's standing offer is
+	// answered, not duplicated; one's own is returned untouched. Read from the
+	// notebook already locked, so no statement is added.
+	for _, row := range notebook.Proposals {
+		if row.Purpose != purpose || row.CompletedAt != nil || !p.now.Before(row.ExpiresAt) {
+			continue
+		}
+		stands := false
+		for _, c := range notebook.Consents {
+			if c.ProposalID == row.ID && c.PersonID == row.ProposedByID && c.GrantedAt != nil && c.RevokedAt == nil {
+				stands = true
+			}
+		}
+		if !stands {
+			continue
+		}
+		if row.ProposedByID != p.actor {
+			return refuse(409, "consent_proposal_pending")
+		}
+		return nil
+	}
 	cycle := notebook.CycleID
 	if cycle == nil {
 		if len(members) < 2 {

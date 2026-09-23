@@ -85,3 +85,7 @@ Tự nhiên idempotent (200 lần sau). Khoá header: 201 được lưu và phá
 ## Lỗi Python (chỉ báo, không sửa)
 
 - `IntegrityError` của khoá ngoại `person_id` bị đọc như một lần đua, đọc lại không thấy gì rồi `assert` → 500 thay vì 404/409 (`repository.py:4288-4295`). Chỉ tới được khi người gọi không có hàng `people` (dev).
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này nằm trong vùng chạm của `check_go_owned_python_touch.py` do đồ thị gọi so theo tên hàm trần (`ApiService.pair_notebook` trùng tên module `pair_notebook`); mã của route không đọc đồng ý của sổ đôi. Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).

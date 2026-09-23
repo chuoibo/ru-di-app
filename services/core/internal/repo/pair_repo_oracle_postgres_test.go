@@ -735,7 +735,9 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 		{"GET notebook: a missing conversation", "404:notebook_not_found", onCtx("pair_notebook", w.an, w.missingContext)},
 		{"POST proposals: lap_so where the cycle closed", "", onCtx("propose_pair_consent", w.binh, w.bc, "body", body("purpose", "lap_so"))},
 		{"POST proposals: lap_so with no notebook", "", onCtx("propose_pair_consent", w.em, w.be, "body", body("purpose", "lap_so"))},
-		{"POST proposals: lap_so again in a pending notebook", "", onCtx("propose_pair_consent", w.em, w.ae, "body", body("purpose", "lap_so"))},
+		// 2026-09-23: An's lap_so offer is standing, so Em answers it rather
+		// than filing a second one (QA cặp đôi, mục 13).
+		{"POST proposals: lap_so again in a pending notebook", "409:consent_proposal_pending", onCtx("propose_pair_consent", w.em, w.ae, "body", body("purpose", "lap_so"))},
 		{"POST proposals: doc_chat in an active notebook", "", onCtx("propose_pair_consent", w.binh, w.ab, "body", body("purpose", "doc_chat"))},
 		{"POST proposals: bat_doi in a pending notebook", "409:consent_missing", onCtx("propose_pair_consent", w.an, w.ae, "body", body("purpose", "bat_doi"))},
 		{"POST proposals: the other person only invited", "409:cycle_not_active", onCtx("propose_pair_consent", w.an, w.ag, "body", body("purpose", "lap_so"))},

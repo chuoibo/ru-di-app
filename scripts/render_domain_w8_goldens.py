@@ -910,7 +910,7 @@ def notebook_record(n: dict | None) -> PairNotebookRecord | None:
         participants=tuple(U(p) for p in n["participants"]),
         consents=tuple(
             PairConsentRecord(
-                proposal_id=U("PR1"),
+                proposal_id=U(proposal),
                 person_id=U(person),
                 purpose=purpose,
                 granted_at=granted_at,
@@ -918,7 +918,7 @@ def notebook_record(n: dict | None) -> PairNotebookRecord | None:
                 proposal_expires_at=expires_at,
                 terms_version=1,
             )
-            for person, purpose, granted_at, revoked_at, expires_at in n["consents"]
+            for person, purpose, granted_at, revoked_at, expires_at, proposal in n["consents"]
         ),
         proposals=tuple(proposal_record(row) for row in n["proposals"]),
         constraints=tuple(
@@ -1431,8 +1431,10 @@ def nb(
 NB_NONE = nb(cycle=None, state=None, participants=())
 
 
-def grant(person, purpose, granted=T - HOUR, revoked=None, expires=T + 6 * DAY) -> list:
-    return [person, purpose, granted, revoked, expires]
+def grant(person, purpose, granted=T - HOUR, revoked=None, expires=T + 6 * DAY, proposal="PR1") -> list:
+    # The sixth field names the proposal the answer belongs to (2026-09-23:
+    # agreement and «does this offer still stand» are per proposal).
+    return [person, purpose, granted, revoked, expires, proposal]
 
 
 def both(purpose, **kw) -> list:
@@ -1751,6 +1753,32 @@ def pair_steps_edges() -> list[dict]:
         ("couple_when_active", "bat_doi", [NB_ACTIVE], None),
         ("chat_when_active", "doc_chat", [NB_ACTIVE], [["TOI", "active"]]),
         ("lap_so_when_active", "lap_so", [NB_ACTIVE], None),
+        # QA 23/09: one offer per rung. The proposer asking again gets the offer
+        # already standing; the other person asking gets 409 and must answer it.
+        (
+            "again_by_the_proposer",
+            "lap_so",
+            [nb(state="pending", consents=[grant("TOI", "lap_so")], proposals=[prop("PR1", "lap_so", by="TOI")])],
+            None,
+        ),
+        (
+            "again_after_taking_ones_own_yes_back",
+            "lap_so",
+            [nb(state="pending", consents=[grant("TOI", "lap_so", revoked=T - HOUR)], proposals=[prop("PR1", "lap_so", by="TOI")])],
+            None,
+        ),
+        (
+            "couple_while_the_other_offers_it",
+            "bat_doi",
+            [nb(consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")], proposals=[prop("PR1", "lap_so", completed=T - HOUR), prop("PR2", "bat_doi", by="KIA")])],
+            None,
+        ),
+        (
+            "couple_after_the_other_offer_lapsed",
+            "bat_doi",
+            [nb(consents=both("lap_so") + [grant("KIA", "bat_doi", proposal="PR2")], proposals=[prop("PR1", "lap_so", completed=T - HOUR), prop("PR2", "bat_doi", by="KIA", expires=T - HOUR)])],
+            None,
+        ),
     ):
         w = {"locks": locks}
         if roster is not None:

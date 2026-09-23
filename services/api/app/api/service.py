@@ -7336,6 +7336,19 @@ class ApiService:
             # cannot be turned off would break the limit rule (spec 6.3).
             nep_gui_ho=False,
             open_paper_id=self._open_paper_id(context_id, actor, now=now),
+            # What BOTH have agreed to, on one proposal each: the only reading
+            # a screen may light a rung on. `my_consents` and
+            # `their_consents_granted` stay per person -- who has answered --
+            # and two per-person yeses on two different proposals are not an
+            # agreement (QA 23/09).
+            granted_purposes=[
+                purpose
+                for purpose in pair_notebook.CONSENT_PURPOSES
+                if purpose
+                in pair_notebook.granted_purposes(
+                    consents, [str(p) for p in participants], now=now
+                )
+            ],
         )
 
     def _open_paper_id(
@@ -7397,6 +7410,40 @@ class ApiService:
             # 3, and nothing implies tier 1 either.
             raise ApiProblem(
                 409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã."
+            )
+        # One offer per rung at a time. The other person already asking for the
+        # same thing is an offer to ANSWER, by its id: a second proposal made
+        # each of them agree only with themselves, and the rung read «both»
+        # with nothing completed (QA 23/09). Asking twice oneself returns the
+        # offer already standing instead of filing another.
+        # An offer stands only while its proposer's own yes on it is live: one
+        # the proposer took back is a dead offer, and asking again files a new
+        # one (the only way to say yes again, since each person answers each
+        # proposal once).
+        standing = {
+            row.proposal_id
+            for row in notebook.consents
+            if row.granted_at is not None and row.revoked_at is None
+            and any(p.id == row.proposal_id and p.proposed_by_id == row.person_id for p in notebook.proposals)
+        }
+        for row in notebook.proposals:
+            if row.purpose != request.purpose or row.id not in standing or not pair_notebook.dang_cho(
+                {"completed_at": row.completed_at, "expires_at": row.expires_at},
+                now=now,
+            ):
+                continue
+            if row.proposed_by_id != actor.id:
+                raise ApiProblem(
+                    409,
+                    "consent_proposal_pending",
+                    "Người ấy đã đề nghị đúng việc này. Đồng ý lời đề nghị của họ.",
+                )
+            return PairProposalResponse(
+                id=row.id,
+                purpose=row.purpose,
+                expires_at=row.expires_at,
+                proposed_by_id=row.proposed_by_id,
+                my_granted=True,
             )
         if cycle_id is None:
             if len(members) < 2:
@@ -8168,6 +8215,10 @@ def _kind_of(row) -> dict:
 
 
 def _consents_as_dicts(notebook: PairNotebookRecord) -> list[dict]:
+    # Which proposal each answer belongs to, and whether that proposal was
+    # completed: «both agreed» is per proposal, and an agreed proposal no longer
+    # lapses with its offer window (`pair_notebook._live`).
+    completed = {str(row.id): row.completed_at for row in notebook.proposals}
     return [
         {
             "person_id": str(row.person_id),
@@ -8175,6 +8226,8 @@ def _consents_as_dicts(notebook: PairNotebookRecord) -> list[dict]:
             "granted_at": row.granted_at,
             "revoked_at": row.revoked_at,
             "proposal_expires_at": row.proposal_expires_at,
+            "proposal_id": str(row.proposal_id),
+            "proposal_completed_at": completed.get(str(row.proposal_id)),
         }
         for row in notebook.consents
     ]

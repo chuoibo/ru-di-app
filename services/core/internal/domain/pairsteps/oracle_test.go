@@ -289,11 +289,14 @@ func (h *harness) notebookOf(value any) (*Notebook, error) {
 		return nil, err
 	}
 	for _, raw := range consents {
-		c, err := fields(raw, 5)
+		c, err := fields(raw, 6)
 		if err != nil {
 			return nil, err
 		}
 		var row Consent
+		if row.ProposalID, err = h.id(c[5]); err != nil {
+			return nil, err
+		}
 		if row.PersonID, err = h.id(c[0]); err != nil {
 			return nil, err
 		}
@@ -903,7 +906,17 @@ func (h *harness) notebookView(v NotebookView) any {
 		"context_id": h.name(v.ContextID), "cycle_state": optionalText(v.CycleState), "participants": h.nameList(v.Participants),
 		"my_consents": mine, "their_consents_granted": theirs, "pending_proposals": pending, "constraints": constraints,
 		"nep_gui_ho": v.NepGuiHo, "open_paper_id": h.optionalName(v.OpenPaperID),
+		"granted_purposes": stringsAny(v.GrantedPurposes),
 	}
+}
+
+// stringsAny is a []string as the decoded JSON list it is compared against.
+func stringsAny(values []string) []any {
+	out := []any{}
+	for _, value := range values {
+		out = append(out, value)
+	}
+	return out
 }
 
 func previewView(p pairnotebook.ClosePreview) any {

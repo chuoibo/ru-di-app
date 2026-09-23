@@ -96,3 +96,7 @@ Corpus sinh tự động: `parity/scenarios/generated/w8-422/get-contexts-contex
 - `participants` của sổ không có chu kỳ sống xếp theo `memberships.created_at, id`; hai membership của pair luôn cùng `created_at`, nên thứ tự phụ thuộc uuid4 ngẫu nhiên của membership và khác nhau giữa hai pair hay hai stack.
 - Chặn (ADR-0023) không đóng cửa sổ: người đã chặn và người bị chặn vẫn đọc và ghi sổ của nhau. Chỉ tin nhắn kiểm `_require_pair_is_alive`.
 - Người kia đã xoá tài khoản vẫn nằm trong `participants` của chu kỳ sống (danh sách chụp lúc mở chu kỳ).
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Thân trả lời thêm trường cuối `granted_purposes: list["lap_so"|"bat_doi"|"doc_chat"]` (thứ tự thang): bậc mà CẢ HAI đã đồng ý trên CÙNG MỘT lời đề nghị. `my_consents` và `their_consents_granted` giữ nghĩa cũ (mỗi người đã trả lời chưa). Client chỉ sáng một bậc theo `granted_purposes` (`apps/mobile/src/rudi/to-giay/so-doi-map.ts caHaiDongY`). Go `pairsteps.ReadNotebook` + `routes.wireNotebook`, Python `pair_notebook` + `PairNotebookResponse`.

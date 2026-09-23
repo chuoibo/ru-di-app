@@ -55,24 +55,32 @@ func (e *NotebookError) Error() string { return e.Code }
 // week.
 func HanDeNghi(now time.Time) time.Time { return now.AddDate(0, 0, 7) }
 
-// Consent is one row of `_consents_as_dicts`: the keys `_live` and
-// `granted_by` read.
+// Consent is one row of `_consents_as_dicts`: the keys `_live`, `granted_by`
+// and `granted_purposes` read. ProposalID "" is Python's absent key: every such
+// row belongs to one shared group, the old per-purpose reading.
 type Consent struct {
-	PersonID          string
-	Purpose           string
-	GrantedAt         *time.Time
-	RevokedAt         *time.Time
-	ProposalExpiresAt *time.Time
+	PersonID            string
+	Purpose             string
+	GrantedAt           *time.Time
+	RevokedAt           *time.Time
+	ProposalExpiresAt   *time.Time
+	ProposalID          string
+	ProposalCompletedAt *time.Time
 }
 
-// live is _live: granted, not revoked, and the PROPOSAL not lapsed. A nil now
-// is Python's `now=None`, which skips the expiry test entirely.
+// live is _live: granted, not revoked, and the PROPOSAL not lapsed -- unless it
+// was completed: an agreed rung stands until revoked, it does not switch itself
+// off when its offer window ends (QA 23/09). A nil now is Python's `now=None`,
+// which skips the expiry test entirely.
 func live(consent Consent, now *time.Time) bool {
 	if consent.GrantedAt == nil {
 		return false
 	}
 	if consent.RevokedAt != nil {
 		return false
+	}
+	if consent.ProposalCompletedAt != nil {
+		return true
 	}
 	if consent.ProposalExpiresAt != nil && now != nil && !now.Before(*consent.ProposalExpiresAt) {
 		return false
@@ -110,8 +118,12 @@ func GrantedBy(consents []Consent, personID string, now *time.Time) []string {
 }
 
 // GrantedPurposes is granted_purposes: the purposes every one of the distinct
-// participants has granted. Fewer than two distinct people unlock nothing, and
-// duplicates in participants count once, as Python's set does.
+// participants has granted ON ONE PROPOSAL (ADR-0027: «cả hai chấp nhận cùng đề
+// nghị»). Two people who each filed their own proposal have each agreed only
+// with themselves; counted per purpose that read as «both» with nothing
+// completed, and the same count gates Nếp reading the chat (QA 23/09). Fewer
+// than two distinct people unlock nothing, and duplicates in participants count
+// once, as Python's set does.
 func GrantedPurposes(consents []Consent, participants []string, now *time.Time) []string {
 	people := map[string]bool{}
 	for _, person := range participants {
@@ -120,15 +132,27 @@ func GrantedPurposes(consents []Consent, participants []string, now *time.Time) 
 	if len(people) < 2 {
 		return []string{}
 	}
-	count := map[string]int{}
-	for person := range people {
-		for _, purpose := range GrantedBy(consents, person, now) {
-			count[purpose]++
+	type key struct{ purpose, proposal string }
+	agreed := map[key]map[string]bool{}
+	for _, row := range consents {
+		if !onLadder(row.Purpose) || !live(row, now) || !people[row.PersonID] {
+			continue
+		}
+		k := key{row.Purpose, row.ProposalID}
+		if agreed[k] == nil {
+			agreed[k] = map[string]bool{}
+		}
+		agreed[k][row.PersonID] = true
+	}
+	held := map[string]bool{}
+	for k, who := range agreed {
+		if len(who) == len(people) {
+			held[k.purpose] = true
 		}
 	}
 	out := []string{}
 	for _, rung := range ladder {
-		if count[rung] == len(people) {
+		if held[rung] {
 			out = append(out, rung)
 		}
 	}

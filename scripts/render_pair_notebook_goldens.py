@@ -227,6 +227,47 @@ def edge_cases() -> list[dict]:
     two = [A, B]
     both_chat = [consent(A, "doc_chat"), consent(B, "doc_chat")]
     cases = [
+        # QA 23/09: each person filed their own proposal for the same rung.
+        # Per purpose that read as «both agreed»; per proposal it is nothing.
+        consents_case(
+            "two proposals, each granted only by its proposer",
+            [
+                consent(A, "bat_doi", proposal_id="PR-A"),
+                consent(B, "bat_doi", proposal_id="PR-B"),
+            ],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "both on one proposal, a stray third proposal beside it",
+            [
+                consent(A, "doc_chat", proposal_id="PR-1"),
+                consent(B, "doc_chat", proposal_id="PR-1"),
+                consent(A, "doc_chat", proposal_id="PR-2"),
+            ],
+            two,
+            NOW,
+        ),
+        # An agreed rung stands until revoked: its offer window no longer
+        # applies once the proposal was completed.
+        consents_case(
+            "completed proposal past its offer window still stands",
+            [
+                consent(A, "bat_doi", proposal_id="PR-1", proposal_expires_at=NOW - timedelta(days=1), proposal_completed_at=NOW - timedelta(days=8)),
+                consent(B, "bat_doi", proposal_id="PR-1", proposal_expires_at=NOW - timedelta(days=1), proposal_completed_at=NOW - timedelta(days=8)),
+            ],
+            two,
+            NOW,
+        ),
+        consents_case(
+            "uncompleted proposal past its window lapses",
+            [
+                consent(A, "bat_doi", proposal_id="PR-1", proposal_expires_at=NOW - timedelta(days=1)),
+                consent(B, "bat_doi", proposal_id="PR-1", proposal_expires_at=NOW - timedelta(days=1)),
+            ],
+            two,
+            NOW,
+        ),
         consents_case("no consents", [], two, NOW),
         consents_case("no consents, nobody", [], [], NOW),
         consents_case("one side only", [consent(A, "doc_chat")], two, NOW),

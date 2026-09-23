@@ -2758,6 +2758,10 @@ class PairNotebookResponse(ApiModel):
     #: một hành vi trái luật hạn mức (§6.3). Công tắc tới ở lát 2.
     nep_gui_ho: StrictBool
     open_paper_id: UUID | None
+    #: Bậc mà CẢ HAI đã đồng ý trên CÙNG MỘT lời đề nghị, theo thứ tự thang.
+    #: Hai «có» của hai lời đề nghị khác nhau không phải một thoả thuận; màn
+    #: hình chỉ được sáng một bậc theo trường này (QA 23/09).
+    granted_purposes: list[PairConsentPurpose]
 
 
 class PairProposalCreateRequest(ApiModel):

@@ -60,6 +60,10 @@ export function rangBuocCua(so: SoHaiNguoi | null, ownerId: string | null): Rang
  */
 export function caHaiDongY(so: SoHaiNguoi | null, purpose: MucDich): boolean {
   if (so === null) return false;
+  // The server's own answer when it gives one: agreement is per PROPOSAL, and
+  // two per-person yeses on two different proposals lit «Một đôi» on both
+  // phones while nothing had been completed (QA 23/09).
+  if (so.granted_purposes !== undefined) return so.granted_purposes.includes(purpose);
   const cuaToi = so.my_consents.find((row) => row.purpose === purpose)?.granted === true;
   return cuaToi && so.their_consents_granted[purpose] === true;
 }

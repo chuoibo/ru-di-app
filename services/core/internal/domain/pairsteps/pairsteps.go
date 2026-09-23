@@ -103,6 +103,7 @@ type Member struct {
 
 // Consent is PairConsentRecord, the keys `_consents_as_dicts` reads.
 type Consent struct {
+	ProposalID        string
 	PersonID          string
 	Purpose           string
 	GrantedAt         *time.Time
@@ -410,15 +411,23 @@ func ConsentsOf(notebook *Notebook) []pairnotebook.Consent {
 	if notebook == nil {
 		return []pairnotebook.Consent{}
 	}
+	// Which proposal each answer belongs to, and whether it was completed:
+	// «both agreed» is per proposal, and an agreed proposal no longer lapses.
+	completed := map[string]*time.Time{}
+	for _, row := range notebook.Proposals {
+		completed[row.ID] = row.CompletedAt
+	}
 	out := make([]pairnotebook.Consent, len(notebook.Consents))
 	for i, row := range notebook.Consents {
 		expires := row.ProposalExpiresAt
 		out[i] = pairnotebook.Consent{
-			PersonID:          row.PersonID,
-			Purpose:           row.Purpose,
-			GrantedAt:         row.GrantedAt,
-			RevokedAt:         row.RevokedAt,
-			ProposalExpiresAt: &expires,
+			PersonID:            row.PersonID,
+			Purpose:             row.Purpose,
+			GrantedAt:           row.GrantedAt,
+			RevokedAt:           row.RevokedAt,
+			ProposalExpiresAt:   &expires,
+			ProposalID:          row.ProposalID,
+			ProposalCompletedAt: completed[row.ProposalID],
 		}
 	}
 	return out

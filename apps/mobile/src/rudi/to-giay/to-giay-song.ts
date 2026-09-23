@@ -60,6 +60,11 @@ export interface SoHaiNguoi {
   constraints: readonly RangBuocSong[];
   nep_gui_ho: boolean;
   open_paper_id: string | null;
+  /**
+   * What BOTH agreed to on one proposal, in ladder order. Absent on a server
+   * older than 23/09, where the client falls back to the per-person maps.
+   */
+  granted_purposes?: readonly MucDich[];
 }
 
 /**

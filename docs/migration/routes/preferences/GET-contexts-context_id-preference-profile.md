@@ -94,3 +94,7 @@ Chỉ đọc (một transaction chỉ có SELECT, commit trước khi trả, `se
 - Sort nhãn theo byte UTF-8 của Go trùng với code point của Python; **không** dùng collation.
 - `split_total_vnd` cộng chồng các chuyến trùng ngày là hành vi hiện tại, không phải hợp đồng mong muốn; đổi thì mở ADR.
 - Thông điệp `uuid_parsing` là chữ của pydantic-core và phải chép nguyên văn cho mọi dạng lỗi (ký tự lạ, độ dài nhóm, độ dài tổng).
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này đọc đồng ý của sổ đôi (qua `_pair_chat_consent`/gu nhóm hoặc trực tiếp): kết quả chỉ đổi khi một pair mang hai lời đề nghị cùng bậc song song, khi đó bậc KHÔNG còn được tính là đã bật (trước là bật nhầm) (với `live-go-25-route-wai.md`: áp cho các route AI/gợi ý đọc gu nhóm của pair; các route khác trong tệp chỉ bị chạm theo tên). Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).
