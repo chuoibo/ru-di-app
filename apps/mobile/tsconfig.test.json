@@ -303,6 +303,8 @@
     "src/rudi/loi-moi-den.ts",
     "src/rudi/dot-thu/dot-thu.ts",
     "src/rudi/ky-niem/ky-niem.ts",
+    "src/rudi/ky-niem/achievement-routes.ts",
+    "src/rudi/ky-niem/journey-view.ts",
     "src/rudi/vote.ts",
     // Điểm đến (M10): compile để test chứng minh toạ độ chỉ đi trong MỘT lời
     // gọi và không nằm lại đâu cả, và câu «gần tôi» có đủ bốn trạng thái —
@@ -355,6 +357,7 @@
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
     // wall owner's comment policy -- pure copy and the six routes.
     "src/rudi/tuong/bai-chi-tiet.ts",
+    "src/rudi/tuong/social-v2.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
@@ -397,6 +400,7 @@
     // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
+    "src/rudi/nep/profile-video.ts",
     "src/screens/quan-tri/quan-tri.ts"
   ]
 }

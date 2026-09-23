@@ -231,6 +231,15 @@ def _route_roots() -> dict[str, tuple[str, str]]:
     return roots
 
 
+def _live_go_route_ids(rows: list[dict]) -> set[str]:
+    """Mounts serve files without a Python endpoint in the call graph."""
+    return {
+        row["id"]
+        for row in rows
+        if row["kind"] == "route" and row["owner"] == "go" and row["python"] == "live"
+    }
+
+
 def gate(base: str) -> int:
     try:
         _git("rev-parse", "--verify", base)
@@ -238,9 +247,7 @@ def gate(base: str) -> int:
         print(f"::error::base {base!r} does not resolve")
         return 2
     rows = json.loads(MANIFEST.read_text(encoding="utf-8"))["routes"]
-    live_go = {
-        row["id"] for row in rows if row["owner"] == "go" and row["python"] == "live"
-    }
+    live_go = _live_go_route_ids(rows)
     if not live_go:
         print("go-owned python touch OK: no route is served by Go with live Python")
         return 0
@@ -332,6 +339,14 @@ def selftest() -> int:
         "GET /things/{id}": reachable(index, ("app.api.routes.things", "read_thing"))
     }
     failures = []
+
+    if _live_go_route_ids(
+        [
+            {"id": "MOUNT /static", "kind": "mount", "owner": "go", "python": "live"},
+            {"id": "GET /things", "kind": "route", "owner": "go", "python": "live"},
+        ]
+    ) != {"GET /things"}:
+        failures.append("static mounts must not be treated as Python endpoints")
 
     def expect(name: str, errors: list[str], red: bool) -> None:
         if bool(errors) != red:

@@ -608,6 +608,15 @@ class TheGoHalfOfTheServerIsRead(unittest.TestCase):
             self.assertTrue(key.startswith("/"), key)
             self.assertTrue(methods <= {"GET", "POST", "PUT", "PATCH", "DELETE"}, key)
 
+    def test_new_go_profile_handlers_are_in_the_client_contract(self):
+        found = contract_gate.read_go_routes()
+        for path, method in (
+            ("/me/achievement-routes", "GET"),
+            ("/social/v2/people/{person_id}/changes", "GET"),
+            ("/me/profile-videos/{job_id}/file", "GET"),
+        ):
+            self.assertIn(method, found.get(contract_gate.normalise(path), set()))
+
 
 if __name__ == "__main__":
     unittest.main()

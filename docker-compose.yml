@@ -127,6 +127,10 @@ services:
       # `seed` and `demo` share that anchor and none of them read a bill. A
       # credential belongs in exactly the processes that use it.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Nếp image generation remains in the legacy AI/media seam; Go uses the
+      # same proxy for earned, credit-backed MP4 jobs.
+      NEP_PROXY_URL: ${NEP_PROXY_URL:-}
+      NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
       # The key `people.id` is derived under (bug-140342). Same rule as the
       # line above: Compose forwards nothing by itself, so a key sitting in the
       # host's `.env` reaches the API only because it is named here. Unset, the
@@ -206,6 +210,17 @@ services:
 
   # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
   # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
+  profile-migrate:
+    build:
+      context: ./services/core
+    image: mobile-local/core:dev
+    command: ["migrate-profile"]
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
   core:
     build:
       context: ./services/core
@@ -223,16 +238,21 @@ services:
       # served from Go; same key as `api`, or the two would name one number
       # differently. Unset, those routes answer 503 as Python does.
       MOBILE_PERSON_ID_KEY: ${MOBILE_PERSON_ID_KEY:-}
+      NEP_PROXY_URL: ${NEP_PROXY_URL:-}
+      NEP_PROXY_TOKEN: ${NEP_PROXY_TOKEN:-}
       # Go code merged but not yet owned by Go (manifest PORTED or later) is
       # served from Go only when named here, e.g. `ported`. Empty keeps Python.
       MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}
-      # Rollback without a rebuild: `MOBILE_FORCE_PYTHON=all make up`.
+      # Legacy route rollback without a rebuild. Go-only profile routes have
+      # no Python implementation and remain owned by Go.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
     ports:
       - "${MOBILE_API_PORT:-8099}:8000"
     depends_on:
       api:
         condition: service_healthy
+      profile-migrate:
+        condition: service_completed_successfully
     healthcheck:
       # Liveness of core itself, on its loopback port — not a proxied /healthz,
       # which would report Python's health under core's name.

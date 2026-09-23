@@ -199,7 +199,16 @@ def _ordered(row: dict) -> dict:
 def build(previous: dict | None, prune: bool) -> dict:
     rows = _app_rows()
     old = {r["id"]: r for r in (previous or {}).get("routes", [])}
-    gone = sorted(set(old) - {row["id"] for row in rows})
+    native = [
+        r
+        for r in (previous or {}).get("routes", [])
+        if r.get("python") == "absent" and r.get("state") == "GO-NATIVE"
+    ]
+    app_ids = {row["id"] for row in rows}
+    overlapping = sorted(r["id"] for r in native if r["id"] in app_ids)
+    if overlapping:
+        raise SystemExit(f"Go-only routes now appear in Python: {overlapping}")
+    gone = sorted(set(old) - app_ids - {r["id"] for r in native})
     if gone and not prune:
         raise SystemExit(f"routes left the app, rerun with --prune if intended: {gone}")
     for row in rows:
@@ -208,6 +217,8 @@ def build(previous: dict | None, prune: bool) -> dict:
         for field in CARRIED_FIELDS:
             if field in carried:
                 row[field] = carried[field]
+    for route in native:
+        rows.append({**route, "order": len(rows)})
     return {"schema": 1, "routes": [_ordered(row) for row in rows]}
 
 

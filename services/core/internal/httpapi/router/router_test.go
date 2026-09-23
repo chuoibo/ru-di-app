@@ -129,6 +129,11 @@ func TestMatchesStarletteGoldens(t *testing.T) {
 		t.Errorf("%d of %d cases disagree with Starlette", mismatches, len(cases))
 	}
 	for _, row := range routes {
+		// Starlette cannot produce a golden for routes that only exist in Go.
+		// Their handler registrations are checked by cmd/core native_routes_test.
+		if row.Python == ownership.PythonAbsent {
+			continue
+		}
 		if !fullRoutes[row.ID] {
 			t.Errorf("no golden case FULL-matches %q", row.ID)
 		}

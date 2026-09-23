@@ -21,23 +21,23 @@ import {
   cauQuanHe,
   cauTuongRong,
   docHoSoNguoi,
-  docTuongCua,
   dongPhuBai,
   loiRaChu,
-  type Bai,
   type HoSoNguoi,
 } from "../../nguoi/ho-so-nguoi";
-import { attemptFor, type Attempt } from "../../../api";
+import { ApiError, attemptFor, type Attempt } from "../../../api";
 import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
+import { BADGE_TITLES, docHuyHieuTrungBay, type EarnedBadge } from "../../ky-niem/achievement-routes";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
+import { docDoiTuong, docTrangTuong, ghepTrangTuong, type BaiTuong } from "../../tuong/social-v2";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
+import { BadgeArt } from "../../ui/BadgeArt";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -49,7 +49,7 @@ type TrangHoSo =
 
 type TrangTuong =
   | { pha: "dang-doc" }
-  | { pha: "xong"; bai: Bai[] }
+  | { pha: "xong"; bai: BaiTuong[]; conTro: string | null; conNua: boolean }
   | { pha: "hong"; loi: string };
 
 export function HoSoNguoiScreen() {
@@ -62,6 +62,7 @@ export function HoSoNguoiScreen() {
   let personId = "";
   if (typeof params.id === "string") personId = params.id;
   const [hoSo, setHoSo] = useState<TrangHoSo>({ pha: "dang-doc" });
+  const [huyHieu, setHuyHieu] = useState<EarnedBadge[]>([]);
   const [tuong, setTuong] = useState<TrangTuong>({ pha: "dang-doc" });
   // ADR-0023 §2.3: blocking and reporting live behind «Thêm hành động». The
   // flag is local because the server never says «you blocked them» on a
@@ -73,6 +74,8 @@ export function HoSoNguoiScreen() {
   const [dangMoChat, setDangMoChat] = useState(false);
   const [loiChat, setLoiChat] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  const doiTuongCursor = useRef<string | null>(null);
+  const [dangTaiThem, setDangTaiThem] = useState(false);
   // ADR-0022 §2.2: on one's own wall, who may comment. Read from `/people/me`
   // (the public profile never carries it) and written with one PATCH.
   const [chinhSach, setChinhSach] = useState<ChinhSachBinhLuan | null>(null);
@@ -118,32 +121,79 @@ export function HoSoNguoiScreen() {
     }
   };
 
-  const napHoSo = useCallback(async () => {
+  const napHoSo = useCallback(async (quiet = false) => {
     if (phien === null || personId === "") return;
-    setHoSo({ pha: "dang-doc" });
+    if (!quiet) setHoSo({ pha: "dang-doc" });
     try {
       setHoSo({ pha: "xong", hoSo: await docHoSoNguoi(personId, phien.person_id) });
     } catch (error) {
-      setHoSo({ pha: "hong", loi: loiRaChu(error) });
+      if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
+        setHoSo({ pha: "hong", loi: loiRaChu(error) });
+      }
     }
   }, [personId, phien]);
 
-  const napTuong = useCallback(async () => {
+  const napHuyHieu = useCallback(async (quiet = false) => {
     if (phien === null || personId === "") return;
-    setTuong({ pha: "dang-doc" });
+    if (!quiet) setHuyHieu([]);
     try {
-      setTuong({ pha: "xong", bai: await docTuongCua(personId, phien.person_id) });
-    } catch (error) {
-      setTuong({ pha: "hong", loi: loiRaChu(error) });
+      const result = await docHuyHieuTrungBay(phien.person_id, personId);
+      setHuyHieu(result.badges);
+    } catch {
+      if (!quiet) setHuyHieu([]);
     }
   }, [personId, phien]);
+
+  const napTuong = useCallback(async (quiet = false) => {
+    if (phien === null || personId === "") return;
+    if (!quiet) setTuong({ pha: "dang-doc" });
+    try {
+      const page = await docTrangTuong(personId, phien.person_id);
+      setTuong({ pha: "xong", bai: page.posts, conTro: page.next_cursor, conNua: page.has_more });
+    } catch (error) {
+      if (!quiet || (error instanceof ApiError && (error.status === 403 || error.status === 404))) {
+        setTuong({ pha: "hong", loi: loiRaChu(error) });
+      }
+    }
+  }, [personId, phien]);
+
+  const taiThem = async () => {
+    if (phien === null || tuong.pha !== "xong" || !tuong.conNua || tuong.conTro === null || dangTaiThem) return;
+    setDangTaiThem(true);
+    try {
+      const page = await docTrangTuong(personId, phien.person_id, tuong.conTro);
+      setTuong({ pha: "xong", bai: ghepTrangTuong(tuong.bai, page.posts), conTro: page.next_cursor, conNua: page.has_more });
+    } catch (error) {
+      setTuong({ pha: "hong", loi: loiRaChu(error) });
+    } finally {
+      setDangTaiThem(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
+      doiTuongCursor.current = null;
       void napHoSo();
+      void napHuyHieu();
       void napTuong();
       void napChinhSach();
-    }, [napHoSo, napTuong, napChinhSach]),
+      let active = true;
+      const watch = async () => {
+        while (active && phien !== null && personId !== "") {
+          try {
+            const change = await docDoiTuong(personId, phien.person_id, doiTuongCursor.current);
+            if (!active) return;
+            doiTuongCursor.current = change.next_cursor;
+            await Promise.all([napTuong(true), napHoSo(true), napHuyHieu(true)]);
+          } catch {
+            if (!active) return;
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+          }
+        }
+      };
+      void watch();
+      return () => { active = false; };
+    }, [napHoSo, napHuyHieu, napTuong, napChinhSach, personId, phien]),
   );
 
   // ADR-0023 §2.3: khay này phải nằm NGOÀI hộp cuộn của màn. `Sheet` phủ
@@ -183,7 +233,10 @@ export function HoSoNguoiScreen() {
       {hoSo.pha === "hong" ? <ErrorState body={hoSo.loi} onRetry={() => void napHoSo()} title="Chưa mở được hồ sơ" /> : null}
       {hoSo.pha === "xong" ? (
         <>
-          <View style={styles.hoSo}>
+          <View style={[styles.hoSo, { backgroundColor: colors.accentSoft, borderColor: colors.lineStrong }]}>
+            <Text style={[typography.h1, { color: colors.ink }]}>
+              {hoSo.hoSo.relation === "self" ? "Những ngày mình đã đi" : `Những ngày của ${hoSo.hoSo.display_name}`}
+            </Text>
             <View style={styles.dau}>
               <Avatar name={hoSo.hoSo.display_name} size={60} />
               <View style={styles.dauChu}>
@@ -208,6 +261,20 @@ export function HoSoNguoiScreen() {
                   : "Người này chưa viết giới thiệu."}
               </Text>
             )}
+            {huyHieu.length > 0 ? (
+              <View style={[styles.huyHieu, { borderTopColor: colors.lineStrong }]}>
+                <Text style={[typography.label, { color: colors.inkSoft }]}>Dấu ấn mang theo</Text>
+                <View style={styles.huyHieuHang}>
+                  {huyHieu.map((badge) => (
+                    <View key={badge.id} style={styles.huyHieuMot}>
+                      <BadgeArt badgeId={badge.id} label={BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình"} size={54} state="unlocked" />
+                      <Text numberOfLines={2} style={[typography.caption, { color: colors.ink, textAlign: "center" }]}>{BADGE_TITLES[badge.id] ?? "Huy hiệu hành trình"}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+            {hoSo.hoSo.relation === "self" ? <RudiButton compact full={false} icon="map-outline" label="Xem hành trình" onPress={() => router.push("/achievements")} variant="ghost" /> : null}
             {hoSo.hoSo.relation === "self" ? (
               <RudiButton
                 compact
@@ -272,7 +339,7 @@ export function HoSoNguoiScreen() {
               </View>
             ) : null}
           </View>
-          <Heading title={hoSo.hoSo.relation === "self" ? "Tường của bạn" : "Tường cá nhân"} />
+          <Heading title={hoSo.hoSo.relation === "self" ? "Trang viết của bạn" : "Trang viết được chia sẻ"} />
           {tuong.pha === "dang-doc" ? (
             <SkeletonGroup>
               <SkeletonLines lines={2} />
@@ -283,29 +350,49 @@ export function HoSoNguoiScreen() {
             <EmptyState illustration={<Canh id="chua-co-ky-niem" width={150} />} kind="first-use" layout="inline" title={cauTuongRong(hoSo.hoSo.relation)} />
           ) : null}
           {tuong.pha === "xong" && tuong.bai.length > 0 ? (
-            <View>
+            <View style={styles.dongChay}>
               {tuong.bai.map((bai) => (
-                <Pressable
-                  accessibilityLabel={`Mở bài: ${bai.body}`}
-                  accessibilityRole="button"
+                <View
                   key={bai.id}
-                  onPress={() => router.push(`/posts/${bai.id}` as never)}
-                  style={({ pressed }) => [styles.bai, { borderBottomColor: colors.line }, pressed && styles.bam]}
+                  style={[styles.bai, { backgroundColor: colors.card, borderColor: colors.line, shadowColor: colors.ink }]}
                 >
-                  <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
+                  <Pressable accessibilityLabel={`Mở bài: ${bai.body}`} accessibilityRole="button" onPress={() => router.push(`/posts/${bai.id}` as never)} style={({ pressed }) => [styles.baiNoiDung, pressed && styles.bam]}>
+                    <View style={styles.baiDau}>
+                      <View style={[styles.dauMoc, { backgroundColor: colors.accentSoft }]}>
+                        <Text style={[typography.stamp, { color: colors.accent }]}>{bai.is_repost ? "CHIA SẺ" : "NHẬT KÝ"}</Text>
+                      </View>
+                      <Text style={[typography.caption, { color: colors.inkFaint }]}>{dongPhuBai(bai)}</Text>
+                    </View>
+                    <Text style={[typography.body, { color: colors.ink }]}>{bai.body}</Text>
+                  </Pressable>
                   {bai.image_url ? (
-                    <Image
-                      accessibilityLabel="Ảnh bài đăng"
-                      contentFit="cover"
-                      source={nguonAnhBai(bai.image_url, phien?.person_id ?? "")}
-                      style={[styles.anhBai, { borderRadius: 12 }]}
-                    />
+                    <Pressable
+                      accessibilityLabel="Mở ảnh và bình luận"
+                      accessibilityRole="button"
+                      onPress={() => router.push(`/posts/${bai.id}?photo=1` as never)}
+                    >
+                      <Image
+                        accessibilityLabel="Ảnh bài đăng"
+                        contentFit="cover"
+                        source={nguonAnhBai(bai.image_url, phien?.person_id ?? "")}
+                        style={[styles.anhBai, { borderRadius: 12 }]}
+                      />
+                    </Pressable>
                   ) : null}
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>
-                    {dongPhuBai(bai)} · {cauTuongTacBai(bai)}
-                  </Text>
-                </Pressable>
+                  <Pressable accessibilityLabel={`Mở ${bai.comment_count} bình luận của bài`} accessibilityRole="button" onPress={() => router.push(`/posts/${bai.id}` as never)} style={({ pressed }) => [styles.baiNoiDung, pressed && styles.bam]}>
+                    {bai.is_repost ? (
+                      <View style={[styles.trichDan, { borderColor: colors.lineStrong }]}>
+                        <Text style={[typography.label, { color: colors.ink }]}>{bai.origin?.author_display_name ?? "Bài gốc không còn xem được"}</Text>
+                        {bai.origin ? <Text numberOfLines={3} style={[typography.body, { color: colors.inkSoft }]}>{bai.origin.body}</Text> : null}
+                      </View>
+                    ) : null}
+                    <Text style={[typography.caption, { color: colors.inkFaint }]}>
+                      {bai.like_count} thích · {bai.comment_count} bình luận
+                    </Text>
+                  </Pressable>
+                </View>
               ))}
+              {tuong.conNua ? <RudiButton label="Xem những trang trước" loading={dangTaiThem} onPress={() => void taiThem()} variant="outline" /> : null}
             </View>
           ) : null}
         </>
@@ -315,11 +402,19 @@ export function HoSoNguoiScreen() {
 }
 
 const styles = StyleSheet.create({
-  hoSo: { gap: 10 },
+  hoSo: { gap: 14, borderWidth: 1, borderRadius: 24, padding: 20, marginBottom: 12 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  bai: { gap: 6, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  dongChay: { gap: 16, paddingBottom: 24 },
+  bai: { gap: 12, padding: 16, borderWidth: 1, borderRadius: 18, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  baiNoiDung: { gap: 12 },
+  baiDau: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  dauMoc: { borderRadius: 5, paddingHorizontal: 8, paddingVertical: 5 },
+  trichDan: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 4 },
+  huyHieu: { gap: 10, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 14 },
+  huyHieuHang: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  huyHieuMot: { width: 72, alignItems: "center", gap: 5 },
   khoiChat: { gap: 6, marginTop: 4 },
   chinhSach: { gap: 8, marginTop: 4 },
   anhBai: { width: "100%", aspectRatio: 4 / 3 },

@@ -43,6 +43,11 @@
       "where": "apps/mobile/src/api.ts :: string>",
       "count": 2,
       "reason": "Cùng một hạn chế: khai báo 'export async function translatedAsActor<T>(' và 'export async function translatedAnonymous<T>(' bị đọc thành lời gọi. Xem ghi chú ở mục ngay trên."
+    },
+    {
+      "where": "apps/mobile/src/rudi/nep/NepPhim.tsx :: profileVideoFileURL(job.job_id)",
+      "count": 1,
+      "reason": "Fetch MP4 dùng helper ghép URL nội bộ /me/profile-videos/{job_id}/file và header phiên. Bộ quét không lần qua helper; apps/mobile/tests/profile-video.test.mjs kiểm đường dẫn, Go RouteIDs đối chiếu manifest."
     }
   ]
 }

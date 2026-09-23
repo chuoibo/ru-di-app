@@ -10,6 +10,7 @@ import { Sheet } from "../ui/Sheet";
 import type { PhieuNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
+import { NepPhim } from "./NepPhim";
 
 /**
  * The panel Nếp talks in.
@@ -131,6 +132,8 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           />
         </Pressable>
       ) : null}
+
+      <NepPhim actorId={nguon.kieu === "live" ? nguon.actorId : null} imageJobIds={buc.anhDaVe} />
 
       <View style={[styles.soan, { borderColor: colors.line }]}>
         <TextInput

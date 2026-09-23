@@ -23,14 +23,15 @@ const (
 
 	PythonLive   = "live"
 	PythonFrozen = "frozen"
+	PythonAbsent = "absent"
 )
 
 var (
 	classes = set("core", "ai", "mixed", "framework")
 	kinds   = set("route", "mount")
 	states  = set("PY", "CARDED", "PORTED-UNPROVEN", "PORTED", "PARITY-LOCAL", "AGY-PASS", "RERUN-PASS",
-		"LIVE-GO", "FROZEN", "PY-DELETED", "DEFERRED")
-	goServedStates     = set("LIVE-GO", "FROZEN", "PY-DELETED")
+		"LIVE-GO", "FROZEN", "PY-DELETED", "DEFERRED", "GO-NATIVE")
+	goServedStates     = set("LIVE-GO", "FROZEN", "PY-DELETED", "GO-NATIVE")
 	pythonFrozenStates = set("FROZEN", "PY-DELETED")
 )
 
@@ -103,13 +104,16 @@ func (m *Manifest) validate() error {
 		if r.Owner != OwnerPython && r.Owner != OwnerGo {
 			return fmt.Errorf("%s: owner = %q", where, r.Owner)
 		}
-		if r.Python != PythonLive && r.Python != PythonFrozen {
+		if r.Python != PythonLive && r.Python != PythonFrozen && r.Python != PythonAbsent {
 			return fmt.Errorf("%s: python = %q", where, r.Python)
 		}
 		if (r.Owner == OwnerGo) != goServedStates[r.State] {
 			return fmt.Errorf("%s: owner %q does not match state %q", where, r.Owner, r.State)
 		}
 		if (r.Python == PythonFrozen) != pythonFrozenStates[r.State] {
+			return fmt.Errorf("%s: python %q does not match state %q", where, r.Python, r.State)
+		}
+		if (r.Python == PythonAbsent) != (r.State == "GO-NATIVE") {
 			return fmt.Errorf("%s: python %q does not match state %q", where, r.Python, r.State)
 		}
 		if r.Owner == OwnerGo && r.Evidence == "" {
@@ -185,6 +189,12 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 			if r.Python == PythonFrozen {
 				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q is frozen in Python and cannot be forced back", r.ID)
 			}
+			if r.Python == PythonAbsent {
+				if token == "all" {
+					continue
+				}
+				return Force{}, fmt.Errorf("MOBILE_FORCE_PYTHON: %q has no Python fallback", r.ID)
+			}
 			force.Routes[r.ID] = true
 		}
 	}
@@ -195,7 +205,7 @@ func (m *Manifest) ParseForce(raw string) (Force, error) {
 func (m *Manifest) GoServed(force Force) []Route {
 	var served []Route
 	for _, r := range m.Routes {
-		if r.Owner == OwnerGo && !force.All && !force.Routes[r.ID] {
+		if r.Owner == OwnerGo && r.Python != PythonAbsent && !force.All && !force.Routes[r.ID] {
 			served = append(served, r)
 		}
 	}
