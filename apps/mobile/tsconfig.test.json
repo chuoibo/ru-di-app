@@ -8,6 +8,10 @@
     "target": "es2022"
   },
   "include": [
+    // QA 23/09: the placeholder-name check (held equal to both server spellings)
+    // and the invite-by-number steps (a 403 rename no longer aborts the invite).
+    "src/rudi/ten-giu-cho.ts",
+    "src/rudi/moi-bang-so.ts",
     "src/rudi/photo-viewer.ts",
     "src/api.ts",
     "src/assignment.ts",

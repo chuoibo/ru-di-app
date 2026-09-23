@@ -152,6 +152,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         <RudiButton
           compact
           disabled={!nhap.trim() || buc.dangCho}
+          full={false}
           label="Vẽ"
           loading={buc.dangCho}
           onPress={() => {
@@ -169,7 +170,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           tone="ai"
           variant="outline"
         />
-        <RudiButton compact disabled={!nhap.trim()} label="Gửi" onPress={() => datDaGui(true)} tone="ai" />
+        <RudiButton compact disabled={!nhap.trim()} full={false} label="Gửi" onPress={() => datDaGui(true)} tone="ai" />
       </View>
     </Sheet>
   );
@@ -184,5 +185,8 @@ const styles = StyleSheet.create({
   loi: { marginTop: 12 },
   khungAnh: { marginTop: 12, borderRadius: 14, overflow: "hidden" },
   soan: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
-  o: { flex: 1, paddingVertical: 10 },
+  // Two compact buttons share this row with the input. Buttons default to
+  // `full` (width 100%, no shrink), which squeezed the input to zero width on
+  // Android (QA 23/09); they opt out above, and the input keeps a floor.
+  o: { flex: 1, minWidth: 120, paddingVertical: 10 },
 });

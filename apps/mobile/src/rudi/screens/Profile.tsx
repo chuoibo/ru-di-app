@@ -22,6 +22,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, formatVnd } from "../fixtures";
 import { docSoThich, tomTat, type SoThichSong } from "../nguoi/so-thich-song";
 import { layTaiChinh, tinhTrangNo, type Finance } from "../../screens/ca-nhan/tai-chinh";
+import { docLoiMoi } from "../../screens/ca-nhan/ban-be";
+import { docDaLuu } from "../kham-pha/dia-diem";
 import { nhanKhoangNgay } from "../../screens/len-plan/buoi-di";
 import { dauLich, homNay, nhanNhip, nhipKeo } from "../keo/nhip-keo";
 import { noiLuu, noiLuuNgan } from "../luu-tru";
@@ -64,6 +66,12 @@ export function ProfileScreen() {
   // The row's subtitle is what this person told the server (M11), read on
   // focus rather than once: they may have just changed it on the step itself.
   const [soThich, setSoThich] = useState<SoThichSong>({ muc: [], khoang: null });
+  // A real session counts what the SERVER saved and who is waiting on it. The
+  // local draft's `savedPlaceIds` is the fixture's list (seeded with one cafe),
+  // which a fresh install read as «1 địa điểm» it never saved (QA 23/09); and a
+  // friend request nobody can see is a request that never arrives.
+  const [soDaLuu, setSoDaLuu] = useState<number | null>(null);
+  const [loiMoiCho, setLoiMoiCho] = useState(0);
   useFocusEffect(
     useCallback(() => {
       if (personId === null) return;
@@ -71,11 +79,18 @@ export function ProfileScreen() {
       void docSoThich(personId)
         .then((da) => con && setSoThich(da))
         .catch(() => undefined);
+      void docDaLuu(personId)
+        .then((ids) => con && setSoDaLuu(ids.length))
+        .catch(() => undefined);
+      void docLoiMoi(personId, personId, "incoming")
+        .then((ds) => con && setLoiMoiCho(ds.filter((loi) => loi.state === "pending").length))
+        .catch(() => undefined);
       return () => {
         con = false;
       };
     }, [personId]),
   );
+  const soLuuHien = personId !== null ? soDaLuu : session.savedPlaceIds.length;
 
   if (panel === "account") {
     return (
@@ -119,8 +134,8 @@ export function ProfileScreen() {
       <RudiScreen bottomInset="tab" testID="profile-screen">
         <TopBar onBack={() => setPanel("home")} title="Đã lưu" />
         <Heading
-          title={`${session.savedPlaceIds.length} địa điểm`}
-          subtitle={`Danh sách ${noiLuu(session.luuTruSong)}. Mở Khám phá để thêm.`}
+          title={soLuuHien === null ? "Đã lưu" : `${soLuuHien} địa điểm`}
+          subtitle={personId !== null ? "Danh sách lưu trong tài khoản của bạn. Mở Khám phá để thêm." : `Danh sách ${noiLuu(session.luuTruSong)}. Mở Khám phá để thêm.`}
         />
         <RudiButton label="Mở Khám phá" onPress={() => router.push("/explore")} />
       </RudiScreen>
@@ -205,9 +220,16 @@ export function ProfileScreen() {
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
               <ListRow
                 icon="people-outline"
-                onPress={() => router.push("/friends")}
-                subtitle="Bạn bè, lời mời đã nhận và đã gửi"
+                onPress={() => router.push((loiMoiCho > 0 ? "/friends?muc=da-nhan" : "/friends") as never)}
+                subtitle={loiMoiCho > 0 ? `${loiMoiCho} lời mời kết bạn đang chờ bạn` : "Bạn bè, lời mời đã nhận và đã gửi"}
                 title="Bạn bè"
+                trailing={
+                  loiMoiCho > 0 ? (
+                    <View accessibilityLabel={`${loiMoiCho} lời mời đang chờ`} style={[styles.dem, { backgroundColor: colors.accent }]}>
+                      <Text style={[typography.caption, { color: colors.accentInk }]}>{loiMoiCho}</Text>
+                    </View>
+                  ) : undefined
+                }
               />
             </View>
             <View style={[styles.hangMenu, { borderBottomColor: colors.line }]}>
@@ -258,7 +280,13 @@ export function ProfileScreen() {
           <ListRow
             icon="bookmark-outline"
             onPress={() => setPanel("saved")}
-            subtitle={`${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`}
+            subtitle={
+              personId !== null
+                ? soLuuHien === null
+                  ? "Địa điểm bạn đã lưu"
+                  : `${soLuuHien} địa điểm trong tài khoản`
+                : `${session.savedPlaceIds.length} địa điểm ${noiLuuNgan(session.luuTruSong)}`
+            }
             title="Đã lưu"
           />
         </View>
@@ -278,7 +306,7 @@ export function ProfileScreen() {
           <ListRow
             icon="shield-checkmark-outline"
             onPress={() => setPanel("account")}
-            subtitle="Quyền riêng tư và đăng xuất bản trải nghiệm"
+            subtitle={session.phien !== null ? "Quyền riêng tư và đăng xuất" : "Quyền riêng tư và đăng xuất bản trải nghiệm"}
             title="Tài khoản"
           />
         </View>
@@ -301,6 +329,11 @@ export function FinanceScreen() {
   if (session.nguon.kieu === "live") {
     return <TaiChinhLive actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
   }
+  // Signed in, in no group yet: the finance route is per PERSON, so it reads
+  // the real (empty) ledger instead of falling back to Team Đà Lạt's numbers.
+  if (session.phien !== null) {
+    return <TaiChinhLive actorId={session.phien.person_id} contextId={null} />;
+  }
   return <TaiChinhNhap />;
 }
 
@@ -311,7 +344,7 @@ export function FinanceScreen() {
  * is guaranteed by the ledger query that answers it, and deriving even one of
  * the three here would be a second implementation of the same sum.
  */
-function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string }) {
+function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: string | null }) {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   const [du, setDu] = useState<Finance | null>(null);
@@ -363,8 +396,8 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
         <DongTien nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
       </View>
       <SectionHeader
-        action="Xem quyết toán"
-        onAction={() => router.push(("/settlements/" + contextId) as never)}
+        action={contextId !== null ? "Xem quyết toán" : undefined}
+        onAction={contextId !== null ? () => router.push(("/settlements/" + contextId) as never) : undefined}
         title="Chi theo nhóm"
       />
       <View style={styles.ghiChu}>
@@ -531,6 +564,7 @@ export function AchievementsScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  dem: { minWidth: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", paddingHorizontal: 7 },
   form: { maxWidth: 560 },
   khung: { gap: 14 },
   profileTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },

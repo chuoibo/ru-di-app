@@ -2,8 +2,8 @@
 #
 # Ba lần mở lạnh, ba câu trả lời khác nhau của cùng một cửa vào:
 #   1. chưa có phiên     → màn chào;
-#   2. có phiên          → THẲNG vào (ở đây là «Chưa có nhóm nào», vì người này
-#                          chưa có nhóm), không qua màn chào;
+#   2. có phiên          → THẲNG vào (ở đây là tab Tin nhắn rỗng «Chưa có nhóm
+#                          nào», vì người này chưa có nhóm), không qua màn chào;
 #   3. sau khi đăng xuất → màn chào lại, và ở lại đó sau một lần tắt nữa.
 # Quyết định đó là `manDau` trong src/rudi/duong-vao.ts, chạy sau khi
 # SecureStore đã trả lời — cái đợi đó là thứ flow này đo được mà test node

@@ -18,6 +18,7 @@ import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../
 import { guiLoiMoi, timBanTheoSo, type NguoiTimDuoc } from "../../../screens/ca-nhan/ban-be";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { useRudiSession } from "../../session";
+import { tenThat } from "../../ten-giu-cho";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { HangNguoi } from "./HangNguoi";
@@ -84,7 +85,7 @@ export function AddFriendScreen() {
       <RudiScreen testID="add-friend-screen">
         <TopBar title="Thêm bạn" />
         <Heading
-          title={`Đã gửi lời mời tới ${trang.nguoi.display_name}`}
+          title={`Đã gửi lời mời tới ${tenThat(trang.nguoi.display_name) ?? `số đuôi ${duoiSo(phone)}`}`}
           subtitle="Khi người ấy đồng ý, hai bạn là bạn bè và thấy tường của nhau."
         />
         <RudiButton label="Về danh sách bạn" onPress={() => router.back()} />
@@ -119,7 +120,13 @@ export function AddFriendScreen() {
         {trang.pha === "tim-thay" || trang.pha === "dang-gui" ? (
           <>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Tìm thấy theo số điện thoại</Text>
-            <HangNguoi phu="Đã dùng Rủ Đi hoặc đã được đặt tên bằng số này" ten={trang.nguoi.display_name} />
+            {/* Somebody who has not chosen a name yet only has the server's
+                placeholder; the tail of the number the searcher typed is what
+                tells them they found the right person (QA 23/09). */}
+            <HangNguoi
+              phu={`Số đuôi ${duoiSo(phone)} · ${tenThat(trang.nguoi.display_name) === null ? "chưa đặt tên trên Rủ Đi" : "đã dùng Rủ Đi"}`}
+              ten={tenThat(trang.nguoi.display_name) ?? "Người chưa đặt tên"}
+            />
             <RudiButton
               disabled={ban}
               label="Gửi lời mời"
@@ -136,6 +143,12 @@ export function AddFriendScreen() {
       </View>
     </RudiScreen>
   );
+}
+
+/** The last three digits of what the searcher typed; the number itself is not stored. */
+function duoiSo(so: string): string {
+  const chuSo = so.replace(/\D/g, "");
+  return chuSo.length >= 3 ? `•••${chuSo.slice(-3)}` : "này";
 }
 
 const styles = StyleSheet.create({

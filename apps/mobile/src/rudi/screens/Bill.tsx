@@ -44,6 +44,7 @@ import { AiCoGi } from "../ui/AiCoGi";
 import { Avatar } from "../ui/Avatar";
 import { HaiCot } from "../ui/HaiCot";
 import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
+import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { RosterPicker } from "../ui/RosterPicker";
@@ -304,8 +305,24 @@ export function OcrAssignmentScreen() {
  */
 export function SettlementScreen() {
   const session = useRudiSession();
+  const router = useRouter();
   if (session.nguon.kieu === "live") {
     return <QuyetToanLive actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
+  }
+  // Signed in with no group: there is no ledger to settle, and Team Đà Lạt's
+  // fixture must never stand in for one (QA 23/09).
+  if (session.phien !== null) {
+    return (
+      <RudiScreen tone="split" testID="settlement-screen">
+        <TopBar title="Quyết toán" />
+        <EmptyState
+          action={{ label: "Tới Tin nhắn", onPress: () => router.replace("/messages" as never) }}
+          body="Quyết toán tính từ sổ của một nhóm. Vào hoặc tạo một nhóm trước."
+          kind="first-use"
+          title="Chưa có sổ nào để quyết toán"
+        />
+      </RudiScreen>
+    );
   }
   return <QuyetToanNhap />;
 }
