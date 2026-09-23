@@ -88,14 +88,23 @@ func chatSchemaURL(t *testing.T) string {
 	return raw + separator + "search_path=" + url.QueryEscape(schema+",public")
 }
 
-func freeAddress(t *testing.T) string {
+// freeAddresses returns two distinct loopback addresses for core's public and
+// liveness listeners. Both probes stay open until both are taken: closing the
+// first before opening the second let the kernel hand out the same port twice,
+// and config.Load then refused "must differ" -- measured once in ten runs.
+func freeAddresses(t *testing.T) (string, string) {
 	t.Helper()
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	first, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer l.Close()
-	return l.Addr().String()
+	defer first.Close()
+	second, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer second.Close()
+	return first.Addr().String(), second.Addr().String()
 }
 
 // pythonStub stands in for the API behind core and records what reached it.
@@ -140,7 +149,7 @@ type runningCore struct {
 // liveness. It fails the test if core exits first.
 func startCore(t *testing.T, env map[string]string) runningCore {
 	t.Helper()
-	listen, live := freeAddress(t), freeAddress(t)
+	listen, live := freeAddresses(t)
 	full := map[string]string{"MOBILE_CORE_LISTEN": listen, "MOBILE_CORE_LIVENESS_LISTEN": live}
 	for k, v := range env {
 		full[k] = v
@@ -312,9 +321,10 @@ func TestChatFeaturesRefuseToStartWithoutSchema(t *testing.T) {
 	databaseURL := chatSchemaURL(t)
 	python := newPythonStub(t)
 	logs := &lockedBuffer{}
+	listen, live := freeAddresses(t)
 	env := map[string]string{
-		"MOBILE_CORE_LISTEN":          freeAddress(t),
-		"MOBILE_CORE_LIVENESS_LISTEN": freeAddress(t),
+		"MOBILE_CORE_LISTEN":          listen,
+		"MOBILE_CORE_LIVENESS_LISTEN": live,
 		"MOBILE_PYTHON_UPSTREAM":      python.URL,
 		"MOBILE_DATABASE_URL":         databaseURL,
 	}
