@@ -54,11 +54,26 @@ try {
   const [author, peer, observer] = pages;
   await author.click('[aria-label="Thêm vào cuộc trò chuyện"]'); await author.click('[aria-label="Tờ hẹn"]');
   await fill(author, '[aria-label="Lời nhờ lập kế hoạch"]', 'Lập tờ hẹn tổng hợp cho nhóm thử nghiệm: 4 người đi cà phê và ăn tối ở Đà Lạt, 18:00 đến 20:00, 200000 đồng mỗi người. Chỉ chọn địa điểm có trong danh mục được cung cấp. Ghi giờ HH:mm cho từng chặng.');
-  const consent = await author.evaluate(() => document.body.innerText.includes('Lịch sử chat không được chia sẻ.'));
-  await author.screenshot({ path: path.join(output, '01-consent.png') });
+  // The block above the send button names a number of messages. Asserting the
+  // SENTENCE would only prove some words are on screen; asserting the NUMBER
+  // against what the request actually carried is the only version of this check
+  // that could fail when the screen starts lying.
+  const xemTruoc = await author.evaluate(() => {
+    const el = document.querySelector('[data-testid="chat-boi-canh"]');
+    return el ? el.textContent : '';
+  });
+  const soTrenMan = Number((xemTruoc.match(/\d+/) || [])[0] ?? -1);
+  await author.screenshot({ path: path.join(output, '01-boi-canh.png') });
   const pending = author.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/ai-invocations'));
   await clickText(author, 'Gửi lời nhờ cho AI'); const response = await pending, invocation = await response.json();
-  result.steps.push({ name: 'explicit_invocation', pass: response.status() === 202 && consent, status: response.status(), invocationId: invocation.id }); save();
+  let soTrenDay = -1;
+  try { soTrenDay = JSON.parse(response.request().postData() || '{}').boi_canh?.luot?.length ?? -1; } catch { soTrenDay = -1; }
+  result.steps.push({
+    name: 'explicit_invocation',
+    pass: response.status() === 202 && soTrenMan >= 0 && soTrenMan === soTrenDay,
+    status: response.status(), invocationId: invocation.id,
+    xemTruoc, soTrenMan, soTrenDay,
+  }); save();
   if (response.status() !== 202) throw Error(`Invocation refused: ${response.status()}`);
   let job;
   for (let attempt = 0; attempt < 80; attempt++) {

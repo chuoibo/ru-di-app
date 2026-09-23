@@ -4,6 +4,7 @@ package chate2e
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -44,8 +45,66 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 		if !ok {
 			t.Fatalf("thiếu khối ai trong năng lực — %s", response.trim())
 		}
-		if scope, _ := ai["share_scope"].(string); scope != "invocation_only" {
-			t.Fatalf("phạm vi chia sẻ phải là invocation_only, nhận %q", scope)
+		// `caller_attached` is a gate the client reads, not a label: while the
+		// server says `invocation_only` the client attaches no context at all.
+		// Flipping it is what turns the path on, so the value is worth pinning.
+		if scope, _ := ai["share_scope"].(string); scope != "caller_attached" {
+			t.Fatalf("phạm vi chia sẻ phải là caller_attached, nhận %q", scope)
+		}
+	})
+
+	t.Run("I5 gói bối cảnh do người gọi trao", func(t *testing.T) {
+		// The only case in this tier that sends what the screen actually sends.
+		// Without it the whole context path is exercised by nothing here.
+		luot := func(id, chu string) map[string]any {
+			return map[string]any{"id": id, "vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": "2030-09-22T10:00:00Z", "chu": chu}
+		}
+		goi := func(items ...map[string]any) map[string]any {
+			return map[string]any{"ban": 1, "nguon": "chat-nhom", "luot": items, "tongLuot": len(items), "daCat": false}
+		}
+		mot := author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Tao dị ứng hải sản"}, Idem(newKey())).Str(t, "id")
+		hai := author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Dưới 300k thôi"}, Idem(newKey())).Str(t, "id")
+
+		// A turn whose id is not a message of this room refuses, and refuses
+		// before anything reaches the model.
+		lac := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "plan", "prompt": "Lên kế hoạch giúp",
+			"boi_canh": goi(luot(newUUID(), "Câu của phòng khác")),
+		}, Idem(newKey()))
+		if lac.Status != 422 {
+			t.Fatalf("id tin lạ phòng phải 422, nhận %d — %s", lac.Status, lac.trim())
+		}
+
+		created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "plan", "prompt": "Lên kế hoạch giúp",
+			"boi_canh": goi(luot(mot, "Tao dị ứng hải sản"), luot(hai, "Dưới 300k thôi")),
+		}, Idem(newKey()))
+		if created.Status != http.StatusAccepted && created.Status != http.StatusCreated {
+			t.Fatalf("lời gọi mang bối cảnh phải 202/201, nhận %d — %s", created.Status, created.trim())
+		}
+		id := created.Str(t, "id")
+
+		deadline := time.Now().Add(jobWait)
+		state := ""
+		for time.Now().Before(deadline) {
+			response := author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil)
+			state, _ = response.JSON["status"].(string)
+			if state == "succeeded" || state == "failed" || state == "cancelled" {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if state != "succeeded" {
+			t.Fatalf("job mang bối cảnh dừng ở %q, mong succeeded", state)
+		}
+		// The public shape of a job never carries the prompt or the context back.
+		body := author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil).trim()
+		for _, cam := range []string{"dị ứng", "300k", "boi_canh", "prompt"} {
+			if strings.Contains(body, cam) {
+				t.Fatalf("phản hồi job để lộ %q — %s", cam, body)
+			}
 		}
 	})
 

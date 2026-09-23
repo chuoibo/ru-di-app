@@ -244,6 +244,11 @@ func (h *Handler) preflight(r *http.Request) error {
 	return tx.Commit(r.Context())
 }
 
+// `share_scope` is a gate, not a label. While it reads `invocation_only` the
+// client attaches no bundle at all, so an older server keeps receiving exactly
+// the old body. Flipping it here is what turns the context path on, and it is
+// flipped only now that the preview block above the send button exists
+// (ADR-0034 §4 forbids the one without the other).
 func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	tx, g, err := h.begin(r)
 	if err != nil {
@@ -263,7 +268,7 @@ func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	if enabled {
 		reason = nil
 	}
-	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "share_scope": "invocation_only"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
+	reply(w, 200, map[string]any{"protocol": "legacy", "realtime": map[string]bool{"available": true}, "ai": map[string]any{"plan": map[string]any{"available": enabled, "reason": reason}, "share_scope": "caller_attached"}, "media": map[string]bool{"image": true, "sticker": true, "voice": false}})
 }
 
 func scan(row pgx.Row) (Invocation, error) {
