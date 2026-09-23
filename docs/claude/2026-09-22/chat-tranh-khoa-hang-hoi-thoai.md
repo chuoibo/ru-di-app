@@ -215,3 +215,65 @@ toàn rảnh, cùng một chữ ký — nên câu đúng là **không quy trách
 cửa sổ đầu**, chứ không phải "do tôi". Nhật ký việc đã chạy nằm ở
 `/tmp/rudi-chat-load-locks/nhieu-host.txt`. Bài học giữ lại: máy đo phải im
 lặng, và khi nó không im lặng thì nói ra chứ đừng suy.
+
+## 7. Đo lại trên `main` 62a591fa (23-09), cùng máy với bản trước khi sửa
+
+`main` đã đi thêm 43 commit sau PR #633 nhưng không commit nào chạm
+`chatv2`, `chatv2http`, `chat-load` hay harness. Đo lại để con số gắn với SHA
+đang chạy, và đo **bản trước khi sửa** (`cb5a15fd`, cha của `aee3581f`) ngay
+sau đó trên cùng máy, cùng harness (script lấy mẫu của `main` chép vào cây
+cũ; `chat-load`/`chat-lab` giống hệt), để hai cột so được với nhau.
+
+Burst 300/s · 60 s · 1.000 socket · 200 người · 5 thiết bị · 2 nhóm, chạy
+liền nhau, lúc bắt đầu nền máy chỉ có một máy ảo Android và Chrome:
+
+| | trước (`cb5a15fd`) | sau (`62a591fa`) | ngưỡng |
+|---|---|---|---|
+| `passed` | **false** | **true** | |
+| delivery p50 | 676 ms | **50 ms** | — |
+| delivery p95 | 2.268 ms | **101 ms** | ≤ 800 ms |
+| delivery p99 | 2.600 ms | **208 ms** | ≤ 2.000 ms |
+| delivery max | 2.777 ms | 369 ms | — |
+| send p95 · p99 | 2.244 · 2.573 ms | **48 · 166 ms** | — |
+| nhịp đạt | 294,2/s | **299,9/s** | mời 300/s |
+| tổng lượt chờ khoá (mẫu) | 940 | **101** | — |
+| chờ khoá tuple | 214, **cả 214** trên `chat_v2_conversations` | 18, cả 18 trên cùng bảng | — |
+
+Toàn vẹn sạch ở **cả hai** cột: 9.000.000/9.000.000 lượt giao, 0 thiếu · 0
+trùng · 0 hụt dãy · 0 hỏng · 0 lỗi gửi · 0 rớt hàng đợi, 180 replay đạt,
+`db_events = db_outbox = db_dedup = 18.000`, `http_status {201: 18.000, 200: 180}`.
+
+Lượt ngắn 100/s · 120 s trên `62a591fa`: `passed: true`, p95 **64 ms**, p99
+**108 ms**, max 383 ms; 6.000.000/6.000.000, 0 lỗi; cả lượt chỉ 5 lượt chờ, 0
+khoá tuple. Lượt ngắn trên `cb5a15fd` cũng đạt (p95 122, p99 530 ms) nhưng
+**không so được**: lúc nó chạy một phiên khác trên máy đang bundle bằng `node`
+(~8,6 nhân) và khởi động máy ảo Android thứ hai. Lượt ngắn 100/s vốn đạt cả
+trước khi sửa, nên nó không phân biệt được hai bản; burst mới phân biệt.
+
+### Cái còn giữ khoá hàng, đọc đúng lần này
+
+`phan_tich_khoa_chat.py` tách dòng `HOLDER` theo khoảng trắng, nên mọi kẻ giữ
+ở trạng thái `idle in transaction` bị gộp thành nhãn `in/transaction` và mất
+luôn việc nó đang chờ. Đã sửa. Đọc lại burst sau khi sửa (111 mẫu kẻ giữ):
+
+| kẻ giữ | mẫu |
+|---|---|
+| `idle in transaction` · `Client/ClientRead` sau CTE tăng dãy | **31** |
+| `commit` · `LWLock/WALWrite` + `IO/WALSync` + `IO/WALInitSync` | **42** |
+| chính nó đang chờ ở CTE (`Lock/transactionid`, `Lock/tuple`) | 24 |
+
+Vùng tới hạn còn lại đúng như mục 3 dự đoán — một câu lệnh cộng `commit` —
+nhưng giờ thấy rõ nó gồm **hai** phần: fsync của `commit`, và **một vòng mạng**
+từ lúc CTE trả hàng về Go tới lúc Go gửi `COMMIT`. Nếu cần thêm biên cho p99
+của lượt dài, đó là hai đòn bẩy theo thứ tự rẻ trước: gửi `COMMIT` cùng lượt
+với CTE (bỏ vòng mạng, không đổi ngữ nghĩa), rồi mới tới gom nhiều tin vào
+một lần tăng dãy (chia một fsync). Chưa làm cái nào: cổng đang đạt, và mỗi cái
+cần đo riêng trên máy yên.
+
+**Lượt ngắn và burst xanh không nói gì về lượt 30 phút.** Lượt 30 phút duy
+nhất trên bản sửa là lượt ở mục 5 (22-09); không chạy lại lần này vì máy dùng
+chung đang có phiên khác chạy trình duyệt và e2e.
+
+Artifact (không bền qua reboot): `/tmp/rudi-chat-mass.AIdOmz24` (burst sau),
+`/tmp/rudi-chat-mass.CJiCxJVB` (burst trước), `/tmp/rudi-chat-mass.5o4bpMsj`
+(ngắn sau), `/tmp/rudi-chat-mass.1wfefurk` (ngắn trước).
