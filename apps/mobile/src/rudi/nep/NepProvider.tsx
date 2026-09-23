@@ -35,6 +35,8 @@ export interface NepDieuKhien {
   gui(su: SuKienNep): void;
   datTyLe(t: number): void;
   datPhieu(p: PhieuNguCanh | null): void;
+  /** A sheet opened over the page (`true`) or closed (`false`). Counted. */
+  nhuongCho(mo: boolean): void;
 }
 
 const NepContext = createContext<NepDieuKhien | null>(null);
@@ -55,7 +57,7 @@ export function NepProvider({ children }: { children: ReactNode }) {
       const daLuu = giaiMaDock(raw);
       if (daLuu) {
         datTyLeRaw(daLuu.tyLe);
-        if (daLuu.an) gui({ kieu: "vuot-ra" });
+        if (daLuu.ra) gui({ kieu: "keo-vao" });
       }
       datDaDocDia(true);
     });
@@ -81,6 +83,16 @@ export function NepProvider({ children }: { children: ReactNode }) {
     }
   }, [duong]);
 
+  // Sheets nest: a confirm can open over a tray. Nếp comes back only when the
+  // LAST one closes, so the count is what matters, not the latest event.
+  const soTo = useRef(0);
+  const nhuongCho = useCallback((mo: boolean) => {
+    const truoc = soTo.current;
+    soTo.current = Math.max(0, truoc + (mo ? 1 : -1));
+    if (truoc === 0 && soTo.current > 0) gui({ kieu: "nhuong-cho", bat: true });
+    if (truoc > 0 && soTo.current === 0) gui({ kieu: "nhuong-cho", bat: false });
+  }, []);
+
   const datTyLe = useCallback((t: number) => {
     const sach = Number.isFinite(t) ? Math.min(1, Math.max(0, t)) : 0;
     datTyLeRaw(sach);
@@ -90,12 +102,12 @@ export function NepProvider({ children }: { children: ReactNode }) {
   // never overwrites what the disk holds.
   useEffect(() => {
     if (!daDocDia) return;
-    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe, an: dock.nen === "an" }));
+    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe, ra: dock.nen === "nghi" }));
   }, [daDocDia, tyLe, dock.nen]);
 
   const gia = useMemo<NepDieuKhien>(
-    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, datPhieu }),
-    [dock, phieu, tyLe, daDocDia, datTyLe],
+    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, datPhieu, nhuongCho }),
+    [dock, phieu, tyLe, daDocDia, datTyLe, nhuongCho],
   );
 
   return <NepContext.Provider value={gia}>{children}</NepContext.Provider>;
@@ -125,3 +137,25 @@ export function useNepNguCanh(tho: unknown): void {
     return () => datPhieu(null);
   }, [khoa, datPhieu]);
 }
+
+/**
+ * What a surface calls while it lays another sheet over the page.
+ *
+ * «Chừa một chỗ cho nhau»: while the sheet is open Nếp tucks into the notebook
+ * edge and leaves the room to it, and comes back to exactly where the person
+ * left it when the sheet closes. `ui/Sheet.tsx` calls this for every bottom
+ * sheet in the app; a surface that draws its own tray calls it too.
+ *
+ * Tolerates a missing provider, because sheets render in fixtures and tests
+ * that have no Nếp at all -- and a sheet with no Nếp to make room for has
+ * nothing to do.
+ */
+export function useNhuongChoNep(dangMo: boolean): void {
+  const nhuong = useContext(NepContext)?.nhuongCho;
+  useEffect(() => {
+    if (!dangMo || !nhuong) return;
+    nhuong(true);
+    return () => nhuong(false);
+  }, [dangMo, nhuong]);
+}
+

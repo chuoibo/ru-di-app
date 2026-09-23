@@ -7,41 +7,43 @@
 # `tests/test_maestro_flows_are_all_reachable.py` gác đúng chuyện đó.
 #
 # Chứng minh theo đúng thứ tự người dùng gặp:
-#   1. Nếp có mặt sẵn ở tab đầu, không phải gọi ra;
-#   2. vuốt sang phải thì Nếp nằm gọn trong mép — đĩa mất, chỉ còn mép giấy;
-#   3. chạm mép thì Nếp quay ra nhưng CHƯA mở bảng;
-#   4. chạm lần nữa mới mở bảng, và bảng nói đúng màn đang đứng;
-#   5. Back đóng bảng mà Nếp vẫn còn đó, không biến mất theo.
+#   1. Nếp có mặt sẵn ở tab đầu, nhưng CÀI trong mép: chỉ mép giấy, không đĩa;
+#   2. chạm mép thì Nếp ra ngoài nhưng CHƯA mở bảng;
+#   3. chạm lần nữa mới mở bảng, và bảng nói đúng màn đang đứng;
+#   4. Back đóng bảng, Nếp vẫn ở ngoài như người dùng đã kéo;
+#   5. vuốt sang phải thì Nếp cài lại vào mép.
 #
-# Bước 3 là lý do flow này tồn tại. Nếu một chạm vừa lôi Nếp ra vừa bung bảng
-# thì một cú vuốt lỡ tay sẽ che mất màn người ta đang đọc, và đó đúng là kiểu
-# hỏng không ai báo bug mà chỉ thấy khó chịu.
+# Bước 1 là lý do bản 23/09 đổi thứ tự. Nếp mặc định nằm ngoài thành một đĩa
+# 57dp thì đè chữ trên thẻ (Khám phá) và nuốt cú bấm «Đồng ý» của lời mời vào
+# nhóm (flow 25, docs/claude/2026-09-23/nep-nuot-cu-bam-cua-nut.md). Bước 2 là
+# lý do flow này tồn tại từ đầu: nếu một chạm vừa lôi Nếp ra vừa bung bảng thì
+# một cú chạm lỡ tay vào mép sẽ che mất màn người ta đang đọc.
 #
 # Không dùng `clearState`: `appId` ở đây là Expo Go dùng chung với lane khác
-# (xem đầu `_vao-app-sach.yaml`).
+# (xem đầu `_vao-app-sach.yaml`). Vì thế bước 1 KHÔNG giả định máy sạch: nếu
+# lượt trước để Nếp ở ngoài thì vuốt nó vào trước, rồi mới đo.
 appId: com.lakiet.rudi
 ---
 - runFlow: _vao-app.yaml
 
-# 1. Nếp có mặt sẵn
-- extendedWaitUntil:
-    visible:
-      id: "nep-dia"
-    timeout: 30000
-
-# 2. vuốt ra mép
-- swipe:
-    from:
-      id: "nep-dia"
-    direction: RIGHT
+# 1. Nếp có mặt sẵn, cài trong mép
+- runFlow:
+    when:
+      visible:
+        id: "nep-dia"
+    commands:
+      - swipe:
+          from:
+            id: "nep-dia"
+          direction: RIGHT
 - extendedWaitUntil:
     visible:
       id: "nep-mep"
-    timeout: 10000
+    timeout: 30000
 - assertNotVisible:
     id: "nep-dia"
 
-# 3. một chạm chỉ lôi Nếp ra, KHÔNG mở bảng
+# 2. một chạm chỉ kéo Nếp ra, KHÔNG mở bảng
 - tapOn:
     id: "nep-mep"
 - extendedWaitUntil:
@@ -51,7 +53,7 @@ appId: com.lakiet.rudi
 - assertNotVisible:
     id: "nep-o-nhap"
 
-# 4. chạm lần nữa mới mở bảng, và bảng biết đang ở đâu
+# 3. chạm lần nữa mới mở bảng, và bảng biết đang ở đâu
 - tapOn:
     id: "nep-dia"
 - extendedWaitUntil:
@@ -60,7 +62,7 @@ appId: com.lakiet.rudi
     timeout: 10000
 - assertVisible: "Khám phá"
 
-# 5. Back đóng bảng, Nếp vẫn còn
+# 4. Back đóng bảng, Nếp vẫn ở ngoài như người dùng đã kéo
 - back
 - extendedWaitUntil:
     visible:
@@ -68,3 +70,13 @@ appId: com.lakiet.rudi
     timeout: 10000
 - assertNotVisible:
     id: "nep-o-nhap"
+
+# 5. vuốt sang phải thì Nếp cài lại, để lượt sau bắt đầu từ mặc định
+- swipe:
+    from:
+      id: "nep-dia"
+    direction: RIGHT
+- extendedWaitUntil:
+    visible:
+      id: "nep-mep"
+    timeout: 10000

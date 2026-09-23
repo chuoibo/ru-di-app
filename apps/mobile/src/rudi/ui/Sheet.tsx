@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNhuongChoNep } from "../nep/NepProvider";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -40,6 +41,8 @@ const KEO_DONG_TOC = 900;
  * instantly.
  */
 export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, testID }: SheetProps) {
+  // Every sheet in the app makes room: Nếp tucks into the edge while it is up.
+  useNhuongChoNep(open);
   const { colors, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
