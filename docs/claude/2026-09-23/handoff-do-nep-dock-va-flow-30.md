@@ -40,8 +40,8 @@ Không bỏ `00` và canary: thiếu chúng thì bảng mất tiền đề và m
 
 | Thứ | Trạng thái |
 |---|---|
-| Máy ảo `rudi` | **đang chạy**, `emulator-5554`, Android 15 / SDK 35, `boot_completed=1`, Expo Go đã cài |
-| adb | cổng **5038** (5037 bị nuốt trên WSL2) |
+| Máy ảo `rudi` | **ĐÃ CHẾT** lúc 21:41 (xem dưới). Phải bật lại. Khi còn sống nó là `emulator-5554`, Android 15 / SDK 35, Expo Go đã cài |
+| adb | server đã chết theo máy; khi bật lại dùng cổng **5038** (5037 bị nuốt trên WSL2) |
 | Stack backend | **không có** — 8099 và 8199 đều im |
 | Metro | **không chạy** |
 | `~/wt-do-dock` | có, tại `656c1235`, **chưa `npm ci`** |
@@ -63,7 +63,7 @@ không ghim thì nó lái `127.0.0.1:5555`. **Luôn truyền `--serial emulator-
 và `SERIAL` đi vào `maestro --device "$SERIAL"` ở 6 chỗ (dòng 1665, 1799, 2159,
 2191, 2311, 2378). Ghi chú cũ trong bộ nhớ nói ngược là **đã lỗi thời**.
 
-### Máy này đã khởi động lại hai lần trong ngày 23/09
+### Máy này đã khởi động lại BA lần trong ngày 23/09
 
 Cả hai lần đều trùng lúc nhiều việc nặng chạy **song song** (pytest đầy đủ +
 go postgres tier + máy ảo + Metro + nhập ảnh). WSL cạn RAM thì khởi động lại cả
@@ -72,6 +72,15 @@ container DB `--rm`.
 
 Nên: **chạy tuần tự**, kiểm `free -g` trước mỗi việc nặng, và đừng để việc chưa
 commit nằm trong `/tmp`.
+
+**Lần thứ ba: 21:41**, ngay trong lúc viết tài liệu này. Ba mốc boot trong ngày:
+11:22, 20:05, 21:41. Lần này mất máy ảo vừa bật, adb server, `/tmp/rd-emulator-rudi.log`
+và toàn bộ scratchpad. **Các worktree `~/wt-chat-ui` và `~/wt-do-dock` sống sót
+nguyên vẹn** — cây git là thứ duy nhất đáng tin qua một lần khởi động lại.
+
+Nên bước đầu tiên của phiên sau là **bật lại máy ảo**, đừng tin bảng trạng thái
+ở trên là vẫn đúng. Kiểm bằng `ps -eo args | grep qemu-system` chứ đừng kiểm
+bằng `adb devices` (adb tự dựng server mới và im lặng trả danh sách rỗng).
 
 ## 3. Cái đã đo được và đã chốt
 
