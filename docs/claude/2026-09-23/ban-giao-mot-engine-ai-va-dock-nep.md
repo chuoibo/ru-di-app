@@ -87,12 +87,16 @@ Chưa làm:
     khai vùng loại trừ.
   - Phiên đó cũng bàn giao giữa chừng, không kịp đo. Phần đã chuẩn bị sẵn:
     - Worktree `~/wt-do-dock` ở `656c1235` (detached), CHƯA `npm ci`.
-    - Máy ảo `emulator-5554` (Android 15) đang chạy, có Expo Go, adb ở cổng 5038.
+    - Máy ảo `rudi` và adb server đã CHẾT khi WSL khởi động lại lần thứ ba lúc 21:41. Phải
+      dựng lại máy ảo; adb dùng cổng 5038.
     - Ba phép đo được ghi nguyên văn kèm kỳ vọng ở mục 1a của
       `docs/claude/2026-09-23/handoff-do-nep-dock-va-flow-30.md` (PR #642).
   - Bẫy khi đo: `adb devices` liệt kê CÙNG một máy hai dòng (`127.0.0.1:5555` và
     `emulator-5554`). Harness tự lấy dòng đầu, nên phải truyền `--serial emulator-5554`.
     `--serial` có tới được Maestro.
+  - Đừng kiểm máy ảo bằng `adb devices`: adb tự dựng một server mới rồi im lặng trả danh sách
+    rỗng, trông y hệt «không có máy nào» lẫn «adb hỏng». Kiểm bằng
+    `ps -eo args | grep qemu-system`.
 - **Chưa đo bằng hình học**: badge của Outing (right:12), Memories (right:8), `leadSave` của
   HangDiaDiem. Đọc nguồn thì chúng nằm trong cột nội dung, nhưng chưa có số đo.
 - DESIGN.md chưa cập nhật. Theo quy trình, chỉ chạy `impeccable-documenter` sau khi reviewer
@@ -137,8 +141,10 @@ vẹn 9 triệu/9 triệu. Còn lại:
 
 ## 8. Bẫy môi trường gặp trong đợt này
 
-- **WSL khởi động lại hai lần** khi chạy song song pytest đầy đủ, tầng Postgres của Go, máy
-  ảo, Metro và nhập ảnh. Mỗi lần mất sạch `/tmp` và scratchpad, và mọi stack đều tắt. Chạy
+- **WSL khởi động lại ba lần** trong ngày (11:22, 20:05, 21:41), khi chạy song song pytest
+  đầy đủ, tầng Postgres của Go, máy ảo, Metro và nhập ảnh. Mỗi lần mất sạch `/tmp` và
+  scratchpad, mọi stack và máy ảo đều tắt; cây git sống sót cả ba lần.
+  Mọi thứ cần giữ phải nằm trong git. Chạy
   tuần tự, kiểm `free -g` trước, commit sớm, và giữ bằng chứng ngoài `/tmp`.
 - `expo export` không kèm `--clear` giữ lại `EXPO_PUBLIC_API_URL` của lần dựng trước. Khi đó
   đăng nhập bắn vào `api.build-check.invalid`. Sau khi dựng, grep bundle để kiểm URL.
