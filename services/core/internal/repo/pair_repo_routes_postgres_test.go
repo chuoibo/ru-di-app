@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -45,7 +44,6 @@ var (
 		"de_nghi_sua": {"da_gui", "da_xem", "dong_y"}, "rut": {"da_gui"},
 		"nghi_tuan": {"nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"}, "da_di": {"chot"}, "giu": {"da_di", "da_giu"},
 	}
-	canonicalUUID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 )
 
 type pairRoute struct {
@@ -544,11 +542,38 @@ func contentDay(content json.RawMessage) (time.Time, bool) {
 		if _, ok := stop["viec"]; !ok {
 			return time.Time{}, false
 		}
-		if place, ok := stop["place_id"].(string); ok && place != "" && !canonicalUUID.MatchString(place) {
-			return time.Time{}, false
-		}
 	}
 	return day, true
+}
+
+// agreedStop is one `_noi_dung_wire(content).chang` element as _chot reads it.
+type agreedStop struct {
+	gio, viec string
+	placeID   *string
+}
+
+// agreedStops is `_noi_dung_wire(content).chang` for a content contentDay
+// accepted; the cases store only str gio/viec and str-or-null place_id.
+func agreedStops(content json.RawMessage) []agreedStop {
+	var fields struct {
+		Chang []struct {
+			Gio     string  `json:"gio"`
+			Viec    string  `json:"viec"`
+			PlaceID *string `json:"place_id"`
+		} `json:"chang"`
+	}
+	if err := json.Unmarshal(content, &fields); err != nil {
+		panic(err)
+	}
+	out := []agreedStop{}
+	for _, stop := range fields.Chang {
+		place := stop.PlaceID
+		if place != nil && *place == "" {
+			place = nil
+		}
+		out = append(out, agreedStop{gio: stop.Gio, viec: stop.Viec, placeID: place})
+	}
+	return out
 }
 
 // dayOf is `_ngay_cua(paper)`.
@@ -817,8 +842,25 @@ func (p *pairRoute) chot(paper *PairPaper, version int64) error {
 	if !ok {
 		return refuse(409, "paper_wrong_state")
 	}
+	chang := agreedStops(current.Content)
+	places := make([]*Place, len(chang))
+	for i, stop := range chang {
+		if stop.placeID == nil {
+			continue
+		}
+		if places[i], err = p.repo.GetPlace(bg, *stop.placeID); err != nil {
+			return err
+		}
+	}
+	ten := []rune(chang[0].viec)
+	if places[0] != nil {
+		ten = []rune(places[0].Name)
+	}
+	if len(ten) > 190 {
+		ten = ten[:190]
+	}
 	outing, err := p.repo.CreateOuting(bg, OutingInput{ContextID: paper.ContextID, CreatedByID: p.actor,
-		Title: "Tờ lời rủ " + day.Format("02/01"), StartsOn: day, EndsOn: day, Headcount: 2, Now: p.now})
+		Title: string(ten) + " · " + day.Format("02/01"), StartsOn: day, EndsOn: day, Headcount: 2, Now: p.now})
 	if err != nil {
 		return err
 	}
@@ -831,6 +873,22 @@ func (p *pairRoute) chot(paper *PairPaper, version int64) error {
 		}
 		return err
 	}
+	if err != nil {
+		return err
+	}
+	stops := make([]TimelineStop, len(chang))
+	for i, stop := range chang {
+		clock, err := time.Parse("15:04", stop.gio)
+		if err != nil {
+			return err
+		}
+		stops[i] = TimelineStop{MinuteOfDay: int64(clock.Hour()*60 + clock.Minute()), Label: stop.viec}
+		if places[i] != nil {
+			name, id := places[i].Name, places[i].ID
+			stops[i].PlaceName, stops[i].PlaceID = &name, &id
+		}
+	}
+	_, err = p.repo.ReplaceOutingStops(bg, outing.ID, stops, nil)
 	return err
 }
 

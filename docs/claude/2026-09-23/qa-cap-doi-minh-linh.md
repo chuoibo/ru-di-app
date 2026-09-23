@@ -220,6 +220,13 @@
   nào». Hồ sơ đếm «1 kèo» nhưng bấm vào không đi đâu. Màn tờ đã chốt chỉ còn «Huỷ buổi
   này», không có đường sang kèo. → Chặng «CÙNG ĐI» và «GIỮ MỘT ĐIỀU» của vòng trải
   nghiệm (spec §2) không làm được.
+  - **Đợt 3 (24/09) — đã sửa phần máy chủ + đường vào:** chặng tờ nhận id danh mục (slug);
+    chốt ghi chặng đã đồng ý thành `outing_stops` cùng transaction, tên kèo theo quán/việc
+    («Lẩu gà lá é · 26/09»); tờ đã chốt có nút «Xem kèo» (`/outings/{id}?ctx={pair}`); tab
+    «Lên plan» thêm mục «Hẹn của hai bạn»; kèo có «Chia bill buổi này» chia trong đúng sổ
+    của kèo; `/settlements/{id}` đọc đúng sổ. **Còn mở:** chọn «Chỗ chính» từ Khám phá và
+    kiểm giờ chặng (làm cùng bộ chọn ngày/giờ của `DeNghiSua`, Đợt 5); «Thêm vào kèo» chọn
+    kèo của pair; mốc «đã hẹn» trong DM (dựng ở client, E2EE).
 - 🟡 Chốt xong không có dấu mốc nào trong chat (một dòng «Minh & Linh hẹn Thứ Bảy
   26/09 · Lẩu Gà Lá É» sẽ là khoảnh khắc đáng nhớ nhất của cả luồng).
 - 🟠 Khay «+» của nhắn riêng có «Tờ hẹn» (AI lập kế hoạch) song song với «Tờ giấy của

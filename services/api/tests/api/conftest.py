@@ -10,6 +10,7 @@ real PostgreSQL server.
 
 from __future__ import annotations
 
+import dataclasses
 import uuid
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -58,6 +59,7 @@ from app.api.repository import (
     OtpChallengeRecord,
     OutingInviteRecord,
     OutingRecord,
+    OutingStopRecord,
     PairConsentRecord,
     PairConstraintRecord,
     PairKeepRecord,
@@ -2361,6 +2363,28 @@ class FakeRepository(SeedCatalogueReads):
 
     def get_outing(self, outing_id):
         return self.outings.get(outing_id)
+
+    def replace_outing_stops(self, *, outing_id, stops, expected_revision=None):
+        """The agreed sheet's stops written onto its outing (2026-09-23).
+
+        Only what `_chot` needs: the stops in order, one revision up. The
+        timeline's own edit routes are proved against PostgreSQL, not here.
+        """
+        record = self.outings[outing_id]
+        written = tuple(
+            OutingStopRecord(
+                id=uuid.uuid4(),
+                position=i,
+                minute_of_day=stop["minute_of_day"],
+                label=stop["label"],
+                place_name=stop.get("place_name"),
+                place_id=stop.get("place_id"),
+            )
+            for i, stop in enumerate(stops)
+        )
+        record = dataclasses.replace(record, stops=written, timeline_revision=record.timeline_revision + 1)
+        self.outings[outing_id] = record
+        return record
 
     def list_outings(self, context_id):
         return tuple(

@@ -502,6 +502,7 @@ type fakeStore struct {
 	outings           []*string
 	conflicts         map[string][]any
 	constraintVersion int
+	places            map[string]string
 }
 
 func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
@@ -513,6 +514,25 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 		roster:            []Member{{PersonID: h.ids["TOI"], State: "active"}, {PersonID: h.ids["KIA"], State: "active"}},
 		conflicts:         map[string][]any{},
 		constraintVersion: 1,
+		places:            map[string]string{},
+	}
+	// "places": [[catalogue id, name], ...], the rows get_place finds.
+	placeRows, err := oracletest.List(orEmpty(world["places"]))
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range placeRows {
+		pair, err := fields(row, 2)
+		if err != nil {
+			return nil, err
+		}
+		id, err := oracletest.Str(pair[0])
+		if err != nil {
+			return nil, err
+		}
+		if s.places[id], err = oracletest.Str(pair[1]); err != nil {
+			return nil, err
+		}
 	}
 	if raw, ok := world["context"]; ok {
 		s.context = nil
@@ -583,7 +603,6 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 		}
 		return out, nil
 	}
-	var err error
 	if s.locks, err = notebooks("locks"); err != nil {
 		return nil, err
 	}
@@ -636,6 +655,13 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 		}
 	}
 	return s, nil
+}
+
+func orNil(value *string) any {
+	if value == nil {
+		return nil
+	}
+	return *value
 }
 
 func orEmpty(value any) any {
@@ -872,6 +898,25 @@ func (s *fakeStore) CreateOuting(d OutingDraft) (string, error) {
 	return s.h.ids["OUN"], nil
 }
 
+func (s *fakeStore) GetPlace(placeID string) (*PlaceRef, error) {
+	s.rec("get_place", placeID)
+	name, ok := s.places[placeID]
+	if !ok {
+		return nil, nil
+	}
+	return &PlaceRef{ID: placeID, Name: name}, nil
+}
+
+func (s *fakeStore) ReplaceOutingStops(outingID string, stops []OutingStopDraft) error {
+	rows := []any{}
+	for _, stop := range stops {
+		rows = append(rows, map[string]any{"minute_of_day": stop.MinuteOfDay, "label": stop.Label,
+			"place_name": orNil(stop.PlaceName), "place_id": orNil(stop.PlaceID)})
+	}
+	s.rec("replace_outing_stops", s.h.name(outingID), rows)
+	return nil
+}
+
 // --- the answers, in model_dump()'s shape -----------------------------------
 
 func (h *harness) proposalView(v ProposalView) any {
@@ -957,7 +1002,7 @@ func (h *harness) paperView(v PaperView) any {
 	for _, version := range v.Versions {
 		chang := []any{}
 		for _, stop := range version.Content.Chang {
-			chang = append(chang, map[string]any{"gio": stop.Gio, "viec": stop.Viec, "place_id": h.optionalName(stop.PlaceID), "can_kiem": stop.CanKiem})
+			chang = append(chang, map[string]any{"gio": stop.Gio, "viec": stop.Viec, "place_id": orNil(stop.PlaceID), "can_kiem": stop.CanKiem})
 		}
 		versions = append(versions, map[string]any{
 			"version":                int64(version.Version),

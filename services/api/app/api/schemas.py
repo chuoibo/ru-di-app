@@ -2564,7 +2564,10 @@ class PaperStopInput(ApiModel):
     #: which is agreed can become an outing without reinterpreting its hours.
     gio: Annotated[StrictStr, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
     viec: Annotated[StrictStr, Field(min_length=1, max_length=200)]
-    place_id: UUID | None = None
+    #: A catalogue place's id, the same spelling `OutingStopInput.place_id`
+    #: takes (slugs such as «p-lau-ga-la-e»). It was a UUID, which no catalogue
+    #: place is, so a sheet could never name a real place (QA 23/09).
+    place_id: Annotated[StrictStr, Field(min_length=1, max_length=80)] | None = None
     can_kiem: StrictBool = True
 
 
@@ -2580,7 +2583,7 @@ class PaperContentInput(ApiModel):
 class PaperStop(ApiModel):
     gio: StrictStr
     viec: StrictStr
-    place_id: UUID | None
+    place_id: StrictStr | None
     can_kiem: StrictBool
 
 

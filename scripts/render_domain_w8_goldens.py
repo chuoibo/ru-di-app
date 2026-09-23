@@ -895,6 +895,8 @@ WORLD_DEFAULTS = {
     "outings": [],
     "conflicts": {},
     "constraint_version": 1,
+    # [[catalogue id, name], ...]: the rows get_place finds.
+    "places": [],
 }
 
 
@@ -1271,6 +1273,18 @@ class Stub:
         )
         return SimpleNamespace(id=U("OUN"))
 
+    def get_place(self, place_id):
+        self.rec("get_place", place_id)
+        for key, name in self.world["places"]:
+            if key == place_id:
+                row = {"id": key, "name": name}
+                return SimpleNamespace(to_row=lambda row=row: dict(row))
+        return None
+
+    def replace_outing_stops(self, *, outing_id, stops, expected_revision=None):
+        assert expected_revision is None
+        self.rec("replace_outing_stops", outing_id, [dict(stop) for stop in stops])
+
 
 def content_input(spec: dict):
     return schemas.PaperContentInput.model_construct(
@@ -1279,7 +1293,7 @@ def content_input(spec: dict):
             schemas.PaperStopInput.model_construct(
                 gio=gio,
                 viec=viec,
-                place_id=None if place is None else uuid.UUID(place),
+                place_id=place,
                 can_kiem=can_kiem,
             )
             for gio, viec, place, can_kiem in spec["chang"]
@@ -2644,6 +2658,24 @@ def pair_steps_edges() -> list[dict]:
     fn = "respond_pair_paper"
     kia_sent = paper(owner="KIA", state="da_xem", responses=[[1, "KIA", "dong_y"]])
     agreed = dict(kia_sent, responses=[[1, "KIA", "dong_y"], [1, "TOI", "dong_y"]])
+    two_places = {
+        "ngay": "2030-09-21",
+        "chang": [
+            {"gio": "19:00", "viec": "Ăn tối", "place_id": "p-lau-ga", "can_kiem": True},
+            {"gio": "21:30", "viec": "Chè", "place_id": "p-da-dong-cua", "can_kiem": False},
+        ],
+    }
+    placed_agreed = dict(agreed, versions=[ver(1, content=two_places, sent_by="KIA")])
+    unknown_agreed = dict(
+        agreed,
+        versions=[
+            ver(1, content=body(place="p-da-dong-cua"), sent_by="KIA"),
+        ],
+    )
+    long_agreed = dict(
+        agreed, versions=[ver(1, content=body(place="p-dai"), sent_by="KIA")]
+    )
+    places = [["p-lau-ga", "Lẩu gà lá é"], ["p-dai", "Lẩu gà " * 28]]
     counter = {
         "kind": "de_nghi_sua",
         "content": content_in("2030-09-20", (("18:00", "Phở", PLACE, True),)),
@@ -2720,6 +2752,43 @@ def pair_steps_edges() -> list[dict]:
             req(fn),
             [None],
             {},
+            T,
+        ),
+        # The agreed stops become the outing's timeline, named after the place.
+        (
+            "agreed_place_names_outing",
+            [kia_sent, placed_agreed],
+            kia_sent,
+            req(fn),
+            [None],
+            {},
+            T,
+        ),
+        (
+            "agreed_place_unknown_keeps_line",
+            [kia_sent, unknown_agreed],
+            kia_sent,
+            req(fn),
+            [None],
+            {},
+            T,
+        ),
+        (
+            "agreed_place_name_cut_at_190",
+            [kia_sent, long_agreed],
+            kia_sent,
+            req(fn),
+            [None],
+            {},
+            T,
+        ),
+        (
+            "agreed_place_link_raced_writes_no_stops",
+            [kia_sent, placed_agreed],
+            kia_sent,
+            req(fn),
+            [None, "OU1"],
+            {"link_paper_outing": ["paper_outing_exists"]},
             T,
         ),
         (
@@ -2882,6 +2951,8 @@ def pair_steps_edges() -> list[dict]:
             "outings": outings,
             "conflicts": conflicts,
         }
+        if name.startswith("agreed_place"):
+            w["places"] = places
         out.append(S(fn, name, r, w, now=now, actor=(actor, ("member",))))
 
     # --- withdraw_pair_paper -------------------------------------------------------------

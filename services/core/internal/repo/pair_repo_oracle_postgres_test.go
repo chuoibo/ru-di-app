@@ -61,6 +61,7 @@ var (
 	pairKeepsDump      = orderedDump("pair_paper_keeps t", fixtureFirst("t.id")+", t.paper_id, t.created_at, t.person_id, t.id")
 	pairLinksDump      = orderedDump("pair_paper_outings t", "t.paper_id")
 	pairOutingsDump    = orderedDump("outings t", fixtureFirst("t.id")+", t.context_id, t.created_at, t.id")
+	pairStopsDump      = orderedDump("outing_stops t", fixtureFirst("t.id")+", t.outing_id, t.position, t.id")
 )
 
 // probePairRowLocks lists the row locks held on every table a W8 method locks
@@ -419,7 +420,7 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 	}
 	probes := append(append([]string{probeLocks, probeWrites, probePairRowLocks}, pairNotebooksDump, pairCyclesDump,
 		pairParticipantsDump, pairProposalsDump, pairConsentsDump, pairCoupleDump, pairConstraintDump, pairPapersDump,
-		pairVersionsDump, pairViewsDump, pairResponsesDump, pairKeepsDump, pairLinksDump, pairOutingsDump), probeNow)
+		pairVersionsDump, pairViewsDump, pairResponsesDump, pairKeepsDump, pairLinksDump, pairOutingsDump, pairStopsDump), probeNow)
 	args := func(pairs ...any) map[string]any {
 		out := map[string]any{}
 		for i := 0; i < len(pairs); i += 2 {
@@ -837,6 +838,15 @@ func pairRepoOracleCases() ([]socialCase, oracleSpec) {
 	add("route POST responses: yes to a plan whose other yes is gone", "409:paper_wrong_state", base,
 		tweak("DELETE FROM pair_paper_responses WHERE id = '"+fid(kindResponse, 0x15)+"'",
 			onPaper("respond_pair_paper", w.an, w.pAB2, "version", 1, "body", body("kind", "dong_y"))))
+	// _chot reads the catalogue: a known key names the outing and its stop
+	// (the sent version is immutable, so the catalogue gains the key instead).
+	add("route POST responses: a catalogue place names the outing and its stop", "", base,
+		tweak(`INSERT INTO destinations (id, name, lat, lng, bbox_south, bbox_west, bbox_north, bbox_east, created_at, updated_at)
+		       VALUES ('d-cap', 'Nơi (dữ liệu mẫu)', 12, 109, 11, 108, 13, 110, '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+			tweak(`INSERT INTO places (id, destination_id, name, category, lat, lng, source, created_at, updated_at)
+			       VALUES ('e0000099-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'd-cap', 'Lẩu gà lá é (dữ liệu mẫu)', 'food', 10.77,
+			               106.7, 'seed', '2030-09-01T00:00:00Z', '2030-09-01T00:00:00Z')`,
+				onPaper("respond_pair_paper", w.an, w.pAB1, "version", 2, "body", body("kind", "dong_y")))))
 	add("route POST send: a draft whose week ended at this instant", "409:paper_expired", base,
 		tweak("UPDATE pair_papers SET expires_at = '"+now+"' WHERE id = '"+w.pCD1+"'",
 			onPaper("send_pair_paper", w.chi, w.pCD1, "body", body("version", 1))))
@@ -907,6 +917,8 @@ var pairBranches = []struct{ call, prefix string }{
 	{"close_open_pair_papers", "UPDATE pair_papers SET state="},
 	{"create_outing", "INSERT INTO outings"},
 	{"route.respond_pair_paper", "INSERT INTO outings"},
+	{"route.respond_pair_paper", "INSERT INTO outing_stops"},
+	{"route.respond_pair_paper", "SELECT places.id"},
 	{"route.respond_pair_paper", "INSERT INTO pair_paper_versions"},
 	{"route.grant_pair_consent", "INSERT INTO active_couple_members"},
 	{"route.grant_pair_consent", "UPDATE pair_notebook_cycles SET state="},

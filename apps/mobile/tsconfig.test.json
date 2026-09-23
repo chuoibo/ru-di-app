@@ -288,6 +288,8 @@
     // cách chia sắp tới/đã qua trên tab Lên plan. Compile vì luật nó mang là
     // số học theo ngày lịch: một ngày không đọc được KHÔNG thành con số bịa.
     "src/rudi/keo/nhip-keo.ts",
+    "src/rudi/keo/hen-hai-ban.ts",
+    "src/rudi/ngu-canh-mo.ts",
     // Hành trình (ADR-0026): chiếu lịch trình lên địa lý. Compile vì luật
     // phủ định — chặng không toạ độ không thành marker, hiệu suất không bịa,
     // OSRM fail thì geodesic — chỉ đo được khi chạy hàm.

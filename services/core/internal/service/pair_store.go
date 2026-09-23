@@ -493,6 +493,33 @@ func (s PairStore) CreateOuting(draft pairsteps.OutingDraft) (string, error) {
 	return outing.ID, nil
 }
 
+// GetPlace is get_place; _chot reads the row's id and name.
+func (s PairStore) GetPlace(placeID string) (*pairsteps.PlaceRef, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	place, err := r.GetPlace(s.Ctx, placeID)
+	if err != nil || place == nil {
+		return nil, storeError(err)
+	}
+	return &pairsteps.PlaceRef{ID: place.ID, Name: place.Name}, nil
+}
+
+// ReplaceOutingStops is replace_outing_stops(expected_revision=None).
+func (s PairStore) ReplaceOutingStops(outingID string, stops []pairsteps.OutingStopDraft) error {
+	r, err := s.repository()
+	if err != nil {
+		return err
+	}
+	rows := make([]repo.TimelineStop, len(stops))
+	for i, stop := range stops {
+		rows[i] = repo.TimelineStop{MinuteOfDay: stop.MinuteOfDay, Label: stop.Label, PlaceName: stop.PlaceName, PlaceID: stop.PlaceID}
+	}
+	_, err = r.ReplaceOutingStops(s.Ctx, outingID, rows, nil)
+	return storeError(err)
+}
+
 // --- records ----------------------------------------------------------------
 
 // PairNotebookOf is the PairNotebookRecord the pair methods read, nil for

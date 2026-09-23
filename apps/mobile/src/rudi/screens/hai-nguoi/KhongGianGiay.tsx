@@ -126,6 +126,10 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         onNghiTuan={() => setViec("nghi_tuan")}
         onRut={() => setViec("rut")}
         onSuaNhap={() => setMo("de-nghi-sua")}
+        // The agreed sheet became an outing in this pair, its stops the
+        // outing's timeline: the way there, where it used to be reachable only
+        // by guessing the plan list's «Tờ lời rủ dd/mm» (QA 23/09).
+        onXemKeo={toMo.outing_id && ["chot", "da_di", "da_giu"].includes(toMo.state) ? () => router.push(`/outings/${toMo.outing_id}?ctx=${contextId}` as never) : undefined}
         tenNguoiKia={so.tenNguoiKia}
         testID="to-mo"
         to={toMo}

@@ -7938,8 +7938,20 @@ class ApiService:
         if current is None:
             raise ApiProblem(409, "paper_wrong_state", "Tờ giấy này không đọc được.")
         noi_dung = _noi_dung_wire(current.content)
+        # The places the sheet names, read from the catalogue before anything
+        # is written: a key the catalogue no longer knows keeps its line and
+        # drops its id, because the outing's timeline refuses unknown places
+        # and the plan would otherwise be uneditable later.
+        cho = [
+            None if chang.place_id is None else self.place_row(chang.place_id)
+            for chang in noi_dung.chang
+        ]
+        # Named after what the two agreed to, not «Tờ lời rủ dd/mm»: that title
+        # was all the plan list could say about a date (QA 23/09).
+        chinh = noi_dung.chang[0]
+        ten = chinh.viec if cho[0] is None else str(cho[0]["name"])
         de_nghi = OutingCreateRequest(
-            title=f"Tờ lời rủ {noi_dung.ngay.strftime('%d/%m')}",
+            title=f"{ten[:190]} · {noi_dung.ngay.strftime('%d/%m')}",
             starts_on=noi_dung.ngay,
             ends_on=noi_dung.ngay,
             headcount=2,
@@ -7969,6 +7981,21 @@ class ApiService:
                     409, exc.code.lower(), "Tờ này đã có buổi đi rồi."
                 ) from exc
             return already
+        # The stops of the agreed version become the outing's timeline, in the
+        # same transaction: before 23/09 the outing held a date and nothing
+        # else, and the two stops the couple had agreed on were lost.
+        self.repository.replace_outing_stops(
+            outing_id=outing.id,
+            stops=[
+                {
+                    "minute_of_day": _minute_of_day(chang.gio),
+                    "label": chang.viec,
+                    "place_name": None if row is None else str(row["name"]),
+                    "place_id": None if row is None else str(row["id"]),
+                }
+                for chang, row in zip(noi_dung.chang, cho, strict=True)
+            ],
+        )
         return outing.id
 
     def _de_nghi_sua(
@@ -8260,7 +8287,7 @@ def _noi_dung_wire(content: dict) -> PaperContent:
                     viec=str(stop["viec"]),
                     place_id=None
                     if stop.get("place_id") in (None, "")
-                    else uuid.UUID(str(stop["place_id"])),
+                    else str(stop["place_id"]),
                     can_kiem=bool(stop.get("can_kiem", True)),
                 )
                 for stop in content.get("chang", [])

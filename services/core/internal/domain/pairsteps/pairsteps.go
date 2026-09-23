@@ -286,6 +286,24 @@ type Store interface {
 	AddPaperKeep(paperID, personID, line string, now time.Time) (Keep, error)
 	CloseOpenPairPapers(contextID string, now time.Time) error
 	CreateOuting(draft OutingDraft) (string, error)
+	// GetPlace is get_place: one catalogue row, nil when the id is unknown.
+	GetPlace(placeID string) (*PlaceRef, error)
+	// ReplaceOutingStops is replace_outing_stops with expected_revision=None.
+	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
+}
+
+// PlaceRef is the part of a catalogue row _chot reads.
+type PlaceRef struct {
+	ID   string
+	Name string
+}
+
+// OutingStopDraft is one element of replace_outing_stops' `stops`.
+type OutingStopDraft struct {
+	MinuteOfDay int64
+	Label       string
+	PlaceName   *string
+	PlaceID     *string
 }
 
 // permissionRefusals is _TU_CHOI_TO_GIAY: the failed predicates that answer
