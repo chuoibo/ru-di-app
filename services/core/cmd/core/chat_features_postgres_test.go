@@ -166,17 +166,35 @@ func startCore(t *testing.T, env map[string]string) runningCore {
 			t.Fatalf("core exited %d before serving; log:\n%s", code, logs.String())
 		default:
 		}
-		resp, err := http.Get("http://" + live + "/livez")
-		if err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				return runningCore{base: "http://" + listen, logs: logs, stop: stop}
-			}
+		// Liveness and the public door are two listeners started side by
+		// side; /livez answering says nothing about the other one. Measured:
+		// a request sent on the first 200 from /livez was refused once in a
+		// full tier run. Wait for both.
+		if live200(live) && accepts(listen) {
+			return runningCore{base: "http://" + listen, logs: logs, stop: stop}
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	t.Fatalf("core never became live; log:\n%s", logs.String())
 	return runningCore{}
+}
+
+func live200(address string) bool {
+	resp, err := http.Get("http://" + address + "/livez")
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
+}
+
+func accepts(address string) bool {
+	conn, err := net.DialTimeout("tcp", address, time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }
 
 func getCode(t *testing.T, target string) (int, string) {
