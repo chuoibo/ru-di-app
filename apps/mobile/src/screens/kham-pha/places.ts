@@ -307,6 +307,14 @@ function parseMatch(raw: unknown, field: string): Match | null {
  * a styling bug and gets chased in the wrong file for an hour; a refusal that
  * names `places[3].rating` is read once and fixed.
  */
+/** Kept in step with the CHECK on `places.geo_precision` and the server's
+ *  wire schema. A value outside it is refused rather than passed through: a
+ *  screen that did not recognise a precision would have to guess whether to
+ *  draw a pin, and guessing is the one thing a precision exists to prevent. */
+const GEO_PRECISIONS = new Set([
+  "rooftop", "street", "ward_centroid", "province_centroid", "suy_luan", "none",
+]);
+
 export function parsePlace(raw: unknown, field: string): Place {
   const p = raw as Record<string, unknown>;
   const flag = p.flag ?? null;
@@ -325,9 +333,25 @@ export function parsePlace(raw: unknown, field: string): Place {
     throw new Error(`${field}: khoảng giá thiếu một đầu`);
   }
   const source = p.source ?? "seed";
-  if (source !== "seed" && source !== "osm" && source !== "curated") {
+  if (source !== "seed" && source !== "osm" && source !== "curated" && source !== "vnlocal") {
     throw new Error(
-      `${field}.source phải là seed|osm|curated, nhận được ${JSON.stringify(source)}`,
+      `${field}.source phải là seed|osm|curated|vnlocal, nhận được ${JSON.stringify(source)}`,
+    );
+  }
+  // Null together or not at all. Half a point is a broken row rather than a
+  // partial answer, and the server refuses to store one; refusing it here too
+  // keeps a map from pinning a place at latitude 10 and longitude nothing.
+  const lat = numOrNull(p.lat, `${field}.lat`);
+  const lng = numOrNull(p.lng, `${field}.lng`);
+  if ((lat === null) !== (lng === null)) {
+    // Name the half that is missing, the way every other refusal here does.
+    const thieu = lat === null ? "lat" : "lng";
+    throw new Error(`${field}.${thieu}: toạ độ chỉ có một nửa (lat=${lat}, lng=${lng})`);
+  }
+  const geoPrecision = p.geo_precision ?? null;
+  if (geoPrecision !== null && !GEO_PRECISIONS.has(geoPrecision as string)) {
+    throw new Error(
+      `${field}.geo_precision không nhận ra được: ${JSON.stringify(geoPrecision)}`,
     );
   }
   return {
@@ -358,8 +382,9 @@ export function parsePlace(raw: unknown, field: string): Place {
         }
       : null,
     flag,
-    lat: num(p.lat, `${field}.lat`),
-    lng: num(p.lng, `${field}.lng`),
+    lat,
+    lng,
+    geoPrecision: geoPrecision as Place["geoPrecision"],
     source,
     license: strOrNull(p.license, `${field}.license`),
     match: parseMatch(p.match, `${field}.match`),

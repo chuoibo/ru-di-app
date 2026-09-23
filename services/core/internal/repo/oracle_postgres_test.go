@@ -457,14 +457,15 @@ func tPerson(p *Person) any {
 func tPlace(p Place) any {
 	return tRecord("PlaceRecord", "id", tStr(p.ID), "destination_id", tStr(p.DestinationID), "name", tStr(p.Name),
 		"category", tStr(p.Category), "kinds", tStrings(p.Kinds), "address", optional(p.Address, tStr),
-		"lat", tFloat(p.Lat), "lng", tFloat(p.Lng), "rating", optional(p.Rating, tFloat),
+		"lat", optional(p.Lat, tFloat), "lng", optional(p.Lng, tFloat), "rating", optional(p.Rating, tFloat),
 		"rating_count", optional(p.RatingCount, tInt), "price_min_vnd", optional(p.PriceMinVND, tInt),
 		"price_max_vnd", optional(p.PriceMaxVND, tInt), "open_hours", optional(p.OpenHours, tStr),
 		"open_now", optional(p.OpenNow, tBool), "travel_minutes", optional(p.TravelMinutes, tInt),
 		"distance_km", optional(p.DistanceKM, tFloat), "photo_count", tInt(p.PhotoCount), "traits", tStrings(p.Traits),
 		"group_fit", tJSON(p.GroupFit), "flag", optional(p.Flag, tStr), "description", optional(p.Description, tStr),
 		"reviews", tJSON(p.Reviews), "source", tStr(p.Source), "source_ref", optional(p.SourceRef, tStr),
-		"license", optional(p.License, tStr), "activities", tJSON(p.Activities))
+		"license", optional(p.License, tStr), "activities", tJSON(p.Activities),
+		"geo_precision", optional(p.GeoPrecision, tStr))
 }
 
 func tMemory(m Memory) any {

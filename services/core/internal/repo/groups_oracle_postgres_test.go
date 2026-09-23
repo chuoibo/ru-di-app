@@ -196,7 +196,7 @@ func groupsGoCall(repo Repository, method string, a map[string]any) (any, error)
 		return tMemory(m), err
 	case "create_checkin":
 		m, err := repo.CreateCheckin(bg, CheckinInput{ContextID: s("context_id"), AuthorID: s("author_id"),
-			PlaceID: s("place_id"), PlaceName: s("place_name"), Lat: a["lat"].(float64), Lng: a["lng"].(float64),
+			PlaceID: s("place_id"), PlaceName: s("place_name"), Lat: optionalFloat(a, "lat"), Lng: optionalFloat(a, "lng"),
 			Caption: argOptional(a, "caption"), Now: at("now")})
 		return tMemory(m), err
 	case "get_context_memory":
@@ -815,4 +815,14 @@ func TestGroupsRepositoryOracle(t *testing.T) {
 	t.Logf("groups repo oracle: %d cases, %d steps (%d results, %d refusals), %d statements, %d probe rows of which "+
 		"%d table rows, %d generated ids bound, %d mismatches", tally.cases, tally.steps, tally.results, tally.errors,
 		tally.statements, tally.probeRows, tally.tableRows, tally.generated, tally.mismatches)
+}
+
+// optionalFloat reads a coordinate the oracle may send as null. A check-in at a
+// place with no coordinates still happens; it just carries none.
+func optionalFloat(args map[string]any, key string) *float64 {
+	value, ok := args[key].(float64)
+	if !ok {
+		return nil
+	}
+	return &value
 }

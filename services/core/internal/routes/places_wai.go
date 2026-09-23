@@ -627,8 +627,8 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 		if cover, ok := covers[row.ID]; ok {
 			url := "/places/" + row.ID + "/photos/" + cover.ID
 			card.Set("photo_url", pyjson.String(url))
-			card.Set("photo_author", pyjson.String(cover.Author))
-			card.Set("photo_license", pyjson.String(cover.License))
+			card.Set("photo_author", textOrNull(cover.Author))
+			card.Set("photo_license", textOrNull(cover.License))
 		} else {
 			card.Set("photo_url", pyjson.Null{})
 			card.Set("photo_author", pyjson.Null{})
@@ -668,8 +668,9 @@ func placeRow(row repo.Place) *pyjson.OrderedMap {
 	out.Set("group_fit", wireGroupFit(row.GroupFit))
 	out.Set("activities", jsonListOrEmpty(row.Activities))
 	out.Set("flag", textOrNull(row.Flag))
-	out.Set("lat", pyjson.Float(row.Lat))
-	out.Set("lng", pyjson.Float(row.Lng))
+	out.Set("lat", floatOrNull(row.Lat))
+	out.Set("lng", floatOrNull(row.Lng))
+	out.Set("geo_precision", textOrNull(row.GeoPrecision))
 	out.Set("description", textOrNull(row.Description))
 	out.Set("reviews", wireReviews(row.Reviews))
 	out.Set("source", pyjson.String(row.Source))
@@ -813,7 +814,7 @@ func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group tast
 		"id", "name", "category", "kinds", "rating", "rating_count", "distance_km",
 		"price_min_vnd", "price_max_vnd", "address", "open_now", "open_hours",
 		"travel_minutes", "photo_count", "photo_url", "photo_author", "photo_license",
-		"traits", "group_fit", "flag", "lat", "lng", "source", "license",
+		"traits", "group_fit", "flag", "lat", "lng", "geo_precision", "source", "license",
 	} {
 		if value, ok := place.Get(key); ok {
 			out.Set(key, value)
@@ -925,8 +926,8 @@ func wirePlacePhoto(placeID string, photo repo.PlacePhoto) *pyjson.OrderedMap {
 	out := pyjson.NewOrderedMap()
 	out.Set("id", pyjson.String(photo.ID))
 	out.Set("url", pyjson.String("/places/"+placeID+"/photos/"+photo.ID))
-	out.Set("author", pyjson.String(photo.Author))
-	out.Set("license", pyjson.String(photo.License))
+	out.Set("author", textOrNull(photo.Author))
+	out.Set("license", textOrNull(photo.License))
 	out.Set("source_url", pyjson.String(photo.SourceURL))
 	out.Set("title", textOrNull(photo.Title))
 	out.Set("width", pyjson.NewInt(photo.Width))

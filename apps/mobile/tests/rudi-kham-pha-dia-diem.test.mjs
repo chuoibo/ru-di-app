@@ -14,8 +14,12 @@ import test from "node:test";
 import { BASE_URL, datTokenPhien } from "../dist-test/api.js";
 import {
   anhBiaThe,
+  CAU_ANH_BAI_DANG,
   CAU_ANH_NHOM,
   CAU_NGUON_ANH,
+  HANG_MOI_LUOT,
+  cauNguonAnh,
+  cauXemThem,
   TIEN_TO_ANH,
   bieuTuongLoai,
   boLuuDiaDiem,
@@ -446,4 +450,47 @@ test("hàng thiếu context_id hoặc đường ảnh lạ bị bỏ, không là
   }));
   const ds = await docAnhNhom("p-1", "0a1b2c3d-4e5f-4061-8273-8495a6b7c8d9");
   assert.deepEqual(ds.map((a) => a.id), ["c"]);
+});
+
+test("ảnh từ feed địa điểm lên thẻ kèm câu nguồn, không bao giờ trần", () => {
+  // e2e native 2026-09-23: 1.945 chỗ ở TP.HCM có ảnh mà thẻ nào cũng hiện ô
+  // biểu tượng, vì cổng bìa đòi tác giả + giấy phép mà khung hình bài đăng không có.
+  const bia = anhBiaThe({ photoUrl: "/places/vnl-1/photos/a", photoAuthor: null, photoLicense: null, source: "vnlocal" });
+  assert.ok(bia !== null, "ảnh của feed phải lên thẻ");
+  assert.equal(bia.ve().ghiCong, CAU_ANH_BAI_DANG);
+  assert.doesNotMatch(bia.ve().ghiCong, /giấy phép|Wikimedia/);
+  // Ngoại lệ chỉ dành cho feed: một dòng seed/osm thiếu giấy phép vẫn bị chặn.
+  for (const source of ["seed", "osm", "curated"]) {
+    assert.equal(anhBiaThe({ photoUrl: "/p/a", photoAuthor: null, photoLicense: null, source }), null, source);
+  }
+  assert.equal(anhBiaThe({ photoUrl: null, photoAuthor: null, photoLicense: null, source: "vnlocal" }), null);
+});
+
+test("câu dưới dải ảnh nói đúng loại ảnh đang có, không mặc định Wikimedia", () => {
+  const phep = { license: "CC BY-SA 4.0", sourceUrl: "https://commons.wikimedia.org/wiki/File:A.jpg" };
+  const tiktok = { license: null, sourceUrl: "https://www.tiktok.com/@/video/1#t=24.4" };
+  const threads = { license: null, sourceUrl: "https://www.threads.net/@a/post/B" };
+  const la = { license: null, sourceUrl: "https://example.org/x" };
+  assert.equal(cauNguonAnh([]), null);
+  assert.equal(cauNguonAnh([phep]), CAU_NGUON_ANH);
+  assert.equal(cauNguonAnh([tiktok, tiktok]), "Ảnh lấy từ bài đăng trên TikTok. Không phải ảnh do nơi này cung cấp.");
+  assert.match(cauNguonAnh([tiktok, threads]), /bài đăng trên TikTok, Threads\./);
+  // Nền tảng không nhận ra thì nói chung, không đoán tên.
+  assert.match(cauNguonAnh([tiktok, la]), /bài đăng trên mạng xã hội\./);
+  for (const cau of [cauNguonAnh([tiktok]), cauNguonAnh([threads]), cauNguonAnh([la])]) {
+    assert.doesNotMatch(cau, /Wikimedia|giấy phép/, cau);
+    assert.match(cau, /Không phải ảnh do nơi này cung cấp/);
+    // «người dùng» ở app này là người dùng Rủ Đi: nói ảnh là của họ là bịa nguồn.
+    assert.doesNotMatch(cau, /người dùng/, cau);
+  }
+  const tron = cauNguonAnh([phep, tiktok]);
+  assert.match(tron, /Wikimedia Commons/);
+  assert.match(tron, /bài đăng trên TikTok/);
+});
+
+test("nút xem thêm không hứa nhiều hơn số còn lại", () => {
+  assert.equal(HANG_MOI_LUOT, 20);
+  assert.equal(cauXemThem(2371), "Xem thêm 20 nơi");
+  assert.equal(cauXemThem(7), "Xem thêm 7 nơi");
+  assert.equal(cauXemThem(1500, 1200), "Xem thêm 1.200 nơi");
 });

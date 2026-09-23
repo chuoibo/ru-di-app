@@ -476,7 +476,7 @@ func TestListPlacesFiltersAtTheDatabaseAndReadsJSONThePythonWay(t *testing.T) {
 	if a := byID["p-a"]; !slices.Equal(a.Kinds, []string{"z", "aa"}) || len(a.Traits) != 0 || *a.DistanceKM != 1e-7 || a.Activities != nil || *a.OpenNow {
 		t.Fatalf("p-a = %+v", a)
 	}
-	if big := byID["p-big"]; *big.PriceMinVND != int64(1)<<53 || *big.PriceMaxVND != int64(1)<<53+1 || big.Lng != 179.87654 {
+	if big := byID["p-big"]; *big.PriceMinVND != int64(1)<<53 || *big.PriceMaxVND != int64(1)<<53+1 || big.Lng == nil || *big.Lng != 179.87654 {
 		t.Fatalf("p-big = %+v", big)
 	}
 

@@ -211,6 +211,12 @@ const CHO_PHEP = new Map([
     // `null` là câu trả lời thật cho bản trải nghiệm, nơi chưa có ai đăng nhập.
     'nguon.kieu === "live" ? nguon.actorId : null',
   ]],
+  ["rudi/screens/explore/ExploreLive.tsx", [
+    // Which destination the list on screen was read for, kept in a ref and
+    // only compared against the next saved choice to decide whether to show
+    // the skeleton. Never drawn: the header names the city from the answer.
+    "daChon ?? danhMuc.destination?.id",
+  ]],
   ["participants.ts", [
     // Clearing the advancer when that person is removed. Stored, never drawn.
     "roster.advancerId === id ? null : roster.advancerId",

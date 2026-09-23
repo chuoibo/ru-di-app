@@ -14,6 +14,7 @@ import (
 
 	"mobile/services/core/internal/db"
 	"mobile/services/core/internal/ingest"
+	"mobile/services/core/internal/media/storage"
 )
 
 func main() {
@@ -109,6 +110,43 @@ func run(args []string, getenv func(string) string, stdout, stderr *os.File) int
 			result.RejectedTotal(), result.Posts)
 		for _, reason := range result.Reasons() {
 			fmt.Fprintf(stdout, "  %s: %d\n", reason, result.Rejected[reason])
+		}
+		return 0
+
+	case "photos":
+		set := flag.NewFlagSet("photos", flag.ContinueOnError)
+		batch := set.String("batch", "", "mã đợt đã hạ")
+		root := set.String("frames-root", "", "thư mục khung hình của nguồn")
+		province := set.Int("province", 0, "chỉ nạp một tỉnh (0 = tất cả)")
+		perPlace := set.Int("per-place", 3, "số ảnh tối đa mỗi địa điểm")
+		if err := set.Parse(args[1:]); err != nil {
+			return 2
+		}
+		if *batch == "" || *root == "" {
+			fmt.Fprintln(stderr, "--batch và --frames-root là bắt buộc")
+			return 2
+		}
+		// The same root the API serves bytes from. Written anywhere else, the
+		// rows would point at objects no reader can find.
+		store, err := storage.New()
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		opt := ingest.PhotoOptions{BatchID: *batch, FramesRoot: *root, PerPlace: *perPlace}
+		if *province > 0 {
+			code := int16(*province)
+			opt.ProvinceCode = &code
+		}
+		result, err := ingest.ImportPhotos(ctx, pool, store, opt)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "địa điểm %d · ảnh mới %d · đã có %d\n",
+			result.Places, result.Written, result.Existing)
+		for reason, count := range result.Skipped {
+			fmt.Fprintf(stdout, "  bỏ qua %s: %d\n", reason, count)
 		}
 		return 0
 	}

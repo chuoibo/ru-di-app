@@ -45,7 +45,7 @@ import {
   duongChiDuong,
   luuDiaDiem,
   nguonAnhDiaDiem,
-  CAU_NGUON_ANH,
+  cauNguonAnh,
   TIEN_TO_ANH,
   type AnhDiaDiem,
   type AnhNhom,
@@ -244,6 +244,7 @@ function ThanChiTiet({
   // strip carries the other licensed photographs, each with its own line.
   const bia = anhBiaThe(place);
   const conLai = bia === null ? anh : anh.filter((a) => nguonAnhDiaDiem(a).uri !== place.photoUrl);
+  const cauAnh = cauNguonAnh(anh);
   const viec = cauHoatDong(place.activities);
   return (
     <>
@@ -269,11 +270,12 @@ function ThanChiTiet({
       )}
       {loiAnh !== null ? <Text style={[typography.caption, { color: colors.warn }]}>{loiAnh}</Text> : null}
       {conLai.length > 0 ? <DaiAnh anh={conLai} /> : null}
-      {/* The sentence the pictures are shown on: found by geosearch around the
-          venue, licensed, not supplied by the place. Said once under the
-          photographs whenever there is at least one (M12, ADR-0017 §2.5). */}
-      {bia !== null || conLai.length > 0 ? (
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>{CAU_NGUON_ANH}</Text>
+      {/* The sentence the pictures are shown on, said once under them: where
+          they came from and that the place did not supply them (M12, ADR-0017
+          §2.5). Built from the gallery itself, which may hold licensed
+          photographs, frames of people's posts, or both. */}
+      {cauAnh !== null && (bia !== null || conLai.length > 0) ? (
+        <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauAnh}</Text>
       ) : null}
       <View style={styles.dau}>
         <Text style={[typography.h1, { color: colors.ink }]}>{place.name}</Text>
@@ -397,7 +399,9 @@ function DaiAnh({ anh }: { anh: AnhDiaDiem[] }) {
     () =>
       anh.map((a) => ({
         id: a.id,
-        alt: a.title ?? "Ảnh có giấy phép chụp quanh đây",
+        // «có giấy phép» only when there is one. The feed's frames have none,
+        // and an alt text is still a statement a screen reader makes aloud.
+        alt: a.title ?? (a.license !== null ? "Ảnh có giấy phép chụp quanh đây" : "Ảnh chụp quanh đây"),
         anh: anhDanhMuc(nguonAnhDiaDiem(a), { author: a.author, license: a.license, prefix: TIEN_TO_ANH }),
       })),
     [anh],

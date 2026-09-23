@@ -30,10 +30,13 @@ type CheckinInput struct {
 	AuthorID  string
 	PlaceID   string
 	PlaceName string
-	Lat       float64
-	Lng       float64
-	Caption   *string
-	Now       time.Time
+	// Nil when the place has no coordinates. A check-in at such a place still
+	// happened; refusing it would stop people checking in at a quarter of the
+	// catalogue over a field they never see.
+	Lat     *float64
+	Lng     *float64
+	Caption *string
+	Now     time.Time
 }
 
 // MemoryReaction is MemoryReactionRecord.
@@ -91,9 +94,9 @@ func (r Repository) CreateCheckin(ctx context.Context, in CheckinInput) (Memory,
 	if err != nil {
 		return Memory{}, err
 	}
-	placeID, placeName, lat, lng := in.PlaceID, in.PlaceName, in.Lat, in.Lng
+	placeID, placeName := in.PlaceID, in.PlaceName
 	m := Memory{ID: id, ContextID: in.ContextID, AuthorID: in.AuthorID, Kind: "checkin", Caption: in.Caption,
-		PlaceID: &placeID, PlaceName: &placeName, Lat: &lat, Lng: &lng, CreatedAt: pythonInstant(in.Now)}
+		PlaceID: &placeID, PlaceName: &placeName, Lat: in.Lat, Lng: in.Lng, CreatedAt: pythonInstant(in.Now)}
 	if err := r.insertMemory(ctx, m); err != nil {
 		return Memory{}, err
 	}

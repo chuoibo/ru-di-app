@@ -25,8 +25,11 @@ type Place struct {
 	Category      string
 	Kinds         []string
 	Address       *string
-	Lat           float64
-	Lng           float64
+	// Nil together or not at all. A quarter of the fed catalogue has no
+	// coordinates and never will; scanning NULL into a float64 is what
+	// turned every read of such a row into a 500.
+	Lat           *float64
+	Lng           *float64
 	Rating        *float64
 	RatingCount   *int64
 	PriceMinVND   *int64
@@ -45,6 +48,9 @@ type Place struct {
 	SourceRef     *string
 	License       *string
 	Activities    json.RawMessage
+	// How the point was arrived at. A rooftop match and a province centroid
+	// are both "has coordinates"; only one of them may be drawn.
+	GeoPrecision *string
 }
 
 // PlaceFilter is list_places' keyword arguments; nil is "not passed".
@@ -77,7 +83,7 @@ func (r Repository) ListPlaces(ctx context.Context, filter PlaceFilter) ([]Place
 	               places.travel_minutes, places.distance_km, places.photo_count, places.traits,
 	               places.group_fit, places.activities, places.flag, places.description,
 	               places.reviews, places.source, places.source_ref, places.license,
-	               places.created_at, places.updated_at
+	               places.geo_precision, places.created_at, places.updated_at
 	          FROM places`
 	if len(where) > 0 {
 		sql += " WHERE " + strings.Join(where, " AND ")
@@ -114,7 +120,7 @@ func scanPlace(row pgx.Row) (Place, error) {
 		&p.TravelMinutes, &p.DistanceKM, &p.PhotoCount, &traits,
 		&groupFit, &activities, &p.Flag, &p.Description,
 		&reviews, &p.Source, &p.SourceRef, &p.License,
-		&created, &updated); err != nil {
+		&p.GeoPrecision, &created, &updated); err != nil {
 		return Place{}, err
 	}
 	var err error
@@ -151,7 +157,8 @@ func (r Repository) GetPlace(ctx context.Context, placeID string) (*Place, error
 		        places.activities AS places_activities, places.flag AS places_flag,
 		        places.description AS places_description, places.reviews AS places_reviews,
 		        places.source AS places_source, places.source_ref AS places_source_ref,
-		        places.license AS places_license, places.created_at AS places_created_at,
+		        places.license AS places_license, places.geo_precision AS places_geo_precision,
+		        places.created_at AS places_created_at,
 		        places.updated_at AS places_updated_at
 		   FROM places
 		  WHERE places.id = $1::VARCHAR`, placeID))
