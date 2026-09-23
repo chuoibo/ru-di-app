@@ -41,12 +41,14 @@ Phiên kết thúc bằng commit, push, PR #645 và tài liệu bàn giao. Máy 
 
 ## 3. Dòng thời gian yêu cầu của người dùng và việc tôi làm
 
-**22/09 15:08**: «hiện tại ở session này sẽ là nơi ta bàn luận về cách nạp data
+Mọi mốc giờ trong file này là giờ Việt Nam (UTC+7), cùng múi với giờ commit và `journalctl`.
+
+**22/09 22:08**: «hiện tại ở session này sẽ là nơi ta bàn luận về cách nạp data
 production ready stable cho production… repo hiện tại chỉ có data synthetic tự
 tạo chứ chưa hề nạp data mới chuẩn»
 - Việc: khảo sát hiện trạng. DB có 12 dòng `places` đều là `source='seed'`, và 2 `destinations`.
 
-**22/09 15:14**: dán id session bên data, rồi viết: «tôi muốn bạn giao tiếp với
+**22/09 22:14**: dán id session bên data, rồi viết: «tôi muốn bạn giao tiếp với
 agent bên này để hiểu cấu trúc data họ đang lưu như nào, họ crawl data làm sao,
 bên ta sẽ phải ingest data như nào, infra ra làm sao, SDLC như nào, CRUD như
 nào… thảo luận về system design để build một system stable cho production»
@@ -59,13 +61,13 @@ nào… thảo luận về system design để build một system stable cho pro
   - `bo_qua` là lỗi viết, không phải phán quyết chất lượng
   - 51 file WebP và 12 file PNG mang đuôi `.jpg`
 
-**22/09 15:25**: trả lời bốn câu hỏi chọn:
+**22/09 22:25**: trả lời bốn câu hỏi chọn:
 - Ảnh: «cứ nhập ảnh cho tôi sử dụng ảnh hiện tại đang có ưu tiên cho tôi»
 - Toạ độ: «nhờ bên họ chạy hết long lat bằng agy services cho tất cả các địa điểm sau đó sử dụng sau nhé»
 - Ngưỡng: «Đã review xong»
 - Chữ: «Chỉ nạp văn tổng hợp, bỏ trích nguyên văn»
 
-**22/09 15:30**: bác bốn đề xuất của tôi:
+**22/09 22:30**: bác bốn đề xuất của tôi:
 - ADR: «bỏ cái này đi tôi quyết»
 - Điểm đến: «bên kia đang update thêm long lat cho ta, cứ set up hết trước đi đã,
   rồi sau này data đủ thì sẽ update vô… giờ ta làm sườn adapt hết đi»
@@ -75,7 +77,7 @@ nào… thảo luận về system design để build một system stable cho pro
 **22/09 (xen giữa)**: «không rõ gì về data nhắn tin hỏi session bên kia cho rõ nhé»
 - Từ đó mọi câu hỏi về dữ liệu đều đi qua session bên data; không đoán.
 
-**22/09 15:40**: «lên plan… system design, architecture, techstack, sync data từ
+**22/09 22:40**: «lên plan… system design, architecture, techstack, sync data từ
 bên crawl qua bên ta, database lưu trữ làm sao, SDLC, tính lâu dài và consistent
 của dữ liệu, CRUD… hình ảnh store ở minio… ultrathink»
 - Việc: viết kế hoạch đầy đủ. Kiến trúc buồng đệm (dữ liệu thô JSONB nguyên
@@ -83,7 +85,7 @@ của dữ liệu, CRUD… hình ảnh store ở minio… ultrathink»
   theo nguồn sở hữu, không xoá cứng, ảnh giữ khoá ngẫu nhiên (không content-addressed),
   MinIO sau interface kèm cổng conformance, các mốc M0–M8 và luồng W2.
 
-**22/09 15:53**: bốn câu chọn tiếp:
+**22/09 22:53**: bốn câu chọn tiếp:
 - Production: «Làm song song»
 - Điểm đến: «34 tỉnh + 15 điểm đến cũ»
 - Đường giao: «Kafka ngay từ đầu»
@@ -91,7 +93,7 @@ của dữ liệu, CRUD… hình ảnh store ở minio… ultrathink»
 
 Kế hoạch được duyệt qua ExitPlanMode.
 
-**22/09 16:10**: «continue»
+**22/09 23:10**: «continue»
 - Việc (đêm 22 → rạng sáng 23/09), 9 commit từ `6c9e6fc4` tới `ea1493b0`:
   - migration Go 7 bảng
   - Alembic `b3f19c7d2a04`
@@ -101,10 +103,10 @@ Kế hoạch được duyệt qua ExitPlanMode.
   - xử lý `mon_an`
   - 34 tỉnh + 33 hộp bao
 
-**23/09 01:56**: «test e2e trước, bật app lên test thật sự xem nó đã vận hành
+**23/09 08:56**: «test e2e trước, bật app lên test thật sự xem nó đã vận hành
 đúng với cách ta expected chưa»
 
-**23/09 02:59**: «ý là đã mở app ra test e2e chưa»
+**23/09 09:59**: «ý là đã mở app ra test e2e chưa»
 - Việc: nạp lô 0006 vào DB thật, bật API, và **thấy HTTP 500**. Có ba lỗi cùng
   một họ, do một từ vựng enum sống ở ba chỗ (CHECK của DB, Literal của
   Pydantic, kiểu TS) và ba chỗ đó lệch nhau.
@@ -112,7 +114,7 @@ Kế hoạch được duyệt qua ExitPlanMode.
   `test_wire_vocabulary_matches_the_database.py`, cổng này được kiểm bằng đột biến.
 - Mở app bằng bản web và thấy dữ liệu thật.
 
-**23/09 (khoảng 03:00–03:30)**: «phải test end to end app trên native nhé, xem
+**23/09 (khoảng 10:00–10:30)**: «phải test end to end app trên native nhé, xem
 khi gắn data vào hình ở các địa điểm rồi chữ ở các quán có bị broken có bị
 overflow không, phải rà kĩ test trên app mobile nhé, xem FE có bị bể khi nạp
 data đúng không»
@@ -123,16 +125,16 @@ data đúng không»
 - Chạy impeccable-pipeline (harden) cho phần sửa UI, cộng một finish reviewer
   context mới, người này chấm «fix».
 
-**23/09 12:57 và 14:34**: «continue» (sau hai lần máy khởi động lại)
+**23/09 19:57 và 21:34**: «continue» (mỗi lần sau một lần máy khởi động lại)
 - Việc: dựng lại stack, chạy cổng. Máy lại khởi động lại giữa chừng.
 
-**23/09 14:58**: «tạm thời bạn đang làm gì thì commit lên push hết lên nhánh, tạo PR,
+**23/09 21:58**: «tạm thời bạn đang làm gì thì commit lên push hết lên nhánh, tạo PR,
 rồi để lại 1 handoff docs là bạn đang làm gì, đang chưa làm gì, bỏ dở gì, sau
 đó sẽ có 1 agent khác làm tiếp việc của bạn nhé»
 - Việc: chạy kiểm tra nhẹ rồi commit `6dbf71bc` (sửa FE + Go) và `c8a2c8bc`
   (tài liệu bàn giao + bản sao kế hoạch). Push, tạo PR #645.
 
-**23/09 16:58**: yêu cầu tổng hợp cả phiên thành file lịch sử này và push lên PR.
+**23/09 23:58**: yêu cầu tổng hợp cả phiên thành file lịch sử này và push lên PR.
 
 ## 4. Quyết định đã chốt (không mở lại nếu leader không mở)
 
