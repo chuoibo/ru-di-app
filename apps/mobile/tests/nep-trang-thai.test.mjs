@@ -39,27 +39,29 @@ test("đóng bảng thì Nếp về đúng nền trước đó, không tự hi�
   assert.equal(chuyen(moTuAn, { kieu: "dong" }).trangThai, "an");
 });
 
-test("báo việc chỉ ghi nhận; chỉ việc cần trả lời mới hé ra một dòng", () => {
+test("báo việc chỉ ghi nhận; Nếp đang cài thì KHÔNG tự bước ra, kể cả việc cần trả lời", () => {
   const chiBao = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: false });
   assert.equal(chiBao.coViec, true);
   assert.equal(chiBao.trangThai, "an", "việc không cần trả lời thì Nếp vẫn cài, chỉ tờ thứ hai hiện");
 
-  const heRa = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(heRa.trangThai, "he");
-  assert.equal(heRa.coViec, true);
+  // Sliding a line over the page for four seconds takes whatever tap lands
+  // there; tucked, the second slip says it inside the margin instead.
+  const canTraLoi = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: true });
+  assert.equal(canTraLoi.trangThai, "an", "Nếp cài thì chỉ dày mép, không nói to");
+  assert.equal(canTraLoi.coViec, true);
+  assert.equal(hienToSau(canTraLoi), true);
 });
 
-test("dòng hé tự thu về đúng nền, và xong việc thì tờ thứ hai rút đi", () => {
-  const he = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(chuyen(he, { kieu: "het-gio-he" }).trangThai, "an");
-  assert.equal(chuyen(he, { kieu: "vuot-ra" }).trangThai, "an");
-
-  const heKhiDaRa = chuyen(RA, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(chuyen(heKhiDaRa, { kieu: "het-gio-he" }).trangThai, "nghi", "người đã kéo Nếp ra thì Nếp về lại chỗ đó");
+test("Nếp đã đứng ngoài thì mới hé một dòng; dòng hé tự thu về, xong việc thì tờ thứ hai rút đi", () => {
+  const he = chuyen(RA, { kieu: "bao-viec", canTraLoi: true });
+  assert.equal(he.trangThai, "he");
+  assert.equal(he.coViec, true);
+  assert.equal(chuyen(he, { kieu: "het-gio-he" }).trangThai, "nghi", "về lại đúng chỗ người dùng đã kéo ra");
+  assert.equal(chuyen(he, { kieu: "vuot-ra" }).trangThai, "nghi");
 
   const xong = chuyen(he, { kieu: "xong-viec" });
   assert.equal(xong.coViec, false);
-  assert.equal(xong.trangThai, "an");
+  assert.equal(xong.trangThai, "nghi");
 });
 
 test("Luật Nếp Đứng Xa Tiền: màn tiền ép Nếp lui vào mép và cấm hé", () => {

@@ -148,6 +148,11 @@ export function NepDock() {
     return () => clearTimeout(t);
   }, [dangHe, gui]);
 
+  // Only outward and vertical drags mean anything here. Under gesture
+  // navigation the outer ~30dp of the edge belongs to the system's Back swipe,
+  // which is an INWARD drag: a tucked slip that needed one to come out would
+  // hand the person Back instead. So out is a tap, and the inward half of the
+  // drag is clamped away rather than competed for.
   const keo = Gesture.Pan()
     .enabled(!dock.nhuongCho)
     .onUpdate((e) => {

@@ -129,7 +129,12 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       // open sheet: the work is kept and simply waits for the room to clear.
       if (dock.luiLai || dock.nhuongCho) return coViec;
       if (!su.canTraLoi) return coViec;
-      if (dock.trangThai === "an" || dock.trangThai === "nghi") return { ...coViec, trangThai: "he" };
+      // Nếp speaks only when it is already standing outside. Tucked, Nếp
+      // never comes out on its own: the line would slide over the page for
+      // four seconds and take whatever tap lands there, which on a native
+      // table is a flow that goes red only when the phone is slow. Tucked,
+      // the second slip says it, inside the margin.
+      if (dock.trangThai === "nghi") return { ...coViec, trangThai: "he" };
       return coViec;
     }
 

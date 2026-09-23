@@ -20,3 +20,15 @@
 declare const process: { env: Record<string, string | undefined> };
 
 export const TAT_NEP_QA: boolean = process.env.EXPO_PUBLIC_QA_TAT_NEP === "1";
+
+/**
+ * `EXPO_PUBLIC_QA_NEP_VIEC=bao|hoi` hands Nếp one piece of work at start-up,
+ * so the two states that only work can reach -- the second slip (`bao`) and
+ * the line written on the slip (`hoi`, work that needs an answer, arriving
+ * while the person has Nếp pulled out, the only time Nếp speaks) -- can be
+ * looked at. Nothing in the app sends work to the dock yet, so without this
+ * knob those states exist only in `trang-thai.ts` and nobody has ever seen
+ * them. Same inlining and shipping rules as the knob above.
+ */
+const VIEC = process.env.EXPO_PUBLIC_QA_NEP_VIEC;
+export const VIEC_NEP_QA: "bao" | "hoi" | null = VIEC === "bao" || VIEC === "hoi" ? VIEC : null;
