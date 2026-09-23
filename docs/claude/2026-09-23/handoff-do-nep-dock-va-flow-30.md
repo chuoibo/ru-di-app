@@ -5,6 +5,10 @@ commit gốc khi viết: `d1cdd671` (origin/main) · ngày 2026-09-23 · phiên 
 Tài liệu này để một phiên khác cầm tiếp mà không phải dò lại. Phần «chưa làm»
 quan trọng hơn phần «đã làm», nên nó nằm trước.
 
+Tài liệu song sinh: **`lich-su-phien-do-nep-dock.md`** cùng thư mục, kể lại
+**đã xảy ra chuyện gì và vì sao**, gồm cả những chỗ phiên này làm sai. Đọc nó
+nếu cần hiểu bối cảnh; đọc file này nếu chỉ cần biết làm gì tiếp.
+
 ## 1. Việc còn nợ, theo thứ tự nên làm
 
 ### 1a. Ba phép đo mà phiên `ai-engine-unification` đang CHỜ
