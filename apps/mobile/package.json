@@ -10,6 +10,7 @@
     "@maplibre/maplibre-react-native": "^11.3.10",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-google-signin/google-signin": "^16.1.5",
+    "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.17",
     "expo-blur": "~57.0.2",
     "expo-camera": "~57.0.4",
@@ -49,12 +50,13 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
+    "web": "node tools/chep-canvaskit.mjs && expo start --web",
+    "postinstall": "node tools/chep-canvaskit.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build:check && tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests -path tests/e2e -prune -o -name '*.test.mjs' -print | sort)",
     "seed:rudi": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node tools/seed-rudi-world.mjs",
     "test:e2e": "tsc -p tsconfig.test.json && node tools/fixup-esm.mjs && node --test $(find tests/e2e -name '*.test.mjs' | sort)",
-    "build:check": "EXPO_PUBLIC_API_URL=http://api.build-check.invalid expo export --platform web --output-dir .expo-build-check --clear"
+    "build:check": "node tools/chep-canvaskit.mjs && EXPO_PUBLIC_API_URL=http://api.build-check.invalid expo export --platform web --output-dir .expo-build-check --clear"
   },
   "private": true
 }

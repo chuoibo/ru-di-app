@@ -15,6 +15,7 @@ import { TIEN_TO_MINH_HOA, anhDanhMuc, type AnhCoGhiCong } from "../../src/rudi/
 import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
 import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../src/rudi/ui";
+import { ThuRenderer } from "../../src/rudi/ui/ThuRenderer";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
 import { KyHoa } from "../../src/rudi/ui/art/KyHoa";
@@ -214,6 +215,7 @@ export default function UiLab() {
   const [stickerChon, setStickerChon] = useState<string>("cho-ti");
   const [tenDai, setTenDai] = useState(false);
   const [daLuu, setDaLuu] = useState<string[]>([]);
+  const [lanThu, setLanThu] = useState(0);
   const anhAlbum = anhAlbumMau(caAlbum);
   const [dan, ...conLai] = diaDiemMau(caAnh, tenDai);
   const luu = (id: string) => setDaLuu((ds) => (ds.includes(id) ? ds.filter((x) => x !== id) : [...ds, id]));
@@ -224,6 +226,11 @@ export default function UiLab() {
   return <RudiScreen overlay={<KhaySticker onChon={(id) => { setStickerChon(id); setKhaySticker(false); }} onClose={() => setKhaySticker(false)} open={khaySticker} />} scrollEnabled={!dragging}>
     <TopBar title="Thử tương tác native" />
     <Heading title="Dữ liệu tổng hợp" subtitle="Chỉ đo gesture và hiển thị. Không phải dữ liệu nhóm hay bằng chứng API live." />
+    <SectionHeader action="Chạy lại" onAction={() => setLanThu((n) => n + 1)} title="Sân khấu giấy · renderer Skia hay SVG" />
+    <Text style={{ ...typography.note, color: colors.inkFaint }}>
+      {"Nếp dựng lên quanh vạch chân (3D) và đường mực tự vẽ. Máy có Skia vẽ bằng Skia; dev client cũ hoặc trình duyệt không WebGL vẽ bằng SVG, cùng chuyển động."}
+    </Text>
+    <ThuRenderer lan={lanThu} />
     <SectionHeader title="Album · renderer live, dữ liệu tổng hợp" />
     <Inline gap={8} wrap>
       {CA_ALBUM.map((ca) => <Chip key={ca.id} label={ca.nhan} onPress={() => setCaAlbum(ca.id)} selected={caAlbum === ca.id} />)}
