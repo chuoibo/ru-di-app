@@ -50,7 +50,9 @@ export const MAN_NEP_LUI = ["finance", "settlements", "batches", "smart-split"] 
  * into a list of «screens Nếp got in the way on» (QA 23/09: the disc covered
  * the taste chips of `personalization` and the buttons of the first screens).
  */
-export const MAN_NEP_VANG = ["welcome", "login", "otp", "personalization"] as const;
+// `moi` is the invite-code screen, reached from sign-in before any account
+// exists (native run 24/09: Nếp stood there, tucked, with nobody to serve).
+export const MAN_NEP_VANG = ["welcome", "login", "otp", "moi", "personalization"] as const;
 
 export interface PhieuNguCanh {
   /** Route id, either as declared (`outings/[id]`) or as walked (`/outings/7`). */

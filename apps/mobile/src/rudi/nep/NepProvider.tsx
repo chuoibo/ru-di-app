@@ -70,10 +70,7 @@ export function NepProvider({ children }: { children: ReactNode }) {
     void docGiaoDienAsync(KHOA_DOCK).then((raw) => {
       if (!song) return;
       const daLuu = giaiMaDock(raw);
-      if (daLuu) {
-        datTyLeRaw(daLuu.tyLe);
-        if (daLuu.an) gui({ kieu: "vuot-ra" });
-      }
+      if (daLuu) datTyLeRaw(daLuu.tyLe);
       datDaDocDia(true);
     });
     return () => {
@@ -112,12 +109,12 @@ export function NepProvider({ children }: { children: ReactNode }) {
     datTyLeRaw(sach);
   }, []);
 
-  // Persist the two facts worth persisting, after the first read so the default
+  // Persist the one fact worth persisting, after the first read so the default
   // never overwrites what the disk holds.
   useEffect(() => {
     if (!daDocDia) return;
-    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe, an: dock.nen === "an" }));
-  }, [daDocDia, tyLe, dock.nen]);
+    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe }));
+  }, [daDocDia, tyLe]);
 
   const gia = useMemo<NepDieuKhien>(
     () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, khaiPhieu, goPhieu }),
@@ -167,4 +164,23 @@ export function useNepNguCanh(tho: unknown): void {
       return () => goPhieu(id);
     }, [khoa, duong, khaiPhieu, goPhieu]),
   );
+}
+
+/**
+ * What a surface that draws its own tray, or takes the whole screen, calls
+ * while it is up: the same count `ui/Sheet.tsx` keeps (`mo-sheet` /
+ * `dong-sheet`), so Nếp tucks into the edge and is not drawn until the last
+ * one closes. «Chừa một chỗ cho nhau» (ADR-0035 §2.5): the tray «Tờ hẹn», the
+ * story viewer and the journey map.
+ *
+ * Tolerates a missing provider, because surfaces render in fixtures and tests
+ * that have no Nếp at all.
+ */
+export function useNhuongChoNep(dangMo: boolean): void {
+  const gui = useNepGui();
+  useEffect(() => {
+    if (!dangMo || !gui) return;
+    gui({ kieu: "mo-sheet" });
+    return () => gui({ kieu: "dong-sheet" });
+  }, [dangMo, gui]);
 }
