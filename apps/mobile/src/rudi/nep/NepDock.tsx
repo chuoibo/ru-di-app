@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AccessibilityInfo, Platform, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
@@ -221,7 +221,7 @@ export function NepDock() {
   return (
     <Animated.View
       pointerEvents="box-none"
-      style={[styles.lop, { width }, kieuRay]}
+      style={[styles.lop, { width }, Platform.OS === "web" ? CAT_NGANG_WEB : null, kieuRay]}
     >
       <GestureDetector gesture={keo}>
         <Animated.View style={[styles.cum, kieuTo]}>
@@ -327,6 +327,16 @@ function MatTo({ w, h, r, giay, bong, muc, vien }: { w: number; h: number; r: nu
     </Svg>
   );
 }
+
+/**
+ * Web only: the tucked slip is 56dp wide and 46dp of it sits past the right
+ * edge. A click focuses it, and the browser scrolls the page sideways to show
+ * the focused element -- measured 24/09 on /finance, the whole page slid 46px
+ * left and the hidden part of the slip came into view. `clip` cuts the
+ * overflow without making the layer a scroll container, so there is nothing
+ * to scroll; the vertical axis stays visible for the second slip's top edge.
+ */
+const CAT_NGANG_WEB = { overflowX: "clip" } as unknown as ViewStyle;
 
 const styles = StyleSheet.create({
   lop: {

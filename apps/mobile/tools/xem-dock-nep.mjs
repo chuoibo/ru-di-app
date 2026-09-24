@@ -237,6 +237,10 @@ async function chay(scheme) {
       // seen on the way in, or the result says nothing about the law.
       const docMep = () => page.evaluate(() => ({
         url: location.pathname,
+        // Where the edge actually is: a page that slid sideways shows more of
+        // the tucked slip than 10dp, and every other field would stay green.
+        mepTrai: Math.round(document.querySelector('[data-testid="nep-mep"]')?.getBoundingClientRect().left ?? -1),
+        mepLo: (() => { const r = document.querySelector('[data-testid="nep-mep"]')?.getBoundingClientRect(); return r ? Math.round(Math.min(r.right, innerWidth) - Math.max(r.left, 0)) : -1; })(),
         mep: !!document.querySelector('[data-testid="nep-mep"]'),
         dia: !!document.querySelector('[data-testid="nep-dia"]'),
         sau: !!document.querySelector('[data-testid="nep-to-sau"]'),
@@ -259,7 +263,7 @@ async function chay(scheme) {
       await sleep(900);
       await chup('4-man-tien-sau-cham');
       const sauCham = await docMep();
-      ket.steps.push({ scheme, name: 'man_tien_cham_mep_khong_ra_mat', pass: sauCham.mep && !sauCham.dia, ...sauCham });
+      ket.steps.push({ scheme, name: 'man_tien_cham_mep_khong_ra_mat', pass: sauCham.mep && !sauCham.dia && sauCham.mepLo <= 10, ...sauCham });
       save();
     }
 
