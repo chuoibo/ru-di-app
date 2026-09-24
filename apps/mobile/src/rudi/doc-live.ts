@@ -120,20 +120,24 @@ export function tongTuRecap(wire: unknown): TongChuyen | null {
 export function dongHeroQuyetToan(
   tong: TongChuyen | null,
   soNguoi: number,
-): { nhan: string; so: string; cau: string } {
+): { nhan: string; so: string; cau: string; laSo: boolean } {
   const nguoi = `${soNguoi} người`;
   if (tong === null) {
     return {
       nhan: `Chi tiêu theo chuyến (${nguoi})`,
       so: "Chưa có số",
-      cau: "Máy chủ chưa trả tổng cho nhóm này. Các khoản chuyển bên dưới vẫn tính từ sổ.",
+      cau: "Chưa đọc được tổng lúc này. Các khoản chuyển bên dưới vẫn tính từ sổ.",
+      laSo: false,
     };
   }
   if (tong.kieu === "chua-co-chuyen") {
     return {
       nhan: `Chi tiêu theo chuyến (${nguoi})`,
       so: "Chưa có chuyến",
-      cau: "Nhóm chưa có kèo nào để gom chi tiêu theo ngày. Các khoản chuyển bên dưới vẫn tính từ sổ, kể cả khoản vừa ghi.",
+      // Not «nhóm chưa có kèo nào»: a pair that has just agreed on a plan for
+      // Saturday has a kèo, it simply has not started (QA 23/09).
+      cau: "Chưa có kèo nào đang đi hay đã xong để gom chi tiêu theo ngày. Các khoản chuyển bên dưới vẫn tính từ sổ, kể cả khoản vừa ghi.",
+      laSo: false,
     };
   }
   if (tong.kieu === "dang-di") {
@@ -142,12 +146,14 @@ export function dongHeroQuyetToan(
       nhan: `Chi tiêu chuyến ${tong.ten}${them}, đang đi (${nguoi})`,
       so: dinhDangTienVnd(tong.tong),
       cau: "Tính từ sổ theo ngày của chuyến, tới giờ này. Sửa một bill là số đổi theo.",
+      laSo: true,
     };
   }
   return {
     nhan: `${tong.soChuyen} chuyến đã kết thúc (${nguoi})`,
     so: dinhDangTienVnd(tong.tong),
-    cau: "Số này máy chủ tính lại từ sổ mỗi lần hỏi.",
+    cau: "Số này tính lại từ sổ mỗi lần mở.",
+    laSo: true,
   };
 }
 

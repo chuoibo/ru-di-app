@@ -449,7 +449,9 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
           <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
         </View>
-        <Text style={[typography.money, { color: colors.split }]}>{hero.so}</Text>
+        {/* A state («Chưa có chuyến») is not a sum: in the money face it read as a
+            value sitting where a number goes (QA 23/09). */}
+        <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
       </View>
       <SectionHeader title="Các khoản chuyển" />
       {du.chuyenTien.length === 0 ? (
@@ -472,7 +474,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         <Ionicons color={colors.split} name="shield-checkmark-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           {du.toiThieu
-            ? "Máy chủ chứng minh đây là danh sách chuyển ngắn nhất."
+            ? "Đây là danh sách chuyển ngắn nhất, tính từ sổ."
             : "Danh sách này chưa được chứng minh là ngắn nhất."}{" "}
           Nghĩa vụ chỉ tồn tại sau khi một đợt thu được phát.
         </Text>

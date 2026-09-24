@@ -24,7 +24,7 @@ export function LoaiSo({ open, onClose, batDoi, dangCho, deNghiCuaToi = true, te
         {dangCho && !batDoi && deNghiCuaToi ? <Stamp label="Đã đề nghị" tone="ink" /> : null}
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {batDoi
-            ? "Đang là một đôi. Nếp nói chuyện với hai bạn như với một đôi."
+            ? "Đang là một đôi. Nếp biết đây là sổ của một đôi."
             : dangCho && !deNghiCuaToi
               ? `${tenNguoiKia ?? "Người ấy"} đề nghị hai bạn là «Một đôi». Bạn đồng ý thì bật cho cả hai.`
               : dangCho

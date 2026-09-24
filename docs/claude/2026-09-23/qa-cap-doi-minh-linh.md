@@ -415,3 +415,34 @@ consistency 1 · error-prevention 1 · recognition 2 · aesthetic 3 · recovery 
 · P2 hai nhãn «Giờ» + placeholder trông như giá trị · P3 không có trạng thái focus / chỗ
 lỗi dưới ô. Ô một dòng làm tốt (52dp, viền 3:1, placeholder một dòng có «…»); OTP đúng
 chuẩn (một input thật, `sms-otp`, focus màu).
+
+## Đợt 5 (24/09) — bộ ô nhập và UI chung: đã đóng / còn mở
+
+Đo trên dev build Android (APK dựng lại với plugin mới), stack cô lập, tài khoản Linh.
+
+- **Ô nhiều dòng canh giữa → đã sửa** (`ui/Field.tsx`, hàm thuần `kieuO`): chữ và gợi ý ở góc
+  trên-trái, padding trên dưới bằng nhau, cao theo `numberOfLines`, quá 8 dòng thì cuộn; viền
+  accent 2dp khi đang nhập (chữ không xê dịch), chỗ cho `error`/`helper`. Ảnh: sheet «Đề nghị
+  sửa» (sáng) và «Hai ô ràng buộc» (tối, đang nhập).
+- **Ngày/giờ gõ thô, hai ô cùng tên «Giờ» → đã sửa**: ngày là chip từ hôm nay tới hết tuần sau
+  («T7 26/09», nhãn trợ năng «Thứ Bảy 26/09»); giờ chuẩn hoá «1800»/«21h30» → «18:00»/«21:30»,
+  kiểm `hh:mm`, «Đi tiếp phải sau 19:15» (qua nửa đêm vẫn được); tên trợ năng «Giờ chỗ chính» /
+  «Giờ đi tiếp»; chặng có giờ mà không có việc thì không gửi (trước: máy chủ sẽ 422).
+- **«Chỗ chính» không chọn được quán → đã sửa**: «Chọn chỗ / Đổi chỗ / Bỏ chỗ» từ danh mục
+  ngay trong sheet; quán đã gắn không còn bị rơi khi sửa dòng việc; đổi quán hiện thành một dòng
+  «Chỗ chính: Tiệm Nướng Xóm Lào → Lẩu Gà Lá É Tao Ngộ» ở cả hai phía. Trên máy: gửi từ app, máy
+  chủ lưu `place_id: p-lau-ga-la-e`.
+- **Bản phác của mình mở «Gửi phiên bản 2» → đã sửa**: «Sửa bản phác / Lưu bản phác».
+- **Đổi cỡ chữ nhảy về màn đầu → đã sửa** (plugin `giu-man-khi-doi-co-chu`: `fontScale|density`
+  trong `configChanges`). Trên máy: đang ở tờ giấy, `font_scale 1.3` → vẫn ở tờ giấy, chữ to lên.
+- **«máy chủ» trong câu người dùng đọc → đã đổi 49 dòng** trên đường đi thường (các bước chia
+  bill, hoá đơn, quyết toán, đợt thu, hồ sơ, mời, kỷ niệm) và lỗi chung. Còn 73 dòng (lỗi hiếm ở
+  màn cũ/legacy, chữ chẩn đoán) chưa đổi.
+- **«Chưa có chuyến» in như con số, «Nhóm chưa có kèo nào» khi vừa chốt kèo → đã sửa.**
+- **Sheet lập sổ hứa «Không ai ngoài hai bạn thấy» cạnh ổ khoá mở; bật đôi hứa vai Người lo/chấm
+  chưa có → đã sửa** thành câu đúng phạm vi. Câu đóng sổ bớt lạnh. «Vì:» hết thụt lệch.
+- **Chat nhóm không cập nhật «n thành viên» khi có người vào → đã sửa** (đọc lại khi focus và
+  khi có tin từ người lạ; đếm người `active`).
+- **Còn mở:** chất giấy ở chế độ tối (`paper` #2e335c là hợp đồng màu có đo trong spec §16 /
+  DESIGN.md — cần một lượt thiết kế, không sửa lén); Khám phá ở chữ 1.3 (nút AI xuống hàng, giá
+  bị cắt) chưa làm.

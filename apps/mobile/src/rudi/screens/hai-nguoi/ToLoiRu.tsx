@@ -106,10 +106,12 @@ export function ToLoiRu({
     truoc.current = `${to.id}:${to.state}`;
   }, [to.id, to.state]);
   const dangQuyet = ["da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(to.state);
-  const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
+  const truocDo = dangQuyet && to.version > 1 ? phienBanTruoc(to) : undefined;
+  const hangCu = truocDo?.content.chang ?? [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
-  const tenCho = useTenCho(hang.map((c) => c.place_id));
+  const tenCho = useTenCho([...hang, ...hangCu].map((c) => c.place_id));
+  const doi = dangQuyet && pb && truocDo ? khacGi(pb, truocDo, (id) => tenCho[id]) : [];
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -295,7 +297,8 @@ const styles = StyleSheet.create({
   gio: { minWidth: 52, fontVariant: ["tabular-nums"], paddingTop: 2 },
   viec: { flex: 1 },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
-  lyDo: { paddingHorizontal: 6 },
+  // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
+  lyDo: {},
   thoat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 6 },
   doi: { borderLeftWidth: StyleSheet.hairlineWidth, paddingLeft: 12, gap: 2 },
   giu: { gap: 2, paddingHorizontal: 6 },

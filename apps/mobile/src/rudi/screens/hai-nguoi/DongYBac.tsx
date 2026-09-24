@@ -102,7 +102,11 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
     <BacDongY
       {...props}
       choPhep={["Một chỗ hai bạn truyền giấy cho nhau mỗi tuần.", "Hai ô ràng buộc: «Không ăn được» và «Đừng».", "Nếp phác một tờ khi tới lượt, bạn sửa rồi gửi."]}
-      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Không ai ngoài hai bạn thấy sổ này."]}
+      // Said as far as it is true: only the two of them can open the notebook
+      // in the app, but the chat is not end to end encrypted yet (its lock
+      // label says so), and «nobody but you two sees this» beside an open lock
+      // promised more than the product keeps (QA 23/09).
+      khongKeoTheo={["Không tự thành «Một đôi».", "Nếp không đọc tin nhắn của hai bạn.", "Chỉ hai bạn mở được sổ này trong app; tin nhắn thì chưa mã hoá đầu cuối."]}
       nhanDeNghi="Đề nghị lập sổ"
       testID="lap-so"
       tieuDe="Lập sổ hai người"
@@ -114,7 +118,9 @@ export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: 
   return (
     <BacDongY
       {...props}
-      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp nói chuyện với hai bạn như với một đôi.", "Mở đường cho vai «Người lo» và «Người chấm»."]}
+      // Only what switching it on does today. The roles («Người lo», «Người
+      // chấm») are not built yet, so the sheet no longer promises them.
+      choPhep={["Sổ này là sổ đôi: mỗi người chỉ có một.", "Nếp biết đây là sổ của một đôi."]}
       khongKeoTheo={["Nếp vẫn không đọc tin nhắn; đó là một công tắc khác.", "Không đăng gì, không ai được báo.", "Tắt được bất cứ lúc nào, sổ vẫn còn."]}
       nhanDeNghi="Đề nghị bật «Một đôi»"
       testID="bat-mot-doi"

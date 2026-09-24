@@ -266,6 +266,7 @@
     "src/rudi/so/ban-tinh.ts",
     // Tờ giấy của sổ hai người: bảy luật §3.3 + hai luật ADR-0027; tests/to-giay-luat.test.mjs
     "src/rudi/to-giay/to-giay.ts",
+    "src/rudi/to-giay/sua-to.ts",
     // Sổ hai người trên fixture: chuyển trạng thái thuần thay máy chủ tới Phase 4; tests/to-giay-fixture.test.mjs
     "src/rudi/to-giay/so-fixture.ts",
     // Dây nối duy nhất giữa wire và mười ba màn đã đọc mù; tests/so-doi-map.test.mjs

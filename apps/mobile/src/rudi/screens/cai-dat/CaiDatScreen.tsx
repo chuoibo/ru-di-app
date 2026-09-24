@@ -211,7 +211,7 @@ export function CaiDatScreen() {
           selected={NHAN_GIAO_DIEN.findIndex((muc) => muc.ma === cheDo)}
         />
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Lựa chọn này ở trên máy này, không gửi lên máy chủ.
+          Lựa chọn này chỉ ở trên máy này, không gửi đi đâu.
         </Text>
       </View>
       <SectionHeader title="Về Rủ Đi" />

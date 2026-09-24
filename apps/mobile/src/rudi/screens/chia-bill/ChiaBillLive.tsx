@@ -122,7 +122,7 @@ function tieuDeBuoc(buoc: Buoc): string {
     case "gan-mon":
       return "Ai dùng món nào?";
     case "ket-qua":
-      return "Máy chủ chia";
+      return "Rủ Đi chia";
   }
 }
 
@@ -350,7 +350,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
 
       {buoc.ten === "bat-dau" ? (
         <>
-          <Heading title="Bill hôm nay" subtitle="Chụp hoặc chọn ảnh hóa đơn để máy chủ đọc món, hoặc gõ tay. Ai dùng món nào thì hỏi ở bước sau." />
+          <Heading title="Bill hôm nay" subtitle="Chụp hoặc chọn ảnh hoá đơn để Rủ Đi đọc từng món, hoặc gõ tay. Ai dùng món nào thì hỏi ở bước sau." />
           <RudiButton disabled={ban} icon="images-outline" label="Chọn ảnh bill" loading={ban} onPress={() => void chonAnh()} tone="split" />
           <RudiButton disabled={ban} icon="create-outline" label="Nhập tay" onPress={nhapTay} tone="split" variant="outline" />
         </>
@@ -358,7 +358,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
 
       {buoc.ten === "xem-anh" ? (
         <>
-          <Heading title="Ảnh này đúng bill chứ?" subtitle="Máy chủ sẽ đọc từng món từ ảnh này. Chưa gửi gì cho tới khi bạn bấm dùng." />
+          <Heading title="Ảnh này đúng bill chứ?" subtitle="Rủ Đi sẽ đọc từng món từ ảnh này. Chưa gửi gì cho tới khi bạn bấm dùng." />
           <Image accessibilityLabel="Ảnh bill đã chọn" contentFit="cover" source={{ uri: buoc.uri }} style={[styles.anh, { borderRadius: radius.small, backgroundColor: colors.line }]} />
           <RudiButton disabled={ban} icon="scan-outline" label="Dùng ảnh này" loading={ban} onPress={() => void docAnh(buoc.uri, buoc.bytes)} tone="split" />
           <RudiButton disabled={ban} icon="images-outline" label="Chọn ảnh khác" onPress={() => void chonAnh()} tone="split" variant="outline" />
@@ -450,7 +450,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
           phai={<AiCoGi bang={aiCoGi(reading.lines, roster, assignment)} />}
           trai={
             <>
-          <Heading title={cauTongMon(reading)} subtitle="Chạm một món để sửa ai dùng. Máy chủ giữ bản gán này; tổng bill không đổi khi bạn sửa người." />
+          <Heading title={cauTongMon(reading)} subtitle="Chạm một món để sửa ai dùng. Bản gán được lưu lại; tổng bill không đổi khi bạn sửa người." />
           <View>
             {reading.lines.map((line, i) => {
               const mo = moRong.has(line.id);
@@ -516,7 +516,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
           </Inline>
           <Field accessibilityLabel="Ô tên khoản chi" label="Gọi khoản này là" onChangeText={setOccasion} placeholder="Ví dụ: Tối nay Xóm Lào" value={occasion} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
-            Ghi vào sổ là tạo khoản chi với đúng các số ở trên; máy chủ tự kiểm tổng khớp trước khi ghi.
+            Ghi vào sổ là tạo khoản chi với đúng các số ở trên; tổng được kiểm cho khớp trước khi ghi.
           </Text>
             </>
           }
@@ -530,13 +530,13 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
               <DongTien
                 dam
                 nhan="Phần của bạn"
-                phu={`Máy chủ chia ${cauTongMon(reading)} theo bản gán ${buoc.chia.assignmentState === "confirmed" ? "đã chốt" : "đang gợi ý"}${phanCuaToi.lamTron ? "; lẻ đồng dồn về bạn" : ""}.`}
+                phu={`Rủ Đi chia ${cauTongMon(reading)} theo bản gán ${buoc.chia.assignmentState === "confirmed" ? "đã chốt" : "đang gợi ý"}${phanCuaToi.lamTron ? "; lẻ đồng dồn về bạn" : ""}.`}
                 tone="split"
                 vnd={Number(phanCuaToi.tien.replace(/\D/g, ""))}
               />
             </View>
           ) : (
-            <Heading title={cauTongMon(reading)} subtitle={buoc.chia.assignmentState === "confirmed" ? "Máy chủ chia theo bản gán đã chốt." : "Máy chủ chia theo bản gán đang gợi ý."} />
+            <Heading title={cauTongMon(reading)} subtitle={buoc.chia.assignmentState === "confirmed" ? "Chia theo bản gán đã chốt." : "Chia theo bản gán đang gợi ý."} />
           )}
           <SectionHeader title="Phần của mỗi người" />
           <View>
@@ -551,7 +551,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
           </View>
           {buoc.chia.roundingGainers.length > 0 ? (
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Lẻ đồng dồn về: {buoc.chia.roundingGainers.map((id) => tenCua(roster, id)).join(", ")} (máy chủ quyết, tổng vẫn khớp).
+              Lẻ đồng dồn về: {buoc.chia.roundingGainers.map((id) => tenCua(roster, id)).join(", ")} (chia lẻ tự động, tổng vẫn khớp).
             </Text>
           ) : null}
           {buoc.chia.warnings.map((w) => (
@@ -571,7 +571,7 @@ export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string 
           </View>
           <Heading
             title={`Đã ghi: ${buoc.tenKhoan}`}
-            subtitle={`${dinhDangTien(buoc.tongVnd)}, ${tenCua(roster, buoc.nguoiTraId)} đã trả. Mỗi người phần của mình như máy chủ chia; quyết toán của nhóm tính lại từ sổ.`}
+            subtitle={`${dinhDangTien(buoc.tongVnd)}, ${tenCua(roster, buoc.nguoiTraId)} đã trả. Mỗi người phần của mình như đã chia; quyết toán tính lại từ sổ.`}
           />
           <RudiButton icon="wallet-outline" label="Xem quyết toán" onPress={() => router.replace(`/settlements/${ctx}` as never)} tone="split" />
           <RudiButton label="Về Tin nhắn" onPress={() => router.replace("/(tabs)/messages" as never)} tone="split" variant="outline" />

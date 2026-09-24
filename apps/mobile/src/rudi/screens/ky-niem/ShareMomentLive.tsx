@@ -125,7 +125,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         placeholder="Ví dụ: Đà Lạt về đêm"
         value={caption}
       />
-      <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Máy chủ lột dữ liệu EXIF của ảnh trước khi lưu.</Text>
+      <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
       <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label="Chia sẻ ngay vào nhóm" loading={ban} onPress={() => void chiaSe()} />
       {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
     </RudiScreen>

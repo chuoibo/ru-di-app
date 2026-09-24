@@ -44,3 +44,13 @@ test("recap lệch hợp đồng (chuyến không tên, tiền không nguyên) �
   assert.equal(tongTuRecap(null), null);
   assert.equal(dongHeroQuyetToan(null, 2).so, "Chưa có số");
 });
+
+test("trạng thái trống không in bằng mặt chữ tiền, và không nói «chưa có kèo» khi có kèo chưa tới", () => {
+  assert.equal(dongHeroQuyetToan({ kieu: "chua-co-chuyen" }, 2).laSo, false);
+  assert.equal(dongHeroQuyetToan(null, 2).laSo, false);
+  assert.equal(dongHeroQuyetToan({ kieu: "da-ket-thuc", soChuyen: 1, tong: 1000 }, 2).laSo, true);
+  assert.doesNotMatch(dongHeroQuyetToan({ kieu: "chua-co-chuyen" }, 2).cau, /chưa có kèo nào để/);
+  for (const t of [null, { kieu: "chua-co-chuyen" }, { kieu: "da-ket-thuc", soChuyen: 1, tong: 1000 }]) {
+    assert.doesNotMatch(dongHeroQuyetToan(t, 2).cau, /máy chủ/i);
+  }
+});
