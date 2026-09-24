@@ -60,6 +60,7 @@ import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceGlyph } from "./HangDiaDiem";
 import { KyHoa } from "../../ui/art/KyHoa";
+import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; place: PlaceDetail } | { pha: "hong"; loi: string };
 
@@ -203,7 +204,9 @@ export function PlaceDetailLiveScreen({ phien }: { phien: Phien }) {
         anh={anh}
         anhNhom={anhNhom}
         loiAnh={loiAnh}
+        doi={(phien.contexts ?? []).filter((n) => laPair(n) && n.my_state === "active").slice(0, 3).map((n) => ({ id: n.id, ten: tenCuocTroChuyen(n) }))}
         onChiDuong={() => void chiDuong(trang.place)}
+        onRu={(id) => router.push(`/groups/${id}/to-giay?ru=1&cho=${encodeURIComponent(trang.place.id)}` as never)}
         onThemAnhNhom={() =>
           router.push(
             `/moments/new?place=${encodeURIComponent(trang.place.id)}&ten=${encodeURIComponent(trang.place.name)}` as never,
@@ -226,6 +229,8 @@ function ThanChiTiet({
   thongBao,
   onChiDuong,
   onThemAnhNhom,
+  doi,
+  onRu,
 }: {
   place: PlaceDetail;
   anh: AnhDiaDiem[];
@@ -235,6 +240,9 @@ function ThanChiTiet({
   thongBao: string | null;
   onChiDuong: () => void;
   onThemAnhNhom: () => void;
+  /** The person's two-person notebooks: «Rủ Minh tới đây» starts a sheet with this place on it. */
+  doi: { id: string; ten: string }[];
+  onRu: (contextId: string) => void;
 }) {
   const { colors } = useRudiTheme();
   const hop = matchLabel(place.match);
@@ -304,6 +312,12 @@ function ThanChiTiet({
         </Pressable>
         <RudiButton compact full={false} icon="navigate-outline" label="Chỉ đường" onPress={onChiDuong} variant="outline" />
       </View>
+      {/* From a place to an invitation in one step: the sheet of the two of
+          them opens with this place as the main stop (QA 23/09: a place page
+          had no way to become an evening for a couple). */}
+      {doi.map((d) => (
+        <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
+      ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
       <View style={styles.suKien}>
         <View style={styles.hangSuKien}>

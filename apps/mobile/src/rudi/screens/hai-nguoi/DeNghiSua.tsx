@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { docDanhMuc } from "../../kham-pha/dia-diem";
+import { docChiTiet, docDanhMuc } from "../../kham-pha/dia-diem";
 import { homNay } from "../../keo/nhip-keo";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { ngayDocDuoc } from "../../to-giay/ngay";
-import { chuanGio, loiGio, loiThuTu, loiViec, ngayChonDuoc, ngayNgan } from "../../to-giay/sua-to";
+import { chuanGio, loiGio, loiThuTu, loiViec, ngayChonDuoc, ngayNgan, viecTheoLoai } from "../../to-giay/sua-to";
 import { type NoiDungTo, type ToGiay, khacGi, phienBan } from "../../to-giay/to-giay";
 import { useTenCho } from "../../to-giay/useTenCho";
 import { Chip, Heading, ListRow, RudiButton } from "../../ui";
@@ -29,7 +29,7 @@ import { Sheet } from "../../ui/Sheet";
  * and the place a stop points at is kept, shown, and can be changed from the
  * catalogue -- it used to be dropped silently whenever the line was edited.
  */
-export function DeNghiSua({ to, open, onClose, onGui, testID }: { to: ToGiay; open: boolean; onClose: () => void; onGui: (content: NoiDungTo, lyDo: string | null) => void; testID?: string }) {
+export function DeNghiSua({ to, open, onClose, onGui, choGoiY, testID }: { to: ToGiay; open: boolean; onClose: () => void; onGui: (content: NoiDungTo, lyDo: string | null) => void; /** A catalogue place to start the main stop at («Rủ … tới đây»). */ choGoiY?: string; testID?: string }) {
   const { colors, space } = useRudiTheme();
   const { phien } = useRudiSession();
   const nhap = to.state === "nhap";
@@ -51,13 +51,29 @@ export function DeNghiSua({ to, open, onClose, onGui, testID }: { to: ToGiay; op
     setNgay(pb?.content.ngay ?? "");
     setGio1(chinh?.gio ?? "");
     setViec1(chinh?.viec ?? "");
-    setCho1(chinh?.place_id ?? null);
+    // A place handed in wins over the draft's own; both are ids used as ids.
+    if (choGoiY) setCho1(choGoiY);
+    else setCho1(chinh?.place_id ?? null);
     setGio2(tiep?.gio ?? "");
     setViec2(tiep?.viec ?? "");
     setCho2(tiep?.place_id ?? null);
     setLyDo("");
     setChonCho(null);
   }, [open, pb?.version]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A place handed in from its own page names the stop after its kind.
+  useEffect(() => {
+    if (!open || !choGoiY) return;
+    let song = true;
+    void docChiTiet(choGoiY)
+      .then((p) => {
+        if (song) setViec1((cu) => viecTheoLoai(p.category, cu));
+      })
+      .catch(() => undefined);
+    return () => {
+      song = false;
+    };
+  }, [open, choGoiY]);
 
   // The catalogue, read the first time a place is being chosen.
   useEffect(() => {

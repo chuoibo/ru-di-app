@@ -56,6 +56,7 @@ export function SoDoiSongProvider({
         cuaToi: d.proposed_by_id === toiId,
       })),
       daDong: false,
+      daNap: song.pha !== "dang-nap",
       dangLam: song.dangLam,
       loiLenh: song.loiLenh,
 

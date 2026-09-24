@@ -25,7 +25,8 @@ Còn mở, theo thứ tự:
    vai/nhịp/nghỉ/câu trả lời, worker tuần gọi brain, 4 sticker đôi ở bốn danh sách, hồ sơ «Một đôi».
 3. Không cần ADR — đã xong 24/09 (lượt «còn nợ» 1): khoảnh khắc hẹn, kỷ niệm của hai bạn, ảnh dọc
    trên tường, «Thêm vào kèo» cho sổ đôi, Khám phá chữ 1.3, câu chữ «máy chủ». Còn: chất giấy chế
-   độ tối (hợp đồng màu spec §16 — cần lượt thiết kế có đọc mù); «Rủ … tới đây» từ trang quán.
+   độ tối (hợp đồng màu spec §16 — cần lượt thiết kế có đọc mù). «Rủ … tới đây» từ trang quán: xong
+   lượt «còn nợ» 2 (24/09).
 
 ---
 

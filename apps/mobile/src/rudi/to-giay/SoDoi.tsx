@@ -66,6 +66,12 @@ export interface TrangThaiSoDoi {
    */
   deNghiCho: readonly { id: string; purpose: "lap_so" | "bat_doi" | "doc_chat"; cuaToi: boolean }[];
   daDong: boolean;
+  /**
+   * The first read of the notebook has landed. Until then `toMo` being
+   * `undefined` says nothing about whether a sheet is open. The fixture is
+   * synchronous and always true.
+   */
+  daNap: boolean;
   /** The command in flight, by name, or null. The fixture never waits. */
   dangLam: string | null;
   /**
@@ -148,6 +154,7 @@ function seed(): TrangThaiSoDoi {
     toGiay: TO_GIAY_CU,
     deNghiCho: [],
     daDong: false,
+    daNap: true,
     dangLam: null,
     loiLenh: null,
   };

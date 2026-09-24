@@ -88,3 +88,13 @@ export function loiThuTu(gio1: string, gio2: string): string | null {
   if (gio2 === gio1 || (gio2 < gio1 && gio2 >= "06:00")) return `Đi tiếp phải sau ${gio1}.`;
   return null;
 }
+
+/**
+ * The line a stop takes from the kind of place it is at, the same table as
+ * the server's draft (`pair_paper._VIEC_THEO_LOAI`); a kind not listed keeps
+ * the line it had. «Ăn tối» at a café read wrong (24/09).
+ */
+export function viecTheoLoai(loai: string | null | undefined, cu: string): string {
+  const bang: Record<string, string> = { cafe: "Cà phê", "vui-choi": "Đi chơi", "di-choi-dem": "Đi chơi tối" };
+  return (loai && bang[loai]) || cu;
+}

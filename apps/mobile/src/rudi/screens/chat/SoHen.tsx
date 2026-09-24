@@ -5,6 +5,7 @@ import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, u
 import type { ChatCapabilities } from "../../chat/ai-invocations";
 import { cauBoiCanh, nhanVai, type BoiCanh } from "../../ai/boi-canh";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
+import { chuKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, type Tin } from "../../chat/tin-song";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, IconButton, RudiButton } from "../../ui";
@@ -53,8 +54,10 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh, haiNguoi = false, onToGiay }: {
   personId: string; contextId: string;
+  /** A two-person conversation: the tray's plan slot opens the pair's paper. */
+  haiNguoi?: boolean; onToGiay?: () => void;
   panel: KhayChat; onPanel: (panel: KhayChat) => void; onImage: () => void; onSticker: () => void;
   onPoll: (command: string) => Promise<boolean>; onPlan: (prompt: string, boiCanh?: BoiCanh) => Promise<boolean>; onManual: () => void;
   /** What the screen is showing, already reduced to what would go on the wire. */
@@ -62,6 +65,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null; initialPrompt: string;
 }) {
   const { colors } = useRudiTheme();
+  const chu = chuKhay(haiNguoi && onToGiay !== undefined);
   const [dinhKem, setDinhKem] = useState(true);
   const [moRong, setMoRong] = useState(false);
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
@@ -152,14 +156,16 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
     { icon: "image-outline", label: "Ảnh", action: onImage },
     { icon: "happy-outline", label: "Sticker", action: onSticker },
     { icon: "stats-chart-outline", label: "Bình chọn", action: () => onPanel("poll") },
-    { icon: "trail-sign-outline", label: "Tờ hẹn", action: () => onPanel("plan") },
+    chu.congCuHen.dich === "to-giay"
+      ? { icon: "mail-outline", label: chu.congCuHen.label, action: () => { onPanel(null); onToGiay?.(); } }
+      : { icon: "trail-sign-outline", label: chu.congCuHen.label, action: () => onPanel("plan") },
   ];
   const hasDraft = panel === "poll" ? !!draft.question || draft.choices.some(Boolean) : panel === "plan" && !!draft.prompt;
   return (
     <View style={[styles.tools, { backgroundColor: colors.card, borderColor: colors.line }]}>
       <View style={styles.titleRow}>
         <Text accessibilityRole="header" style={[typography.title, styles.flex, { color: colors.ink }]}>
-          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? "Hội mình chọn gì?" : "Phác một tờ hẹn"}
+          {panel === "tools" ? "Thêm vào cuộc trò chuyện" : panel === "poll" ? chu.tieuDePoll : "Phác một tờ hẹn"}
         </Text>
         <IconButton accessibilityLabel="Đóng khay công cụ" icon="close" quiet onPress={() => onPanel(null)} />
       </View>
@@ -176,12 +182,14 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
               style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
               <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><Ionicons name={tool.icon} size={25} color={colors.ink} /></View>
-              <Text style={[typography.caption, { color: colors.ink }]}>{tool.label}</Text>
+              {/* Stretched to the column: measured at its own width, Android wrapped
+                  «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
+              <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
         ) : panel === "poll" ? (
           <View style={styles.form}>
-            <Field label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder="Tối nay hội mình ăn gì?" />
+            <Field label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
             {/* The message sits under the box it belongs to. One sentence under
                 the whole form said something was wrong but not where, so fixing
                 it meant re-reading every box (reviewer C4, heuristic 9). */}
@@ -192,7 +200,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
             </View>)}
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
           </View>
-        ) : <Field label="Bạn muốn rủ hội đi đâu?" accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
+        ) : <Field label={chu.nhanPlan} accessibilityLabel="Lời nhờ lập kế hoạch" value={draft.prompt} onChangeText={(prompt) => update({ prompt })} editable={!busy} multiline maxLength={2000} placeholder="Ví dụ: tối thứ Sáu, ăn rồi đi dạo quanh hồ" />}
       </ScrollView>
       {panel === "poll" ? <View style={styles.footer}>
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
@@ -256,6 +264,7 @@ const styles = StyleSheet.create({
   o: { gap: 4 },
   toolRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
   tool: { alignItems: "center", justifyContent: "center", minWidth: 62, flex: 1, gap: 7, paddingVertical: 10 },
+  toolNhan: { alignSelf: "stretch", textAlign: "center" },
   toolIcon: { width: 48, height: 48, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   form: { gap: 12, paddingBottom: 4 },
   scroll: { flexGrow: 0 },
