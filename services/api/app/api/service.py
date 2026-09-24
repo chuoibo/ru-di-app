@@ -7150,21 +7150,13 @@ class ApiService:
         standing = {
             row.proposal_id
             for row in notebook.consents
-            if row.granted_at is not None
-            and row.revoked_at is None
-            and any(
-                p.id == row.proposal_id and p.proposed_by_id == row.person_id
-                for p in notebook.proposals
-            )
+            if row.granted_at is not None and row.revoked_at is None
+            and any(p.id == row.proposal_id and p.proposed_by_id == row.person_id for p in notebook.proposals)
         }
         for row in notebook.proposals:
-            if (
-                row.purpose != request.purpose
-                or row.id not in standing
-                or not pair_notebook.dang_cho(
-                    {"completed_at": row.completed_at, "expires_at": row.expires_at},
-                    now=now,
-                )
+            if row.purpose != request.purpose or row.id not in standing or not pair_notebook.dang_cho(
+                {"completed_at": row.completed_at, "expires_at": row.expires_at},
+                now=now,
             ):
                 continue
             if row.proposed_by_id != actor.id:
@@ -7455,11 +7447,7 @@ class ApiService:
         # function of the rows the lock was taken over.
         lich_su = _lich_su_chu_ky(papers, notebook)
         cho_cu_id = next(
-            (
-                nd["chang"][0]["place_id"]
-                for nd in lich_su
-                if nd["chang"][0]["place_id"]
-            ),
+            (nd["chang"][0]["place_id"] for nd in lich_su if nd["chang"][0]["place_id"]),
             None,
         )
         cho_cu = None if cho_cu_id is None else self.repository.get_place(cho_cu_id)
@@ -7508,7 +7496,9 @@ class ApiService:
         _require_pair_permission(
             "view_pair_paper",
             actor,
-            {"may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)},
+            {
+                "may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)
+            },
         )
         return paper, members
 
@@ -7925,11 +7915,7 @@ def _lich_su_chu_ky(papers, notebook) -> list[dict]:
     sources are never used to draft again (§8). A sheet whose stored content
     cannot be read is skipped rather than failing the draft.
     """
-    if (
-        notebook is None
-        or notebook.cycle_id is None
-        or notebook.cycle_state != "active"
-    ):
+    if notebook is None or notebook.cycle_id is None or notebook.cycle_state != "active":
         return []
     out: list[dict] = []
     for paper in papers:
@@ -7962,7 +7948,6 @@ def _lich_su_chu_ky(papers, notebook) -> list[dict]:
         if len(out) == _LICH_SU_TOI_DA:
             break
     return out
-
 
 #: The bridge between the two vocabularies. The permission table answers with
 #: the name of the predicate that failed; the client's dictionary translates
