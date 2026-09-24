@@ -17,6 +17,7 @@ import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { ThuRenderer } from "../../src/rudi/ui/ThuRenderer";
 import { ThuSanKhau } from "../../src/rudi/ui/ThuSanKhau";
+import { ThuNepDien } from "../../src/rudi/ui/ThuNepDien";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
 import { KyHoa } from "../../src/rudi/ui/art/KyHoa";
@@ -235,6 +236,8 @@ export default function UiLab() {
     <ThuRenderer lan={lanThu} />
     <SectionHeader action="Mở màn thử" onAction={() => router.push("/dev/san-khau")} title="Sân khấu giấy · bật dựng, nghiêng, tab kéo" />
     <ThuSanKhau lan={lanThu} />
+    <SectionHeader title="Nếp con rối giấy · chín tiết mục, tám khoảnh khắc" />
+    <ThuNepDien />
     <SectionHeader title="Album · renderer live, dữ liệu tổng hợp" />
     <Inline gap={8} wrap>
       {CA_ALBUM.map((ca) => <Chip key={ca.id} label={ca.nhan} onPress={() => setCaAlbum(ca.id)} selected={caAlbum === ca.id} />)}

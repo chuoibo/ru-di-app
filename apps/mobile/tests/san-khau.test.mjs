@@ -325,3 +325,17 @@ test("kích thước sân khấu: điện thoại nằm ngang thì không có s�
   // Android hands 1.3 as a float a hair below it; it still counts as large text
   assert.equal(kt(390, 844, TI_LE_CANH, Math.fround(1.3)).gon, true);
 });
+
+test("chỗ của Nếp khi diễn: 128 tablet, 112 phone, 88 chữ lớn, 0 khi cửa sổ thấp", async () => {
+  const { kichThuocNepDien } = await import("../dist-test/rudi/san-khau/kich-thuoc.js");
+  const co = (rong, cao, fontScale = 1) => {
+    const l = layoutFor(rong, cao);
+    return kichThuocNepDien({ sizeClass: l.sizeClass, heightClass: l.heightClass, fontScale });
+  };
+  assert.equal(co(390, 844), 112);
+  assert.equal(co(768, 1024), 128);
+  assert.equal(co(1280, 800), 128);
+  assert.equal(co(390, 844, 1.3), 88, "chữ lớn: chữ trước, Nếp nhỏ lại");
+  assert.equal(co(390, 844, Math.fround(1.3)), 88);
+  assert.equal(co(844, 390), 0, "điện thoại nằm ngang: không có chỗ cho Nếp");
+});

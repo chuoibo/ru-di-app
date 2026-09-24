@@ -63,3 +63,15 @@ export function kichThuocSanKhau(vao: DauVaoKichThuoc): KichThuocSanKhau | null 
   const h = Math.floor(caoToiDa);
   return { w: Math.min(Math.floor(rongCho), Math.round(h * tiLe)), h, gon: lon };
 }
+
+/**
+ * The room Nếp takes in a layout when it performs (ADR-0037 D5): its own slot,
+ * never laid over content. 128 dp on a tablet, 112 on a phone, 88 with large
+ * system text (the words come first), and none on a window too short to spare
+ * it -- a phone on its side keeps its room for what the person is doing.
+ */
+export function kichThuocNepDien(vao: { sizeClass: SizeClass; heightClass: HeightClass; fontScale: number }): number {
+  if (vao.heightClass === "short") return 0;
+  if (chuLon(vao.fontScale)) return 88;
+  return vao.sizeClass === "compact" ? 112 : 128;
+}

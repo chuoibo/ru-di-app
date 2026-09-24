@@ -422,6 +422,13 @@
     "src/rudi/art/san-khau.ts",
     "src/rudi/art/giay.ts",
     "src/rudi/san-khau/dong-hoc.ts",
-    "src/rudi/san-khau/kich-thuoc.ts"
+    "src/rudi/san-khau/kich-thuoc.ts",
+    // The paper puppet (S0.4): the still figure's sheet and face on a rig of
+    // rigid bones, and the nine performances. Compiled so the gates sweep every
+    // frame of every performance through the same fold and path rules as the
+    // still figure; see tests/nep-roi.test.mjs.
+    "src/rudi/art/nep-roi.ts",
+    "src/rudi/art/nep-dien.ts",
+    "src/rudi/khoanh-khac.ts"
   ]
 }

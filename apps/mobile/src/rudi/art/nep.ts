@@ -157,6 +157,11 @@ const TU_THE: Record<PoseNep, { nghieng: number; nhin: readonly [number, number]
   "gap-lai": { nghieng: 0, nhin: [0.6, 1.4], bieuCam: "giu-kin", dang: "dung" },
 };
 
+/** A pose's lean, gaze, face and stance, as the still figure draws it (unknown poses read as «moi»). */
+export function tuTheCuaPose(pose: string): { nghieng: number; nhin: readonly [number, number]; bieuCam: BieuCamNep; dang: DangNep } {
+  return TU_THE[laPoseNep(pose) ? pose : "moi"];
+}
+
 /** The feet stand on this line of the 96-box; a scene puts its floor here. */
 export const CHAN_NEP = 91;
 
@@ -199,8 +204,54 @@ export function laPoseNep(pose: string): pose is PoseNep {
   return (POSE_NEP as readonly string[]).includes(pose);
 }
 
-/** The layers of one pose, back to front. An unknown pose draws «moi». */
-export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
+/**
+ * Everything one drawing of the figure is built from, resolved once: the
+ * placement, the lean as a point map, the widths, the face and the legs. The
+ * pieces below (`thanNep`, `matNep`, `chanNep`, `tayNep`) each read it, so the
+ * paper puppet (`nep-roi.ts`) takes the sheet and the face exactly as the
+ * still figure draws them and hinges its own limbs on the same points.
+ * `hinhNep` is those four pieces in the order it always drew them: the sha256
+ * lock of the `trang` sheet (tests/art-duong.test.mjs) holds across the split.
+ */
+export interface NguCanhNep {
+  /** The pose after the unknown-pose fallback. */
+  p: PoseNep;
+  gap: GapNep;
+  chiTiet: boolean;
+  tiLe: number;
+  /** Ink weight multiplier (`TuyChonNep.dam`). */
+  dam: number;
+  /** Placement only: offset, then scale. Hands and props land through this. */
+  P: (x: number, y: number) => Diem;
+  /** Placement plus the lean: a shear of everything above the ground line. */
+  S: (x: number, y: number) => Diem;
+  /** A stroke width at this scale and ink weight. */
+  net: (w: number) => number;
+  nhinX: number;
+  nhinY: number;
+  bieuCam: BieuCamNep;
+  dang: DangNep;
+  /** Arm capsule width and mitten radius. */
+  wTay: number;
+  rBan: number;
+  /** The near and far shoulders, sheared with the body. */
+  L: Diem;
+  R: Diem;
+}
+
+/**
+ * Where the limbs are hinged on the upright sheet, in the 96-box before any
+ * lean: the two shoulders (the pocket sheet's near shoulder sits out at its
+ * wider edge) and the two hips. The paper puppet pins its limbs here.
+ */
+export const VAI_GAN: Diem = [25, 54];
+export const VAI_GAN_MANH: Diem = [20, 54];
+export const VAI_XA: Diem = [69, 50];
+export const HONG_GAN: Diem = [39, 76];
+export const HONG_XA: Diem = [56, 75];
+
+/** Resolve one drawing's context. An unknown pose draws «moi». */
+export function nguCanhNep(pose: string, tuyChon: TuyChonNep = {}): NguCanhNep {
   const { x0 = 0, y0 = 0, tiLe = 1, chiTiet = true, gap = "trang" } = tuyChon;
   const P = bienDoi(x0, y0, tiLe);
   const dam = tuyChon.dam ?? 1;
@@ -218,7 +269,24 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
   // their place on the floor and the head travels the whole `nghieng`. Hands
   // are placed through `P`, unsheared, because they land on things.
   const S = (x: number, y: number): Diem => P(x + (nghieng * (CHAN_NEP - y)) / (CHAN_NEP - 20), y);
+  // Limbs are filled capsules, so they do not depend on the renderer's caps.
+  const wTay = (chiTiet ? 4.2 : 5) * tiLe * dam;
+  const rBan = (chiTiet ? 3.4 : 3.8) * tiLe * dam;
+  // The pocket-fold sheet is wider on the left, so its near shoulder moves
+  // out with the edge; the far shoulder sits where both edges nearly agree.
+  const L = S(gap === "manh" ? VAI_GAN_MANH[0] : VAI_GAN[0], VAI_GAN[1]), R = S(VAI_XA[0], VAI_XA[1]);
+  return { p, gap, chiTiet, tiLe, dam, P, S, net, nhinX, nhinY, bieuCam, dang, wTay, rBan, L, R };
+}
 
+/** The layers of one pose, back to front. An unknown pose draws «moi». */
+export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
+  const ctx = nguCanhNep(pose, tuyChon);
+  return [...thanNep(ctx), ...matNep(ctx), ...chanNep(ctx), ...tayNep(ctx)];
+}
+
+/** The sheet: its outline, the lapel (or the pocket sheet's creases) and the coral corner. */
+export function thanNep(ctx: NguCanhNep): LopVe[] {
+  const { S, net, chiTiet, gap } = ctx;
   // The sheet: nearly a rectangle, a shade wider at the foot, its top edge
   // climbing to the right so the figure leans toward whoever it is talking
   // to. The corner at the top right is cut along H..G, where it folds down.
@@ -280,7 +348,15 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
           { d: daGiac([H, G, Bp]), mau: "muc", net: net(chiTiet ? 1.8 : 2.4) },
         ]
       : thanManh();
+  return than;
+}
 
+/**
+ * The face in its three parts: the two eyes (where the pose looks), the one
+ * brow and the mouth (what it feels). The compact reading has no brow.
+ */
+export function matNepPhan(ctx: NguCanhNep): { mat: LopVe[]; may: LopVe[]; mieng: LopVe } {
+  const { S, net, tiLe, chiTiet, bieuCam, nhinX, nhinY } = ctx;
   // The eyes sit where the pose looks; the brow and the mouth carry the
   // feeling. The compact reading drops the brow and thickens what is left,
   // which is what keeps it a second drawing rather than a shrunk first one.
@@ -374,26 +450,23 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     ? [
         { d: bau(...S(39 + nhinX, 45 + nhinY), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
         { d: bau(...S(52 + nhinX, 43 + nhinY), 2.1 * tiLe, 3 * tiLe), mau: "muc" },
-        ...may(),
-        mieng(false),
       ]
     : [
         { d: tron(...S(39 + nhinX, 45 + nhinY), 2.6 * tiLe), mau: "muc" },
         { d: tron(...S(52 + nhinX, 43 + nhinY), 2.6 * tiLe), mau: "muc" },
-        mieng(true),
       ];
+  return { mat, may: chiTiet ? may() : [], mieng: mieng(!chiTiet) };
+}
 
-  // Limbs are filled capsules, so they do not depend on the renderer's caps.
-  const wTay = (chiTiet ? 4.2 : 5) * tiLe * dam;
-  const rBan = (chiTiet ? 3.4 : 3.8) * tiLe * dam;
-  const tay = (a: Diem, b: Diem): LopVe[] => [
-    { d: vien(a, b, wTay), mau: "muc" },
-    { d: tron(b[0], b[1], rBan), mau: "muc" },
-  ];
-  // The pocket-fold sheet is wider on the left, so its near shoulder moves
-  // out with the edge; the far shoulder sits where both edges nearly agree.
-  const L = S(gap === "manh" ? 20 : 25, 54), R = S(69, 50);
+/** The face as the still figure draws it: eyes, brow, mouth. */
+export function matNep(ctx: NguCanhNep): LopVe[] {
+  const { mat, may, mieng } = matNepPhan(ctx);
+  return [...mat, ...may, mieng];
+}
 
+/** The legs of the pose's stance. */
+export function chanNep(ctx: NguCanhNep): LopVe[] {
+  const { S, P, net, tiLe, dam, chiTiet, dang } = ctx;
   // Legs from the sheared hip down. `dung` keeps both feet on the ground line;
   // the other stances are the reason a figure can now walk, sit or leave the
   // ground at all, which is what «Đi thôi!» and «Tuyệt vời» needed.
@@ -456,7 +529,16 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
     }
   };
   const chan: LopVe[] = chanTheo();
+  return chan;
+}
 
+/** The arms of the pose and whatever it holds. */
+export function tayNep(ctx: NguCanhNep): LopVe[] {
+  const { p, P, net, tiLe, chiTiet, wTay, rBan, L, R } = ctx;
+  const tay = (a: Diem, b: Diem): LopVe[] => [
+    { d: vien(a, b, wTay), mau: "muc" },
+    { d: tron(b[0], b[1], rBan), mau: "muc" },
+  ];
   let tuThe: LopVe[];
   switch (p) {
     case "moi":
@@ -683,8 +765,7 @@ export function hinhNep(pose: string, tuyChon: TuyChonNep = {}): LopVe[] {
       break;
     }
   }
-
-  return [...than, ...mat, ...chan, ...tuThe];
+  return tuThe;
 }
 
 /** A seat for the scenes: a simple bentwood café chair. Back to the left, or to the right with `lat`. */
