@@ -174,6 +174,7 @@ export function FriendsScreen() {
                 }
                 key={b.person_id}
                 onPress={() => router.push(`/people/${b.person_id}`)}
+                personId={b.person_id}
                 phu={ngayKetBan(b.friends_since)}
                 ten={b.display_name}
               />

@@ -26,7 +26,7 @@ import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
@@ -119,7 +119,7 @@ export function GroupMembersScreen() {
             const duocMoi = tv.state === "invited";
             return (
               <View key={tv.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
-                <Avatar name={ten} ring={laToi} size={40} />
+                <AvatarNguoi name={ten} personId={tv.person_id} ring={laToi} size={40} />
                 <View style={styles.hangChu}>
                   <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : colors.ink }]}>
                     {ten}

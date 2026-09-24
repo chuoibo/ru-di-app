@@ -40,7 +40,7 @@ import {
 } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { Sheet } from "../../ui/Sheet";
@@ -265,7 +265,7 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
             return (
               <View key={k.id} style={[styles.bai, { borderBottomColor: colors.line }]}>
                 <View style={styles.dong}>
-                  <Avatar name={tacGia} size={36} />
+                  <AvatarNguoi name={tacGia} personId={k.authorId} size={36} />
                   <View style={styles.flex}>
                     <Text style={[typography.label, { color: colors.ink }]}>{tacGia}</Text>
                     <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioViet(k.createdAt)}</Text>
