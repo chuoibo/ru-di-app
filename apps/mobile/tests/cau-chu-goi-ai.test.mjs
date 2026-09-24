@@ -33,6 +33,15 @@
  *
  * ## Nó KHÔNG chứng minh
  *
+ * ## Hai đường, một cổng
+ *
+ * Nếp hỏi bằng chữ (ADR-0036 §2.7) đi cùng hàng đợi nhưng qua hai route riêng
+ * (`POST /me/nep/ai-invocations`, `GET /me/nep/ai-invocations/{id}`) và bảng
+ * câu riêng `LOI_NEP` trong `src/rudi/nep/hoi.ts`, vì cùng một mã nói với
+ * người hỏi Nếp một câu khác với người nhờ AI trong nhóm. `DUONG` dưới đây là
+ * danh sách các cặp (file client, bảng câu); mỗi cặp đi đúng bốn luật trên.
+ * Gốc đọc cả GET lẫn POST, khớp theo cặp phương thức + đường dẫn.
+ *
  * Rằng câu tới được màn hình, rằng phân tích theo tên hàm không bỏ sót một lời
  * gọi động (nó xấp xỉ TRÊN: hai hàm cùng tên đều bị coi là với tới được), hay
  * rằng người thật hiểu câu chữ.
@@ -49,6 +58,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { LOI_GOI_AI } from "../dist-test/rudi/chat/ai-invocations.js";
+import { LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const GOC_APP = join(HERE, "..");
@@ -69,6 +79,13 @@ const MIEN_TRU = {
     "contextId lấy từ chính nhóm đang mở, luôn là UUID; không có gì người dùng gõ đi vào đường dẫn.",
   invocation_already_published:
     "Chỉ nhánh cancel của mutate phát ra mã này; client không có lời gọi cancel nào. Đồ thị gọi theo tên xấp xỉ trên nên mới kéo nó vào qua retry.",
+};
+
+/** Nếp: cùng hai mã của thân JSON, cùng lý do. */
+const MIEN_TRU_NEP = {
+  json_required: MIEN_TRU.json_required,
+  invalid_body:
+    "Thân yêu cầu dựng từ đúng các trường máy chủ đọc (logical_id, prompt, phieu, luot), phiếu đã qua donPhieu; thân thừa trường hay sai JSON là app hỏng.",
 };
 
 /**
@@ -160,23 +177,39 @@ function maVoiToiDuoc(doThi, goc) {
 
 const chuanHoa = (duong) => duong.replace(/\$\{[^}]*\}|\{[^}]*\}/g, "{}");
 
-/** Handler names the client reaches through `LOI_GOI_AI`, read from both sides. */
-function gocTuClient() {
-  const client = readFileSync(join(GOC_APP, "src", "rudi", "chat", "ai-invocations.ts"), "utf8");
-  const duongClient = [...client.matchAll(/translatedAsActor<[^>]*>\(\s*LOI_GOI_AI\s*,\s*`([^`]+)`/g)].map((m) => chuanHoa(m[1]));
-  assert.ok(duongClient.length >= 1, "không thấy lời gọi nào dùng LOI_GOI_AI trong ai-invocations.ts");
+/** Every client path that turns refusals into sentences, and its table. */
+const DUONG = [
+  { ten: "AI nhóm", tep: ["src", "rudi", "chat", "ai-invocations.ts"], bang: "LOI_GOI_AI", cau: LOI_GOI_AI, mienTru: MIEN_TRU, toiThieu: 2 },
+  { ten: "Nếp", tep: ["src", "rudi", "nep", "hoi.ts"], bang: "LOI_NEP", cau: LOI_NEP, mienTru: MIEN_TRU_NEP, toiThieu: 2 },
+];
+
+/**
+ * Handler names the client reaches through one table, read from both sides,
+ * matched on method + path (the group list is `GET` on the same path as the
+ * `POST` that creates, so a path alone is ambiguous).
+ */
+function gocTuClient(duong) {
+  const client = readFileSync(join(GOC_APP, ...duong.tep), "utf8");
+  const moTa = new RegExp(`translatedAsActor<[^>]*>\\(\\s*${duong.bang}\\s*,\\s*[\`"]([^\`"]+)[\`"]`, "g");
+  const goi = [...client.matchAll(moTa)].map((m) => {
+    const sau = client.slice(m.index, client.indexOf("});", m.index));
+    const phuongThuc = /method:\s*"(GET|POST)"/.exec(sau);
+    assert.ok(phuongThuc, `lời gọi ${m[1]} trong ${duong.tep.at(-1)} không khai method`);
+    return `${phuongThuc[1]} ${chuanHoa(m[1])}`;
+  });
+  assert.ok(goi.length >= duong.toiThieu, `chỉ thấy ${goi.length} lời gọi dùng ${duong.bang} trong ${duong.tep.at(-1)}`);
   const handler = readFileSync(join(CHATASSIST, "handler.go"), "utf8");
   const dangKy = new Map();
-  for (const m of handler.matchAll(/h\.mux\.HandleFunc\("POST (\S+)",\s*h\.(\w+)\)/g)) dangKy.set(chuanHoa(m[1]), m[2]);
-  return duongClient.map((duong) => {
-    const ten = dangKy.get(duong);
-    assert.ok(ten, `client gọi POST ${duong} qua LOI_GOI_AI nhưng handler.go không đăng ký route đó`);
+  for (const m of handler.matchAll(/h\.mux\.HandleFunc\("(GET|POST) (\S+)",\s*h\.(\w+)\)/g)) dangKy.set(`${m[1]} ${chuanHoa(m[2])}`, m[3]);
+  return goi.map((khoa) => {
+    const ten = dangKy.get(khoa);
+    assert.ok(ten, `client gọi ${khoa} qua ${duong.bang} nhưng handler.go không đăng ký route đó`);
     return ten;
   });
 }
 
-function tuVung() {
-  const goc = gocTuClient();
+function tuVung(duong) {
+  const goc = gocTuClient(duong);
   const doThi = doThiGo();
   const moiMa = new Set();
   for (const bang of [doThi.method, doThi.ham]) for (const ham of bang.values()) for (const m of maTrong(ham.than)) moiMa.add(m);
@@ -185,40 +218,42 @@ function tuVung() {
 
 /* ------------------------------------------------ 1. đủ câu -------------- */
 
-test("mọi mã từ chối trên đường gọi AI đều có câu, hoặc có tên trong miễn trừ", () => {
-  const { goc, moiMa, voiToi } = tuVung();
-  console.log(`  handler gốc: ${goc.join(", ")}; gói phát ${moiMa.size} mã, đường gọi AI với tới ${voiToi.size}`);
-  assert.ok(moiMa.size >= 20, `chỉ đọc được ${moiMa.size} mã trong cả gói, bộ đọc đang hỏng`);
-  const thieu = [...voiToi].filter((ma) => !(ma in LOI_GOI_AI) && !(ma in MIEN_TRU)).sort();
-  assert.deepEqual(
-    thieu,
-    [],
-    `máy chủ phát ${thieu.join(", ")} trên đường gọi AI mà LOI_GOI_AI không có câu nào. ` +
-      `Thêm câu vào src/rudi/chat/ai-invocations.ts, đừng để nó rơi vào câu chung.`,
-  );
-});
+for (const duong of DUONG) {
+  test(`${duong.ten}: mọi mã từ chối trên đường gọi đều có câu, hoặc có tên trong miễn trừ`, () => {
+    const { goc, moiMa, voiToi } = tuVung(duong);
+    console.log(`  ${duong.ten}: handler gốc ${goc.join(", ")}; gói phát ${moiMa.size} mã, đường này với tới ${voiToi.size}`);
+    assert.ok(moiMa.size >= 20, `chỉ đọc được ${moiMa.size} mã trong cả gói, bộ đọc đang hỏng`);
+    const thieu = [...voiToi].filter((ma) => !(ma in duong.cau) && !(ma in duong.mienTru)).sort();
+    assert.deepEqual(
+      thieu,
+      [],
+      `máy chủ phát ${thieu.join(", ")} trên đường ${duong.ten} mà ${duong.bang} không có câu nào. ` +
+        `Thêm câu vào ${duong.tep.join("/")}, đừng để nó rơi vào câu chung.`,
+    );
+  });
 
-test("miễn trừ chỉ dành cho mã còn phát ra và chưa có câu", () => {
-  const { voiToi } = tuVung();
-  for (const [ma, lyDo] of Object.entries(MIEN_TRU)) {
-    assert.ok(voiToi.has(ma), `miễn trừ cho ${ma} nhưng đường gọi AI không còn phát mã đó`);
-    assert.equal(ma in LOI_GOI_AI, false, `${ma} vừa có câu vừa được miễn trừ`);
-    assert.ok(lyDo.trim().length > 20, `miễn trừ ${ma} không nói vì sao`);
-  }
-});
+  test(`${duong.ten}: miễn trừ chỉ dành cho mã còn phát ra và chưa có câu`, () => {
+    const { voiToi } = tuVung(duong);
+    for (const [ma, lyDo] of Object.entries(duong.mienTru)) {
+      assert.ok(voiToi.has(ma), `miễn trừ cho ${ma} nhưng đường ${duong.ten} không còn phát mã đó`);
+      assert.equal(ma in duong.cau, false, `${ma} vừa có câu vừa được miễn trừ`);
+      assert.ok(lyDo.trim().length > 20, `miễn trừ ${ma} không nói vì sao`);
+    }
+  });
 
-test("không có câu chết: mỗi khoá của LOI_GOI_AI là một mã thật sự phát ra", () => {
-  const { voiToi } = tuVung();
-  const thua = Object.keys(LOI_GOI_AI).filter((ma) => !voiToi.has(ma));
-  assert.deepEqual(thua, [], `câu chữ cho mã đường gọi AI không phát: ${thua.join(", ")}`);
-});
+  test(`${duong.ten}: không có câu chết, mỗi khoá của ${duong.bang} là một mã thật sự phát ra`, () => {
+    const { voiToi } = tuVung(duong);
+    const thua = Object.keys(duong.cau).filter((ma) => !voiToi.has(ma));
+    assert.deepEqual(thua, [], `câu chữ cho mã đường ${duong.ten} không phát: ${thua.join(", ")}`);
+  });
+}
 
 /* ------------------------------------------------ 2. phân biệt được ------ */
 
-test("không hai mã nào dùng chung một câu, trừ khi là cùng một sự kiện", () => {
+for (const duong of DUONG) test(`${duong.ten}: không hai mã nào dùng chung một câu, trừ khi là cùng một sự kiện`, () => {
   const choPhep = new Set(CUNG_SU_KIEN.map((nhom) => [...nhom].sort().join("|")));
   const theoCau = new Map();
-  for (const [ma, cau] of Object.entries(LOI_GOI_AI)) theoCau.set(cau, [...(theoCau.get(cau) ?? []), ma]);
+  for (const [ma, cau] of Object.entries(duong.cau)) theoCau.set(cau, [...(theoCau.get(cau) ?? []), ma]);
   const dungChung = [...theoCau.values()]
     .filter((ds) => ds.length > 1)
     .filter((ds) => !choPhep.has([...ds].sort().join("|")));
@@ -227,9 +262,9 @@ test("không hai mã nào dùng chung một câu, trừ khi là cùng một sự
 
 /* ------------------------------------------------ 3. giọng người --------- */
 
-test("không câu nào lộ chữ của máy hay viết như báo lỗi", () => {
-  const tenMay = [...Object.keys(LOI_GOI_AI), ...Object.keys(MIEN_TRU), "code", "status", "invocation"];
-  for (const cau of Object.values(LOI_GOI_AI)) {
+for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của máy hay viết như báo lỗi`, () => {
+  const tenMay = [...Object.keys(duong.cau), ...Object.keys(duong.mienTru), "code", "status", "invocation"];
+  for (const cau of Object.values(duong.cau)) {
     for (const ten of tenMay) {
       assert.equal(cau.includes(ten), false, `câu chữ lộ tên máy "${ten}": ${cau}`);
     }

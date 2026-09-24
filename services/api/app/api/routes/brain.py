@@ -27,12 +27,15 @@ from app.api.deps import (
     Companion,
     ContextualSuggester,
     FaceDetector,
+    NepReplyNotConfigured,
+    NepResponder,
     Reeler,
     Suggester,
     get_chat_expense_reader,
     get_companion,
     get_contextual_suggester,
     get_face_detector,
+    get_nep_responder,
     get_receipt_reader,
     get_reeler,
     get_screenshot_reader,
@@ -210,6 +213,36 @@ def companion_reply(
     except Exception:
         _LOGGER.warning("brain companion failed")
         raise _code_error(502, "companion_unavailable") from None
+
+
+@router.post("/nep-reply")
+def nep_reply(
+    body: dict,
+    _: Annotated[None, Depends(require_internal_token)],
+    responder: Annotated[NepResponder, Depends(get_nep_responder)],
+) -> dict:
+    """Nếp's answer: the model step only (ADR-0036 §2.10).
+
+    Go has already authenticated the caller, applied the money law and the
+    bounds, and will store the answer; this checks shapes and calls the model.
+    """
+
+    prompt = body.get("prompt")
+    slip = body.get("slip")
+    if not isinstance(prompt, str) or not (slip is None or isinstance(slip, dict)):
+        raise _code_error(422, "brain_request_invalid")
+    turns = _list_of_dict(body, "turns")
+    try:
+        answer = responder.reply(slip=slip, turns=turns, prompt=prompt)
+    except NepReplyNotConfigured:
+        raise _code_error(503, "nep_reply_not_configured") from None
+    except Exception:
+        _LOGGER.warning("brain nep reply failed")
+        raise _code_error(502, "nep_reply_unavailable") from None
+    text = answer.get("text") if isinstance(answer, dict) else None
+    if not isinstance(text, str):
+        raise _code_error(502, "nep_reply_unavailable")
+    return {"text": text}
 
 
 @router.post("/capabilities")

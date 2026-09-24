@@ -420,6 +420,11 @@
     // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
+    // Nếp's words (ADR-0036 §2.7). Compiled because its laws are negative: the
+    // session sent is never more than the server accepts, the preview counts
+    // exactly what goes, a money-screen slip is NOT asked, and every refusal
+    // code the Go handlers emit has a sentence (tests/cau-chu-goi-ai.test.mjs).
+    "src/rudi/nep/hoi.ts",
     "src/screens/quan-tri/quan-tri.ts"
   ]
 }
