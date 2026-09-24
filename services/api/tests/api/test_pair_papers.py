@@ -771,3 +771,63 @@ def test_a_catalogue_place_on_the_sheet_names_the_outing_and_its_stop(client, re
     # A place the catalogue no longer knows keeps its line and drops its id, so
     # the timeline stays editable (its route refuses unknown places).
     assert [(s.label, s.place_id, s.place_name) for s in outing.stops] == [("Ăn tối", place.id, place.name), ("Dạo hồ", None, None)]
+
+
+def _mot_tuan_da_chot(client, repository, clock, *, gio="19:30"):
+    """A notebook with one agreed sheet at a catalogue place, a week ago.
+
+    The place is one whose kind has other places in its city, so the next
+    draft has somewhere new to propose."""
+    lap_so(client)
+    rows = repository.list_places()
+    place = next(
+        r
+        for r in rows
+        if sum(1 for o in rows if (o.destination_id, o.category) == (r.destination_id, r.category)) >= 3
+    )
+    paper_id = _draft(client)
+    content = {"ngay": THU_BAY, "chang": [{"gio": gio, "viec": "Ăn lẩu", "place_id": place.id}]}
+    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    assert _agree(client, paper_id).json()["state"] == "chot"
+    clock(TUAN_SAU)
+    return place, [r for r in rows if (r.destination_id, r.category) == (place.destination_id, place.category) and r.id != place.id]
+
+
+def test_next_weeks_draft_keeps_their_hour_and_proposes_a_new_place_of_the_same_kind(client, repository, clock):
+    place, same_kind = _mot_tuan_da_chot(client, repository, clock)
+    body = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()
+    first = body["versions"][0]
+    stop = first["content"]["chang"][0]
+    assert stop["gio"] == "19:30", "giờ quen của hai người, không phải 18:30 cố định"
+    best = max(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count))
+    assert stop["place_id"] == best.id, "chỗ mới cùng kiểu, cùng thành phố, điểm cao nhất"
+    assert stop["can_kiem"] is True, "danh mục không chứng minh món ăn (ADR-0027 §7)"
+    assert place.name in first["ly_do"] and best.name in first["ly_do"]
+    assert len(first["ly_do"]) <= 200
+
+
+def test_the_draft_avoids_a_place_whose_words_meet_a_constraint(client, repository, clock):
+    place, same_kind = _mot_tuan_da_chot(client, repository, clock)
+    ranked = sorted(same_kind, key=lambda r: (-1.0 if r.rating is None else r.rating, -1 if r.rating_count is None else r.rating_count), reverse=True)
+    blocked = ranked[0]
+    put = client.put(
+        f"/contexts/{CAP}/notebook/constraints/khong_an_duoc",
+        json={"content": f"x, {blocked.name.upper()}"},
+        headers=head(NGUOI_KIA),
+    )
+    assert put.status_code == 200, put.text
+    first = _read(client, _draft(client, actor=NGUOI_KIA), actor=NGUOI_KIA).json()["versions"][0]
+    assert first["content"]["chang"][0]["place_id"] not in (blocked.id, place.id)
+    assert "hai ô ràng buộc" in first["ly_do"]
+
+
+def test_a_sheet_that_was_never_agreed_teaches_the_draft_nothing(client, clock):
+    lap_so(client)
+    paper_id = _draft(client)
+    assert _patch(client, paper_id, gio="21:00").status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    clock(TUAN_SAU)
+    first = _read(client, _draft(client)).json()["versions"][0]
+    assert first["content"]["chang"][0]["gio"] == "18:30"
+    assert first["ly_do"] is None

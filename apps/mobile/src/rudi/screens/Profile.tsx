@@ -47,6 +47,7 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { Stamp } from "../ui/Stamp";
+import { useNepNguCanh } from "../nep/NepProvider";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -60,6 +61,7 @@ export function ProfileScreen() {
   const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "edit" | "saved">("home");
+  useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = session.phien === null ? null : `/people/${session.phien.person_id}`;
   const personId = session.phien?.person_id ?? null;
@@ -101,8 +103,8 @@ export function ProfileScreen() {
         </Text>
         <Text style={[typography.caption, { color: colors.inkFaint }]}>
           {session.phien !== null
-            ? "Đăng xuất kết thúc phiên trên máy chủ, xoá lựa chọn trên máy này rồi đưa về màn chào."
-            : "Đăng xuất xoá mọi lựa chọn của lần mở app này rồi đưa về welcome. Phiên này không ký máy chủ."}
+            ? "Đăng xuất kết thúc phiên đăng nhập, xoá lựa chọn trên máy này rồi đưa về màn chào."
+            : "Đăng xuất xoá mọi lựa chọn của lần mở app này rồi đưa về màn chào. Bản trải nghiệm không có phiên đăng nhập."}
         </Text>
         {DAU_VAN_CAY ? (
           <Text accessibilityLabel="dau-van-cay" style={[typography.caption, { color: colors.inkFaint }]}>
@@ -391,7 +393,7 @@ function TaiChinhLive({ actorId, contextId }: { actorId: string; contextId: stri
       <TopBar title="Tài chính của tôi" />
       {/* The one answer first, as the first line of a ledger: what this person's share of everything has come to. */}
       <View>
-        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Máy chủ tính lại từ sổ mỗi lần hỏi.`} tone="split" vnd={du.spend_vnd} />
+        <DongTien dam nhan="Phần chi của bạn" phu={`${du.expense_count} khoản chi trong ${du.group_count} nhóm. Tính lại từ sổ mỗi lần mở.`} tone="split" vnd={du.spend_vnd} />
         <DongTien nhan="Còn phải trả" phu={`Đã trả ${formatVnd(du.settled_vnd)}`} tone={du.outstanding_vnd > 0 ? "warn" : "ink"} vnd={du.outstanding_vnd} />
         <DongTien nhan="Sẽ nhận" phu="Bạn đã ứng trước" tone="split" vnd={du.receivable_vnd} />
       </View>

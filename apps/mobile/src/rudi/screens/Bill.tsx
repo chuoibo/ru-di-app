@@ -21,7 +21,9 @@ import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, BASE_URL, attemptFor, scanReceipt, type Attempt } from "../../api";
-import { docQuyetToanLive, dongHeroQuyetToan, tenCua, type QuyetToanLive } from "../doc-live";
+import { docQuyetToanLive, dongChiTieuChung, dongHeroQuyetToan, tenCua, type QuyetToanLive } from "../doc-live";
+import { laPair } from "../nhan-rieng/nhan-rieng";
+import { banTinhCua } from "../so/ban-tinh";
 import { cauTomTatDot, cauTrangThaiDot, docDotThuCuaNhom, moDotThu, type DotThuTomTat } from "../dot-thu/dot-thu";
 import { DEMO_PEOPLE } from "../nhom-demo";
 import { BILL_ITEMS, COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, demoAssets, formatVnd } from "../fixtures";
@@ -346,6 +348,13 @@ export function SettlementScreen() {
 function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: string }) {
   const { colors, radius } = useRudiTheme();
   const router = useRouter();
+  const { phien } = useRudiSession();
+  // A two-person notebook shows its money as shared spending (`ban-tinh.ts`
+  // `tienHien`), with the transfer list one tap away instead of on top. Only a
+  // `pair` context: a group that happens to have two members is not a couple,
+  // and the screen does not guess.
+  const laDoi = laPair(phien?.contexts?.find((c) => c.id === contextId)) && banTinhCua("hai-nguoi").tienHien === "chi-tieu-chung";
+  const [moChuyen, setMoChuyen] = useState(false);
   const [du, setDu] = useState<QuyetToanLive | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   // The group's collection rounds, read beside the balances. `"hong"` keeps
@@ -440,16 +449,45 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
     );
   }
   const hero = dongHeroQuyetToan(du.tongChuyen, du.nguoi.length);
+  if (laDoi && !moChuyen) {
+    const chung = dongChiTieuChung(du.nguoi, du.soDu);
+    return (
+      <RudiScreen tone="split" testID="settlement-screen">
+        <TopBar title="Chi tiêu chung" />
+        <Text style={[typography.body, { color: colors.inkSoft }]}>
+          {chung.ngangNhau
+            ? "Hai bạn đang ngang nhau: mỗi người đã trả đúng phần của mình."
+            : "Tính từ sổ của hai bạn, mỗi lần mở lại tính lại. Không ai phải làm gì cả nếu hai bạn thấy ổn."}
+        </Text>
+        <View testID="chi-tieu-chung">
+          {chung.dong.map((d) => (
+            <View key={d.personId} style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
+              <View style={styles.flex}>
+                <Text style={[typography.label, { color: colors.ink }]}>{d.ten}</Text>
+                <Text style={[typography.caption, { color: colors.inkSoft }]}>{d.cau}</Text>
+              </View>
+              {d.vnd !== null ? <Money tone="split" vnd={d.vnd} /> : null}
+            </View>
+          ))}
+        </View>
+        {!chung.ngangNhau ? (
+          <RudiButton icon="swap-horizontal-outline" label="Muốn cân lại? Xem cách chuyển" onPress={() => setMoChuyen(true)} tone="split" variant="ghost" />
+        ) : null}
+      </RudiScreen>
+    );
+  }
   return (
     <RudiScreen tone="split" testID="settlement-screen">
-      <TopBar title="Quyết toán chuyến đi" />
+      <TopBar onBack={laDoi ? () => setMoChuyen(false) : undefined} title={laDoi ? "Cân lại chi tiêu" : "Quyết toán chuyến đi"} />
       {/* The ledger's first line, not a hero: the sum the server holds, its name beside it. */}
       <View style={[styles.hangChuyen, { borderBottomColor: colors.line }]}>
         <View style={styles.flex}>
           <Text style={[typography.label, { color: colors.ink }]}>{hero.nhan}</Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>{hero.cau}</Text>
         </View>
-        <Text style={[typography.money, { color: colors.split }]}>{hero.so}</Text>
+        {/* A state («Chưa có chuyến») is not a sum: in the money face it read as a
+            value sitting where a number goes (QA 23/09). */}
+        <Text style={hero.laSo ? [typography.money, { color: colors.split }] : [typography.caption, { color: colors.inkSoft }]}>{hero.so}</Text>
       </View>
       <SectionHeader title="Các khoản chuyển" />
       {du.chuyenTien.length === 0 ? (
@@ -472,7 +510,7 @@ function QuyetToanLive({ actorId, contextId }: { actorId: string; contextId: str
         <Ionicons color={colors.split} name="shield-checkmark-outline" size={20} />
         <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>
           {du.toiThieu
-            ? "Máy chủ chứng minh đây là danh sách chuyển ngắn nhất."
+            ? "Đây là danh sách chuyển ngắn nhất, tính từ sổ."
             : "Danh sách này chưa được chứng minh là ngắn nhất."}{" "}
           Nghĩa vụ chỉ tồn tại sau khi một đợt thu được phát.
         </Text>

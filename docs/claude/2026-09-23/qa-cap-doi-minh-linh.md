@@ -193,6 +193,12 @@
 - 🔵 **Đĩa Nếp nổi vẽ ĐÈ LÊN bottom sheet**: che mép phải ô «Đừng» (ảnh 42) và ô «Đi
   tiếp» (ảnh 45), che chữ bong bóng tin nhắn trong chat. Một vật nổi toàn cục không
   được nằm trên sheet đang mở.
+  - **Đợt 4 (24/09) — đã sửa:** sheet mở thì Nếp không vẽ (đếm theo từng sheet, sheet đóng
+    hết mới hiện lại, không hé câu nào lúc có sheet); welcome/đăng nhập/OTP/gu lần đầu: Nếp
+    vắng (danh sách riêng `MAN_NEP_VANG`, không nới «Luật Nếp Đứng Xa Tiền»). Kiểm trên máy:
+    sheet «Đề nghị sửa» 0 node Nếp, đóng sheet thì Nếp về; welcome/login/OTP 0 node.
+    **Còn mở:** đĩa Nếp vẫn đè nội dung tĩnh ở mép phải trên màn không có sheet (dòng hướng
+    dẫn ở màn kèo, bong bóng tin của mình) — giới hạn của thiết kế ray dọc (ADR-0033).
 - 🟡 Ngày nhập là chữ ISO thô «2026-09-26», giờ là chữ tự do «18:30» — không có bộ chọn
   ngày/giờ; hai ô cùng tên «Giờ» (a11y đọc trùng).
 
@@ -208,6 +214,12 @@
   dùng «Thích cafe yên tĩnh» trong hồ sơ Linh. Lời hứa lõi «Nếp giữ một điều» chưa có
   gì để giữ — đây là câu trả lời thẳng cho câu hỏi «insight cho cặp đôi có sâu không»:
   **hiện là 0**, người dùng tự viết hết.
+  - **Đợt 4 (24/09) — bước đầu:** bản phác đọc tờ đã chốt của chu kỳ đang mở (giờ quen, chỗ
+    đã chọn) và danh mục cùng thành phố/cùng loại, tránh chỗ trùng chữ hai ô ràng buộc, nói
+    rõ chưa kiểm món. Trên máy: «19:15 · Ăn tối · Tiệm Nướng Xóm Lào — Lần trước hai bạn hẹn
+    19:15 ở Lẩu Gà Lá É Tao Ngộ; Nếp giữ giờ đó…». Tờ giấy giờ hiện tên quán dưới chặng.
+    **Còn mở:** gu hai người chỉ vào sau ADR + consent `chia_gu` (Đợt 7); tờ lời rủ trước khi
+    lập sổ không thành lịch sử (đúng ADR-0027 §4) nên tuần đầu vẫn là bản mẫu.
 - 🟠 Sửa **bản nháp của chính mình** lại mở sheet «Đề nghị sửa» với câu «Sửa gì thì
   thành phiên bản 2. Người ấy sẽ thấy đúng chỗ đổi» và nút **«Gửi phiên bản 2»** —
   nhưng bấm xong KHÔNG gửi gì (DB vẫn `nhap`, version 1). Nhãn nói sai việc nút làm.
@@ -305,7 +317,11 @@ người và không gắn với kèo vừa chốt (vì kèo nằm trong `pair`).
 ### 14. Nếp trong sổ đôi, responsive, kỷ niệm, đóng sổ, hồ sơ
 
 - 🔴 **Nếp mù ngữ cảnh ngay trong sổ đôi.** Mở Nếp trong nhắn riêng của một đôi vừa chốt
-  hẹn: «Mình chưa rõ bạn đang ở đâu trong app.» Ô «Hỏi Nếp một câu» vẫn **0 px** —
+  hẹn: «Mình chưa rõ bạn đang ở đâu trong app.»
+  **Đợt 4 (24/09) — đã sửa:** Tin nhắn, nhắn riêng/chat nhóm, tờ giấy, Lên plan, Cá nhân khai
+  phiếu; phiếu khai theo focus và gắn đường dẫn (trước đây quay lại màn dưới stack thì mất
+  phiếu); câu «Mình đang thấy» đọc như câu («sổ một đôi · còn 2 ngày nữa · 1 chặng», không còn
+  «soNguoi: 2»); nhãn «Mình đang thấy» trước đây trắng trên nền tím nhạt (dùng nhầm `aiInk`). Ô «Hỏi Nếp một câu» vẫn **0 px** —
   nguyên nhân (đánh giá A): `nep/NepBang.tsx:152-172` hai `RudiButton compact` không
   truyền `full={false}`, mà `RudiButton` mặc định `full=true` → `width:"100%"` +
   `flexShrink:0` (`ui.tsx:421, 1065-1066`) bóp `TextInput` `flex:1` về 0. Hỏi Nếp
@@ -399,3 +415,59 @@ consistency 1 · error-prevention 1 · recognition 2 · aesthetic 3 · recovery 
 · P2 hai nhãn «Giờ» + placeholder trông như giá trị · P3 không có trạng thái focus / chỗ
 lỗi dưới ô. Ô một dòng làm tốt (52dp, viền 3:1, placeholder một dòng có «…»); OTP đúng
 chuẩn (một input thật, `sms-otp`, focus màu).
+
+## Đợt 5 (24/09) — bộ ô nhập và UI chung: đã đóng / còn mở
+
+Đo trên dev build Android (APK dựng lại với plugin mới), stack cô lập, tài khoản Linh.
+
+- **Ô nhiều dòng canh giữa → đã sửa** (`ui/Field.tsx`, hàm thuần `kieuO`): chữ và gợi ý ở góc
+  trên-trái, padding trên dưới bằng nhau, cao theo `numberOfLines`, quá 8 dòng thì cuộn; viền
+  accent 2dp khi đang nhập (chữ không xê dịch), chỗ cho `error`/`helper`. Ảnh: sheet «Đề nghị
+  sửa» (sáng) và «Hai ô ràng buộc» (tối, đang nhập).
+- **Ngày/giờ gõ thô, hai ô cùng tên «Giờ» → đã sửa**: ngày là chip từ hôm nay tới hết tuần sau
+  («T7 26/09», nhãn trợ năng «Thứ Bảy 26/09»); giờ chuẩn hoá «1800»/«21h30» → «18:00»/«21:30»,
+  kiểm `hh:mm`, «Đi tiếp phải sau 19:15» (qua nửa đêm vẫn được); tên trợ năng «Giờ chỗ chính» /
+  «Giờ đi tiếp»; chặng có giờ mà không có việc thì không gửi (trước: máy chủ sẽ 422).
+- **«Chỗ chính» không chọn được quán → đã sửa**: «Chọn chỗ / Đổi chỗ / Bỏ chỗ» từ danh mục
+  ngay trong sheet; quán đã gắn không còn bị rơi khi sửa dòng việc; đổi quán hiện thành một dòng
+  «Chỗ chính: Tiệm Nướng Xóm Lào → Lẩu Gà Lá É Tao Ngộ» ở cả hai phía. Trên máy: gửi từ app, máy
+  chủ lưu `place_id: p-lau-ga-la-e`.
+- **Bản phác của mình mở «Gửi phiên bản 2» → đã sửa**: «Sửa bản phác / Lưu bản phác».
+- **Đổi cỡ chữ nhảy về màn đầu → đã sửa** (plugin `giu-man-khi-doi-co-chu`: `fontScale|density`
+  trong `configChanges`). Trên máy: đang ở tờ giấy, `font_scale 1.3` → vẫn ở tờ giấy, chữ to lên.
+- **«máy chủ» trong câu người dùng đọc → đã đổi 49 dòng** trên đường đi thường (các bước chia
+  bill, hoá đơn, quyết toán, đợt thu, hồ sơ, mời, kỷ niệm) và lỗi chung. Còn 73 dòng (lỗi hiếm ở
+  màn cũ/legacy, chữ chẩn đoán) chưa đổi.
+- **«Chưa có chuyến» in như con số, «Nhóm chưa có kèo nào» khi vừa chốt kèo → đã sửa.**
+- **Sheet lập sổ hứa «Không ai ngoài hai bạn thấy» cạnh ổ khoá mở; bật đôi hứa vai Người lo/chấm
+  chưa có → đã sửa** thành câu đúng phạm vi. Câu đóng sổ bớt lạnh. «Vì:» hết thụt lệch.
+- **Chat nhóm không cập nhật «n thành viên» khi có người vào → đã sửa** (đọc lại khi focus và
+  khi có tin từ người lạ; đếm người `active`).
+- **Còn mở:** chất giấy ở chế độ tối (`paper` #2e335c là hợp đồng màu có đo trong spec §16 /
+  DESIGN.md — cần một lượt thiết kế, không sửa lén); Khám phá ở chữ 1.3 (nút AI xuống hàng, giá
+  bị cắt) chưa làm.
+
+## Đợt 6 (24/09) — tiền và kỷ niệm: đã đóng / còn mở
+
+- **Đăng kỷ niệm hỏng («Không nối được máy chủ») → tìm ra gốc và đã sửa.** Máy chủ nhận ảnh
+  bình thường (curl với phiên thật: 201). Trên máy, lỗi thật là `Unsupported FormDataPart
+  implementation`: `fetch` toàn cục của app là của Expo (runtime winter), chỉ nhận phần
+  multipart là chuỗi, `Blob` hoặc đối tượng có `bytes()`, còn phần `{ uri, name, type }` kiểu
+  React Native bị ném lỗi **trước khi một byte rời máy**. Cùng lỗi ở ảnh nhóm/chat, ảnh đại
+  diện, ảnh bài đăng, quét bill và quét ảnh chụp màn hình. Sửa: app cài `datCachDocTepAnh`
+  (đọc bằng `File` của `expo-file-system`), mọi phần ảnh đi qua `phanTepAnh`. Trên máy: ảnh
+  lên tường nhóm; quét bill giờ tới máy chủ (trả «chưa bật» vì máy không có khoá — 0 lời gọi).
+- **Thử lại chắc chắn hỏng (ảnh gốc bị xoá) → đã sửa**: bản nén luôn dọn, ảnh đã chọn chỉ dọn
+  khi gửi thành công hoặc khi rời màn. (Ảnh **bill** vẫn xoá ngay cả khi hỏng — luật riêng tư.)
+- **Ảnh dọc có hai dải xám, nút «Chia sẻ» bị đẩy khỏi màn → đã sửa** (khung theo tỉ lệ ảnh
+  3:4…1.91:1; nút ở footer).
+- **Ô số lượng không xoá được để gõ lại, ô tiền hiện số thô → đã sửa** (chuỗi nháp khi đang gõ,
+  rời ô thì «420.000»); «Thành tiền» ghi rõ «Tổng cả dòng · 210.000đ mỗi phần».
+- **«Xem lại hoá đơn» như form CRUD → thành tờ hoá đơn** (đầu tờ là buổi đi, dòng chấm dẫn,
+  tổng ở đáy). Bước gán món với 2 người: một chip «Cả hai» thay ba nút.
+- **Quyết toán biến bạn gái thành con nợ → đã sửa cho context `pair`**: «Chi tiêu chung» — mỗi
+  người «trả nhiều hơn / ít hơn phần mình» với đúng số dư ròng máy chủ tính; danh sách chuyển
+  và đợt thu thu vào «Muốn cân lại? Xem cách chuyển». Nhóm thường 2 người giữ nguyên.
+- **Còn mở:** tường nhóm cắt ảnh dọc vào khung ngang; kỷ niệm chưa gắn vào tờ đã chốt (spec §2
+  «giữ một điều»); chưa có tổng «hai bạn đã chi bao nhiêu» vì không có route tổng chi của một
+  context (không tự cộng trên máy — luật tiền).

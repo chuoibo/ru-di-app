@@ -44,6 +44,14 @@ const KIEU_NHIP = ["sap-toi", "hom-nay", "dang-dien-ra", "da-qua", "khong-ro"] a
 /** Route segments Nếp must stand away from (DESIGN.md «Luật Nếp Đứng Xa Tiền»). */
 export const MAN_NEP_LUI = ["finance", "settlements", "batches", "smart-split"] as const;
 
+/**
+ * Route segments Nếp is absent from: signing in and the first run. A separate
+ * list on purpose -- `MAN_NEP_LUI` is a law about money and must not grow
+ * into a list of «screens Nếp got in the way on» (QA 23/09: the disc covered
+ * the taste chips of `personalization` and the buttons of the first screens).
+ */
+export const MAN_NEP_VANG = ["welcome", "login", "otp", "personalization"] as const;
+
 export interface PhieuNguCanh {
   /** Route id, either as declared (`outings/[id]`) or as walked (`/outings/7`). */
   man: string;
@@ -65,10 +73,54 @@ function chuNgan(v: unknown, han: number): string | null {
  * money screen; a `startsWith` here would silence Nếp on unrelated routes and
  * nobody would notice, because the failure is Nếp being absent.
  */
+function doanDau(man: string): string {
+  return man.replace(/^\/+/, "").split("/")[0];
+}
+
 export function nepPhaiLui(man: string): boolean {
   if (typeof man !== "string") return false;
-  const dau = man.replace(/^\/+/, "").split("/")[0];
-  return (MAN_NEP_LUI as readonly string[]).includes(dau);
+  return (MAN_NEP_LUI as readonly string[]).includes(doanDau(man));
+}
+
+/** Whole segments too, for the same reason as `nepPhaiLui`. */
+export function nepPhaiVang(man: string): boolean {
+  if (typeof man !== "string") return false;
+  return (MAN_NEP_VANG as readonly string[]).includes(doanDau(man));
+}
+
+/** How a count reads out loud: «2 người», never «soNguoi: 2». */
+const DON_VI: Record<KhoaSoLieu, string> = {
+  soNguoi: "người",
+  soChang: "chặng",
+  soAnh: "ảnh",
+  soNgay: "ngày",
+  soMuc: "mục",
+  soViec: "việc",
+};
+
+const TEN_SO: Record<LoaiSo, string> = { hoi: "nhóm bạn", "hai-nguoi": "sổ hai người", doi: "sổ một đôi" };
+
+/**
+ * The «Mình đang thấy» line: the whole of what the screen shared, in words.
+ * It is the honest limit of what Nếp knows (ADR-0033 §2.5), so it reads like
+ * a sentence rather than a debug dump. A count given as text is the screen's
+ * own words and is printed as it came.
+ */
+export function cauNguCanh(phieu: PhieuNguCanh | null): string {
+  if (!phieu) return "Màn này chưa kể gì cho mình, nên mình chỉ biết bạn đang dùng app.";
+  const phan: string[] = [phieu.tieuDe ? `Bạn đang ở ${phieu.tieuDe}` : "Bạn đang ở một màn chưa có tên"];
+  if (phieu.loaiSo) phan.push(TEN_SO[phieu.loaiSo]);
+  const n = phieu.nhip;
+  if (n?.kieu === "sap-toi") phan.push(`còn ${n.conNgay} ngày nữa`);
+  else if (n?.kieu === "hom-nay") phan.push("hôm nay");
+  else if (n?.kieu === "dang-dien-ra") phan.push("đang diễn ra");
+  else if (n?.kieu === "da-qua") phan.push(`đã qua ${n.truocNgay} ngày`);
+  for (const khoa of KHOA_SO_LIEU) {
+    const v = phieu.soLieu?.[khoa];
+    if (v === undefined) continue;
+    phan.push(typeof v === "number" ? `${v} ${DON_VI[khoa]}` : v);
+  }
+  return `${phan.join(" · ")}.`;
 }
 
 export function donPhieu(tho: unknown): PhieuNguCanh | null {

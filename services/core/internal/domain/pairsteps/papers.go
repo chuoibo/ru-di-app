@@ -1,6 +1,7 @@
 package pairsteps
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -147,11 +148,44 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 			return Command{}, refusal(409, "paper_wrong_state", "Đang có một tờ mở. Xong tờ này đã.")
 		}
 	}
+	// What this cycle already agreed, and the catalogue around the place it
+	// chose -- read before the write, in Python's order.
+	lichSu, err := lichSuChuKy(papers, notebook)
+	if err != nil {
+		return Command{}, err
+	}
+	var choCu *PlaceRef
+	for _, nd := range lichSu {
+		if id := nd.Chang[0].PlaceID; id != nil && *id != "" {
+			if choCu, err = s.GetPlace(*id); err != nil {
+				return Command{}, err
+			}
+			break
+		}
+	}
+	var ungVien []pairpaper.PlaceRow
+	var choCuRow *pairpaper.PlaceRow
+	if choCu != nil {
+		rows, err := s.ListPlaces(choCu.DestinationID, choCu.Category)
+		if err != nil {
+			return Command{}, err
+		}
+		for _, row := range rows {
+			ungVien = append(ungVien, row.row())
+		}
+		r := choCu.row()
+		choCuRow = &r
+	}
 	ngay := pairpaper.NgayDeXuat(now)
 	phac, err := pairpaper.PhacToGiay(pairpaper.Routine{Ngay: &ngay, Gio: khungGio, Viec: khungViec}, len(notebook.Constraints) > 0, now)
 	if err != nil {
 		return Command{}, err
 	}
+	boxes := make([]string, len(notebook.Constraints))
+	for i, c := range notebook.Constraints {
+		boxes[i] = c.Content
+	}
+	phac = pairpaper.LamGiauPhac(phac, lichSu, choCuRow, ungVien, boxes)
 	var lyDo *string
 	if phac.LyDo != "" {
 		lyDo = &phac.LyDo
@@ -172,6 +206,56 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 		return Command{}, err
 	}
 	return wireCommand(&paper, paper.State, nil), nil
+}
+
+// lichSuToiDa is _LICH_SU_TOI_DA.
+const lichSuToiDa = 4
+
+// lichSuChuKy is _lich_su_chu_ky: the agreed contents of the notebook's
+// ACTIVE cycle, newest first (ListPairPapers' order), at most lichSuToiDa. A
+// sheet whose stored content does not read is skipped.
+func lichSuChuKy(papers []Paper, notebook *Notebook) ([]pairpaper.Content, error) {
+	if notebook == nil || notebook.CycleID == nil || !isActive(notebook) {
+		return nil, nil
+	}
+	var out []pairpaper.Content
+	for i := range papers {
+		paper := &papers[i]
+		if paper.CycleID == nil || *paper.CycleID != *notebook.CycleID || paper.IsTemporary ||
+			(paper.State != "chot" && paper.State != "da_di" && paper.State != "da_giu") {
+			continue
+		}
+		var current *Version
+		for j := range paper.Versions {
+			if paper.Versions[j].Version == paper.CurrentVersion {
+				current = &paper.Versions[j]
+				break
+			}
+		}
+		if current == nil {
+			continue
+		}
+		wire, err := NoiDungWire(current.Content)
+		var refused *Refusal
+		if errors.As(err, &refused) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(wire.Chang) == 0 {
+			continue
+		}
+		content := pairpaper.Content{Ngay: wire.Ngay.ISOFormat()}
+		for _, stop := range wire.Chang {
+			content.Chang = append(content.Chang, pairpaper.Stop{Gio: stop.Gio, Viec: stop.Viec, PlaceID: stop.PlaceID})
+		}
+		out = append(out, content)
+		if len(out) == lichSuToiDa {
+			break
+		}
+	}
+	return out, nil
 }
 
 // readablePaperOr404 is _readable_paper_or_404.

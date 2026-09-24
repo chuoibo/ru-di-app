@@ -80,7 +80,7 @@ const MA_LOI = [
   { code: "screenshot_model_named_a_person", status: 422, phaiCo: /tên người|phiên đăng nhập/ },
   { code: "screenshot_unreadable", status: 422, phaiCo: /Không đọc được|ảnh chụp/ },
   { code: "screenshot_reader_unavailable", status: 502, phaiCo: /không trả lời|Thử lại/ },
-  { code: "screenshot_reader_not_configured", status: 503, phaiCo: /chưa cấu hình|máy chủ/ },
+  { code: "screenshot_reader_not_configured", status: 503, phaiCo: /chưa bật|chưa cấu hình/ },
 ];
 
 for (const { code, status, phaiCo } of MA_LOI) {
