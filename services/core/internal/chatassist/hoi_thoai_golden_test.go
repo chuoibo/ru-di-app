@@ -26,6 +26,7 @@ func TestHoiThoaiKhopGoldenDungChungVoiBoDo(t *testing.T) {
 			Ten          string          `json:"ten"`
 			Goi          json.RawMessage `json:"goi"`
 			Prompt       string          `json:"prompt"`
+			Toi          string          `json:"toi"`
 			Conversation json.RawMessage `json:"conversation"`
 		} `json:"cases"`
 	}
@@ -37,11 +38,14 @@ func TestHoiThoaiKhopGoldenDungChungVoiBoDo(t *testing.T) {
 	}
 	for _, ca := range file.Cases {
 		t.Run(ca.Ten, func(t *testing.T) {
+			if ca.Toi == "" {
+				t.Fatal("ca golden thiếu `toi`: nhãn người gọi là một phần của hội thoại")
+			}
 			goi := []byte(ca.Goi)
 			if string(goi) == "null" {
 				goi = nil
 			}
-			got, err := hoiThoai(goi, ca.Prompt)
+			got, err := hoiThoai(goi, ca.Prompt, ca.Toi)
 			if err != nil {
 				t.Fatal(err)
 			}

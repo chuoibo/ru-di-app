@@ -87,7 +87,7 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "sharing_unavailable")
 	}
-	conversation, err := hoiThoai(j.goi, j.prompt)
+	conversation, err := hoiThoai(j.goi, j.prompt, dap.toi)
 	if err != nil {
 		return true, h.finishFailure(ctx, j, "invalid_ai_result")
 	}
@@ -127,8 +127,10 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 type dapThem struct {
 	// The catalogue the model may choose from, best match for the group first.
 	places []*pyjson.OrderedMap
-	// Who is in the room, in the caller's own pseudonyms (see roster).
+	// Who is in the room, by display name where one is safe (see roster).
 	members pyjson.List
+	// The caller's label in that roster, which the transcript uses too.
+	toi string
 	// The group's stated per-person budget, nil when nobody answered.
 	budget *int64
 }
@@ -172,11 +174,11 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	if err != nil {
 		return dapThem{}, err
 	}
-	members, err := roster(ctx, tx, store, j.conversation, j.person, j.goi)
+	members, toi, err := roster(ctx, tx, store, j.conversation, j.person, j.goi)
 	if err != nil {
 		return dapThem{}, err
 	}
-	return dapThem{places: places, members: members, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
+	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
 func (h *Handler) finishFailure(ctx context.Context, j work, code string) error {

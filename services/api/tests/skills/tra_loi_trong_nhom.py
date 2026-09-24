@@ -13,8 +13,8 @@ What it proves when it runs
 * The model saw what production sends. The conversation is built by
   ``hoi_thoai``, which is held to the SAME handwritten golden as the Go worker's
   ``hoiThoai`` (``services/core/internal/chatassist/testdata/``), key order
-  included. The roster follows the worker's ``roster``: pseudonyms, never an
-  account name.
+  included. The roster follows the worker's ``roster``: display names where
+  they pass the prompt-safety test (ADR-0034 §5), never an account id.
 * Per case: every ``place_id`` is in the catalogue it was handed, no money field
   appears, the answer is Vietnamese, forbidden place tags are absent, prices,
   districts and opening hours fit what the group typed, required words appear,
@@ -51,6 +51,8 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from app.places.prompt_safety import field_is_safe
+
 CORPUS_PATH = Path(__file__).parent / "corpus" / "tra-loi-trong-nhom.json"
 GOLDEN_PATH = (
     Path(__file__).resolve().parents[3]
@@ -62,11 +64,13 @@ GOLDEN_PATH = (
 )
 DEFAULT_OUT = Path("/tmp/tra-loi-trong-nhom")
 
-# The three speaker labels of chatassist/boicanh.go nhanNguoiNoi, and the
-# caller's label that chatassist/roster.go shares with it.
+# The fallback speaker labels of chatassist/boicanh.go nhanNguoiNoi, and the
+# caller's fallback label that chatassist/roster.go shares with it.
 TOI_LA = "Mình"
 AI_LA = "Rủ Đi AI"
 KHONG_TEN = "Một người trong nhóm"
+# chatassist/roster.go maxTenDoc.
+MAX_TEN_DOC = 60
 
 MONEY_KEYS = frozenset({"expense", "amount_vnd", "obligation", "split", "total_vnd"})
 _VIETNAMESE = re.compile(
@@ -83,16 +87,32 @@ def load_corpus(path: Path = CORPUS_PATH) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def ten_doc(name: str | None) -> str:
+    """``chatassist.tenDoc``: a display name the model may read, or "".
+
+    The same test ``promptsafety.TextSafe`` applies in Go, which is itself the
+    port of ``app.places.prompt_safety.field_is_safe``.
+    """
+
+    name = (name or "").strip()
+    if not name or not field_is_safe(name, max_chars=MAX_TEN_DOC):
+        return ""
+    return name
+
+
 def bundle_for(case: dict) -> tuple[dict, dict[str, str]]:
     """The bundle the client would attach, plus each turn's author.
 
     Mirrors ``gomBoiCanhChat`` for text messages: the caller's own lines are
-    ``toi``, everybody else is ``ban`` with an alias minted by first appearance.
-    The author map stands in for the ``messages.author_id`` column the worker
-    reads to line the roster up with those aliases.
+    ``toi``, everybody else is ``ban`` labelled by their display name (the
+    corpus authors ARE display names), a repeated name deduplicated as
+    «Tên (2)» by first appearance. The author map stands in for the
+    ``messages.author_id`` column the worker reads to line the roster up with
+    those labels.
     """
 
     alias: dict[str, str] = {}
+    used: set[str] = set()
     luot = []
     author_of = {}
     for index, message in enumerate(case["messages"]):
@@ -101,7 +121,12 @@ def bundle_for(case: dict) -> tuple[dict, dict[str, str]]:
         luc = (_BASE_TIME + timedelta(minutes=index)).strftime("%Y-%m-%dT%H:%M:%SZ")
         turn = {"id": message["id"], "vai": "toi", "luc": luc}
         if author != case["caller"]:
-            alias.setdefault(author, f"Bạn {len(alias) + 1}")
+            if author not in alias:
+                label, k = author, 2
+                while label in used:
+                    label, k = f"{author} ({k})", k + 1
+                used.add(label)
+                alias[author] = label
             turn = {
                 "id": message["id"],
                 "vai": "ban",
@@ -120,16 +145,16 @@ def bundle_for(case: dict) -> tuple[dict, dict[str, str]]:
     return goi, author_of
 
 
-def _speaker(turn: dict) -> str:
+def _speaker(turn: dict, toi: str) -> str:
     vai = turn.get("vai")
     if vai == "toi":
-        return TOI_LA
+        return toi
     if vai == "ai":
         return AI_LA
-    return turn.get("biDanh") or KHONG_TEN
+    return ten_doc(turn.get("biDanh")) or KHONG_TEN
 
 
-def hoi_thoai(goi: dict | None, prompt: str) -> list[dict]:
+def hoi_thoai(goi: dict | None, prompt: str, toi: str) -> list[dict]:
     """``chatassist.hoiThoai``, field for field and in the same key order."""
 
     out = []
@@ -138,26 +163,46 @@ def hoi_thoai(goi: dict | None, prompt: str) -> list[dict]:
             {
                 "author_kind": "ai" if turn.get("vai") == "ai" else "human",
                 "kind": "text",
-                "speaker": _speaker(turn),
+                "speaker": _speaker(turn, toi),
                 "body": turn.get("chu", ""),
                 "created_at": turn.get("luc", ""),
             }
         )
-    out.append(
-        {"author_kind": "human", "kind": "text", "speaker": TOI_LA, "body": prompt}
-    )
+    out.append({"author_kind": "human", "kind": "text", "speaker": toi, "body": prompt})
     return out
 
 
 def roster(
-    caller: str, active: list[str], goi: dict | None, author_of: dict[str, str]
-) -> list[dict]:
-    """``chatassist.roster``: every active member once, in the bundle's aliases."""
+    caller: str,
+    active: list[str],
+    goi: dict | None,
+    author_of: dict[str, str],
+    names: dict[str, str] | None = None,
+) -> tuple[list[dict], str]:
+    """``chatassist.roster``: every active member once, and the caller's label.
 
-    used = {TOI_LA}
+    ``names`` maps a person to their display name; the corpus uses names as
+    person ids, so it defaults to the id itself.
+    """
+
+    def name_of(person: str) -> str:
+        return ten_doc((names or {}).get(person, person))
+
+    turns = (goi or {}).get("luot", [])
+    others = {
+        ten_doc(t.get("biDanh"))
+        for t in turns
+        if t.get("vai") == "ban" and ten_doc(t.get("biDanh"))
+    }
+    toi = TOI_LA
+    if caller in active:
+        own = name_of(caller)
+        if own and own not in others:
+            toi = own
+    used = {toi}
     alias: dict[str, str] = {}
-    for turn in (goi or {}).get("luot", []):
-        label = turn.get("biDanh")
+    for turn in turns:
+        label = ten_doc(turn.get("biDanh"))
         if turn.get("vai") != "ban" or not label:
             continue
         taken = label in used
@@ -177,12 +222,23 @@ def roster(
                 used.add(label)
                 return label
 
-    out = [{"display_name": TOI_LA}]
+    def unique(name: str) -> str:
+        label, k = name, 2
+        while label in used:
+            label, k = f"{name} ({k})", k + 1
+        used.add(label)
+        return label
+
+    out = [{"display_name": toi}]
     for member in active:
         if member == caller:
             continue
-        out.append({"display_name": alias.get(member) or fresh()})
-    return out
+        label = alias.get(member)
+        if label is None:
+            name = name_of(member)
+            label = unique(name) if name else fresh()
+        out.append({"display_name": label})
+    return out, toi
 
 
 def model_places(catalogue: list[dict]) -> list[dict]:
@@ -198,9 +254,10 @@ def model_places(catalogue: list[dict]) -> list[dict]:
 
 def payload_for(corpus: dict, case: dict) -> dict:
     goi, author_of = bundle_for(case)
+    members, toi = roster(case["caller"], case["members"], goi, author_of)
     return {
-        "conversation": hoi_thoai(goi, case["prompt"]),
-        "members": roster(case["caller"], case["members"], goi, author_of),
+        "conversation": hoi_thoai(goi, case["prompt"], toi),
+        "members": members,
         "places": model_places(corpus["catalogue"]),
         "budget_per_person_vnd": case.get("budget_per_person_vnd"),
     }

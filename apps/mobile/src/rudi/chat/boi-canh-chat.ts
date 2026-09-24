@@ -40,12 +40,48 @@ function chuTheAi(card: unknown): string {
   return "Một thẻ";
 }
 
-function luotCua(tin: Tin, personId: string, biDanh: Map<string, string>): LuotBoiCanh {
+/**
+ * One label per author for the whole bundle, handed out by first appearance.
+ *
+ * The label is the member's display name (ADR-0034 §5), because a plan that
+ * says «Lan dị ứng hải sản» is one the room can act on. Two members with the
+ * same name must not become one speaker, so a repeat is «Lan (2)». A member
+ * whose name the screen does not know yet is «Bạn N», never the account id.
+ * The server checks every label again before a model reads it.
+ */
+function nhanCua(
+  authorId: string,
+  biDanh: Map<string, string>,
+  daDung: Set<string>,
+  tenCua?: (personId: string) => string | undefined,
+): string {
+  const co = biDanh.get(authorId);
+  if (co !== undefined) return co;
+  const ten = tenCua?.(authorId)?.trim();
+  let nhan: string;
+  if (ten) {
+    nhan = ten;
+    for (let k = 2; daDung.has(nhan); k++) nhan = `${ten} (${k})`;
+  } else {
+    let n = 1;
+    do nhan = `Bạn ${n++}`;
+    while (daDung.has(nhan));
+  }
+  daDung.add(nhan);
+  biDanh.set(authorId, nhan);
+  return nhan;
+}
+
+function luotCua(
+  tin: Tin,
+  personId: string,
+  biDanh: Map<string, string>,
+  daDung: Set<string>,
+  tenCua?: (personId: string) => string | undefined,
+): LuotBoiCanh {
   const vai = vaiCua(tin, personId);
   const chung = { id: tin.id, vai, luc: tin.created_at } as const;
-  if (vai === "ban" && tin.author_id !== null && !biDanh.has(tin.author_id)) {
-    biDanh.set(tin.author_id, `Bạn ${biDanh.size + 1}`);
-  }
+  if (vai === "ban" && tin.author_id !== null) nhanCua(tin.author_id, biDanh, daDung, tenCua);
   const nhan = vai === "ban" && tin.author_id !== null ? { biDanh: biDanh.get(tin.author_id) } : {};
   switch (tin.kind) {
     case "deleted":
@@ -66,10 +102,13 @@ function luotCua(tin: Tin, personId: string, biDanh: Map<string, string>): LuotB
 
 /**
  * @param tin the rows the screen is drawing, newest first (an inverted list).
+ * @param tenCua the display name the screen shows for a member, or undefined
+ *   when it does not know one; the label then falls back to «Bạn N».
  */
 export function gomBoiCanhChat(opts: {
   tin: readonly Tin[];
   personId: string;
+  tenCua?: (personId: string) => string | undefined;
   soLuot?: number;
   hanByte?: number;
 }): BoiCanh {
@@ -79,10 +118,11 @@ export function gomBoiCanhChat(opts: {
   // fault nobody can see on screen. Take from the head, then flip.
   const moiNhat = opts.tin.slice(0, soLuot).reverse();
   const biDanh = new Map<string, string>();
+  const daDung = new Set<string>();
   const bc: BoiCanh = {
     ban: 1,
     nguon: "chat-nhom",
-    luot: moiNhat.map((t) => luotCua(t, opts.personId, biDanh)),
+    luot: moiNhat.map((t) => luotCua(t, opts.personId, biDanh, daDung, opts.tenCua)),
     tongLuot: opts.tin.length,
     daCat: opts.tin.length > soLuot,
   };

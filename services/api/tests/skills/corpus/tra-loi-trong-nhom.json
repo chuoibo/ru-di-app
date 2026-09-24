@@ -57,7 +57,7 @@
       "prompt": "Tối thứ Sáu nhóm mình đi ăn ở đâu được nhỉ? Gợi ý vài chỗ đi",
       "budget_per_person_vnd": null,
       "expected": {
-        "phai_ton_trong": ["Bạn 1 dị ứng hải sản: không quán hải sản, ốc, bánh xèo tôm, bún chả cá, buffet có hải sản", "Bạn 1 rảnh sau 7h tối: quán phải mở buổi tối"],
+        "phai_ton_trong": ["Huy dị ứng hải sản: không quán hải sản, ốc, bánh xèo tôm, bún chả cá, buffet có hải sản", "Huy rảnh sau 7h tối: quán phải mở buổi tối"],
         "khong_duoc": ["Gợi ý quán có hải sản hay món có tôm", "Trả lời chung chung như thể không có tin dị ứng", "Bịa địa điểm ngoài catalogue"],
         "may_cham": {
           "nen_goi_y_dia_diem": true,
@@ -256,7 +256,7 @@
       "prompt": "Tìm chỗ ăn tối nay cho 4 đứa",
       "budget_per_person_vnd": null,
       "expected": {
-        "phai_ton_trong": ["Bạn 1 ăn chay: mọi chỗ gợi ý phải có món chay"],
+        "phai_ton_trong": ["Trang ăn chay: mọi chỗ gợi ý phải có món chay"],
         "khong_duoc": ["Gợi ý quán chỉ có thịt, hải sản", "Bỏ qua chuyện ăn chay"],
         "may_cham": {
           "nen_goi_y_dia_diem": true,

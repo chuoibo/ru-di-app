@@ -213,7 +213,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
                 {moRong ? (
                   <View style={styles.luot} testID="chat-boi-canh-luot">
                     <Text style={[typography.caption, { color: colors.inkSoft }]}>
-                      Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. Tên tài khoản không đi kèm, còn chữ trong tin nhắn thì đi nguyên văn.
+                      Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. Tên hiển thị của các thành viên đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn thì đi nguyên văn.
                     </Text>
                     {boiCanh.luot.map((l) => (
                       <Text key={l.id} style={[typography.caption, { color: colors.ink }]} testID="chat-boi-canh-muc">{`${nhanVai(l)}: ${l.chu}`}</Text>

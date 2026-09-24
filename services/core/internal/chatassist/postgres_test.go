@@ -162,16 +162,16 @@ func TestInvocationOnlyInputAndDurableIdempotency(t *testing.T) {
 		t.Fatalf("worker: %v %v", ok, err)
 	}
 	raw, _ := json.Marshal(payload)
-	if bytes.Contains(raw, []byte("unshared history")) || bytes.Contains(raw, []byte("Synthetic peer")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
+	if bytes.Contains(raw, []byte("unshared history")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
 		t.Fatal("inference input scope violated")
 	}
-	// ADR-0034 §2.3: the server lays the roster on top, but as a head count in
-	// the caller's own pseudonyms. No account name, no id.
+	// ADR-0034 §2.3 and §5: the server lays the roster on top, one entry per
+	// active member by display name. Never an account id.
 	if got := payload["members"].([]any); len(got) != 2 {
 		t.Fatalf("roster has %d entries, want the 2 active members", len(got))
 	}
-	if bytes.Contains(raw, []byte("Synthetic caller")) || bytes.Contains(raw, []byte(f.peer)) || bytes.Contains(raw, []byte(f.person)) {
-		t.Fatal("roster carries an account name or id")
+	if bytes.Contains(raw, []byte(f.peer)) || bytes.Contains(raw, []byte(f.person)) {
+		t.Fatal("roster carries an account id")
 	}
 	w := f.request("GET", f.route()+"/"+first.ID, f.token, nil)
 	requireCode(t, w, 200)
