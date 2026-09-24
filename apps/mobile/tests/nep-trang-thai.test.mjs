@@ -13,30 +13,32 @@ const RA = chuyen(DOCK_DAU, { kieu: "keo-vao" });
 // the slip's edge in the margin, and «out» is something the person does.
 
 test("Nếp bắt đầu cài trong mép, không có việc, không lui", () => {
-  assert.deepEqual(DOCK_DAU, { trangThai: "an", nen: "an", coViec: false, luiLai: false, nhuongCho: false });
+  assert.deepEqual(DOCK_DAU, { trangThai: "an", coViec: false, luiLai: false, nhuongCho: false });
 });
 
 test("chạm mép chỉ kéo Nếp ra, chưa mở bảng; chạm lần nữa mới mở", () => {
   const ra = chuyen(DOCK_DAU, { kieu: "cham" });
   assert.equal(ra.trangThai, "nghi");
-  assert.equal(ra.nen, "nghi", "người dùng đã kéo ra thì đó là lựa chọn của họ");
   assert.equal(chuyen(ra, { kieu: "cham" }).trangThai, "mo");
 });
 
-test("vuốt ra thì Nếp nằm gọn lại trong mép, và mép là nền để quay về", () => {
+test("vuốt ra thì Nếp nằm gọn lại trong mép", () => {
   const an = chuyen(RA, { kieu: "vuot-ra" });
-  assert.deepEqual(an, { trangThai: "an", nen: "an", coViec: false, luiLai: false, nhuongCho: false });
+  assert.deepEqual(an, { trangThai: "an", coViec: false, luiLai: false, nhuongCho: false });
   assert.equal(chuyen(an, { kieu: "keo-vao" }).trangThai, "nghi");
 });
 
-test("đóng bảng thì Nếp về đúng nền trước đó, không tự hiện ra", () => {
-  const moTuRa = chuyen(RA, { kieu: "cham" });
-  assert.equal(moTuRa.trangThai, "mo");
-  assert.equal(moTuRa.nen, "nghi");
-  assert.equal(chuyen(moTuRa, { kieu: "dong" }).trangThai, "nghi");
+// Pulled out is the first of the two taps that open the panel, so it cannot
+// be a place to rest: anyone who opened the panel once would carry 56dp over
+// every page for the rest of the session (finish review 24/09, ADR-0035).
+test("mở rồi đóng bảng thì Nếp về lại mép, không đứng ngoài đè lên trang", () => {
+  const dong = [{ kieu: "cham" }, { kieu: "cham" }, { kieu: "dong" }].reduce(chuyen, DOCK_DAU);
+  assert.equal(dong.trangThai, "an");
+});
 
-  const moTuAn = { trangThai: "mo", nen: "an", coViec: false, luiLai: false, nhuongCho: false };
-  assert.equal(chuyen(moTuAn, { kieu: "dong" }).trangThai, "an");
+test("kéo Nếp ra rồi rời màn thì màn sau bắt đầu với Nếp cài trong mép", () => {
+  assert.equal(chuyen(RA, { kieu: "doi-man", nepLui: false }).trangThai, "an");
+  assert.equal(chuyen(chuyen(RA, { kieu: "cham" }), { kieu: "doi-man", nepLui: false }).trangThai, "an");
 });
 
 test("báo việc chỉ ghi nhận; Nếp đang cài thì KHÔNG tự bước ra", () => {
@@ -80,14 +82,20 @@ test("Luật Nếp Đứng Xa Tiền: màn tiền ép Nếp lui vào mép", () =
   assert.equal(coViecOManTien.coViec, true, "vẫn ghi nhận có việc, chỉ là không nói ra");
 });
 
-test("rời màn tiền thì Nếp trả về đúng ý người dùng trước đó, không tự bật lên", () => {
-  const quaManTien = chuyen(DOCK_DAU, { kieu: "doi-man", nepLui: true });
+test("rời màn tiền thì Nếp vẫn cài, không tự bật lên", () => {
+  const quaManTien = chuyen(RA, { kieu: "doi-man", nepLui: true });
   const roiManTien = chuyen(quaManTien, { kieu: "doi-man", nepLui: false });
-  assert.equal(roiManTien.trangThai, "an", "Nếp đang cài thì vẫn cài");
+  assert.equal(roiManTien.trangThai, "an");
   assert.equal(roiManTien.luiLai, false);
+});
 
-  const roiManTienKhiDaRa = chuyen(chuyen(RA, { kieu: "doi-man", nepLui: true }), { kieu: "doi-man", nepLui: false });
-  assert.equal(roiManTienKhiDaRa.trangThai, "nghi", "người đã kéo Nếp ra thì Nếp trở ra");
+// On a money screen the edge is a door, not a face (ADR-0033 §2.2-2.3). The
+// finish review caught a tap there bringing Nếp's face out beside «0đ».
+test("màn tiền: chạm hay kéo mép đều không đưa mặt Nếp ra cạnh con số", () => {
+  const oManTien = chuyen(DOCK_DAU, { kieu: "doi-man", nepLui: true });
+  assert.equal(chuyen(oManTien, { kieu: "cham" }).trangThai, "an");
+  assert.equal(chuyen(oManTien, { kieu: "keo-vao" }).trangThai, "an");
+  assert.equal(chuyen(chuyen(oManTien, { kieu: "cham" }), { kieu: "cham" }).trangThai, "an", "hai chạm cũng không mở bảng cạnh tiền");
 });
 
 test("đang mở bảng mà vào màn tiền thì bảng đóng lại, không đứng cạnh số tiền", () => {
@@ -103,21 +111,19 @@ test("đang mở bảng mà vào màn tiền thì bảng đóng lại, không đ
 // than a z-index because that is what it is: the first scene ever drawn of
 // Nếp is Nếp pulling out a chair for someone else.
 
-test("nhường chỗ: trang mở một tờ khác thì Nếp rút vào mép, tờ đóng thì trở ra đúng chỗ cũ", () => {
+test("nhường chỗ: trang mở một tờ khác thì Nếp rút vào mép, tờ đóng thì Nếp vẫn ở mép", () => {
   const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
   assert.equal(nhuong.trangThai, "an", "Nếp rút vào mép sổ");
-  assert.equal(nhuong.nen, "nghi", "nhường chỗ không phải lựa chọn của người dùng, nên nền không đổi");
   assert.equal(nhuong.nhuongCho, true);
 
   const traLai = chuyen(nhuong, { kieu: "nhuong-cho", bat: false });
-  assert.equal(traLai.trangThai, "nghi", "tờ kia đóng thì Nếp trở ra đúng chỗ người dùng đã để");
+  assert.equal(traLai.trangThai, "an", "trả chỗ không lôi Nếp ra đè lên trang");
   assert.equal(traLai.nhuongCho, false);
 });
 
 test("Nếp đang cài thì sau khi nhường chỗ vẫn cài", () => {
   const sau = chuyen(chuyen(DOCK_DAU, { kieu: "nhuong-cho", bat: true }), { kieu: "nhuong-cho", bat: false });
   assert.equal(sau.trangThai, "an");
-  assert.equal(sau.nen, "an");
 });
 
 test("đang nhường chỗ thì chạm vào mép không lôi Nếp ra đè lên tờ đang mở", () => {
@@ -151,7 +157,7 @@ test("đổi màn trong lúc còn tờ đang mở không bật Nếp ra đè lê
   const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
   const doiMan = chuyen(nhuong, { kieu: "doi-man", nepLui: false });
   assert.equal(doiMan.trangThai, "an", "tờ chưa đóng thì Nếp chưa trở ra");
-  assert.equal(chuyen(doiMan, { kieu: "nhuong-cho", bat: false }).trangThai, "nghi");
+  assert.equal(chuyen(doiMan, { kieu: "nhuong-cho", bat: false }).trangThai, "an");
 });
 
 // The second slip is Nếp SAYING there is work. The work is recorded wherever

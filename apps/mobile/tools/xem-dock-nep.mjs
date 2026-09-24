@@ -187,6 +187,21 @@ async function chay(scheme) {
     ket.steps.push({ scheme, name: 'nghi_tab_dau_khong_che_chu', pass: tabDau.hopDock.length > 0 && tabDau.chuBiChe.length === 0, ...tabDau });
     save();
 
+    if (mode === 'thuong') {
+      // Open the panel and close it again: pulled out is only the first of
+      // the two taps, so Nếp must come back to the edge, not rest outside.
+      await page.click('[data-testid="nep-mep"]');
+      await page.waitForSelector('[data-testid="nep-dia"]', { timeout: 10000 });
+      await page.click('[data-testid="nep-dia"]');
+      await page.waitForSelector('[data-testid="nep-ngu-canh"]', { timeout: 10000 });
+      await page.keyboard.press('Escape');
+      await sleep(1200);
+      const sauBang = await doChe(page);
+      const veMep = !!(await page.$('[data-testid="nep-mep"]'));
+      ket.steps.push({ scheme, name: 'dong_bang_ve_mep_khong_che_chu', pass: veMep && sauBang.chuBiChe.length === 0, veMep, ...sauBang });
+      save();
+    }
+
     await page.click('[role="tab"][aria-label="Tin nhắn"]');
     await page.waitForSelector('[aria-label="Mở nhóm Phòng kiểm thử đồng thời"]', { timeout: 30000 });
     await page.click('[aria-label="Mở nhóm Phòng kiểm thử đồng thời"]');
@@ -234,6 +249,11 @@ async function chay(scheme) {
       await chup('4-man-tien');
       const tien = await docMep();
       ket.steps.push({ scheme, name: 'man_tien_chi_mep_tron', pass: truoc.sau && tien.url === '/finance' && tien.mep && !tien.dia && !tien.sau, truoc, ...tien });
+      // The edge there is a door, not a face: a tap may not bring Nếp out.
+      await page.click('[data-testid="nep-mep"]');
+      await sleep(900);
+      const sauCham = await docMep();
+      ket.steps.push({ scheme, name: 'man_tien_cham_mep_khong_ra_mat', pass: sauCham.mep && !sauCham.dia, ...sauCham });
       save();
     }
 
@@ -258,6 +278,10 @@ async function chay(scheme) {
       await page.waitForSelector('[role="tab"][aria-label="Khám phá"]', { timeout: 20000 });
       await page.click('[role="tab"][aria-label="Khám phá"]');
       await sleep(1500);
+      // Leaving the conversation put Nếp back in the edge (ADR-0035), so it is
+      // pulled out again here, on the page the canary measures.
+      await page.click('[data-testid="nep-mep"]');
+      await sleep(900);
       await chup('4-keo-ra');
       const keoRa = await doChe(page);
       ket.steps.push({

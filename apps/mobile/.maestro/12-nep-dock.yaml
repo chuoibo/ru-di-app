@@ -10,8 +10,9 @@
 #   1. Nếp có mặt sẵn ở tab đầu, nhưng CÀI trong mép: chỉ mép giấy, không đĩa;
 #   2. chạm mép thì Nếp ra ngoài nhưng CHƯA mở bảng;
 #   3. chạm lần nữa mới mở bảng, và bảng nói đúng màn đang đứng;
-#   4. Back đóng bảng, Nếp vẫn ở ngoài như người dùng đã kéo;
-#   5. vuốt sang phải thì Nếp cài lại vào mép.
+#   4. Back đóng bảng, Nếp về lại mép: kéo ra chỉ là bước đầu của hai chạm
+#      mở bảng, không phải chỗ nghỉ (ADR-0035);
+#   5. kéo ra rồi vuốt sang phải thì Nếp cài lại vào mép.
 #
 # Bước 1 là lý do bản 23/09 đổi thứ tự. Nếp mặc định nằm ngoài thành một đĩa
 # 57dp thì đè chữ trên thẻ (Khám phá) và nuốt cú bấm «Đồng ý» của lời mời vào
@@ -62,16 +63,24 @@ appId: com.lakiet.rudi
     timeout: 10000
 - assertVisible: "Khám phá"
 
-# 4. Back đóng bảng, Nếp vẫn ở ngoài như người dùng đã kéo
+# 4. Back đóng bảng, Nếp về lại mép chứ không đứng ngoài đè lên trang
 - back
+- extendedWaitUntil:
+    visible:
+      id: "nep-mep"
+    timeout: 10000
+- assertNotVisible:
+    id: "nep-dia"
+- assertNotVisible:
+    id: "nep-o-nhap"
+
+# 5. kéo ra rồi vuốt sang phải thì Nếp cài lại
+- tapOn:
+    id: "nep-mep"
 - extendedWaitUntil:
     visible:
       id: "nep-dia"
     timeout: 10000
-- assertNotVisible:
-    id: "nep-o-nhap"
-
-# 5. vuốt sang phải thì Nếp cài lại, để lượt sau bắt đầu từ mặc định
 - swipe:
     from:
       id: "nep-dia"

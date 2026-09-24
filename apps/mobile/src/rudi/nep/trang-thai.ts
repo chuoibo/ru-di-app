@@ -4,8 +4,14 @@
  * Nếp is the character who carries a sheet of paper, so hiding Nếp is tucking
  * that sheet into the edge of the notebook: `an` leaves a paper edge showing,
  * `nghi` is Nếp pulled out on the rail, `mo` is the panel open. Three states,
- * and `nen` remembers which of the two resting ones to fall back to, so
- * closing the panel never invents a position the person did not choose.
+ * and only one of them rests: `an`.
+ *
+ * Pulled out is a passage, not a place. It is the first of the two taps that
+ * open the panel, so a pulled-out Nếp that stayed out -- as the resting state
+ * the panel closed back to, or carried across screens -- was 56dp over the
+ * page for anyone who had once opened the panel (finish review, 24/09; the
+ * canary measured it over «200.000đ» and «22:30»). Closing the panel, leaving
+ * the screen and a sheet closing all put Nếp back in the edge (ADR-0035).
  *
  * Nếp STARTS tucked. Measured on the running app (23/09), text reaches the
  * page margin: message times in a conversation end exactly 16dp from the
@@ -32,36 +38,33 @@
  *      simply not spoken. A component that merely skipped rendering would still
  *      have run the transition, and the next screen would inherit a Nếp that had
  *      popped open next to a settlement.
- *   2. Leaving a money screen restores what the PERSON last chose, never a
- *      default. Someone who swiped Nếp away keeps it away.
+ *      A tap on the edge there does not bring Nếp out either: the edge is a
+ *      door back to Nếp from elsewhere, not a face beside a figure.
+ *   2. Nothing but the person's tap brings Nếp out, and nothing keeps it out
+ *      past the screen it was brought out on.
  *
  * Pure: no React, no Reanimated, no routing. `NepDock.tsx` maps these states to
  * springs and `NepProvider.tsx` feeds the events in.
  */
 
-/** Two resting states, plus the panel, which is always temporary. */
-export type NenNep = "an" | "nghi";
-export type TrangThaiNep = NenNep | "mo";
+/** Tucked (the one resting state), pulled out, and the panel. */
+export type TrangThaiNep = "an" | "nghi" | "mo";
 
 export interface DockNep {
   trangThai: TrangThaiNep;
-  /** The resting state `mo` falls back to. */
-  nen: NenNep;
   /** There is something waiting; the paper edge thickens. Not a state change. */
   coViec: boolean;
   /** This screen is one Nếp must stand away from (money, errors, conflict). */
   luiLai: boolean;
   /**
    * The page has laid another sheet over itself -- a tray, a bottom sheet --
-   * so Nếp has tucked into the edge to leave the room to it. Like `luiLai` it
-   * is never the person's choice, so it never touches `nen`.
+   * so Nếp has tucked into the edge to leave the room to it.
    */
   nhuongCho: boolean;
 }
 
 export const DOCK_DAU: DockNep = Object.freeze({
   trangThai: "an",
-  nen: "an",
   coViec: false,
   luiLai: false,
   nhuongCho: false,
@@ -93,9 +96,9 @@ export function hienToSau(dock: DockNep): boolean {
   return dock.coViec && !dock.luiLai && !dock.nhuongCho && dock.trangThai !== "mo";
 }
 
-/** Rest at `nen`, keeping the badge and the law flag as they are. */
-function veNen(dock: DockNep): DockNep {
-  return { ...dock, trangThai: dock.nen };
+/** Back into the edge, keeping the badge and the law flag as they are. */
+function veMep(dock: DockNep): DockNep {
+  return { ...dock, trangThai: "an" };
 }
 
 export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
@@ -104,25 +107,27 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       // While a sheet is open the edge is only a sign that Nếp is still there.
       // Pulling Nếp out now would put it straight back over the words of the
       // sheet the person is reading, which is the bug this state exists for.
-      if (dock.nhuongCho) return dock;
+      // Beside money the edge is only a door, and a tap may not put a face next
+      // to a figure (ADR-0033 §2.2).
+      if (dock.nhuongCho || dock.luiLai) return dock;
       // From the edge, one tap only brings Nếp out. Opening the panel is a
       // second, deliberate tap: a sheet that sprang open from a stray swipe
       // back would cover the screen the person was actually reading.
-      if (dock.trangThai === "an") return { ...dock, trangThai: "nghi", nen: "nghi" };
+      if (dock.trangThai === "an") return { ...dock, trangThai: "nghi" };
       if (dock.trangThai === "nghi") return { ...dock, trangThai: "mo" };
       return dock;
 
     case "vuot-ra":
-      if (dock.trangThai === "nghi") return { ...dock, trangThai: "an", nen: "an" };
+      if (dock.trangThai === "nghi") return veMep(dock);
       return dock;
 
     case "keo-vao":
-      if (dock.nhuongCho) return dock;
-      if (dock.trangThai === "an") return { ...dock, trangThai: "nghi", nen: "nghi" };
+      if (dock.nhuongCho || dock.luiLai) return dock;
+      if (dock.trangThai === "an") return { ...dock, trangThai: "nghi" };
       return dock;
 
     case "dong":
-      return dock.trangThai === "mo" ? veNen(dock) : dock;
+      return dock.trangThai === "mo" ? veMep(dock) : dock;
 
     case "bao-viec":
       // Recorded, never spoken out loud: `hienToSau` decides whether the
@@ -133,12 +138,8 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       return { ...dock, coViec: false };
 
     case "doi-man":
-      // `nen` is deliberately untouched on the way in: it is the person's last
-      // choice, and it is what they get back on the way out.
-      if (su.nepLui) return { ...dock, trangThai: "an", luiLai: true };
-      // A sheet still open across the route change keeps Nếp tucked until it
-      // closes; the release event brings Nếp back, not the navigation.
-      return { ...dock, trangThai: dock.nhuongCho ? "an" : dock.nen, luiLai: false };
+      // Every screen starts with Nếp in the edge; out was for the last one.
+      return { ...dock, trangThai: "an", luiLai: su.nepLui };
 
     case "nhuong-cho":
       if (su.bat) {
@@ -147,8 +148,8 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
         return { ...dock, trangThai: "an", nhuongCho: true };
       }
       if (!dock.nhuongCho) return dock;
-      // Back to what the person chose -- unless the money law still holds.
-      return { ...dock, nhuongCho: false, trangThai: dock.luiLai ? "an" : dock.trangThai === "mo" ? "mo" : dock.nen };
+      // The room is given back and Nếp stays in the edge it went to.
+      return { ...dock, nhuongCho: false };
 
     default:
       return dock;

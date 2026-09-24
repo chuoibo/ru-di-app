@@ -51,9 +51,10 @@ const TO_SAU_CAO_HON = 6;
  *   - `an`   (the default) tucked; its edge shows inside the margin, nothing
  *            more. Nếp is not drawn: on a money screen this edge is all ADR-0033
  *            §3 allows, «không mặt, không nhân vật».
- *   - `nghi` pulled out, because the person pulled it; Nếp stands on it. It
- *            holds for the session and is never written to disk: a launch
- *            starts tucked (`luu-dock.ts`).
+ *   - `nghi` pulled out, because the person tapped the edge; Nếp stands on
+ *            it. A passage to the panel, not a place: closing the panel,
+ *            leaving the screen or a sheet closing puts it back in the edge,
+ *            and it is never written to disk (ADR-0035).
  *   - `mo`   the panel is open, and it covers the edge anyway.
  *
  * Nothing widens the slip past `nghi` on its own. A line written on it for four
