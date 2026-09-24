@@ -17,6 +17,7 @@ import { StyleSheet, Switch, Text, View } from "react-native";
 import { ApiError, newAttempt, taiAnhDaiDien, thongDiepNguoiDoc } from "../../../api";
 import { baoDaDoiAnh } from "../../nguoi/anh-dai-dien";
 import { boAnh, chonAnh, nenVaDung } from "../../ky-niem/chon-anh";
+import { AnhNhomError } from "../../../camera/anh-nhom";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach } from "../../nguoi/chinh-sach-tuong";
 import { docHoSoToi, suaHoSoToi, type HoSoToi } from "../../../phien";
 import { NHAN_GIAO_DIEN } from "../../giao-dien";
@@ -88,13 +89,16 @@ export function CaiDatScreen() {
     if (daChon === null) return;
     setDangDoiAnh(true);
     try {
-      await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
-      // The address never changes, so every frame showing it -- here, on the
-      // profile, in the rosters -- has to be told to reload, not just this one.
-      baoDaDoiAnh(phien.person_id, phien.person_id);
+      const daTai = await nenVaDung(daChon, (nen) => taiAnhDaiDien(phien.person_id, nen, phien.person_id));
+      // The new id is the new version: every frame on this phone switches now;
+      // the stream tells everyone who shares a group with us.
+      baoDaDoiAnh(phien.person_id, phien.person_id, daTai.id);
     } catch (error) {
       await boAnh(daChon);
-      setLoi(error instanceof ApiError ? error.message : thongDiepNguoiDoc(0, null));
+      // `AnhNhomError` carries the device's own words ("not a picture", "too
+      // large"); replacing them with the network sentence sent people looking
+      // at their Wi-Fi for a file that was never an image (measured 2026-09-24).
+      setLoi(error instanceof ApiError || error instanceof AnhNhomError ? error.message : thongDiepNguoiDoc(0, null));
     } finally {
       setDangDoiAnh(false);
     }

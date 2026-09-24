@@ -1,44 +1,69 @@
 /**
- * Which avatar frames may ask the server, and what they ask for.
+ * Which avatar each frame shows, kept consistent across readers.
  *
- * Every live screen that shows a person draws the same frame: the photograph
- * that person uploaded (M8), or their initials. The address never changes
- * (`/people/{id}/avatar`), and the server answers 404 for "no picture yet" and
- * 403 for "you share no group with them" -- both ordinary. So two things have
- * to live somewhere shared rather than in each screen:
+ * The server is the one source of truth: `GET /people/avatars?ids=...` answers
+ * each person's current avatar id (or null for none) for the people this
+ * reader may see, and `/people/avatars/stream` pushes a hint when one changes.
+ * A frame's address carries that id -- `/people/{id}/avatar?v=<avatar id>` --
+ * so the address changes exactly when the picture does. That is what makes
+ * every cache honest: the browser's HTTP cache (`max-age=300`) and expo-image's
+ * native disk cache are both keyed by URL, and a URL that never changed kept
+ * showing a replaced picture for minutes on web and indefinitely on a phone
+ * (measured on web 2026-09-24: B saw A's old picture until max-age ran out).
  *
- *   - **A refusal is remembered.** A roster of thirty people, most without a
- *     photograph, would otherwise send thirty requests on every render and
- *     every scroll back. A refused frame stays initials for `NHO_HONG_MS`, then
- *     may ask again (somebody may have uploaded since).
- *   - **An upload is announced.** The address is stable, so a frame already
- *     pointed at it keeps drawing the old bytes out of cache. `baoDaDoiAnh`
- *     bumps a per-person counter that goes into the query string, and every
- *     mounted frame hears about it -- not only the settings screen that did
- *     the upload.
- *   - **The same frame gets the same object.** expo-image on web fetches a
- *     headered source in an effect keyed on the source OBJECT, so a fresh
- *     `{uri, headers}` per render is a fresh request per render (measured: 43
- *     avatar requests for an eight-person roster). An unchanged address and
- *     header set hands back the object it handed out last time.
+ * Rules this module holds, all tested in `tests/anh-dai-dien.test.mjs`:
  *
- * All of it belongs to one signed-in account: a different `actorId` wipes the
- * memory, because what one account may see says nothing about another's.
+ *   - **Unknown means ask, not guess.** A person whose version is not known
+ *     draws initials and is queued; queued ids go out in one request of at
+ *     most 100. Known-null draws initials with no request at all, so a roster
+ *     of people without pictures costs one call, not one 404 each.
+ *   - **Newer beats older.** A push or one's own upload bumps that person's
+ *     generation; a versions answer that was asked for before the bump is
+ *     not allowed to overwrite it.
+ *   - **The same frame gets the same object.** expo-image on web refetches a
+ *     headered source whenever the source OBJECT changes, so an unchanged
+ *     address and header set hands back the object handed out last time.
+ *   - **A picture that would not load stays initials for that version only.**
+ *   - **One account at a time.** A different `actorId` wipes everything.
  *
- * Pure module, no React: `AvatarNguoi` subscribes to it, the node suite runs it.
+ * Pure module, no React: `AvatarNguoi` subscribes, the stream feeds it.
  */
 import type { ImageSource } from "expo-image";
 
-import { nguonAnhDaiDien } from "./anh-ca-nhan";
+import { BASE_URL, duongDanAnhDaiDien, translatedAsActor } from "../../api";
+import { headerNguoiGoi } from "../../danh-tinh";
 
-/** How long a refused frame stays initials before it may ask again. */
-export const NHO_HONG_MS = 10 * 60 * 1000;
+/** One versions request asks for at most this many people (the server's limit). */
+export const TOI_DA_MOT_LAN = 100;
+
+export type PhienBan = string | null;
+export type LayPhienBan = (ids: string[], actorId: string) => Promise<Record<string, PhienBan>>;
+
+async function layTuMayChu(ids: string[], actorId: string): Promise<Record<string, PhienBan>> {
+  const tra = await translatedAsActor<{ avatars: Record<string, PhienBan> }>(
+    {},
+    `/people/avatars?ids=${ids.map(encodeURIComponent).join(",")}`,
+    // A hung request would keep these people "being asked" forever; the
+    // timeout turns it into a failure, which leaves them unknown and askable.
+    { method: "GET", actorId, timeoutMs: 10_000 },
+  );
+  return tra.avatars ?? {};
+}
+
+let lay: LayPhienBan = layTuMayChu;
+let hen: (f: () => void) => void = (f) => {
+  setTimeout(f, 20);
+};
 
 let chu: string | null = null;
-const hongLuc = new Map<string, number>();
-const phienBan = new Map<string, number>();
+const phienBan = new Map<string, PhienBan>();
+const doi = new Map<string, number>();
+const choHoi = new Set<string>();
+const dangHoi = new Set<string>();
+const hong = new Set<string>();
 const daDua = new Map<string, { khoa: string; nguon: ImageSource }>();
 const nghe = new Set<() => void>();
+let daHen = false;
 let nhip = 0;
 
 function phat(): void {
@@ -46,34 +71,74 @@ function phat(): void {
   for (const f of nghe) f();
 }
 
-/** Another account (or none) wipes what the previous one learnt. */
 function theoChu(actorId: string): void {
   if (chu === actorId) return;
   chu = actorId;
-  hongLuc.clear();
   phienBan.clear();
+  doi.clear();
+  choHoi.clear();
+  dangHoi.clear();
+  hong.clear();
   daDua.clear();
+}
+
+function xin(personId: string): void {
+  if (choHoi.has(personId) || dangHoi.has(personId)) return;
+  choHoi.add(personId);
+  if (daHen) return;
+  daHen = true;
+  hen(() => {
+    daHen = false;
+    void guiDi();
+  });
+}
+
+async function guiDi(): Promise<void> {
+  const actorId = chu;
+  if (actorId === null) return;
+  while (choHoi.size > 0) {
+    const lo = [...choHoi].slice(0, TOI_DA_MOT_LAN);
+    const truoc = new Map(lo.map((id) => [id, doi.get(id) ?? 0]));
+    for (const id of lo) {
+      choHoi.delete(id);
+      dangHoi.add(id);
+    }
+    let tra: Record<string, PhienBan> | null = null;
+    try {
+      tra = await lay(lo, actorId);
+    } catch {
+      tra = null;
+    }
+    if (chu !== actorId) return;
+    for (const id of lo) {
+      dangHoi.delete(id);
+      // A failed request leaves the person unknown; the next resync asks again.
+      if (tra === null || (doi.get(id) ?? 0) !== truoc.get(id)) continue;
+      // Absent means this reader may not see them: initials, same as the image route's 403.
+      phienBan.set(id, Object.prototype.hasOwnProperty.call(tra, id) ? tra[id] : null);
+    }
+    phat();
+  }
 }
 
 /**
  * The frame source for `personId` as seen by `actorId`, or null for initials.
- *
- * Null without asking when either id is missing or the server refused this
- * frame recently; otherwise the address with this person's upload counter.
+ * Null while the version is being asked for, for "no picture", for a reader
+ * the server does not let see it, and for a version whose picture would not load.
  */
-export function nguonAvatar(
-  personId: string | null | undefined,
-  actorId: string | null | undefined,
-  bayGio: number = Date.now(),
-): ImageSource | null {
+export function nguonAvatar(personId: string | null | undefined, actorId: string | null | undefined): ImageSource | null {
   if (!personId || !actorId) return null;
   theoChu(actorId);
-  const luc = hongLuc.get(personId);
-  if (luc !== undefined) {
-    if (bayGio - luc < NHO_HONG_MS) return null;
-    hongLuc.delete(personId);
+  const v = phienBan.get(personId);
+  if (v === undefined) {
+    xin(personId);
+    return null;
   }
-  const moi = nguonAnhDaiDien(personId, actorId, phienBan.get(personId) ?? 0);
+  if (v === null || hong.has(`${personId} ${v}`)) return null;
+  const moi: ImageSource = {
+    uri: `${BASE_URL}${duongDanAnhDaiDien(personId)}?v=${encodeURIComponent(v)}`,
+    headers: headerNguoiGoi(actorId, { roles: "member" }),
+  };
   // The bearer is in the headers, so a new sign-in as the same person is a new key too.
   const khoa = `${moi.uri} ${JSON.stringify(moi.headers)}`;
   const cu = daDua.get(personId);
@@ -82,20 +147,48 @@ export function nguonAvatar(
   return moi;
 }
 
-/** The frame for `personId` would not load (404, 403, network): draw initials. */
-export function baoAnhHong(personId: string, actorId: string, bayGio: number = Date.now()): void {
+/** The picture for this person's current version would not load: initials until it changes. */
+export function baoAnhHong(personId: string, actorId: string): void {
   theoChu(actorId);
-  if (hongLuc.has(personId)) return;
-  hongLuc.set(personId, bayGio);
+  const v = phienBan.get(personId);
+  if (typeof v !== "string" || hong.has(`${personId} ${v}`)) return;
+  hong.add(`${personId} ${v}`);
   phat();
 }
 
-/** `personId` has a new picture: forget any refusal and bust every frame's cache. */
-export function baoDaDoiAnh(personId: string, actorId: string): void {
+/**
+ * `personId` has a new picture. With the id the upload answered, every frame
+ * switches at once; without it, the person is asked for again.
+ */
+export function baoDaDoiAnh(personId: string, actorId: string, avatarId?: string | null): void {
   theoChu(actorId);
-  hongLuc.delete(personId);
-  phienBan.set(personId, (phienBan.get(personId) ?? 0) + 1);
+  doi.set(personId, (doi.get(personId) ?? 0) + 1);
+  if (avatarId === undefined) {
+    phienBan.delete(personId);
+    xin(personId);
+  } else {
+    phienBan.set(personId, avatarId);
+  }
   phat();
+}
+
+/** Ask again for everyone this account has drawn: after a reconnect or coming back to the foreground. */
+export function lamMoiTatCa(actorId: string): void {
+  theoChu(actorId);
+  for (const id of phienBan.keys()) xin(id);
+}
+
+/** One frame from the stream. Anything unrecognised is ignored, never trusted. */
+export function nhanSuKien(suKien: unknown, actorId: string): void {
+  if (!suKien || typeof suKien !== "object") return;
+  const e = suKien as { type?: unknown; person_id?: unknown; avatar_id?: unknown };
+  if (e.type === "ready") {
+    lamMoiTatCa(actorId);
+    return;
+  }
+  if (e.type !== "avatar" || typeof e.person_id !== "string") return;
+  if (e.avatar_id !== undefined && e.avatar_id !== null && typeof e.avatar_id !== "string") return;
+  baoDaDoiAnh(e.person_id, actorId, (e.avatar_id as string | null | undefined) ?? null);
 }
 
 /** Subscribe to changes; returns the unsubscribe. Shape of `useSyncExternalStore`. */
@@ -109,4 +202,10 @@ export function dangKyAnhDaiDien(f: () => void): () => void {
 /** Changes on every announcement; the snapshot `useSyncExternalStore` compares. */
 export function nhipAnhDaiDien(): number {
   return nhip;
+}
+
+/** Test seam: where versions come from and how the batch is deferred. */
+export function datNguonPhienBan(f: LayPhienBan, henMoi?: (f: () => void) => void): void {
+  lay = f;
+  if (henMoi) hen = henMoi;
 }
