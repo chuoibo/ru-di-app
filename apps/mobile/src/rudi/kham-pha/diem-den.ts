@@ -113,9 +113,16 @@ export function cauKhoangCach(diemDen: Pick<DiemDen, "distanceKm">): string | nu
   return `Cách bạn ${diemDen.distanceKm} km`;
 }
 
-/** The subtitle under a destination name: province, and distance if known. */
+/**
+ * The subtitle under a destination name: province, and distance if known.
+ *
+ * The province is left out when it is the name itself. A province is its own
+ * destination (the catalogue has one per province), and «Thành phố Hồ Chí Minh»
+ * printed twice, bold then grey, reads as a rendering fault.
+ */
 export function dongPhuDiemDen(diemDen: DiemDen): string {
-  const phan = [diemDen.province, cauKhoangCach(diemDen)].filter(
+  const tinh = diemDen.province?.trim() === diemDen.name.trim() ? null : diemDen.province;
+  const phan = [tinh, cauKhoangCach(diemDen)].filter(
     (x): x is string => typeof x === "string" && x !== "",
   );
   return phan.join(" · ");

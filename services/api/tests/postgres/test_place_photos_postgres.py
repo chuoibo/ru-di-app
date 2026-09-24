@@ -102,6 +102,7 @@ def _place(session: Session) -> Place:
         traits=[],
         lat=11.94,
         lng=108.44,
+        geo_precision="rooftop",
         source="seed",
     )
     session.add(row)
@@ -219,6 +220,7 @@ def test_a_synthetic_place_never_gets_a_real_photograph(postgres_session):
         "traits": [],
         "lat": 11.94,
         "lng": 108.44,
+        "geo_precision": "rooftop",
     }
     bia = Place(id=f"p-seed-{uuid.uuid4().hex[:8]}", source="seed", **chung)
     that = Place(

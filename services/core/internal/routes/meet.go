@@ -68,7 +68,12 @@ func postMeetingPoint() Route {
 		}
 		places := make([]meeting.Place, 0, len(rows))
 		for _, row := range rows {
-			places = append(places, meeting.Place{ID: row.ID, Name: row.Name, Category: row.Category, Address: row.Address, Lat: row.Lat, Lng: row.Lng})
+			// A place with no coordinates cannot be a meeting point: the whole
+			// computation is a distance, and there is nothing to measure from.
+			if row.Lat == nil || row.Lng == nil {
+				continue
+			}
+			places = append(places, meeting.Place{ID: row.ID, Name: row.Name, Category: row.Category, Address: row.Address, Lat: *row.Lat, Lng: *row.Lng})
 		}
 		candidates, err := meeting.RankMeetingPoints(origins, places, meetCandidates)
 		if err != nil {

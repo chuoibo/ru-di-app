@@ -199,8 +199,8 @@ export type AnhDiaDiem = {
    * is a string an `<Image>` fails on in silence.
    */
   url: string;
-  author: string;
-  license: string;
+  author: string | null;
+  license: string | null;
   /** Where the original lives, so a reader can check the credit. */
   sourceUrl: string;
   title: string | null;
@@ -210,6 +210,15 @@ export type AnhDiaDiem = {
 
 function soDuong(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.trunc(v) : null;
+}
+
+function chuHoacNull(a: Record<string, unknown>, key: string, field: string): string | null {
+  const value = a[key];
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`${field}.${key} phải là chuỗi có nội dung hoặc null`);
+  }
+  return value;
 }
 
 function chuKhongRong(raw: Record<string, unknown>, khoa: string, field: string): string {
@@ -235,8 +244,12 @@ export function parseAnhDiaDiem(raw: unknown, field: string): AnhDiaDiem {
   return {
     id: chuKhongRong(a, "id", field),
     url,
-    author: chuKhongRong(a, "author", field),
-    license: chuKhongRong(a, "license", field),
+    // Null when the source cannot say. Frames from the place feed are posts
+    // people published on a platform, with no recorded author or licence; the
+    // catalogue shows them without a credit rather than inventing one. A blank
+    // string is still refused -- that is a false answer, not an absent one.
+    author: chuHoacNull(a, "author", field),
+    license: chuHoacNull(a, "license", field),
     sourceUrl: chuKhongRong(a, "source_url", field),
     title: typeof title === "string" && title.trim() !== "" ? title : null,
     width: soDuong(a.width),
@@ -299,6 +312,71 @@ export const CAU_NGUON_ANH =
   "Ảnh có giấy phép chụp quanh đây, từ Wikimedia Commons. Không phải ảnh do nơi này cung cấp.";
 
 /**
+ * The credit line of a picture taken from the place feed, on a card.
+ *
+ * Those pictures are frames of posts people published about the place
+ * (TikTok, Threads), picked by the feed for how well they show it. They carry
+ * no author and no licence, so the line says the one thing that is true of
+ * every one of them -- where they came from -- and nothing it cannot back.
+ * Calling them licensed, or «from Wikimedia Commons», would be false twice.
+ */
+export const CAU_ANH_BAI_DANG = "Ảnh từ bài đăng mạng xã hội";
+
+/** Platform names as a person reads them, keyed on the post's host. */
+const NEN_TANG: readonly (readonly [RegExp, string])[] = [
+  [/(^|\.)tiktok\.com$/i, "TikTok"],
+  [/(^|\.)threads\.(net|com)$/i, "Threads"],
+  [/(^|\.)instagram\.com$/i, "Instagram"],
+  [/(^|\.)facebook\.com$/i, "Facebook"],
+  [/(^|\.)youtube\.com$|(^|\.)youtu\.be$/i, "YouTube"],
+];
+
+function tenNenTang(sourceUrl: string): string | null {
+  const host = /^https?:\/\/([^/?#:]+)/i.exec(sourceUrl.trim())?.[1];
+  if (host === undefined) return null;
+  return NEN_TANG.find(([mau]) => mau.test(host))?.[1] ?? null;
+}
+
+/**
+ * The sentence under a gallery, said about the pictures actually in it.
+ *
+ * One fixed sentence used to sit under every gallery and name Wikimedia
+ * Commons, which was true of the licensed photographs and false of the feed's
+ * frames the day those arrived (2026-09-23, native, real data). The gallery can
+ * hold either kind, or both, so the sentence is built from what is there.
+ * Null when there is nothing to say it under.
+ */
+export function cauNguonAnh(anh: readonly Pick<AnhDiaDiem, "license" | "sourceUrl">[]): string | null {
+  if (anh.length === 0) return null;
+  const coPhep = anh.some((a) => a.license !== null);
+  const baiDang = anh.filter((a) => a.license === null);
+  if (baiDang.length === 0) return CAU_NGUON_ANH;
+  const nenTang = [...new Set(baiDang.map((a) => tenNenTang(a.sourceUrl)))];
+  const noi = nenTang.every((ten): ten is string => ten !== null) ? nenTang.join(", ") : "mạng xã hội";
+  // «trên TikTok», not «của người dùng»: in this app «người dùng» reads as the
+  // people using Rủ Đi, which would name a source these pictures do not have.
+  if (!coPhep) return `Ảnh lấy từ bài đăng trên ${noi}. Không phải ảnh do nơi này cung cấp.`;
+  return `Ảnh chụp quanh đây có giấy phép từ Wikimedia Commons, cùng ảnh lấy từ bài đăng trên ${noi}. Không phải ảnh do nơi này cung cấp.`;
+}
+
+/**
+ * Rows drawn per step of the list.
+ *
+ * The catalogue for one city is thousands of places (Hồ Chí Minh: 2,391), and
+ * every row is a live view tree inside one ScrollView. Mounting them all took
+ * an 11-second frame and the phone's low-memory killer shut the app while it
+ * was on screen (2026-09-23, native, real data). Rows are therefore added in
+ * steps the person asks for; the search and the chips still read the whole
+ * list, so nothing is out of reach, only out of the view tree.
+ */
+export const HANG_MOI_LUOT = 20;
+
+/** «Xem thêm 20 nơi», never promising more than is left. */
+export function cauXemThem(conLai: number, moiLuot: number = HANG_MOI_LUOT): string {
+  return `Xem thêm ${Math.min(conLai, moiLuot).toLocaleString("vi-VN")} nơi`;
+}
+
+/**
  * The cover photograph of a card, or null when it may not be drawn.
  *
  * «May not», not «is not there»: a URL whose author or licence did not come
@@ -306,11 +384,21 @@ export const CAU_NGUON_ANH =
  * credit goes with it. The card then falls back to the typographic tile --
  * which is exactly what the design rule prescribes for a photograph that
  * cannot say where it came from.
+ *
+ * The one exception is the place feed (`source: "vnlocal"`), whose frames can
+ * say where they came from -- a post -- but have no author or licence to give.
+ * Leaving licensing aside while the catalogue is built was the product lead's
+ * call (2026-09-22); the card still prints where the picture is from, so it is
+ * never drawn without a word about it.
  */
 export function anhBiaThe(
-  place: Pick<Place, "photoUrl" | "photoAuthor" | "photoLicense">,
+  place: Pick<Place, "photoUrl" | "photoAuthor" | "photoLicense" | "source">,
 ): AnhCoGhiCong | null {
-  if (place.photoUrl === null || place.photoAuthor === null || place.photoLicense === null) {
+  if (place.photoUrl === null) return null;
+  if (place.source === "vnlocal" && place.photoAuthor === null && place.photoLicense === null) {
+    return anhDanhMuc({ uri: place.photoUrl }, { author: null, license: null, source: CAU_ANH_BAI_DANG });
+  }
+  if (place.photoAuthor === null || place.photoLicense === null) {
     return null;
   }
   // One decision, not two. Two screens used to ask this function whether the
@@ -578,9 +666,17 @@ export function cauDuongDi(place: Pick<Place, "distanceKm" | "travelMinutes">): 
   return phan.length === 0 ? "Mở bằng ứng dụng bản đồ" : phan.join(" · ");
 }
 
-/** A `geo:` URL the phone's map app understands; no map SDK in this build. */
+/** A `geo:` URL the phone's map app understands; no map SDK in this build.
+ *
+ *  A place with no coordinates hands the map app a search instead of a point.
+ *  `geo:0,0?q=name` is the form the geo URI scheme defines for "search for this
+ *  name", and it is what the map app would otherwise have had to guess from
+ *  `geo:null,null` -- which it cannot parse, so the button would open nothing
+ *  for a quarter of the catalogue. */
 export function duongChiDuong(place: Pick<Place, "lat" | "lng" | "name">): string {
-  return `geo:${place.lat},${place.lng}?q=${encodeURIComponent(place.name)}`;
+  const q = encodeURIComponent(place.name);
+  if (place.lat === null || place.lng === null) return `geo:0,0?q=${q}`;
+  return `geo:${place.lat},${place.lng}?q=${q}`;
 }
 
 /**

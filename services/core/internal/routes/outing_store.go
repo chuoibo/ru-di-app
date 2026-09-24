@@ -162,8 +162,7 @@ func (o outingStore) GetPlace(placeID string) (*outingsteps.Place, error) {
 	if err != nil || record == nil {
 		return nil, err
 	}
-	lat, lng := record.Lat, record.Lng
-	return &outingsteps.Place{Lat: &lat, Lng: &lng}, nil
+	return &outingsteps.Place{Lat: record.Lat, Lng: record.Lng}, nil
 }
 
 func (o outingStore) CreateOuting(draft outingsteps.OutingDraft) (outingsteps.Outing, error) {

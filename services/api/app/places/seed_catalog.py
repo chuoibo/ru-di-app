@@ -21,39 +21,20 @@ from sqlalchemy.orm import Session
 from app.db.models import Destination, Place
 from app.places.activities import hoat_dong_theo_dong
 from app.places.catalog import PLACES
+from app.places.destinations_vn import DESTINATIONS_VN
 from app.places.details import find_detail
 
-# Two destinations, because the twelve seed rows sit in two cities. Coordinates
-# are the city centres; the boxes are wide enough to hold the seed rows and are
-# what the OSM importer would query with.
-SEED_DESTINATIONS: list[dict[str, Any]] = [
-    {
-        "id": "d-da-lat",
-        "name": "Đà Lạt",
-        "province": "Lâm Đồng",
-        "lat": 11.9404,
-        "lng": 108.4583,
-        "bbox_south": 11.88,
-        "bbox_west": 108.38,
-        "bbox_north": 12.00,
-        "bbox_east": 108.52,
-        "blurb": "Thành phố sương mù, quán cà phê và đồi thông.",
-        "sort_order": 10,
-    },
-    {
-        "id": "d-tphcm",
-        "name": "TP. Hồ Chí Minh",
-        "province": "TP. Hồ Chí Minh",
-        "lat": 10.7769,
-        "lng": 106.7009,
-        "bbox_south": 10.68,
-        "bbox_west": 106.60,
-        "bbox_north": 10.88,
-        "bbox_east": 106.82,
-        "blurb": "Ăn khuya, rooftop và cà phê vợt trong hẻm.",
-        "sort_order": 20,
-    },
-]
+# One list of destinations, not two. This module used to carry its own copy of
+# two of them, and the copy had drifted: its bounding box for Ho Chi Minh City
+# was four times the area of the one in `destinations_vn`, which is the box the
+# OpenStreetMap importer actually queries with. All twelve seed rows sit inside
+# the `destinations_vn` boxes, so the wider copy bought nothing and cost a
+# second answer to the question "where is this city".
+#
+# Seeding all fifteen also closes a measured hole: a stack with only two
+# destinations cannot answer a request for Hoi An, and a flow that asked for one
+# failed on an empty screen rather than on a missing destination.
+SEED_DESTINATIONS: list[dict[str, Any]] = DESTINATIONS_VN
 
 
 def _destination_for(place: dict[str, Any]) -> str:
@@ -100,6 +81,10 @@ def seed_place_catalog(session: Session) -> tuple[int, int]:
                 address=place["address"],
                 lat=place["lat"],
                 lng=place["lng"],
+                # A seed row's point is a specific spot rather than the
+                # centre of an area, so it claims the precision it has.
+                # The catalogue refuses a point that will not say.
+                geo_precision="rooftop",
                 rating=place["rating"],
                 rating_count=place["rating_count"],
                 price_min_vnd=place["price_min_vnd"],

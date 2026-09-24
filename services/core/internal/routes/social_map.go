@@ -115,8 +115,12 @@ func socialMap() Route {
 		}
 		trendingInput := make([]socialmap.Place, 0, len(catalogue))
 		for _, place := range catalogue {
+			// A map layer: a place with nowhere to put a pin is not on it.
+			if place.Lat == nil || place.Lng == nil {
+				continue
+			}
 			trendingInput = append(trendingInput, socialmap.Place{
-				ID: place.ID, Name: place.Name, Lat: place.Lat, Lng: place.Lng,
+				ID: place.ID, Name: place.Name, Lat: *place.Lat, Lng: *place.Lng,
 				Rating: place.Rating, RatingCount: place.RatingCount, Flag: place.Flag,
 			})
 		}
@@ -129,11 +133,17 @@ func socialMap() Route {
 			trendingList = append(trendingList, item)
 		}
 		recommendedList := pyjson.List{}
-		for i, entry := range scored {
-			if i == mapRecommended {
+		for _, entry := range scored {
+			if len(recommendedList) == mapRecommended {
 				break
 			}
-			item, err := mapPlace(entry.place.ID, entry.place.Name, entry.place.Lat, entry.place.Lng, entry.place.Rating, entry.place.RatingCount)
+			// Counted by pins placed rather than by position in the ranking:
+			// skipping a place with no coordinates must not also shorten the
+			// layer by one.
+			if entry.place.Lat == nil || entry.place.Lng == nil {
+				continue
+			}
+			item, err := mapPlace(entry.place.ID, entry.place.Name, *entry.place.Lat, *entry.place.Lng, entry.place.Rating, entry.place.RatingCount)
 			if err != nil {
 				return endpoint.Reply{}, err
 			}

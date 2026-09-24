@@ -19,11 +19,15 @@ type PlacePhoto struct {
 	ByteSize    int64
 	Width       int64
 	Height      int64
-	Author      string
-	License     string
-	SourceURL   string
-	Title       *string
-	SortOrder   int64
+	// Nil when the source cannot say. Feed frames are posts people published
+	// on a platform; who took them and under what terms is not recorded, and
+	// the catalogue decided to show them without a credit rather than invent
+	// one. Scanning NULL into a string is what made every read 500.
+	Author    *string
+	License   *string
+	SourceURL string
+	Title     *string
+	SortOrder int64
 }
 
 // Mapped column order of db.models.PlacePhoto, including created_at the

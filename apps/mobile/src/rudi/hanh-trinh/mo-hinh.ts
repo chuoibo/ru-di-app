@@ -39,8 +39,13 @@ export type HanhTrinh = {
 export type ChoChieu = {
   id: string;
   name: string;
-  lat: number;
-  lng: number;
+  /** Null together, or not at all: a quarter of the catalogue has no
+   *  coordinates. Widened rather than filtered, because this same list feeds
+   *  the place search when planning an outing, and dropping those places would
+   *  make a quarter of the catalogue impossible to add to a plan. The map side
+   *  already checks `Number.isFinite` before drawing anything. */
+  lat: number | null;
+  lng: number | null;
   address?: string | null;
   category?: string;
 };

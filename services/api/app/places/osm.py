@@ -225,6 +225,10 @@ def row_from_element(
         "address": address_for(tags, fallback_city),
         "lat": float(lat),
         "lng": float(lng),
+        # OpenStreetMap gives the node's own coordinates, not the centre
+        # of the ward it sits in. Saying so is what lets a screen tell a
+        # located place apart from an approximated one.
+        "geo_precision": "rooftop",
         "rating": None,
         "rating_count": None,
         "price_min_vnd": None,

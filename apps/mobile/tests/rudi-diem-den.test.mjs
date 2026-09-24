@@ -144,3 +144,15 @@ test("điểm đến đã lưu mà máy chủ không còn thì lùi về mặc �
   }
   assert.equal(daGoi.length, 2, "một lần hỏi nơi đã lưu, một lần lùi về mặc định");
 });
+
+test("dòng phụ không lặp lại tên khi điểm đến chính là một tỉnh", () => {
+  const doc = (o) => ({ id: "x", name: o.name, province: o.province, blurb: null, lat: 0, lng: 0, distanceKm: o.distanceKm ?? null });
+  // 34 tỉnh là 34 điểm đến: tên và tỉnh trùng nhau, và bộ chọn từng in
+  // «Thành phố Hồ Chí Minh» hai lần liền (e2e native 2026-09-23).
+  assert.equal(dongPhuDiemDen(doc({ name: "Thành phố Hồ Chí Minh", province: "Thành phố Hồ Chí Minh" })), "");
+  assert.equal(
+    dongPhuDiemDen(doc({ name: "Thành phố Hồ Chí Minh", province: "Thành phố Hồ Chí Minh", distanceKm: 3 })),
+    "Cách bạn 3 km",
+  );
+  assert.equal(dongPhuDiemDen(doc({ name: "Đà Lạt", province: "Lâm Đồng" })), "Lâm Đồng");
+});
