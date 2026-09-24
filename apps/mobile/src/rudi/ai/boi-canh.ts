@@ -1,6 +1,6 @@
 /**
  * The context bundle: the one thing the caller hands the model, and the one
- * shape both AI surfaces use (ADR-0034 §2.2).
+ * shape both AI surfaces use (ADR-0036 §2.2).
  *
  * The server does not read the conversation. It cannot: chat v2 is end to end
  * encrypted and the server holds no key. So context reaches a model exactly
