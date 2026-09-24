@@ -521,10 +521,20 @@ jobs:
         # the pool is lazy (pgxpool connects on first use) and /healthz
         # deliberately never touches the database, so this step still asks only
         # what it means to ask -- does the image boot and report healthy.
+        #
+        # The chat feed and group AI are on by default in prod, and core then
+        # checks the chat schema at startup and refuses to start without it
+        # (bbf62d4b). With no database that refusal is correct, so this step
+        # takes the documented way out, as parity_stacks.sh does. The prod
+        # default itself is booted against a real schema elsewhere:
+        # TestChatFeaturesMountedWithNoFlagInProd and
+        # TestChatFeaturesRefuseToStartWithoutSchema (go_postgres_tier.sh), and
+        # the chat end-to-end job, which runs prod with no flag.
         run: |
           docker run -d --name core --health-interval 2s \
             -e MOBILE_PYTHON_UPSTREAM=http://127.0.0.1:9 \
             -e MOBILE_DATABASE_URL=postgresql://none@127.0.0.1:9/none \
+            -e MOBILE_CHAT_CHANGES_CANDIDATE=0 \
             mobile-core:ci
           for i in $(seq 1 60); do
             status=$(docker inspect --format '{{.State.Health.Status}}' core)
