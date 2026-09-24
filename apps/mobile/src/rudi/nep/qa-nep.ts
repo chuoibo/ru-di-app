@@ -23,12 +23,12 @@ export const TAT_NEP_QA: boolean = process.env.EXPO_PUBLIC_QA_TAT_NEP === "1";
 
 /**
  * `EXPO_PUBLIC_QA_NEP_VIEC=bao|hoi` hands Nếp one piece of work at start-up,
- * so the two states that only work can reach -- the second slip (`bao`) and
- * the line written on the slip (`hoi`, work that needs an answer, arriving
- * while the person has Nếp pulled out, the only time Nếp speaks) -- can be
- * looked at. Nothing in the app sends work to the dock yet, so without this
- * knob those states exist only in `trang-thai.ts` and nobody has ever seen
- * them. Same inlining and shipping rules as the knob above.
+ * so the second slip -- the one state only work can reach -- can be looked
+ * at: tucked (`bao`), or behind a Nếp the person had already pulled out when
+ * the work arrived (`hoi`, which simulates that pull). Work never widens Nếp
+ * over the page (ADR-0035 §2.3). Nothing in the app sends work to the dock
+ * yet, so without this knob the second slip exists only in `trang-thai.ts`.
+ * Same inlining and shipping rules as the knob above.
  */
 const VIEC = process.env.EXPO_PUBLIC_QA_NEP_VIEC;
 export const VIEC_NEP_QA: "bao" | "hoi" | null = VIEC === "bao" || VIEC === "hoi" ? VIEC : null;

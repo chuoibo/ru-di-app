@@ -29,8 +29,10 @@ Ba lượt reviewer độc lập (impeccable finish reviewer, 23–24/09) bắt 
 2. **Kéo ra (`nghi`) là một lối đi, không phải chỗ đứng.** Nó chỉ đến từ cú chạm của người dùng.
    Đóng bảng, rời màn, một tờ khác đóng lại, hay **6 giây không chạm lần hai** đều đưa Nếp về
    mép: một cú chạm lỡ vào mép 10dp, sát dải Back của hệ thống, không được để 56dp nằm trên chữ
-   trong lúc người ta đọc tiếp. Khi bật trình đọc màn hình thì không tự cất theo giờ (người đó
-   di tiêu điểm chậm hơn và không được bị giành), thay vào đó có thao tác «Cất Nếp vào mép».
+   trong lúc người ta đọc tiếp. Đang kéo dọc thì đồng hồ dừng, thả tay mới đếm lại. Trên Android
+   và iOS, khi bật trình đọc màn hình thì không tự cất theo giờ (người đó
+   di tiêu điểm chậm hơn và không được bị giành), thay vào đó có thao tác «Cất Nếp vào mép». Bản
+   web không biết được (react-native-web luôn trả «có trình đọc»), nên trên web vẫn tự cất.
    «Đã kéo ra» không được lưu xuống đĩa; mỗi lần mở app, Nếp bắt đầu ở trạng thái cài.
    *Thay ADR-0033 §2.4.* Câu «rời màn tiền thì Nếp trả về đúng lựa chọn của người dùng» vẫn đúng,
    vì lựa chọn nghỉ duy nhất còn lại là mép. «Ai đã vuốt Nếp đi thì vẫn đi» vẫn giữ nguyên.

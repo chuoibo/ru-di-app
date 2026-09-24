@@ -167,12 +167,15 @@ export function NepDock() {
       sub.remove();
     };
   }, []);
+  // Held while a finger is on the slip: a slow drag along the rail is the
+  // person using Nếp, and the count starts again when it lets go.
+  const [dangKeo, datDangKeo] = useState(false);
   const dangRa = dock.trangThai === "nghi";
   useEffect(() => {
-    if (!dangRa || docManHinh) return;
+    if (!dangRa || docManHinh || dangKeo) return;
     const t = setTimeout(() => gui({ kieu: "tu-cat" }), TU_CAT_MS);
     return () => clearTimeout(t);
-  }, [dangRa, docManHinh, gui]);
+  }, [dangRa, docManHinh, dangKeo, gui]);
 
   // Only outward and vertical drags mean anything here. Under gesture
   // navigation the outer ~30dp of the edge belongs to the system's Back swipe,
@@ -181,6 +184,12 @@ export function NepDock() {
   // drag is clamped away rather than competed for.
   const keo = Gesture.Pan()
     .enabled(!dock.nhuongCho)
+    .onStart(() => {
+      runOnJS(datDangKeo)(true);
+    })
+    .onFinalize(() => {
+      runOnJS(datDangKeo)(false);
+    })
     .onUpdate((e) => {
       y.value = ghimVaoRay(yTuTyLe(tyLe, ray) + e.translationY, ray);
       keoX.value = Math.max(0, e.translationX);

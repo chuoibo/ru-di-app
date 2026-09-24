@@ -16,10 +16,9 @@ import { TAT_NEP_QA, VIEC_NEP_QA } from "./qa-nep";
  */
 export function NepNoi() {
   const { dock, gui, phieu } = useNep();
-  // QA only: the states work reaches, made reachable for a screenshot. Sent
-  // once, on the first screen that declares itself to Nếp, so the line is
-  // still up when a person (or a capture) is looking rather than having timed
-  // out behind the sign-in screen.
+  // QA only: the state work reaches, made reachable for a screenshot. Sent
+  // once, on the first screen that declares itself to Nếp, so it lands on a
+  // real page rather than behind the sign-in screen.
   const daGiao = useRef(false);
   const coPhieu = phieu !== null;
   useEffect(() => {
