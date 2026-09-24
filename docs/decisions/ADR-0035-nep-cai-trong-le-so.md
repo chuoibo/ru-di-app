@@ -27,8 +27,11 @@ Ba lượt reviewer độc lập (impeccable finish reviewer, 23–24/09) bắt 
 1. **Chỗ nghỉ duy nhất là `an`: tờ giấy cài trong lề, lộ 10dp.** Có việc thì thêm một tờ thứ hai
    lộ 4dp, tổng 14dp, vẫn trong lề 16dp. Vùng chạm dừng đúng ở lề.
 2. **Kéo ra (`nghi`) là một lối đi, không phải chỗ đứng.** Nó chỉ đến từ cú chạm của người dùng.
-   Đóng bảng, rời màn, hay một tờ khác đóng lại đều đưa Nếp về mép. «Đã kéo ra» không được lưu
-   xuống đĩa; mỗi lần mở app, Nếp bắt đầu ở trạng thái cài.
+   Đóng bảng, rời màn, một tờ khác đóng lại, hay **6 giây không chạm lần hai** đều đưa Nếp về
+   mép: một cú chạm lỡ vào mép 10dp, sát dải Back của hệ thống, không được để 56dp nằm trên chữ
+   trong lúc người ta đọc tiếp. Khi bật trình đọc màn hình thì không tự cất theo giờ (người đó
+   di tiêu điểm chậm hơn và không được bị giành), thay vào đó có thao tác «Cất Nếp vào mép».
+   «Đã kéo ra» không được lưu xuống đĩa; mỗi lần mở app, Nếp bắt đầu ở trạng thái cài.
    *Thay ADR-0033 §2.4.* Câu «rời màn tiền thì Nếp trả về đúng lựa chọn của người dùng» vẫn đúng,
    vì lựa chọn nghỉ duy nhất còn lại là mép. «Ai đã vuốt Nếp đi thì vẫn đi» vẫn giữ nguyên.
 3. **Nếp không bao giờ tự nở rộng.** Trạng thái `he` (dòng hé) bị bỏ. Việc chỉ được báo bằng tờ thứ
@@ -57,7 +60,7 @@ Ba lượt reviewer độc lập (impeccable finish reviewer, 23–24/09) bắt 
 - Công cụ đo `apps/mobile/tools/xem-dock-nep.mjs` giữ các luật trên:
   - lúc nghỉ, trên tab đầu và trong hội thoại có tin thật, không che chữ nào;
   - khi khay mở, dock không vẽ gì;
-  - mở rồi đóng bảng thì Nếp về mép;
+  - mở rồi đóng bảng thì Nếp về mép; kéo ra rồi để yên thì 6 giây sau tự về mép;
   - trên màn tiền chỉ còn mép trơn, và chạm vào không ra mặt Nếp;
   - có việc thì không gì rộng hơn 56dp;
   - canary: kéo Nếp ra thì phép đo **phải** thấy chữ bị che.

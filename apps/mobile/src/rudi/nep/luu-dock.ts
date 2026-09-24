@@ -12,10 +12,10 @@
  * reasoning that a choice the app forgets is a choice it overrules. But a
  * pulled-out Nếp is 56dp on a page whose text runs to a 16dp margin, and on
  * every launch after one tap it was the resting state: measured 24/09 on the
- * web build, it lay over «200.000đ» and «22:30» on Explore. Within a session
- * the choice holds, across screens and money screens alike (ADR-0033 §2.4);
- * a launch starts tucked, as `trang-thai.ts` promises. v1 (`an`) and v2
- * (`ra`) are not read, so neither can put Nếp back over the page.
+ * web build, it lay over «200.000đ» and «22:30» on Explore. Pulled out is
+ * never stored and never outlives its screen (ADR-0035 §2.2); a launch starts
+ * tucked, as `trang-thai.ts` promises. v1 (`an`) and v2 (`ra`) are not read,
+ * so neither can put Nếp back over the page.
  * `coViec` is the server's truth, `luiLai` belongs to whichever screen is open,
  * and `mo` is a panel nobody asked to have reopened three days later. A restart
  * that reopened the assistant over the screen the person launched into would be

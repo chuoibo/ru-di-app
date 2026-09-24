@@ -190,3 +190,14 @@ test("bảng Nếp đang mở thì không vẽ tờ thứ hai sau lưng nó", ()
   assert.equal(moCoViec.trangThai, "mo");
   assert.equal(hienToSau(moCoViec), false);
 });
+
+// A stray tap on the edge must not leave 56dp over the page while the person
+// reads on (finish review round 4, ADR-0035 §2.2). NepDock sends `tu-cat`
+// after TU_CAT_MS without a second tap; it is off under a screen reader, which
+// has the «Cất Nếp vào mép» action instead.
+test("kéo ra mà không chạm tiếp thì tự cất về mép; ở mép hay đang mở bảng thì không đổi", () => {
+  assert.equal(chuyen(RA, { kieu: "tu-cat" }).trangThai, "an");
+  assert.equal(chuyen(DOCK_DAU, { kieu: "tu-cat" }), DOCK_DAU);
+  const mo = chuyen(RA, { kieu: "cham" });
+  assert.equal(chuyen(mo, { kieu: "tu-cat" }).trangThai, "mo", "bảng đang mở thì không bị giật đóng");
+});

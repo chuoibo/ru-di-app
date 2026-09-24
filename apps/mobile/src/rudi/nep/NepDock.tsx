@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
@@ -22,6 +22,12 @@ import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, ghimVaoRay, rayDoc, slopTr
 import { useNep } from "./NepProvider";
 import { hienToSau } from "./trang-thai";
 
+/**
+ * Pulled out and not tapped again, Nếp goes back into the edge after this.
+ * Long enough to reach for the second tap, short enough that a stray tap on
+ * the edge does not leave 56dp over the page while the person reads on.
+ */
+export const TU_CAT_MS = 6000;
 /** Past this, a horizontal drag means «tuck Nếp away» rather than «move it». */
 const KEO_AN_DP = 56;
 const KEO_AN_TOC = 700;
@@ -53,8 +59,9 @@ const TO_SAU_CAO_HON = 6;
  *            §3 allows, «không mặt, không nhân vật».
  *   - `nghi` pulled out, because the person tapped the edge; Nếp stands on
  *            it. A passage to the panel, not a place: closing the panel,
- *            leaving the screen or a sheet closing puts it back in the edge,
- *            and it is never written to disk (ADR-0035).
+ *            leaving the screen, a sheet closing or `TU_CAT_MS` without a
+ *            second tap puts it back in the edge, and it is never written to
+ *            disk (ADR-0035).
  *   - `mo`   the panel is open, and it covers the edge anyway.
  *
  * Nothing widens the slip past `nghi` on its own. A line written on it for four
@@ -144,6 +151,25 @@ export function NepDock() {
     sauRa.value = coToSau ? withTiming(1, motion.timing("standard", "decelerate")) : 0;
   }, [coToSau, sauRa, motion]);
 
+  // A screen reader user reaches the second tap by moving focus, which takes
+  // longer and must not be raced; they have «Cất Nếp vào mép» instead.
+  const [docManHinh, datDocManHinh] = useState(false);
+  useEffect(() => {
+    let song = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((bat) => song && datDocManHinh(bat));
+    const sub = AccessibilityInfo.addEventListener("screenReaderChanged", datDocManHinh);
+    return () => {
+      song = false;
+      sub.remove();
+    };
+  }, []);
+  const dangRa = dock.trangThai === "nghi";
+  useEffect(() => {
+    if (!dangRa || docManHinh) return;
+    const t = setTimeout(() => gui({ kieu: "tu-cat" }), TU_CAT_MS);
+    return () => clearTimeout(t);
+  }, [dangRa, docManHinh, gui]);
+
   // Only outward and vertical drags mean anything here. Under gesture
   // navigation the outer ~30dp of the edge belongs to the system's Back swipe,
   // which is an INWARD drag: a tucked slip that needed one to come out would
@@ -220,8 +246,9 @@ export function NepDock() {
           ) : null}
           <Pressable
             // Tucking back is otherwise only the outward flick, which a screen
-            // reader user cannot make: without this, one tap to pull Nếp out
-            // leaves them with 56dp over the page for the rest of the session.
+            // reader user cannot make, and the timed tuck is off for them:
+            // without this, Nếp pulled out stays 56dp over the page until they
+            // leave the screen.
             accessibilityActions={dangAn ? undefined : [{ name: "activate" }, { name: "cat", label: "Cất Nếp vào mép" }]}
             accessibilityLabel={nhan}
             accessibilityRole="button"

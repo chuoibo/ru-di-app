@@ -174,8 +174,11 @@ async function chay(scheme) {
         await sleep(250);
       }
       await chup('5-ra-co-viec');
+      // Out with work (second slip behind), never wider than 56dp, and then
+      // back in the edge by itself once nobody taps again (ADR-0035 §2.2).
+      const daRaCoViec = dongThoiGian.some(o => o.dia && o.sau);
       const cuoi = dongThoiGian.at(-1);
-      ket.steps.push({ scheme, name: 'ra_co_viec_khong_bung_rong', pass: cuoi.dia && cuoi.sau && rongNhat <= 56, rongNhat, dongThoiGian });
+      ket.steps.push({ scheme, name: 'ra_co_viec_khong_bung_rong_roi_tu_cat', pass: daRaCoViec && rongNhat <= 56 && cuoi.mep && !cuoi.dia, rongNhat, dongThoiGian });
       save();
       return;
     }
@@ -184,7 +187,9 @@ async function chay(scheme) {
     await chup('1-tab-dau');
 
     const tabDau = await doChe(page);
-    ket.steps.push({ scheme, name: 'nghi_tab_dau_khong_che_chu', pass: tabDau.hopDock.length > 0 && tabDau.chuBiChe.length === 0, ...tabDau });
+    // At rest the whole dock, second slip included, stays inside the 16dp margin.
+    const trongLe = (d) => d.hopDock.length > 0 && d.hopDock.every(h => h.rong <= 16);
+    ket.steps.push({ scheme, name: 'nghi_tab_dau_khong_che_chu', pass: trongLe(tabDau) && tabDau.chuBiChe.length === 0, ...tabDau });
     save();
 
     if (mode === 'thuong') {
@@ -209,7 +214,7 @@ async function chay(scheme) {
     await sleep(1500);
     const hoiThoai = await doChe(page);
     await chup('2-hoi-thoai');
-    ket.steps.push({ scheme, name: 'nghi_hoi_thoai_khong_che_chu', pass: hoiThoai.hopDock.length > 0 && hoiThoai.chuBiChe.length === 0, ...hoiThoai });
+    ket.steps.push({ scheme, name: 'nghi_hoi_thoai_khong_che_chu', pass: trongLe(hoiThoai) && hoiThoai.chuBiChe.length === 0, ...hoiThoai });
     save();
 
     await page.click('[aria-label="Thêm vào cuộc trò chuyện"]');
@@ -252,6 +257,7 @@ async function chay(scheme) {
       // The edge there is a door, not a face: a tap may not bring Nếp out.
       await page.click('[data-testid="nep-mep"]');
       await sleep(900);
+      await chup('4-man-tien-sau-cham');
       const sauCham = await docMep();
       ket.steps.push({ scheme, name: 'man_tien_cham_mep_khong_ra_mat', pass: sauCham.mep && !sauCham.dia, ...sauCham });
       save();
@@ -290,6 +296,12 @@ async function chay(scheme) {
         pass: !!(await page.$('[data-testid="nep-dia"]')) && keoRa.chuBiChe.length > 0,
         ...keoRa,
       });
+      save();
+      // Left alone after the pull, Nếp goes back into the edge on its own.
+      await sleep(7000);
+      await chup('6-tu-cat');
+      const tuCat = await doChe(page);
+      ket.steps.push({ scheme, name: 'keo_ra_bo_do_thi_tu_cat_ve_mep', pass: trongLe(tuCat) && tuCat.chuBiChe.length === 0, ...tuCat });
       save();
     }
   } finally {

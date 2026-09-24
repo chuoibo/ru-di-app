@@ -11,7 +11,8 @@
  * the panel closed back to, or carried across screens -- was 56dp over the
  * page for anyone who had once opened the panel (finish review, 24/09; the
  * canary measured it over «200.000đ» and «22:30»). Closing the panel, leaving
- * the screen and a sheet closing all put Nếp back in the edge (ADR-0035).
+ * the screen, a sheet closing, and a few seconds with no second tap all put
+ * Nếp back in the edge (ADR-0035).
  *
  * Nếp STARTS tucked. Measured on the running app (23/09), text reaches the
  * page margin: message times in a conversation end exactly 16dp from the
@@ -77,6 +78,8 @@ export type SuKienNep =
   | { kieu: "dong" }
   | { kieu: "bao-viec" }
   | { kieu: "xong-viec" }
+  /** Pulled out and left alone: back into the edge (ADR-0035 §2.2). */
+  | { kieu: "tu-cat" }
   | { kieu: "doi-man"; nepLui: boolean }
   /** Another sheet opened over the page (`bat`), or the last one closed. */
   | { kieu: "nhuong-cho"; bat: boolean };
@@ -120,6 +123,11 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
     case "vuot-ra":
       if (dock.trangThai === "nghi") return veMep(dock);
       return dock;
+
+    case "tu-cat":
+      // A stray tap on a 10dp edge beside the system's Back strip must not
+      // leave 56dp over the text for as long as the person keeps reading.
+      return dock.trangThai === "nghi" ? veMep(dock) : dock;
 
     case "keo-vao":
       if (dock.nhuongCho || dock.luiLai) return dock;

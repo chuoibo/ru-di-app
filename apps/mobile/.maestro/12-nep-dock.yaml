@@ -12,7 +12,8 @@
 #   3. chạm lần nữa mới mở bảng, và bảng nói đúng màn đang đứng;
 #   4. Back đóng bảng, Nếp về lại mép: kéo ra chỉ là bước đầu của hai chạm
 #      mở bảng, không phải chỗ nghỉ (ADR-0035);
-#   5. kéo ra rồi vuốt sang phải thì Nếp cài lại vào mép.
+#   5. kéo ra rồi vuốt sang phải thì Nếp cài lại vào mép;
+#   6. kéo ra rồi để yên thì Nếp tự cất về mép (ADR-0035 §2.2).
 #
 # Bước 1 là lý do bản 23/09 đổi thứ tự. Nếp mặc định nằm ngoài thành một đĩa
 # 57dp thì đè chữ trên thẻ (Khám phá) và nuốt cú bấm «Đồng ý» của lời mời vào
@@ -89,3 +90,17 @@ appId: com.lakiet.rudi
     visible:
       id: "nep-mep"
     timeout: 10000
+
+# 6. kéo ra rồi để yên: Nếp tự cất về mép, không đứng đè lên trang
+- tapOn:
+    id: "nep-mep"
+- extendedWaitUntil:
+    visible:
+      id: "nep-dia"
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: "nep-mep"
+    timeout: 12000
+- assertNotVisible:
+    id: "nep-dia"
