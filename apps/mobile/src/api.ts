@@ -1297,7 +1297,38 @@ const SCAN_REFUSALS: Record<string, string> = {
   receipt_reader_unavailable:
     "Bộ đọc bill đang không trả lời. Thử lại sau một chút, hoặc nhập tay các món ở bước sau.",
   permission_denied: "Tài khoản này chưa được phép đọc bill trong nhóm.",
+  // The server's own detail names an environment variable for whoever runs
+  // it; the person holding the phone needs the next move instead.
+  receipt_reader_not_configured:
+    "Rủ Đi chưa bật phần đọc bill từ ảnh. Đây là lỗi phía Rủ Đi, không phải ảnh bạn chụp.",
 };
+
+/**
+ * How a local file becomes the bytes of a multipart part, installed by the
+ * native app at start (`rudi/tep-anh-native.ts`).
+ *
+ * Expo's `fetch` (the global one since the winter runtime) builds a multipart
+ * body only from a string, a `Blob`, or an object with `bytes()`. React
+ * Native's `{ uri, name, type }` part throws «Unsupported FormDataPart
+ * implementation» before a byte leaves the phone -- so every photo upload
+ * failed as «Không nối được», and the server never saw a request (QA 23/09,
+ * found 24/09 on the device). Node tests have no file system bridge and leave
+ * this unset, so they still see the plain shape.
+ */
+let docTepAnh: ((uri: string) => Promise<Uint8Array>) | null = null;
+
+export function datCachDocTepAnh(doc: ((uri: string) => Promise<Uint8Array>) | null): void {
+  docTepAnh = doc;
+}
+
+/** The multipart part for a local photo, in the shape the running `fetch` sends. */
+function phanTepAnh(uri: string, name: string): unknown {
+  if (docTepAnh !== null) {
+    const doc = docTepAnh;
+    return { name, type: "image/jpeg", bytes: () => doc(uri) };
+  }
+  return { uri, name, type: "image/jpeg" };
+}
 
 /**
  * Put one image into a multipart field named `image`.
@@ -1315,8 +1346,7 @@ async function appendImageField(
     const blob = await fetch(photo.uri).then((r) => r.blob());
     form.append("image", blob, filename);
   } else {
-    // React Native's own FormData understands this shape and nothing else.
-    form.append("image", { uri: photo.uri, name: filename, type: "image/jpeg" } as never);
+    form.append("image", phanTepAnh(photo.uri, filename) as never);
   }
 }
 
@@ -1545,8 +1575,7 @@ async function guiAnhLen(
     const blob = await fetch(photo.uri).then((r) => r.blob());
     form.append("file", blob, "anh.jpg");
   } else {
-    // React Native's own FormData understands this shape and nothing else.
-    form.append("file", { uri: photo.uri, name: "anh.jpg", type: "image/jpeg" } as never);
+    form.append("file", phanTepAnh(photo.uri, "anh.jpg") as never);
   }
 
   let response: Response;

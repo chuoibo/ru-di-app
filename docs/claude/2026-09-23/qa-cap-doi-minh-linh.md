@@ -446,3 +446,28 @@ chuẩn (một input thật, `sms-otp`, focus màu).
 - **Còn mở:** chất giấy ở chế độ tối (`paper` #2e335c là hợp đồng màu có đo trong spec §16 /
   DESIGN.md — cần một lượt thiết kế, không sửa lén); Khám phá ở chữ 1.3 (nút AI xuống hàng, giá
   bị cắt) chưa làm.
+
+## Đợt 6 (24/09) — tiền và kỷ niệm: đã đóng / còn mở
+
+- **Đăng kỷ niệm hỏng («Không nối được máy chủ») → tìm ra gốc và đã sửa.** Máy chủ nhận ảnh
+  bình thường (curl với phiên thật: 201). Trên máy, lỗi thật là `Unsupported FormDataPart
+  implementation`: `fetch` toàn cục của app là của Expo (runtime winter), chỉ nhận phần
+  multipart là chuỗi, `Blob` hoặc đối tượng có `bytes()`, còn phần `{ uri, name, type }` kiểu
+  React Native bị ném lỗi **trước khi một byte rời máy**. Cùng lỗi ở ảnh nhóm/chat, ảnh đại
+  diện, ảnh bài đăng, quét bill và quét ảnh chụp màn hình. Sửa: app cài `datCachDocTepAnh`
+  (đọc bằng `File` của `expo-file-system`), mọi phần ảnh đi qua `phanTepAnh`. Trên máy: ảnh
+  lên tường nhóm; quét bill giờ tới máy chủ (trả «chưa bật» vì máy không có khoá — 0 lời gọi).
+- **Thử lại chắc chắn hỏng (ảnh gốc bị xoá) → đã sửa**: bản nén luôn dọn, ảnh đã chọn chỉ dọn
+  khi gửi thành công hoặc khi rời màn. (Ảnh **bill** vẫn xoá ngay cả khi hỏng — luật riêng tư.)
+- **Ảnh dọc có hai dải xám, nút «Chia sẻ» bị đẩy khỏi màn → đã sửa** (khung theo tỉ lệ ảnh
+  3:4…1.91:1; nút ở footer).
+- **Ô số lượng không xoá được để gõ lại, ô tiền hiện số thô → đã sửa** (chuỗi nháp khi đang gõ,
+  rời ô thì «420.000»); «Thành tiền» ghi rõ «Tổng cả dòng · 210.000đ mỗi phần».
+- **«Xem lại hoá đơn» như form CRUD → thành tờ hoá đơn** (đầu tờ là buổi đi, dòng chấm dẫn,
+  tổng ở đáy). Bước gán món với 2 người: một chip «Cả hai» thay ba nút.
+- **Quyết toán biến bạn gái thành con nợ → đã sửa cho context `pair`**: «Chi tiêu chung» — mỗi
+  người «trả nhiều hơn / ít hơn phần mình» với đúng số dư ròng máy chủ tính; danh sách chuyển
+  và đợt thu thu vào «Muốn cân lại? Xem cách chuyển». Nhóm thường 2 người giữ nguyên.
+- **Còn mở:** tường nhóm cắt ảnh dọc vào khung ngang; kỷ niệm chưa gắn vào tờ đã chốt (spec §2
+  «giữ một điều»); chưa có tổng «hai bạn đã chi bao nhiêu» vì không có route tổng chi của một
+  context (không tự cộng trên máy — luật tiền).

@@ -10,7 +10,7 @@
  */
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -50,6 +50,17 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const [ban, setBan] = useState(false);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const attempts = useRef<Record<string, Attempt>>({});
+  // The pick outlives a failed upload (`nenVaDung`), so leaving the screen
+  // without sharing is what discards it.
+  const anhRef = useRef<TempPhoto | null>(null);
+  anhRef.current = anh;
+  const daGuiRef = useRef(false);
+  useEffect(
+    () => () => {
+      if (anhRef.current !== null && !daGuiRef.current) void boAnh(anhRef.current);
+    },
+    [],
+  );
 
   if (contextId === null) {
     return (
@@ -80,6 +91,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
     setThongBao(null);
     try {
       await nenVaDung(anh, (nen) => dangAnhLenTuong(ctx, nen, caption.trim() === "" ? null : caption.trim(), phien.person_id, attempts.current, placeId), setGiaiDoan);
+      daGuiRef.current = true;
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
       // The draft stays: the caption is still in the field, the photo is
@@ -95,7 +107,19 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const cauTrangThai = cauGiaiDoan(giaiDoan);
 
   return (
-    <RudiScreen contentStyle={styles.screen} testID="share-moment-screen">
+    <RudiScreen
+      contentStyle={styles.screen}
+      // The one action stays on screen however tall the photo is: under the
+      // print and the caption it was pushed past the fold (QA 23/09).
+      footer={
+        <View style={styles.footer}>
+          <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label="Chia sẻ ngay vào nhóm" loading={ban} onPress={() => void chiaSe()} />
+          {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
+        </View>
+      }
+      footerInset={12}
+      testID="share-moment-screen"
+    >
       <TopBar title="Thả khoảnh khắc" />
       <Heading title="Một khoảnh khắc cho nhóm" subtitle={`Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`} />
       {placeId === null ? null : (
@@ -112,7 +136,10 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chọn một tấm từ thư viện.</Text>
           </View>
         ) : (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { borderRadius: radius.small, backgroundColor: colors.ground }]} />
+          // The frame takes the photo's own shape, within a portrait-to-wide
+          // range: a square frame put two grey bands beside every portrait
+          // photo and read as a card still loading, not as a print (QA 23/09).
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), borderRadius: radius.small, backgroundColor: colors.ground }]} />
         )}
       </View>
       <RudiButton disabled={ban} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chon()} variant="outline" />
@@ -126,16 +153,21 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         value={caption}
       />
       <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
-      <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label="Chia sẻ ngay vào nhóm" loading={ban} onPress={() => void chiaSe()} />
-      {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
     </RudiScreen>
   );
+}
+
+/** The print's shape: the photo's own ratio, held between 3:4 portrait and 1.91:1 wide. */
+export function tiLeKhung(anh: { width: number; height: number }): number {
+  if (!(anh.width > 0) || !(anh.height > 0)) return 1;
+  return Math.min(1.91, Math.max(0.75, anh.width / anh.height));
 }
 
 const styles = StyleSheet.create({
   screen: { maxWidth: 640 },
   instax: { gap: 10, padding: 12, paddingBottom: 18, borderWidth: 1 },
   khungTrong: { alignItems: "center", justifyContent: "center", gap: 8, aspectRatio: 1 },
-  anh: { width: "100%", aspectRatio: 1 },
+  anh: { width: "100%" },
+  footer: { paddingHorizontal: 16, gap: 6 },
   chuThich: { textAlign: "center" },
 });

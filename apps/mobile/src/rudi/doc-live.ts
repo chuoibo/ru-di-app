@@ -61,7 +61,35 @@ export type QuyetToanLive = {
   chuyenTien: { fromId: string; toId: string; amountVnd: number }[];
   /** True when the server proved this transfer set is minimal. */
   toiThieu: boolean;
+  /** Each person's net as the server computed it: paid minus share, integer đồng. */
+  soDu: Record<string, number>;
 };
+
+/** One row of a couple's shared spending: who paid more, or less, than their part. */
+export type DongChiTieuChung = { personId: string; ten: string; cau: string; vnd: number | null };
+
+/**
+ * A couple's settlement, told as shared spending rather than as debt (Lead,
+ * 23/09: «chi tiêu chung, ẩn mũi tên nợ»; `ban-tinh.ts` has declared
+ * `tienHien: "chi-tieu-chung"` for both pair kinds since the notebook spec, and
+ * no screen read it). After a date the ledger used to say «Linh → Minh
+ * 210.000đ · Đề xuất, chưa phải nghĩa vụ»: the girlfriend turned into a
+ * debtor in accounting words.
+ *
+ * Nothing is computed here. Each row is the server's own net for that person
+ * (`GET /balances`), said as «trả nhiều hơn phần mình» / «trả ít hơn phần
+ * mình» with its size; the ledger, the three money laws and the transfer list
+ * are untouched, and the screen still shows the transfers to whoever opens them.
+ */
+export function dongChiTieuChung(nguoi: readonly NguoiLive[], soDu: Readonly<Record<string, number>>): { dong: DongChiTieuChung[]; ngangNhau: boolean } {
+  const dong = nguoi.map((n) => {
+    const net = soDu[n.personId] ?? 0;
+    if (net > 0) return { personId: n.personId, ten: n.ten, cau: "trả nhiều hơn phần mình", vnd: net };
+    if (net < 0) return { personId: n.personId, ten: n.ten, cau: "trả ít hơn phần mình", vnd: -net };
+    return { personId: n.personId, ten: n.ten, cau: "vừa đúng phần mình", vnd: null };
+  });
+  return { dong, ngangNhau: dong.every((d) => d.vnd === null) };
+}
 
 /** The label for somebody the roster did not name. Never a UUID, never a fixture name. */
 export const TEN_CHUA_BIET = "Thành viên chưa đặt tên";
@@ -204,6 +232,7 @@ export async function docQuyetToanLive(
       amountVnd: row.amountVnd,
     })),
     toiThieu: soDu.provenMinimal,
+    soDu: soDu.netByPerson,
   };
 }
 

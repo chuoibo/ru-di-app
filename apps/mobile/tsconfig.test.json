@@ -306,6 +306,7 @@
     // mỗi lời gọi một Attempt, và không phép chia nào ở phía client.
     "src/rudi/chia-bill/ai-co-gi.ts",
     "src/rudi/chia-bill/hoa-don.ts",
+    "src/rudi/chia-bill/o-so.ts",
     "src/screens/kham-pha/ban-do-nhom.ts",
     "src/rudi/loi-moi-den.ts",
     "src/rudi/dot-thu/dot-thu.ts",
