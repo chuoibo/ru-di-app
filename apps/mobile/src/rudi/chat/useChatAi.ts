@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { ApiError, newAttempt, thongDiepNguoiDoc } from "../../api";
 import { docAiInvocations, docChatCapabilities, goiAi, gopAiInvocations, thuLaiAi, type AiInvocation, type ChatCapabilities } from "./ai-invocations";
+import { vanTay, type BoiCanh } from "../ai/boi-canh";
 
 export function useChatAi(contextId: string, personId: string) {
   const [capabilities, setCapabilities] = useState<ChatCapabilities | null>(null);
@@ -41,14 +42,22 @@ export function useChatAi(contextId: string, personId: string) {
     const sub = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(true); });
     return () => { disposed = true; generation.current += 1; clearInterval(timer); sub.remove(); };
   }, [contextId, personId]));
-  const send = async (prompt: string) => {
+  const send = async (prompt: string, boiCanh?: BoiCanh) => {
     if (sending.current) return false;
     if (!capabilities?.ai.plan.available) { setError("AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo."); return false; }
-    if (!attempt.current || attempt.current.prompt !== prompt) attempt.current = { prompt, id: newAttempt().key };
+    // Only attach when the server says it reads a bundle. An older server gets
+    // the old body, and nothing needs a flag.
+    const dinhKem = capabilities.ai.share_scope === "caller_attached" ? boiCanh : undefined;
+    // The key covers the BUNDLE as well as the words. Keyed on the prompt
+    // alone, the same question asked again over newer messages reuses the old
+    // logical id, the server finds a matching digest and answers 200 with the
+    // OLD card, and the person believes the AI just read what they just said.
+    const khoa = `${prompt}\u0000${dinhKem ? vanTay(dinhKem) : ""}`;
+    if (!attempt.current || attempt.current.prompt !== khoa) attempt.current = { prompt: khoa, id: newAttempt().key };
     const version = generation.current;
     sending.current = true; setBusy(true); setError(null);
     try {
-      const request = await goiAi(contextId, personId, prompt, attempt.current.id);
+      const request = await goiAi(contextId, personId, prompt, attempt.current.id, dinhKem);
       if (version !== generation.current) return false;
       setRequests((held) => gopAiInvocations(held, [request]));
       attempt.current = null;

@@ -210,7 +210,7 @@ func (d draftRow) card() ([]byte, error) {
 
 func (h *Handler) draftCreate(w http.ResponseWriter, r *http.Request) {
 	var in draftBody
-	if err := readBody(w, r, &in); err != nil {
+	if err := readBody(w, r, &in, 32<<10); err != nil {
 		failure(w, err)
 		return
 	}
@@ -347,7 +347,7 @@ func (h *Handler) draftGet(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) draftPatch(w http.ResponseWriter, r *http.Request) {
 	var in draftBody
-	if err := readBody(w, r, &in); err != nil {
+	if err := readBody(w, r, &in, 32<<10); err != nil {
 		failure(w, err)
 		return
 	}

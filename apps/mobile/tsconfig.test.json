@@ -349,6 +349,8 @@
     "src/rudi/chat/useChatChanges.ts",
     "src/rudi/chat/ban-nhap-cong-cu.ts",
     "src/rudi/chat/chat-route.ts",
+    "src/rudi/ai/boi-canh.ts",
+    "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
     "src/rudi/chat/to-hen-chung.ts",
     "src/rudi/chat/useBanNhap.ts",

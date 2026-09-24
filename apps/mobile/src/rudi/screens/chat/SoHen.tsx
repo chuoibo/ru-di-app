@@ -3,6 +3,7 @@ import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ChatCapabilities } from "../../chat/ai-invocations";
+import { cauBoiCanh, nhanVai, type BoiCanh } from "../../ai/boi-canh";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
 import { docTheAi, type Tin } from "../../chat/tin-song";
 import { typography, useRudiTheme } from "../../theme";
@@ -52,13 +53,17 @@ export function ToHen({ tin, onOpen, onVote }: { tin: Tin; onOpen: (tin: Tin) =>
   );
 }
 
-export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt }: {
+export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSticker, onPoll, onPlan, onManual, capabilities, busy, error, initialPrompt, boiCanh }: {
   personId: string; contextId: string;
   panel: KhayChat; onPanel: (panel: KhayChat) => void; onImage: () => void; onSticker: () => void;
-  onPoll: (command: string) => Promise<boolean>; onPlan: (prompt: string) => Promise<boolean>; onManual: () => void;
+  onPoll: (command: string) => Promise<boolean>; onPlan: (prompt: string, boiCanh?: BoiCanh) => Promise<boolean>; onManual: () => void;
+  /** What the screen is showing, already reduced to what would go on the wire. */
+  boiCanh: BoiCanh | null;
   capabilities: ChatCapabilities | null; busy: boolean; error: string | null; initialPrompt: string;
 }) {
   const { colors } = useRudiTheme();
+  const [dinhKem, setDinhKem] = useState(true);
+  const [moRong, setMoRong] = useState(false);
   // The tray is a sheet laid over the conversation; Nếp makes room for it.
   useNhuongChoNep(panel !== null);
   const { height } = useWindowDimensions();
@@ -137,7 +142,7 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   };
   const sendPlan = async () => {
     const submitted = held.current.prompt;
-    if (await onPlan(submitted.trim())) {
+    if (await onPlan(submitted.trim(), dinhKem ? boiCanh ?? undefined : undefined)) {
       if (held.current.prompt === submitted) update({ prompt: "" });
       setRestored((old) => ({ ...old, plan: false }));
       onPanel(null);
@@ -193,10 +198,44 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
         {pollError ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{pollError}</Text> : null}
         <RudiButton label="Gửi bình chọn" loading={busy} disabled={busy} onPress={() => void sendPoll()} />
       </View> : panel === "plan" ? <View style={styles.footer}>
-        <View style={styles.scope}>
-          <Ionicons name="hand-left-outline" size={18} color={colors.inkSoft} />
-          <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ.</Text>
-        </View>
+        {capabilities?.ai.share_scope === "caller_attached" ? (
+          /* The same block Nếp already uses, and the same promise, so it reads
+             as one app rather than two. It renders from the bundle itself, not
+             from the message list: a preview rebuilt from the screen would be a
+             picture OF the payload instead of the payload. */
+          <View style={[styles.thay, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
+            <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
+            <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.ink }]} testID="chat-boi-canh">
+              {cauBoiCanh(dinhKem ? boiCanh : null)}
+            </Text>
+            {dinhKem && boiCanh !== null && boiCanh.luot.length > 0 ? (
+              <>
+                <Pressable accessibilityRole="button" accessibilityState={{ expanded: moRong }} onPress={() => setMoRong((cu) => !cu)} testID="chat-boi-canh-mo">
+                  <Text style={[typography.caption, { color: colors.ai }]}>{moRong ? "Thu lại" : "Xem đúng thứ sắp gửi"}</Text>
+                </Pressable>
+                {moRong ? (
+                  <View style={styles.luot} testID="chat-boi-canh-luot">
+                    <Text style={[typography.caption, { color: colors.inkSoft }]}>
+                      Ảnh đi bằng chú thích, sticker đi bằng chữ «Sticker», tin đã xoá đi bằng một dòng nói là đã xoá. Tên tài khoản không đi kèm, còn chữ trong tin nhắn thì đi nguyên văn.
+                    </Text>
+                    {boiCanh.luot.map((l) => (
+                      <Text key={l.id} style={[typography.caption, { color: colors.ink }]} testID="chat-boi-canh-muc">{`${nhanVai(l)}: ${l.chu}`}</Text>
+                    ))}
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+            {/* The old contract promised the history was never shared. Ship without
+                a way back to exactly that and the promise is withdrawn by one
+                side, which is not a thing to do quietly. */}
+            <RudiButton label={dinhKem ? "Chỉ gửi lời nhờ" : "Gửi kèm tin gần nhất"} variant="outline" compact disabled={busy} onPress={() => setDinhKem((cu) => !cu)} />
+          </View>
+        ) : (
+          <View style={styles.scope}>
+            <Ionicons name="hand-left-outline" size={18} color={colors.inkSoft} />
+            <Text style={[typography.caption, styles.flex, { color: colors.inkSoft }]}>Chỉ lời nhờ trong ô này được gửi cho AI. Lịch sử chat không được chia sẻ.</Text>
+          </View>
+        )}
         {error ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{error}</Text> : null}
         {capabilities?.ai.plan.available ? <RudiButton label="Gửi lời nhờ cho AI" loading={busy} disabled={busy || !draft.prompt.trim()} onPress={() => void sendPlan()} />
           : <Text style={[typography.caption, { color: colors.inkSoft }]}>AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.</Text>}
@@ -222,5 +261,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 0 },
   footer: { flexShrink: 0, gap: 8, paddingTop: 10 },
   scope: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  thay: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
+  luot: { gap: 6 },
   pressed: { opacity: 0.65 },
 });

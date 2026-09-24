@@ -80,6 +80,11 @@ command.upgrade(c,'head',sql=True)" >/dev/null && echo ok
 
 **Nguồn sự thật về ai phục vụ route nào là `services/core/ownership/routes.json`**, không phải cây thư mục — `scripts/check_route_ownership.py` gác nó. Xoá mã Python để "xong port" là xoá luôn bằng chứng port đúng.
 
+Ngoại lệ duy nhất, có tên (ADR-0036): khi một hành vi bị **xoá hẳn** chứ không phải
+được port, Python không còn là oracle của nó vì không còn gì để so. Lúc đó bản Go,
+bản Python và hàng manifest phải đi trong **cùng một commit** — bỏ bản Go trước thì
+cửa trước proxy thẳng sang Python và hành vi sống lại nguyên vẹn mà mọi cổng vẫn xanh.
+
 Mô tả dưới đây là **tầng phía Python**, giữ vì nó vẫn chạy và vẫn là oracle.
 
 Tầng, từ trong ra ngoài:
