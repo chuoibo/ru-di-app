@@ -13,9 +13,17 @@ import (
 )
 
 //go:embed schema.sql
-var migration string
+var avatarTrigger string
 
-// Migrate installs the notify trigger atomically. `core migrate-chat` runs it
+//go:embed membership.sql
+var membershipTrigger string
+
+// migrations are applied in order, each once, each pinned by its digest: an
+// edited file is a refusal, never a silent re-run. Version 1 shipped first and
+// its text must not change.
+var migrations = []string{avatarTrigger, membershipTrigger}
+
+// Migrate installs the notify triggers atomically. `core migrate-chat` runs it
 // next to the chat feed; serving never runs DDL.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)
@@ -29,19 +37,23 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	if _, err = tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS avatar_feed_schema_migrations(version integer PRIMARY KEY,digest text NOT NULL)`); err != nil {
 		return err
 	}
-	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(migration)))
-	var old string
-	if err = tx.QueryRow(ctx, `SELECT coalesce((SELECT digest FROM avatar_feed_schema_migrations WHERE version=1),'')`).Scan(&old); err != nil {
-		return err
-	}
-	if old != "" && old != digest {
-		return fmt.Errorf("avatar feed migration checksum mismatch")
-	}
-	if old == "" {
-		if _, err = tx.Exec(ctx, migration); err != nil {
+	for i, sql := range migrations {
+		version := i + 1
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(sql)))
+		var old string
+		if err = tx.QueryRow(ctx, `SELECT coalesce((SELECT digest FROM avatar_feed_schema_migrations WHERE version=$1),'')`, version).Scan(&old); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(ctx, `INSERT INTO avatar_feed_schema_migrations VALUES(1,$1)`, digest); err != nil {
+		if old != "" && old != digest {
+			return fmt.Errorf("avatar feed migration %d checksum mismatch", version)
+		}
+		if old != "" {
+			continue
+		}
+		if _, err = tx.Exec(ctx, sql); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, `INSERT INTO avatar_feed_schema_migrations VALUES($1,$2)`, version, digest); err != nil {
 			return err
 		}
 	}
@@ -51,6 +63,6 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 // Installed reports whether serve can rely on the trigger.
 func Installed(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
 	var ok bool
-	err := pool.QueryRow(ctx, `SELECT to_regclass('avatar_feed_schema_migrations') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='avatar_feed_capture')`).Scan(&ok)
+	err := pool.QueryRow(ctx, `SELECT to_regclass('avatar_feed_schema_migrations') IS NOT NULL AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='avatar_feed_capture') AND EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='avatar_feed_membership')`).Scan(&ok)
 	return ok, err
 }
