@@ -53,6 +53,9 @@ OTP=0
 # Đối chứng âm cho phép đo bàn phím: tắt KeyboardAvoidingView trong bundle, và
 # do_ban_phim.py PHẢI hỏng. Xanh ở đây là thước đo mù.
 TAT_KAV=0
+# Nếp vẽ đè lên mọi route. Tắt nó là CHẨN ĐOÁN, không phải mặc định: một thứ
+# ship cho người dùng mà bảng không chạm tới thì không cổng nào canh nó.
+TAT_NEP=0
 # --ai (cùng --otp): API phải có khoá Gemini còn sống; chạy thêm flow 40 và kiểm thẻ AI grounded.
 AI=0
 # --anh (cùng --otp): API phải đã nhập ảnh Wikimedia cho ít nhất một địa điểm;
@@ -92,6 +95,7 @@ while [ $# -gt 0 ]; do
     --lap) LAP="$2"; shift 2 ;;
     --otp) OTP=1; shift ;;
     --tat-kav) TAT_KAV=1; shift ;;
+    --tat-nep) TAT_NEP=1; shift ;;
     --ai) AI=1; shift ;;
     --anh) ANH=1; shift ;;
     *) echo "tham số lạ: $1" >&2; exit 64 ;;
@@ -1929,6 +1933,17 @@ if [ "$ANH" = 1 ]; then kiem_co_anh_dia_diem; fi
   fi
   if [ "$TAT_KAV" = 1 ]; then
     export EXPO_PUBLIC_QA_TAT_KAV=1
+  fi
+  # Nếp vẽ đè lên mọi route và dock của nó kéo được, nên vùng chạm của nó rơi
+  # được lên bất kỳ nút nào của bất kỳ màn nào. Bảng `--otp` 22-09 đã dính:
+  # dock nuốt cú bấm «Đồng ý» ở flow 25, lời mời không được nhận, và chín flow
+  # sau đỏ vì một lý do chẳng liên quan gì tới thứ chúng đo.
+  #
+  # Tắt Nếp cho bảng để hai mươi lăm flow kia tất định trở lại. ĐỔI LẠI: bảng
+  # này không còn phủ Nếp chút nào, và Nếp vẫn cần flow riêng của nó — ghi ở
+  # `apps/mobile/src/rudi/nep/qa-nep.ts`, chưa làm trong thay đổi này.
+  if [ "$TAT_NEP" = 1 ]; then
+    export EXPO_PUBLIC_QA_TAT_NEP=1
   fi
   if [ -n "$API_PORT" ]; then
     export EXPO_PUBLIC_API_URL="http://localhost:$API_PORT"

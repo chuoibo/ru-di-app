@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { type RudiTone, toneColor, toneSoftColor, typography, useRudiTheme } from "../theme";
 import { DEMO_GROUP } from "../fixtures";
+import { laPair } from "../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../session";
 import { DemoBadge, Heading, IconName } from "../ui";
 import { PressScale } from "../ui/PressScale";
@@ -22,6 +23,8 @@ const ACTIONS: { icon: IconName; title: string; detail?: string; href: string; t
   { icon: "document-text-outline", title: "Rủ một người đi chơi", detail: "Một tờ giấy cho hai người, mỗi tuần", href: "/hai-nguoi/chon-nguoi", tone: "accent" },
 ];
 
+const RU_MOT_NGUOI = "/hai-nguoi/chon-nguoi";
+
 /**
  * Same sheet for the tab FAB (`router.push("/create")`) and the `/create` route.
  *
@@ -37,6 +40,11 @@ export function CreateSheet() {
   const { phien } = useRudiSession();
   const [open, setOpen] = useState(true);
   const currentGroup = phien?.contexts?.find((group) => group.id === phien.context_id);
+  // Somebody who already talks one-to-one with a person gets the two-person
+  // entry first: it was fifth, under the bill and the story, and a couple read
+  // past it (QA 23/09). Everybody else keeps the group order.
+  const coCap = (phien?.contexts ?? []).some((nhom) => laPair(nhom) && nhom.my_state === "active");
+  const cacViec = coCap ? [...ACTIONS.filter((a) => a.href === RU_MOT_NGUOI), ...ACTIONS.filter((a) => a.href !== RU_MOT_NGUOI)] : ACTIONS;
   const subtitle = phien === null
     ? `Bắt đầu với ${DEMO_GROUP.name}.`
     : currentGroup ? `Đang ở ${currentGroup.display_name}.` : "Chọn hội bạn trong bước tiếp theo.";
@@ -50,7 +58,7 @@ export function CreateSheet() {
             {phien === null ? <DemoBadge /> : null}
           </View>
           <View style={styles.actions}>
-            {ACTIONS.map((action) => (
+            {cacViec.map((action) => (
               <PressScale
                 accessibilityRole="button"
                 key={action.title}

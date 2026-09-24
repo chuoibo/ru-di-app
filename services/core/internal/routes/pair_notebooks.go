@@ -288,6 +288,11 @@ func wireNotebook(view pairsteps.NotebookView) *pyjson.OrderedMap {
 	out.Set("constraints", constraints)
 	out.Set("nep_gui_ho", pyjson.Bool(view.NepGuiHo))
 	out.Set("open_paper_id", textOrNull(view.OpenPaperID))
+	granted := pyjson.List{}
+	for _, purpose := range view.GrantedPurposes {
+		granted = append(granted, pyjson.String(purpose))
+	}
+	out.Set("granted_purposes", granted)
 	return out
 }
 

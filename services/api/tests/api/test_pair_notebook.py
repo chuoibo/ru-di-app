@@ -356,3 +356,47 @@ def test_everybody_outside_the_pair_gets_the_same_four_oh_four(client):
                 answer = client.post(url, json=payload, headers=head(actor))
             assert answer.status_code == 404, f"{label} {path}: {answer.text}"
             assert answer.json()["code"] == "notebook_not_found"
+
+
+# QA 23/09 (docs/claude/2026-09-23/qa-cap-doi-minh-linh.md mục 13): the other
+# person pressed «Một đôi» instead of answering, which filed a SECOND proposal;
+# both phones then read «Đang là một đôi» while nothing was completed.
+def test_the_other_offering_the_same_rung_is_told_to_answer_it(client, repository):
+    lap_so(client)
+    mine = de_nghi(client, "bat_doi")
+    assert mine.status_code == 201, mine.text
+    theirs = de_nghi(client, "bat_doi", actor=NGUOI_KIA)
+    assert theirs.status_code == 409, theirs.text
+    assert theirs.json()["code"] == "consent_proposal_pending"
+    assert repository.active_couple_members == {}
+    view = _so(client).json()
+    assert view["granted_purposes"] == ["lap_so"]
+    assert [p["purpose"] for p in view["pending_proposals"]] == ["bat_doi"]
+
+
+def test_asking_twice_returns_the_offer_already_standing(client):
+    lap_so(client)
+    first = de_nghi(client, "bat_doi")
+    again = de_nghi(client, "bat_doi")
+    assert again.status_code == 201, again.text
+    assert again.json()["id"] == first.json()["id"]
+    assert len(_so(client).json()["pending_proposals"]) == 1
+
+
+def test_granted_purposes_names_what_both_agreed_to(client):
+    assert _so(client).json()["granted_purposes"] == []
+    lap_so(client)
+    dong_thuan(client, "bat_doi")
+    assert _so(client).json()["granted_purposes"] == ["lap_so", "bat_doi"]
+
+
+def test_an_offer_whose_proposer_took_their_yes_back_is_dead(client, repository):
+    # Each person answers each proposal once; after taking one's own yes back,
+    # asking again must file a new offer or the notebook could never open.
+    first = de_nghi(client, "lap_so").json()["id"]
+    assert client.delete(f"/contexts/{CAP}/notebook/consents/lap_so", headers=head(TOI)).status_code == 204
+    again = de_nghi(client, "lap_so")
+    assert again.status_code == 201, again.text
+    assert again.json()["id"] != first
+    theirs = de_nghi(client, "lap_so", actor=NGUOI_KIA)
+    assert theirs.status_code == 409, theirs.text

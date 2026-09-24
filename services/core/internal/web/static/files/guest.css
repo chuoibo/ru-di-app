@@ -1,0 +1,361 @@
+/* Guest payment page.
+ *
+ * Design read: single-purpose transactional page for a Vietnamese student on
+ * the same phone they will pay from. Trust-first, so the dials sit low:
+ * variance 3, motion 2, density 4. No marquees, no scroll effects, no
+ * decoration. On a page about somebody's money, restraint IS the design.
+ *
+ * Type: system stack on purpose, not as a shortcut. iOS ships SF Pro and
+ * Android ships Roboto; both render Vietnamese diacritics (ế ự ỡ ạ) correctly
+ * at zero bytes. A webfont here would cost LCP on mobile data and risk broken
+ * diacritics for nothing. Personality comes from the amount treatment and the
+ * palette instead.
+ *
+ * Palette: cream ground, white cards, three meaning-bearing hues. accent
+ * (cam) is brand and in-app primary actions. split (teal) is bill-split,
+ * money, settlement. ai (purple) is machine-made and still editable. This
+ * page IS a settlement surface, so its lead actions use split, not accent.
+ */
+
+:root {
+  --ground: #f7f3ec;
+  --card: #ffffff;
+  --line: #e6dfd3;
+  --line-strong: #777580;
+  --ink: #1f2230;
+  --ink-soft: #4e5563;
+  --ink-faint: #676e7b;
+  --accent: #ba3e20;
+  --accent-end: #ba3e20;
+  --accent-ink: #ffffff;
+  --accent-soft: #fff0ea;
+  --split: #00756b;
+  --split-ink: #ffffff;
+  --split-soft: #e6f2ee;
+  --ai: #7356a6;
+  --ai-ink: #ffffff;
+  --ai-soft: #f1ebf7;
+  --warn: #c2410c;
+  --paper-shade: #e6dfd3;
+  --paper: #ffffff;
+  --cover-line-strong: #8d92bd;
+  --cover-line: #3a3f63;
+  --cover-ink-soft: #c9c6d6;
+  --cover-ink: #f7f3ec;
+  --cover: #1d2140;
+
+  /* Shape lock, three documented steps:
+   *   --radius          cards, the amount, the toast
+   *   --radius-control  buttons
+   *   --radius-sm       inline chips and images sitting inside a card
+   * A chip with the same radius as the card it sits in reads as a seam. */
+  --radius: 20px;
+  --radius-sm: 10px;
+  --radius-control: 14px;
+  --gap: 1rem;
+  --shadow: 0 1px 2px rgb(90 48 20 / 0.05), 0 10px 30px -14px rgb(90 48 20 / 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #151830;
+    --card: #1f2340;
+    --line: #363b5e;
+    --line-strong: #7d82a9;
+    --ink: #f4f1ea;
+    --ink-soft: #c4c2cf;
+    --ink-faint: #9b9aae;
+    --accent: #fb693e;
+    --accent-end: #fb693e;
+    --accent-ink: #1c0d06;
+    --accent-soft: #3d1a10;
+    --split: #74cec0;
+    --split-ink: #04201d;
+    --split-soft: #153734;
+    --ai: #c7b1e5;
+    --ai-ink: #150a30;
+    --ai-soft: #30273f;
+    --warn: #e8734b;
+    --paper-shade: #181b36;
+    --paper: #2e335c;
+    --cover-line-strong: #9095c0;
+    --cover-line: #2e3255;
+    --cover-ink-soft: #c4c2cf;
+    --cover-ink: #f4f1ea;
+    --cover: #0f1126;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 30px -14px rgb(0 0 0 / 0.65);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: light dark; }
+
+::selection {
+  background: var(--split-soft);
+  color: var(--ink);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--split);
+  /* The thumb is a control, so it takes --line-strong. At --line it sat at
+     1.21:1 against its own track. */
+  scrollbar-color: var(--line-strong) var(--ground);
+  padding: max(1rem, env(safe-area-inset-top)) 1rem
+           max(2rem, env(safe-area-inset-bottom));
+  /* A single centred column, said out loud. The default `row` put anything
+     added after <main> beside it instead of under it, and the preview's state
+     switcher did exactly that -- squashing the card to half the width of a
+     390px screen. The product page has no second element today, which is
+     precisely why the bug only appeared where a human looks at it. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* Separation comes from the shadow OR the border, never both. The mockup
+ * lifts white cards off the cream ground with a soft warm shadow and no
+ * hairline; a 1px line under a 30px blur reads as a seam the shadow already
+ * made redundant. --card--quiet has no shadow, so there the border is the
+ * only thing holding the edge and it stays. */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+.card--quiet {
+  box-shadow: none;
+  border: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.lede {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.lede strong { font-weight: 650; }
+
+/* The signature move: the amount IS the copy control.
+ * On a phone the largest target should be the most frequent action, and the
+ * one thing this reader needs to carry into their banking app is this number.
+ */
+.amount {
+  display: block;
+  width: 100%;
+  margin: 1.25rem 0 1.5rem;
+  padding: 1rem 0.75rem 0.75rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.1s;
+}
+.amount:hover { border-color: var(--split); }
+.amount:active { transform: scale(0.985); }
+.amount__figure {
+  font-size: clamp(2.5rem, 14vw, 3.5rem);
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.amount__unit {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  vertical-align: super;
+  margin-left: 0.15em;
+}
+.amount__hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.choices { display: grid; gap: 0.5rem; }
+.choices__escape { display: grid; gap: 0.5rem; }
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-weight: 550;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.15s, border-color 0.15s;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn--primary { background: var(--split); color: var(--split-ink); }
+.btn--ghost {
+  background: transparent;
+  border-color: var(--split);
+  color: var(--split);
+}
+/* The two escape hatches must be findable, not buried. Section 8.6 treats
+ * "I am not Ha" as a first-class outcome, so it gets a real target size and
+ * readable contrast rather than a footnote link. */
+.btn--quiet {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+  font-weight: 400;
+  padding: 0.75rem 1rem;
+}
+.btn--quiet:hover { color: var(--warn); border-color: var(--warn); }
+
+.transfer {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.transfer[hidden] { display: none; }
+/* Collapsed only when scripting is confirmed. The inline script at the top of
+ * <body> sets .js before paint, so there is no flash of the open panel, and a
+ * page with scripting off keeps the transfer details reachable. */
+.js .transfer { display: none; }
+.js .transfer.is-open { display: block; }
+
+.recipient { margin: 0 0 1rem; font-weight: 550; }
+
+.fields { margin: 0 0 1.25rem; display: grid; gap: 0.875rem; }
+.field dt { font-size: 0.8125rem; color: var(--ink-soft); }
+.field dd {
+  margin: 0.125rem 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.field__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+  word-break: break-all;
+}
+
+.copy {
+  flex: none;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--split);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--split); }
+
+.qr { margin: 0 0 1.25rem; text-align: center; }
+.qr img {
+  /* height must follow width, not stay pinned. `max-width: 100%` shrinks the
+     width on a narrow screen while a fixed `height: 200px` does not follow it,
+     so at a 320px viewport this rendered 173x200 -- a QR squashed 13.5% along
+     one axis. A banking app pointed at a non-square QR may simply refuse it,
+     and it would fail at the one moment that matters. Found by driving a real
+     browser across the state x viewport matrix; no unit test saw it. */
+  width: 200px;
+  height: auto;
+  aspect-ratio: 1;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 0.5rem;
+}
+.qr figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.status { margin: 0; font-weight: 550; }
+.status--done { color: var(--split); }
+
+/* Where this person stands, stated before they touch anything.
+   Set apart with a rule rather than a filled block: this is the answer to
+   "have I already done this?", and it should read as a fact about them, not
+   as another thing on the page competing with the amount. */
+.standing {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.75rem 0 0.75rem 0.875rem;
+  border-left: 3px solid var(--line);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.standing--done {
+  border-left-color: var(--split);
+  color: var(--split);
+  font-weight: 550;
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.footer {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--ground);
+  font-size: 0.875rem;
+  box-shadow: var(--shadow);
+}
+.toast[hidden] { display: none; }
+
+:where(button, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--split);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

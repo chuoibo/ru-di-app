@@ -16,7 +16,7 @@ import { DongTien } from "../ui/DongTien";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -26,6 +26,7 @@ import { cauTomTatDot, cauTrangThaiDot, docDotThuCuaNhom, moDotThu, type DotThuT
 import { DEMO_PEOPLE } from "../nhom-demo";
 import { BILL_ITEMS, COLLECTOR_INDEX, DEMO_GROUP, PEOPLE, demoAssets, formatVnd } from "../fixtures";
 import { noiLuuNgan } from "../luu-tru";
+import { nguCanhMo } from "../ngu-canh-mo";
 import { useRudiSession } from "../session";
 import { bongDen, giayHoaDon, lopPhu, typography, useRudiTheme } from "../theme";
 import {
@@ -44,6 +45,7 @@ import { AiCoGi } from "../ui/AiCoGi";
 import { Avatar } from "../ui/Avatar";
 import { HaiCot } from "../ui/HaiCot";
 import { useAdaptiveLayout } from "../ui/useAdaptiveLayout";
+import { EmptyState } from "../ui/EmptyState";
 import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { RosterPicker } from "../ui/RosterPicker";
@@ -304,8 +306,32 @@ export function OcrAssignmentScreen() {
  */
 export function SettlementScreen() {
   const session = useRudiSession();
+  const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string }>();
+  // `/settlements/{id}` names the ledger. It used to be ignored, so a bill
+  // split in a pair (never the current group) showed the current group's
+  // ledger under «Xem quyết toán». Only a context the person is active in.
+  const mo = session.phien === null ? null : nguCanhMo(session.phien, params.id);
+  if (session.phien !== null && mo?.kieu === "khac") {
+    return <QuyetToanLive actorId={session.phien.person_id} contextId={mo.contextId} key={mo.contextId} />;
+  }
   if (session.nguon.kieu === "live") {
     return <QuyetToanLive actorId={session.nguon.actorId} contextId={session.nguon.contextId} />;
+  }
+  // Signed in with no group: there is no ledger to settle, and Team Đà Lạt's
+  // fixture must never stand in for one (QA 23/09).
+  if (session.phien !== null) {
+    return (
+      <RudiScreen tone="split" testID="settlement-screen">
+        <TopBar title="Quyết toán" />
+        <EmptyState
+          action={{ label: "Tới Tin nhắn", onPress: () => router.replace("/messages" as never) }}
+          body="Quyết toán tính từ sổ của một nhóm. Vào hoặc tạo một nhóm trước."
+          kind="first-use"
+          title="Chưa có sổ nào để quyết toán"
+        />
+      </RudiScreen>
+    );
   }
   return <QuyetToanNhap />;
 }

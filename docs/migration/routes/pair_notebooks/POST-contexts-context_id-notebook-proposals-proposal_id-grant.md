@@ -101,3 +101,13 @@ Corpus sinh tự động: `parity/scenarios/generated/w8-422/post-contexts-conte
 - Lời đề nghị đã hoàn tất trả `consent_proposal_expired` «Lời đề nghị này đã hết hạn.»: bấm «đồng ý» lần hai bị báo hết hạn dù vừa thành công.
 - `grant_consent` không khôi phục đồng ý đã thu hồi (`granted_at` còn thì bỏ qua): người hỏi đã thu hồi không có cách «đồng ý lại» lời đề nghị của mình, cũng không thể đồng ý nó (403 `is_invitee`); lời đề nghị treo tới khi hết hạn.
 - `_locked_notebook` chạy trước kiểm role, nên một request 403 vẫn xếp hàng khoá sổ (rollback, không để lại hàng).
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+«Cả hai đồng ý» (`pair_notebook.granted_purposes`, quyết định hoàn tất lời đề nghị, mở chu kỳ, ghi `active_couple_members`) tính theo CÙNG MỘT lời đề nghị, không theo purpose; một lời đề nghị đã hoàn tất không còn hết hạn theo cửa sổ 7 ngày (`_live`/`live`). Với dữ liệu một-đề-nghị-mỗi-bậc (mọi kịch bản hiện có) byte trả lời không đổi.
+
+## Đổi 2026-09-23 (b) — `place_id` của tờ giấy là id danh mục; chốt ghi chặng vào kèo (QA cặp đôi)
+
+Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
+
+- `POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant`: Route này đọc nội dung tờ qua `_noi_dung_wire` (hoặc chỉ bị chạm theo tên hàm): `place_id` đã lưu trả nguyên chữ. Mọi hàng ghi trước 23/09 đều là UUID dạng chuẩn (`model_dump` của `uuid.UUID`), nên byte trả lời không đổi với dữ liệu cũ; hàng mang `place_id` không phải UUID trước đây là 409 `paper_wrong_state`, nay đọc được.

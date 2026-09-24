@@ -9,6 +9,7 @@ import (
 
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyval"
+	staticweb "mobile/services/core/internal/web/static"
 )
 
 // Route is one Go implementation.
@@ -177,6 +178,20 @@ func All() []Route {
 	}
 }
 
+// ImplementedIDs lists every manifest id this binary implements: the routes in
+// All(), plus the mounts served outside the endpoint pipeline. `core routes
+// --json` and the handler map must agree on exactly this list, or the ownership
+// gate compares the manifest against a list missing a route the binary really
+// does answer -- which is how a Go-served route can look unimplemented.
+func ImplementedIDs() []string {
+	all := All()
+	out := make([]string, 0, len(all)+1)
+	for _, route := range all {
+		out = append(out, route.ID)
+	}
+	return append(out, staticweb.RouteID)
+}
+
 // Handlers binds every route to its request contract and builds its handler.
 // A route whose contract pyval cannot bind refuses to start the binary.
 func Handlers(contract *pyval.Contract, registry *pyval.Registry, env endpoint.Env) (map[string]http.Handler, error) {
@@ -195,5 +210,12 @@ func Handlers(contract *pyval.Contract, registry *pyval.Registry, env endpoint.E
 		}
 		handlers[route.ID] = handler
 	}
+	// MOUNT /static does not go through the endpoint pipeline: it has no
+	// pydantic contract to bind, no body model and no reply to frame. It still
+	// runs inside the same chain dispatch wraps every Go route in.
+	if _, dup := handlers[staticweb.RouteID]; dup {
+		return nil, fmt.Errorf("routes: %s is implemented twice", staticweb.RouteID)
+	}
+	handlers[staticweb.RouteID] = staticweb.Handler()
 	return handlers, nil
 }

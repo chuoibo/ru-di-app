@@ -58,6 +58,7 @@ export function ToLoiRu({
   onDaDi,
   onGiu,
   onHuy,
+  onXemKeo,
   testID,
 }: {
   to: ToGiay;
@@ -76,6 +77,9 @@ export function ToLoiRu({
   onDaDi?: () => void;
   onGiu?: () => void;
   onHuy?: () => void;
+  /** The outing this agreed sheet became; shown with the affirmative actions,
+   *  above the escapes -- under «Huỷ buổi này» it read as an afterthought. */
+  onXemKeo?: () => void;
   testID?: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -187,6 +191,7 @@ export function ToLoiRu({
           ))}
         </View>
       ) : null}
+      {onXemKeo ? <RudiButton icon="calendar-outline" label="Xem kèo" onPress={onXemKeo} variant={chinh.length === 0 ? "solid" : "outline"} /> : null}
       {phu.length > 0 ? (
         // Tách khỏi nhóm trên bằng một nét: đây là các lối THOÁT, và «Bỏ bản
         // phác này» vứt đi thứ vừa viết còn «Huỷ buổi này» xoá một buổi người

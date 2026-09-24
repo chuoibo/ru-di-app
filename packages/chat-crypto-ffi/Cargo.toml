@@ -1,0 +1,17 @@
+[package]
+name = "rudi-chat-crypto-ffi"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.91"
+publish = false
+
+# A separate crate on purpose. `rudi-chat-crypto` carries
+# `#![forbid(unsafe_code)]` and that guarantee is what makes it auditable; a C
+# ABI needs raw pointers, so the unsafe lives here, beside nothing else.
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+rudi-chat-crypto = { path = "../chat-crypto" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

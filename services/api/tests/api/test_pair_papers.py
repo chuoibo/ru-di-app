@@ -220,7 +220,11 @@ def test_two_yeses_make_one_outing_in_the_same_request(client, repository):
     outing = repository.get_outing(__import__("uuid").UUID(body["outing_id"]))
     assert outing is not None
     assert outing.context_id == CAP
-    assert outing.title == f"Tờ lời rủ {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    # Named after what was agreed, and the agreed stop is the outing's timeline
+    # (QA 23/09: the outing used to hold a date and nothing else).
+    assert outing.title == f"Ăn tối, quán mới · {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    assert [(s.minute_of_day, s.label, s.place_id) for s in outing.stops] == [(19 * 60, "Ăn tối, quán mới", None)]
+    assert outing.timeline_revision == 1
     assert outing.starts_on.isoformat() == THU_BAY == outing.ends_on.isoformat()
     assert outing.headcount == 2
     assert outing.budget_per_person_vnd == 0, "không cột tiền nào nhận số không ai gõ"
@@ -751,3 +755,19 @@ def test_a_sheet_the_list_cannot_read_does_not_take_the_list_down(client, reposi
     assert len(rows) == 1
     assert rows[0]["chang_dau"] is None
     assert rows[0]["ngay"] is None
+
+
+
+def test_a_catalogue_place_on_the_sheet_names_the_outing_and_its_stop(client, repository):
+    lap_so(client)
+    place = next(iter(repository.list_places()))
+    paper_id = _draft(client)
+    content = {"ngay": THU_BAY, "chang": [{"gio": "19:00", "viec": "Ăn tối", "place_id": place.id}, {"gio": "21:00", "viec": "Dạo hồ", "place_id": "p-khong-con-trong-danh-muc"}]}
+    assert client.patch(f"/papers/{paper_id}/draft", json={"content": content}, headers=head(TOI)).status_code == 200
+    assert _send(client, paper_id).status_code == 200
+    body = _agree(client, paper_id).json()
+    outing = repository.get_outing(__import__("uuid").UUID(body["outing_id"]))
+    assert outing.title == f"{place.name} · {THU_BAY[8:]}/{THU_BAY[5:7]}"
+    # A place the catalogue no longer knows keeps its line and drops its id, so
+    # the timeline stays editable (its route refuses unknown places).
+    assert [(s.label, s.place_id, s.place_name) for s in outing.stops] == [("Ăn tối", place.id, place.name), ("Dạo hồ", None, None)]

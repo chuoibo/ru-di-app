@@ -28,6 +28,7 @@ function BacDongY({
   onDongY,
   nhanDeNghi,
   nguoiKiaDongY,
+  tenNguoiKia,
   testID,
 }: {
   open: boolean;
@@ -50,6 +51,8 @@ function BacDongY({
   onDongY: () => void;
   nhanDeNghi: string;
   nguoiKiaDongY: (() => void) | null;
+  /** Who is waiting on this, by name; the app knows it, so it says it. */
+  tenNguoiKia?: string;
   testID: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -74,13 +77,13 @@ function BacDongY({
           // nói rằng đang chờ chính mình.
           <>
             <Text style={[typography.body, { color: colors.ink }]} testID={`${testID}-ho-de-nghi`}>
-              Người ấy đã đề nghị. Bạn đồng ý thì sổ mở.
+              {tenNguoiKia ? `${tenNguoiKia} đã đề nghị.` : "Người ấy đã đề nghị."} {testID === "lap-so" ? "Bạn đồng ý thì sổ mở." : "Bạn đồng ý thì bậc này bật cho cả hai."}
             </Text>
             <RudiButton label="Đồng ý" onPress={onDongY} />
           </>
         ) : dangCho ? (
           <Text style={[typography.caption, { color: colors.inkSoft }]} testID={`${testID}-dang-cho`}>
-            Đã đề nghị. Chờ người ấy đồng ý trên máy của người ấy; im lặng không phải đồng ý.
+            Đã đề nghị. Chờ {tenNguoiKia ?? "người ấy"} đồng ý trên máy của họ; im lặng không phải đồng ý.
           </Text>
         ) : (
           <RudiButton label={nhanDeNghi} onPress={onDeNghi} />
@@ -94,7 +97,7 @@ function BacDongY({
   );
 }
 
-export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function LapSo(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
@@ -107,7 +110,7 @@ export function LapSo(props: { open: boolean; onClose: () => void; dangCho: bool
   );
 }
 
-export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null }) {
+export function BatMotDoi(props: { open: boolean; onClose: () => void; dangCho: boolean; deNghiCuaToi: boolean; onDeNghi: () => void; onDongY: () => void; nguoiKiaDongY: (() => void) | null; tenNguoiKia?: string }) {
   return (
     <BacDongY
       {...props}
