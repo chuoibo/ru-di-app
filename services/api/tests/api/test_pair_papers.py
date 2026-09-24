@@ -831,3 +831,30 @@ def test_a_sheet_that_was_never_agreed_teaches_the_draft_nothing(client, clock):
     first = _read(client, _draft(client)).json()["versions"][0]
     assert first["content"]["chang"][0]["gio"] == "18:30"
     assert first["ly_do"] is None
+
+
+def test_a_draft_never_sent_stays_its_owners_after_the_week_is_skipped(client):
+    """QA 24/09: skipping the week on a draft handed it to the other person,
+    content and private reason included. A sheet nobody sent is its owner's
+    draft whatever its state."""
+    lap_so(client)
+    paper_id = _draft(client)
+    assert _patch(client, paper_id, viec="Quà sinh nhật, bí mật", ly_do="chưa muốn nói").status_code == 200
+    skipped = client.post(f"/papers/{paper_id}/skip", headers=head(TOI))
+    assert skipped.status_code == 200, skipped.text
+    assert skipped.json()["state"] == "nghi_tuan"
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    assert paper_id not in [p["id"] for p in theirs]
+    assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 404
+    mine = client.get(f"/contexts/{CAP}/papers", headers=head(TOI)).json()["papers"]
+    assert paper_id in [p["id"] for p in mine], "chủ bản phác vẫn thấy tờ của mình"
+    assert _read(client, paper_id).status_code == 200
+
+
+def test_a_sheet_that_was_sent_stays_readable_to_both_after_it_closes(client):
+    lap_so(client)
+    paper_id = _da_gui(client)
+    assert client.post(f"/papers/{paper_id}/skip", headers=head(NGUOI_KIA)).status_code == 200
+    assert _read(client, paper_id, actor=NGUOI_KIA).status_code == 200
+    theirs = client.get(f"/contexts/{CAP}/papers", headers=head(NGUOI_KIA)).json()["papers"]
+    assert paper_id in [p["id"] for p in theirs]

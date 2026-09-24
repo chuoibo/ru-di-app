@@ -101,7 +101,7 @@ func ListPapers(s Store, actor Actor, contextID string, now time.Time) ([]PaperS
 	for i := range papers {
 		paper := &papers[i]
 		state := pairpaper.HieuLuc(PaperDict(paper), now)
-		if state == "nhap" && paper.DraftOwnerID != actor.ID {
+		if !chiChuThay(paper, state, actor.ID) {
 			continue
 		}
 		var kept *string
@@ -208,6 +208,24 @@ func DraftPaper(s Store, actor Actor, contextID string, now time.Time) (Command,
 	return wireCommand(&paper, paper.State, nil), nil
 }
 
+// chiChuThay is _chi_chu_thay: a sheet nobody ever sent is its owner's draft
+// whatever its state -- skipping the week on it, discarding it or letting its
+// week run out does not hand it to the other person (QA 24/09).
+func chiChuThay(paper *Paper, state, actorID string) bool {
+	if paper.DraftOwnerID == actorID {
+		return true
+	}
+	if state == "nhap" {
+		return false
+	}
+	for _, v := range paper.Versions {
+		if v.SentAt != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // lichSuToiDa is _LICH_SU_TOI_DA.
 const lichSuToiDa = 4
 
@@ -272,7 +290,7 @@ func readablePaperOr404(s Store, actor Actor, paperID string) (*Paper, []string,
 		return nil, nil, err
 	}
 	if err := requirePairPermission("view_pair_paper", actor,
-		fact{"may_view_paper", paper.State != "nhap" || paper.DraftOwnerID == actor.ID},
+		fact{"may_view_paper", chiChuThay(paper, paper.State, actor.ID)},
 	); err != nil {
 		return nil, nil, err
 	}

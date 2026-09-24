@@ -7668,7 +7668,7 @@ class ApiService:
         papers = []
         for paper in self.repository.list_pair_papers(context_id):
             state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
-            if state == "nhap" and paper.draft_owner_id != actor.id:
+            if not _chi_chu_thay(paper, state, actor.id):
                 continue
             papers.append(
                 PaperSummary(
@@ -7770,9 +7770,7 @@ class ApiService:
             "view_pair_paper",
             actor,
             {
-                "may_view_paper": (
-                    paper.state != "nhap" or paper.draft_owner_id == actor.id
-                )
+                "may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)
             },
         )
         return paper, members
@@ -8166,6 +8164,20 @@ _KHUNG_MAC_DINH = {"gio": "18:30", "viec": "Ăn tối", "di_tiep": None}
 
 #: How many agreed sheets the draft looks back over.
 _LICH_SU_TOI_DA = 4
+
+
+def _chi_chu_thay(paper: PairPaperRecord, state: str, actor_id: uuid.UUID) -> bool:
+    """Whether this person may see this sheet at all.
+
+    A sheet nobody ever sent is its owner's draft whatever its state: skipping
+    the week on it (`nghi_tuan`), discarding it (`bo`) or letting its week run
+    out does not hand it to the other person. The rule used to be «not `nhap`»,
+    so a draft skipped before sending appeared in the other person's list and
+    detail with its content and its private reason (QA 24/09).
+    """
+    if paper.draft_owner_id == actor_id:
+        return True
+    return state != "nhap" and any(v.sent_at is not None for v in paper.versions)
 
 
 def _lich_su_chu_ky(papers, notebook) -> list[dict]:
