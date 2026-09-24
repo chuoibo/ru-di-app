@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
@@ -15,15 +15,13 @@ import Svg, { Path } from "react-native-svg";
 
 import { TAB_BAR_HEIGHT } from "../adaptive";
 import { so } from "../art/net";
-import { typography, useRudiTheme } from "../theme";
+import { useRudiTheme } from "../theme";
 import { Nep } from "../ui/art/Nep";
 import { useMotion } from "../ui/useMotion";
 import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, ghimVaoRay, rayDoc, slopTrai, tyLeTuY, yTuTyLe } from "./dock-vi-tri";
 import { useNep } from "./NepProvider";
 import { hienToSau } from "./trang-thai";
 
-/** How long one peeked line stays before it retracts on its own. */
-const HE_MS = 4000;
 /** Past this, a horizontal drag means «tuck Nếp away» rather than «move it». */
 const KEO_AN_DP = 56;
 const KEO_AN_TOC = 700;
@@ -53,9 +51,14 @@ const TO_SAU_CAO_HON = 6;
  *   - `an`   (the default) tucked; its edge shows inside the margin, nothing
  *            more. Nếp is not drawn: on a money screen this edge is all ADR-0033
  *            §3 allows, «không mặt, không nhân vật».
- *   - `nghi` pulled out, because the person pulled it; Nếp stands on it.
- *   - `he`   pulled further, with the one line written ON the slip.
+ *   - `nghi` pulled out, because the person pulled it; Nếp stands on it. It
+ *            holds for the session and is never written to disk: a launch
+ *            starts tucked (`luu-dock.ts`).
  *   - `mo`   the panel is open, and it covers the edge anyway.
+ *
+ * Nothing widens the slip past `nghi` on its own. A line written on it for four
+ * seconds used to announce work (`he`); it lay over a card's price and hours,
+ * so work is now only ever the second slip, and what it is waits in the panel.
  *
  * The margin is a measured budget, not a style: text in a conversation ends
  * exactly 16dp from the right edge, so the tucked slip, the second slip behind
@@ -82,21 +85,22 @@ const TO_SAU_CAO_HON = 6;
  * ## Something waiting is a second slip, not a dot
  *
  * DESIGN.md forbids Nếp acting as chrome, and a red dot is chrome. When there
- * is work, a second slip in `accentSoft` -- warmer paper, «ấm lên một nấc»
- * (ADR-0033 §7) -- slides out from behind Nếp's once, one beat, and stays.
+ * is work, a second slip of warmer paper, «ấm lên một nấc» (ADR-0033 §7) --
+ * `accentSoft` in the light theme, the paper family's lighter `line` in the
+ * dark one -- slides out from behind Nếp's once, one beat, and stays.
  * It never shows on a money screen or beside an open sheet (`hienToSau`).
  *
  * ## «Chừa một chỗ cho nhau»
  *
  * When the page lays another sheet over itself -- a tray, a bottom sheet --
- * the slip tucks back into the edge and leaves the room to it, the first scene
- * ever drawn of Nếp, pulling out a chair for someone else. While the sheet is
- * up the edge is only a sign that Nếp is still there: not a button, and not
- * announced.
+ * the slip slides back into the notebook and leaves the room to it, the first
+ * scene ever drawn of Nếp, pulling out a chair for someone else. While the
+ * sheet is up not even the edge is drawn, and nothing is announced; Nếp comes
+ * back where the person left it when the last sheet closes.
  */
 export function NepDock() {
   const { dock, tyLe, gui, datTyLe } = useNep();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const motion = useMotion();
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
@@ -111,7 +115,6 @@ export function NepDock() {
   });
 
   const dangAn = dock.trangThai === "an";
-  const dangHe = dock.trangThai === "he";
   const coToSau = hienToSau(dock);
   // How much of the slip is tucked into the edge right now.
   const cai = dangAn ? NEP_DIA - NEP_MEP_HEP : 0;
@@ -139,14 +142,6 @@ export function NepDock() {
   useEffect(() => {
     sauRa.value = coToSau ? withTiming(1, motion.timing("standard", "decelerate")) : 0;
   }, [coToSau, sauRa, motion]);
-
-  // One peeked line retracts by itself. A line that waited for a tap would
-  // become a second permanent element on every screen.
-  useEffect(() => {
-    if (!dangHe) return;
-    const t = setTimeout(() => gui({ kieu: "het-gio-he" }), HE_MS);
-    return () => clearTimeout(t);
-  }, [dangHe, gui]);
 
   // Only outward and vertical drags mean anything here. Under gesture
   // navigation the outer ~30dp of the edge belongs to the system's Back swipe,
@@ -178,25 +173,23 @@ export function NepDock() {
   }));
 
   // The panel covers the edge anyway, and a slip sliding under a sheet reads
-  // as a bug rather than as depth.
-  if (dock.trangThai === "mo") return null;
+  // as a bug rather than as depth. The same holds for any other sheet: the
+  // story puts Nếp IN the page's edge and the sheet ON the page, so an edge
+  // still painted over a tray's corner, beside its ✕, is a layering fault.
+  // It comes back, where the person left it, when the last sheet closes.
+  if (dock.trangThai === "mo" || dock.nhuongCho) return null;
 
   const nhan = dangAn
     ? coToSau
-      ? "Nếp đang cài trong mép sổ và có tin mới, chạm để kéo ra"
+      ? "Nếp đang cài trong mép sổ và có việc mới, chạm để kéo ra"
       : "Nếp đang cài trong mép sổ, chạm để kéo ra"
-    : dangHe
-      ? "Nếp có việc cho bạn, chạm để xem"
+    : coToSau
+      ? "Mở Nếp, có việc mới"
       : "Mở Nếp";
 
   return (
     <Animated.View
-      // While another sheet is up the edge is a sign, not a control: it cannot
-      // be pressed, dragged or announced, or it would pull Nếp back over the
-      // words the person is reading.
-      accessibilityElementsHidden={dock.nhuongCho}
-      importantForAccessibility={dock.nhuongCho ? "no-hide-descendants" : "auto"}
-      pointerEvents={dock.nhuongCho ? "none" : "box-none"}
+      pointerEvents="box-none"
       style={[styles.lop, { width }, kieuRay]}
     >
       <GestureDetector gesture={keo}>
@@ -209,7 +202,12 @@ export function NepDock() {
               style={[
                 styles.toSau,
                 {
-                  backgroundColor: colors.accentSoft,
+                  // A second sheet of paper, one step warmer. In the light
+                  // theme accentSoft is that step. In the dark theme it is
+                  // #3d1a10, which beside navy paper reads as a rust band
+                  // (the reason AlbumAnh refused it too); `line` is the
+                  // paper family's lighter face, the one the fold shows.
+                  backgroundColor: dark ? colors.line : colors.accentSoft,
                   borderColor: colors.lineStrong,
                   borderTopLeftRadius: radius.small,
                   borderBottomLeftRadius: radius.small,
@@ -220,8 +218,16 @@ export function NepDock() {
             />
           ) : null}
           <Pressable
+            // Tucking back is otherwise only the outward flick, which a screen
+            // reader user cannot make: without this, one tap to pull Nếp out
+            // leaves them with 56dp over the page for the rest of the session.
+            accessibilityActions={dangAn ? undefined : [{ name: "activate" }, { name: "cat", label: "Cất Nếp vào mép" }]}
             accessibilityLabel={nhan}
             accessibilityRole="button"
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === "cat") gui({ kieu: "vuot-ra" });
+              else if (e.nativeEvent.actionName === "activate") gui({ kieu: "cham" });
+            }}
             // Tucked, the slip borrows the rest of the margin and not one dp of
             // the page; out, it borrows nothing (`slopTrai`).
             hitSlop={{ top: 12, bottom: 12, left: slopTrai(dangAn), right: 12 }}
@@ -244,15 +250,6 @@ export function NepDock() {
                   vien={colors.lineStrong}
                   w={kich.w}
                 />
-                {dangHe ? (
-                  <Text
-                    numberOfLines={2}
-                    style={[typography.body, styles.dong, { color: colors.ink }]}
-                    testID="nep-bong-bong"
-                  >
-                    Mình có việc này, xem không?
-                  </Text>
-                ) : null}
                 <Animated.View style={[styles.oNep, kieuNep]}>
                   <Nep pose="doi" size={NEP_CO} testID="nep-hinh" />
                 </Animated.View>
@@ -321,11 +318,6 @@ const styles = StyleSheet.create({
     width: NEP_DIA,
     alignItems: "center",
     justifyContent: "center",
-  },
-  // Written on the slip, left of Nếp, in the voice of the rest of the app.
-  dong: {
-    maxWidth: 176,
-    paddingLeft: 14,
   },
   toSau: {
     position: "absolute",

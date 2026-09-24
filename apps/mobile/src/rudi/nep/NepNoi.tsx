@@ -24,14 +24,14 @@ export function NepNoi() {
   const coPhieu = phieu !== null;
   useEffect(() => {
     if (!VIEC_NEP_QA || !coPhieu || daGiao.current) return;
-    // After the arrival settles: the route change that brought the screen in
-    // returns a peeked line to rest, which is right for a person and useless
-    // for a capture. Nếp speaks only once it is out, so `hoi` stands for a
-    // person who had already pulled Nếp out when the work arrived.
+    // After the arrival settles, so the capture sees the steady state. `hoi`
+    // stands for a person who had already pulled Nếp out when the work
+    // arrived: the second slip shows behind the pulled-out slip, and nothing
+    // widens over the page.
     const t = setTimeout(() => {
       daGiao.current = true;
       if (VIEC_NEP_QA === "hoi") gui({ kieu: "keo-vao" });
-      gui({ kieu: "bao-viec", canTraLoi: VIEC_NEP_QA === "hoi" });
+      gui({ kieu: "bao-viec" });
     }, 1200);
     return () => clearTimeout(t);
   }, [coPhieu, gui]);

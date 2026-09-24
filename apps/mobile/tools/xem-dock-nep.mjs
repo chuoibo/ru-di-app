@@ -5,13 +5,14 @@
  * States, light and dark: resting over the first tab and over a conversation
  * (scrolled through, text rects collected at every stop), making room while a
  * tray is open, and pulled out by the person. Built with
- * `EXPO_PUBLIC_QA_NEP_VIEC=bao|hoi`, the same run also shows the second slip
- * or the line written on the slip (`MODE=bao|hoi`); nothing in the app sends
- * the dock work yet, so those states are reachable only that way.
+ * `EXPO_PUBLIC_QA_NEP_VIEC=bao|hoi`, the same run also shows the second slip,
+ * tucked with a money screen (`MODE=bao`) or pulled out (`MODE=hoi`); nothing
+ * in the app sends the dock work yet, so those states are reachable only that
+ * way.
  *
- * The pictures are for looking at; `pass` is for failing. Pulled out and the
- * peeked line are the person's choice and a four-second announcement, so they
- * are captured but not held to the no-overlap rule.
+ * The pictures are for looking at; `pass` is for failing. Pulled out is the
+ * person's choice, so it is captured and used as the canary, not held to the
+ * no-overlap rule; nothing may ever widen past it.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,28 +152,30 @@ async function chay(scheme) {
     await page.type('[data-testid="otp-input"]', '000000');
     await page.waitForSelector('[role="tab"][aria-label="Tin nhắn"]', { timeout: 40000 });
     if (mode === 'hoi') {
-      // The line written on the slip: an announcement, captured, not measured.
-      // It lasts four seconds from the first screen that declares itself.
-      // Sampled rather than awaited, so a miss says which state the dock was
-      // in instead of only that a selector never appeared.
+      // Work arriving while Nếp is already out. Sampled for ten seconds: the
+      // second slip must show, and nothing may widen past the pulled-out slip
+      // (the old four-second line lay over a card's price and hours).
       const dongThoiGian = [];
-      let dong = null;
-      for (let t = 0; t < 10000 && !dong; t += 250) {
-        const o = await page.evaluate(() => ({
-          url: location.pathname,
-          mep: !!document.querySelector('[data-testid="nep-mep"]'),
-          dia: !!document.querySelector('[data-testid="nep-dia"]'),
-          sau: !!document.querySelector('[data-testid="nep-to-sau"]'),
-          bong: !!document.querySelector('[data-testid="nep-bong-bong"]'),
-        }));
-        const truoc = dongThoiGian.at(-1);
-        const { t: _t, ...truocKhongT } = truoc ?? {};
-        if (!truoc || JSON.stringify(truocKhongT) !== JSON.stringify(o)) dongThoiGian.push({ t, ...o });
-        if (o.bong) dong = await page.$('[data-testid="nep-bong-bong"]');
-        else await sleep(250);
+      let rongNhat = 0;
+      for (let t = 0; t < 10000; t += 250) {
+        const o = await page.evaluate(() => {
+          const r = document.querySelector('[data-testid="nep-dia"]')?.getBoundingClientRect();
+          return {
+            url: location.pathname,
+            mep: !!document.querySelector('[data-testid="nep-mep"]'),
+            dia: !!r,
+            rong: r ? Math.round(r.width) : 0,
+            sau: !!document.querySelector('[data-testid="nep-to-sau"]'),
+          };
+        });
+        rongNhat = Math.max(rongNhat, o.rong);
+        const { t: _t, ...truocKhongT } = dongThoiGian.at(-1) ?? {};
+        if (!dongThoiGian.length || JSON.stringify(truocKhongT) !== JSON.stringify(o)) dongThoiGian.push({ t, ...o });
+        await sleep(250);
       }
-      await chup(dong ? '5-dong-he' : '5-dong-he-khong-thay');
-      ket.steps.push({ scheme, name: 'dong_he_hien', pass: !!dong, dongThoiGian });
+      await chup('5-ra-co-viec');
+      const cuoi = dongThoiGian.at(-1);
+      ket.steps.push({ scheme, name: 'ra_co_viec_khong_bung_rong', pass: cuoi.dia && cuoi.sau && rongNhat <= 56, rongNhat, dongThoiGian });
       save();
       return;
     }
@@ -202,8 +205,37 @@ async function chay(scheme) {
     if (moRong) { await moRong.click(); await sleep(500); }
     await chup('3-nhuong-cho-khay');
     const khay = await doChe(page);
-    ket.steps.push({ scheme, name: 'nhuong_cho_khay_khong_che_chu', pass: khay.hopDock.length > 0 && khay.chuBiChe.length === 0, ...khay });
+    // Making room means not even the edge is drawn over the sheet.
+    ket.steps.push({ scheme, name: 'nhuong_cho_khay_khong_ve_gi', pass: khay.hopDock.length === 0, ...khay });
     save();
+
+    if (mode === 'bao') {
+      // The money law (ADR-0033 §2.2-2.3): with work waiting, a money screen
+      // shows the bare edge only -- no second slip, no Nếp.
+      // Walked there in the app, not loaded by URL: a reload would drop the
+      // work and the check would pass on nothing. The second slip must be
+      // seen on the way in, or the result says nothing about the law.
+      const docMep = () => page.evaluate(() => ({
+        url: location.pathname,
+        mep: !!document.querySelector('[data-testid="nep-mep"]'),
+        dia: !!document.querySelector('[data-testid="nep-dia"]'),
+        sau: !!document.querySelector('[data-testid="nep-to-sau"]'),
+      }));
+      await page.keyboard.press('Escape');
+      await sleep(800);
+      await page.goBack();
+      await page.waitForSelector('[role="tab"][aria-label="Cá nhân"]', { timeout: 20000 });
+      await page.click('[role="tab"][aria-label="Cá nhân"]');
+      await sleep(1500);
+      const truoc = await docMep();
+      const [loiVao] = await page.$$('xpath/.//*[text()="Tài chính của tôi"]');
+      if (loiVao) await loiVao.click();
+      await sleep(2500);
+      await chup('4-man-tien');
+      const tien = await docMep();
+      ket.steps.push({ scheme, name: 'man_tien_chi_mep_tron', pass: truoc.sau && tien.url === '/finance' && tien.mep && !tien.dia && !tien.sau, truoc, ...tien });
+      save();
+    }
 
     if (mode === 'thuong') {
       // Close the tray, then pull Nếp out the way a person would.

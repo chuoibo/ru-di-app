@@ -56,10 +56,7 @@ export function NepProvider({ children }: { children: ReactNode }) {
     void docGiaoDienAsync(KHOA_DOCK).then((raw) => {
       if (!song) return;
       const daLuu = giaiMaDock(raw);
-      if (daLuu) {
-        datTyLeRaw(daLuu.tyLe);
-        if (daLuu.ra) gui({ kieu: "keo-vao" });
-      }
+      if (daLuu) datTyLeRaw(daLuu.tyLe);
       datDaDocDia(true);
     });
     return () => {
@@ -90,12 +87,12 @@ export function NepProvider({ children }: { children: ReactNode }) {
     datTyLeRaw(sach);
   }, []);
 
-  // Persist the two facts worth persisting, after the first read so the default
+  // Persist the one fact worth persisting, after the first read so the default
   // never overwrites what the disk holds.
   useEffect(() => {
     if (!daDocDia) return;
-    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe, ra: dock.nen === "nghi" }));
-  }, [daDocDia, tyLe, dock.nen]);
+    void ghiGiaoDienAsync(KHOA_DOCK, maHoaDock({ tyLe }));
+  }, [daDocDia, tyLe]);
 
   const gia = useMemo<NepDieuKhien>(
     () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, ghiPhieu: guiPhieu, nhuongCho }),

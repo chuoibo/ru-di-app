@@ -3,10 +3,9 @@
  *
  * Nếp is the character who carries a sheet of paper, so hiding Nếp is tucking
  * that sheet into the edge of the notebook: `an` leaves a paper edge showing,
- * `nghi` is Nếp pulled out on the rail, `he` is one line peeking out, `mo` is
- * the panel open. Four states, and `nen` remembers which of the two resting
- * ones to fall back to, so closing the panel never invents a position the
- * person did not choose.
+ * `nghi` is Nếp pulled out on the rail, `mo` is the panel open. Three states,
+ * and `nen` remembers which of the two resting ones to fall back to, so
+ * closing the panel never invents a position the person did not choose.
  *
  * Nếp STARTS tucked. Measured on the running app (23/09), text reaches the
  * page margin: message times in a conversation end exactly 16dp from the
@@ -15,14 +14,21 @@
  * first cut, which rested as a 57dp disc, did: it cut «20|0» and «22:|» on
  * Explore and sat on the «Đồng ý» of an invitation (flow 25). Tucked, only the
  * slip's edge shows, inside the margin. Nếp comes further out only when the
- * person pulls it, or for the one line that needs an answer.
+ * person pulls it.
+ *
+ * Nếp never widens by itself. An earlier cut let work that needed an answer
+ * write one line on a pulled-out slip for four seconds (`he`); measured on
+ * the web build (24/09) that line was 234dp wide and lay over a card's price
+ * and opening hours, a live button over the words. «Không bao giờ che nội
+ * dung» has no four-second exception, so work shows only as the second slip,
+ * and what the work is waits in the panel.
  *
  * Two rules carry weight and both are negative, which is why they live in a
  * pure reducer instead of inside a component:
  *
  *   1. DESIGN.md's «Luật Nếp Đứng Xa Tiền» forbids Nếp beside money, errors and
  *      conflict. `luiLai` is that law: on those screens Nếp is pushed to `an`
- *      and `bao-viec` may NOT open a bubble. The work is still recorded, it is
+ *      and the second slip may NOT show. The work is still recorded, it is
  *      simply not spoken. A component that merely skipped rendering would still
  *      have run the transition, and the next screen would inherit a Nếp that had
  *      popped open next to a settlement.
@@ -33,13 +39,13 @@
  * springs and `NepProvider.tsx` feeds the events in.
  */
 
-/** Two resting states, plus the two that are always temporary. */
+/** Two resting states, plus the panel, which is always temporary. */
 export type NenNep = "an" | "nghi";
-export type TrangThaiNep = NenNep | "he" | "mo";
+export type TrangThaiNep = NenNep | "mo";
 
 export interface DockNep {
   trangThai: TrangThaiNep;
-  /** The resting state `he` and `mo` fall back to. */
+  /** The resting state `mo` falls back to. */
   nen: NenNep;
   /** There is something waiting; the paper edge thickens. Not a state change. */
   coViec: boolean;
@@ -66,10 +72,8 @@ export type SuKienNep =
   | { kieu: "vuot-ra" }
   | { kieu: "keo-vao" }
   | { kieu: "dong" }
-  /** `canTraLoi` is the difference between a badge and a sentence out loud. */
-  | { kieu: "bao-viec"; canTraLoi: boolean }
+  | { kieu: "bao-viec" }
   | { kieu: "xong-viec" }
-  | { kieu: "het-gio-he" }
   | { kieu: "doi-man"; nepLui: boolean }
   /** Another sheet opened over the page (`bat`), or the last one closed. */
   | { kieu: "nhuong-cho"; bat: boolean };
@@ -105,13 +109,10 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       // second, deliberate tap: a sheet that sprang open from a stray swipe
       // back would cover the screen the person was actually reading.
       if (dock.trangThai === "an") return { ...dock, trangThai: "nghi", nen: "nghi" };
-      if (dock.trangThai === "nghi" || dock.trangThai === "he") return { ...dock, trangThai: "mo" };
+      if (dock.trangThai === "nghi") return { ...dock, trangThai: "mo" };
       return dock;
 
     case "vuot-ra":
-      // Swiping the bubble away retracts it; it does not also hide Nếp, which
-      // would punish the person for dismissing one sentence.
-      if (dock.trangThai === "he") return veNen(dock);
       if (dock.trangThai === "nghi") return { ...dock, trangThai: "an", nen: "an" };
       return dock;
 
@@ -123,28 +124,13 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
     case "dong":
       return dock.trangThai === "mo" ? veNen(dock) : dock;
 
-    case "bao-viec": {
-      const coViec = { ...dock, coViec: true };
-      // The law wins over the notification, and it wins silently. So does an
-      // open sheet: the work is kept and simply waits for the room to clear.
-      if (dock.luiLai || dock.nhuongCho) return coViec;
-      if (!su.canTraLoi) return coViec;
-      // Nếp speaks only when it is already standing outside. Tucked, Nếp
-      // never comes out on its own: the line would slide over the page for
-      // four seconds and take whatever tap lands there, which on a native
-      // table is a flow that goes red only when the phone is slow. Tucked,
-      // the second slip says it, inside the margin.
-      if (dock.trangThai === "nghi") return { ...coViec, trangThai: "he" };
-      return coViec;
-    }
+    case "bao-viec":
+      // Recorded, never spoken out loud: `hienToSau` decides whether the
+      // second slip may say it, and nothing here widens Nếp over the page.
+      return { ...dock, coViec: true };
 
-    case "xong-viec": {
-      const xong = { ...dock, coViec: false };
-      return xong.trangThai === "he" ? veNen(xong) : xong;
-    }
-
-    case "het-gio-he":
-      return dock.trangThai === "he" ? veNen(dock) : dock;
+    case "xong-viec":
+      return { ...dock, coViec: false };
 
     case "doi-man":
       // `nen` is deliberately untouched on the way in: it is the person's last

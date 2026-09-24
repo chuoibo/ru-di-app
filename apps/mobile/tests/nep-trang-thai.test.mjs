@@ -39,38 +39,44 @@ test("đóng bảng thì Nếp về đúng nền trước đó, không tự hi�
   assert.equal(chuyen(moTuAn, { kieu: "dong" }).trangThai, "an");
 });
 
-test("báo việc chỉ ghi nhận; Nếp đang cài thì KHÔNG tự bước ra, kể cả việc cần trả lời", () => {
-  const chiBao = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: false });
+test("báo việc chỉ ghi nhận; Nếp đang cài thì KHÔNG tự bước ra", () => {
+  const chiBao = chuyen(DOCK_DAU, { kieu: "bao-viec" });
   assert.equal(chiBao.coViec, true);
-  assert.equal(chiBao.trangThai, "an", "việc không cần trả lời thì Nếp vẫn cài, chỉ tờ thứ hai hiện");
-
-  // Sliding a line over the page for four seconds takes whatever tap lands
-  // there; tucked, the second slip says it inside the margin instead.
-  const canTraLoi = chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(canTraLoi.trangThai, "an", "Nếp cài thì chỉ dày mép, không nói to");
-  assert.equal(canTraLoi.coViec, true);
-  assert.equal(hienToSau(canTraLoi), true);
+  assert.equal(chiBao.trangThai, "an", "Nếp vẫn cài, chỉ tờ thứ hai hiện");
+  assert.equal(hienToSau(chiBao), true);
 });
 
-test("Nếp đã đứng ngoài thì mới hé một dòng; dòng hé tự thu về, xong việc thì tờ thứ hai rút đi", () => {
-  const he = chuyen(RA, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(he.trangThai, "he");
-  assert.equal(he.coViec, true);
-  assert.equal(chuyen(he, { kieu: "het-gio-he" }).trangThai, "nghi", "về lại đúng chỗ người dùng đã kéo ra");
-  assert.equal(chuyen(he, { kieu: "vuot-ra" }).trangThai, "nghi");
+// Nếp never widens over the page by itself. The four-second line that used
+// to announce work on a pulled-out slip lay over a card's price and hours on
+// the web build (24/09); «không bao giờ che nội dung» has no exception for it.
+test("Nếp đã đứng ngoài mà có việc thì vẫn đứng yên đúng chỗ, không tự bung ra một dòng", () => {
+  const coViec = chuyen(RA, { kieu: "bao-viec" });
+  assert.equal(coViec.trangThai, "nghi");
+  assert.equal(coViec.coViec, true);
+  assert.equal(hienToSau(coViec), true, "việc được nói bằng tờ thứ hai, không bằng chữ đè lên trang");
 
-  const xong = chuyen(he, { kieu: "xong-viec" });
+  const xong = chuyen(coViec, { kieu: "xong-viec" });
   assert.equal(xong.coViec, false);
   assert.equal(xong.trangThai, "nghi");
 });
 
-test("Luật Nếp Đứng Xa Tiền: màn tiền ép Nếp lui vào mép và cấm hé", () => {
+test("không trạng thái nào rộng hơn Nếp đã ra mà đến được khi người dùng không chạm", () => {
+  const khongCham = ["vuot-ra", "keo-vao", "dong", "bao-viec", "xong-viec"];
+  let dock = RA;
+  for (const kieu of khongCham) for (const nepLui of [false, true]) {
+    dock = chuyen(dock, { kieu });
+    dock = chuyen(dock, { kieu: "doi-man", nepLui });
+    assert.ok(["an", "nghi"].includes(dock.trangThai), `${kieu} → ${dock.trangThai}`);
+  }
+});
+
+test("Luật Nếp Đứng Xa Tiền: màn tiền ép Nếp lui vào mép", () => {
   const oManTien = chuyen(RA, { kieu: "doi-man", nepLui: true });
   assert.equal(oManTien.trangThai, "an");
   assert.equal(oManTien.luiLai, true);
 
-  const coViecOManTien = chuyen(oManTien, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(coViecOManTien.trangThai, "an", "màn tiền thì tuyệt đối không hé");
+  const coViecOManTien = chuyen(oManTien, { kieu: "bao-viec" });
+  assert.equal(coViecOManTien.trangThai, "an", "màn tiền thì Nếp tuyệt đối không bước ra");
   assert.equal(coViecOManTien.coViec, true, "vẫn ghi nhận có việc, chỉ là không nói ra");
 });
 
@@ -120,10 +126,10 @@ test("đang nhường chỗ thì chạm vào mép không lôi Nếp ra đè lên
   assert.equal(chuyen(nhuong, { kieu: "keo-vao" }).trangThai, "an");
 });
 
-test("đang nhường chỗ thì có việc vẫn được ghi nhận nhưng không hé ra một dòng", () => {
+test("đang nhường chỗ thì có việc vẫn được ghi nhận nhưng Nếp không bước ra", () => {
   const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
-  const coViec = chuyen(nhuong, { kieu: "bao-viec", canTraLoi: true });
-  assert.equal(coViec.trangThai, "an", "hé ra lúc này là đè lên tờ người ta đang đọc");
+  const coViec = chuyen(nhuong, { kieu: "bao-viec" });
+  assert.equal(coViec.trangThai, "an", "bước ra lúc này là đè lên tờ người ta đang đọc");
   assert.equal(coViec.coViec, true, "việc không bị nuốt, chỉ đợi");
 });
 
@@ -154,13 +160,13 @@ test("đổi màn trong lúc còn tờ đang mở không bật Nếp ra đè lê
 // first cut drawing it on money screens and beside an open tray.
 
 test("tờ thứ hai hiện khi có việc ở màn bình thường, cả lúc Nếp cài lẫn lúc đã ra", () => {
-  assert.equal(hienToSau(chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: false })), true);
-  assert.equal(hienToSau(chuyen(RA, { kieu: "bao-viec", canTraLoi: false })), true);
+  assert.equal(hienToSau(chuyen(DOCK_DAU, { kieu: "bao-viec" })), true);
+  assert.equal(hienToSau(chuyen(RA, { kieu: "bao-viec" })), true);
   assert.equal(hienToSau(DOCK_DAU), false, "không có việc thì không có tờ thứ hai");
 });
 
 test("màn tiền: có việc vẫn ghi nhận nhưng tờ thứ hai không hiện", () => {
-  const oManTien = chuyen(chuyen(DOCK_DAU, { kieu: "doi-man", nepLui: true }), { kieu: "bao-viec", canTraLoi: false });
+  const oManTien = chuyen(chuyen(DOCK_DAU, { kieu: "doi-man", nepLui: true }), { kieu: "bao-viec" });
   assert.equal(oManTien.coViec, true);
   assert.equal(hienToSau(oManTien), false, "mép ở màn tiền là mép giấy trơn, không mặt, không lời");
   const roiManTien = chuyen(oManTien, { kieu: "doi-man", nepLui: false });
@@ -168,13 +174,13 @@ test("màn tiền: có việc vẫn ghi nhận nhưng tờ thứ hai không hi�
 });
 
 test("đang có tờ khác mở: tờ thứ hai không hiện, tờ kia đóng thì hiện lại", () => {
-  const nhuong = chuyen(chuyen(DOCK_DAU, { kieu: "bao-viec", canTraLoi: false }), { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(chuyen(DOCK_DAU, { kieu: "bao-viec" }), { kieu: "nhuong-cho", bat: true });
   assert.equal(hienToSau(nhuong), false);
   assert.equal(hienToSau(chuyen(nhuong, { kieu: "nhuong-cho", bat: false })), true);
 });
 
 test("bảng Nếp đang mở thì không vẽ tờ thứ hai sau lưng nó", () => {
-  const moCoViec = chuyen(chuyen(RA, { kieu: "bao-viec", canTraLoi: false }), { kieu: "cham" });
+  const moCoViec = chuyen(chuyen(RA, { kieu: "bao-viec" }), { kieu: "cham" });
   assert.equal(moCoViec.trangThai, "mo");
   assert.equal(hienToSau(moCoViec), false);
 });
