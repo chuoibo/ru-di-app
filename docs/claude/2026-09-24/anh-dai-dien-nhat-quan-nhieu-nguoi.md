@@ -54,10 +54,64 @@ cũ có thể sống vô thời hạn.
   `core migrate-chat`; `serve` từ chối khởi động nếu thiếu trigger, cùng
   thông báo như schema chat.
 
+## Bổ sung (cùng ngày): vào/rời nhóm, và phiên web qua reload
+
+### Vào/rời nhóm được đẩy ngay
+
+Nguyên nhân gốc: trigger chỉ bắt *ảnh đổi*, không bắt *quyền xem đổi*. B đã
+nhớ C là "không được xem" (vắng trong câu trả lời, ví dụ từ danh sách bạn
+bè); C vào nhóm thì không ai bảo B hỏi lại. Chiều rời nhóm y như vậy.
+
+Sửa: migration version 2 của `avatarfeed` (`membership.sql`): trigger trên
+`memberships` phát `m:<context>:<person>` mỗi khi một hàng vào hoặc rời
+trạng thái `active` (INSERT, UPDATE, DELETE; đổi context/person của một hàng
+phát cho cả hai phía). Listener gửi `ready` cho mọi thành viên active của
+context đó và cho chính người đó; client hỏi lại phiên bản và nhận đúng
+quyền mới. Lời mời (`invited`) không phát gì. Version 1 giữ nguyên chữ nên
+checksum cũ vẫn khớp.
+
+### Phiên web sống qua lần tải lại trang
+
+Nguyên nhân gốc: không phải lỗi vô tình. `src/phien.ts` cố ý giữ phiên chỉ
+trong bộ nhớ trên web để không ghi bearer vào `localStorage`. Thiếu một nơi
+cất an toàn thì mọi reload là đăng xuất.
+
+Sửa (mẫu "cookie làm mới + token trong bộ nhớ" của SPA),
+`services/core/internal/websession`, ba route Go-only:
+
+- `POST /sessions/web` (Bearer) đặt cookie `rudi_web_session` =
+  token phiên: `HttpOnly; Secure; SameSite=Strict; Path=/sessions/web`,
+  hết hạn cùng phiên.
+- `POST /sessions/web/resume` đọc CHỈ cookie, trả token/person/expiry/door/tên
+  nếu phiên còn sống (chưa thu hồi, chưa hết hạn, người chưa xoá); phiên chết
+  thì 401 và xoá cookie.
+- `POST /sessions/web/clear` xoá cookie.
+- CORS riêng có credentials; bắt buộc có `Origin` và phải là origin được
+  phép (cùng host, danh sách `MOBILE_CORS_ALLOW_ORIGINS`, hoặc loopback khi
+  danh sách trống); `*` không bao giờ được chấp nhận ở đây.
+
+Client: `src/phien-web.ts` là kho phiên của trình duyệt (token trong bộ nhớ,
+không đụng Web Storage); `khoiPhucPhien` đọc lại danh sách nhóm khi phiên
+khôi phục không mang nhóm. Native vẫn dùng SecureStore, không đổi.
+
+Giới hạn nói thẳng:
+
+- Một XSS đang chạy trên trang vẫn gọi được `/resume` và lấy token, y như nó
+  dùng được token trong bộ nhớ trước đây. Cái được so với `localStorage`:
+  không script nào đọc được token lúc nó nằm yên (HttpOnly), cookie chỉ đi
+  tới ba route này, không route nào khác đọc cookie nên không thêm quyền ngầm
+  (CSRF) ở đâu cả, và thu hồi phiên là cookie chết theo. Cái KHÔNG được:
+  cookie vẫn nằm trong kho cookie của profile trình duyệt trên đĩa, như mọi
+  cookie đăng nhập; ai đọc được profile đó thì đọc được phiên.
+- Cần web và API cùng *site* (ví dụ `app.x` và `api.x`) vì `SameSite=Strict`.
+  Khác site thì cookie không đi, và kết quả an toàn: như cũ, reload là đăng
+  xuất.
+- Chọn nhóm đang xem không được nhớ qua reload; lấy nhóm mặc định như đăng
+  nhập mới.
+
 ## Còn mở
 
 - iOS/Android native chưa chạy: container không có KVM, và chính sách mạng
   chặn `dl.google.com`. Cần máy có KVM + `scripts/android_emulator.sh`.
-- Người mới vào nhóm: người khác thấy ảnh của họ ở lần đồng bộ kế tiếp (mở
-  màn, lên foreground, nối lại socket), chưa được đẩy tức thì.
-- Bản web mất phiên khi tải lại trang (có từ trước, ngoài phạm vi).
+- Danh sách thành viên trên màn đang mở không tự thêm người mới (danh sách là
+  một lần đọc của màn); avatar thì đúng ngay khi người đó hiện ra.
