@@ -170,7 +170,7 @@ export function ExploreScreen() {
       {session.inboxOpen ? (
         <EmptyState
           action={{ label: "Đóng", onPress: () => session.setInboxOpen(false) }}
-          body="Chưa có hộp thư máy chủ. Bản trải nghiệm không đẩy thông báo."
+          body="Bản trải nghiệm không có hộp thư và không đẩy thông báo."
           kind="first-use"
           layout="inline"
           title="Thông báo"

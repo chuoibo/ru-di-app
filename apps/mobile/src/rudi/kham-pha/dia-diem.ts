@@ -600,17 +600,17 @@ export function cauTimKiem(trang: TimKiemState): string | null {
     case "chua-biet-la-ai":
       return "Cần đăng nhập để hỏi Rủ Đi AI.";
     case "bi-tu-choi":
-      return "Máy chủ từ chối yêu cầu này.";
+      return "Rủ Đi không làm được việc này.";
     case "qua-nhieu-lan":
       return "Hết lượt hỏi trong phút này. Thử lại sau một chút.";
     case "chua-co-endpoint":
-      return "Máy chủ này chưa có tìm kiếm bằng câu.";
+      return "Tìm bằng câu chưa bật ở đây.";
     case "khong-noi-duoc":
-      return "Không nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+      return "Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.";
     case "may-chu-loi":
-      return "Máy chủ đang lỗi. Thử lại sau.";
+      return "Rủ Đi đang gặp sự cố. Thử lại sau.";
     case "du-lieu-sai":
-      return "Máy chủ trả dữ liệu không đọc được.";
+      return "Kết quả trả về không đọc được. Thử lại sau.";
     default:
       return null;
   }

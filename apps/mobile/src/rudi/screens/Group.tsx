@@ -457,7 +457,7 @@ export function VotingScreen() {
           <View style={styles.flex}>
             <Text style={[typography.label, { color: colors.ink }]}>Bạn đã chọn {VOTE_OPTIONS[session.voteChoice].name}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              Phiếu {noiLuu(session.luuTruSong)}. Chưa gửi lên máy chủ.
+              Phiếu {noiLuu(session.luuTruSong)}. Chưa gửi đi đâu.
             </Text>
           </View>
         </View>

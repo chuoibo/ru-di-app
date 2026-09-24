@@ -373,16 +373,23 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             </Text>
             {/* Two sums, side by side while the window allows, one under the other
                 when it does not. Neither is ever shrunk to fit. */}
-            <View style={styles.tien}>
-              <View style={styles.oTien}>
-                <Money vnd={trang.keo.budget_per_person_vnd} />
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>một người</Text>
+            {/* A plan made from a two-person sheet has no budget, and «0đ · 0đ»
+                read as «this evening costs nothing» (QA 23/09). No budget is
+                said as such; the two sums appear only when there is one. */}
+            {trang.keo.budget_per_person_vnd > 0 ? (
+              <View style={styles.tien}>
+                <View style={styles.oTien}>
+                  <Money vnd={trang.keo.budget_per_person_vnd} />
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>một người</Text>
+                </View>
+                <View style={styles.oTien}>
+                  <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
+                  <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
+                </View>
               </View>
-              <View style={styles.oTien}>
-                <Money vnd={tongDuKien(trang.keo.budget_per_person_vnd, trang.keo.headcount)} />
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
-              </View>
-            </View>
+            ) : (
+              <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa đặt ngân sách cho buổi này.</Text>
+            )}
             {/* The bill of this outing belongs to the outing's own context --
                 a pair's plan is split in the pair, never in whichever group
                 happens to be current (QA 23/09). */}

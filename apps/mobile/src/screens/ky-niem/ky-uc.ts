@@ -158,14 +158,14 @@ export async function timNhomDemo(
       body: JSON.stringify({ display_name: DEMO_GROUP_NAME }),
     });
   } catch {
-    throw new KyUcError(0, "Không gọi được máy chủ.");
+    throw new KyUcError(0, "Không kết nối được Rủ Đi.");
   }
   if (!response.ok) {
     throw new KyUcError(response.status, loiKyUc(response.status, ""));
   }
   const body = (await response.json()) as { id?: unknown };
   if (typeof body.id !== "string") {
-    throw new KyUcError(response.status, "Máy chủ không trả id nhóm.");
+    throw new KyUcError(response.status, "Rủ Đi trả lời thiếu thông tin nhóm.");
   }
   return {
     contextId: body.id,
@@ -205,7 +205,7 @@ export async function layKyUc(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's localhost.
-    throw new KyUcError(0, "Không gọi được máy chủ.");
+    throw new KyUcError(0, "Không kết nối được Rủ Đi.");
   }
   if (!response.ok) {
     let code = "";
@@ -224,8 +224,8 @@ export function loiKyUc(status: number, code: string): string {
   if (code === "permission_denied" || status === 403) {
     return "Kỷ niệm là của riêng nhóm. Bạn cần là thành viên mới xem được.";
   }
-  if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
+  if (status === 401) return "Chưa đăng nhập nên chưa đọc được.";
   if (status === 404) return "Không tìm thấy nhóm này.";
-  if (status >= 500) return "Máy chủ đang lỗi, chưa đọc được sổ.";
-  return `Máy chủ trả lỗi ${status}.`;
+  if (status >= 500) return "Rủ Đi đang gặp sự cố, chưa đọc được sổ.";
+  return `Rủ Đi gặp lỗi (${status}).`;
 }

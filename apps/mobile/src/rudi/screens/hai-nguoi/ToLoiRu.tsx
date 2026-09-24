@@ -7,6 +7,8 @@ import { typography, useRudiTheme } from "../../theme";
 import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
 import { useTenCho } from "../../to-giay/useTenCho";
+import { cauLanHen, demNgay } from "../../to-giay/moc-hen";
+import { homNay } from "../../keo/nhip-keo";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -61,6 +63,7 @@ export function ToLoiRu({
   onGiu,
   onHuy,
   onXemKeo,
+  tatCa,
   testID,
 }: {
   to: ToGiay;
@@ -82,6 +85,8 @@ export function ToLoiRu({
   /** The outing this agreed sheet became; shown with the affirmative actions,
    *  above the escapes -- under «Huỷ buổi này» it read as an afterthought. */
   onXemKeo?: () => void;
+  /** Every sheet of the notebook, to say which of their evenings this one is. */
+  tatCa?: readonly ToGiay[];
   testID?: string;
 }) {
   const { colors, space } = useRudiTheme();
@@ -184,6 +189,15 @@ export function ToLoiRu({
         </View>
       ) : null}
       <Text style={[typography.caption, { color: colors.inkSoft }]}>{cau}</Text>
+      {/* The agreed evening, as a moment rather than a status: how far it is,
+          and which of their evenings it is (QA 23/09: after «Đã chốt» the
+          screen held one red button and nothing else). */}
+      {to.state === "chot" && (demNgay(to, homNay()) !== null || tatCa) ? (
+        <View style={styles.moc} testID={testID ? `${testID}-moc` : undefined}>
+          {demNgay(to, homNay()) !== null ? <Stamp dong={vuaDoi} label={demNgay(to, homNay()) ?? ""} tilt={-3} tone="ink" /> : null}
+          {tatCa ? <Text style={[typography.label, styles.mocChu, { color: colors.ink }]}>{cauLanHen(to, tatCa)}</Text> : null}
+        </View>
+      ) : null}
       {to.keeps.length > 0 ? (
         <View style={styles.giu}>
           {to.keeps.map((k) => (
@@ -299,6 +313,8 @@ const styles = StyleSheet.create({
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
   // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
   lyDo: {},
+  moc: { flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap", paddingVertical: 4 },
+  mocChu: { flexShrink: 1 },
   thoat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 6 },
   doi: { borderLeftWidth: StyleSheet.hairlineWidth, paddingLeft: 12, gap: 2 },
   giu: { gap: 2, paddingHorizontal: 6 },

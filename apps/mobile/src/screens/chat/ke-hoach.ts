@@ -287,6 +287,6 @@ export function cauBiCat(soLuong: number, danhTu: "chặng" | "chỗ"): [string,
       : "Hỏi AI để xem thêm chỗ khác.";
   return [
     `${doiTuong} bị rút gọn, còn ${soLuong} ${danhTu} nữa chưa được gửi.`,
-    `Máy chủ chỉ gửi phần đầu ${nguon}, nên phần sau không có ở đây. ${dan}`,
+    `Chỉ có phần đầu ${nguon}, nên phần sau không có ở đây. ${dan}`,
   ];
 }

@@ -182,7 +182,7 @@ test("cauTimKiem: có kết quả thì im, mỗi kiểu thất bại một câu 
   assert.match(cauTimKiem({ kind: "khong-tra-loi", query: "x" }), /chưa đủ chắc/);
   assert.match(cauTimKiem({ kind: "qua-nhieu-lan", query: "x" }), /Hết lượt/);
   assert.match(cauTimKiem({ kind: "cau-khong-hop-le", max: 300 }), /300/);
-  assert.match(cauTimKiem({ kind: "khong-noi-duoc", url: "u", detail: "d" }), /Không nối được/);
+  assert.match(cauTimKiem({ kind: "khong-noi-duoc", url: "u", detail: "d" }), /Không kết nối được/);
 });
 
 /* ------------------------------------------------------------------ M9 -- */

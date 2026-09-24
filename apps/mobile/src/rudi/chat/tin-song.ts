@@ -468,18 +468,18 @@ export function cauYDinh(gui: TinDaGui): string | null {
     case "vote_malformed":
       return "Bình chọn cần dạng: /vote Câu hỏi? Lựa chọn A | Lựa chọn B";
     case "chia_bill_not_available":
-      return "Chia bill từ chat chưa sẵn sàng trên máy chủ này.";
+      return "Chia bill từ chat chưa bật ở đây.";
     case "chia_bill_no_expenses":
       return "Không thấy khoản chi nào trong các tin gần đây.";
     case "chia_bill_refused":
-      return "Máy chủ từ chối bản đọc lần này. Thử lại sau.";
+      return "Lần đọc này chưa được. Thử lại sau.";
     default:
       break;
   }
   if (gui.companion && !gui.companion.spoke) {
     switch (gui.companion.reason) {
       case "unavailable":
-        return "Rủ Đi AI chưa nối được mô hình trên máy chủ này.";
+        return "Rủ Đi AI chưa bật ở đây.";
       case "ungrounded":
         return "Rủ Đi AI có ý nhưng không nêu được địa điểm trong danh mục, nên im lặng.";
       default:

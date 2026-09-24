@@ -268,7 +268,7 @@ const LOI_OTP_GUI: Record<string, string> = {
   otp_resend_too_soon: "Mã vừa được gửi. Đợi một chút rồi gửi lại.",
   otp_too_many_requests: "Số này vừa nhận nhiều mã. Thử lại sau ít phút.",
   rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Máy chủ chưa sẵn sàng cho đăng nhập.",
+  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
   sms_unavailable: "Chưa gửi được tin nhắn lúc này, thử lại sau.",
 };
 
@@ -277,7 +277,7 @@ const LOI_OTP_XAC_MINH: Record<string, string> = {
   otp_too_many_attempts: "Sai quá nhiều lần. Xin mã mới.",
   challenge_id_invalid: "Lượt xin mã bị lỗi. Xin mã mới.",
   rate_limited: "Thử lại sau một phút.",
-  identity_key_missing: "Máy chủ chưa sẵn sàng cho đăng nhập.",
+  identity_key_missing: "Rủ Đi chưa sẵn sàng cho đăng nhập. Thử lại sau ít phút.",
 };
 
 /** Ask the server to send a code. The number goes in the body, never a path. */
@@ -366,7 +366,7 @@ export async function doiTenTrongPhien(phien: Phien, ten: string, kho?: KhoAnToa
 export async function chonNhom(phien: Phien, contextId: string, kho?: KhoAnToan): Promise<Phien> {
   const nhom = phien.contexts?.find((ung) => ung.id === contextId);
   if (nhom === undefined) {
-    throw new Error("Nhóm này không có trong danh sách máy chủ vừa trả.");
+    throw new Error("Nhóm này không còn trong danh sách của bạn.");
   }
   if (nhom.my_state !== "active") {
     throw new Error("Bạn chưa đồng ý vào nhóm này.");
@@ -403,7 +403,7 @@ export type HoSoToi = {
 };
 
 const LOI_HO_SO: Record<string, string> = {
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
   http_422: "Hồ sơ chưa hợp lệ: tên không được rỗng, giới thiệu tối đa 500 chữ.",
 };
 

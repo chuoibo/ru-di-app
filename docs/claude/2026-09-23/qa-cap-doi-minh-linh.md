@@ -484,3 +484,26 @@ chuẩn (một input thật, `sms-otp`, focus màu).
   cho cả hai như cũ.
 - **Phần còn lại của Đợt 7 chờ Lead ký ADR-0034** (gu/vai/nhịp/câu hỏi tuần) — xem
   `docs/team/hang-doi.md`.
+
+## Lượt «còn nợ» 1 (24/09) — khoảnh khắc hẹn, kỷ niệm của hai bạn, Khám phá chữ lớn
+
+Đo trên dev build Android, stack cô lập dựng mới (cặp Minh/Linh gieo bằng API công khai).
+
+- **Đỉnh cảm xúc sau «Đã chốt» trống trơn → đã sửa**: tờ đã chốt có con dấu mực «CÒN 2 NGÀY» (coral
+  giữ cho «Xem kèo», một điểm dẫn mỗi bề mặt) và «Lần hẹn đầu tiên / thứ N của hai bạn»; hàng ghim
+  trong nhắn riêng thành mốc «Hai bạn hẹn Thứ Bảy 26/09 · Lẩu Gà Lá É Tao Ngộ · còn 2 ngày» (dựng ở
+  client từ sổ, không chèn gì vào chat — E2EE).
+- **Kèo «0đ / 0đ» → «Chưa đặt ngân sách cho buổi này.»**
+- **Kỷ niệm chỉ đi lên tường nhóm → đã có «Kỷ niệm của hai bạn»** (ADR-0021 §2.5 cho phép): lối vào
+  ở «Cài đặt sổ» và sau buổi đi («Giữ một tấm ảnh của buổi này»); màn đăng nói «Chỉ hai bạn thấy».
+  Trên máy: ảnh vào đúng sổ đôi. **Lỗi phát hiện kèm:** nút «Thả khoảnh khắc» trên tường của MỘT
+  nhóm mở `/moments/new` không kèm nhóm → ảnh vào nhóm *hiện tại*; nay mang `?ctx=`.
+- **Tường nhóm cắt ảnh dọc thành dải 4:3 → khung theo tỉ lệ ảnh** (3:4 … 1.91:1, đọc từ ảnh lúc tải).
+- **«Thêm vào kèo» không thấy kèo của sổ đôi, và chuyển hướng đi khi chưa có nhóm → đã sửa**: mục
+  «Hẹn của hai bạn»; trên máy thêm «Tiệm Nướng Xóm Lào» vào kèo của đôi, mở đúng kèo.
+- **Khám phá ở chữ 1.3**: ô tìm và nút AI giữ một hàng; dòng giá được hai dòng khi chữ lớn.
+- **«máy chủ» còn sót → đã viết lại 66 câu** (ErrorState mặc định «Chưa đọc được từ máy chủ» →
+  «Chưa tải được»; câu nêu tên biến môi trường cho người dựng hệ → câu người dùng làm được gì). Còn 5
+  chuỗi chẩn đoán nội bộ và 1 ở màn dev.
+- **Để mở có chủ đích:** chất giấy chế độ tối — vân giấy đo ≈ 2 mức trên nền tối (phẳng), màu tờ đêm
+  là hợp đồng đã đo (spec §16, DESIGN «sổ đóng trên bàn»); cần một lượt thiết kế có đọc mù.

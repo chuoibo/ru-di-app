@@ -71,7 +71,7 @@ export type CameraAccess = {
  */
 export const DEFAULT_MESSAGES: Record<CameraAccessState, string> = {
   "chua-hoi":
-    "Chụp ảnh bill để app đọc từng món. Ảnh chỉ gửi tới máy chủ của nhóm, không lưu vào thư viện máy.",
+    "Chụp ảnh bill để app đọc từng món. Ảnh chỉ gửi cho Rủ Đi để đọc món, không lưu vào thư viện máy.",
   "cho-phep": "Đưa bill vào trong khung, chụp khi chữ đã rõ.",
   // Em-dashes removed, not restyled. The repo bans them in Vietnamese copy
   // that reaches a screen, and both of these reached one: they were rendered

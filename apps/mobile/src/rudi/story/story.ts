@@ -37,7 +37,7 @@ export const THOI_LUONG_MS = 5000;
 
 export const LOI_STORY: Record<string, string> = {
   story_not_found: "Story này không còn, hoặc không dành cho bạn.",
-  photo_not_found: "Ảnh chưa lên tới máy chủ. Chọn lại ảnh nhé.",
+  photo_not_found: "Ảnh chưa gửi lên được. Chọn lại ảnh nhé.",
   photo_url_invalid: "Ảnh này không phải ảnh cá nhân của Rủ Đi.",
   permission_denied: "Chỉ đăng được ảnh của chính mình, và chỉ bạn mới xoá được story của mình.",
   caption_too_long: "Chú thích dài quá 200 ký tự.",

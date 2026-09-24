@@ -120,12 +120,12 @@ export const LOI_TIM: Record<string, string> = {
   // concludes the app is broken and stops. It says the wait, and says the app
   // is fine.
   rate_limited:
-    "Bạn vừa tìm hơi nhiều lần nên máy chủ tạm nghỉ một chút. Thử lại sau một phút. App không hỏng, chỉ đang chờ.",
+    "Bạn vừa tìm hơi nhiều lần nên Rủ Đi tạm nghỉ một chút. Thử lại sau một phút. App không hỏng, chỉ đang chờ.",
   // 503. Configured wrongly, not broken, and above all not the fault of the
   // number that was typed -- so the sentence says so before somebody spends
   // ten minutes retyping their friend's number.
   identity_key_missing:
-    "Máy chủ chưa bật được phần tìm bạn. Đây là lỗi cấu hình phía máy chủ chứ không phải do số bạn nhập. Báo nhóm kỹ thuật giúp mình.",
+    "Rủ Đi chưa bật được phần tìm bạn. Đây là lỗi phía Rủ Đi chứ không phải do số bạn nhập. Báo nhóm kỹ thuật giúp mình.",
   permission_denied: "Tài khoản đang dùng chưa được phép tìm bạn bằng số điện thoại.",
 };
 

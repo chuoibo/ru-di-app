@@ -2,7 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
-import { TRANG_THAI_MO, type ToGiay, cauTrangThai } from "../../to-giay/to-giay";
+import { homNay } from "../../keo/nhip-keo";
+import { cauHenTrongChat } from "../../to-giay/moc-hen";
+import { TRANG_THAI_MO, type ToGiay, cauTrangThai, phienBan } from "../../to-giay/to-giay";
+import { useTenCho } from "../../to-giay/useTenCho";
 import { ThuGapBa } from "../../ui/art/Motif";
 
 /**
@@ -47,11 +50,18 @@ export function HangToGiay({
   // sheet still in play (a proposal, or a plan not yet gone on). A memory on
   // the paper surface is the surface's business; here it reads as a quiet week.
   const dangChoi = toMo && (TRANG_THAI_MO.includes(toMo.state) || toMo.state === "chot" || toMo.state === "da_di");
+  // While a plan stands the line is the date itself, with its place and how
+  // far away it is: the conversation's own milestone, drawn here from the
+  // notebook because nothing may be written into an encrypted chat for them.
+  const pbMo = toMo === undefined ? undefined : phienBan(toMo);
+  const choChinh = pbMo?.content.chang[0]?.place_id ?? null;
+  const tenCho = useTenCho([choChinh]);
+  const hen = toMo ? cauHenTrongChat(toMo, homNay(), choChinh ? tenCho[choChinh] : undefined) : null;
   const phu = deNghiDenToi
     ? CAU_DE_NGHI[deNghiDenToi.purpose](deNghiDenToi.ten)
-    : dangChoi
+    : hen ?? (dangChoi && toMo
       ? cauTrangThai(toMo, toiId)
-      : `Chưa có tờ nào tuần này. ${cauMo}`;
+      : `Chưa có tờ nào tuần này. ${cauMo}`);
   return (
     <Pressable
       accessibilityLabel={`${tieuDe}. ${phu}`}

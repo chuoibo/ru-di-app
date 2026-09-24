@@ -121,7 +121,7 @@ export type AiTurnState =
  */
 // `_url` stays in the signature for its callers; the sentence no longer prints it (F43).
 export function cauAiChuaNoiDuoc(_url: string): string {
-  return `AI chưa nối vào máy chủ này. Việc còn nợ là ${AI_WORK_ITEM}.`;
+  return "Rủ Đi AI chưa bật ở đây.";
 }
 
 /**
@@ -196,7 +196,7 @@ export const CAU_THEO_LY_DO: Readonly<Record<string, string>> = {
     "Bạn hỏi Rủ Đi AI hơi nhiều lượt trong một phút vừa rồi nên phần hỏi đang tạm nghỉ. Thử lại sau khoảng một phút nhé.",
   // Client-side only: a 204 or an empty 200 body. Not in the server vocabulary.
   no_content:
-    "Máy chủ nhận câu hỏi nhưng trả về một lượt rỗng. Chưa có câu trả lời nào để hiện.",
+    "Rủ Đi AI nhận câu hỏi nhưng chưa trả lời gì. Hỏi lại thử nhé.",
 };
 
 /**

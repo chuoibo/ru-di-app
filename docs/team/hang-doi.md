@@ -23,8 +23,9 @@ Còn mở, theo thứ tự:
    Lead duyệt số lời gọi riêng).
 2. Sau ADR: migration (`people.gioi_tinh`, `chia_gu`, `pair_cycle_rhythms`, `pair_week_insights`), route
    vai/nhịp/nghỉ/câu trả lời, worker tuần gọi brain, 4 sticker đôi ở bốn danh sách, hồ sơ «Một đôi».
-3. Không cần ADR: tường nhóm cắt ảnh dọc; kỷ niệm gắn vào tờ đã chốt; chất giấy chế độ tối (hợp đồng
-   màu spec §16 — cần lượt thiết kế); Khám phá ở chữ 1.3; 73 dòng «máy chủ» còn lại ở lỗi hiếm.
+3. Không cần ADR — đã xong 24/09 (lượt «còn nợ» 1): khoảnh khắc hẹn, kỷ niệm của hai bạn, ảnh dọc
+   trên tường, «Thêm vào kèo» cho sổ đôi, Khám phá chữ 1.3, câu chữ «máy chủ». Còn: chất giấy chế
+   độ tối (hợp đồng màu spec §16 — cần lượt thiết kế có đọc mù); «Rủ … tới đây» từ trang quán.
 
 ---
 

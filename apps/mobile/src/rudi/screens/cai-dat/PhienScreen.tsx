@@ -88,7 +88,7 @@ export function PhienScreen() {
       ) : null}
       {trang.pha === "xong" && trang.phien.length === 0 ? (
         <EmptyState
-          body="Phiên hiện tại sẽ hiện ở đây sau khi máy chủ ghi nhận."
+          body="Phiên hiện tại sẽ hiện ở đây sau khi được ghi nhận."
           kind="first-use"
           title="Chưa có phiên nào"
         />

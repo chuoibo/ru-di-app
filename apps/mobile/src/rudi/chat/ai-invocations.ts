@@ -38,7 +38,7 @@ export function docAiInvocations(contextId: string, personId: string) {
  */
 export const LOI_GOI_AI: Record<string, string> = {
   boi_canh_qua_lon: "Đoạn chat gửi kèm dài quá. Bạn chọn «Chỉ gửi lời nhờ», hoặc thử lại để mình gửi ít tin hơn.",
-  boi_canh_sai_dang: "Bản app này gửi bối cảnh theo kiểu máy chủ chưa đọc được. Cập nhật app rồi thử lại.",
+  boi_canh_sai_dang: "Bản app này đã cũ nên Rủ Đi chưa đọc được yêu cầu. Cập nhật app rồi thử lại.",
   boi_canh_mismatch: "Có tin trong đoạn gửi kèm không thuộc nhóm này. Bạn thử lại nhé.",
   invocation_conflict: "Lời nhờ này đã gửi rồi với nội dung khác. Đợi kết quả cũ xong rồi gửi lại nhé.",
   invocation_rate_limited: "Bạn hỏi hơi nhanh. Chờ một chút rồi nhờ tiếp nhé.",

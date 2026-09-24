@@ -210,13 +210,13 @@ export function loiChiTiet(state: ChiTietState): string | null {
     case "co-du-lieu":
       return null;
     case "khong-co":
-      return "Máy chủ không còn địa điểm này. Phần giới thiệu và đánh giá lấy từ đó nên cũng không có.";
+      return "Chỗ này không còn trong danh mục, nên chưa có giới thiệu và đánh giá.";
     case "chua-co-endpoint":
-      return `Máy chủ đang chạy nhưng chưa có route GET /places/{id} (${state.work}). Phần trên vẫn là dữ liệu thật từ danh sách.`;
+      return "Chưa có phần giới thiệu cho chỗ này. Phần trên vẫn là dữ liệu thật từ danh sách.";
     case "khong-noi-duoc":
-      return "Không nối được máy chủ để lấy giới thiệu và đánh giá.";
+      return "Không kết nối được để lấy giới thiệu và đánh giá. Kiểm tra mạng rồi thử lại.";
     case "may-chu-loi":
-      return `Máy chủ trả HTTP ${state.status} khi hỏi chi tiết địa điểm này.`;
+      return `Chưa đọc được chi tiết chỗ này (lỗi ${state.status}).`;
     case "du-lieu-sai":
       return `Chi tiết địa điểm sai định dạng: ${state.detail}`;
   }

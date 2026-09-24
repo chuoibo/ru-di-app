@@ -43,7 +43,7 @@ export type Bai = BaiWire;
 export const LOI_NGUOI: Record<string, string> = {
   person_not_visible:
     "Hồ sơ này chỉ bạn bè hoặc người cùng nhóm mới xem được. Gửi lời mời kết bạn trước nhé.",
-  person_not_found: "Máy chủ chưa có hồ sơ cho tài khoản này.",
+  person_not_found: "Chưa có hồ sơ cho tài khoản này. Đăng nhập lại giúp mình.",
 };
 
 /** One person's public profile, as this reader is allowed to see it. */
@@ -116,5 +116,5 @@ export function cauLucNao(iso: string, bayGio: Date = new Date()): string {
 /** Server refusals to a sentence, for the two reads this module makes. */
 export function loiRaChu(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  return "Không gọi được máy chủ. Kiểm tra mạng rồi thử lại.";
+  return "Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.";
 }

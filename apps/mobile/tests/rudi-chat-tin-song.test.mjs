@@ -133,7 +133,7 @@ test("cauYDinh nói đúng điều máy chủ làm với lệnh", () => {
   assert.match(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), intent_error: "vote_malformed" }), /\/vote/);
   assert.match(
     cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), companion: { context_id: CTX, spoke: false, reason: "unavailable", message: null } }),
-    /chưa nối được mô hình/,
+    /chưa bật/,
   );
   assert.equal(cauYDinh({ ...tin("a", "2030-08-27T12:00:00Z"), companion: { context_id: CTX, spoke: true, reason: "ok", message: tin("z", "2030-08-27T12:00:01Z") } }), null);
   assert.equal(cauYDinh(tin("a", "2030-08-27T12:00:00Z")), null);

@@ -142,6 +142,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         // outing's timeline: the way there, where it used to be reachable only
         // by guessing the plan list's «Tờ lời rủ dd/mm» (QA 23/09).
         onXemKeo={toMo.outing_id && ["chot", "da_di", "da_giu"].includes(toMo.state) ? () => router.push(`/outings/${toMo.outing_id}?ctx=${contextId}` as never) : undefined}
+        tatCa={so.toGiay}
         tenNguoiKia={so.tenNguoiKia}
         testID="to-mo"
         to={toMo}
@@ -190,6 +191,7 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
           <ListRow icon="people-outline" onPress={() => setMo("loai-so")} subtitle={so.batDoi ? "Một đôi" : "Hai người bạn"} title="Loại sổ" />
           <ListRow icon="hand-left-outline" onPress={() => setMo("rang-buoc")} subtitle="Không ăn được · Đừng" title="Hai ô ràng buộc" />
           <ListRow icon="book-outline" onPress={() => router.push(`/groups/${contextId}/chat` as never)} subtitle="Về cuộc trò chuyện" title="Tin nhắn" />
+          <ListRow icon="images-outline" onPress={() => router.push(`/groups/${contextId}/wall` as never)} subtitle="Ảnh và những buổi hai bạn đã giữ" title="Kỷ niệm của hai bạn" />
           {!so.daDong ? <ListRow icon="close-circle-outline" onPress={() => setMo("dong-so")} subtitle="Xem trước rồi mới đóng" title="Đóng sổ" /> : null}
         </View>
       </Sheet>
@@ -289,6 +291,17 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
           </Text>
         ) : null}
         {than}
+        {/* After the evening: a photo of it goes into the pair's own memories
+            (ADR-0021 §2.5), beside the one line the sheet keeps. Before 24/09
+            a memory could only go to a group's wall. */}
+        {toMo && (toMo.state === "da_di" || toMo.state === "da_giu") ? (
+          <RudiButton
+            icon="camera-outline"
+            label="Giữ một tấm ảnh của buổi này"
+            onPress={() => router.push(`/moments/new?ctx=${contextId}` as never)}
+            variant="outline"
+          />
+        ) : null}
         {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
           // One quiet row, not three coral lines: the tester's table must not
           // count among the things the person can do (blind read 12/09).

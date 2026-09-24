@@ -17,6 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
+import { tiLeKhung } from "../../ky-niem/ti-le";
+import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -43,7 +45,9 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   const tenCho = typeof params.ten === "string" && params.ten !== "" ? params.ten : null;
   const { colors, radius } = useRudiTheme();
   const contextId = phien.context_id;
-  const tenNhom = phien.contexts?.find((n) => n.id === contextId)?.display_name ?? "nhóm hiện tại";
+  const nhom = phien.contexts?.find((n) => n.id === contextId);
+  const laDoi = laPair(nhom);
+  const tenNhom = laDoi ? `kỷ niệm của bạn và ${nhom?.display_name || "người ấy"}` : nhom?.display_name ?? "nhóm hiện tại";
   const [anh, setAnh] = useState<TempPhoto | null>(null);
   const [caption, setCaption] = useState("");
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
@@ -113,7 +117,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       // print and the caption it was pushed past the fold (QA 23/09).
       footer={
         <View style={styles.footer}>
-          <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label="Chia sẻ ngay vào nhóm" loading={ban} onPress={() => void chiaSe()} />
+          <RudiButton disabled={ban || anh === null} icon="paper-plane-outline" label={laDoi ? "Giữ vào kỷ niệm của hai bạn" : "Chia sẻ ngay vào nhóm"} loading={ban} onPress={() => void chiaSe()} />
           {cauTrangThai !== null ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkFaint }]}>{cauTrangThai}</Text> : null}
         </View>
       }
@@ -121,7 +125,10 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       testID="share-moment-screen"
     >
       <TopBar title="Thả khoảnh khắc" />
-      <Heading title="Một khoảnh khắc cho nhóm" subtitle={`Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`} />
+      <Heading
+        subtitle={laDoi ? `Ảnh và một câu, vào ${tenNhom}. Chỉ hai bạn thấy.` : `Ảnh và một câu, lên tường của ${tenNhom}. Chỉ thành viên nhóm thấy.`}
+        title={laDoi ? "Giữ một khoảnh khắc" : "Một khoảnh khắc cho nhóm"}
+      />
       {placeId === null ? null : (
         <Text style={[typography.caption, { color: colors.inkSoft }]}>
           {`Gắn vào ${tenCho ?? "địa điểm bạn vừa mở"}: ảnh sẽ hiện ở màn chỗ đó, cho người trong nhóm.`}
@@ -155,12 +162,6 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
     </RudiScreen>
   );
-}
-
-/** The print's shape: the photo's own ratio, held between 3:4 portrait and 1.91:1 wide. */
-export function tiLeKhung(anh: { width: number; height: number }): number {
-  if (!(anh.width > 0) || !(anh.height > 0)) return 1;
-  return Math.min(1.91, Math.max(0.75, anh.width / anh.height));
 }
 
 const styles = StyleSheet.create({

@@ -21,7 +21,7 @@ export default function BatchRoute() {
   return (
     <RudiScreen tone="split" testID="collection-batch-screen">
       <TopBar title="Đợt thu" />
-      <Heading title="Cần đăng nhập" subtitle="Đợt thu đọc từ máy chủ; bản trải nghiệm không có đợt thu nào." />
+      <Heading title="Cần đăng nhập" subtitle="Đợt thu là của một nhóm thật; bản trải nghiệm không có đợt thu nào." />
       <RudiButton label="Quay lại" onPress={() => router.back()} tone="split" variant="outline" />
     </RudiScreen>
   );

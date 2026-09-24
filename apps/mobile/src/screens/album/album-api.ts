@@ -191,7 +191,7 @@ async function doc<T>(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's own localhost.
-    throw new AlbumError(0, "Không gọi được máy chủ.");
+    throw new AlbumError(0, "Không kết nối được Rủ Đi.");
   }
   if (!response.ok) {
     let code = "";
@@ -260,13 +260,13 @@ export function loiAlbum(status: number, code: string): string {
   if (code === "permission_denied" || status === 403) {
     return "Album là của riêng nhóm. Bạn cần là thành viên đang hoạt động mới xem được.";
   }
-  if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
+  if (status === 401) return "Chưa đăng nhập nên chưa đọc được.";
   if (status === 404) return "Không tìm thấy chuyến này trong nhóm.";
   // F37 charges the caller before it reaches the model, so this one is a real
   // answer rather than a server fault: the reel has a window and it is full.
   if (status === 429) return "Bạn vừa dựng thước phim liên tục. Chờ một chút rồi thử lại.";
-  if (status >= 500) return "Máy chủ đang lỗi, chưa đọc được album.";
-  return `Máy chủ trả lỗi ${status}.`;
+  if (status >= 500) return "Rủ Đi đang gặp sự cố, chưa đọc được album.";
+  return `Rủ Đi gặp lỗi (${status}).`;
 }
 
 /** Why this reel is empty, in the group's own language.
@@ -284,7 +284,7 @@ export function lyDoPhim(reason: LyDoPhim): string {
     return "AI chưa trả lời được lúc này. Không có bản dựng sẵn nào để thay thế, nên màn này không hiện gì thay vì hiện một thước phim cũ.";
   }
   if (reason === "ungrounded") {
-    return "AI có trả lời, nhưng những gì nó chọn không khớp với ảnh thật của chuyến này nên máy chủ đã bỏ. Thà không có thước phim còn hơn có một cái nói về tấm ảnh không tồn tại.";
+    return "AI có trả lời, nhưng những gì nó chọn không khớp với ảnh thật của chuyến này nên Rủ Đi đã bỏ. Thà không có thước phim còn hơn có một cái nói về tấm ảnh không tồn tại.";
   }
   return "";
 }

@@ -191,7 +191,7 @@ export const SO_GIAO_DICH_TOI_DA = 20;
  */
 export function ghiChuGioiHan(movements: readonly Movement[]): string | null {
   if (movements.length < SO_GIAO_DICH_TOI_DA) return null;
-  return `Đây là ${SO_GIAO_DICH_TOI_DA} giao dịch gần nhất. Máy chủ chưa có đường đọc phần cũ hơn.`;
+  return `Đây là ${SO_GIAO_DICH_TOI_DA} giao dịch gần nhất. Phần cũ hơn chưa xem được.`;
 }
 
 export class FinanceError extends Error {
@@ -228,7 +228,7 @@ export async function layTaiChinh(
     // Names the address it tried. "Không kết nối được" on its own sends
     // somebody to check their wifi when the real answer is that the phone is
     // pointed at the laptop's localhost.
-    throw new FinanceError(0, "Không gọi được máy chủ.");
+    throw new FinanceError(0, "Không kết nối được Rủ Đi.");
   }
   if (!response.ok) {
     let code = "";
@@ -245,7 +245,7 @@ export async function layTaiChinh(
 /** Refusals in words the person reading them can act on. */
 export function loiTaiChinh(status: number, code: string): string {
   if (code === "not_your_finances") return "Chỉ chính chủ xem được phần tài chính này.";
-  if (status === 401) return "Chưa đăng nhập nên chưa hỏi được máy chủ.";
-  if (status >= 500) return "Máy chủ đang lỗi, chưa đọc được sổ.";
-  return `Máy chủ trả lỗi ${status}.`;
+  if (status === 401) return "Chưa đăng nhập nên chưa đọc được.";
+  if (status >= 500) return "Rủ Đi đang gặp sự cố, chưa đọc được sổ.";
+  return `Rủ Đi gặp lỗi (${status}).`;
 }
