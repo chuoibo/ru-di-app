@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AccessibilityInfo, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Extrapolation,
@@ -152,9 +152,13 @@ export function NepDock() {
   }, [coToSau, sauRa, motion]);
 
   // A screen reader user reaches the second tap by moving focus, which takes
-  // longer and must not be raced; they have «Cất Nếp vào mép» instead.
+  // longer and must not be raced; they have «Cất Nếp vào mép» instead. Only
+  // native can tell: react-native-web answers `true` unconditionally, because
+  // a browser does not say, and trusting it would switch the tuck off for
+  // every web visitor.
   const [docManHinh, datDocManHinh] = useState(false);
   useEffect(() => {
+    if (Platform.OS === "web") return;
     let song = true;
     void AccessibilityInfo.isScreenReaderEnabled().then((bat) => song && datDocManHinh(bat));
     const sub = AccessibilityInfo.addEventListener("screenReaderChanged", datDocManHinh);
