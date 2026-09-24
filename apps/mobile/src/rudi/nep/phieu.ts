@@ -117,3 +117,31 @@ export function donPhieu(tho: unknown): PhieuNguCanh | null {
 
   return phieu;
 }
+
+/** A slip together with the route it was declared on. */
+export interface PhieuCuaMan {
+  duong: string;
+  phieu: PhieuNguCanh;
+}
+
+export type SuPhieu =
+  | { kieu: "khai"; duong: string; phieu: PhieuNguCanh }
+  | { kieu: "bo"; phieu: PhieuNguCanh };
+
+/**
+ * A screen's slip belongs to that screen, and the route it was declared on is
+ * kept with it rather than enforced by clearing on navigation. Clearing was
+ * an ordering bet: React runs a child's effects before its parent's, so the
+ * provider's "route changed, clear" ran after the new screen had declared,
+ * and wiped it. Withdrawing removes only the slip that screen declared, so a
+ * screen that unmounts late cannot take the next screen's slip with it.
+ */
+export function ghiPhieu(cu: PhieuCuaMan | null, su: SuPhieu): PhieuCuaMan | null {
+  if (su.kieu === "khai") return { duong: su.duong, phieu: su.phieu };
+  return cu !== null && cu.phieu === su.phieu ? null : cu;
+}
+
+/** The slip the open route may read: its own, or none. */
+export function phieuDangMo(ghi: PhieuCuaMan | null, duong: string): PhieuNguCanh | null {
+  return ghi !== null && ghi.duong === duong ? ghi.phieu : null;
+}

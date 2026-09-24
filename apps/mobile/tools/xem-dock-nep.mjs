@@ -93,6 +93,39 @@ const doChe = async (page) => page.evaluate(async () => {
   };
 });
 
+/**
+ * The seed makes the room but says nothing in it, and an empty room has no
+ * bubble for the slip to cover: "0 covered" there is a measure of nothing,
+ * and the canary cannot go red. So fill it once per stack, with the person
+ * being measured speaking too (their bubbles sit on the right, against the
+ * margin the slip lives in), and with lines long enough to wrap to full width.
+ */
+async function nhoiTin() {
+  const dau = `${process.env.SESSIONS}.da-nhoi`;
+  if (fs.existsSync(dau)) return;
+  const ai = [nguoi, fixture.users[0], fixture.users[2], fixture.users[3]];
+  const cau = [
+    'Tối nay ai rảnh không, đi ăn gì đó rồi cà phê nhé',
+    'Mình rảnh từ 7h, nhưng đừng xa quá, mình đi xe buýt',
+    'Ok',
+    'Hay là lẩu nấm ở gần hồ, lần trước ăn thấy ổn mà giá cũng mềm, tầm hai trăm một người là no',
+    'Được đó, nhớ đặt bàn trước vì cuối tuần hay kín chỗ lắm',
+    'Mình dị ứng hải sản nha, lẩu nấm thì ok',
+    '7h30 gặp ở cổng chợ nhé mọi người, ai tới trễ nhắn trước một tiếng',
+    'Chốt!',
+  ];
+  for (let i = 0; i < 24; i++) {
+    const u = ai[i % ai.length];
+    const r = await fetch(`${fixture.apiUrl}/contexts/${fixture.groupId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${u.token}`, 'Idempotency-Key': crypto.randomUUID() },
+      body: JSON.stringify({ kind: 'text', body: cau[i % cau.length], image_url: null, card: null }),
+    });
+    if (r.status !== 201 && r.status !== 200) throw Error(`seed message ${r.status}: ${await r.text()}`);
+  }
+  fs.writeFileSync(dau, '');
+}
+
 async function chay(scheme) {
   const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox'] });
   try {
@@ -119,11 +152,27 @@ async function chay(scheme) {
     await page.waitForSelector('[role="tab"][aria-label="Tin nhắn"]', { timeout: 40000 });
     if (mode === 'hoi') {
       // The line written on the slip: an announcement, captured, not measured.
-      // It lasts four seconds from the first screen that declares itself, so
-      // wait for it rather than for a fixed delay.
-      const dong = await page.waitForSelector('[data-testid="nep-bong-bong"]', { timeout: 8000 }).catch(() => null);
-      if (dong) await chup('5-dong-he');
-      ket.steps.push({ scheme, name: 'dong_he_hien', pass: !!dong });
+      // It lasts four seconds from the first screen that declares itself.
+      // Sampled rather than awaited, so a miss says which state the dock was
+      // in instead of only that a selector never appeared.
+      const dongThoiGian = [];
+      let dong = null;
+      for (let t = 0; t < 10000 && !dong; t += 250) {
+        const o = await page.evaluate(() => ({
+          url: location.pathname,
+          mep: !!document.querySelector('[data-testid="nep-mep"]'),
+          dia: !!document.querySelector('[data-testid="nep-dia"]'),
+          sau: !!document.querySelector('[data-testid="nep-to-sau"]'),
+          bong: !!document.querySelector('[data-testid="nep-bong-bong"]'),
+        }));
+        const truoc = dongThoiGian.at(-1);
+        const { t: _t, ...truocKhongT } = truoc ?? {};
+        if (!truoc || JSON.stringify(truocKhongT) !== JSON.stringify(o)) dongThoiGian.push({ t, ...o });
+        if (o.bong) dong = await page.$('[data-testid="nep-bong-bong"]');
+        else await sleep(250);
+      }
+      await chup(dong ? '5-dong-he' : '5-dong-he-khong-thay');
+      ket.steps.push({ scheme, name: 'dong_he_hien', pass: !!dong, dongThoiGian });
       save();
       return;
     }
@@ -166,9 +215,18 @@ async function chay(scheme) {
         await page.mouse.click(b.x + Math.min(b.width, 8) / 2, b.y + b.height / 2);
         await sleep(900);
       }
+      await chup('4-keo-ra-hoi-thoai');
+      // The canary is measured on the first tab, not here. In a conversation
+      // the text of a bubble stops at the bubble's padding, well short of the
+      // slip even when it is out (measured 24-09: 0 of 363), so "nothing
+      // covered" here cannot tell a blind measure from a clean one. On the
+      // first tab a card's metadata line runs to the page margin, and the slip
+      // pulled out DOES stand on it.
+      await page.goBack();
+      await page.waitForSelector('[role="tab"][aria-label="Khám phá"]', { timeout: 20000 });
+      await page.click('[role="tab"][aria-label="Khám phá"]');
+      await sleep(1500);
       await chup('4-keo-ra');
-      // The canary: pulled out, the slip DOES stand on the conversation, so a
-      // measure that still reports nothing covered here is blind, not clean.
       const keoRa = await doChe(page);
       ket.steps.push({
         scheme,
@@ -183,6 +241,7 @@ async function chay(scheme) {
   }
 }
 
+if (mode !== 'hoi') await nhoiTin();
 for (const scheme of (process.env.SCHEMES ?? 'light,dark').split(',')) await chay(scheme);
 ket.pass = ket.steps.every(s => s.pass);
 save();

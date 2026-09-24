@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { docGiaoDienAsync, ghiGiaoDienAsync } from "../kho";
 import { KHOA_DOCK, giaiMaDock, maHoaDock } from "./luu-dock";
-import { donPhieu, nepPhaiLui, type PhieuNguCanh } from "./phieu";
+import { donPhieu, ghiPhieu, nepPhaiLui, phieuDangMo, type PhieuCuaMan, type PhieuNguCanh, type SuPhieu } from "./phieu";
 import { DOCK_DAU, chuyen, type DockNep, type SuKienNep } from "./trang-thai";
 
 /**
@@ -34,7 +34,8 @@ export interface NepDieuKhien {
   daDocDia: boolean;
   gui(su: SuKienNep): void;
   datTyLe(t: number): void;
-  datPhieu(p: PhieuNguCanh | null): void;
+  /** A screen declares its slip, or withdraws the one it declared. */
+  ghiPhieu(su: Omit<Extract<SuPhieu, { kieu: "khai" }>, "duong"> | Extract<SuPhieu, { kieu: "bo" }>): void;
   /** A sheet opened over the page (`true`) or closed (`false`). Counted. */
   nhuongCho(mo: boolean): void;
 }
@@ -43,10 +44,15 @@ const NepContext = createContext<NepDieuKhien | null>(null);
 
 export function NepProvider({ children }: { children: ReactNode }) {
   const [dock, gui] = useReducer(chuyen, DOCK_DAU);
-  const [phieu, datPhieu] = useState<PhieuNguCanh | null>(null);
+  const [ghi, datGhi] = useState<PhieuCuaMan | null>(null);
   const [tyLe, datTyLeRaw] = useState(0.62);
   const [daDocDia, datDaDocDia] = useState(false);
   const duong = usePathname();
+  // Read during render so a child's effect, which runs before this
+  // component's effects in the same commit, tags its slip with the route that
+  // commit is showing.
+  const duongHienTai = useRef(duong);
+  duongHienTai.current = duong;
 
   // Read once. A failed read is indistinguishable from a first launch and both
   // answers are the same: the default position.
@@ -72,16 +78,10 @@ export function NepProvider({ children }: { children: ReactNode }) {
     gui({ kieu: "doi-man", nepLui: nepPhaiLui(duong ?? "") });
   }, [duong]);
 
-  // A screen's slip belongs to that screen. Clearing on route change means a
-  // screen that forgets to declare cannot inherit the previous one's numbers
-  // and have Nếp answer about a trip the person already left.
-  const duongTruoc = useRef(duong);
-  useEffect(() => {
-    if (duongTruoc.current !== duong) {
-      duongTruoc.current = duong;
-      datPhieu(null);
-    }
-  }, [duong]);
+  const phieu = phieuDangMo(ghi, duong ?? "");
+  const guiPhieu = useCallback<NepDieuKhien["ghiPhieu"]>((su) => {
+    datGhi((cu) => ghiPhieu(cu, su.kieu === "khai" ? { ...su, duong: duongHienTai.current ?? "" } : su));
+  }, []);
 
   // Sheets nest: a confirm can open over a tray. Nếp comes back only when the
   // LAST one closes, so the count is what matters, not the latest event.
@@ -106,8 +106,8 @@ export function NepProvider({ children }: { children: ReactNode }) {
   }, [daDocDia, tyLe, dock.nen]);
 
   const gia = useMemo<NepDieuKhien>(
-    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, datPhieu, nhuongCho }),
-    [dock, phieu, tyLe, daDocDia, datTyLe, nhuongCho],
+    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, ghiPhieu: guiPhieu, nhuongCho }),
+    [dock, phieu, tyLe, daDocDia, datTyLe, guiPhieu, nhuongCho],
   );
 
   return <NepContext.Provider value={gia}>{children}</NepContext.Provider>;
@@ -128,14 +128,15 @@ export function useNep(): NepDieuKhien {
  * render, and comparing by identity would write to the provider on every frame.
  */
 export function useNepNguCanh(tho: unknown): void {
-  const { datPhieu } = useNep();
+  const { ghiPhieu: gui } = useNep();
   const sach = donPhieu(tho);
   const khoa = sach ? JSON.stringify(sach) : "";
   useEffect(() => {
     if (!khoa) return;
-    datPhieu(JSON.parse(khoa) as PhieuNguCanh);
-    return () => datPhieu(null);
-  }, [khoa, datPhieu]);
+    const phieu = JSON.parse(khoa) as PhieuNguCanh;
+    gui({ kieu: "khai", phieu });
+    return () => gui({ kieu: "bo", phieu });
+  }, [khoa, gui]);
 }
 
 /**

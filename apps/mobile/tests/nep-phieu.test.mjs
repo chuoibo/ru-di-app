@@ -71,3 +71,31 @@ test("màn thường không bị nhầm thành màn tiền, kể cả khi tên b
     assert.equal(nepPhaiLui(man), false, man);
   }
 });
+
+// The slip is kept with the route it was declared on. React runs a child's
+// effects before its parent's, so a provider that cleared the slip "on route
+// change" in its own effect wiped the slip the new screen had just declared
+// (measured 24-09 on the web build: Khám phá declared, Nếp never saw it).
+import { ghiPhieu, phieuDangMo } from "../dist-test/rudi/nep/phieu.js";
+
+test("màn mới khai phiếu rồi route mới được áp: phiếu vẫn còn", () => {
+  const p = donPhieu({ man: "explore" });
+  const ghi = ghiPhieu(null, { kieu: "khai", duong: "/explore", phieu: p });
+  assert.equal(phieuDangMo(ghi, "/explore"), p);
+});
+
+test("phiếu của màn cũ không đi theo sang màn không khai gì", () => {
+  const p = donPhieu({ man: "outings/[id]", soLieu: { soChang: 3 } });
+  const ghi = ghiPhieu(null, { kieu: "khai", duong: "/outings/1", phieu: p });
+  assert.equal(phieuDangMo(ghi, "/groups/2/chat"), null);
+});
+
+test("màn cũ tháo muộn không xoá phiếu màn mới vừa khai", () => {
+  const cu = donPhieu({ man: "explore" });
+  const moi = donPhieu({ man: "plan" });
+  let ghi = ghiPhieu(null, { kieu: "khai", duong: "/explore", phieu: cu });
+  ghi = ghiPhieu(ghi, { kieu: "khai", duong: "/plan", phieu: moi });
+  ghi = ghiPhieu(ghi, { kieu: "bo", phieu: cu });
+  assert.equal(phieuDangMo(ghi, "/plan"), moi);
+  assert.equal(ghiPhieu(ghi, { kieu: "bo", phieu: moi }), null);
+});
