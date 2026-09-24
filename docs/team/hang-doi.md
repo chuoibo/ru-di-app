@@ -9,6 +9,25 @@ Xếp theo mức độ nghiêm trọng, không theo thứ tự nghĩ ra.
 
 ---
 
+## MỚI 2026-09-24 — sổ đôi sau QA cặp đôi: chờ Lead ký ADR-0034
+
+Đợt 1–6 của kế hoạch sửa QA cặp đôi (23/09) đã lên `main` (`71e50a9f` … `764bbf64`), cộng bít lỗ rò
+«bản phác chưa gửi hiện cho người kia sau khi nghỉ tuần» (Đợt 7A). Ghi chép từng mục đóng/mở:
+[`docs/claude/2026-09-23/qa-cap-doi-minh-linh.md`](../claude/2026-09-23/qa-cap-doi-minh-linh.md).
+
+Còn mở, theo thứ tự:
+
+1. **Chờ Lead ký [ADR-0034](../decisions/ADR-0034-gay-vai-nhip-chia-gu-va-cau-hoi-tuan-cua-so-doi.md)**
+   trước khi code: consent `chia_gu` theo người, gu chung / gu người kia, giới tính tự khai cho vai mặc
+   định, gậy/vai/nhịp/nghỉ tuần, câu hỏi tuần bằng mô hình (1 lời gọi/sổ/tuần; lượt đo chất lượng cần
+   Lead duyệt số lời gọi riêng).
+2. Sau ADR: migration (`people.gioi_tinh`, `chia_gu`, `pair_cycle_rhythms`, `pair_week_insights`), route
+   vai/nhịp/nghỉ/câu trả lời, worker tuần gọi brain, 4 sticker đôi ở bốn danh sách, hồ sơ «Một đôi».
+3. Không cần ADR: tường nhóm cắt ảnh dọc; kỷ niệm gắn vào tờ đã chốt; chất giấy chế độ tối (hợp đồng
+   màu spec §16 — cần lượt thiết kế); Khám phá ở chữ 1.3; 73 dòng «máy chủ» còn lại ở lỗi hiếm.
+
+---
+
 ## MỚI 2026-09-18 — `APPROVE` vòng 2 + rebase lên chiến dịch
 
 Claude: [`docs/archive/claude/2026-09-18/verdict-phan-con-lai-go.md`](../claude/2026-09-18/verdict-phan-con-lai-go.md) @ `aa556e43`, verdict `APPROVE`. Cây `/home/lakiet/wt-go-con-lai`, nhánh `go/p0-w-con-lai`, đã rebase `--merge` (3-way; git cũ không có `--3way`) lên `claude/p0-w-go0-nen-mong-cong-truoc`. **Không đụng** `claude/wip-go-*`. Không LIVE-GO. Không `gate.sh parity` (T5, người gộp).

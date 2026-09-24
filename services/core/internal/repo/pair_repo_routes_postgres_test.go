@@ -481,10 +481,27 @@ func (p *pairRoute) readablePaper(paperID string) (*PairPaper, error) {
 	if _, err := p.contextOr404(paper.ContextID); err != nil {
 		return nil, err
 	}
-	if paper.State == "nhap" && paper.DraftOwnerID != p.actor {
+	if !chiChuThayRepo(paper, p.actor) {
 		return nil, refuse(404, "paper_not_found")
 	}
 	return paper, nil
+}
+
+// chiChuThayRepo is `_chi_chu_thay` on the stored state: a sheet nobody ever
+// sent is its owner's draft whatever its state.
+func chiChuThayRepo(paper *PairPaper, actor string) bool {
+	if paper.DraftOwnerID == actor {
+		return true
+	}
+	if paper.State == "nhap" {
+		return false
+	}
+	for _, v := range paper.Versions {
+		if v.SentAt != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *pairRoute) lockedPaper() (*PairPaper, error) {

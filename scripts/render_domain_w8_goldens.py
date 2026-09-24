@@ -2409,6 +2409,16 @@ def pair_steps_edges() -> list[dict]:
         ),
         S(fn, "empty", req(fn), {}),
     ]
+    # A sheet nobody sent is its owner's draft whatever its state (24/09).
+    chua_gui = [ver(1, sent_at=None, sent_by=None)]
+    unsent = [
+        paper("PP4", state="nghi_tuan", versions=chua_gui),
+        paper("PP5", state="bo", versions=chua_gui),
+        paper("PP6", state="het_han", versions=chua_gui),
+        paper("PP7", state="nghi_tuan"),
+    ]
+    for who in ("TOI", "KIA"):
+        out.append(S(fn, f"unsent_closed_as_{who.lower()}", req(fn), {"papers": unsent}, actor=(who, ("member",))))
 
     # --- draft_pair_paper --------------------------------------------------------------
     fn = "draft_pair_paper"
@@ -2531,6 +2541,10 @@ def pair_steps_edges() -> list[dict]:
         ("revised_as_toi", revised, "TOI", T),
         ("revised_as_kia", revised, "KIA", T),
         ("draft_as_owner", paper(state="nhap"), "TOI", T),
+        ("unsent_skipped_as_owner", paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]), "TOI", T),
+        ("unsent_skipped_as_kia", paper(state="nghi_tuan", versions=[ver(1, sent_at=None, sent_by=None)]), "KIA", T),
+        ("unsent_discarded_as_kia", paper(state="bo", versions=[ver(1, sent_at=None, sent_by=None)]), "KIA", T),
+        ("sent_then_skipped_as_kia", paper(state="nghi_tuan"), "KIA", T),
         (
             "nep_sheet",
             paper(state="da_gui", versions=[ver(1, author="nep", sent_by=None)]),

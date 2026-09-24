@@ -471,3 +471,16 @@ chuẩn (một input thật, `sms-otp`, focus màu).
 - **Còn mở:** tường nhóm cắt ảnh dọc vào khung ngang; kỷ niệm chưa gắn vào tờ đã chốt (spec §2
   «giữ một điều»); chưa có tổng «hai bạn đã chi bao nhiêu» vì không có route tổng chi của một
   context (không tự cộng trên máy — luật tiền).
+
+## Đợt 7A (24/09) — lỗ rò: bản phác chưa gửi hiện cho người kia
+
+- **Tái hiện** trên stack cô lập bằng hai phiên thật (đăng nhập OTP qua API công khai): Minh phác
+  «Bí mật: quà sinh nhật (dữ liệu mẫu)» kèm lý do riêng, **không gửi**, rồi «Tuần này nghỉ» → danh
+  sách của Linh có tờ `nghi_tuan` với nguyên dòng đó, `GET /papers/{id}` của Linh trả cả nội dung lẫn
+  lý do. Gốc: quyền xem chỉ kiểm `state != "nhap"`.
+- **Đã sửa** (Go + Python oracle, 29 tệp evidence): tờ chưa có phiên bản nào được gửi chỉ chủ bản
+  phác thấy, ở mọi trạng thái (`nhap`, `nghi_tuan`, `bo`, `het_han`). Sau khi dựng lại core: danh sách
+  Linh không còn tờ đó, chi tiết 404; Minh vẫn thấy tờ của mình. Tờ đã gửi thì đóng rồi vẫn đọc được
+  cho cả hai như cũ.
+- **Phần còn lại của Đợt 7 chờ Lead ký ADR-0034** (gu/vai/nhịp/câu hỏi tuần) — xem
+  `docs/team/hang-doi.md`.
