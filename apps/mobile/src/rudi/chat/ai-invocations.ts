@@ -11,11 +11,39 @@ export type ChatCapabilities = {
    * keeps receiving exactly the old body and its tests stay green. That is the
    * whole rollout plan; there is no second feature flag.
    */
-  ai: { plan: { available: boolean; reason: string | null }; share_scope: "invocation_only" | "caller_attached" };
+  ai: {
+    plan: { available: boolean; reason: string | null };
+    /** Absent on a server from before `command=chia_bill` existed: read as unavailable. */
+    chia_bill?: { available: boolean; reason: string | null };
+    share_scope: "invocation_only" | "caller_attached";
+  };
   media: { image: boolean; sticker: boolean; voice: boolean };
 };
+/** The two things a person can ask the group AI for, on one queue (ADR-0036 §2.9). */
+export type LenhAi = "plan" | "chia_bill";
+
+/** Whether the server says this command can run now. Fails closed. */
+export function lenhSanSang(capabilities: ChatCapabilities | null, lenh: LenhAi): boolean {
+  return (lenh === "plan" ? capabilities?.ai.plan : capabilities?.ai.chia_bill)?.available === true;
+}
+
+/**
+ * What a typed command asks for, and the words that go with it. `/chia-bill`
+ * alone still needs a request the server will accept (it refuses an empty
+ * prompt), so it gets a plain one; the words after it are the caller's own and
+ * may carry an expense of their own («/chia-bill mình trả 300k tiền nước»).
+ */
+export function docLenhAi(body: string): { lenh: LenhAi; prompt: string } {
+  const chia = /^\/chia-?bill\b\s*/i.exec(body);
+  if (chia) return { lenh: "chia_bill", prompt: body.slice(chia[0].length).trim() || LOI_NHO_CHIA_BILL };
+  return { lenh: "plan", prompt: body.replace(/^\/plan\s*|^@(rủ đi|ru di|rudi)\s*/i, "") };
+}
+export const LOI_NHO_CHIA_BILL = "Gom giúp các khoản chi trong đoạn chat";
+
 export type AiInvocation = {
   id: string;
+  /** Older servers did not echo it; treat a missing command as `plan`. */
+  command?: LenhAi;
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
   code: string | null;
   message_id: string | null;
@@ -58,14 +86,47 @@ export const LOI_GOI_AI: Record<string, string> = {
 };
 
 /**
+ * Why a job the worker picked up ended without a card, for the codes a person
+ * can do something about. These never come back as an HTTP refusal, so they
+ * are not `LOI_GOI_AI` (whose every key must be one), and a code missing here
+ * falls back to the row's own sentence.
+ */
+export const LOI_KET_QUA_AI: Record<string, string> = {
+  chia_bill_no_expenses: "Rủ Đi AI chưa thấy khoản chi nào có số tiền trong đoạn chat gửi kèm. Bạn gửi kèm tin có số tiền, hoặc thêm khoản chi ở mục Chia bill.",
+};
+
+/** A job whose answer would be the same on retry offers no «Thử lại». */
+export function thuLaiDuoc(request: AiInvocation): boolean {
+  return request.status === "failed" && request.code !== "chia_bill_no_expenses";
+}
+
+/** The words on a pending or failed invocation row, per command. */
+export function chuHangLoiGoi(request: AiInvocation): { tieuDe: string; cau: string } {
+  const chia = request.command === "chia_bill";
+  if (request.status === "failed") {
+    return {
+      tieuDe: chia ? "Chưa gom được khoản chi" : "Chưa phác được tờ hẹn",
+      cau: (request.code ? LOI_KET_QUA_AI[request.code] : undefined)
+        ?? (chia ? "Lời nhờ vẫn được giữ. Bạn có thể thử lại hoặc thêm khoản chi ở mục Chia bill." : "Lời nhờ vẫn được giữ. Bạn có thể thử lại hoặc tự tạo kèo."),
+    };
+  }
+  return {
+    tieuDe: request.status === "queued" ? "Lời nhờ đang chờ" : chia ? "Đang gom khoản chi…" : "Đang phác tờ hẹn…",
+    cau: "Bạn cứ trò chuyện, kết quả sẽ về đây.",
+  };
+}
+
+/**
  * @param boiCanh the bundle the person just saw above the send button. Omitted
  *   entirely when the server still declares `invocation_only`, so the body on
  *   the wire is byte for byte the old one.
+ * @param lenh `chia_bill` rides the same queue, digest, limits and preview as
+ *   `plan`; only the server's inference step differs.
  */
-export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string, boiCanh?: BoiCanh) {
+export function goiAi(contextId: string, personId: string, prompt: string, logicalId: string, boiCanh?: BoiCanh, lenh: LenhAi = "plan") {
   return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations`, {
     ...options(contextId, personId), method: "POST",
-    body: { logical_id: logicalId, command: "plan", prompt, ...(boiCanh ? { boi_canh: boiCanh } : {}) },
+    body: { logical_id: logicalId, command: lenh, prompt, ...(boiCanh ? { boi_canh: boiCanh } : {}) },
   });
 }
 export function thuLaiAi(contextId: string, personId: string, id: string) {

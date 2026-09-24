@@ -111,6 +111,43 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 		}
 	})
 
+	t.Run("I6 chia_bill đi cùng hàng đợi, ra thẻ chữ", func(t *testing.T) {
+		// ADR-0036 §2.9: the same queue as plan, the existing chat-expense
+		// skill, a text card a person reads, and nothing written to money.
+		luot := map[string]any{"vai": "ban", "biDanh": "Bạn 1", "loai": "chu", "luc": "2030-09-22T10:00:00Z", "chu": "Tao trả 300k tiền nước"}
+		luot["id"] = author.Expect(201, "POST", "/contexts/"+group+"/messages",
+			map[string]any{"kind": "text", "body": "Tao trả 300k tiền nước"}, Idem(newKey())).Str(t, "id")
+		created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{
+			"logical_id": newUUID(), "command": "chia_bill", "prompt": "/chia-bill",
+			"boi_canh": map[string]any{"ban": 1, "nguon": "chat-nhom", "luot": []any{luot}, "tongLuot": 1, "daCat": false},
+		}, Idem(newKey()))
+		if created.Status != http.StatusAccepted && created.Status != http.StatusCreated {
+			t.Fatalf("lời gọi chia_bill phải 202/201, nhận %d — %s", created.Status, created.trim())
+		}
+		id := created.Str(t, "id")
+		deadline := time.Now().Add(jobWait)
+		var final Response
+		for time.Now().Before(deadline) {
+			final = author.Expect(200, "GET", "/contexts/"+group+"/ai-invocations/"+id, nil)
+			if state, _ := final.JSON["status"].(string); state == "succeeded" || state == "failed" || state == "cancelled" {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		if state, _ := final.JSON["status"].(string); state != "succeeded" {
+			t.Fatalf("job chia_bill dừng ở %q — %s", state, final.trim())
+		}
+		if command, _ := final.JSON["command"].(string); command != "chia_bill" {
+			t.Fatalf("job trả lệnh %q — %s", command, final.trim())
+		}
+		// The public job shape still carries neither the context nor the drafts.
+		for _, cam := range []string{"300000", "drafts", "boi_canh"} {
+			if strings.Contains(final.trim(), cam) {
+				t.Fatalf("phản hồi job để lộ %q — %s", cam, final.trim())
+			}
+		}
+	})
+
 	t.Run("I3 job bền và chốt ở trạng thái cuối", func(t *testing.T) {
 		logical := newUUID()
 		created := author.Do("POST", "/contexts/"+group+"/ai-invocations", map[string]any{

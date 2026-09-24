@@ -156,3 +156,26 @@ Python, Python trả 404. Nhánh `/vote` giữ nguyên.
 - Hệ quả cho stack `dev` (8099): engine AI tắt ở `dev` (bảng trên), và `ai-turn`
   từng là đường AI duy nhất ở đó. Từ mốc này stack `dev` không có AI nhóm nào
   cho tới khi seed chạy bằng phiên thật.
+
+## Checkpoint 24-09-2026 — `command=chia_bill` trên engine (ADR-0036 §2.9)
+
+`/chia-bill` thôi là câu «chưa được bật»: nó đi đúng đường của `/plan`. Cùng
+hàng đợi, cùng digest (`command + prompt + gói`), cùng lease/retry, cùng trần
+8 lượt/phút, cùng kiểm quyền, cùng khối «Mình đang thấy» và «Chỉ gửi lời nhờ».
+`chat-capabilities` khai thêm `ai.chia_bill` (cùng câu trả lời với `plan`: một
+khoá, một lần dò).
+
+- Worker (`internal/chatassist/chiabill.go`) đọc từng lượt chữ trong gói bằng
+  skill brain **có sẵn** `chat-expense` (hợp đồng Python không đổi một dòng),
+  tối đa 8 lời gọi như v1, cộng lời nhờ của chính người gọi. Người trả là tác
+  giả tin theo `messages.author_id` (hoặc người gọi), **không bao giờ** là câu
+  trả lời của mô hình. Không đọc `messages.body`; cổng
+  `khong_doc_chat_test.go` vẫn xanh.
+- Kết quả: thẻ `kind:"text"` trong phòng (qua `GroundCard`, không thêm kind),
+  nói rõ «đề xuất, chưa ghi vào sổ»; bản nháp có cấu trúc (hình `expense_draft`
+  của v1) ghi vào cột `result`. Không ghi sổ, không tạo khoản chi hay nghĩa vụ,
+  không tính phần chia từng người. Không khoản nào: job `failed` với
+  `chia_bill_no_expenses`, không đăng thẻ, client không mời thử lại.
+- Còn mở: `result` chưa lộ ra phản hồi công khai của job, và client chưa có
+  luồng «xác nhận khoản chi» từ bản nháp chat (thẻ `expense_draft` cũ cũng chỉ
+  chỉ sang mục Chia bill). Nối hai thứ đó là việc riêng.
