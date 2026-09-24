@@ -172,7 +172,7 @@ function DauDaGhi({ khoa }: { khoa: string }) {
   );
 }
 
-export function ChiaBillLiveScreen({ phien }: { phien: Phien }) {
+export function ChiaBillLiveScreen({ phien, dip }: { phien: Phien; dip?: string }) {
   const router = useRouter();
   const { colors, radius } = useRudiTheme();
   // The step CTA is the last thing in the scroll; at font 1.3 it met the gesture pill.
@@ -184,7 +184,7 @@ export function ChiaBillLiveScreen({ phien }: { phien: Phien }) {
   const [moRong, setMoRong] = useState<Set<string>>(new Set());
   const [roster, setRoster] = useState<ThanhVien[]>([]);
   const [payerId, setPayerId] = useState(phien.person_id);
-  const [occasion, setOccasion] = useState("");
+  const [occasion, setOccasion] = useState(dip ?? "");
   const [thongBao, setThongBao] = useState<string | null>(null);
   const [ban, setBan] = useState(false);
   const attempts = useRef<Record<string, Attempt>>({});

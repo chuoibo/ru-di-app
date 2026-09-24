@@ -133,12 +133,17 @@ func replayConsents(t *testing.T, tl *tally, c map[string]any) {
 	var consents []Consent
 	for _, item := range c["consents"].([]any) {
 		row := item.(map[string]any)
+		// A case without `proposal_id` is Python's absent key: "" groups those
+		// rows together, the per-purpose reading the older corpus was built on.
+		proposalID, _ := row["proposal_id"].(string)
 		consents = append(consents, Consent{
-			PersonID:          row["person_id"].(string),
-			Purpose:           row["purpose"].(string),
-			GrantedAt:         instant(row["granted_at"]),
-			RevokedAt:         instant(row["revoked_at"]),
-			ProposalExpiresAt: instant(row["proposal_expires_at"]),
+			PersonID:            row["person_id"].(string),
+			Purpose:             row["purpose"].(string),
+			GrantedAt:           instant(row["granted_at"]),
+			RevokedAt:           instant(row["revoked_at"]),
+			ProposalExpiresAt:   instant(row["proposal_expires_at"]),
+			ProposalID:          proposalID,
+			ProposalCompletedAt: instant(row["proposal_completed_at"]),
 		})
 	}
 	participants := stringsOf(c["participants"])

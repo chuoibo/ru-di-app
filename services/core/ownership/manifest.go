@@ -115,7 +115,7 @@ func (m *Manifest) validate() error {
 		if r.Owner == OwnerGo && r.Evidence == "" {
 			return fmt.Errorf("%s: Go-owned route without evidence", where)
 		}
-		if r.Owner == OwnerGo && (r.Kind != "route" || r.Class == "framework") {
+		if r.Owner == OwnerGo && (r.Kind != "route" || r.Class == "framework") && !goMayServe[r.ID] {
 			return fmt.Errorf("%s: only API routes can move to Go", where)
 		}
 		// Routes that share an in-memory limiter or cache must be served by
@@ -141,6 +141,19 @@ type Force struct {
 
 // ParseForce validates MOBILE_FORCE_PYTHON against the manifest. Tokens are
 // comma-separated: "all", a group name, or "METHOD /path". Unknown tokens and
+// goMayServe names the rows that are not API routes and may still be Go's.
+// The blanket refusal above exists because the other framework rows cannot
+// simply be reimplemented: /openapi.json, /docs, /redoc and its oauth2-redirect
+// are rendered BY FastAPI from the very app being deleted, so each needs its own
+// decision and its own evidence before it can appear here.
+//
+// MOUNT /static is different in kind: it serves three files off disk, and the
+// pages that ask for them are already Go's -- so leaving it behind means Go HTML
+// linking a Python stylesheet. Adding a row here is deliberate and still buys
+// nothing on its own: every rule above applies unchanged, including the one that
+// refuses a Go-owned row with no evidence.
+var goMayServe = map[string]bool{"MOUNT /static": true}
+
 // frozen routes are refused so a typo can never silently keep Go serving.
 func (m *Manifest) ParseForce(raw string) (Force, error) {
 	force := Force{Routes: map[string]bool{}}

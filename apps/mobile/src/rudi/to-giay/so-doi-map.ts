@@ -9,6 +9,34 @@
 import type { ToGiay } from "./to-giay";
 import type { MucDich, SoHaiNguoi, ToTomTat } from "./to-giay-song";
 
+/**
+ * Write the two constraint boxes: in order, one at a time, and only the box
+ * that changed; stop at the first write that does not land.
+ *
+ * The live notebook runs one command at a time and answers `false` to a second
+ * one started while the first is in flight. The provider used to start both
+ * together, so «Đừng» never reached the server while the sheet closed as if it
+ * had -- for every person, on every save (QA 23/09).
+ */
+export async function ghiRangBuocTuanTu(
+  hienTai: RangBuocDoc,
+  moi: Partial<RangBuocDoc>,
+  buoc: {
+    dat: (kind: keyof RangBuocDoc, noiDung: string) => Promise<boolean>;
+    xoa: (kind: keyof RangBuocDoc) => Promise<boolean>;
+  },
+): Promise<boolean> {
+  for (const kind of ["khong_an_duoc", "dung"] as const) {
+    const vao = moi[kind];
+    if (vao === undefined) continue;
+    const noiDung = vao.trim();
+    if (noiDung === hienTai[kind].trim()) continue;
+    const daXong = noiDung ? await buoc.dat(kind, noiDung) : await buoc.xoa(kind);
+    if (!daXong) return false;
+  }
+  return true;
+}
+
 /** Neither line written. Not «unknown»: the notebook simply holds nothing here. */
 export const KHONG_RANG_BUOC = { khong_an_duoc: "", dung: "" } as const;
 
@@ -32,6 +60,10 @@ export function rangBuocCua(so: SoHaiNguoi | null, ownerId: string | null): Rang
  */
 export function caHaiDongY(so: SoHaiNguoi | null, purpose: MucDich): boolean {
   if (so === null) return false;
+  // The server's own answer when it gives one: agreement is per PROPOSAL, and
+  // two per-person yeses on two different proposals lit «Một đôi» on both
+  // phones while nothing had been completed (QA 23/09).
+  if (so.granted_purposes !== undefined) return so.granted_purposes.includes(purpose);
   const cuaToi = so.my_consents.find((row) => row.purpose === purpose)?.granted === true;
   return cuaToi && so.their_consents_granted[purpose] === true;
 }

@@ -36,6 +36,9 @@ type NotebookView struct {
 	Constraints          []Constraint
 	NepGuiHo             bool
 	OpenPaperID          *string
+	// GrantedPurposes is what BOTH agreed to on one proposal, in ladder order:
+	// the only reading a screen may light a rung on (QA 23/09).
+	GrantedPurposes []string
 }
 
 // ReadNotebook is pair_notebook (GET /contexts/{context_id}/notebook).
@@ -94,6 +97,7 @@ func ReadNotebook(s Store, actor Actor, contextID string, now time.Time) (Notebo
 	if view.OpenPaperID, err = openPaperID(s, actor, contextID, now); err != nil {
 		return NotebookView{}, err
 	}
+	view.GrantedPurposes = pairnotebook.GrantedPurposes(consents, participants, &now)
 	return view, nil
 }
 
@@ -137,6 +141,22 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 	if purpose != "lap_so" && !isActive(notebook) {
 		return ProposalView{}, refusal(409, "consent_missing", "Cả hai cùng đồng ý lập sổ trước đã.")
 	}
+	// One offer per rung at a time. The other person already asking for the
+	// same thing is an offer to ANSWER, by id: a second proposal made each of
+	// them agree only with themselves, and the rung read «both» with nothing
+	// completed (QA 23/09). Asking twice oneself returns the standing offer.
+	// An offer stands only while its proposer's own yes on it is live: one the
+	// proposer took back is dead, and asking again files a new one (each person
+	// answers each proposal once, so that is the only way to say yes again).
+	for _, row := range notebook.Proposals {
+		if row.Purpose != purpose || !proposerStillAgrees(notebook, row) || !pairnotebook.DangCho(proposalOf(row), now) {
+			continue
+		}
+		if row.ProposedByID != actor.ID {
+			return ProposalView{}, refusal(409, "consent_proposal_pending", "Người ấy đã đề nghị đúng việc này. Đồng ý lời đề nghị của họ.")
+		}
+		return proposalView(row), nil
+	}
 	if cycleID == nil {
 		if len(members) < 2 {
 			return ProposalView{}, refusal(409, "cycle_not_active", "Sổ này chưa đủ hai người.")
@@ -162,6 +182,16 @@ func ProposeConsent(s Store, actor Actor, contextID, purpose string, now time.Ti
 		return ProposalView{}, err
 	}
 	return proposalView(proposal), nil
+}
+
+// proposerStillAgrees: the proposer's own grant on this proposal is live.
+func proposerStillAgrees(notebook *Notebook, proposal Proposal) bool {
+	for _, row := range notebook.Consents {
+		if row.ProposalID == proposal.ID && row.PersonID == proposal.ProposedByID && row.GrantedAt != nil && row.RevokedAt == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func proposalView(proposal Proposal) ProposalView {

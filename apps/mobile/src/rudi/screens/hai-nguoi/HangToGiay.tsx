@@ -22,6 +22,7 @@ export function HangToGiay({
   onPress,
   tieuDe = "Tờ giấy của hai mình",
   cauMo = "Đi đâu không?",
+  deNghiDenToi,
   testID,
 }: {
   toMo: ToGiay | undefined;
@@ -31,6 +32,14 @@ export function HangToGiay({
   tieuDe?: string;
   /** The notebook kind's opening line, shown when no sheet is on the table. */
   cauMo?: string;
+  /**
+   * A consent proposal the OTHER person filed and only I can answer.
+   *
+   * Nothing said so before 23/09: after Minh proposed opening the notebook,
+   * Linh's pinned line still read «Chưa có tờ nào tuần này», and the only way
+   * to learn of it was to open the notebook for no stated reason (QA 23/09).
+   */
+  deNghiDenToi?: { purpose: "lap_so" | "bat_doi" | "doc_chat"; ten: string };
   testID?: string;
 }) {
   const { colors, radius } = useRudiTheme();
@@ -38,7 +47,11 @@ export function HangToGiay({
   // sheet still in play (a proposal, or a plan not yet gone on). A memory on
   // the paper surface is the surface's business; here it reads as a quiet week.
   const dangChoi = toMo && (TRANG_THAI_MO.includes(toMo.state) || toMo.state === "chot" || toMo.state === "da_di");
-  const phu = dangChoi ? cauTrangThai(toMo, toiId) : `Chưa có tờ nào tuần này. ${cauMo}`;
+  const phu = deNghiDenToi
+    ? CAU_DE_NGHI[deNghiDenToi.purpose](deNghiDenToi.ten)
+    : dangChoi
+      ? cauTrangThai(toMo, toiId)
+      : `Chưa có tờ nào tuần này. ${cauMo}`;
   return (
     <Pressable
       accessibilityLabel={`${tieuDe}. ${phu}`}
@@ -58,6 +71,12 @@ export function HangToGiay({
     </Pressable>
   );
 }
+
+const CAU_DE_NGHI: Record<"lap_so" | "bat_doi" | "doc_chat", (ten: string) => string> = {
+  lap_so: (ten) => `${ten} đề nghị lập sổ hai người. Mở để xem và trả lời.`,
+  bat_doi: (ten) => `${ten} đề nghị hai bạn là «Một đôi». Mở để xem và trả lời.`,
+  doc_chat: (ten) => `${ten} đề nghị cho Nếp đọc tin nhắn của hai bạn. Mở để xem và trả lời.`,
+};
 
 const styles = StyleSheet.create({
   hang: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth },

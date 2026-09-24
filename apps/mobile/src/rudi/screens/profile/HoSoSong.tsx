@@ -20,7 +20,8 @@ import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
-import { docHoSoToi, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
+import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
+import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, Inline, RudiButton } from "../../ui";
 import { Avatar } from "../../ui/Avatar";
@@ -39,6 +40,7 @@ function loiRaChu(error: unknown): string {
 const NHAN_CUA: Record<string, string> = { phone: "số điện thoại", google: "Google" };
 
 export function HoSoSong({ phien }: { phien: Phien }) {
+  const { datPhien } = useRudiSession();
   const { colors } = useRudiTheme();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangSua, setDangSua] = useState(false);
@@ -79,6 +81,8 @@ export function HoSoSong({ phien }: { phien: Phien }) {
     try {
       const hoSo = await suaHoSoToi(phien.person_id, { display_name: ten.trim(), bio, city });
       setTrang({ pha: "xong", hoSo });
+      // Keep the session's greeting in step with the server (QA 23/09).
+      datPhien(await doiTenTrongPhien(phien, hoSo.display_name));
       setDangSua(false);
     } catch (error) {
       setLoiLuu(loiRaChu(error));

@@ -48,7 +48,7 @@ import { Wordmark } from "../ui/Wordmark";
 export const WELCOME_PAGES = [
   {
     title: "Hẹn hội bạn. Rủ Đi lo phần còn lại.",
-    body: "Khám phá, lên plan, chia bill và giữ trọn mọi kỷ niệm trong một nơi.",
+    body: "Rủ cả hội hay chỉ một người: khám phá, lên plan, chia bill và giữ trọn kỷ niệm trong một nơi.",
   },
   {
     title: "Tìm nơi hợp cả hội",

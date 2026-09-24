@@ -111,3 +111,9 @@ Corpus sinh tự động: hoãn, `path version is int`.
 - Nhánh `dong_y` coi «đã đồng ý phiên bản này» là phát lại **trước** khi xét trạng thái: sau `da_di`/`da_giu` một lần «ừ» nữa vẫn 200 với trạng thái hiện tại (`mate_agrees_after_done`, `mate_agrees_after_keep`), còn «đề nghị sửa» cùng lúc là 409.
 - `Field(discriminator="kind")` không được dùng khi validate: thân sai trả lỗi của cả hai model thay vì một lỗi tag.
 - NUL trong nội dung đề nghị sửa là 500.
+
+## Đổi 2026-09-23 (b) — `place_id` của tờ giấy là id danh mục; chốt ghi chặng vào kèo (QA cặp đôi)
+
+Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
+
+- `POST /papers/{paper_id}/versions/{version}/responses`: Route này đổi hành vi thật: «ừ» thứ hai tạo kèo có tên theo chỗ và có chặng; đề nghị sửa nhận `place_id` dạng slug (trước 422). Id dạng UUID vẫn nhận nguyên chữ, nhưng không còn chuẩn hoá (`{…}`/`urn:uuid:` giữ nguyên chữ thay vì về dạng chuẩn).

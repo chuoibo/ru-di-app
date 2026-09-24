@@ -57,9 +57,10 @@
       "path": "/static",
       "group": "static",
       "class": "framework",
-      "owner": "python",
+      "owner": "go",
       "python": "live",
-      "state": "DEFERRED"
+      "state": "LIVE-GO",
+      "evidence": "docs/migration/routes/static/MOUNT-static.md"
     },
     {
       "id": "POST /expenses",
