@@ -2340,12 +2340,15 @@
        "schema": {
         "type": "nullable",
         "schema": {
-         "type": "uuid"
+         "type": "str",
+         "strict": true,
+         "min_length": 1,
+         "max_length": 80
         }
        },
        "default": null
       },
-      "annotation": "uuid.UUID | None",
+      "annotation": "Annotated[str, Strict(strict=True), Field(MinLen(min_length=1), MaxLen(max_length=80))] | None",
       "required": false
      },
      {

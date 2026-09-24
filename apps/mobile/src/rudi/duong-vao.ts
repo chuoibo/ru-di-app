@@ -133,15 +133,21 @@ export function diemVaoTuUrl(url: string | null | undefined): DiemVao {
  * testable without a device.
  *
  * `invited` is not `active`: somebody with a pending invitation and no group
- * they can read lands on the group list, where the "Đồng ý" button lives, not
+ * they can read lands on the Tin nhắn tab, where the "Đồng ý" button lives, not
  * on a Khám phá tab that would have to invent its numbers.
+ *
+ * It is a TAB, not the old stand-alone «Chưa có nhóm nào» screen: that screen
+ * had no tab bar, so a new person could not reach Cá nhân → Bạn bè, never saw a
+ * friend request, and a couple had to invent a group before they could talk
+ * (QA 23/09). Tin nhắn already has the empty state, the invitations with their
+ * «Đồng ý», and a refetch on focus.
  */
 export function manDau(
   phien: { context_id: string | null; membership_state: string | null } | null,
-): "/welcome" | "/explore" | "/groups/empty" {
+): "/welcome" | "/explore" | "/messages" {
   if (phien === null) return "/welcome";
   if (phien.context_id !== null && phien.membership_state === "active") return "/explore";
-  return "/groups/empty";
+  return "/messages";
 }
 
 /**
@@ -165,7 +171,7 @@ export function manSauDangNhap(
         is_new_person?: boolean;
       }
     | null,
-): "/welcome" | "/explore" | "/groups/empty" | "/personalization" {
+): "/welcome" | "/explore" | "/messages" | "/personalization" {
   if (phien !== null && phien.is_new_person === true) return "/personalization";
   return manDau(phien);
 }

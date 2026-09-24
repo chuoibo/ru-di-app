@@ -4,7 +4,9 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
+import { doiTenTrongPhien, suaHoSoToi } from "../../phien";
 import { manDau } from "../duong-vao";
+import { laTenGiuCho } from "../ten-giu-cho";
 import {
   LOI_SO_THICH,
   cauLuuTru,
@@ -16,7 +18,7 @@ import {
 import { NGAN_SACH, SO_THICH, doiMuc } from "../../screens/vao-cua/so-thich";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import { Chip, Heading, Inline, ResponsiveRow, RudiButton, RudiScreen, TopBar } from "../ui";
+import { Chip, Field, Heading, Inline, ResponsiveRow, RudiButton, RudiScreen, TopBar } from "../ui";
 import { GuGlyph } from "../ui/art/Gu";
 
 /** The words are the SERVER's (`so-thich.ts`, held equal to `GET /interests`
@@ -52,6 +54,12 @@ export function PersonalizationScreen() {
   const { fontScale } = useWindowDimensions();
   const session = useRudiSession();
   const personId = session.phien?.person_id ?? null;
+  // Ask for a name here, once, while the account still carries the server's
+  // placeholder. Without it the person who looks this number up to invite them
+  // reads «Thành viên mới» and cannot tell they found the right one, and the
+  // invitation then refuses any other name (QA 23/09). Skippable like the rest.
+  const hoiTen = personId !== null && laTenGiuCho(session.phien?.profile?.display_name);
+  const [ten, setTen] = useState("");
 
   const [muc, setMuc] = useState<string[]>([]);
   const [khoang, setKhoang] = useState<string | null>(null);
@@ -107,7 +115,24 @@ export function PersonalizationScreen() {
   // Skipping from the fixture door (no session) goes into the fixture app, not
   // back to the cover: `manDau(null)` is Welcome, which the Maestro board
   // caught as a loop on 2026-09-06.
-  const boQua = () => router.replace(personId === null ? "/explore" : manDau(session.phien));
+  /** Save the typed name, if any; a failure is not worth blocking the step. */
+  const luuTen = async () => {
+    const phien = session.phien;
+    if (!hoiTen || phien === null || ten.trim() === "") return;
+    try {
+      const hoSo = await suaHoSoToi(phien.person_id, { display_name: ten.trim() });
+      // The session carries the name the rest of the app greets with; without
+      // this it would keep the placeholder until the next sign-in.
+      session.datPhien(await doiTenTrongPhien(phien, hoSo.display_name));
+    } catch {
+      // Editable later from Cá nhân; the step itself stays a door, not a gate.
+    }
+  };
+
+  const boQua = async () => {
+    await luuTen();
+    router.replace(personId === null ? "/explore" : manDau(session.phien));
+  };
 
   const xong = async () => {
     setLoi(null);
@@ -120,6 +145,7 @@ export function PersonalizationScreen() {
     }
     setDangLuu(true);
     try {
+      await luuTen();
       await luuSoThich(personId, { muc, khoang });
       router.replace(manDau(session.phien));
     } catch (error) {
@@ -143,7 +169,7 @@ export function PersonalizationScreen() {
     <RudiScreen contentStyle={styles.personalization} testID="personalization-screen">
       <TopBar
         right={
-          <Pressable accessibilityRole="button" hitSlop={8} onPress={boQua} style={({ pressed }) => [styles.boQua, pressed && styles.pressed]}>
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void boQua()} style={({ pressed }) => [styles.boQua, pressed && styles.pressed]}>
             {/* Not a gate. The step is editable forever from Cá nhân, and a
                 required question on the first screen of a new account is a
                 toll booth, not a personalization. */}
@@ -151,6 +177,18 @@ export function PersonalizationScreen() {
           </Pressable>
         }
       />
+      {hoiTen ? (
+        <Field
+          accessibilityLabel="Ô tên của bạn"
+          autoCapitalize="words"
+          label="Bạn tên gì?"
+          maxLength={60}
+          onChangeText={setTen}
+          placeholder="Tên bạn bè hay gọi bạn"
+          textContentType="name"
+          value={ten}
+        />
+      ) : null}
       <Heading title="Cho Rủ Đi biết gu của bạn" />
       <View style={styles.block}>
         <ResponsiveRow minItemWidth={Math.round(150 * Math.max(1, fontScale))} gap={12}>

@@ -196,6 +196,19 @@ export function attemptFor(book: Record<string, Attempt>, name: string): Attempt
 }
 
 /**
+ * Forget the attempt for `name` once its write has LANDED.
+ *
+ * The key exists so a retry of the same press replays the first answer. After
+ * a success there is nothing left to retry, and keeping the key turns the next,
+ * different write under the same name into a replay (same body) or a 422
+ * `idempotency_key_reuse` (new body): saving a constraint a second time did
+ * exactly that (QA 23/09). Call it after success only; a failure keeps the key.
+ */
+export function quenLuot(book: Record<string, Attempt>, name: string): void {
+  delete book[name];
+}
+
+/**
  * What the idempotency middleware's own refusals mean.
  *
  * Applied in `call` rather than per route, matching how the protection is

@@ -103,6 +103,7 @@ type Member struct {
 
 // Consent is PairConsentRecord, the keys `_consents_as_dicts` reads.
 type Consent struct {
+	ProposalID        string
 	PersonID          string
 	Purpose           string
 	GrantedAt         *time.Time
@@ -285,6 +286,24 @@ type Store interface {
 	AddPaperKeep(paperID, personID, line string, now time.Time) (Keep, error)
 	CloseOpenPairPapers(contextID string, now time.Time) error
 	CreateOuting(draft OutingDraft) (string, error)
+	// GetPlace is get_place: one catalogue row, nil when the id is unknown.
+	GetPlace(placeID string) (*PlaceRef, error)
+	// ReplaceOutingStops is replace_outing_stops with expected_revision=None.
+	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
+}
+
+// PlaceRef is the part of a catalogue row _chot reads.
+type PlaceRef struct {
+	ID   string
+	Name string
+}
+
+// OutingStopDraft is one element of replace_outing_stops' `stops`.
+type OutingStopDraft struct {
+	MinuteOfDay int64
+	Label       string
+	PlaceName   *string
+	PlaceID     *string
 }
 
 // permissionRefusals is _TU_CHOI_TO_GIAY: the failed predicates that answer
@@ -410,15 +429,23 @@ func ConsentsOf(notebook *Notebook) []pairnotebook.Consent {
 	if notebook == nil {
 		return []pairnotebook.Consent{}
 	}
+	// Which proposal each answer belongs to, and whether it was completed:
+	// «both agreed» is per proposal, and an agreed proposal no longer lapses.
+	completed := map[string]*time.Time{}
+	for _, row := range notebook.Proposals {
+		completed[row.ID] = row.CompletedAt
+	}
 	out := make([]pairnotebook.Consent, len(notebook.Consents))
 	for i, row := range notebook.Consents {
 		expires := row.ProposalExpiresAt
 		out[i] = pairnotebook.Consent{
-			PersonID:          row.PersonID,
-			Purpose:           row.Purpose,
-			GrantedAt:         row.GrantedAt,
-			RevokedAt:         row.RevokedAt,
-			ProposalExpiresAt: &expires,
+			PersonID:            row.PersonID,
+			Purpose:             row.Purpose,
+			GrantedAt:           row.GrantedAt,
+			RevokedAt:           row.RevokedAt,
+			ProposalExpiresAt:   &expires,
+			ProposalID:          row.ProposalID,
+			ProposalCompletedAt: completed[row.ProposalID],
 		}
 	}
 	return out

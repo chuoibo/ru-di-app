@@ -79,12 +79,16 @@ def _live(consent: dict, *, now: datetime | None) -> bool:
 
     The expiry is the PROPOSAL's, not the grant's. An offer nobody answered
     within its window stops being an offer; a grant that was answered stands
-    until it is revoked.
+    until it is revoked. «Answered» is the proposal's `completed_at`: before
+    2026-09-23 the window was applied to completed proposals too, so an agreed
+    «Một đôi» would have switched itself off a week later.
     """
     if not consent.get("granted_at"):
         return False
     if consent.get("revoked_at"):
         return False
+    if consent.get("proposal_completed_at") is not None:
+        return True
     expires_at = consent.get("proposal_expires_at")
     if expires_at is not None and now is not None and now >= expires_at:
         return False
@@ -126,13 +130,29 @@ def granted_purposes(
     «Both» is the whole rule and it is why this returns a set rather than a
     per-person map: nothing in a two-person notebook is unlocked by one person
     agreeing with themselves.
+
+    Both ON THE SAME PROPOSAL (ADR-0027: «cả hai chấp nhận cùng đề nghị»). Two
+    people who each filed their own proposal for one purpose have each agreed
+    with themselves; counted per purpose, that read as «both agreed» while no
+    proposal had been completed, and the same count gates whether Nếp may read
+    the chat (QA 23/09). A row without `proposal_id` belongs to one shared
+    group, which is the old per-purpose reading for a caller that has no ids.
     """
     people = {str(p) for p in participants}
     if len(people) < 2:
         return frozenset()
-    return frozenset.intersection(
-        *(granted_by(consents, person, now=now) for person in people)
-    )
+    agreed: dict[tuple[str, object], set[str]] = {}
+    for row in consents:
+        purpose = str(row["purpose"])
+        if purpose not in CONSENT_PURPOSES or not _live(row, now=now):
+            continue
+        who = str(row["person_id"])
+        if who not in people:
+            continue
+        proposal = row.get("proposal_id")
+        key = (purpose, None if proposal is None else str(proposal))
+        agreed.setdefault(key, set()).add(who)
+    return frozenset(purpose for (purpose, _), who in agreed.items() if who >= people)
 
 
 def can_bat_doi(

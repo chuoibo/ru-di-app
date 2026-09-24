@@ -383,6 +383,18 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
                 <Text style={[typography.caption, { color: colors.inkSoft }]}>cả kèo, {trang.keo.headcount} người</Text>
               </View>
             </View>
+            {/* The bill of this outing belongs to the outing's own context --
+                a pair's plan is split in the pair, never in whichever group
+                happens to be current (QA 23/09). */}
+            <RudiButton
+              compact
+              full={false}
+              icon="receipt-outline"
+              label="Chia bill buổi này"
+              onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
+              tone="split"
+              variant="outline"
+            />
           </View>
           <SectionHeader
             action={draft ? undefined : moThem ? "Đóng" : "Thêm chặng"}

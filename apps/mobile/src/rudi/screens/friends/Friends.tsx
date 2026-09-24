@@ -9,7 +9,7 @@
  * Reuses the legacy client module (`ban-be.ts`) as-is: the routes are the ones
  * App B called, with the bearer now doing the identifying.
  */
-import { Redirect, useFocusEffect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Canh } from "../../ui/art/Canh";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -69,7 +69,10 @@ export function FriendsScreen() {
   // top/left/right, so the bottom inset is this screen's to add.
   const { bottom: menDuoi } = useSafeAreaInsets();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
-  const [muc, setMuc] = useState(0);
+  // Cá nhân links here with `?muc=da-nhan` when requests are waiting, so the
+  // person lands on them instead of on an empty «Đã là bạn» tab (QA 23/09).
+  const { muc: mucMo } = useLocalSearchParams<{ muc?: string }>();
+  const [muc, setMuc] = useState(mucMo === "da-nhan" ? 1 : 0);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangTraLoi, setDangTraLoi] = useState<string | null>(null);
   // ADR-0021 §2.5: «Nhắn tin» on a friend's row opens (or finds) the pair.

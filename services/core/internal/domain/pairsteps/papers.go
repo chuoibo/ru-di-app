@@ -1,6 +1,8 @@
 package pairsteps
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"mobile/services/core/internal/domain/pairpaper"
@@ -32,7 +34,8 @@ type Command struct {
 	OutingID *string
 }
 
-// StopInput is PaperStopInput after validation; PlaceID is str(UUID) or nil.
+// StopInput is PaperStopInput after validation; PlaceID is a catalogue id
+// (1..80 characters, a slug such as «p-lau-ga-la-e») or nil.
 type StopInput struct {
 	Gio     string
 	Viec    string
@@ -371,9 +374,16 @@ func dongY(s Store, paper *Paper, version int, actor Actor, now time.Time) (Comm
 	return wireCommand(paper, "chot", &outingID), nil
 }
 
-// OutingTitle is the title _chot gives the outing: «Tờ lời rủ dd/mm».
-func OutingTitle(ngay pairpaper.Date) string {
-	return "Tờ lời rủ " + twoDigits(ngay.Day) + "/" + twoDigits(ngay.Month)
+// OutingTitle is the title _chot gives the outing: what was agreed -- the
+// catalogue place's name, or the first stop's line -- then « · dd/mm». Python
+// cuts the name at 190 code points (`ten[:190]`), so the title stays inside
+// OutingCreateRequest's 200.
+func OutingTitle(ten string, ngay pairpaper.Date) string {
+	runes := []rune(ten)
+	if len(runes) > 190 {
+		runes = runes[:190]
+	}
+	return string(runes) + " · " + twoDigits(ngay.Day) + "/" + twoDigits(ngay.Month)
 }
 
 func twoDigits(value int) string {
@@ -401,10 +411,26 @@ func chot(s Store, paper *Paper, version int, actor Actor, now time.Time) (strin
 	if err != nil {
 		return "", err
 	}
+	// The places the sheet names, read before anything is written: a key the
+	// catalogue no longer knows keeps its line and drops its id, because the
+	// outing's timeline refuses unknown places (QA 23/09).
+	places := make([]*PlaceRef, len(content.Chang))
+	for i, stop := range content.Chang {
+		if stop.PlaceID == nil {
+			continue
+		}
+		if places[i], err = s.GetPlace(*stop.PlaceID); err != nil {
+			return "", err
+		}
+	}
+	ten := content.Chang[0].Viec
+	if places[0] != nil {
+		ten = places[0].Name
+	}
 	outingID, err := s.CreateOuting(OutingDraft{
 		ContextID:          paper.ContextID,
 		CreatedByID:        actor.ID,
-		Title:              OutingTitle(content.Ngay),
+		Title:              OutingTitle(ten, content.Ngay),
 		StartsOn:           content.Ngay,
 		EndsOn:             content.Ngay,
 		Headcount:          2,
@@ -428,7 +454,40 @@ func chot(s Store, paper *Paper, version int, actor Actor, now time.Time) (strin
 		}
 		return *already, nil
 	}
+	// The agreed stops become the outing's timeline, in the same transaction.
+	stops := make([]OutingStopDraft, len(content.Chang))
+	for i, stop := range content.Chang {
+		minute, err := gioThanhPhut(stop.Gio)
+		if err != nil {
+			return "", err
+		}
+		stops[i] = OutingStopDraft{MinuteOfDay: minute, Label: stop.Viec}
+		if places[i] != nil {
+			name, id := places[i].Name, places[i].ID
+			stops[i].PlaceName, stops[i].PlaceID = &name, &id
+		}
+	}
+	if err := s.ReplaceOutingStops(outingID, stops); err != nil {
+		return "", err
+	}
 	return outingID, nil
+}
+
+// gioThanhPhut is _minute_of_day for a stop the schema already held to HH:MM.
+func gioThanhPhut(gio string) (int64, error) {
+	parts := strings.Split(gio, ":")
+	if len(parts) != 2 {
+		return 0, &Invariant{Reason: "a stored stop's gio is not HH:MM: " + gio}
+	}
+	hour, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, err
+	}
+	minute, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, err
+	}
+	return int64(hour*60 + minute), nil
 }
 
 // deNghiSua is _de_nghi_sua: a counter-proposal is a new version its author

@@ -18,7 +18,8 @@ Thứ tự (đọc từ mã, kịch bản đo):
 6. `_require_pair_permission("propose_pair_consent", {"is_group_member": True})` (`service.py:7356-7358`; `services/api/app/domain/permissions.py:526`): chỉ còn role → 403 `permission_denied` `role_not_permitted` (`owner_proposes_as_advancer`).
 7. `_locked_notebook` (`service.py:7326-7341`): `SELECT … FOR UPDATE` hàng `pair_notebooks`; chưa có thì `INSERT` rồi khoá lại. Từ đây các lệnh ghi sổ của cùng pair xếp hàng.
 8. Purpose khác `lap_so` khi `cycle_state != 'active'` (không có chu kỳ, chu kỳ `pending`, hoặc sau khi đóng) → 409 `consent_missing` `Cả hai cùng đồng ý lập sổ trước đã.` (`service.py:7362-7372`; `owner_proposes_bat_doi_first`, `owner_proposes_doc_chat_first`, `owner_proposes_bat_doi_while_pending`, `owner_proposes_bat_doi_after_close`). Kiểm **trước** khi mở chu kỳ.
-9. Không có chu kỳ sống: ít hơn hai membership đang hoạt động → 409 `cycle_not_active` `Sổ này chưa đủ hai người.` (`service.py:7373-7375`; `owner_proposes_in_lone_pair` sau khi người kia xoá tài khoản). Ngược lại mở chu kỳ `pending` với hai người đó (`repository.py:7765-7788`).
+9. **(2026-09-23)** Một lời đề nghị cùng `purpose` còn đang chờ (`pair_notebook.dang_cho`) trong chu kỳ: của **người kia** → 409 `consent_proposal_pending` `Người ấy đã đề nghị đúng việc này. Đồng ý lời đề nghị của họ.` (`mate_proposes_lap_so`); của **chính người hỏi** → 201 trả lại đúng lời đề nghị ấy, không ghi gì (`owner_proposes_lap_so_again`, `owner_proposes_three_at_once`). Lý do: QA hai máy 23/09 (`docs/claude/2026-09-23/qa-cap-doi-minh-linh.md` mục 13) — hai người mỗi người một lời đề nghị «Một đôi» làm màn hình hai máy sáng «Đang là một đôi» trong khi không lời đề nghị nào hoàn tất; ADR-0027:104 đòi cả hai chấp nhận **cùng** một đề nghị. Go `pairsteps.ProposeConsent`, Python `propose_pair_consent`.
+10. Không có chu kỳ sống: ít hơn hai membership đang hoạt động → 409 `cycle_not_active` `Sổ này chưa đủ hai người.` (`service.py:7373-7375`; `owner_proposes_in_lone_pair` sau khi người kia xoá tài khoản). Ngược lại mở chu kỳ `pending` với hai người đó (`repository.py:7765-7788`).
 
 ## Đầu vào
 
@@ -39,7 +40,7 @@ Trong một giao dịch, cùng `now` (`service.py:7343-7396`):
 - `pair_consent_proposals`: `cycle_id`, `purpose`, `proposed_by_id`, `terms_version=1` (`service.py:8033`), `completed_at` NULL, `created_at`, `expires_at`.
 - `pair_consents`: `proposal_id`, `person_id` = người hỏi, `granted_at` = `now`, `revoked_at` NULL, `created_at` (`repository.py:7832-7861`).
 - `idempotency_keys` khi có header và 201.
-- Không trùng lặp: `lap_so` hỏi lại lúc `pending` hoặc `active` tạo **thêm** lời đề nghị trong cùng chu kỳ (`owner_proposes_lap_so_again`, `mate_proposes_lap_so`, `owner_proposes_lap_so_while_active`).
+- Một lời đề nghị đang chờ cho mỗi bậc (từ 2026-09-23): hỏi lại khi lời đề nghị của mình còn chờ trả lại nó; người kia hỏi cùng bậc nhận 409 (bước 9). Hỏi lại khi bậc đã hoàn tất (`owner_proposes_lap_so_while_active`) vẫn tạo lời đề nghị mới như trước — không lời đề nghị nào đang chờ.
 - Sau khi đóng sổ, `lap_so` mở **chu kỳ mới**; lời đề nghị của chu kỳ cũ không còn hiện (`owner_proposes_lap_so_new_cycle`, `owner_reads_new_cycle`).
 - Mọi từ chối rollback, kể cả hàng `pair_notebooks` vừa chèn (`services/api/app/api/deps.py:196-209`).
 
@@ -56,6 +57,7 @@ Trong một giao dịch, cùng `now` (`service.py:7343-7396`):
 | 403 | `permission_denied` | `role_not_permitted` | `service.py:504` |
 | 409 | `consent_missing` | `Cả hai cùng đồng ý lập sổ trước đã.` | `service.py:7369-7372` |
 | 409 | `cycle_not_active` | `Sổ này chưa đủ hai người.` | `service.py:7374` |
+| 409 | `consent_proposal_pending` | `Người ấy đã đề nghị đúng việc này. Đồng ý lời đề nghị của họ.` | `propose_pair_consent` (2026-09-23) |
 
 ## Mã Python
 
@@ -102,3 +104,13 @@ Corpus sinh tự động: `parity/scenarios/generated/w8-422/post-contexts-conte
 - Hai request ghi đầu tiên cùng lúc vào một pair chưa từng có hàng sổ: cả hai thấy «chưa có», cùng `INSERT`, request thua nhận `IntegrityError` trên `uq_pair_notebooks_context` → 500. Phụ thuộc lịch chạy nên không có trong kịch bản.
 - Không chống trùng: bấm «lập sổ» nhiều lần sinh nhiều lời đề nghị `lap_so` cùng lúc chờ trong một chu kỳ.
 - Chặn không ngăn hỏi thêm bậc (`owner_proposes_after_block` là 201).
+
+## Đổi 2026-09-23 — đồng ý theo cùng một lời đề nghị (QA cặp đôi)
+
+Xem bước 9 ở trên; ngoài ra Diff này đổi `pair_notebook.granted_purposes`/`_live` (và Go `pairnotebook.GrantedPurposes`/`live`): «cả hai đồng ý» một bậc của sổ đôi tính theo CÙNG MỘT lời đề nghị, lời đề nghị đã hoàn tất không hết hạn; `_consents_as_dicts` mang thêm `proposal_id`, `proposal_completed_at`. Route này đọc đồng ý của sổ đôi (qua `_pair_chat_consent`/gu nhóm hoặc trực tiếp): kết quả chỉ đổi khi một pair mang hai lời đề nghị cùng bậc song song, khi đó bậc KHÔNG còn được tính là đã bật (trước là bật nhầm). Byte trả lời không đổi với mọi dữ liệu có một lời đề nghị mỗi bậc (mọi kịch bản parity hiện có), và từ 23/09 không còn tạo được hai lời đề nghị cùng bậc song song (`POST …/notebook/proposals` trả 409).
+
+## Đổi 2026-09-23 (b) — `place_id` của tờ giấy là id danh mục; chốt ghi chặng vào kèo (QA cặp đôi)
+
+Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
+
+- `POST /contexts/{context_id}/notebook/proposals`: Route này đọc nội dung tờ qua `_noi_dung_wire` (hoặc chỉ bị chạm theo tên hàm): `place_id` đã lưu trả nguyên chữ. Mọi hàng ghi trước 23/09 đều là UUID dạng chuẩn (`model_dump` của `uuid.UUID`), nên byte trả lời không đổi với dữ liệu cũ; hàng mang `place_id` không phải UUID trước đây là 409 `paper_wrong_state`, nay đọc được.

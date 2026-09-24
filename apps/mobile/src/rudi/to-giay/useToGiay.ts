@@ -32,7 +32,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
-import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt } from "../../api";
+import { ApiError, attemptFor, thongDiepNguoiDoc, type Attempt, quenLuot } from "../../api";
 import type { NoiDungTo, ToGiay } from "./to-giay";
 import {
   type LoaiRangBuoc,
@@ -202,6 +202,8 @@ export function useToGiay(contextId: string, personId: string, { nhip = NHIP_SO_
       try {
         await chay({ actorId: personId, attempt: attemptFor(luotRef.current, ten) });
         if (theHe !== theHeRef.current) return false;
+        // Landed: the next command under this name is a new write, not a retry.
+        quenLuot(luotRef.current, ten);
         dangLamRef.current = null;
         setTrang((cu) => ({ ...cu, dangLam: null }));
         await doc(false);

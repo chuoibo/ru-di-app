@@ -9,16 +9,12 @@
 # Gọi SAU khi màn đã ổn định: người gọi phải `extendedWaitUntil` một trong ba
 # màn đích («Rủ Đi thôi!» | «Khám phá» | «Chưa có nhóm nào») trước, vì `when`
 # không chờ.
+#
+# Không còn nhánh «Chưa có nhóm nào» riêng: từ 23/09 người chưa có nhóm vào tab
+# Tin nhắn (có thanh tab, không có nút «Đăng xuất» trên màn), nên nhánh «Khám
+# phá» — khớp nhãn tab — đi đúng đường Cá nhân → Tài khoản → Đăng xuất cho cả hai.
 appId: com.lakiet.rudi
 ---
-- runFlow:
-    when:
-      visible: "Chưa có nhóm nào"
-    commands:
-      - tapOn: "Đăng xuất"
-      - extendedWaitUntil:
-          visible: "Rủ Đi thôi!"
-          timeout: 30000
 - runFlow:
     when:
       visible: "Khám phá"

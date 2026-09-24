@@ -315,8 +315,8 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	implemented := map[string]bool{}
-	for _, route := range routes.All() {
-		implemented[route.ID] = true
+	for _, id := range routes.ImplementedIDs() {
+		implemented[id] = true
 	}
 	views := []routeView{}
 	for _, r := range manifest.Routes {
