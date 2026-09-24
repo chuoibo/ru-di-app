@@ -29,6 +29,7 @@ import { useRudiSession } from "../session";
 import { displayFace, typography, useRudiTheme } from "../theme";
 import { DAU_VAN_CAY } from "../dau-van-cay";
 import { HoSoSong } from "./profile/HoSoSong";
+import { HanhTrinhTeaser } from "./profile/HanhTrinhTeaser";
 import {
   DemoBadge,
   Field,
@@ -172,6 +173,7 @@ export function ProfileScreen() {
           />
         </View>
       )}
+      {personId !== null ? <HanhTrinhTeaser personId={personId} /> : null}
       {session.phien === null ? (
         // The fixture trip. A real session has no outing yet until M4 reads
         // `/outings`; showing Team Đà Lạt's weekend to a signed-in stranger is

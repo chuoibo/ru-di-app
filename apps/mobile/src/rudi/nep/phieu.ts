@@ -41,8 +41,11 @@ export const GIOI_HAN = Object.freeze({
 /** The nhịp vocabulary is closed in `keo/nhip-keo.ts`; repeated here to check it. */
 const KIEU_NHIP = ["sap-toi", "hom-nay", "dang-dien-ra", "da-qua", "khong-ro"] as const;
 
-/** Route segments Nếp must stand away from (DESIGN.md «Luật Nếp Đứng Xa Tiền»). */
-export const MAN_NEP_LUI = ["finance", "settlements", "batches", "smart-split"] as const;
+/** Route segments where the dock must leave the content and controls clear. */
+export const MAN_NEP_LUI = [
+  "finance", "settlements", "batches", "smart-split",
+  "profile", "people", "posts", "achievements", "stories", "friends",
+] as const;
 
 export interface PhieuNguCanh {
   /** Route id, either as declared (`outings/[id]`) or as walked (`/outings/7`). */

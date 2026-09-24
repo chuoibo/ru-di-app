@@ -10,12 +10,12 @@
  */
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { newAttempt } from "../../../api";
+import { attemptFor, type Attempt } from "../../../api";
 import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "../../ky-niem/chon-anh";
-import { taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
+import { nguonAnhBai, taiAnhCaNhan } from "../../nguoi/anh-ca-nhan";
 import { loiRaChu } from "../../nguoi/ho-so-nguoi";
 import { useRudiSession } from "../../session";
 import { dangStory } from "../../story/story";
@@ -29,6 +29,8 @@ export function DangStoryScreen() {
   const { colors, radius } = useRudiTheme();
   const { phien, phienDaDoc } = useRudiSession();
   const [anh, setAnh] = useState<TempPhoto | null>(null);
+  const [anhDaTai, setAnhDaTai] = useState<string | null>(null);
+  const attempts = useRef<Record<string, Attempt>>({});
   const [chuThich, setChuThich] = useState("");
   const [giaiDoan, setGiaiDoan] = useState<GiaiDoanTaiAnh | null>(null);
   const [dangGui, setDangGui] = useState(false);
@@ -41,6 +43,7 @@ export function DangStoryScreen() {
       const daChon = await chonAnh();
       if (daChon === null) return;
       if (anh !== null) await boAnh(anh);
+      setAnhDaTai(null);
       setAnh(daChon);
     } catch (error) {
       setLoi(loiRaChu(error));
@@ -48,26 +51,39 @@ export function DangStoryScreen() {
   };
 
   const boAnhDaChon = async () => {
-    if (anh === null || dangGui) return;
-    await boAnh(anh);
+    if (dangGui) return;
+    if (anh !== null) await boAnh(anh);
     setAnh(null);
+    setAnhDaTai(null);
   };
 
   if (!phienDaDoc) return null;
 
-  const guiDuoc = phien !== null && anh !== null && chuThich.length <= TRAN_CHU_THICH && !dangGui;
+  const guiDuoc = phien !== null && (anh !== null || anhDaTai !== null) && chuThich.length <= TRAN_CHU_THICH && !dangGui;
 
   const gui = async () => {
-    if (phien === null || anh === null) return;
+    if (phien === null || (anh === null && anhDaTai === null)) return;
     setDangGui(true);
     setLoi(null);
+    let uploadFinished = false;
     try {
-      const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
-      await dangStory(daTai.url, chuThich, phien.person_id, newAttempt());
-      setAnh(null);
+      let imageUrl = anhDaTai;
+      if (anh !== null) {
+        try {
+          const daTai = await nenVaDung(anh, (nen) => taiAnhCaNhan(nen, phien.person_id), setGiaiDoan);
+          imageUrl = daTai.url;
+          setAnhDaTai(daTai.url);
+          uploadFinished = true;
+        } finally {
+          setAnh(null);
+        }
+      }
+      if (imageUrl === null) return;
+      await dangStory(imageUrl, chuThich, phien.person_id, attemptFor(attempts.current, JSON.stringify({ imageUrl, chuThich })));
       router.back();
     } catch (error) {
-      setLoi(loiRaChu(error));
+      const repickHint = anh !== null && !uploadFinished ? " Chọn lại ảnh rồi thử lần nữa." : "";
+      setLoi(loiRaChu(error) + repickHint);
     } finally {
       setGiaiDoan(null);
       setDangGui(false);
@@ -82,16 +98,18 @@ export function DangStoryScreen() {
       <TopBar title="Đăng story" />
       <Text style={[typography.body, { color: colors.inkSoft }]}>Một tấm ảnh, chỉ bạn bè thấy, trong 24 giờ.</Text>
       <Card style={styles.khungAnh}>
-        {anh === null ? (
+        {anh !== null ? (
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anhXem, { borderRadius: radius.small }]} />
+        ) : anhDaTai !== null && phien !== null ? (
+          <Image accessibilityLabel="Ảnh đã tải lên, đang chờ đăng story" contentFit="cover" source={nguonAnhBai(anhDaTai, phien.person_id) ?? undefined} style={[styles.anhXem, { borderRadius: radius.small }]} />
+        ) : (
           <View style={[styles.anhTrong, { borderColor: colors.lineStrong, borderRadius: radius.small }]}>
             <Text style={[typography.caption, { color: colors.inkFaint }]}>Chưa có ảnh nào.</Text>
           </View>
-        ) : (
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="cover" source={{ uri: anh.uri }} style={[styles.anhXem, { borderRadius: radius.small }]} />
         )}
         <View style={styles.chips}>
-          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
-          {anh !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
+          <RudiButton compact disabled={dangGui} full={false} icon="images-outline" label={anh === null && anhDaTai === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chonAnhMoi()} variant="outline" />
+          {anh !== null || anhDaTai !== null ? <RudiButton compact disabled={dangGui} full={false} label="Bỏ ảnh" onPress={() => void boAnhDaChon()} variant="ghost" /> : null}
         </View>
         {cauGiaiDoan ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{cauGiaiDoan}</Text> : null}
       </Card>

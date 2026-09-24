@@ -49,6 +49,7 @@ export function BaiChiTietScreen() {
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerCommentsOpen, setViewerCommentsOpen] = useState(false);
@@ -160,11 +161,11 @@ export function BaiChiTietScreen() {
 
   const repost = async (audience: PostAudience) => {
     if (busy) return;
-    setBusy(true); setError(null);
+    setBusy(true); setError(null); setNotice(null);
     try {
       await dangLaiBai(postId, audience, actor, attemptFor(attempts.current, `repost:${postId}:${audience}`));
       setShareOpen(false);
-      setError("Đã chia sẻ lên tường của bạn.");
+      setNotice("Đã chia sẻ lên tường của bạn.");
     } catch (cause) { setError(loiRaChu(cause)); }
     finally { setBusy(false); }
   };
@@ -272,7 +273,8 @@ export function BaiChiTietScreen() {
             <Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới trang</Text>
             {commentsBlock}
             {composer}
-            {error ? <Text style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
+            {error ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.warn }]}>{error}</Text> : null}
+            {notice ? <Text accessibilityLiveRegion="polite" style={[typography.note, { color: colors.accent }]}>{notice}</Text> : null}
             {post.phase === "ready" && post.post.author_id !== actor ? <RudiButton label="Báo cáo bài này" icon="flag-outline" onPress={() => setReportOpen(true)} variant="ghost" /> : null}
           </View>
         }
@@ -295,7 +297,7 @@ export function BaiChiTietScreen() {
       <Modal animationType="fade" onRequestClose={() => { setViewerCommentsOpen(false); setViewerOpen(false); }} statusBarTranslucent visible={viewerOpen}>
         <View style={[styles.viewer, { backgroundColor: bongDen }]}>
           <Pressable accessibilityLabel="Đóng ảnh" accessibilityRole="button" onPress={() => { setViewerCommentsOpen(false); setViewerOpen(false); }} style={[styles.viewerClose, { top: insets.top + 8 }]}><Ionicons color={mucTrenAnh} name="close" size={28} /></Pressable>
-          {post.phase === "ready" && post.post.image_url ? <Image accessibilityLabel="Ảnh toàn màn hình" contentFit="contain" source={nguonAnhBai(post.post.image_url, actor)} style={viewerCommentsOpen ? { width: "100%", height: Math.max(180, Math.round(windowHeight * 0.32)) } : styles.viewerImage} /> : null}
+          {post.phase === "ready" && post.post.image_url ? <View style={viewerCommentsOpen ? { height: Math.round(windowHeight * 0.66), justifyContent: "center" } : styles.viewerImage}><Image accessibilityLabel="Ảnh toàn màn hình" contentFit="contain" source={nguonAnhBai(post.post.image_url, actor)} style={viewerCommentsOpen ? { width: "100%", height: Math.max(180, Math.round(windowHeight * 0.32)) } : styles.viewerImage} /></View> : null}
           <Pressable accessibilityLabel="Mở bình luận ảnh" accessibilityRole="button" onPress={() => setViewerCommentsOpen(true)} style={[styles.viewerComments, { bottom: insets.bottom + 16 }]}><Ionicons color={mucTrenAnh} name="chatbubble-outline" size={21} /><Text style={[typography.label, { color: mucTrenAnh }]}>Bình luận</Text></Pressable>
           <Sheet accessibilityLabel="Bình luận ảnh" onClose={() => setViewerCommentsOpen(false)} open={viewerCommentsOpen}>
             <View style={{ gap: space.md }}><Text style={[typography.h2, { color: colors.ink }]}>Lời nhắn dưới ảnh</Text>{commentsBlock}{composer}</View>

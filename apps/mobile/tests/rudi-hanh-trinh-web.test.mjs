@@ -123,13 +123,12 @@ if (!existsSync(INDEX)) {
         () => document.body?.innerText?.includes("Ăn trưa - Bánh căn Lệ") && document.body?.innerText?.includes("Lịch trình"),
         { timeout: 10000, label: "về lịch trình" },
       );
-      const chon = await page.evaluate(() => {
+      await page.waitFor(() => {
         // Both views remain mounted to preserve the draft and undo; assert the
         // visible timeline row, never a hidden map marker or rail control.
         const nut = [...document.querySelectorAll('[role="button"]')].find((el) => el.getClientRects().length > 0 && (el.getAttribute("aria-label") ?? el.innerText ?? "").includes("Ăn trưa - Bánh căn Lệ"));
-        return nut ? nut.getAttribute("aria-selected") : null;
-      });
-      assert.equal(chon, "true", `chặng đã chọn phải còn highlight khi về Lịch trình, nhận ${chon}`);
+        return nut?.getAttribute("aria-selected") === "true";
+      }, { timeout: 10000, label: "chặng đã chọn còn highlight khi về Lịch trình" });
       await page.clickLabel("Hành trình");
       await openEditor();
       await page.evaluate(() => {

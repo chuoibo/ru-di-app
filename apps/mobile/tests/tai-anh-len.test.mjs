@@ -37,6 +37,7 @@ import {
 
 const NGUOI = "3bb00000-bbbb-4bbb-8bbb-0000b0000001";
 const NHOM = "1aa00000-aaaa-4aaa-8aaa-0000a0000001";
+const PHOTO_URI = "blob:synthetic-photo";
 
 /** A backend whose every step is scriptable, so the lifecycle can be driven
  *  without a picker, a phone, or a file system. */
@@ -62,6 +63,9 @@ function backendGia({ pick, compress, onDiscard } = {}) {
 function bacFetch(traLoi) {
   const goi = [];
   globalThis.fetch = async (url, init) => {
+    // Node has no Expo native file module. This exercises the browser blob
+    // transport; the Android file transport is checked on the emulator.
+    if (String(url) === PHOTO_URI) return { blob: async () => new Blob([Uint8Array.of(0xff, 0xd8, 0xff)], { type: "image/jpeg" }) };
     goi.push({ url: String(url), init });
     return traLoi(goi.length);
   };
@@ -91,7 +95,7 @@ const ANH_TRA_VE = {
 
 test("ảnh nhóm đi bằng multipart, field tên 'file', và KHÔNG có Content-Type", async () => {
   const goi = bacFetch(() => traLoiOk(ANH_TRA_VE));
-  await taiAnhNhom(NHOM, { uri: "file:///tmp/nho.jpg" }, NGUOI);
+  await taiAnhNhom(NHOM, { uri: PHOTO_URI }, NGUOI);
 
   assert.equal(goi.length, 1);
   assert.equal(goi[0].url, `http://localhost:8099/contexts/${NHOM}/photos`);
@@ -121,7 +125,7 @@ test("URL ảnh đại diện ổn định, và không mang theo context của n
 
 test("ảnh đại diện gửi lên đúng đường của chính chủ", async () => {
   const goi = bacFetch(() => traLoiOk({ ...ANH_TRA_VE, context_id: null }));
-  await taiAnhDaiDien(NGUOI, { uri: "file:///tmp/nho.jpg" }, NGUOI);
+  await taiAnhDaiDien(NGUOI, { uri: PHOTO_URI }, NGUOI);
   assert.equal(goi[0].url, `http://localhost:8099/people/${NGUOI}/avatar`);
 });
 
@@ -131,7 +135,7 @@ test("kích thước máy chủ trả về được giữ nguyên, không bị s
   // 861-byte primer came back 305 bytes. Anything comparing the two and
   // complaining would be reporting the feature working as a fault.
   bacFetch(() => traLoiOk(ANH_TRA_VE));
-  const ket = await taiAnhNhom(NHOM, { uri: "file:///tmp/nho.jpg" }, NGUOI);
+  const ket = await taiAnhNhom(NHOM, { uri: PHOTO_URI }, NGUOI);
   assert.equal(ket.byteSize, 305);
   assert.equal(ket.url, ANH_TRA_VE.url);
 });
@@ -152,7 +156,7 @@ test("mỗi mã lỗi ra một câu tiếng Việt, và không mã số nào lê
       status,
       json: async () => ({ code, detail: "Machine text nobody should read" }),
     }));
-    const loi = await taiAnhNhom(NHOM, { uri: "f.jpg" }, NGUOI).then(
+    const loi = await taiAnhNhom(NHOM, { uri: PHOTO_URI }, NGUOI).then(
       () => null,
       (e) => e,
     );
@@ -166,23 +170,21 @@ test("mỗi mã lỗi ra một câu tiếng Việt, và không mã số nào lê
   }
 });
 
-test("413 và 415 nói hai việc khác nhau", () => {
+test("413 và 415 nói hai việc khác nhau", async () => {
   // Both are "we will not store this", and they have different answers: a heavy
   // file can be re-saved smaller, a file that is not an image cannot. One
   // sentence for both would send half the people who hit it to do something
   // that cannot work.
   const noi = async (code, status) => {
     bacFetch(() => ({ ok: false, status, json: async () => ({ code }) }));
-    return taiAnhNhom(NHOM, { uri: "f.jpg" }, NGUOI).then(
+    return taiAnhNhom(NHOM, { uri: PHOTO_URI }, NGUOI).then(
       () => "",
       (e) => e.message,
     );
   };
-  return Promise.all([noi("image_too_large", 413), noi("not_an_image", 415)]).then(
-    ([nang, khongPhaiAnh]) => {
-      assert.notEqual(nang, khongPhaiAnh);
-    },
-  );
+  const nang = await noi("image_too_large", 413);
+  const khongPhaiAnh = await noi("not_an_image", 415);
+  assert.notEqual(nang, khongPhaiAnh);
 });
 
 /* ---------------------------------------------------------- the lifecycle --- */

@@ -1503,10 +1503,10 @@ export const ANH_REFUSALS: Record<string, string> = {
  *  - **`X-Actor-Roles` is required.** Without `member` in it the server answers
  *    403 `role_not_permitted`, which reads exactly like "you are not in this
  *    group" and sends somebody to fix their membership instead of the header.
- *  - **Two ways to put a file in a `FormData`.** React Native accepts
- *    `{uri, name, type}` and streams the file. On the web the manipulator hands
- *    back a `blob:` url, and that object appends as the literal string
- *    "[object Object]".
+ *  - **Two ways to put a file in a `FormData`.** Expo's native fetch reads a
+ *    `File` blob; its FormData converter rejects React Native's `{uri, name,
+ *    type}` part before a request reaches the server. On the web the
+ *    manipulator hands back a `blob:` url.
  *
  * Deliberately does not go through `call`: that function sets a JSON
  * `Content-Type` and `JSON.stringify`s its body, both of which are wrong here.
@@ -1532,8 +1532,8 @@ async function guiAnhLen(
     const blob = await fetch(photo.uri).then((r) => r.blob());
     form.append("file", blob, "anh.jpg");
   } else {
-    // React Native's own FormData understands this shape and nothing else.
-    form.append("file", { uri: photo.uri, name: "anh.jpg", type: "image/jpeg" } as never);
+    const { File } = await import("expo-file-system");
+    form.append("file", new File(photo.uri), "anh.jpg");
   }
 
   let response: Response;

@@ -66,6 +66,12 @@ test("Luật Nếp Đứng Xa Tiền nhận ra màn tiền ở cả hai cách vi
   }
 });
 
+test("Nếp thu vào mép giấy khi người dùng đọc hồ sơ và tương tác trên tường", () => {
+  for (const man of ["/profile", "/people/abc", "/posts/abc", "/posts/new", "/achievements", "/stories/new", "/friends"]) {
+    assert.equal(nepPhaiLui(man), true, man);
+  }
+});
+
 test("màn thường không bị nhầm thành màn tiền, kể cả khi tên bắt đầu giống", () => {
   for (const man of ["explore", "plan", "/groups/abc/chat", "financial-report", "settlements-guide", "", "/"]) {
     assert.equal(nepPhaiLui(man), false, man);

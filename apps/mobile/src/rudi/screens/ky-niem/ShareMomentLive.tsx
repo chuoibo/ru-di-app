@@ -82,9 +82,9 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
       await nenVaDung(anh, (nen) => dangAnhLenTuong(ctx, nen, caption.trim() === "" ? null : caption.trim(), phien.person_id, attempts.current, placeId), setGiaiDoan);
       router.replace(`/groups/${ctx}/wall` as never);
     } catch (error) {
-      // The draft stays: the caption is still in the field, the photo is
-      // still previewed (the compressed copy was discarded, the pick was not).
-      setThongBao(loiRaChu(error));
+      // The caption stays, but `nenVaDung` discarded the picked file.
+      setAnh(null);
+      setThongBao(`${loiRaChu(error)} Chọn lại ảnh rồi thử lần nữa.`);
     } finally {
       setGiaiDoan(null);
       setBan(false);
