@@ -15,16 +15,16 @@
  * and the five counts as one sentence on the paper. The form sits on the
  * page too, with the error next to the field it is about.
  */
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docHoSoToi, doiTenTrongPhien, suaHoSoToi, type HoSoToi, type Phien } from "../../../phien";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Chip, Field, Inline, RudiButton } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonRow } from "../../ui/Skeleton";
 
@@ -42,6 +42,7 @@ const NHAN_CUA: Record<string, string> = { phone: "số điện thoại", google
 export function HoSoSong({ phien }: { phien: Phien }) {
   const { datPhien } = useRudiSession();
   const { colors } = useRudiTheme();
+  const router = useRouter();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangSua, setDangSua] = useState(false);
   const [ten, setTen] = useState("");
@@ -143,7 +144,16 @@ export function HoSoSong({ phien }: { phien: Phien }) {
   return (
     <View style={styles.card}>
       <View style={styles.dau}>
-        <Avatar name={hoSo.display_name} ring size={64} />
+        {/* The picture is changed where it is picked, compressed and uploaded
+            (Cài đặt); tapping it here is the way there, not a second uploader. */}
+        <Pressable
+          accessibilityLabel="Đổi ảnh đại diện"
+          accessibilityRole="button"
+          onPress={() => router.push("/settings" as never)}
+          style={({ pressed }) => pressed && styles.bam}
+        >
+          <AvatarNguoi name={hoSo.display_name} personId={phien.person_id} ring size={64} />
+        </Pressable>
         <View style={styles.dauChu}>
           <Text style={[typography.h1, { color: colors.ink }]}>{hoSo.display_name}</Text>
           <Text style={[typography.caption, { color: colors.inkFaint }]}>
@@ -175,4 +185,5 @@ const styles = StyleSheet.create({
   form: { gap: 12 },
   dau: { flexDirection: "row", alignItems: "center", gap: 14 },
   dauChu: { flex: 1, gap: 2 },
+  bam: { opacity: 0.7 },
 });

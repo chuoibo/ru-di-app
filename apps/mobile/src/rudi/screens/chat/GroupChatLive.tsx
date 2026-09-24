@@ -56,7 +56,7 @@ import { HangToGiaySong } from "../hai-nguoi/HangToGiaySong";
 import { bangMauChat, typography, useRudiTheme } from "../../theme";
 import { IconButton, RudiButton } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { Sticker } from "../../ui/stickers/Sticker";
 import type { TinChoGui } from "../../chat/hang-cho";
 import { Sheet } from "../../ui/Sheet";
@@ -584,7 +584,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         ]}
       >
         {!cuaToi && !laAi ? (
-          cuoiChuoi ? <Avatar name={tenNguoi(tin.author_id)} size={30} /> : <View style={styles.choChuDau} />
+          cuoiChuoi ? <AvatarNguoi name={tenNguoi(tin.author_id)} personId={tin.author_id} size={30} /> : <View style={styles.choChuDau} />
         ) : null}
         <View style={[styles.khoi, cuaToi && !laAi && styles.khoiToi, laAi && styles.khoiAi]}>
           {!cuaToi && !laAi && dauChuoi ? (

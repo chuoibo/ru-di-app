@@ -37,7 +37,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { cauTuongTacBai } from "../../tuong/bai-chi-tiet";
 import { HanhDongHoSoSheet } from "./HanhDongHoSo";
 import { Chip, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { Avatar } from "../../ui/Avatar";
+import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -185,7 +185,7 @@ export function HoSoNguoiScreen() {
         <>
           <View style={styles.hoSo}>
             <View style={styles.dau}>
-              <Avatar name={hoSo.hoSo.display_name} size={60} />
+              <AvatarNguoi name={hoSo.hoSo.display_name} personId={personId} size={60} />
               <View style={styles.dauChu}>
                 <Text numberOfLines={2} style={[typography.h2, { color: colors.ink }]}>
                   {hoSo.hoSo.display_name}
