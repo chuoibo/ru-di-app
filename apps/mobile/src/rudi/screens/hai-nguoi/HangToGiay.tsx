@@ -26,6 +26,7 @@ export function HangToGiay({
   tieuDe = "Tờ giấy của hai mình",
   cauMo = "Đi đâu không?",
   deNghiDenToi,
+  tenNguoiKia,
   testID,
 }: {
   toMo: ToGiay | undefined;
@@ -43,6 +44,8 @@ export function HangToGiay({
    * to learn of it was to open the notebook for no stated reason (QA 23/09).
    */
   deNghiDenToi?: { purpose: "lap_so" | "bat_doi" | "doc_chat"; ten: string };
+  /** The other person's name, so the row says «Minh chưa xem» like the sheet does. */
+  tenNguoiKia?: string;
   testID?: string;
 }) {
   const { colors, radius } = useRudiTheme();
@@ -60,7 +63,7 @@ export function HangToGiay({
   const phu = deNghiDenToi
     ? CAU_DE_NGHI[deNghiDenToi.purpose](deNghiDenToi.ten)
     : hen ?? (dangChoi && toMo
-      ? cauTrangThai(toMo, toiId)
+      ? cauTrangThai(toMo, toiId, tenNguoiKia)
       : `Chưa có tờ nào tuần này. ${cauMo}`);
   return (
     <Pressable

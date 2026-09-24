@@ -916,7 +916,9 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
         onSticker={() => { setKhay(null); setKhaySticker(true); }}
         onPoll={gui}
         onPlan={async (prompt, boiCanh) => { const draft = nhapRef.current; const sent = await ai.send(prompt, boiCanh); if (sent) { setPromptAi(""); if (goiMoHinh(draft.text)) xoaNhapCu(draft.revision); } return sent; }}
-        onManual={() => { setKhay(null); moToHen(); }} /> : null}
+        onManual={() => { setKhay(null); moToHen(); }}
+        haiNguoi={nhanRieng}
+        onToGiay={nhanRieng ? () => router.push(`/groups/${contextId}/to-giay` as never) : undefined} /> : null}
       {khongNhanTin ? (
         <View style={[styles.dungNhan, { backgroundColor: colors.card, borderColor: colors.line, marginHorizontal: space.md }]}>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Cuộc trò chuyện này không còn nhận tin.</Text>

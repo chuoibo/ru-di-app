@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { typography, useRudiTheme } from "../../theme";
 import { useSoDoi } from "../../to-giay/SoDoi";
-import { type ToGiay, phienBan } from "../../to-giay/to-giay";
+import { type ToGiay, goiYChoLam, nenXinTo, phienBan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
 import { Heading, IconButton, ListRow, NhomHang, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { Nep } from "../../ui/art/Nep";
@@ -37,7 +37,7 @@ import { useNepNguCanh } from "../../nep/NepProvider";
  * it: the fixture provider is synchronous, and Phase 4 replaces it with the
  * server's answer, so no handler assumes the change happened (§3.3 rule 6).
  */
-export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: string; ruNgay?: boolean }) {
+export function KhongGianGiayScreen({ contextId, ruNgay = false, choGoiY }: { contextId: string; ruNgay?: boolean; choGoiY?: string }) {
   const router = useRouter();
   const { colors, space } = useRudiTheme();
   const so = useSoDoi();
@@ -48,11 +48,29 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
   // when nothing is already on the table (the notebook refuses a second one).
   useEffect(() => {
     if (!ruNgay || daRu.current) return;
+    const lam = nenXinTo(so.daNap, so.toMo);
+    if (lam === "cho") return;
     daRu.current = true;
-    so.ruDiChoi();
+    if (lam === "xin") so.ruDiChoi();
   }, [ruNgay, so]);
 
   const toMo = so.toMo;
+  // «Rủ … tới đây»: once this person's own draft is on the table, open it
+  // with the place filled in as the main stop -- once, not on every render.
+  const [goiYCho, setGoiYCho] = useState<string | undefined>(choGoiY);
+  const [cauGoiY, setCauGoiY] = useState<string | null>(null);
+  const daMoGoiY = useRef(false);
+  useEffect(() => {
+    if (!goiYCho || daMoGoiY.current) return;
+    const lam = goiYChoLam(toMo, so.toiId, so.tenNguoiKia, goiYCho);
+    if (lam.lam === "cho") return;
+    daMoGoiY.current = true;
+    if (lam.lam === "mo") setMo("de-nghi-sua");
+    else {
+      setGoiYCho(undefined);
+      setCauGoiY(lam.cau);
+    }
+  }, [goiYCho, toMo, so.toiId, so.tenNguoiKia]);
   const dangCoToMo = toMo !== undefined && ["nhap", "da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(toMo.state);
   const deNghiLapSo = so.deNghiCho.find((d) => d.purpose === "lap_so");
   const deNghiBatDoi = so.deNghiCho.find((d) => d.purpose === "bat_doi");
@@ -197,10 +215,15 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
       </Sheet>
       {toMo ? (
         <DeNghiSua
-          onClose={dong}
+          choGoiY={daMoGoiY.current ? goiYCho : undefined}
+          onClose={() => {
+            setGoiYCho(undefined);
+            dong();
+          }}
           onGui={(content, lyDo) => {
             if (toMo.state === "nhap") so.suaNhap(toMo.id, content, lyDo);
             else so.deNghiSua(toMo.id, content, lyDo);
+            setGoiYCho(undefined);
             dong();
           }}
           open={mo === "de-nghi-sua"}
@@ -288,6 +311,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         {so.loiLenh ? (
           <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
             {so.loiLenh}
+          </Text>
+        ) : null}
+        {cauGoiY ? (
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]} testID="giay-goi-y-cho">
+            {cauGoiY}
           </Text>
         ) : null}
         {than}

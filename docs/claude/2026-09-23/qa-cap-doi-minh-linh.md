@@ -507,3 +507,31 @@ chuẩn (một input thật, `sms-otp`, focus màu).
   chuỗi chẩn đoán nội bộ và 1 ở màn dev.
 - **Để mở có chủ đích:** chất giấy chế độ tối — vân giấy đo ≈ 2 mức trên nền tối (phẳng), màu tờ đêm
   là hợp đồng đã đo (spec §16, DESIGN «sổ đóng trên bàn»); cần một lượt thiết kế có đọc mù.
+
+## Lượt «còn nợ» 2 (24/09) — «Rủ … tới đây» từ trang quán
+
+Đóng mục 🟡 ở §11 («không có nút Rủ Minh tới đây ở trang quán»). Đo trên máy thật, tài khoản Linh
+(`emulator-5554`), ảnh ở `~/.cache/rudi-qa-couple/shots/no2-*.png` (ngoài repo):
+
+- Trang quán có một nút «Rủ <tên> tới đây» cho mỗi sổ đôi đang bật (tối đa 3). Bấm → tờ giấy của hai
+  người, bản phác mở sẵn trình sửa với **quán đó làm chỗ chính** và dòng việc theo loại quán, cùng
+  bảng với bản phác của máy chủ (`pair_paper._VIEC_THEO_LOAI` / `pairpaper.viecTheoLoai`): Lưng Chừng
+  Cafe → «Cà phê», không còn «Ăn tối» ở quán cà phê. «Bản phác sẽ đổi:» liệt kê đúng hai dòng.
+  Lưu → «BẢN PHÁC · Cà phê · Lưng Chừng Cafe»; Gửi → «ĐÃ GỬI · Minh chưa xem».
+- Tờ người kia gửi (Linh là người nhận, còn đề nghị sửa được) → mở «Đề nghị sửa» với chỗ đó.
+- Tờ mình đã gửi → một câu «Tờ tuần này đang chờ Minh trả lời. Chỗ bạn chọn chưa được thêm…»;
+  chỗ đã có trên tờ → «Chỗ này đã ở trên tờ tuần này rồi.»; tờ tuần đã chốt → «để dành cho tuần sau».
+  Trước đó chỗ bị bỏ lặng lẽ.
+- Lỗi có sẵn, sửa luôn: `?ru=1` («Rủ một người đi chơi») gọi xin tờ cả khi đã có tờ mở, và màn hiện
+  lỗi đỏ «Tờ giấy không ở trạng thái làm được việc này.» trên một tờ bình thường. Giờ chờ lần đọc
+  đầu (`daNap`) và chỉ xin khi chưa có tờ mở (`nenXinTo`).
+
+- Khay «+» của nhắn riêng (🟠 §11) → ô thứ tư là «Tờ giấy», mở tờ giấy của hai người; không còn
+  «Tờ hẹn» AI song song. Đường AI tường minh (`@Rủ Đi …`) vẫn mở khung phác, nhưng hỏi «Hai bạn muốn đi
+  đâu?»; bình chọn «Hai mình chọn gì? / Tối nay mình ăn gì?». Nhóm giữ nguyên chữ của hội.
+  **Lỗi hình phát hiện kèm:** nhãn «Tờ giấy» bị cắt còn «Tờ» (Android đo chữ sát, «giấy» rớt xuống dòng
+  không hiện) → nhãn giãn theo cột. Ảnh `no2-07c` (trước) / `no2-07d` (sau).
+- Hàng ghim trong nhắn riêng nói «Người ấy chưa xem» trong khi tờ nói «Minh chưa xem» → giờ cùng tên.
+
+Không đo: phía Minh bấm «Rủ Linh tới đây» trên tờ Linh gửi (chỉ có ca thuần `goiYChoLam`, máy thứ hai
+không bật vì RAM); trình đọc màn hình.

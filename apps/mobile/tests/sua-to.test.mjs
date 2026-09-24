@@ -62,3 +62,11 @@ test("chặng có giờ mà không có việc thì không gửi được", async
   assert.equal(loiViec("", ""), null);
   assert.equal(loiViec("Dạo hồ", "21:00"), null);
 });
+
+test("dòng việc theo loại quán, cùng bảng với máy chủ", async () => {
+  const { viecTheoLoai } = await import("../dist-test/rudi/to-giay/sua-to.js");
+  assert.equal(viecTheoLoai("cafe", "Ăn tối"), "Cà phê");
+  assert.equal(viecTheoLoai("vui-choi", "Ăn tối"), "Đi chơi");
+  assert.equal(viecTheoLoai("quan-an-local", "Ăn tối"), "Ăn tối");
+  assert.equal(viecTheoLoai(null, "Ăn tối"), "Ăn tối");
+});

@@ -15,6 +15,8 @@ import {
   coTheNghiTuan,
   coTheRut,
   daDongY,
+  goiYChoLam,
+  nenXinTo,
   demHauQuaDongSo,
   khacGi,
   laKeHoach,
@@ -211,4 +213,32 @@ test("tên dài không phá con dấu: lấy chữ cuối, chặn độ dài", (
   assert.ok(tenNgan("Bartholomewwwwwwww").length <= 10, "quá dài thì cắt");
   assert.ok(tenNgan("Bartholomewwwwwwww").endsWith("…"), "và nói rằng đã cắt");
   assert.equal(tenNgan(""), "", "chuỗi rỗng vẫn là chuỗi rỗng");
+});
+
+test("«Rủ … tới đây»: mở trình sửa khi được sửa, chờ khi chưa có tờ, nói rõ khi không thêm được", () => {
+  assert.deepEqual(goiYChoLam(undefined, TOI, "Minh", "p-1"), { lam: "cho" });
+  assert.deepEqual(goiYChoLam(to("nhap", [phienBan(1, null)]), TOI, "Minh", "p-1"), { lam: "mo" });
+  assert.deepEqual(goiYChoLam(to("da_gui", [phienBan(1, KIA)]), TOI, "Minh", "p-1"), { lam: "mo" }, "tờ người kia gửi: đề nghị sửa với chỗ này");
+  const toiGui = goiYChoLam(to("da_gui", [phienBan(1, TOI)]), TOI, "Minh", "p-1");
+  assert.equal(toiGui.lam, "bao", "tờ mình đã gửi thì không lặng lẽ bỏ chỗ");
+  assert.match(toiGui.cau, /chờ Minh trả lời/);
+  const daChot = goiYChoLam(to("chot", [phienBan(1, TOI)]), TOI, "Minh", "p-1");
+  assert.equal(daChot.lam, "bao");
+  assert.match(daChot.cau, /tuần sau/);
+});
+
+test("?ru=1 chỉ xin tờ khi đã đọc xong và chưa có tờ mở", () => {
+  assert.equal(nenXinTo(false, undefined), "cho", "chưa đọc xong thì chưa biết có tờ không");
+  assert.equal(nenXinTo(true, undefined), "xin");
+  assert.equal(nenXinTo(true, to("da_gui", [phienBan(1, TOI)])), "thoi", "tờ đang mở: không xin tờ thứ hai");
+  assert.equal(nenXinTo(true, to("nhap", [phienBan(1, null)])), "thoi");
+  assert.equal(nenXinTo(true, to("nghi_tuan", [phienBan(1, TOI)])), "xin");
+});
+
+test("«Rủ … tới đây» cho một chỗ đã ở trên tờ thì nói vậy, không mở trình sửa", () => {
+  const coCho = phienBan(1, null, { content: { ngay: "Thứ Bảy 20/09", chang: [{ gio: "19:00", viec: "Cà phê", place_id: "p-1", can_kiem: false }] } });
+  const r = goiYChoLam(to("nhap", [coCho]), TOI, "Minh", "p-1");
+  assert.equal(r.lam, "bao");
+  assert.match(r.cau, /đã ở trên tờ/);
+  assert.deepEqual(goiYChoLam(to("nhap", [coCho]), TOI, "Minh", "p-2"), { lam: "mo" });
 });

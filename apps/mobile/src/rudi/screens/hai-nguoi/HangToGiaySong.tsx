@@ -24,6 +24,7 @@ export function HangToGiaySong({ contextId, toiId, tenNguoiKia }: { contextId: s
     <HangToGiay
       deNghiDenToi={denToi ? { purpose: denToi.purpose, ten: tenNguoiKia ?? "Người ấy" } : undefined}
       onPress={() => router.push(`/groups/${contextId}/to-giay` as never)}
+      tenNguoiKia={tenNguoiKia}
       toMo={so.to ?? undefined}
       toiId={toiId}
     />
