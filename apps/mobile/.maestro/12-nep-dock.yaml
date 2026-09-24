@@ -13,7 +13,10 @@
 #   4. Back đóng bảng, Nếp về lại mép: kéo ra chỉ là bước đầu của hai chạm
 #      mở bảng, không phải chỗ nghỉ (ADR-0035);
 #   5. kéo ra rồi vuốt sang phải thì Nếp cài lại vào mép;
-#   6. kéo ra rồi để yên thì Nếp tự cất về mép (ADR-0035 §2.2).
+#   6. kéo ra rồi để yên thì Nếp tự cất về mép (ADR-0035 §2.2);
+#   7. vuốt dọc trên tờ cài thì tờ dời trên ray và app còn sống: cử chỉ chạy
+#      trên luồng UI, một hàm JS thường gọi ở đó làm app sập ngay cú kéo đầu
+#      (đo 24/09 trên máy ảo; bản web không lộ).
 #
 # Bước 1 là lý do bản 23/09 đổi thứ tự. Nếp mặc định nằm ngoài thành một đĩa
 # 57dp thì đè chữ trên thẻ (Khám phá) và nuốt cú bấm «Đồng ý» của lời mời vào
@@ -104,3 +107,14 @@ appId: com.lakiet.rudi
     timeout: 12000
 - assertNotVisible:
     id: "nep-dia"
+
+# 7. vuốt dọc trên tờ cài: tờ dời trên ray, app không sập
+- swipe:
+    from:
+      id: "nep-mep"
+    direction: UP
+- extendedWaitUntil:
+    visible:
+      id: "nep-mep"
+    timeout: 10000
+- assertNotVisible: "Uncaught Error"
