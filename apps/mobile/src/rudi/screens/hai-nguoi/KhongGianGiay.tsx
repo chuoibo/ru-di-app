@@ -126,6 +126,10 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
         onNghiTuan={() => setViec("nghi_tuan")}
         onRut={() => setViec("rut")}
         onSuaNhap={() => setMo("de-nghi-sua")}
+        // The agreed sheet became an outing in this pair, its stops the
+        // outing's timeline: the way there, where it used to be reachable only
+        // by guessing the plan list's «Tờ lời rủ dd/mm» (QA 23/09).
+        onXemKeo={toMo.outing_id && ["chot", "da_di", "da_giu"].includes(toMo.state) ? () => router.push(`/outings/${toMo.outing_id}?ctx=${contextId}` as never) : undefined}
         tenNguoiKia={so.tenNguoiKia}
         testID="to-mo"
         to={toMo}
@@ -199,10 +203,14 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
           open={mo === "giu"}
         />
       ) : null}
-      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiLapSo ? () => so.nguoiKia?.dongYDeNghi(deNghiLapSo.id) : null} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) { so.dongYDeNghi(deNghiLapSo.id); dong(); } }} open={mo === "lap-so"} />
-      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) { so.dongYDeNghi(deNghiBatDoi.id); dong(); } }} open={mo === "bat-doi"} />
-      <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={so.deNghiBatDoi} onClose={dong} open={mo === "loai-so"} />
-      <RangBuoc nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => { so.datRangBuoc(rb); dong(); }} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
+      {/* A sheet closes on the notebook's answer, not on the press: a refused
+          or dropped write used to close it exactly like a saved one (QA 23/09). */}
+      <LapSo dangCho={deNghiLapSo !== undefined} deNghiCuaToi={deNghiLapSo?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiLapSo ? () => so.nguoiKia?.dongYDeNghi(deNghiLapSo.id) : null} onClose={dong} onDeNghi={so.deNghiLapSo} onDongY={() => { if (deNghiLapSo) void so.dongYDeNghi(deNghiLapSo.id).then((ok) => ok && dong()); }} open={mo === "lap-so"} tenNguoiKia={so.tenNguoiKia} />
+      <BatMotDoi dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onClose={dong} onDeNghi={so.deNghiBatDoi} onDongY={() => { if (deNghiBatDoi) void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()); }} open={mo === "bat-doi"} tenNguoiKia={so.tenNguoiKia} />
+      {/* Choosing «Một đôi» opens the rung's own sheet (what it allows, what it
+          does not pull along) instead of filing the proposal on one tap. */}
+      <LoaiSo batDoi={so.batDoi} dangCho={deNghiBatDoi !== undefined} deNghiCuaToi={deNghiBatDoi?.cuaToi ?? true} nguoiKiaDongY={so.nguoiKia && deNghiBatDoi ? () => so.nguoiKia?.dongYDeNghi(deNghiBatDoi.id) : null} onChonBan={so.thuHoiBatDoi} onChonDoi={() => { if (!so.batDoi && deNghiBatDoi === undefined) setMo("bat-doi"); }} onClose={dong} onDongY={deNghiBatDoi && !deNghiBatDoi.cuaToi ? () => void so.dongYDeNghi(deNghiBatDoi.id).then((ok) => ok && dong()) : undefined} open={mo === "loai-so"} tenNguoiKia={so.tenNguoiKia} />
+      <RangBuoc dangLuu={so.dangLam?.includes("rang-buoc") ?? false} loi={mo === "rang-buoc" ? so.loiLenh : null} nguoiKia={so.rangBuoc.nguoiKia} onClose={dong} onLuu={(rb) => void so.datRangBuoc(rb).then((ok) => ok && dong())} open={mo === "rang-buoc"} tenNguoiKia={so.tenNguoiKia} toi={so.rangBuoc.toi} />
       {/* Chỉ tồn tại khi có cả việc lẫn tờ. Bản trước mount vô điều kiện và
           rơi về chuỗi rỗng khi thiếu một trong hai — không tới được hôm nay,
           nhưng hình dạng hỏng của nó là một tờ xác nhận huỷ MỞ RA với hậu quả
@@ -263,6 +271,11 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
       testID="khong-gian-giay"
     >
       <View style={[styles.than, { gap: space.lg }]}>
+        {so.loiLenh ? (
+          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]} testID="loi-lenh-so">
+            {so.loiLenh}
+          </Text>
+        ) : null}
         {than}
         {so.nguoiKia && toMo && toiGuiToMo && ["da_gui", "da_xem"].includes(toMo.state) ? (
           // One quiet row, not three coral lines: the tester's table must not

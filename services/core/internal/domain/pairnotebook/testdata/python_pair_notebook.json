@@ -34,6 +34,256 @@
  "cases": [
   {
    "fn": "consents",
+   "name": "two proposals, each granted only by its proposer",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-A"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-B"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "both on one proposal, a stray third proposal beside it",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1"
+    },
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "doc_chat",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-16T12:00:00.000000|+00:00",
+     "proposal_id": "PR-2"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "doc_chat"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "doc_chat"
+    ],
+    "can_bat_doi": false,
+    "chat_consent_active": true
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "completed proposal past its offer window still stands",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-12T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1",
+     "proposal_completed_at": "$dt:2026-09-05T12:00:00.000000|+00:00"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-12T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1",
+     "proposal_completed_at": "$dt:2026-09-05T12:00:00.000000|+00:00"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      [
+       "bat_doi"
+      ]
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [
+     "bat_doi"
+    ],
+    "can_bat_doi": true,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
+   "name": "uncompleted proposal past its window lapses",
+   "consents": [
+    {
+     "person_id": "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-12T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1"
+    },
+    {
+     "person_id": "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+     "purpose": "bat_doi",
+     "granted_at": "$dt:2026-09-13T11:00:00.000000|+00:00",
+     "revoked_at": null,
+     "proposal_expires_at": "$dt:2026-09-12T12:00:00.000000|+00:00",
+     "proposal_id": "PR-1"
+    }
+   ],
+   "participants": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2"
+   ],
+   "now": "$dt:2026-09-13T12:00:00.000000|+00:00",
+   "ask": [
+    "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+    "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+    "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+    "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1"
+   ],
+   "result": {
+    "granted_by": [
+     [
+      "a1a1a1a1-b1b1-4c1c-8d1d-e1e1e1e1e1e1",
+      []
+     ],
+     [
+      "a2a2a2a2-b2b2-4c2c-8d2d-e2e2e2e2e2e2",
+      []
+     ],
+     [
+      "a3a3a3a3-b3b3-4c3c-8d3d-e3e3e3e3e3e3",
+      []
+     ],
+     [
+      "A1A1A1A1-B1B1-4C1C-8D1D-E1E1E1E1E1E1",
+      []
+     ]
+    ],
+    "granted_purposes": [],
+    "can_bat_doi": false,
+    "chat_consent_active": false
+   }
+  },
+  {
+   "fn": "consents",
    "name": "no consents",
    "consents": [],
    "participants": [

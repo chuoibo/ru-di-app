@@ -665,7 +665,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
           </Pressable>
           <IconButton accessibilityLabel="Cài đặt nhóm" icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
         </View>
-        {nhanRieng && phien !== null ? <HangToGiaySong contextId={contextId} toiId={phien.person_id} /> : null}
+        {nhanRieng && phien !== null ? <HangToGiaySong contextId={contextId} tenNguoiKia={tenNhom} toiId={phien.person_id} /> : null}
         <View style={styles.baoMat}>
           <Ionicons name="lock-open-outline" size={13} color={colors.inkSoft} />
           <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa mã hoá đầu cuối</Text>

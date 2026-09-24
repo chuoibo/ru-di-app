@@ -343,6 +343,19 @@ export async function ganDanhSachNhom(
 }
 
 /**
+ * The display name the session greets with, after `PATCH /people/me` changed it.
+ *
+ * The session is minted with whatever name the server had at sign-in, often
+ * its placeholder; without writing the new one back, a person who just typed
+ * their name kept being «Thành viên mới» until the next sign-in (QA 23/09).
+ */
+export async function doiTenTrongPhien(phien: Phien, ten: string, kho?: KhoAnToan): Promise<Phien> {
+  const moi: Phien = { ...phien, profile: { ...phien.profile, display_name: ten } };
+  await ghiNho(moi, kho);
+  return moi;
+}
+
+/**
  * Make one of the listed groups the current one, and remember it.
  *
  * The conversation list is where a person with several groups picks which one

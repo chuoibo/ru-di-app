@@ -5,7 +5,8 @@
  * person id (`POST /identity/person-id`, a keyed digest -- the number is never
  * stored), the id gets the name the inviter knows them by (`PUT /people/{id}`,
  * 200 when they already had one -- an existing name is never overwritten
- * silently: the server keeps theirs), and then the membership is created as
+ * silently: the server keeps theirs; a 403 there means "their own name
+ * stands", not "stop", see `moi-bang-so.ts`), and then the membership is created as
  * `invited` (`POST /contexts/{id}/members`).
  *
  * When that person later signs in with the same number, the OTP door derives
@@ -23,6 +24,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { ApiError, newAttempt, registerPerson, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { chuanHoaSo } from "../../../screens/vao-cua/danh-tinh";
 import { layIdTuSo, moiVaoNhom } from "../../../screens/vao-cua/cong-api";
+import { moiBangSo } from "../../moi-bang-so";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
@@ -30,7 +32,7 @@ import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
 type Trang =
   | { pha: "nhap" }
   | { pha: "dang-moi" }
-  | { pha: "xong"; ten: string }
+  | { pha: "xong"; ten: string; tenDaDat: boolean }
   | { pha: "hong"; loi: string };
 
 export function GroupInviteScreen() {
@@ -64,10 +66,19 @@ export function GroupInviteScreen() {
     }
     setTrang({ pha: "dang-moi" });
     try {
-      const personId = await layIdTuSo(soSach);
-      await registerPerson({ id: personId, name: tenSach }, phien.person_id, lanBam.current.dat);
-      await moiVaoNhom(id, personId, phien.person_id, lanBam.current.moi);
-      setTrang({ pha: "xong", ten: tenSach });
+      const lan = lanBam.current;
+      const { tenDaDat } = await moiBangSo(
+        {
+          layId: layIdTuSo,
+          datTen: (personId, tenMoi) => registerPerson({ id: personId, name: tenMoi }, phien.person_id, lan.dat),
+          moi: async (personId) => {
+            await moiVaoNhom(id, personId, phien.person_id, lan.moi);
+          },
+        },
+        soSach,
+        tenSach,
+      );
+      setTrang({ pha: "xong", ten: tenSach, tenDaDat });
     } catch (error) {
       setTrang({
         pha: "hong",
@@ -81,8 +92,12 @@ export function GroupInviteScreen() {
       <RudiScreen testID="group-invite-screen">
         <TopBar title="Mời vào nhóm" />
         <Heading
-          title={`Đã mời ${trang.ten}`}
-          subtitle="Khi người này đăng nhập bằng số đó, lời mời hiện ở tab Tin nhắn và chính họ bấm «Đồng ý»."
+          title={trang.tenDaDat ? `Đã mời ${trang.ten}` : "Đã mời số này"}
+          subtitle={
+            trang.tenDaDat
+              ? "Khi người này đăng nhập bằng số đó, lời mời hiện ở tab Tin nhắn và chính họ bấm «Đồng ý»."
+              : `Người này đã dùng Rủ Đi và có tên riêng, nên cả nhóm sẽ thấy tên do chính họ đặt, không phải «${trang.ten}». Lời mời đang chờ ở tab Tin nhắn của họ.`
+          }
         />
         <RudiButton label="Xem thành viên" onPress={() => router.back()} />
         <RudiButton

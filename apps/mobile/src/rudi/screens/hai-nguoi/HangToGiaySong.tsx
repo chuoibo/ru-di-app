@@ -16,11 +16,13 @@ import { HangToGiay } from "./HangToGiay";
  * the sheet, and a second four-second poll beside the conversation's own would
  * double this screen's traffic to say it a beat sooner.
  */
-export function HangToGiaySong({ contextId, toiId }: { contextId: string; toiId: string }) {
+export function HangToGiaySong({ contextId, toiId, tenNguoiKia }: { contextId: string; toiId: string; tenNguoiKia?: string }) {
   const router = useRouter();
   const so = useToGiay(contextId, toiId, { nhip: 0 });
+  const denToi = so.so?.pending_proposals.find((d) => d.proposed_by_id !== toiId);
   return (
     <HangToGiay
+      deNghiDenToi={denToi ? { purpose: denToi.purpose, ten: tenNguoiKia ?? "Người ấy" } : undefined}
       onPress={() => router.push(`/groups/${contextId}/to-giay` as never)}
       toMo={so.to ?? undefined}
       toiId={toiId}

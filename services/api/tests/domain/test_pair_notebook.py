@@ -164,3 +164,40 @@ def test_loi_cua_so_mang_ma_wire():
     assert loi.code == "notebook_revision_stale"
     with pytest.raises(pair_notebook.NotebookError):
         raise loi
+
+
+# QA 23/09 (docs/claude/2026-09-23/qa-cap-doi-minh-linh.md mục 13): each person
+# filed their own «Một đôi» proposal and each agreed only with themselves. Read
+# per purpose that was «both»; ADR-0027 says both accept THE SAME proposal.
+def test_hai_loi_de_nghi_rieng_khong_thanh_dong_y():
+    rieng = [
+        cho_phep(A, "bat_doi", proposal_id="PR-A"),
+        cho_phep(B, "bat_doi", proposal_id="PR-B"),
+    ]
+    assert pair_notebook.granted_purposes(rieng, HAI_NGUOI, now=NOW) == frozenset()
+    assert pair_notebook.can_bat_doi(rieng, HAI_NGUOI, now=NOW) is False
+    # And the same count gates Nếp reading the chat.
+    doc = [
+        cho_phep(A, "doc_chat", proposal_id="PR-A"),
+        cho_phep(B, "doc_chat", proposal_id="PR-B"),
+    ]
+    assert pair_notebook.chat_consent_active(doc, HAI_NGUOI, now=NOW) is False
+
+
+def test_ca_hai_tren_cung_de_nghi_thi_dong_y():
+    chung = [
+        cho_phep(A, "bat_doi", proposal_id="PR-1"),
+        cho_phep(B, "bat_doi", proposal_id="PR-1"),
+    ]
+    assert pair_notebook.granted_purposes(chung, HAI_NGUOI, now=NOW) == {"bat_doi"}
+
+
+def test_de_nghi_da_hoan_tat_khong_het_han():
+    qua_han = NOW - timedelta(days=1)
+    xong = [
+        cho_phep(p, "bat_doi", proposal_id="PR-1", proposal_expires_at=qua_han, proposal_completed_at=NOW - timedelta(days=8))
+        for p in HAI_NGUOI
+    ]
+    chua_xong = [cho_phep(p, "bat_doi", proposal_id="PR-1", proposal_expires_at=qua_han) for p in HAI_NGUOI]
+    assert pair_notebook.granted_purposes(xong, HAI_NGUOI, now=NOW) == {"bat_doi"}
+    assert pair_notebook.granted_purposes(chua_xong, HAI_NGUOI, now=NOW) == frozenset()
