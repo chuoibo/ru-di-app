@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
@@ -5,6 +6,7 @@ import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
+import { useTenCho } from "../../to-giay/useTenCho";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -107,6 +109,7 @@ export function ToLoiRu({
   const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
+  const tenCho = useTenCho(hang.map((c) => c.place_id));
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -142,7 +145,14 @@ export function ToLoiRu({
               {i > 0 ? <VetGap /> : null}
               <View style={styles.hang}>
                 <Text style={[typography.label, styles.gio, { color: colors.ink }]}>{c.gio}</Text>
-                <Text style={[typography.body, styles.viec, { color: colors.ink }]}>{c.viec}</Text>
+                <View style={styles.viec}>
+                  <Text style={[typography.body, { color: colors.ink }]}>{c.viec}</Text>
+                  {c.place_id && tenCho[c.place_id] ? (
+                    <Text style={[typography.caption, { color: colors.inkSoft }]} testID={testID ? `${testID}-cho-${i}` : undefined}>
+                      <Ionicons color={colors.inkSoft} name="location-outline" size={13} /> {tenCho[c.place_id]}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             </View>
           ))}

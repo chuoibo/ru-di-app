@@ -18,6 +18,7 @@ import {
   yTuTyLe,
 } from "./dock-vi-tri";
 import { useNep } from "./NepProvider";
+import { nepHien } from "./trang-thai";
 
 /** How long one peeked line stays before it retracts on its own. */
 const HE_MS = 4000;
@@ -99,8 +100,9 @@ export function NepDock() {
   }));
 
   // The panel covers the dock anyway, and an icon sliding under a sheet reads
-  // as a bug rather than as depth.
-  if (dock.trangThai === "mo") return null;
+  // as a bug rather than as depth. The same for any other open sheet, and for
+  // the screens Nếp is absent from (`trang-thai.ts` rules 3 and 4).
+  if (!nepHien(dock)) return null;
 
   const nhan = dangAn
     ? dock.coViec

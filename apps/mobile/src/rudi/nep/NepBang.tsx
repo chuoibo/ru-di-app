@@ -7,7 +7,7 @@ import { Nep } from "../ui/art/Nep";
 import { RudiButton } from "../ui";
 import { anhDanhMuc, MediaSlot } from "../ui/MediaSlot";
 import { Sheet } from "../ui/Sheet";
-import type { PhieuNguCanh } from "./phieu";
+import { cauNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
 
@@ -30,22 +30,6 @@ import { useNepAnh } from "./useNepAnh";
  * but `unavailable` must be said. A spinner that never resolves is the version
  * of this screen that lies.
  */
-
-function dongNgucCanh(phieu: PhieuNguCanh | null): string {
-  if (!phieu) return "Mình chưa rõ bạn đang ở đâu trong app.";
-  const phan: string[] = [phieu.tieuDe ? `Bạn đang ở ${phieu.tieuDe}` : `Bạn đang ở màn ${phieu.man}`];
-  if (phieu.nhip) {
-    const n = phieu.nhip;
-    if (n.kieu === "sap-toi") phan.push(`còn ${n.conNgay} ngày nữa`);
-    else if (n.kieu === "hom-nay") phan.push("hôm nay");
-    else if (n.kieu === "dang-dien-ra") phan.push("đang diễn ra");
-    else if (n.kieu === "da-qua") phan.push(`đã qua ${n.truocNgay} ngày`);
-  }
-  if (phieu.soLieu) {
-    for (const [k, v] of Object.entries(phieu.soLieu)) phan.push(`${k}: ${v}`);
-  }
-  return `${phan.join(" · ")}.`;
-}
 
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
@@ -70,9 +54,11 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
       </View>
 
       <View style={[styles.the, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-        <Text style={[typography.label, { color: colors.aiInk }]}>Mình đang thấy</Text>
+        {/* `aiInk` is ink ON the solid ai colour (white in light mode); on `aiSoft`
+            it vanished. `ai` reads on `aiSoft` in both themes. */}
+        <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
         <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
-          {dongNgucCanh(phieu)}
+          {cauNguCanh(phieu)}
         </Text>
       </View>
 

@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useNepGui } from "../nep/NepProvider";
 import { lopPhu, useRudiTheme } from "../theme";
 import { useMotion } from "./useMotion";
 
@@ -57,6 +58,16 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   const wrapperRef = useRef<View>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const nepGui = useNepGui();
+
+  // Nếp is not drawn over an open sheet (`nep/trang-thai.ts` rule 3). Counted
+  // per sheet, and the cleanup also runs when a screen unmounts with its sheet
+  // still open, so the count cannot leak.
+  useEffect(() => {
+    if (!open || !nepGui) return;
+    nepGui({ kieu: "mo-sheet" });
+    return () => nepGui({ kieu: "dong-sheet" });
+  }, [open, nepGui]);
 
   useEffect(() => {
     if (!open || !hien || Platform.OS !== "web") return;

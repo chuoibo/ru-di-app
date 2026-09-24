@@ -30,6 +30,7 @@ Pure functions over dicts. No I/O, no ORM, no framework.
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -47,6 +48,7 @@ __all__ = [
     "da_du_dong_y",
     "han_tuan",
     "hieu_luc",
+    "lam_giau_phac",
     "ngay_de_xuat",
     "phac_to_giay",
     "tuan_cua",
@@ -349,4 +351,153 @@ def phac_to_giay(
             "dung": ["routine", *(["rang_buoc"] if rang_buoc else [])],
             "luc": now.isoformat(),
         },
+    }
+
+
+#: The longest reason line a person may write (`PaperDraftEditRequest.ly_do`);
+#: Nếp's draft keeps to it too, so editing it never starts over the limit.
+_DAI_LY_DO = 200
+
+#: What a draft calls the stop at a place of this catalogue kind. Anything not
+#: listed keeps the routine's own line («Ăn tối»).
+_VIEC_THEO_LOAI = {"cafe": "Cà phê", "vui-choi": "Đi chơi", "di-choi-dem": "Đi chơi tối"}
+
+#: Which of a constraint's characters are folded to lower case: ASCII and the
+#: Latin blocks Vietnamese is written in. Folding stops there on purpose, so
+#: the Go port can fold the same code points the same way; U+0130 is the one
+#: letter in these blocks whose lower case is two code points, and it is kept.
+_KHOI_GAP = ((0x41, 0x5A), (0xC0, 0x24F), (0x1E00, 0x1EFF))
+
+
+def _gap(chu: str) -> str:
+    return "".join(
+        c.lower()
+        if any(dau <= ord(c) <= cuoi for dau, cuoi in _KHOI_GAP) and len(c.lower()) == 1
+        else c
+        for c in chu
+    )
+
+
+def _cum_tu_cam(rang_buoc) -> list[str]:
+    """The phrases of the two boxes, one per comma, semicolon, slash or line."""
+    out = []
+    for rb in rang_buoc:
+        for manh in re.split(r"[,;/\n]", str(rb.get("content") or "")):
+            cum = _gap(manh).strip(" \t\r")
+            if len(cum) >= 2:
+                out.append(cum)
+    return out
+
+
+def _pham(row: dict, cam: list[str]) -> bool:
+    chu = [str(row.get("name") or ""), str(row.get("category") or "")]
+    chu += [k for k in row.get("kinds") or [] if isinstance(k, str)]
+    chu += [t for t in row.get("traits") or [] if isinstance(t, str)]
+    gap = [_gap(c) for c in chu]
+    return any(c in g for c in cam for g in gap)
+
+
+def _cau_vua(lua_chon: list[list[str]]) -> str | None:
+    """The first of these sentence lists that fits the reason line, joined."""
+    for cau in lua_chon:
+        noi = " ".join(c for c in cau if c)
+        if noi and len(noi) <= _DAI_LY_DO:
+            return noi
+    return None
+
+
+def lam_giau_phac(
+    phac: dict,
+    *,
+    lich_su: list[dict],
+    cho_cu: dict | None,
+    ung_vien: list[dict],
+    rang_buoc,
+) -> dict:
+    """Nếp's template, told what this notebook already knows.
+
+    The template alone said «18:30 · Ăn tối» every week (QA 23/09): it read
+    none of what the two had shared. What it may read here is only what both
+    of them already hold (ADR-0027 §4: agreeing to keep a notebook is agreeing
+    to keep its cycle's history):
+
+    - `lich_su`, the contents of this cycle's agreed sheets, newest first. The
+      newest one's hour is the hour they keep; its place, if the catalogue
+      still has it (`cho_cu`), is the kind of place they chose.
+    - `ung_vien`, the catalogue's places of that same kind in that same city.
+      One they have not been to is proposed -- the best rated, the earlier row
+      on a tie -- unless its words meet a phrase of the two boxes.
+
+    The boxes are matched on words only. The catalogue does not prove what a
+    dish contains (ADR-0027 §7), so the stop stays `can_kiem` and the reason
+    says what was and was not checked. Nothing here is a model call, and a
+    notebook with no agreed sheet gets the template back unchanged.
+    """
+    lich_su = [nd for nd in lich_su if nd.get("chang")]
+    if not lich_su:
+        return phac
+    chinh = lich_su[0]["chang"][0]
+    gio = str(chinh["gio"])
+    goc = str(phac["ly_do"])
+    noi_cu = cho_cu is not None and cho_cu["id"] == chinh.get("place_id")
+    if noi_cu:
+        truoc = f"Lần trước hai bạn hẹn {gio} ở {cho_cu['name']}; Nếp giữ giờ đó."
+    else:
+        truoc = f"Lần trước hai bạn hẹn {gio}, «{chinh['viec']}»; Nếp giữ giờ đó."
+    truoc_ngan = f"Lần trước hai bạn hẹn {gio}; Nếp giữ giờ đó."
+    dau = {**phac["content"]["chang"][0], "gio": gio}
+    them = ["lich_su"]
+    chon = None
+    if cho_cu is not None:
+        da_di = {
+            c["place_id"] for nd in lich_su for c in nd["chang"] if c.get("place_id")
+        }
+        cam = _cum_tu_cam(rang_buoc)
+        hang = None
+        for row in ung_vien:
+            if row["id"] in da_di or _pham(row, cam):
+                continue
+            khoa = (
+                -1.0 if row.get("rating") is None else float(row["rating"]),
+                -1 if row.get("rating_count") is None else int(row["rating_count"]),
+            )
+            if chon is None or khoa > hang:
+                chon, hang = row, khoa
+    # A proposed place is never said without what was and was not checked:
+    # the history sentence gives way first, and a place whose name leaves no
+    # room for the check is not proposed at all.
+    ly_do = None
+    if chon is not None:
+        kiem = (
+            "Đã tránh chỗ trùng chữ trong hai ô ràng buộc; món thì hai bạn kiểm lại."
+            if cam
+            else "Chỗ này chưa ai kiểm, hai bạn xem lại."
+        )
+        # The kind is named after the place it came from; when the newest
+        # sheet already named that place, «chỗ đó» points back at it.
+        thu = (
+            f"Thử {chon['name']}, cùng kiểu chỗ đó mà hai bạn chưa đi."
+            if noi_cu
+            else f"Thử {chon['name']}: cùng kiểu {cho_cu['name']}, hai bạn chưa đi."
+        )
+        thu_ngan = f"Thử {chon['name']}, chỗ hai bạn chưa đi."
+        ly_do = _cau_vua(
+            [
+                [goc, truoc, thu, kiem],
+                [truoc, thu, kiem],
+                [truoc_ngan, thu_ngan, kiem],
+                [thu_ngan, kiem],
+            ]
+        )
+        if ly_do is not None:
+            dau["place_id"] = str(chon["id"])
+            dau["viec"] = _VIEC_THEO_LOAI.get(str(chon.get("category")), dau["viec"])
+            them.append("danh_muc")
+    if ly_do is None:
+        ly_do = _cau_vua([[goc, truoc], [truoc], [truoc_ngan]]) or ""
+    dung = list(phac["nguon"]["dung"])
+    return {
+        "content": {**phac["content"], "chang": [dau, *phac["content"]["chang"][1:]]},
+        "ly_do": ly_do,
+        "nguon": {**phac["nguon"], "dung": [dung[0], *them, *dung[1:]]},
     }

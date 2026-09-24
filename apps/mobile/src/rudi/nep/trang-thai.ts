@@ -20,6 +20,20 @@
  *   2. Leaving a money screen restores what the PERSON last chose, never a
  *      default. Someone who swiped Nếp away keeps it away.
  *
+ * Two more, added after the couple QA of 23/09, both about Nếp not standing on
+ * something else:
+ *
+ *   3. While a sheet is open (`coSheet > 0`) Nếp is not drawn at all. A global
+ *      floating object painted over an open sheet covered its inputs (the
+ *      «Đừng» box, the «Đi tiếp» field) and read as a bug, not as depth. A
+ *      count, not a flag: sheets can stack, and each closes its own.
+ *   4. On the sign-in and first-run screens (`vang`) Nếp is absent: Nếp is the
+ *      person's own assistant (`/me/nep/*`) and there is no person yet, and the
+ *      disc sat on the taste chips and the «Tạo nhóm» button.
+ *
+ * Neither changes `nen`: the person's choice comes back when the sheet closes
+ * or the first run ends.
+ *
  * Pure: no React, no Reanimated, no routing. `NepDock.tsx` maps these states to
  * springs and `NepProvider.tsx` feeds the events in.
  */
@@ -36,6 +50,10 @@ export interface DockNep {
   coViec: boolean;
   /** This screen is one Nếp must stand away from (money, errors, conflict). */
   luiLai: boolean;
+  /** How many sheets are open over the screen; Nếp is not drawn while any is. */
+  coSheet: number;
+  /** A screen Nếp is absent from (sign-in, first run). */
+  vang: boolean;
 }
 
 export const DOCK_DAU: DockNep = Object.freeze({
@@ -43,6 +61,8 @@ export const DOCK_DAU: DockNep = Object.freeze({
   nen: "nghi",
   coViec: false,
   luiLai: false,
+  coSheet: 0,
+  vang: false,
 });
 
 export type SuKienNep =
@@ -54,7 +74,14 @@ export type SuKienNep =
   | { kieu: "bao-viec"; canTraLoi: boolean }
   | { kieu: "xong-viec" }
   | { kieu: "het-gio-he" }
-  | { kieu: "doi-man"; nepLui: boolean };
+  | { kieu: "mo-sheet" }
+  | { kieu: "dong-sheet" }
+  | { kieu: "doi-man"; nepLui: boolean; nepVang?: boolean };
+
+/** Whether Nếp is drawn at all. The panel (`mo`) is itself a sheet. */
+export function nepHien(dock: DockNep): boolean {
+  return !dock.vang && dock.coSheet === 0 && dock.trangThai !== "mo";
+}
 
 /** Rest at `nen`, keeping the badge and the law flag as they are. */
 function veNen(dock: DockNep): DockNep {
@@ -87,8 +114,9 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
 
     case "bao-viec": {
       const coViec = { ...dock, coViec: true };
-      // The law wins over the notification, and it wins silently.
-      if (dock.luiLai) return coViec;
+      // The law wins over the notification, and it wins silently. So does a
+      // sheet the person is filling in, and a screen Nếp is absent from.
+      if (dock.luiLai || dock.vang || dock.coSheet > 0) return coViec;
       if (!su.canTraLoi) return coViec;
       if (dock.trangThai === "an" || dock.trangThai === "nghi") return { ...coViec, trangThai: "he" };
       return coViec;
@@ -102,11 +130,19 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
     case "het-gio-he":
       return dock.trangThai === "he" ? veNen(dock) : dock;
 
+    case "mo-sheet":
+      // A bubble peeking beside a sheet is the same object on top of it.
+      return { ...dock, coSheet: dock.coSheet + 1, trangThai: dock.trangThai === "he" ? dock.nen : dock.trangThai };
+
+    case "dong-sheet":
+      return { ...dock, coSheet: Math.max(0, dock.coSheet - 1) };
+
     case "doi-man":
       // `nen` is deliberately untouched on the way in: it is the person's last
       // choice, and it is what they get back on the way out.
-      if (su.nepLui) return { ...dock, trangThai: "an", luiLai: true };
-      return { ...dock, trangThai: dock.nen, luiLai: false };
+      if (su.nepVang) return { ...dock, trangThai: dock.nen, luiLai: false, vang: true };
+      if (su.nepLui) return { ...dock, trangThai: "an", luiLai: true, vang: false };
+      return { ...dock, trangThai: dock.nen, luiLai: false, vang: false };
 
     default:
       return dock;

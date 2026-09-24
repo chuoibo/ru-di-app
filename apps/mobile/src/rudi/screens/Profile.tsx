@@ -47,6 +47,7 @@ import { ErrorState } from "../ui/ErrorState";
 import { Money } from "../ui/Money";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../ui/Skeleton";
 import { Stamp } from "../ui/Stamp";
+import { useNepNguCanh } from "../nep/NepProvider";
 
 /** «17/10/2026» (the fixture's own format) as the ISO day `nhip-keo` reads. */
 function isoTu(ddmmyyyy: string): string {
@@ -60,6 +61,7 @@ export function ProfileScreen() {
   const { colors, radius } = useRudiTheme();
   const session = useRudiSession();
   const [panel, setPanel] = useState<"home" | "account" | "edit" | "saved">("home");
+  useNepNguCanh({ man: "profile", tieuDe: "Trang cá nhân", goiY: ["Gu của mình đang thế nào?", "Mình đã đi những đâu?"] });
   // Read once so the row below keeps the narrowing inside its own callback.
   const duongTuongToi = session.phien === null ? null : `/people/${session.phien.person_id}`;
   const personId = session.phien?.person_id ?? null;

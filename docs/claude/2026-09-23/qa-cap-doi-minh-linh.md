@@ -193,6 +193,12 @@
 - 🔵 **Đĩa Nếp nổi vẽ ĐÈ LÊN bottom sheet**: che mép phải ô «Đừng» (ảnh 42) và ô «Đi
   tiếp» (ảnh 45), che chữ bong bóng tin nhắn trong chat. Một vật nổi toàn cục không
   được nằm trên sheet đang mở.
+  - **Đợt 4 (24/09) — đã sửa:** sheet mở thì Nếp không vẽ (đếm theo từng sheet, sheet đóng
+    hết mới hiện lại, không hé câu nào lúc có sheet); welcome/đăng nhập/OTP/gu lần đầu: Nếp
+    vắng (danh sách riêng `MAN_NEP_VANG`, không nới «Luật Nếp Đứng Xa Tiền»). Kiểm trên máy:
+    sheet «Đề nghị sửa» 0 node Nếp, đóng sheet thì Nếp về; welcome/login/OTP 0 node.
+    **Còn mở:** đĩa Nếp vẫn đè nội dung tĩnh ở mép phải trên màn không có sheet (dòng hướng
+    dẫn ở màn kèo, bong bóng tin của mình) — giới hạn của thiết kế ray dọc (ADR-0033).
 - 🟡 Ngày nhập là chữ ISO thô «2026-09-26», giờ là chữ tự do «18:30» — không có bộ chọn
   ngày/giờ; hai ô cùng tên «Giờ» (a11y đọc trùng).
 
@@ -208,6 +214,12 @@
   dùng «Thích cafe yên tĩnh» trong hồ sơ Linh. Lời hứa lõi «Nếp giữ một điều» chưa có
   gì để giữ — đây là câu trả lời thẳng cho câu hỏi «insight cho cặp đôi có sâu không»:
   **hiện là 0**, người dùng tự viết hết.
+  - **Đợt 4 (24/09) — bước đầu:** bản phác đọc tờ đã chốt của chu kỳ đang mở (giờ quen, chỗ
+    đã chọn) và danh mục cùng thành phố/cùng loại, tránh chỗ trùng chữ hai ô ràng buộc, nói
+    rõ chưa kiểm món. Trên máy: «19:15 · Ăn tối · Tiệm Nướng Xóm Lào — Lần trước hai bạn hẹn
+    19:15 ở Lẩu Gà Lá É Tao Ngộ; Nếp giữ giờ đó…». Tờ giấy giờ hiện tên quán dưới chặng.
+    **Còn mở:** gu hai người chỉ vào sau ADR + consent `chia_gu` (Đợt 7); tờ lời rủ trước khi
+    lập sổ không thành lịch sử (đúng ADR-0027 §4) nên tuần đầu vẫn là bản mẫu.
 - 🟠 Sửa **bản nháp của chính mình** lại mở sheet «Đề nghị sửa» với câu «Sửa gì thì
   thành phiên bản 2. Người ấy sẽ thấy đúng chỗ đổi» và nút **«Gửi phiên bản 2»** —
   nhưng bấm xong KHÔNG gửi gì (DB vẫn `nhap`, version 1). Nhãn nói sai việc nút làm.
@@ -305,7 +317,11 @@ người và không gắn với kèo vừa chốt (vì kèo nằm trong `pair`).
 ### 14. Nếp trong sổ đôi, responsive, kỷ niệm, đóng sổ, hồ sơ
 
 - 🔴 **Nếp mù ngữ cảnh ngay trong sổ đôi.** Mở Nếp trong nhắn riêng của một đôi vừa chốt
-  hẹn: «Mình chưa rõ bạn đang ở đâu trong app.» Ô «Hỏi Nếp một câu» vẫn **0 px** —
+  hẹn: «Mình chưa rõ bạn đang ở đâu trong app.»
+  **Đợt 4 (24/09) — đã sửa:** Tin nhắn, nhắn riêng/chat nhóm, tờ giấy, Lên plan, Cá nhân khai
+  phiếu; phiếu khai theo focus và gắn đường dẫn (trước đây quay lại màn dưới stack thì mất
+  phiếu); câu «Mình đang thấy» đọc như câu («sổ một đôi · còn 2 ngày nữa · 1 chặng», không còn
+  «soNguoi: 2»); nhãn «Mình đang thấy» trước đây trắng trên nền tím nhạt (dùng nhầm `aiInk`). Ô «Hỏi Nếp một câu» vẫn **0 px** —
   nguyên nhân (đánh giá A): `nep/NepBang.tsx:152-172` hai `RudiButton compact` không
   truyền `full={false}`, mà `RudiButton` mặc định `full=true` → `width:"100%"` +
   `flexShrink:0` (`ui.tsx:421, 1065-1066`) bóp `TextInput` `flex:1` về 0. Hỏi Nếp

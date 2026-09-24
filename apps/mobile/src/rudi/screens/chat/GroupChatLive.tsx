@@ -70,6 +70,7 @@ import { KhayToHenChung } from "./ToHenChungKhay";
 import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
+import { useNepNguCanh } from "../../nep/NepProvider";
 
 const LENH = [
   { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
@@ -193,6 +194,18 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // that place opens the other person's profile instead.
   const nhanRieng = laPair(nhom);
   const nguoiKiaId = nhom?.counterpart?.id;
+  // What Nếp may know here: the kind of conversation and, for a group, how many
+  // are in it. Never a name and never a message -- chat v2 is end to end
+  // encrypted, and Nếp does not read chat on its own (ADR-0033 §2.5). Before
+  // this, Nếp opened in a couple's conversation said it had no idea where the
+  // person was (QA 23/09).
+  useNepNguCanh({
+    man: "groups/[id]/chat",
+    tieuDe: nhanRieng ? "cuộc trò chuyện của hai bạn" : "chat nhóm",
+    loaiSo: !nhanRieng ? "hoi" : undefined,
+    soLieu: !nhanRieng ? { soNguoi: nhom?.member_count ?? 0 } : undefined,
+    goiY: nhanRieng ? ["Tuần này rủ nhau đi đâu?", "Mở tờ giấy của hai mình"] : ["Gợi ý chỗ cho cả nhóm", "Tóm tắt kèo sắp tới"],
+  });
   // The group's theme colours only the sender's bubble and the reader's own
   // reaction chip; the screen's leading tone stays the brand accent.
   const mauChat = bangMauChat(nhom?.theme, dark);
