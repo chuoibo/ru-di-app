@@ -8,12 +8,9 @@
  *
  * ## Why every refusal gets its own sentence
  *
- * `thongDiepNguoiDoc`'s generic 403 sentence says «bạn không có quyền». For
- * this feature that is wrong twice over. `pair_chat_consent_required` is not a
- * missing permission, it is a consent neither of them has given yet -- the
- * person reading it has every right they need and nothing to fix in settings.
- * And `paper_version_stale` is not a refusal at all from the reader's side; it
- * is news, that the other person wrote something while this screen was open.
+ * `thongDiepNguoiDoc`'s generic sentences are written for refusals in general.
+ * `paper_version_stale` is not a refusal at all from the reader's side; it is
+ * news, that the other person wrote something while this screen was open.
  *
  * ## Why commands do not carry content back
  *
@@ -105,14 +102,11 @@ export interface XemTruocDongSo {
 
 /**
  * Every refusal this feature can answer, in the language the person reading it
- * speaks. A code missing from here falls through to the generic sentence, which
- * is why the two that generic sentence describes wrongly are first.
+ * speaks. A code missing from here falls through to the generic sentence.
+ * `pair_chat_consent_required` used to be first here; its only raise site was
+ * the automatic companion turn, deleted by ADR-0036 §2.1.
  */
 export const LOI_TO_GIAY: Record<string, string> = {
-  // 403, and NOT a permission. Both of them have to say yes before Nếp opens
-  // the conversation; «bạn không có quyền» would send somebody looking through
-  // settings for a switch that is not theirs alone to flip.
-  pair_chat_consent_required: "Cả hai cùng đồng ý cho Nếp đọc tin nhắn thì Nếp mới nói được.",
   // 409, and news rather than a refusal: the other person wrote while this
   // screen was open. The screen re-reads; the sentence says why.
   paper_version_stale: "Người kia vừa gửi bản mới. Mở lại để xem đã.",

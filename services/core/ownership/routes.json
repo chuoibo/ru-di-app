@@ -793,9 +793,6 @@
       "class": "mixed",
       "owner": "go",
       "python": "live",
-      "in_memory": [
-        "message_intent_limiter"
-      ],
       "state": "LIVE-GO",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
@@ -868,24 +865,8 @@
       "evidence": "docs/migration/live-go-25-route-wai.md"
     },
     {
-      "id": "POST /contexts/{context_id}/ai-turn",
-      "order": 66,
-      "kind": "route",
-      "method": "POST",
-      "path": "/contexts/{context_id}/ai-turn",
-      "group": "messages",
-      "class": "ai",
-      "owner": "go",
-      "python": "live",
-      "in_memory": [
-        "companion_turn_limiter"
-      ],
-      "state": "LIVE-GO",
-      "evidence": "docs/migration/live-go-25-route-wai.md"
-    },
-    {
       "id": "PUT /contexts/{context_id}/members/{person_id}/role",
-      "order": 67,
+      "order": 66,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/members/{person_id}/role",
@@ -898,7 +879,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/read-mark",
-      "order": 68,
+      "order": 67,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/read-mark",
@@ -911,7 +892,7 @@
     },
     {
       "id": "POST /batches",
-      "order": 69,
+      "order": 68,
       "kind": "route",
       "method": "POST",
       "path": "/batches",
@@ -924,7 +905,7 @@
     },
     {
       "id": "POST /batches/{batch_id}/publish",
-      "order": 70,
+      "order": 69,
       "kind": "route",
       "method": "POST",
       "path": "/batches/{batch_id}/publish",
@@ -937,7 +918,7 @@
     },
     {
       "id": "GET /batches/{batch_id}/obligations",
-      "order": 71,
+      "order": 70,
       "kind": "route",
       "method": "GET",
       "path": "/batches/{batch_id}/obligations",
@@ -950,7 +931,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/batches",
-      "order": 72,
+      "order": 71,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/batches",
@@ -963,7 +944,7 @@
     },
     {
       "id": "GET /g/{token}",
-      "order": 73,
+      "order": 72,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}",
@@ -976,7 +957,7 @@
     },
     {
       "id": "POST /g/{token}/da-chuyen",
-      "order": 74,
+      "order": 73,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/da-chuyen",
@@ -989,7 +970,7 @@
     },
     {
       "id": "GET /g/{token}/khong-phai-toi",
-      "order": 75,
+      "order": 74,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}/khong-phai-toi",
@@ -1002,7 +983,7 @@
     },
     {
       "id": "POST /g/{token}/khong-phai-toi",
-      "order": 76,
+      "order": 75,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/khong-phai-toi",
@@ -1015,7 +996,7 @@
     },
     {
       "id": "GET /g/{token}/doi-so-tien",
-      "order": 77,
+      "order": 76,
       "kind": "route",
       "method": "GET",
       "path": "/g/{token}/doi-so-tien",
@@ -1028,7 +1009,7 @@
     },
     {
       "id": "POST /g/{token}/doi-so-tien",
-      "order": 78,
+      "order": 77,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/doi-so-tien",
@@ -1041,7 +1022,7 @@
     },
     {
       "id": "POST /g/{token}/xin-cach-tinh",
-      "order": 79,
+      "order": 78,
       "kind": "route",
       "method": "POST",
       "path": "/g/{token}/xin-cach-tinh",
@@ -1054,7 +1035,7 @@
     },
     {
       "id": "POST /obligations/{obligation_id}/confirm-receipt",
-      "order": 80,
+      "order": 79,
       "kind": "route",
       "method": "POST",
       "path": "/obligations/{obligation_id}/confirm-receipt",
@@ -1067,7 +1048,7 @@
     },
     {
       "id": "GET /people/me/contexts",
-      "order": 81,
+      "order": 80,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/contexts",
@@ -1080,7 +1061,7 @@
     },
     {
       "id": "GET /people/me",
-      "order": 82,
+      "order": 81,
       "kind": "route",
       "method": "GET",
       "path": "/people/me",
@@ -1093,7 +1074,7 @@
     },
     {
       "id": "PATCH /people/me",
-      "order": 83,
+      "order": 82,
       "kind": "route",
       "method": "PATCH",
       "path": "/people/me",
@@ -1106,7 +1087,7 @@
     },
     {
       "id": "GET /people/me/saved-places",
-      "order": 84,
+      "order": 83,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/saved-places",
@@ -1119,7 +1100,7 @@
     },
     {
       "id": "PUT /people/me/saved-places/{place_id}",
-      "order": 85,
+      "order": 84,
       "kind": "route",
       "method": "PUT",
       "path": "/people/me/saved-places/{place_id}",
@@ -1132,7 +1113,7 @@
     },
     {
       "id": "DELETE /people/me/saved-places/{place_id}",
-      "order": 86,
+      "order": 85,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/me/saved-places/{place_id}",
@@ -1145,7 +1126,7 @@
     },
     {
       "id": "GET /people/me/blocked",
-      "order": 87,
+      "order": 86,
       "kind": "route",
       "method": "GET",
       "path": "/people/me/blocked",
@@ -1158,7 +1139,7 @@
     },
     {
       "id": "DELETE /people/me",
-      "order": 88,
+      "order": 87,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/me",
@@ -1171,7 +1152,7 @@
     },
     {
       "id": "POST /people/{person_id}/block",
-      "order": 89,
+      "order": 88,
       "kind": "route",
       "method": "POST",
       "path": "/people/{person_id}/block",
@@ -1184,7 +1165,7 @@
     },
     {
       "id": "DELETE /people/{person_id}/block",
-      "order": 90,
+      "order": 89,
       "kind": "route",
       "method": "DELETE",
       "path": "/people/{person_id}/block",
@@ -1197,7 +1178,7 @@
     },
     {
       "id": "POST /people/{person_id}/dm",
-      "order": 91,
+      "order": 90,
       "kind": "route",
       "method": "POST",
       "path": "/people/{person_id}/dm",
@@ -1210,7 +1191,7 @@
     },
     {
       "id": "GET /people/{person_id}",
-      "order": 92,
+      "order": 91,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}",
@@ -1223,7 +1204,7 @@
     },
     {
       "id": "PUT /people/{person_id}",
-      "order": 93,
+      "order": 92,
       "kind": "route",
       "method": "PUT",
       "path": "/people/{person_id}",
@@ -1236,7 +1217,7 @@
     },
     {
       "id": "POST /sessions",
-      "order": 94,
+      "order": 93,
       "kind": "route",
       "method": "POST",
       "path": "/sessions",
@@ -1249,7 +1230,7 @@
     },
     {
       "id": "GET /sessions",
-      "order": 95,
+      "order": 94,
       "kind": "route",
       "method": "GET",
       "path": "/sessions",
@@ -1262,7 +1243,7 @@
     },
     {
       "id": "DELETE /sessions/current",
-      "order": 96,
+      "order": 95,
       "kind": "route",
       "method": "DELETE",
       "path": "/sessions/current",
@@ -1275,7 +1256,7 @@
     },
     {
       "id": "DELETE /sessions/{session_id}",
-      "order": 97,
+      "order": 96,
       "kind": "route",
       "method": "DELETE",
       "path": "/sessions/{session_id}",
@@ -1288,7 +1269,7 @@
     },
     {
       "id": "POST /auth/otp/request",
-      "order": 98,
+      "order": 97,
       "kind": "route",
       "method": "POST",
       "path": "/auth/otp/request",
@@ -1304,7 +1285,7 @@
     },
     {
       "id": "POST /auth/otp/verify",
-      "order": 99,
+      "order": 98,
       "kind": "route",
       "method": "POST",
       "path": "/auth/otp/verify",
@@ -1320,7 +1301,7 @@
     },
     {
       "id": "POST /auth/google",
-      "order": 100,
+      "order": 99,
       "kind": "route",
       "method": "POST",
       "path": "/auth/google",
@@ -1336,7 +1317,7 @@
     },
     {
       "id": "POST /identity/person-id",
-      "order": 101,
+      "order": 100,
       "kind": "route",
       "method": "POST",
       "path": "/identity/person-id",
@@ -1352,7 +1333,7 @@
     },
     {
       "id": "GET /destinations",
-      "order": 102,
+      "order": 101,
       "kind": "route",
       "method": "GET",
       "path": "/destinations",
@@ -1365,7 +1346,7 @@
     },
     {
       "id": "GET /places",
-      "order": 103,
+      "order": 102,
       "kind": "route",
       "method": "GET",
       "path": "/places",
@@ -1381,7 +1362,7 @@
     },
     {
       "id": "GET /places/{place_id}/photos",
-      "order": 104,
+      "order": 103,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/photos",
@@ -1394,7 +1375,7 @@
     },
     {
       "id": "GET /places/{place_id}/group-photos",
-      "order": 105,
+      "order": 104,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/group-photos",
@@ -1407,7 +1388,7 @@
     },
     {
       "id": "GET /places/{place_id}/photos/{photo_id}",
-      "order": 106,
+      "order": 105,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}/photos/{photo_id}",
@@ -1420,7 +1401,7 @@
     },
     {
       "id": "GET /places/{place_id}",
-      "order": 107,
+      "order": 106,
       "kind": "route",
       "method": "GET",
       "path": "/places/{place_id}",
@@ -1436,7 +1417,7 @@
     },
     {
       "id": "POST /places/search",
-      "order": 108,
+      "order": 107,
       "kind": "route",
       "method": "POST",
       "path": "/places/search",
@@ -1452,7 +1433,7 @@
     },
     {
       "id": "GET /people/{person_id}/finance",
-      "order": 109,
+      "order": 108,
       "kind": "route",
       "method": "GET",
       "path": "/people/{person_id}/finance",
@@ -1465,7 +1446,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/recap",
-      "order": 110,
+      "order": 109,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/recap",
@@ -1478,7 +1459,7 @@
     },
     {
       "id": "POST /me/nep/media",
-      "order": 111,
+      "order": 110,
       "kind": "route",
       "method": "POST",
       "path": "/me/nep/media",
@@ -1490,7 +1471,7 @@
     },
     {
       "id": "GET /me/nep/media/{job_id}",
-      "order": 112,
+      "order": 111,
       "kind": "route",
       "method": "GET",
       "path": "/me/nep/media/{job_id}",
@@ -1502,7 +1483,7 @@
     },
     {
       "id": "GET /me/nep/media/{job_id}/file",
-      "order": 113,
+      "order": 112,
       "kind": "route",
       "method": "GET",
       "path": "/me/nep/media/{job_id}/file",
@@ -1514,7 +1495,7 @@
     },
     {
       "id": "POST /reports",
-      "order": 114,
+      "order": 113,
       "kind": "route",
       "method": "POST",
       "path": "/reports",
@@ -1527,7 +1508,7 @@
     },
     {
       "id": "POST /receipts/scan",
-      "order": 115,
+      "order": 114,
       "kind": "route",
       "method": "POST",
       "path": "/receipts/scan",
@@ -1543,7 +1524,7 @@
     },
     {
       "id": "POST /screenshots/scan",
-      "order": 116,
+      "order": 115,
       "kind": "route",
       "method": "POST",
       "path": "/screenshots/scan",
@@ -1559,7 +1540,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/suggestion",
-      "order": 117,
+      "order": 116,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/suggestion",
@@ -1575,7 +1556,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/contextual-suggestion",
-      "order": 118,
+      "order": 117,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/contextual-suggestion",
@@ -1591,7 +1572,7 @@
     },
     {
       "id": "GET /areas",
-      "order": 119,
+      "order": 118,
       "kind": "route",
       "method": "GET",
       "path": "/areas",
@@ -1604,7 +1585,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/map",
-      "order": 120,
+      "order": 119,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/map",
@@ -1617,7 +1598,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/heatmap",
-      "order": 121,
+      "order": 120,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/heatmap",
@@ -1630,7 +1611,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/meet",
-      "order": 122,
+      "order": 121,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/meet",
@@ -1643,7 +1624,7 @@
     },
     {
       "id": "POST /stories",
-      "order": 123,
+      "order": 122,
       "kind": "route",
       "method": "POST",
       "path": "/stories",
@@ -1656,7 +1637,7 @@
     },
     {
       "id": "GET /stories",
-      "order": 124,
+      "order": 123,
       "kind": "route",
       "method": "GET",
       "path": "/stories",
@@ -1669,7 +1650,7 @@
     },
     {
       "id": "POST /stories/{story_id}/seen",
-      "order": 125,
+      "order": 124,
       "kind": "route",
       "method": "POST",
       "path": "/stories/{story_id}/seen",
@@ -1682,7 +1663,7 @@
     },
     {
       "id": "DELETE /stories/{story_id}",
-      "order": 126,
+      "order": 125,
       "kind": "route",
       "method": "DELETE",
       "path": "/stories/{story_id}",
@@ -1695,7 +1676,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/votes",
-      "order": 127,
+      "order": 126,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/votes",
@@ -1708,7 +1689,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/votes",
-      "order": 128,
+      "order": 127,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/votes",
@@ -1721,7 +1702,7 @@
     },
     {
       "id": "GET /votes/{vote_id}",
-      "order": 129,
+      "order": 128,
       "kind": "route",
       "method": "GET",
       "path": "/votes/{vote_id}",
@@ -1734,7 +1715,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/ballots",
-      "order": 130,
+      "order": 129,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/ballots",
@@ -1747,7 +1728,7 @@
     },
     {
       "id": "POST /votes/{vote_id}/close",
-      "order": 131,
+      "order": 130,
       "kind": "route",
       "method": "POST",
       "path": "/votes/{vote_id}/close",
@@ -1760,7 +1741,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums",
-      "order": 132,
+      "order": 131,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums",
@@ -1773,7 +1754,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}",
-      "order": 133,
+      "order": 132,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}",
@@ -1786,7 +1767,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/albums/{outing_id}/reel",
-      "order": 134,
+      "order": 133,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/albums/{outing_id}/reel",
@@ -1802,7 +1783,7 @@
     },
     {
       "id": "GET /interests",
-      "order": 135,
+      "order": 134,
       "kind": "route",
       "method": "GET",
       "path": "/interests",
@@ -1815,7 +1796,7 @@
     },
     {
       "id": "PUT /people/me/interests",
-      "order": 136,
+      "order": 135,
       "kind": "route",
       "method": "PUT",
       "path": "/people/me/interests",
@@ -1828,7 +1809,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/preference-profile",
-      "order": 137,
+      "order": 136,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/preference-profile",
@@ -1841,7 +1822,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/photos/{photo_id}/face-boxes",
-      "order": 138,
+      "order": 137,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/photos/{photo_id}/face-boxes",
@@ -1857,7 +1838,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/notebook",
-      "order": 139,
+      "order": 138,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/notebook",
@@ -1870,7 +1851,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals",
-      "order": 140,
+      "order": 139,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals",
@@ -1883,7 +1864,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
-      "order": 141,
+      "order": 140,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/proposals/{proposal_id}/grant",
@@ -1896,7 +1877,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/consents/{purpose}",
-      "order": 142,
+      "order": 141,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/consents/{purpose}",
@@ -1909,7 +1890,7 @@
     },
     {
       "id": "PUT /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 143,
+      "order": 142,
       "kind": "route",
       "method": "PUT",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1922,7 +1903,7 @@
     },
     {
       "id": "DELETE /contexts/{context_id}/notebook/constraints/{kind}",
-      "order": 144,
+      "order": 143,
       "kind": "route",
       "method": "DELETE",
       "path": "/contexts/{context_id}/notebook/constraints/{kind}",
@@ -1935,7 +1916,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close/preview",
-      "order": 145,
+      "order": 144,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close/preview",
@@ -1948,7 +1929,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/notebook/close",
-      "order": 146,
+      "order": 145,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/notebook/close",
@@ -1961,7 +1942,7 @@
     },
     {
       "id": "GET /contexts/{context_id}/papers",
-      "order": 147,
+      "order": 146,
       "kind": "route",
       "method": "GET",
       "path": "/contexts/{context_id}/papers",
@@ -1974,7 +1955,7 @@
     },
     {
       "id": "POST /contexts/{context_id}/papers/draft",
-      "order": 148,
+      "order": 147,
       "kind": "route",
       "method": "POST",
       "path": "/contexts/{context_id}/papers/draft",
@@ -1987,7 +1968,7 @@
     },
     {
       "id": "GET /papers/{paper_id}",
-      "order": 149,
+      "order": 148,
       "kind": "route",
       "method": "GET",
       "path": "/papers/{paper_id}",
@@ -2000,7 +1981,7 @@
     },
     {
       "id": "PATCH /papers/{paper_id}/draft",
-      "order": 150,
+      "order": 149,
       "kind": "route",
       "method": "PATCH",
       "path": "/papers/{paper_id}/draft",
@@ -2013,7 +1994,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/send",
-      "order": 151,
+      "order": 150,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/send",
@@ -2026,7 +2007,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/viewed",
-      "order": 152,
+      "order": 151,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/viewed",
@@ -2039,7 +2020,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/versions/{version}/responses",
-      "order": 153,
+      "order": 152,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/versions/{version}/responses",
@@ -2052,7 +2033,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/withdraw",
-      "order": 154,
+      "order": 153,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/withdraw",
@@ -2065,7 +2046,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/skip",
-      "order": 155,
+      "order": 154,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/skip",
@@ -2078,7 +2059,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/done",
-      "order": 156,
+      "order": 155,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/done",
@@ -2091,7 +2072,7 @@
     },
     {
       "id": "POST /papers/{paper_id}/keeps",
-      "order": 157,
+      "order": 156,
       "kind": "route",
       "method": "POST",
       "path": "/papers/{paper_id}/keeps",
@@ -2104,7 +2085,7 @@
     },
     {
       "id": "GET /healthz",
-      "order": 158,
+      "order": 157,
       "kind": "route",
       "method": "GET",
       "path": "/healthz",

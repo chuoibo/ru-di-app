@@ -71,26 +71,16 @@ export type TrangTin = {
   has_more: boolean;
 };
 
-export type LuotAi = {
-  context_id: string;
-  spoke: boolean;
-  reason: string;
-  message: Tin | null;
-};
-
-/** `POST /messages` answers the stored message plus what the server did about a command. */
+/**
+ * `POST /messages` answers the stored message plus what the server did about a
+ * `/vote` command. Nothing else is acted on there any more: `/plan`, `@Rủ Đi`
+ * and `/chia-bill` are ordinary text on the server (ADR-0036 §2.1), and this
+ * client never sends them anyway (`GroupChatLive` opens the AI tray instead).
+ */
 export type TinDaGui = Tin & {
-  intent?: "plan" | "chia_bill" | "vote" | "mention" | null;
-  companion?: LuotAi | null;
+  intent?: "vote" | null;
   vote?: { id: string; question: string } | null;
-  expense_card?: Tin | null;
-  intent_error?:
-    | "vote_malformed"
-    | "companion_rate_limited"
-    | "chia_bill_not_available"
-    | "chia_bill_no_expenses"
-    | "chia_bill_refused"
-    | null;
+  intent_error?: "vote_malformed" | null;
 };
 
 const LOI_CHAT: Record<string, string> = {
@@ -463,30 +453,11 @@ export function docTheAi(card: unknown): TheAi {
 /** Copy for what the server said about a command, or null when nothing to say. */
 export function cauYDinh(gui: TinDaGui): string | null {
   switch (gui.intent_error) {
-    case "companion_rate_limited":
-      return "Hết lượt hỏi Rủ Đi AI trong phút này. Tin của bạn vẫn được gửi.";
     case "vote_malformed":
       return "Bình chọn cần dạng: /vote Câu hỏi? Lựa chọn A | Lựa chọn B";
-    case "chia_bill_not_available":
-      return "Chia bill từ chat chưa bật ở đây.";
-    case "chia_bill_no_expenses":
-      return "Không thấy khoản chi nào trong các tin gần đây.";
-    case "chia_bill_refused":
-      return "Lần đọc này chưa được. Thử lại sau.";
     default:
-      break;
+      return null;
   }
-  if (gui.companion && !gui.companion.spoke) {
-    switch (gui.companion.reason) {
-      case "unavailable":
-        return "Rủ Đi AI chưa bật ở đây.";
-      case "ungrounded":
-        return "Rủ Đi AI có ý nhưng không nêu được địa điểm trong danh mục, nên im lặng.";
-      default:
-        return "Rủ Đi AI đang im lặng (" + gui.companion.reason + ").";
-    }
-  }
-  return null;
 }
 
 /** One line under a place on an AI card: price band, hours, distance -- what is known. */

@@ -30,11 +30,15 @@ export function docAiInvocations(contextId: string, personId: string) {
   return translatedAsActor<{ invocations: AiInvocation[] }>({}, `/contexts/${contextId}/ai-invocations?limit=20`, { ...options(contextId, personId), method: "GET" });
 }
 /**
- * Refusals this route can return, in words a person can act on.
+ * Refusals the invocation routes can return, in words a person can act on.
  *
  * Without this table every 4xx lands on the generic sentence, which says the
  * fault is the app's. For a bundle that is too large that sentence is simply
  * wrong: the person can fix it, by sending fewer messages.
+ *
+ * Both calls that reach the queue (`goiAi` and `thuLaiAi`) read this table,
+ * and `tests/cau-chu-goi-ai.test.mjs` derives the codes those two routes can
+ * emit from the Go handlers: a new refusal without a sentence here is red.
  */
 export const LOI_GOI_AI: Record<string, string> = {
   boi_canh_qua_lon: "Đoạn chat gửi kèm dài quá. Bạn chọn «Chỉ gửi lời nhờ», hoặc thử lại để mình gửi ít tin hơn.",
@@ -46,6 +50,11 @@ export const LOI_GOI_AI: Record<string, string> = {
   provider_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
   chat_ai_unavailable: "AI chưa sẵn sàng. Bạn vẫn có thể tự tạo kèo.",
   group_plan_only: "Chỗ này chưa nhờ AI phác kèo được.",
+  invalid_invocation: "Lời nhờ đang trống hoặc dài quá. Bạn viết gọn lại rồi gửi nhé.",
+  authentication_required: "Phiên đăng nhập đã hết. Bạn đăng nhập lại rồi nhờ AI tiếp nhé.",
+  membership_required: "Bạn không còn ở trong nhóm này nên chưa nhờ AI ở đây được.",
+  encrypted_invocation_required: "Nhóm này đã chuyển sang chat mã hoá, nên cách nhờ AI này chưa dùng được ở đây.",
+  invocation_not_found: "Không còn thấy lời nhờ này nữa. Bạn gửi một lời nhờ mới nhé.",
 };
 
 /**
@@ -60,7 +69,7 @@ export function goiAi(contextId: string, personId: string, prompt: string, logic
   });
 }
 export function thuLaiAi(contextId: string, personId: string, id: string) {
-  return translatedAsActor<AiInvocation>({}, `/contexts/${contextId}/ai-invocations/${id}/retry`, {
+  return translatedAsActor<AiInvocation>(LOI_GOI_AI, `/contexts/${contextId}/ai-invocations/${id}/retry`, {
     ...options(contextId, personId), method: "POST", attempt: newAttempt(),
   });
 }

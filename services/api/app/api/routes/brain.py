@@ -43,7 +43,6 @@ from app.api.receipt_skill import ReceiptReader, run_receipt_skill
 from app.api.screenshot_skill import ScreenshotReader, run_screenshot_skill
 from app.domain import money
 from app.domain.chat_expense import ChatExpenseError
-from app.domain.companion import CompanionError, plan_turn
 from app.domain.place_search import PlaceSearchError, ground_search
 from app.domain.receipt import ReceiptError
 from app.domain.screenshot import ScreenshotError
@@ -193,30 +192,6 @@ def chat_expense(
     except Exception:
         _LOGGER.warning("brain chat expense reader failed")
         raise _code_error(502, "chat_reader_unavailable") from None
-
-
-@router.post("/companion-plan")
-def companion_plan(
-    body: dict,
-    _: Annotated[None, Depends(require_internal_token)],
-) -> dict:
-    """Pure cadence decision. No model call."""
-
-    conversation = body.get("conversation")
-    if not isinstance(conversation, dict):
-        raise _code_error(422, "brain_request_invalid")
-    requested = bool(body.get("requested"))
-    limits = body.get("limits")
-    try:
-        return plan_turn(
-            conversation,
-            limits if isinstance(limits, dict) else None,
-            requested=requested,
-        )
-    except CompanionError as exc:
-        raise _code_error(422, exc.code) from None
-    except (KeyError, TypeError):
-        raise _code_error(422, "brain_request_invalid") from None
 
 
 @router.post("/companion-reply")

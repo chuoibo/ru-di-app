@@ -372,8 +372,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
       if (daGui === null) return false;
       veCuoi();
       const cau = cauYDinh(daGui);
-      const tuAi = daGui.companion !== null && daGui.companion !== undefined && !daGui.companion.spoke;
-      if (cau !== null) setThongBao({ tu: tuAi ? "Rủ Đi AI" : "Rủ Đi", cau, luc: new Date().toISOString() });
+      if (cau !== null) setThongBao({ tu: "Rủ Đi", cau, luc: new Date().toISOString() });
       return !daGui.intent_error;
     } catch {
       // The failed row owns the exact text, quote and retry key. Leave any

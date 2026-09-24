@@ -59,10 +59,13 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	return h
 }
 
-// Matches also seals the old automatic-history entry points in this candidate.
+// Matches also seals the per-message expense-draft entry point, which reads a
+// stored message for the model without anyone handing it over. The old
+// automatic turn (`ai-turn`) is not sealed here: it is deleted in both
+// backends (ADR-0036 §2.1), so it falls through to Python's 404.
 func Matches(path string) bool {
 	p := strings.Split(strings.Trim(path, "/"), "/")
-	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || p[2] == "ai-turn" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
+	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +73,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
 	defer cancel()
-	if strings.HasSuffix(r.URL.Path, "/ai-turn") || strings.HasSuffix(r.URL.Path, "/expense-draft") {
+	if strings.HasSuffix(r.URL.Path, "/expense-draft") {
 		refuse(w, 403, "explicit_invocation_required")
 		return
 	}
