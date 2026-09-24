@@ -18,7 +18,7 @@ import { so } from "../art/net";
 import { useRudiTheme } from "../theme";
 import { Nep } from "../ui/art/Nep";
 import { useMotion } from "../ui/useMotion";
-import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, ghimVaoRay, rayDoc, slopTrai, tyLeTuY, yTuTyLe } from "./dock-vi-tri";
+import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, rayDoc, slopTrai, yTuTyLe } from "./dock-vi-tri";
 import { useNep } from "./NepProvider";
 import { hienToSau, nepHien } from "./trang-thai";
 
@@ -182,6 +182,14 @@ export function NepDock() {
   // which is an INWARD drag: a tucked slip that needed one to come out would
   // hand the person Back instead. So out is a tap, and the inward half of the
   // drag is clamped away rather than competed for.
+  // The pan callbacks run on the UI thread, where calling a plain JS function
+  // throws («Tried to synchronously call a remote function»): measured 24/09 on
+  // an Android emulator, the first vertical drag along the rail crashed the
+  // app, and the web build (worklets on the JS thread) never showed it. So the
+  // rail is read here, on the JS thread, and the callbacks do only arithmetic
+  // on these numbers -- the same clamp as `ghimVaoRay` and `tyLeTuY`.
+  const y0 = yTuTyLe(tyLe, ray);
+  const { tren, duoi } = ray;
   const keo = Gesture.Pan()
     .enabled(dock.coSheet === 0)
     .onStart(() => {
@@ -191,11 +199,11 @@ export function NepDock() {
       runOnJS(datDangKeo)(false);
     })
     .onUpdate((e) => {
-      y.value = ghimVaoRay(yTuTyLe(tyLe, ray) + e.translationY, ray);
+      y.value = Math.min(duoi, Math.max(tren, y0 + e.translationY));
       keoX.value = Math.max(0, e.translationX);
     })
     .onEnd((e) => {
-      runOnJS(datTyLe)(tyLeTuY(y.value, ray));
+      runOnJS(datTyLe)(duoi > tren ? (y.value - tren) / (duoi - tren) : 0);
       if (e.translationX > KEO_AN_DP || e.velocityX > KEO_AN_TOC) runOnJS(gui)({ kieu: "vuot-ra" });
       keoX.value = withSpring(0, motion.spring.settle);
     });
