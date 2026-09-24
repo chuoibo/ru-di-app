@@ -72,30 +72,28 @@ test("màn thường không bị nhầm thành màn tiền, kể cả khi tên b
   }
 });
 
-// The slip is kept with the route it was declared on. React runs a child's
-// effects before its parent's, so a provider that cleared the slip "on route
-// change" in its own effect wiped the slip the new screen had just declared
-// (measured 24-09 on the web build: Khám phá declared, Nếp never saw it).
-import { ghiPhieu, phieuDangMo } from "../dist-test/rudi/nep/phieu.js";
+// The slip belongs to the focused screen (ghiPhieu in phieu.ts). The provider
+// used to clear it on pathname change, and lost the race: expo-router runs the
+// incoming screen's effects before the provider sees the new pathname
+// (measured 24-09: Khám phá declared while the provider was still on /otp).
+import { ghiPhieu } from "../dist-test/rudi/nep/phieu.js";
 
-test("màn mới khai phiếu rồi route mới được áp: phiếu vẫn còn", () => {
+test("màn được focus khai phiếu thì Nếp đọc được phiếu đó", () => {
   const p = donPhieu({ man: "explore" });
-  const ghi = ghiPhieu(null, { kieu: "khai", duong: "/explore", phieu: p });
-  assert.equal(phieuDangMo(ghi, "/explore"), p);
+  assert.equal(ghiPhieu(null, { kieu: "khai", phieu: p }), p);
 });
 
-test("phiếu của màn cũ không đi theo sang màn không khai gì", () => {
+test("màn rời focus rút phiếu của mình: màn sau không khai gì thì không thừa hưởng", () => {
   const p = donPhieu({ man: "outings/[id]", soLieu: { soChang: 3 } });
-  const ghi = ghiPhieu(null, { kieu: "khai", duong: "/outings/1", phieu: p });
-  assert.equal(phieuDangMo(ghi, "/groups/2/chat"), null);
+  const ghi = ghiPhieu(null, { kieu: "khai", phieu: p });
+  assert.equal(ghiPhieu(ghi, { kieu: "bo", phieu: p }), null);
 });
 
-test("màn cũ tháo muộn không xoá phiếu màn mới vừa khai", () => {
+test("màn cũ rời focus muộn không xoá phiếu màn mới vừa khai", () => {
   const cu = donPhieu({ man: "explore" });
   const moi = donPhieu({ man: "plan" });
-  let ghi = ghiPhieu(null, { kieu: "khai", duong: "/explore", phieu: cu });
-  ghi = ghiPhieu(ghi, { kieu: "khai", duong: "/plan", phieu: moi });
+  let ghi = ghiPhieu(null, { kieu: "khai", phieu: cu });
+  ghi = ghiPhieu(ghi, { kieu: "khai", phieu: moi });
   ghi = ghiPhieu(ghi, { kieu: "bo", phieu: cu });
-  assert.equal(phieuDangMo(ghi, "/plan"), moi);
-  assert.equal(ghiPhieu(ghi, { kieu: "bo", phieu: moi }), null);
+  assert.equal(ghi, moi);
 });
