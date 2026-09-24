@@ -87,3 +87,52 @@ nên ai đọc thân câu trả lời của socket sẽ tưởng là rỗng.
   legacy có nhãn «Chưa mã hoá đầu cuối».
 - **`packages/chat-crypto` chưa có cổng CI nào.**
 - Native Android/iOS và crypto review độc lập vẫn là cổng riêng.
+
+## Checkpoint 23-09-2026 — AI nhóm và feed thay đổi bật mặc định
+
+Leader chốt: engine AI (`internal/chatassist`: `ai-invocations`,
+`chat-capabilities`, `plan-promotions`, `shared-drafts`) và feed thay đổi
+(`internal/chatlegacychange`) **luôn bật**. Trước mốc này cả hai nằm sau
+`MOBILE_CHAT_CHANGES_CANDIDATE=1`, cờ chỉ có trong script test, nên production
+chưa từng có AI nhóm ở cấu hình mặc định. Tên biến giữ nguyên để host và script
+cũ còn chạy; nó giờ là công tắc **tắt**.
+
+| Cờ | `MOBILE_AUTH_MODE` | Kết quả |
+|---|---|---|
+| không đặt | `prod` (hoặc không đặt) | **bật** |
+| `1` | `prod` | bật |
+| `0` | bất kỳ | tắt, log `WARN` nêu lý do |
+| không đặt | `dev` | tắt, log `WARN` nêu lý do; **không** từ chối khởi động |
+| `1` | `dev` | từ chối khởi động |
+| giá trị khác | bất kỳ | từ chối khởi động |
+
+Khi bật mà một route `messages`/`votes`/`outings` bị kéo về Python
+(`MOBILE_FORCE_PYTHON`) hoặc thiếu lược đồ chat, core **từ chối khởi động**, và
+thông báo chỉ lối thoát: đặt `MOBILE_CHAT_CHANGES_CANDIDATE=0`. Host production
+nào dùng `MOBILE_FORCE_PYTHON=all` để rollback giờ phải đặt kèm `=0`.
+
+**Vì sao `dev` vẫn tắt.** Feed và engine chỉ tin bearer session. Ở `dev`, bearer
+không phải danh tính thật: `X-Actor-*` mạo danh được một thành viên bất kỳ, người
+đó tạo lời mời đích danh cho bất kỳ người đã đăng ký
+(`internal/domain/outingsteps/invites.go`, `CreateOutingInvite` trả token thô),
+rồi đổi token ở `POST /sessions` lấy phiên của người đó
+(`internal/domain/authsteps/sessions.go`). Quyền thu hồi của feed và sự đồng ý
+theo từng người của engine sẽ đứng trên một danh tính ai cũng đúc được. Đã
+dựng lại trên một stack compose thử (`dev`, dữ liệu tổng hợp, project riêng):
+A chỉ dùng header tạo nhóm, chuyến và lời mời `friend` cho B, rồi `POST /sessions`
+trả **201** với `person_id` của B. B không làm gì.
+
+**Migration là lệnh riêng**: `core migrate-chat` (tên cũ
+`migrate-chat-candidate` vẫn chạy), không cần cờ. Compose chạy nó ở service
+one-shot `migrate-chat`, sau `migrate` (alembic) và trước `core`.
+
+| Stack | Auth | AI nhóm + feed |
+|---|---|---|
+| `make up` / 8099 (`docker-compose.yml`) | `dev` | **tắt** (lược đồ có sẵn) |
+| `docker-compose.journey.yml` | chồng lên file trên, không có `core` riêng | như trên |
+| `scripts/e2e_slice.sh` | `prod` | **bật**, luôn migrate |
+| `scripts/chat_e2e_stack.sh` / `chat_e2e_go.sh` | `prod` | **bật**, không đặt cờ nào |
+| `scripts/parity_stacks.sh` | `dev` và `prod` | **tắt rõ** (`=0`): parity so đường legacy với oracle Python |
+
+Muốn có AI trên 8099 thì stack đó phải chạy `prod`, tức là seed phải đi qua
+phiên thật thay vì header actor. Đó là việc riêng, chưa làm.

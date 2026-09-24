@@ -18,6 +18,10 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// CandidateEnv switches the change feed and the group AI engine
+// (internal/chatassist) off with "0". They are on by default when auth runs in
+// prod; see resolveChatFeatures in cmd/core for the whole rule. The name is
+// kept from when they were opt-in so existing hosts and scripts keep working.
 const CandidateEnv = "MOBILE_CHAT_CHANGES_CANDIDATE"
 
 type Handler struct {
@@ -49,7 +53,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
 
-// Matches keeps the opt-in extension separate from the ownership manifest.
+// Matches routes the feed ahead of the ownership manifest, which is rendered
+// from the Python app and so has no row for a Go-only path.
 func Matches(path string) bool {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	return len(parts) >= 3 && parts[0] == "contexts" && parts[2] == "changes"

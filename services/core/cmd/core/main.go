@@ -4,6 +4,8 @@
 //	core serve         run the front door
 //	core healthcheck   exit 0 if this process answers on its liveness port
 //	core routes --json list the routes this binary serves itself
+//	core migrate-chat  install the chat change feed and AI engine schema
+//	                   (alias: migrate-chat-candidate, the name older scripts use)
 package main
 
 import (
@@ -49,7 +51,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json")
+		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | migrate-chat")
 		return 2
 	}
 	switch args[0] {
@@ -59,8 +61,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return healthcheck(getenv, stderr)
 	case "routes":
 		return listRoutes(args[1:], stdout, stderr)
-	case "migrate-chat-candidate":
-		return migrateChatCandidate(getenv, stdout, stderr)
+	case "migrate-chat", "migrate-chat-candidate":
+		return migrateChat(getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2
@@ -68,6 +70,14 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 }
 
 func serve(getenv func(string) string, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return serveUntil(ctx, getenv, stderr)
+}
+
+// serveUntil runs the front door until ctx ends. It is serve without the
+// signal handling, so a test can start and stop the real startup path.
+func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Writer) int {
 	logger := slog.New(slog.NewJSONHandler(stderr, nil))
 	cfg, err := config.Load(getenv)
 	if err != nil {
@@ -90,19 +100,23 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		return 1
 	}
 	served := append(manifest.GoServed(force), candidates...)
-	chatCandidate := getenv(chatlegacychange.CandidateEnv) == "1"
-	if raw := getenv(chatlegacychange.CandidateEnv); raw != "" && raw != "0" && raw != "1" {
-		logger.Error("refusing to start", "error", "MOBILE_CHAT_CHANGES_CANDIDATE must be 0 or 1")
+	chat, err := resolveChatFeatures(getenv(chatlegacychange.CandidateEnv), cfg.AuthMode)
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	if chatCandidate {
-		if err := validateChatCandidate(cfg.AuthMode, manifest.Routes, served); err != nil {
-			logger.Error("refusing to start", "error", err.Error())
+	if chat.on {
+		// On by default, so a host that pulls a chat route back to Python gets
+		// a refusal it can read, never a front door that quietly lost the AI.
+		if err := validateChatFeatures(cfg.AuthMode, manifest.Routes, served); err != nil {
+			logger.Error("refusing to start", "error", err.Error()+"; "+chatOffHint)
 			return 1
 		}
+	} else {
+		logger.Warn("group AI and the realtime chat feed are off", "reason", chat.off)
 	}
-	candidateCtx, stopCandidate := context.WithCancel(context.Background())
-	defer stopCandidate()
+	chatCtx, stopChat := context.WithCancel(context.Background())
+	defer stopChat()
 	// Every route, Python's included: registration order decides which route a
 	// request belongs to, and a Python route declared first must still win.
 	table, err := router.New(manifest.Routes)
@@ -131,7 +145,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 	}
 	var idempotency func(http.Handler) http.Handler
 	var pool *pgxpool.Pool
-	if len(served) > 0 || chatCandidate {
+	if len(served) > 0 || chat.on {
 		pool, err = db.Open(context.Background(), getenv(db.EnvDatabaseURL))
 		if err != nil {
 			logger.Error("refusing to start", "error", err.Error())
@@ -144,13 +158,19 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		idempotency = idem.New(idem.NewPostgresStore(pool), idem.WithErrorHandler(
 			func(w http.ResponseWriter, r *http.Request, err error) { servererror.Raise(err) }))
 	}
-	if chatCandidate {
-		ctx, cancel := context.WithTimeout(candidateCtx, 5*time.Second)
+	if chat.on {
+		// Serving never runs DDL. A missing schema is a loud refusal, not a
+		// front door that 404s the feed and the AI while /healthz says 200.
+		check, cancel := context.WithTimeout(chatCtx, 5*time.Second)
 		var installed bool
-		err := pool.QueryRow(ctx, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+		err := pool.QueryRow(check, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
 		cancel()
-		if err != nil || !installed {
-			logger.Error("refusing to start", "error", "chat candidate migration is required")
+		if err != nil {
+			logger.Error("refusing to start", "error", "cannot check the chat schema; is the database reachable? "+chatOffHint)
+			return 1
+		}
+		if !installed {
+			logger.Error("refusing to start", "error", "the chat schema is missing: run `core migrate-chat` (compose: service migrate-chat) first; "+chatOffHint)
 			return 1
 		}
 		env.BeforeServe = chatlegacychange.BeforeWrite
@@ -180,15 +200,15 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
-	if chatCandidate {
+	if chat.on {
 		var allowedOrigins []string
 		if origins != "" {
 			allowedOrigins = strings.Split(origins, ",")
 		}
-		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, candidateCtx, allowedOrigins)
+		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
 		assistant := chatassist.New(pool, brain.Configured())
 		go changes.Listen()
-		go assistant.Run(candidateCtx)
+		go assistant.Run(chatCtx)
 		fallback := front
 		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if chatlegacychange.Matches(r.URL.Path) {
@@ -211,7 +231,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		"python_upstream", cfg.PythonUpstream.String(),
 		"go_served", len(served),
 		"candidates", len(candidates),
-		"chat_candidate", chatCandidate,
+		"chat_features", chat.on,
 		"auth_mode", cfg.AuthMode,
 		"manifest_routes", len(manifest.Routes),
 		"force_python", force.Tokens,
@@ -231,8 +251,6 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	errs := make(chan error, 2)
 	for _, srv := range []*http.Server{public, liveness} {
 		srv := srv
@@ -251,7 +269,7 @@ func serve(getenv func(string) string, stderr io.Writer) int {
 		logger.Error("listener failed", "error", err.Error())
 		exit = 1
 	}
-	stopCandidate()
+	stopChat()
 	shutdown, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	_ = public.Shutdown(shutdown)
@@ -333,11 +351,51 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-// validateChatCandidate prevents the privacy and lock-order hooks from being
-// bypassed through Python while the opt-in extension is enabled.
-func validateChatCandidate(mode string, all, served []ownership.Route) error {
+// chatOffHint is the way out that every chat refusal names. Refusing loudly
+// is the point; a host that must run without the features says so in one
+// variable instead of getting them switched off behind its back.
+const chatOffHint = "set " + chatlegacychange.CandidateEnv + "=0 to run without the realtime chat feed and group AI"
+
+// chatFeatures says whether core serves the durable change feed
+// (internal/chatlegacychange) and the group AI engine (internal/chatassist).
+type chatFeatures struct {
+	on bool
+	// off is why they are off, for the startup warning; empty when on.
+	off string
+}
+
+// resolveChatFeatures decides from MOBILE_CHAT_CHANGES_CANDIDATE and the auth
+// mode. The feed and the engine are on unless somebody turns them off: a prod
+// host that sets nothing serves them, and "0" is the one way to opt out.
+//
+// Unset in dev stays off, because both features authenticate by bearer session
+// alone and in dev a bearer proves nothing. X-Actor-* impersonates any member,
+// who can create a named outing invitation for any registered person and
+// exchange it at POST /sessions for that person's session. The feed's
+// revocation and the engine's per-person consent would rest on an identity
+// anybody can mint. "1" in dev is refused by validateChatFeatures, not obeyed.
+func resolveChatFeatures(raw, authMode string) (chatFeatures, error) {
+	switch raw {
+	case "1":
+		return chatFeatures{on: true}, nil
+	case "0":
+		return chatFeatures{off: chatlegacychange.CandidateEnv + "=0 is set on this host"}, nil
+	case "":
+		if authMode == "prod" {
+			return chatFeatures{on: true}, nil
+		}
+		return chatFeatures{off: "MOBILE_AUTH_MODE=" + authMode + ": X-Actor-* headers can mint a bearer session for any person, and the feed and the AI engine trust a bearer alone"}, nil
+	}
+	return chatFeatures{}, fmt.Errorf("%s must be 0 or 1", chatlegacychange.CandidateEnv)
+}
+
+// validateChatFeatures refuses a configuration in which the feed and the
+// engine would trust a forgeable identity (dev auth), or in which their
+// guards would be bypassed: a messages, votes or outings route answered by
+// Python runs neither the explicit-invocation guard nor the feed's lock order.
+func validateChatFeatures(mode string, all, served []ownership.Route) error {
 	if mode != "prod" {
-		return errors.New("chat candidate requires real bearer sessions (MOBILE_AUTH_MODE=prod)")
+		return errors.New("the realtime chat feed and group AI require real bearer sessions (MOBILE_AUTH_MODE=prod)")
 	}
 	inGo := map[string]bool{}
 	for _, route := range served {
@@ -345,17 +403,18 @@ func validateChatCandidate(mode string, all, served []ownership.Route) error {
 	}
 	for _, route := range all {
 		if (route.Group == "messages" || route.Group == "votes" || route.Group == "outings") && !inGo[route.ID] {
-			return fmt.Errorf("chat candidate requires the complete Go messages, votes and outings candidates; missing %s", route.ID)
+			return fmt.Errorf("the realtime chat feed and group AI require every messages, votes and outings route in Go; %s is not", route.ID)
 		}
 	}
 	return nil
 }
 
-func migrateChatCandidate(getenv func(string) string, stdout, stderr io.Writer) int {
-	if getenv(chatlegacychange.CandidateEnv) != "1" {
-		fmt.Fprintln(stderr, "migration requires MOBILE_CHAT_CHANGES_CANDIDATE=1")
-		return 1
-	}
+// migrateChat installs the change feed and AI engine schema. It is a command
+// of its own because serving never runs DDL; compose runs it as the one-shot
+// service migrate-chat, after alembic and before core. It asks for no flag:
+// the capture triggers record writes whether or not serve turns the features
+// on, so a host that turns them on later has lost nothing.
+func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
@@ -371,6 +430,6 @@ func migrateChatCandidate(getenv func(string) string, stdout, stderr io.Writer) 
 		fmt.Fprintln(stderr, "chat migration failed:", err)
 		return 1
 	}
-	fmt.Fprintln(stdout, "Đã áp dụng migration chat candidate; ownership production giữ nguyên.")
+	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi và engine AI nhóm. Ownership route giữ nguyên.")
 	return 0
 }

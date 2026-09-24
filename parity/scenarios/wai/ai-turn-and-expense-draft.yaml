@@ -5,11 +5,14 @@
 # cùng một hình dạng từ chối, cùng một mã, cùng một chỗ dừng trước khi tiêu tiền.
 # Không cần stub: thiếu khoá là một câu trả lời, không phải một lỗ hổng đo đạc.
 #
-# Ghi chú cho người đọc sau: khi cờ `MOBILE_CHAT_CHANGES_CANDIDATE` bật, hai
-# route này bị `internal/chatassist` niêm phong thành `403
-# explicit_invocation_required` — một đổi hành vi **có chủ ý** theo ADR-0031,
-# không phải hồi quy. Tầng parity chạy với cờ đó tắt, nên ở đây chúng vẫn là
-# cổng cũ và vẫn phải khớp Python.
+# Ghi chú cho người đọc sau: từ 23-09-2026 engine AI nhóm và feed thay đổi
+# BẬT MẶC ĐỊNH ở prod, và khi bật thì hai route này bị `internal/chatassist`
+# niêm phong thành `403 explicit_invocation_required` — một đổi hành vi **có
+# chủ ý** theo ADR-0031, không phải hồi quy. Tầng parity đặt RÕ
+# `MOBILE_CHAT_CHANGES_CANDIDATE=0` trong `scripts/parity_stacks.sh`, nên ở đây
+# chúng vẫn là cổng cũ và vẫn phải khớp Python. Nghĩa là kịch bản này đo đường
+# legacy, KHÔNG đo thứ production đang phục vụ cho hai route này; đường đó do
+# `scripts/chat_e2e_go.sh` đo.
 id: wai/ai-turn-and-expense-draft
 routes: ['POST /contexts/{context_id}/ai-turn', 'POST /contexts/{context_id}/messages/{message_id}/expense-draft']
 auth_mode: dev
