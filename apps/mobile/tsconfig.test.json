@@ -413,6 +413,15 @@
     "src/screens/quan-tri/quan-tri.ts",
     // ADR-0037 «Sân khấu giấy»: person inks and paper-stage tokens, pure.
     "src/rudi/nguoi/muc-nguoi.ts",
-    "src/rudi/san-khau/token.ts"
+    "src/rudi/san-khau/token.ts",
+    // The pop-up stage (S0.3): stages built from the existing art, the paper
+    // objects (receipt teeth, ticket notches, stamp perforation) and the fold
+    // maths the renderers run as worklets. Compiled so the gates run the real
+    // builders over every scene and sketch; see tests/san-khau.test.mjs and
+    // tests/giay-vat-the.test.mjs.
+    "src/rudi/art/san-khau.ts",
+    "src/rudi/art/giay.ts",
+    "src/rudi/san-khau/dong-hoc.ts",
+    "src/rudi/san-khau/kich-thuoc.ts"
   ]
 }

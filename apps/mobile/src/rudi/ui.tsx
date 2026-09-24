@@ -4,8 +4,9 @@ import { Image, ImageSource } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { Children, createContext, useContext, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { Children, createContext, useContext, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { ActivityIndicator, DimensionValue, GestureResponderEvent, Keyboard, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DemoPerson } from "./fixtures";
@@ -16,6 +17,7 @@ import { Grain } from "./ui/Grain";
 import { PressScale } from "./ui/PressScale";
 import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
+import { CuonContext } from "./ui/cuon";
 import { gridFor, tabBarHeight } from "./adaptive";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -44,6 +46,13 @@ type ScreenProps = {
   keepEnd?: boolean;
   /** Stays above the scroll box: a chat's top bar and pinned outing, which `keepEnd` would otherwise scroll away. */
   header?: ReactNode;
+  /**
+   * A paper stage heading the screen (ADR-0037, `ui/CanhGap`): first in the
+   * list, folding flat as the list scrolls. The screen publishes its scroll
+   * offset to the stage and to the header's compact title (`ui/cuon`), and the
+   * header drops its fixed keyline for the one `ThanhCanh` fades in.
+   */
+  canh?: ReactNode;
 };
 
 export function RudiScreen({
@@ -63,12 +72,21 @@ export function RudiScreen({
   keepEnd = false,
   header,
   onRefresh,
+  canh,
 }: ScreenProps) {
   const { colors, dark, space } = useRudiTheme();
   const layout = useAdaptiveLayout();
   const { fontScale } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const cuon = useRef<ScrollView>(null);
+  // The scroll a stage folds with; published only when the screen has one.
+  const coCanh = canh !== undefined && canh !== null && canh !== false;
+  const cuonY = useSharedValue(0);
+  const nguongTieuDe = useSharedValue(1e6);
+  const theoCuon = useAnimatedScrollHandler((e) => {
+    cuonY.value = e.contentOffset.y;
+  });
+  const cuonMan = useMemo(() => (coCanh ? { cuonY, nguongTieuDe } : null), [coCanh, cuonY, nguongTieuDe]);
   // Pull-to-refresh runs the screen's own read; the spinner is the only state
   // the shell adds, and it ends whether the read succeeded or threw.
   const [dangKeo, setDangKeo] = useState(false);
@@ -117,13 +135,33 @@ export function RudiScreen({
             drawn sheet sits on it in the `paper` tone (review 11/09, A3). */}
         {dark ? <Grain material="vaiBia" opacity={0.3} /> : <Grain material="giayTrang" opacity={0.45} />}
       </View>
+      <CuonContext.Provider value={cuonMan}>
       <KeyboardAvoidingView style={styles.flex} enabled={avoidKeyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       {header ? (
         // A keyline under the fixed header: content scrolling beneath it reads
-        // as paper under a rule, not as a rendering fault.
-        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, tablet && styles.tabletInner]}>{header}</View>
+        // as paper under a rule, not as a rendering fault. A staged screen's
+        // bar draws its own, only once the stage has folded under it.
+        <View style={[styles.screenHeader, { paddingHorizontal: tablet ? space.lg : space.md, borderBottomColor: colors.line }, coCanh && styles.screenHeaderTrong, tablet && styles.tabletInner]}>{header}</View>
       ) : null}
-      {scroll ? (
+      {scroll && coCanh ? (
+        <Animated.ScrollView
+          scrollEnabled={scrollEnabled}
+          contentContainerStyle={inner}
+          keyboardShouldPersistTaps="handled"
+          onScroll={theoCuon}
+          scrollEventThrottle={16}
+          refreshControl={
+            keoLamMoi ? (
+              <RefreshControl colors={[colors.accent]} onRefresh={() => void keoLamMoi()} progressBackgroundColor={colors.card} refreshing={dangKeo} tintColor={colors.accent} />
+            ) : undefined
+          }
+          showsVerticalScrollIndicator={false}
+          style={styles.flex}
+        >
+          {canh}
+          {children}
+        </Animated.ScrollView>
+      ) : scroll ? (
         <ScrollView
           ref={cuon}
           scrollEnabled={scrollEnabled}
@@ -141,7 +179,7 @@ export function RudiScreen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[inner, styles.flex]}>{children}</View>
+        <View style={[inner, styles.flex]}>{canh}{children}</View>
       )}
       {footer ? (
         <View
@@ -155,6 +193,7 @@ export function RudiScreen({
         </View>
       ) : null}
       </KeyboardAvoidingView>
+      </CuonContext.Provider>
       {overlay}
     </SafeAreaView>
   );
@@ -1030,6 +1069,7 @@ const styles = StyleSheet.create({
   paper: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0 },
   screenInner: { width: "100%", gap: 18, paddingTop: 8 },
   screenHeader: { borderBottomWidth: StyleSheet.hairlineWidth },
+  screenHeaderTrong: { borderBottomWidth: 0 },
   screenFooter: { width: "100%", paddingTop: 8, zIndex: 2 },
   tabletInner: { alignSelf: "center", maxWidth: 960, paddingTop: 22 },
   topBar: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

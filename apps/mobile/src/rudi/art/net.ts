@@ -131,6 +131,11 @@ function doanCung(cx: number, cy: number, r: number, tu: number, den: number): s
   return ra;
 }
 
+/** The `C` segments of an arc, for a closed outline that runs along a circle (a notch, a scallop). */
+export function doanCungTron(cx: number, cy: number, r: number, tu: number, den: number): string[] {
+  return doanCung(cx, cy, r, tu, den);
+}
+
 /** An open circular arc (a stroke). Angles in radians, y down. */
 export function cungTron(cx: number, cy: number, r: number, tu: number, den: number): string {
   return [duong("M", cx + r * Math.cos(tu), cy + r * Math.sin(tu)), ...doanCung(cx, cy, r, tu, den)].join(" ");

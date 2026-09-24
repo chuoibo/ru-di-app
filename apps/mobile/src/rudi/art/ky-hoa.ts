@@ -31,6 +31,9 @@ const PI = Math.PI;
 const GAN = 3.0;
 const VUA = 2.4;
 const XA = 1.7;
+/** The floor line and the three depth weights, read by the paper stage (ADR-0037) to lift the sketch into layers. */
+export const SAN_KY_HOA = SAN;
+export const NET_KY_HOA = Object.freeze({ gan: GAN, vua: VUA, xa: XA });
 const m = (d: string, net = VUA): LopVe => ({ d, mau: "muc", net });
 const fill = (d: string, mau: LopVe["mau"] = "bong"): LopVe => ({ d, mau });
 

@@ -1,4 +1,4 @@
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import type { ImageSource } from "expo-image";
 import { Text, View } from "react-native";
@@ -16,6 +16,7 @@ import { danhDauLoi, themVaoHang } from "../../src/rudi/chat/hang-cho";
 import { HangChoGui } from "../../src/rudi/screens/chat/GroupChatLive";
 import { Chip, Heading, Inline, RudiButton, RudiScreen, SearchField, SectionHeader, TopBar } from "../../src/rudi/ui";
 import { ThuRenderer } from "../../src/rudi/ui/ThuRenderer";
+import { ThuSanKhau } from "../../src/rudi/ui/ThuSanKhau";
 import { CANH_IDS, moTaCanh } from "../../src/rudi/art/canh";
 import { Canh } from "../../src/rudi/ui/art/Canh";
 import { KyHoa } from "../../src/rudi/ui/art/KyHoa";
@@ -200,6 +201,7 @@ function diaDiemMau(caAnh: CaAnh, tenDai: boolean): DiaDiemHienThi[] {
 /** Synthetic native probe: gestures, and the album and explore renderers under invented states. Never in a production build. */
 export default function UiLab() {
   const { colors, radius } = useRudiTheme();
+  const router = useRouter();
   const [items, setItems] = useState([
     { id: "a", label: "Chặng A · 18:00" },
     { id: "b", label: "Chặng B · 08:00" },
@@ -231,6 +233,8 @@ export default function UiLab() {
       {"Nếp dựng lên quanh vạch chân (3D) và đường mực tự vẽ. Máy có Skia vẽ bằng Skia; dev client cũ hoặc trình duyệt không WebGL vẽ bằng SVG, cùng chuyển động."}
     </Text>
     <ThuRenderer lan={lanThu} />
+    <SectionHeader action="Mở màn thử" onAction={() => router.push("/dev/san-khau")} title="Sân khấu giấy · bật dựng, nghiêng, tab kéo" />
+    <ThuSanKhau lan={lanThu} />
     <SectionHeader title="Album · renderer live, dữ liệu tổng hợp" />
     <Inline gap={8} wrap>
       {CA_ALBUM.map((ca) => <Chip key={ca.id} label={ca.nhan} onPress={() => setCaAlbum(ca.id)} selected={caAlbum === ca.id} />)}

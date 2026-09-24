@@ -13,7 +13,7 @@
  *
  * Only reachable through a dynamic import (see `ui/KhungSkia.tsx`).
  */
-import { Group, Path, Skia, type SkPath } from "@shopify/react-native-skia";
+import { Group, Path, Skia, StrokeCap, StrokeJoin, type SkPath } from "@shopify/react-native-skia";
 import type { SharedValue } from "react-native-reanimated";
 
 import type { LopVe, MauVe } from "../../art/net";
@@ -37,6 +37,37 @@ export function duongSkia(d: string): SkPath {
     if (cuNhat !== undefined) cacheDuong.delete(cuNhat);
   }
   return moi;
+}
+
+const cacheBong = new Map<string, SkPath>();
+
+/**
+ * The silhouette of a layer list as ONE path: every fill, and every stroke
+ * turned into its outline at its own width, round-capped as it is drawn. A
+ * cut-paper layer casts its shadow with this -- one blurred draw per layer
+ * instead of one per stroke. Cached like the paths it is built from.
+ */
+export function hinhBongLop(lop: readonly LopVe[]): SkPath {
+  const khoa = lop.map((l) => `${l.net ?? 0}|${l.d}`).join("\n");
+  const co = cacheBong.get(khoa);
+  if (co) return co;
+  const bong = Skia.Path.Make();
+  for (const l of lop) {
+    // The cached path is shared: outline a copy, never the original.
+    const p = duongSkia(l.d).copy();
+    if (l.net && l.net > 0) {
+      const vien = p.stroke({ width: l.net, cap: StrokeCap.Round, join: StrokeJoin.Round });
+      if (vien) bong.addPath(vien);
+    } else {
+      bong.addPath(p);
+    }
+  }
+  cacheBong.set(khoa, bong);
+  if (cacheBong.size > 120) {
+    const cuNhat = cacheBong.keys().next().value;
+    if (cuNhat !== undefined) cacheBong.delete(cuNhat);
+  }
+  return bong;
 }
 
 /**

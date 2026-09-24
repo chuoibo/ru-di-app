@@ -339,6 +339,22 @@ export interface TuyChonCanh {
   nep?: boolean;
 }
 
+/** The floor line of every scene, where a paper-stage layer is hinged (ADR-0037). */
+export const SAN_CANH = SAN;
+
+/**
+ * One scene as the paper stage stands it up (ADR-0037): the props and the
+ * figure as two layers hinged on the floor line. The same layers as
+ * `hinhCanh`, in the same order; the figure is empty for a scene that never
+ * has one (`CANH_KHONG_NEP`) or when the caller asks for none.
+ */
+export function tangCanh(id: string, tuyChon: TuyChonCanh = {}): { nen: LopVe[]; nep: LopVe[] } {
+  const { nep = true } = tuyChon;
+  const canh = canhHopLe(id);
+  const veNepDuoc = nep && !CANH_KHONG_NEP.has(canh);
+  return { nen: NEN[canh](), nep: veNepDuoc ? veNep(NEP[canh]) : [] };
+}
+
 /** The layers of one scene, back to front. An unknown id draws the first scene. */
 export function hinhCanh(id: string, tuyChon: TuyChonCanh = {}): LopVe[] {
   const { nep = true } = tuyChon;
