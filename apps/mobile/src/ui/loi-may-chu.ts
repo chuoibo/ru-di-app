@@ -47,12 +47,12 @@ export function trichThanLoi(detail: string, toiDa: number = TOI_DA_CHI_TIET): s
  */
 export function cauMayChuLoi(status: number): string {
   if (status === 429) {
-    return "Đang gửi quá nhanh nên máy chủ tạm chặn bớt. Chờ một lát rồi thử lại.";
+    return "Đang gửi quá nhanh nên Rủ Đi tạm chặn bớt. Chờ một lát rồi thử lại.";
   }
   if (status >= 500) {
-    return "Máy chủ nhận được yêu cầu nhưng không trả lời được. Đây là sự cố phía máy chủ. Thử lại sau ít phút.";
+    return "Rủ Đi nhận được yêu cầu nhưng chưa trả lời được. Đây là sự cố phía Rủ Đi, không phải do bạn. Thử lại sau ít phút.";
   }
-  return "Máy chủ từ chối yêu cầu này.";
+  return "Rủ Đi không làm được việc này.";
 }
 
 /**

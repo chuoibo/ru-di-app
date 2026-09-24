@@ -23,7 +23,7 @@ export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: bool
     return (
       <Sheet accessibilityLabel="Đóng sổ hai người" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
         <View style={[styles.noiDung, { gap: space.md }]}>
-          <Heading size="h2" subtitle="Đóng là đóng. Tờ chưa mở thì thôi; không gì sống lại." title="Đóng sổ hai người?" />
+          <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ hai người?" />
           <Text style={[typography.body, { color: colors.inkSoft }]} testID="dong-so-dang-dem">
             Đang đếm những gì sẽ đóng lại…
           </Text>
@@ -35,7 +35,7 @@ export function DongSo({ open, onClose, xemTruoc, onDong, testID }: { open: bool
   return (
     <Sheet accessibilityLabel="Đóng sổ hai người" onClose={onClose} open={open} testID={testID ?? "dong-so"}>
       <View style={[styles.noiDung, { gap: space.md }]}>
-        <Heading size="h2" subtitle="Đóng là đóng. Tờ chưa mở thì thôi; không gì sống lại." title="Đóng sổ hai người?" />
+        <Heading size="h2" subtitle="Đóng rồi thì không mở lại được. Những gì hai bạn đã giữ vẫn còn đọc được; tờ chưa ai mở sẽ khép luôn." title="Đóng sổ hai người?" />
         <View style={styles.khoi} testID="dong-so-xem-truoc">
           {xemTruoc.so_nhap_bo > 0 ? (
             <Text style={[typography.body, { color: colors.ink }]}>· {xemTruoc.so_nhap_bo} bản phác chỉ bạn thấy sẽ bỏ.</Text>

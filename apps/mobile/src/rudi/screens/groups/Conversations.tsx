@@ -26,6 +26,7 @@ import { ApiError, thongDiepNguoiDoc } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom, chonNhom, vaoNhom, type NhomTomTat, type Phien } from "../../../phien";
 import { xemTruocTinCuoi } from "../../chat/tin-song";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { useNepNguCanh } from "../../nep/NepProvider";
 import { useRudiSession } from "../../session";
 import { StoryRail } from "../story/StoryRail";
 import { typography, useRudiTheme } from "../../theme";
@@ -59,6 +60,7 @@ export function ConversationsScreen({ phien }: { phien: Phien }) {
   const { datPhien } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [dangBam, setDangBam] = useState<string | null>(null);
+  useNepNguCanh({ man: "messages", tieuDe: "Tin nhắn", goiY: ["Rủ ai đó đi chơi tuần này", "Cuộc hẹn nào sắp tới?"] });
 
   const nap = useCallback(async () => {
     try {

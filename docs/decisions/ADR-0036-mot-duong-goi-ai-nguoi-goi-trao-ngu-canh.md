@@ -1,6 +1,9 @@
-# ADR-0034 — Một đường gọi AI, và người gọi là người trao ngữ cảnh
+# ADR-0036 — Một đường gọi AI, và người gọi là người trao ngữ cảnh
 
 - Ngày: 2026-09-22.
+- Số hiệu: viết và mở PR (#647–#649) dưới số **ADR-0034**. Đổi thành ADR-0036 ngày 2026-09-24 vì
+  main đã nhận một ADR-0034 khác (`ADR-0034-gay-vai-nhip-chia-gu…`). Commit message và mô tả PR
+  cũ của đợt này nhắc «ADR-0034» là nhắc văn bản này.
 - Quyết định sản phẩm: leader chốt trong phiên lập kế hoạch và yêu cầu triển khai.
 - Trạng thái triển khai: đang thực hiện; chưa có bằng chứng production, chưa có cổng chất lượng đã đóng.
 - Thay ADR-0031 §7 (lời gọi và trích đoạn) và bổ sung ADR-0033 §4 (Nếp đọc gì).

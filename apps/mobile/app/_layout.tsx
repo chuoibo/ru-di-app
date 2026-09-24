@@ -16,6 +16,7 @@ import { SoDoiProvider } from "../src/rudi/to-giay/SoDoi";
 import { useRudiTheme } from "../src/rudi/theme";
 import { useMotion } from "../src/rudi/ui/useMotion";
 import { GiaoDienProvider } from "../src/rudi/ui/GiaoDienProvider";
+import "../src/rudi/tep-anh-native";
 
 // Module level, before the first frame: `index.ts` never runs under
 // `expo-router/entry`, so the call that used to live in the legacy App.tsx never

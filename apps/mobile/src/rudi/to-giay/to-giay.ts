@@ -187,7 +187,7 @@ export function coTheDeNghiSua(to: ToGiay, toiId: string): boolean {
  * What changed in the CONTENT between two versions, as lines a person can
  * read (§3.3 rule 3: «hiện cái gì đã đổi»). Empty when nothing did.
  */
-export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] {
+export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined, tenCho: (id: string) => string | undefined = () => undefined): string[] {
   if (!vTruoc) return [];
   const ra: string[] = [];
   if (v.content.ngay !== vTruoc.content.ngay)
@@ -201,6 +201,14 @@ export function khacGi(v: PhienBanTo, vTruoc: PhienBanTo | undefined): string[] 
     else if (a && b) {
       if (a.gio !== b.gio) ra.push(`Giờ ${ten.toLowerCase()}: ${a.gio} → ${b.gio}`);
       if (a.viec !== b.viec) ra.push(`Việc ${ten.toLowerCase()}: ${a.viec} → ${b.viec}`);
+      // A change of place is a change of plan even when the line stays «Ăn
+      // tối»; before 24/09 it was invisible, and a sheet that only changed its
+      // place could not even be sent.
+      if ((a.place_id ?? null) !== (b.place_id ?? null)) {
+        const cu = a.place_id ? tenCho(a.place_id) ?? "một chỗ trong danh mục" : "chưa chọn chỗ";
+        const moi = b.place_id ? tenCho(b.place_id) ?? "một chỗ trong danh mục" : "bỏ chỗ";
+        ra.push(`${ten}: ${cu} → ${moi}`);
+      }
     }
   }
   // The reason is not a diff line: the sheet already prints the current

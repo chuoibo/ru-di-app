@@ -493,7 +493,13 @@ func (s PairStore) CreateOuting(draft pairsteps.OutingDraft) (string, error) {
 	return outing.ID, nil
 }
 
-// GetPlace is get_place; _chot reads the row's id and name.
+// placeRefOf is the part of `PlaceRecord.to_row()` the pair doors read.
+func placeRefOf(place repo.Place) pairsteps.PlaceRef {
+	return pairsteps.PlaceRef{ID: place.ID, Name: place.Name, DestinationID: place.DestinationID, Category: place.Category,
+		Kinds: place.Kinds, Traits: place.Traits, Rating: place.Rating, RatingCount: place.RatingCount}
+}
+
+// GetPlace is get_place.
 func (s PairStore) GetPlace(placeID string) (*pairsteps.PlaceRef, error) {
 	r, err := s.repository()
 	if err != nil {
@@ -503,7 +509,25 @@ func (s PairStore) GetPlace(placeID string) (*pairsteps.PlaceRef, error) {
 	if err != nil || place == nil {
 		return nil, storeError(err)
 	}
-	return &pairsteps.PlaceRef{ID: place.ID, Name: place.Name}, nil
+	ref := placeRefOf(*place)
+	return &ref, nil
+}
+
+// ListPlaces is list_places(destination_id=..., category=...).
+func (s PairStore) ListPlaces(destinationID, category string) ([]pairsteps.PlaceRef, error) {
+	r, err := s.repository()
+	if err != nil {
+		return nil, err
+	}
+	places, err := r.ListPlaces(s.Ctx, repo.PlaceFilter{DestinationID: &destinationID, Category: &category})
+	if err != nil {
+		return nil, storeError(err)
+	}
+	out := make([]pairsteps.PlaceRef, len(places))
+	for i, place := range places {
+		out[i] = placeRefOf(place)
+	}
+	return out, nil
 }
 
 // ReplaceOutingStops is replace_outing_stops(expected_revision=None).
@@ -577,6 +601,8 @@ func PairPaperOf(paper *repo.PairPaper) (*pairsteps.Paper, error) {
 	out := &pairsteps.Paper{
 		ID:             paper.ID,
 		ContextID:      paper.ContextID,
+		CycleID:        paper.CycleID,
+		IsTemporary:    paper.IsTemporary,
 		DraftOwnerID:   paper.DraftOwnerID,
 		State:          paper.State,
 		CurrentVersion: int(paper.CurrentVersion),

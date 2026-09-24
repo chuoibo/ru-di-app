@@ -47,6 +47,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
 import { RudiScreen } from "../../ui";
 import { useMotion } from "../../ui/useMotion";
+import { useNhuongChoNep } from "../../nep/NepProvider";
 
 type Trang =
   | { pha: "dang-doc" }
@@ -65,6 +66,9 @@ export function XemStoryScreen() {
   if (typeof personId === "string") authorId = personId;
   const { colors } = useRudiTheme();
   const { reduced } = useMotion();
+  // A story fills the screen edge to edge, and its «next» tap zone runs to
+  // the right edge: there is no margin here for Nếp to live in, so it makes room.
+  useNhuongChoNep(true);
   const { phien, phienDaDoc } = useRudiSession();
   const toi = phien?.person_id ?? "";
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });

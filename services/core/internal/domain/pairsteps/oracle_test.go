@@ -358,11 +358,16 @@ func (h *harness) paperOf(value any) (*Paper, error) {
 	if value == nil {
 		return nil, nil
 	}
-	f, err := fields(value, 12)
+	f, err := fields(value, 13)
 	if err != nil {
 		return nil, err
 	}
 	p := &Paper{}
+	// The cycle is last in PAPER_KEYS; a sheet with none is the invitation.
+	if p.CycleID, err = h.optionalID(f[12]); err != nil {
+		return nil, err
+	}
+	p.IsTemporary = p.CycleID == nil
 	if p.ID, err = h.id(f[0]); err != nil {
 		return nil, err
 	}
@@ -502,7 +507,7 @@ type fakeStore struct {
 	outings           []*string
 	conflicts         map[string][]any
 	constraintVersion int
-	places            map[string]string
+	places            []PlaceRef
 }
 
 func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
@@ -514,25 +519,54 @@ func (h *harness) newStore(world map[string]any) (*fakeStore, error) {
 		roster:            []Member{{PersonID: h.ids["TOI"], State: "active"}, {PersonID: h.ids["KIA"], State: "active"}},
 		conflicts:         map[string][]any{},
 		constraintVersion: 1,
-		places:            map[string]string{},
 	}
-	// "places": [[catalogue id, name], ...], the rows get_place finds.
+	// "places": [id, name] or [id, name, destination, category, kinds,
+	// traits, rating*10, count], the catalogue get_place and list_places read.
 	placeRows, err := oracletest.List(orEmpty(world["places"]))
 	if err != nil {
 		return nil, err
 	}
-	for _, row := range placeRows {
-		pair, err := fields(row, 2)
-		if err != nil {
-			return nil, err
+	for _, raw := range placeRows {
+		entry, err := oracletest.List(raw)
+		if err != nil || (len(entry) != 2 && len(entry) != 8) {
+			return nil, fmt.Errorf("place %v", raw)
 		}
-		id, err := oracletest.Str(pair[0])
-		if err != nil {
-			return nil, err
+		if len(entry) == 2 {
+			entry = append(entry, "d-mau", "quan-an-local", []any{}, []any{}, nil, nil)
 		}
-		if s.places[id], err = oracletest.Str(pair[1]); err != nil {
-			return nil, err
+		var p PlaceRef
+		for i, into := range []*string{&p.ID, &p.Name, &p.DestinationID, &p.Category} {
+			if *into, err = oracletest.Str(entry[i]); err != nil {
+				return nil, err
+			}
 		}
+		for i, into := range []*[]string{&p.Kinds, &p.Traits} {
+			items, err := oracletest.List(entry[4+i])
+			if err != nil {
+				return nil, err
+			}
+			for _, item := range items {
+				if text, ok := item.(string); ok {
+					*into = append(*into, text)
+				}
+			}
+		}
+		if entry[6] != nil {
+			tenths, err := oracletest.Int64(entry[6])
+			if err != nil {
+				return nil, err
+			}
+			rating := float64(tenths) / 10
+			p.Rating = &rating
+		}
+		if entry[7] != nil {
+			count, err := oracletest.Int64(entry[7])
+			if err != nil {
+				return nil, err
+			}
+			p.RatingCount = &count
+		}
+		s.places = append(s.places, p)
 	}
 	if raw, ok := world["context"]; ok {
 		s.context = nil
@@ -900,11 +934,24 @@ func (s *fakeStore) CreateOuting(d OutingDraft) (string, error) {
 
 func (s *fakeStore) GetPlace(placeID string) (*PlaceRef, error) {
 	s.rec("get_place", placeID)
-	name, ok := s.places[placeID]
-	if !ok {
-		return nil, nil
+	for _, p := range s.places {
+		if p.ID == placeID {
+			found := p
+			return &found, nil
+		}
 	}
-	return &PlaceRef{ID: placeID, Name: name}, nil
+	return nil, nil
+}
+
+func (s *fakeStore) ListPlaces(destinationID, category string) ([]PlaceRef, error) {
+	s.rec("list_places", destinationID, category)
+	var out []PlaceRef
+	for _, p := range s.places {
+		if p.DestinationID == destinationID && p.Category == category {
+			out = append(out, p)
+		}
+	}
+	return out, nil
 }
 
 func (s *fakeStore) ReplaceOutingStops(outingID string, stops []OutingStopDraft) error {

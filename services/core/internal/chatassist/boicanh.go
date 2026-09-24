@@ -10,7 +10,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 )
 
-// The context bundle the caller hands over (ADR-0034 §2.2).
+// The context bundle the caller hands over (ADR-0036 §2.2).
 //
 // The server does not read the conversation, so everything here arrives from
 // the client. That makes the bounds below a refusal surface rather than a

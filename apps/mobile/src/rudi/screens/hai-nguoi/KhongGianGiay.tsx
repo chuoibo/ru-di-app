@@ -18,6 +18,8 @@ import { GiuMotDieu } from "./GiuMotDieu";
 import { LoaiSo } from "./LoaiSo";
 import { RangBuoc } from "./RangBuoc";
 import { NHAN, ToLoiRu } from "./ToLoiRu";
+import { homNay, nhipKeo } from "../../keo/nhip-keo";
+import { useNepNguCanh } from "../../nep/NepProvider";
 
 /**
  * The paper surface of the two-person notebook (spec §15.1): ONE open sheet,
@@ -55,6 +57,16 @@ export function KhongGianGiayScreen({ contextId, ruNgay = false }: { contextId: 
   const deNghiLapSo = so.deNghiCho.find((d) => d.purpose === "lap_so");
   const deNghiBatDoi = so.deNghiCho.find((d) => d.purpose === "bat_doi");
   const pbMo = toMo ? phienBan(toMo) : undefined;
+  // The notebook's kind, the open sheet's day and how many stops it holds --
+  // what the person is reading, without the other person's name.
+  useNepNguCanh({
+    man: "groups/[id]/to-giay",
+    tieuDe: "Tờ giấy của hai mình",
+    loaiSo: so.batDoi ? "doi" : "hai-nguoi",
+    nhip: pbMo?.content.ngay ? nhipKeo(pbMo.content.ngay, pbMo.content.ngay, homNay()) : undefined,
+    soLieu: pbMo ? { soChang: pbMo.content.chang.length } : undefined,
+    goiY: ["Tuần này đi đâu cho mới?", "Nhắc mình trước buổi hẹn"],
+  });
   const toiGuiToMo = pbMo?.author_type === "human" && pbMo.sent_by === so.toiId;
 
   // Bốn việc không lấy lại được đi qua một tờ xác nhận nói ra hậu quả trước
