@@ -28,36 +28,42 @@ import "../src/rudi/tep-anh-native";
 LogBox.ignoreAllLogs();
 
 /*
- * Direction contract v2 (Impeccable Flow A, code-led; RN has no HTML, so the
- * root layout carries it). Seed c8e88116, assigned index 6 of the grounded list.
- * THESIS  -- A travel journal the whole group writes in one evening: cover for
- *            the invitation, pages for the work; it refuses the category default
- *            of sunset photo + white cards + coral pill.
- * OWN-WORLD -- Indigo cloth cover (Persuade surfaces, story headers), bright
- *            paper pages (Operate surfaces), three semantic accents with
- *            meaning (orange = the ask, teal = money, violet = AI) laid only on
- *            the region that matters now; status is an ink stamp, photos are
- *            Instax frames with their provenance line, plans are one continuous
- *            ink route; keylines print first, colour arrives with data; a 4pt
- *            grid snapped to whole units. Display: Bricolage Grotesque; body:
- *            system. Wordmark: Baloo 2 ExtraBold outlines, leaning 9 degrees.
- * STORY   -- Open the cover -> Rủ Đi thôi! -> discover a place -> plan it in
- *            chat -> go -> photograph the bill -> everyone sees their own share
- *            stamped, never a number the screen invented -> the night becomes
- *            a page in the album.
+ * Direction contract v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24; plan copy in
+ * docs/architecture/04-ui-v3-san-khau-giay.md). Builds on v2 (seed c8e88116,
+ * «the travel journal»); what v2 promised still holds unless named here.
+ * THESIS  -- The group's travel journal is a pop-up book. Every screen is a
+ *            stage of cut paper that stands up out of the page's fold; every
+ *            job is a paper object you handle (receipt, invitation, folded
+ *            letter, ticket, stamp, passport), not a form you fill in. It still
+ *            refuses sunset photo + white cards + coral pill, and it refuses the
+ *            stacked-input screen.
+ * OWN-WORLD -- Indigo cloth cover, bright paper pages; the three meaning tones
+ *            are three paper stocks (coral = the ask, teal = money, violet = AI
+ *            tracing paper). Paper height 0-3 is the only depth: printed,
+ *            pasted, standing, lifted; one light from the top left (a desk lamp
+ *            at night). People are paper standees in their own ink. Nếp is a
+ *            paper puppet with brads at its joints.
+ * STORY   -- Open the cover -> Rủ Đi thôi! -> a city stage pops up -> send an
+ *            invitation card -> the ticket joins the plan -> the table pops up,
+ *            dishes go to seats -> the receipt tears into everyone's stub, Nếp
+ *            stamps «ĐÃ GHI SỔ» -> the night becomes a print on the wall.
  * FIRST VIEWPORT -- Welcome is the closed cover: indigo full-bleed, wordmark
  *            very large in the upper third, one diagonal orange washi strip
  *            carrying "AI đi chơi, chia bill thông minh", the CTA
- *            "Rủ Đi thôi!" as a large stamp at the bottom; pressing it opens
- *            the cover onto the bright Login page.
+ *            "Rủ Đi thôi!" as a large stamp; pressing it turns the cover on
+ *            its spine onto the bright Login page.
  * FORM    -- expo-router stack + 4 tabs + create sheet; 48dp targets, 13sp
- *            floor, tabular money; motion instant 100 / standard 200 /
- *            shared 300 / celebrate 550 once per event, Reduce Motion to zero.
- *            Signature interaction: the cover opening, and a stamp landing when
- *            a state becomes true.
- * FINISH: unreviewed and undocumented is unfinished; this build ends with the
- *         finish review, the verdict, DESIGN.md, and every shipping raster
- *         carrying its provenance
+ *            floor, tabular money; four motion steps plus composite stage
+ *            budgets (pop-up <= 420 ms, a Nếp performance <= 1400 ms, never
+ *            holding input), input-linked motion only while the finger moves,
+ *            Reduce Motion to the final frame. Skia draws stages, the puppet
+ *            and materials; SVG draws rows and is the fallback. Every word is
+ *            React Native text. Signatures: the pop-up, the page turn, the
+ *            stamp, the folding letter, the tearing receipt, Nếp performing
+ *            eight moments and never touching a number.
+ * FINISH: unreviewed and undocumented is unfinished; this campaign ends with
+ *         captures on the LIVE seeded world, a blind read, the finish review,
+ *         DESIGN.md v3, and every shipping raster carrying its provenance
  */
 /** Decides the first screen of a cold start, and routes warm links.
  *

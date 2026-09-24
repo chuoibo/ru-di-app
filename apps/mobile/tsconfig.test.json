@@ -410,6 +410,9 @@
     // giây là sáu chục lần gõ cửa), và một job id lạ KHÔNG được dựng thành
     // đường đi ra ngoài.
     "src/rudi/nep/media.ts",
-    "src/screens/quan-tri/quan-tri.ts"
+    "src/screens/quan-tri/quan-tri.ts",
+    // ADR-0037 «Sân khấu giấy»: person inks and paper-stage tokens, pure.
+    "src/rudi/nguoi/muc-nguoi.ts",
+    "src/rudi/san-khau/token.ts"
   ]
 }

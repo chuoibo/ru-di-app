@@ -149,6 +149,13 @@ export function toneSoftColor(palette: RudiPalette, tone: RudiTone) {
   return palette.splitSoft;
 }
 
+// ---- Paper stage and person inks (ADR-0037 D2, D6) ---------------------------
+// Pure modules so node tests read the values that ship; re-exported here so a
+// screen takes every colour from `theme`. Neither module imports the app back, so
+// this file stays a leaf.
+export { bongCao, mauSanKhau, type BongCao, type CaoGiay, type MauSanKhau } from "./san-khau/token";
+export { mucNguoi } from "./nguoi/muc-nguoi";
+
 // ---- Colours that are not scheme tokens --------------------------------------
 // `tests/rudi-khong-hex.test.mjs` lets only this file spell a colour. What follows
 // is fixed by the artwork it sits on (ink on a photo, a scrim over a gradient, the

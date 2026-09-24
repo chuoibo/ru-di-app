@@ -338,6 +338,17 @@ phẩm đúng».
 
 ## Overview
 
+> **Đang chuyển sang v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24).** Kế hoạch:
+> `docs/architecture/04-ui-v3-san-khau-giay.md`. Trong lúc chiến dịch chạy, các luật sau
+> **đã được ADR-0037 thay** và thắng mọi câu cũ bên dưới: «Nếp Đứng Xa Tiền» → «Nếp Không Chạm Số»
+> (Nếp diễn tám khoảnh khắc, kể cả khoảnh khắc tiền, trong vùng riêng, cách con số ≥ 16dp, không ở
+> lỗi/xung đột); «Trong Trang / Trên Trang» → «Độ Cao Giấy» 0–3 (`tokens.json` → `sanKhau.cao`);
+> avatar mang **mực người** (`tokens.json` → `mucNguoi`) thay tông của màn; `celebrate` phủ các cú dập
+> dấu cộng tám khoảnh khắc, một lần mỗi khoá sự kiện; ngân sách ghép `motion.sanKhau` (bật dựng
+> ≤ 420ms, tiết mục ≤ 1400ms). Nền `paper` ở theme tối **không phải mặt chữ** (cổng
+> `tests/chu-tren-giay.test.mjs`). Documenter viết lại toàn file ở lát cuối (S7).
+
+
 **Creative North Star: "Nhật ký chuyến đi sau giờ làm"**
 
 Một cuốn sổ chuyến đi cả hội cùng viết trong một buổi tối. *Bìa* vải indigo
