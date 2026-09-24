@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNhuongChoNep } from "../../nep/NepProvider";
 import { useEffect, useRef, useState } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { ChatCapabilities } from "../../chat/ai-invocations";
@@ -63,6 +64,8 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
   const { colors } = useRudiTheme();
   const [dinhKem, setDinhKem] = useState(true);
   const [moRong, setMoRong] = useState(false);
+  // The tray is a sheet laid over the conversation; Nếp makes room for it.
+  useNhuongChoNep(panel !== null);
   const { height } = useWindowDimensions();
   const [draft, setDraft] = useState(() => docBanNhapCongCu(personId, contextId));
   const held = useRef(draft);

@@ -1,5 +1,5 @@
 {
-  "vi_sao": "Hình dạng `conversation` worker gửi sang brain, viết tay một lần và đọc bởi CẢ HAI phía: hoi_thoai_golden_test.go giữ hoiThoai của Go, services/api/tests/skills/test_tra_loi_trong_nhom.py giữ bộ đo chất lượng. Bộ đo mà dựng hội thoại khác worker thì đo một model đọc thứ production không bao giờ gửi. Từ 2026-09-24 (ADR-0034 §5) người nói mang tên hiển thị; `toi` là nhãn của người gọi mà roster trả về, cả hai phía phải đọc nó.",
+  "vi_sao": "Hình dạng `conversation` worker gửi sang brain, viết tay một lần và đọc bởi CẢ HAI phía: hoi_thoai_golden_test.go giữ hoiThoai của Go, services/api/tests/skills/test_tra_loi_trong_nhom.py giữ bộ đo chất lượng. Bộ đo mà dựng hội thoại khác worker thì đo một model đọc thứ production không bao giờ gửi. Từ 2026-09-24 (ADR-0036 §5) người nói mang tên hiển thị; `toi` là nhãn của người gọi mà roster trả về, cả hai phía phải đọc nó.",
   "cases": [
     {
       "ten": "du-cac-vai-va-loai",

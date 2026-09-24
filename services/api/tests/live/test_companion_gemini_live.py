@@ -54,7 +54,7 @@ pytestmark = pytest.mark.skipif(
     reason="live Gemini tier: needs GEMINI_API_KEY and MOBILE_REQUIRE_GEMINI_TESTS=1",
 )
 
-# The shape the Go worker sends since ADR-0034 §5 (2026-09-24): the roster is
+# The shape the Go worker sends since ADR-0036 §5 (2026-09-24): the roster is
 # display names only, never account ids, and each turn names its speaker the
 # same way (chatassist.hoiThoai; pinned by chatassist/testdata/hoi_thoai_golden.json).
 MEMBERS = [

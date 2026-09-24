@@ -177,6 +177,8 @@ type Keep struct {
 type Paper struct {
 	ID             string
 	ContextID      string
+	CycleID        *string
+	IsTemporary    bool
 	DraftOwnerID   string
 	State          string
 	CurrentVersion int
@@ -288,14 +290,29 @@ type Store interface {
 	CreateOuting(draft OutingDraft) (string, error)
 	// GetPlace is get_place: one catalogue row, nil when the id is unknown.
 	GetPlace(placeID string) (*PlaceRef, error)
+	// ListPlaces is list_places(destination_id=..., category=...), in id order.
+	ListPlaces(destinationID, category string) ([]PlaceRef, error)
 	// ReplaceOutingStops is replace_outing_stops with expected_revision=None.
 	ReplaceOutingStops(outingID string, stops []OutingStopDraft) error
 }
 
-// PlaceRef is the part of a catalogue row _chot reads.
+// PlaceRef is the part of a catalogue row _chot and draft_pair_paper read
+// (`PlaceRecord.to_row()`): Kinds and Traits hold only the str items.
 type PlaceRef struct {
-	ID   string
-	Name string
+	ID            string
+	Name          string
+	DestinationID string
+	Category      string
+	Kinds         []string
+	Traits        []string
+	Rating        *float64
+	RatingCount   *int64
+}
+
+// row is the PlaceRef as lam_giau_phac reads it.
+func (p PlaceRef) row() pairpaper.PlaceRow {
+	return pairpaper.PlaceRow{ID: p.ID, Name: p.Name, Category: p.Category, Kinds: p.Kinds, Traits: p.Traits,
+		Rating: p.Rating, RatingCount: p.RatingCount}
 }
 
 // OutingStopDraft is one element of replace_outing_stops' `stops`.

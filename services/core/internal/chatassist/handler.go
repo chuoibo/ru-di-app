@@ -248,7 +248,7 @@ func (h *Handler) preflight(r *http.Request) error {
 // client attaches no bundle at all, so an older server keeps receiving exactly
 // the old body. Flipping it here is what turns the context path on, and it is
 // flipped only now that the preview block above the send button exists
-// (ADR-0034 §4 forbids the one without the other).
+// (ADR-0036 §4 forbids the one without the other).
 func (h *Handler) capabilities(w http.ResponseWriter, r *http.Request) {
 	tx, g, err := h.begin(r)
 	if err != nil {

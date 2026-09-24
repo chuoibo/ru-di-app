@@ -10,7 +10,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 )
 
-// The context bundle the caller hands over (ADR-0034 §2.2).
+// The context bundle the caller hands over (ADR-0036 §2.2).
 //
 // The server does not read the conversation, so everything here arrives from
 // the client. That makes the bounds below a refusal surface rather than a
@@ -182,7 +182,7 @@ func hoiThoai(goi []byte, prompt, toi string) (pyjson.List, error) {
 
 // nhanNguoiNoi is the speaker label of one shared turn.
 //
-// A friend's label is the display name the client put on the turn (ADR-0034
+// A friend's label is the display name the client put on the turn (ADR-0036
 // §5), and it is text somebody typed about themselves. It goes through tenDoc,
 // the same test roster applies, so a name written at the model is never
 // quoted; the turn is still attributed to someone in the room rather than

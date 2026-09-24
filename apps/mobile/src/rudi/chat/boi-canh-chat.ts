@@ -43,7 +43,7 @@ function chuTheAi(card: unknown): string {
 /**
  * One label per author for the whole bundle, handed out by first appearance.
  *
- * The label is the member's display name (ADR-0034 §5), because a plan that
+ * The label is the member's display name (ADR-0036 §5), because a plan that
  * says «Lan dị ứng hải sản» is one the room can act on. Two members with the
  * same name must not become one speaker, so a repeat is «Lan (2)». A member
  * whose name the screen does not know yet is «Bạn N», never the account id.

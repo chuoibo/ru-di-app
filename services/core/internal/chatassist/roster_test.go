@@ -8,7 +8,7 @@ import (
 	"mobile/services/core/internal/repo"
 )
 
-// The roster's labelling rules without a database (ADR-0034 §5): display
+// The roster's labelling rules without a database (ADR-0036 §5): display
 // names where they are safe, one vocabulary shared with the transcript, and a
 // neutral label wherever a name cannot be used.
 

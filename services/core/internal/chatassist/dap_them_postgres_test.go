@@ -24,7 +24,7 @@ import (
 //     members" gives café first and 175000. The invited member is the one that
 //     makes the state test observable: a left member is already dropped by
 //     `left_at`, an invited one only by `state`.
-//   - the roster uses display names (ADR-0034 §5). The member who left and the
+//   - the roster uses display names (ADR-0036 §5). The member who left and the
 //     quiet member who never spoke are both called «Synthetic twin», and the
 //     departed one's words are in the bundle under that name, so the quiet
 //     member must be «Synthetic twin (2)»: two people must not become one in

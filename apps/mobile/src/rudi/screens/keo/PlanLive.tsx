@@ -22,6 +22,7 @@ import { nhanKhoangNgay, type BuoiDi } from "../../../screens/len-plan/buoi-di";
 import { henHaiBan, type HenHaiBan } from "../../keo/hen-hai-ban";
 import { cauSoChang, docKeoCuaNhom } from "../../keo/keo";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
+import { useNepNguCanh } from "../../nep/NepProvider";
 import { chiaKeo, dauLich, homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { Heading, RudiButton, RudiScreen, SectionHeader } from "../../ui";
@@ -160,6 +161,7 @@ export function PlanLiveScreen({ phien }: { phien: Phien }) {
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const contextId = phien.context_id;
   const today = homNay();
+  useNepNguCanh({ man: "plan", tieuDe: "Lên plan", goiY: ["Kèo nào sắp tới?", "Gợi ý một buổi cuối tuần"] });
 
   const nap = useCallback(async () => {
     if (contextId === null) return;

@@ -1,6 +1,6 @@
 /**
  * The context bundle: the one thing the caller hands the model, and the one
- * shape both AI surfaces use (ADR-0034 §2.2).
+ * shape both AI surfaces use (ADR-0036 §2.2).
  *
  * The server does not read the conversation. It cannot: chat v2 is end to end
  * encrypted and the server holds no key. So context reaches a model exactly
@@ -15,13 +15,13 @@
  *
  * `biDanh` used to be a pseudonym minted per bundle («Bạn 1», «Bạn 2»). Since
  * 2026-09-24 it is the member's display name, the one the room already sees
- * above each bubble (ADR-0034 §5, product lead's decision): an answer that
+ * above each bubble (ADR-0036 §5, product lead's decision): an answer that
  * says «Lan dị ứng hải sản» is one the group can act on, and «Bạn 1 dị ứng hải
  * sản» makes everybody work out who Bạn 1 was. Two members with the same name
  * are «Lan» and «Lan (2)» so they stay two speakers; a member whose name is not
  * known yet is «Bạn N». The words above the send button say names go along,
  * and they changed in the same change, because a stated privacy promise is not
- * withdrawn from one side (ADR-0034 §2.5). The server runs every label through
+ * withdrawn from one side (ADR-0036 §2.5). The server runs every label through
  * the prompt-safety test before a model reads it, since a display name is text
  * a person typed. «Chỉ gửi lời nhờ» still sends no chat at all; the roster
  * the server adds still names the members, and `cauBoiCanh(null)` says so.
@@ -182,7 +182,7 @@ export function vanTay(bc: BoiCanh): string {
  * out of step with the payload is the exact lie this block exists to prevent.
  */
 export function cauBoiCanh(bc: BoiCanh | null): string {
-  // The server's roster names the members even without a bundle (ADR-0034 §5),
+  // The server's roster names the members even without a bundle (ADR-0036 §5),
   // so this sentence says so rather than implying nothing but the prompt goes.
   if (bc === null) return "Chỉ lời nhờ trong ô này, cùng tên hiển thị của các thành viên. Không tin nhắn nào đi kèm.";
   if (bc.luot.length === 0) return "Nhóm chưa có tin nào, nên mình chỉ gửi lời nhờ trong ô này.";

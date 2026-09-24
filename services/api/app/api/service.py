@@ -7668,7 +7668,7 @@ class ApiService:
         papers = []
         for paper in self.repository.list_pair_papers(context_id):
             state = pair_paper.hieu_luc(_paper_dict(paper), now=now)
-            if state == "nhap" and paper.draft_owner_id != actor.id:
+            if not _chi_chu_thay(paper, state, actor.id):
                 continue
             papers.append(
                 PaperSummary(
@@ -7703,7 +7703,8 @@ class ApiService:
                 ),
             },
         )
-        for paper in self.repository.list_pair_papers(context_id):
+        papers = self.repository.list_pair_papers(context_id)
+        for paper in papers:
             if (
                 pair_paper.hieu_luc(_paper_dict(paper), now=now)
                 in pair_paper.OPEN_STATES
@@ -7714,10 +7715,32 @@ class ApiService:
                     "Đang có một tờ mở. Xong tờ này đã.",
                 )
         constraints = [] if notebook is None else list(notebook.constraints)
-        phac = pair_paper.phac_to_giay(
-            {"ngay": pair_paper.ngay_de_xuat(now), **_KHUNG_MAC_DINH},
-            constraints,
-            now=now,
+        # What this cycle already agreed, and the catalogue around the place
+        # it chose -- read before the write, in this order, so the draft is a
+        # function of the rows the lock was taken over.
+        lich_su = _lich_su_chu_ky(papers, notebook)
+        cho_cu_id = next(
+            (nd["chang"][0]["place_id"] for nd in lich_su if nd["chang"][0]["place_id"]),
+            None,
+        )
+        cho_cu = None if cho_cu_id is None else self.repository.get_place(cho_cu_id)
+        ung_vien = (
+            []
+            if cho_cu is None
+            else self.repository.list_places(
+                destination_id=cho_cu.destination_id, category=cho_cu.category
+            )
+        )
+        phac = pair_paper.lam_giau_phac(
+            pair_paper.phac_to_giay(
+                {"ngay": pair_paper.ngay_de_xuat(now), **_KHUNG_MAC_DINH},
+                constraints,
+                now=now,
+            ),
+            lich_su=lich_su,
+            cho_cu=None if cho_cu is None else cho_cu.to_row(),
+            ung_vien=[row.to_row() for row in ung_vien],
+            rang_buoc=[{"content": c.content} for c in constraints],
         )
         paper = self.repository.create_pair_paper(
             context_id=context_id,
@@ -7747,9 +7770,7 @@ class ApiService:
             "view_pair_paper",
             actor,
             {
-                "may_view_paper": (
-                    paper.state != "nhap" or paper.draft_owner_id == actor.id
-                )
+                "may_view_paper": _chi_chu_thay(paper, paper.state, actor.id)
             },
         )
         return paper, members
@@ -8140,6 +8161,66 @@ DIEU_KHOAN_HIEN_TAI = 1
 #: a draft says «chưa biết», so this offers a shape to edit, never a
 #: recommendation. `Create.tsx` promises exactly this -- «Nếp phác sẵn, bạn gửi».
 _KHUNG_MAC_DINH = {"gio": "18:30", "viec": "Ăn tối", "di_tiep": None}
+
+#: How many agreed sheets the draft looks back over.
+_LICH_SU_TOI_DA = 4
+
+
+def _chi_chu_thay(paper: PairPaperRecord, state: str, actor_id: uuid.UUID) -> bool:
+    """Whether this person may see this sheet at all.
+
+    A sheet nobody ever sent is its owner's draft whatever its state: skipping
+    the week on it (`nghi_tuan`), discarding it (`bo`) or letting its week run
+    out does not hand it to the other person. The rule used to be «not `nhap`»,
+    so a draft skipped before sending appeared in the other person's list and
+    detail with its content and its private reason (QA 24/09).
+    """
+    if paper.draft_owner_id == actor_id:
+        return True
+    return state != "nhap" and any(v.sent_at is not None for v in paper.versions)
+
+
+def _lich_su_chu_ky(papers, notebook) -> list[dict]:
+    """The agreed contents of the notebook's ACTIVE cycle, newest first.
+
+    Only a kept notebook has a history to read (ADR-0027 §4: the invitation
+    before it keeps nothing), and only its current cycle: a closed cycle's
+    sources are never used to draft again (§8). A sheet whose stored content
+    cannot be read is skipped rather than failing the draft.
+    """
+    if notebook is None or notebook.cycle_id is None or notebook.cycle_state != "active":
+        return []
+    out: list[dict] = []
+    for paper in papers:
+        if (
+            paper.cycle_id != notebook.cycle_id
+            or paper.is_temporary
+            or paper.state not in ("chot", "da_di", "da_giu")
+        ):
+            continue
+        current = next(
+            (v for v in paper.versions if v.version == paper.current_version), None
+        )
+        if current is None:
+            continue
+        try:
+            noi_dung = _noi_dung_wire(current.content)
+        except ApiProblem:
+            continue
+        if not noi_dung.chang:
+            continue
+        out.append(
+            {
+                "ngay": noi_dung.ngay.isoformat(),
+                "chang": [
+                    {"gio": c.gio, "viec": c.viec, "place_id": c.place_id}
+                    for c in noi_dung.chang
+                ],
+            }
+        )
+        if len(out) == _LICH_SU_TOI_DA:
+            break
+    return out
 
 #: The bridge between the two vocabularies. The permission table answers with
 #: the name of the predicate that failed; the client's dictionary translates

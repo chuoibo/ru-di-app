@@ -119,7 +119,7 @@ export function GroupInviteScreen() {
       <TopBar title="Mời vào nhóm" />
       <Heading
         title="Mời bằng số điện thoại"
-        subtitle="Số điện thoại chỉ dùng để nhận ra đúng người khi họ đăng nhập; máy chủ không lưu số."
+        subtitle="Số điện thoại chỉ dùng để nhận ra đúng người khi họ đăng nhập; Rủ Đi không lưu số."
       />
       <View style={styles.form}>
         <Field

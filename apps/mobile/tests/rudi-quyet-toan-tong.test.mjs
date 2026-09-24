@@ -44,3 +44,28 @@ test("recap lệch hợp đồng (chuyến không tên, tiền không nguyên) �
   assert.equal(tongTuRecap(null), null);
   assert.equal(dongHeroQuyetToan(null, 2).so, "Chưa có số");
 });
+
+test("trạng thái trống không in bằng mặt chữ tiền, và không nói «chưa có kèo» khi có kèo chưa tới", () => {
+  assert.equal(dongHeroQuyetToan({ kieu: "chua-co-chuyen" }, 2).laSo, false);
+  assert.equal(dongHeroQuyetToan(null, 2).laSo, false);
+  assert.equal(dongHeroQuyetToan({ kieu: "da-ket-thuc", soChuyen: 1, tong: 1000 }, 2).laSo, true);
+  assert.doesNotMatch(dongHeroQuyetToan({ kieu: "chua-co-chuyen" }, 2).cau, /chưa có kèo nào để/);
+  for (const t of [null, { kieu: "chua-co-chuyen" }, { kieu: "da-ket-thuc", soChuyen: 1, tong: 1000 }]) {
+    assert.doesNotMatch(dongHeroQuyetToan(t, 2).cau, /máy chủ/i);
+  }
+});
+
+test("sổ đôi: chi tiêu chung nói ai trả nhiều/ít hơn phần mình, bằng đúng số máy chủ tính, không có mũi tên", async () => {
+  const { dongChiTieuChung } = await import("../dist-test/rudi/doc-live.js");
+  const nguoi = [{ personId: "minh", ten: "Minh" }, { personId: "linh", ten: "Linh" }];
+  const { dong, ngangNhau } = dongChiTieuChung(nguoi, { minh: -210000, linh: 210000 });
+  assert.equal(ngangNhau, false);
+  assert.deepEqual(dong, [
+    { personId: "minh", ten: "Minh", cau: "trả ít hơn phần mình", vnd: 210000 },
+    { personId: "linh", ten: "Linh", cau: "trả nhiều hơn phần mình", vnd: 210000 },
+  ]);
+  for (const d of dong) assert.doesNotMatch(d.cau, /→|nợ|nghĩa vụ/);
+  const bang = dongChiTieuChung(nguoi, {});
+  assert.equal(bang.ngangNhau, true);
+  assert.ok(bang.dong.every((d) => d.vnd === null));
+});

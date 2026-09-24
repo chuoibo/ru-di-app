@@ -26,7 +26,7 @@ const maxTenDoc = 60
 // and the caller has to fall back to a neutral label.
 //
 // A display name is text a person typed about themselves, and since
-// 2026-09-24 it reaches the model (ADR-0034 §5). So it goes through the same
+// 2026-09-24 it reaches the model (ADR-0036 §5). So it goes through the same
 // test a catalogue row does: a name that tries to talk to the model is not
 // quoted more carefully, it is not quoted at all.
 func tenDoc(name string) string {
@@ -42,11 +42,11 @@ func tenDoc(name string) string {
 //
 // The model needs the roster for what it can plan with: how many people are
 // going, and who among them has not said anything yet. Since the product
-// decision of 2026-09-24 (ADR-0034 §5) it gets their display names too: a
+// decision of 2026-09-24 (ADR-0036 §5) it gets their display names too: a
 // plan that says «Lan dị ứng hải sản» is one the room can act on, and one that
 // says «Bạn 1 dị ứng hải sản» makes everybody work out who Bạn 1 was. The
 // screen that sends the bundle says so above the send button, and that
-// sentence changed in the same change as this code, because ADR-0034 §2.5
+// sentence changed in the same change as this code, because ADR-0036 §2.5
 // forbids withdrawing a stated promise from one side.
 //
 // The roster and the transcript still have to speak ONE vocabulary. Two labels

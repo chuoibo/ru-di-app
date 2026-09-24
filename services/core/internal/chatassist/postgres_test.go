@@ -165,7 +165,7 @@ func TestInvocationOnlyInputAndDurableIdempotency(t *testing.T) {
 	if bytes.Contains(raw, []byte("unshared history")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
 		t.Fatal("inference input scope violated")
 	}
-	// ADR-0034 §2.3 and §5: the server lays the roster on top, one entry per
+	// ADR-0036 §2.3 and §5: the server lays the roster on top, one entry per
 	// active member by display name. Never an account id.
 	if got := payload["members"].([]any); len(got) != 2 {
 		t.Fatalf("roster has %d entries, want the 2 active members", len(got))

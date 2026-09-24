@@ -7,7 +7,7 @@
  */
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -71,6 +71,7 @@ import { KhayToHenChung } from "./ToHenChungKhay";
 import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
+import { useNepNguCanh } from "../../nep/NepProvider";
 
 const LENH = [
   { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
@@ -194,6 +195,18 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // that place opens the other person's profile instead.
   const nhanRieng = laPair(nhom);
   const nguoiKiaId = nhom?.counterpart?.id;
+  // What Nếp may know here: the kind of conversation and, for a group, how many
+  // are in it. Never a name and never a message -- chat v2 is end to end
+  // encrypted, and Nếp does not read chat on its own (ADR-0033 §2.5). Before
+  // this, Nếp opened in a couple's conversation said it had no idea where the
+  // person was (QA 23/09).
+  useNepNguCanh({
+    man: "groups/[id]/chat",
+    tieuDe: nhanRieng ? "cuộc trò chuyện của hai bạn" : "chat nhóm",
+    loaiSo: !nhanRieng ? "hoi" : undefined,
+    soLieu: !nhanRieng ? { soNguoi: nhom?.member_count ?? 0 } : undefined,
+    goiY: nhanRieng ? ["Tuần này rủ nhau đi đâu?", "Mở tờ giấy của hai mình"] : ["Gợi ý chỗ cho cả nhóm", "Tóm tắt kèo sắp tới"],
+  });
   // The group's theme colours only the sender's bubble and the reader's own
   // reaction chip; the screen's leading tone stays the brand accent.
   const mauChat = bangMauChat(nhom?.theme, dark);
@@ -207,20 +220,39 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
     };
   }, []);
 
+  // The roster is read on every focus and again when somebody the roster does
+  // not know writes: they joined after it was read. Read once on mount, a
+  // group went on saying «2 thành viên» and naming the newcomer «Thành viên»
+  // until the screen was reopened (QA 23/09).
+  const [lanDoc, setLanDoc] = useState(0);
+  const [soDangO, setSoDangO] = useState<number | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      setLanDoc((n) => n + 1);
+    }, []),
+  );
+  const coNguoiLa = chat.tin.some((t) => t.author_id !== null && t.author_id !== personId && !(t.author_id in tenTheoId));
   useEffect(() => {
+    if (coNguoiLa) setLanDoc((n) => n + 1);
+  }, [coNguoiLa]);
+  useEffect(() => {
+    if (lanDoc === 0) return;
     let song = true;
     void danhSachThanhVien(contextId, personId)
       .then((ds) => {
         if (!song) return;
+        // Names of everyone who was ever here (an old message keeps its
+        // author's name after they leave); the count is who is here now.
         const map: Record<string, string> = {};
         for (const tv of ds) if (tv.display_name) map[tv.person_id] = tv.display_name;
         setTenTheoId(map);
+        setSoDangO(ds.filter((tv) => tv.state === "active").length);
       })
       .catch(() => undefined);
     return () => {
       song = false;
     };
-  }, [contextId, personId]);
+  }, [contextId, personId, lanDoc]);
 
   /**
    * The frame for one image message: the read route is permission-checked, so
@@ -242,7 +274,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // `tinChoHoiThoai` hides a `/vote` command once its poll card exists, so that
   // command is not on screen -- and "this is what you are looking at" has to be
   // true in the literal sense. One place decides what is visible.
-  // Members' display names go with the bundle (ADR-0034 §5), the same names
+  // Members' display names go with the bundle (ADR-0036 §5), the same names
   // `tenNguoi` draws above each bubble. The raw map rather than `tenNguoi`
   // itself: its «Thành viên» placeholder would make every unknown member one
   // speaker, and an unknown member has to fall back to a distinct «Bạn N».
@@ -673,7 +705,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             onPress={() => router.push((nhanRieng && nguoiKiaId ? `/people/${nguoiKiaId}` : `/groups/${contextId}/members`) as never)} style={styles.headerIdentity}>
             <Text numberOfLines={1} style={[typography.title, { color: colors.ink }]}>{tenNhom}</Text>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>
-              {nhanRieng ? "Cuộc trò chuyện của hai mình" : `${Object.keys(tenTheoId).length || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
+              {nhanRieng ? "Cuộc trò chuyện của hai mình" : `${soDangO || nhom?.member_count || 1} thành viên · sổ hẹn của hội`}
             </Text>
           </Pressable>
           <IconButton accessibilityLabel="Cài đặt nhóm" icon="ellipsis-horizontal" quiet onPress={() => setCaiDatMo(true)} />
@@ -1023,5 +1055,9 @@ const styles = StyleSheet.create({
   lenh: { maxHeight: 200, flexGrow: 0, borderWidth: 1, borderRadius: 16, padding: 6, gap: 2 },
   lenhHang: { minHeight: 48, paddingHorizontal: 10, paddingVertical: 8, gap: 1 },
   soan: { flexDirection: "row", alignItems: "flex-end", gap: 6, padding: 6, borderWidth: 1, borderRadius: 22 },
-  oNhap: { flex: 1, minHeight: 48, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8 },
+  // Centred on purpose, unlike the kit's multiline `Field`: the composer grows
+  // with its text, so one line sits in the middle of the pill and a longer
+  // message fills it from the top anyway. Said out loud because Android's
+  // default is what made every other box start mid-way (QA 23/09).
+  oNhap: { flex: 1, minHeight: 48, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8, textAlignVertical: "center" },
 });

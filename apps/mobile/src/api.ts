@@ -223,14 +223,14 @@ const IDEMPOTENCY_REFUSALS: Record<string, string> = {
   // and the client is the one party that cannot find out. Telling somebody to
   // press again here is how one payment becomes two.
   idempotency_request_in_flight:
-    "Lần bấm trước chưa chạy xong nên chưa biết máy chủ đã ghi hay chưa. " +
+    "Lần bấm trước chưa chạy xong nên chưa biết đã ghi hay chưa. " +
     "Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.",
   // 422. Same key, different bytes. With attempts threaded properly this is
   // unreachable, which is why it says the app is at fault instead of asking a
   // person to fix something on their side.
   idempotency_key_reuse:
-    "Nội dung gửi đi đã khác so với lần bấm trước, nên máy chủ không phát lại " +
-    "kết quả cũ. Mở lại màn hình để xem máy chủ đang giữ gì trước khi gửi lại.",
+    "Nội dung gửi đi đã khác so với lần bấm trước, nên không dùng lại " +
+    "kết quả cũ được. Mở lại màn hình để xem đang lưu gì trước khi gửi lại.",
   // 422. Only reachable if the app sends a malformed key, so it says so rather
   // than sending somebody to look for a mistake they did not make.
   invalid_idempotency_key:
@@ -288,7 +288,7 @@ const DAU_TIENG_VIET =
  * question for whoever is debugging, not for someone planning a trip; the
  * address goes to the dev console instead (see `call`).
  */
-export const LOI_KHONG_NOI_DUOC = "Không nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+export const LOI_KHONG_NOI_DUOC = "Không kết nối được Rủ Đi. Kiểm tra mạng rồi thử lại.";
 
 declare const __DEV__: boolean | undefined;
 
@@ -309,23 +309,23 @@ export function thongDiepNguoiDoc(status: number, detail: unknown): string {
     // A route the server does not have: the app and the server are out of step.
     // What the person can do is update the app; checking «the address at the
     // bottom of the screen» was an instruction for a developer.
-    return "Bản app này và máy chủ chưa khớp nhau nên chưa mở được phần này. Cập nhật app rồi thử lại.";
+    return "Phần này chưa mở được trên bản app này. Cập nhật app rồi thử lại.";
   }
   if (status === 409) {
-    return "Lần bấm trước chưa chạy xong nên chưa biết máy chủ đã ghi hay chưa. Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.";
+    return "Lần bấm trước chưa chạy xong nên chưa biết đã ghi hay chưa. Chờ một chút rồi mở lại màn hình để xem, đừng bấm lại ngay.";
   }
   if (status === 429) {
-    return "Máy chủ đang nhận quá nhiều yêu cầu cùng lúc. Chờ khoảng một phút rồi thử lại.";
+    return "Rủ Đi đang nhận quá nhiều yêu cầu cùng lúc. Chờ khoảng một phút rồi thử lại.";
   }
   if (status >= 400 && status < 500) {
     // Includes 422, which is where the list-shaped detail comes from. A
     // validation refusal means the app sent something the server does not
     // accept, so it is not something the person holding the phone can fix by
     // typing differently, and the copy must not send them looking.
-    return "App gửi lên một yêu cầu máy chủ không nhận, nên việc này chưa được ghi. Đây là lỗi của app chứ không phải do bạn nhập sai. Thử lại sau, và báo cho nhóm kỹ thuật nếu vẫn vậy.";
+    return "App gửi lên một yêu cầu không hợp lệ, nên việc này chưa được ghi. Đây là lỗi của app chứ không phải do bạn nhập sai. Thử lại sau, và báo cho nhóm kỹ thuật nếu vẫn vậy.";
   }
   if (status >= 500) {
-    return "Máy chủ đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.";
+    return "Rủ Đi đang gặp sự cố nên chưa làm được việc này. Chưa có gì bị ghi sai, thử lại sau một chút.";
   }
   return "Chưa làm được việc này. Thử lại sau một chút.";
 }
@@ -534,7 +534,7 @@ function nameRefusals(person: Participant): Record<string, string> {
     permission_denied:
       `Người này đã được đặt tên khác trước đó, và chỉ chính họ mới đổi được. ` +
       `Giữ nguyên tên cũ, hoặc xoá "${person.name}" khỏi danh sách rồi thêm lại như một người mới.`,
-    person_not_registered: `Máy chủ chưa nhận ra ${person.name}. Thử gửi lại một lần nữa.`,
+    person_not_registered: `Rủ Đi chưa nhận ra ${person.name}. Thử gửi lại một lần nữa.`,
   };
 }
 
@@ -842,7 +842,7 @@ export class GateNotPassedError extends Error {
 const CONFIRM_REFUSALS: Record<string, string> = {
   proposal_changed:
     "Khoản chi đã đổi kể từ lúc bạn nhìn. Quay lại xem con số mới trước khi ghi vào sổ.",
-  expense_not_found: "Không tìm thấy khoản chi này trên máy chủ.",
+  expense_not_found: "Không tìm thấy khoản chi này nữa.",
 };
 
 export const OPEN_BATCH_REFUSALS: Record<string, string> = {
@@ -883,7 +883,7 @@ export const PUBLISH_REFUSALS: Record<string, string> = {
   // to read the server's English to find that out.
   delivery_method_required:
     "Chưa chọn cách gửi phong bì cho đợt thu này, nên chưa phát được.",
-  batch_not_found: "Không tìm thấy đợt thu này trên máy chủ.",
+  batch_not_found: "Không tìm thấy đợt thu này nữa.",
 };
 
 export type OpenedBatch = {
@@ -1293,11 +1293,42 @@ const SCAN_REFUSALS: Record<string, string> = {
     "Chưa đọc được bill này. Thường là do ảnh mờ, thiếu sáng, hoặc bill bị gập che mất cột tiền. " +
     "Chụp lại gần hơn một chút, để cả tờ bill nằm trong khung.",
   unsupported_image_type: "Tệp này không phải ảnh mà app đọc được. Chọn một ảnh JPG hoặc PNG.",
-  image_too_large: "Ảnh nặng quá 8 MB nên máy chủ từ chối. Chụp lại bằng camera trong app để ảnh được nén sẵn.",
+  image_too_large: "Ảnh nặng quá 8 MB nên không gửi được. Chụp lại bằng camera trong app để ảnh được nén sẵn.",
   receipt_reader_unavailable:
     "Bộ đọc bill đang không trả lời. Thử lại sau một chút, hoặc nhập tay các món ở bước sau.",
   permission_denied: "Tài khoản này chưa được phép đọc bill trong nhóm.",
+  // The server's own detail names an environment variable for whoever runs
+  // it; the person holding the phone needs the next move instead.
+  receipt_reader_not_configured:
+    "Rủ Đi chưa bật phần đọc bill từ ảnh. Đây là lỗi phía Rủ Đi, không phải ảnh bạn chụp.",
 };
+
+/**
+ * How a local file becomes the bytes of a multipart part, installed by the
+ * native app at start (`rudi/tep-anh-native.ts`).
+ *
+ * Expo's `fetch` (the global one since the winter runtime) builds a multipart
+ * body only from a string, a `Blob`, or an object with `bytes()`. React
+ * Native's `{ uri, name, type }` part throws «Unsupported FormDataPart
+ * implementation» before a byte leaves the phone -- so every photo upload
+ * failed as «Không nối được», and the server never saw a request (QA 23/09,
+ * found 24/09 on the device). Node tests have no file system bridge and leave
+ * this unset, so they still see the plain shape.
+ */
+let docTepAnh: ((uri: string) => Promise<Uint8Array>) | null = null;
+
+export function datCachDocTepAnh(doc: ((uri: string) => Promise<Uint8Array>) | null): void {
+  docTepAnh = doc;
+}
+
+/** The multipart part for a local photo, in the shape the running `fetch` sends. */
+function phanTepAnh(uri: string, name: string): unknown {
+  if (docTepAnh !== null) {
+    const doc = docTepAnh;
+    return { name, type: "image/jpeg", bytes: () => doc(uri) };
+  }
+  return { uri, name, type: "image/jpeg" };
+}
 
 /**
  * Put one image into a multipart field named `image`.
@@ -1315,8 +1346,7 @@ async function appendImageField(
     const blob = await fetch(photo.uri).then((r) => r.blob());
     form.append("image", blob, filename);
   } else {
-    // React Native's own FormData understands this shape and nothing else.
-    form.append("image", { uri: photo.uri, name: filename, type: "image/jpeg" } as never);
+    form.append("image", phanTepAnh(photo.uri, filename) as never);
   }
 }
 
@@ -1387,11 +1417,11 @@ const SCREENSHOT_REFUSALS: Record<string, string> = {
   screenshot_model_named_a_person:
     "Máy đọc đã nêu tên một người. Kết quả bị từ chối vì tên người chỉ đến từ phiên đăng nhập, không phải từ ảnh.",
   unsupported_image_type: "Tệp này không phải ảnh mà app đọc được. Chọn một ảnh JPG hoặc PNG.",
-  image_too_large: "Ảnh chụp màn hình nặng quá 8 MB nên máy chủ từ chối. Chọn một ảnh nhẹ hơn.",
+  image_too_large: "Ảnh chụp màn hình nặng quá 8 MB nên không gửi được. Chọn một ảnh nhẹ hơn.",
   screenshot_reader_unavailable:
     "Bộ đọc ảnh chụp màn hình đang không trả lời. Thử lại sau một chút.",
   screenshot_reader_not_configured:
-    "Máy chủ chưa cấu hình khoá đọc ảnh chụp màn hình. Đây là lỗi phía máy chủ, không phải ảnh bạn chọn.",
+    "Rủ Đi chưa bật phần đọc ảnh chụp màn hình. Đây là lỗi phía Rủ Đi, không phải ảnh bạn chọn.",
 };
 
 /* --------------------------------------------- chat expense draft (F24) */
@@ -1445,7 +1475,7 @@ const CHAT_EXPENSE_REFUSALS: Record<string, string> = {
   chat_reader_unavailable:
     "Bộ đọc tin nhắn đang không trả lời. Thử lại sau một chút.",
   chat_reader_not_configured:
-    "Máy chủ chưa cấu hình khoá đọc khoản chi từ tin nhắn. Đây là lỗi phía máy chủ, sửa tin nhắn không giúp được.",
+    "Rủ Đi chưa bật phần đọc khoản chi từ tin nhắn. Đây là lỗi phía Rủ Đi, sửa tin nhắn không giúp được.",
 };
 
 /* --------------------------------------------- photographs people keep */
@@ -1487,14 +1517,14 @@ export type AnhDaTai = {
  */
 export const ANH_REFUSALS: Record<string, string> = {
   image_too_large:
-    "Tấm ảnh này nặng quá 10 MB nên máy chủ không nhận. Chọn một tấm nhẹ hơn giúp mình.",
+    "Tấm ảnh này nặng quá 10 MB nên không gửi được. Chọn một tấm nhẹ hơn giúp mình.",
   image_dimensions_too_large:
-    "Tấm ảnh này có kích thước quá lớn nên máy chủ không nhận. Chọn một tấm khác giúp mình.",
+    "Tấm ảnh này có kích thước quá lớn nên không gửi được. Chọn một tấm khác giúp mình.",
   not_an_image:
-    "File bạn chọn không phải là ảnh nên máy chủ không đọc được. Chọn một tấm ảnh JPG hoặc PNG.",
+    "File bạn chọn không phải là ảnh nên không đọc được. Chọn một tấm ảnh JPG hoặc PNG.",
   permission_denied:
     "Bạn cần là thành viên của nhóm này mới đăng ảnh lên tường được. Nhờ người tạo nhóm mời bạn vào rồi thử lại.",
-  photo_not_found: "Không tìm thấy tấm ảnh này trên máy chủ.",
+  photo_not_found: "Không tìm thấy tấm ảnh này nữa.",
   avatar_not_found: "Người này chưa có ảnh đại diện nào.",
 };
 
@@ -1545,8 +1575,7 @@ async function guiAnhLen(
     const blob = await fetch(photo.uri).then((r) => r.blob());
     form.append("file", blob, "anh.jpg");
   } else {
-    // React Native's own FormData understands this shape and nothing else.
-    form.append("file", { uri: photo.uri, name: "anh.jpg", type: "image/jpeg" } as never);
+    form.append("file", phanTepAnh(photo.uri, "anh.jpg") as never);
   }
 
   let response: Response;

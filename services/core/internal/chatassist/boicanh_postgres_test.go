@@ -250,7 +250,7 @@ func TestModelNhanDungDoanChatDuocChiaSeTheoThuTuDoc(t *testing.T) {
 	// The roster is there, and it speaks the bundle's language: the caller by
 	// their own display name, the friend by the label their turns carry (an
 	// older client's «Bạn 1» here), and the transcript names the caller the
-	// same way (ADR-0034 §5).
+	// same way (ADR-0036 §5).
 	var ten []string
 	for _, m := range payload["members"].([]any) {
 		ten = append(ten, m.(map[string]any)["display_name"].(string))

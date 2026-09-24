@@ -362,3 +362,17 @@ test("ngưỡng kích thước là ngưỡng thật, không phải số trang tr
   assert.equal(MAX_BYTES, 2 * 1024 * 1024);
   assert.equal(MAX_EDGE, 1600);
 });
+
+/* ------------------------------------------------ ảnh kỷ niệm: thử lại được --- */
+
+test("kỷ niệm gửi hỏng: bản nén bị xoá, ảnh đã chọn còn để xem trước và thử lại", async () => {
+  const { nenRoiDung } = await import("../dist-test/camera/anh-nhom.js");
+  const backend = fakeBackend();
+  const daChon = { uri: "file:///cache/đã-chọn.jpg", width: 3000, height: 4000 };
+  await assert.rejects(nenRoiDung(backend, daChon, async () => { throw new Error("mạng"); }), /mạng/);
+  assert.deepEqual(backend.calls.discarded, ["file:///cache/nén.jpg"]);
+  // The retry compresses the same pick again: it must still be there.
+  const lan2 = await nenRoiDung(backend, daChon, async (anh) => anh.uri);
+  assert.equal(lan2, "file:///cache/nén.jpg");
+  assert.deepEqual(backend.calls.discarded.sort(), ["file:///cache/nén.jpg", "file:///cache/nén.jpg", "file:///cache/đã-chọn.jpg"].sort());
+});

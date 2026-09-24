@@ -14,7 +14,7 @@ What it proves when it runs
   ``hoi_thoai``, which is held to the SAME handwritten golden as the Go worker's
   ``hoiThoai`` (``services/core/internal/chatassist/testdata/``), key order
   included. The roster follows the worker's ``roster``: display names where
-  they pass the prompt-safety test (ADR-0034 §5), never an account id.
+  they pass the prompt-safety test (ADR-0036 §5), never an account id.
 * Per case: every ``place_id`` is in the catalogue it was handed, no money field
   appears, the answer is Vietnamese, forbidden place tags are absent, prices,
   districts and opening hours fit what the group typed, required words appear,

@@ -215,3 +215,41 @@ function loiKhongMoDuoc(problem: unknown): AnhNhomError {
 }
 
 export { fitLongestEdge };
+
+/**
+ * Shrink the picked photo, hand the result to `use`, and clean up after it.
+ *
+ * The compressed copy is always discarded. The PICK is discarded only once
+ * `use` has succeeded: the share screen keeps previewing it after a failed
+ * upload, and a retry compresses it again. It used to be discarded in the same
+ * `finally`, so the preview pointed at a deleted file and the second attempt
+ * failed for certain with «Không mở được tấm ảnh này» (logcat ENOENT, QA
+ * 23/09). A pick the person walks away from is theirs to discard (`boAnh`).
+ */
+export async function nenRoiDung<T>(
+  backend: PhotoBackend,
+  daChon: TempPhoto,
+  use: (anh: { uri: string }) => Promise<T>,
+  onGiaiDoan?: (giaiDoan: GiaiDoanTaiAnh) => void,
+): Promise<T> {
+  onGiaiDoan?.("chuan-bi-anh");
+  const tam: string[] = [];
+  let xong = false;
+  try {
+    const anh = await nenLai(backend, daChon);
+    if (anh.uri !== daChon.uri) tam.push(anh.uri);
+    onGiaiDoan?.("dang-gui");
+    const ketQua = await use(anh);
+    xong = true;
+    return ketQua;
+  } finally {
+    if (xong) tam.push(daChon.uri);
+    for (const uri of tam) {
+      try {
+        await backend.discard(uri);
+      } catch {
+        // A temp file that would not delete is not the person's problem.
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
@@ -5,6 +6,7 @@ import { chuLon } from "../../adaptive";
 import { typography, useRudiTheme } from "../../theme";
 import { TRANG_THAI_MO, type ToGiay, cauTrangThai, daDongY, khacGi, nutChoTo, phienBan, phienBanTruoc, tenNgan } from "../../to-giay/to-giay";
 import { ngayDocDuoc } from "../../to-giay/ngay";
+import { useTenCho } from "../../to-giay/useTenCho";
 import { RudiButton } from "../../ui";
 import { Stamp } from "../../ui/Stamp";
 import { ToGiay as ToGiayView, VetGap } from "../../ui/ToGiay";
@@ -104,9 +106,12 @@ export function ToLoiRu({
     truoc.current = `${to.id}:${to.state}`;
   }, [to.id, to.state]);
   const dangQuyet = ["da_gui", "da_xem", "de_nghi_sua", "dong_y"].includes(to.state);
-  const doi = dangQuyet && pb && to.version > 1 ? khacGi(pb, phienBanTruoc(to)) : [];
+  const truocDo = dangQuyet && to.version > 1 ? phienBanTruoc(to) : undefined;
+  const hangCu = truocDo?.content.chang ?? [];
   const lyDoSua = dangQuyet && to.version > 1 ? pb?.ly_do ?? null : null;
   const hang = pb?.content.chang ?? [];
+  const tenCho = useTenCho([...hang, ...hangCu].map((c) => c.place_id));
+  const doi = dangQuyet && pb && truocDo ? khacGi(pb, truocDo, (id) => tenCho[id]) : [];
 
   const bam: Record<string, (() => void) | undefined> = {
     gui: onGui,
@@ -142,7 +147,14 @@ export function ToLoiRu({
               {i > 0 ? <VetGap /> : null}
               <View style={styles.hang}>
                 <Text style={[typography.label, styles.gio, { color: colors.ink }]}>{c.gio}</Text>
-                <Text style={[typography.body, styles.viec, { color: colors.ink }]}>{c.viec}</Text>
+                <View style={styles.viec}>
+                  <Text style={[typography.body, { color: colors.ink }]}>{c.viec}</Text>
+                  {c.place_id && tenCho[c.place_id] ? (
+                    <Text style={[typography.caption, { color: colors.inkSoft }]} testID={testID ? `${testID}-cho-${i}` : undefined}>
+                      <Ionicons color={colors.inkSoft} name="location-outline" size={13} /> {tenCho[c.place_id]}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             </View>
           ))}
@@ -285,7 +297,8 @@ const styles = StyleSheet.create({
   gio: { minWidth: 52, fontVariant: ["tabular-nums"], paddingTop: 2 },
   viec: { flex: 1 },
   hangCuoi: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 },
-  lyDo: { paddingHorizontal: 6 },
+  // Flush with the status line under it: the 6dp inset read as a stray indent (QA 23/09).
+  lyDo: {},
   thoat: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, marginTop: 6 },
   doi: { borderLeftWidth: StyleSheet.hairlineWidth, paddingLeft: 12, gap: 2 },
   giu: { gap: 2, paddingHorizontal: 6 },

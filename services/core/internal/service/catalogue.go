@@ -19,7 +19,7 @@ import (
 // The catalogue a model is handed, and the group taste that orders it.
 //
 // Moved here from internal/routes unchanged, so that the one AI path that
-// survives ADR-0034 (internal/chatassist) ranks places exactly the way the
+// survives ADR-0036 (internal/chatassist) ranks places exactly the way the
 // routes that Python still oracles do. Two copies of the ranking would be two
 // answers to "which forty places does the model see", and only one of them
 // would be under the parity gate.

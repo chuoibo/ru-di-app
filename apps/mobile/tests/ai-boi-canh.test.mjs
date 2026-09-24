@@ -80,7 +80,7 @@ test("Thẻ tờ hẹn không mang theo ngân sách", () => {
 });
 
 test("Id tài khoản không lên dây; người khác mang tên hiển thị, ổn định trong MỘT gói", () => {
-  // ADR-0034 §5: the label is the name the room already sees above each bubble.
+  // ADR-0036 §5: the label is the name the room already sees above each bubble.
   const ten = { [ban]: "Lan", [banHai]: "Huy", [toi]: "Nam" };
   const bc = gom([tin("4", { author_id: ban }), tin("3", { author_id: ban }), tin("2", { author_id: banHai }), tin("1", { author_id: toi })], {
     tenCua: (id) => ten[id],

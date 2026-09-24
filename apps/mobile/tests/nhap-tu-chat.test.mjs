@@ -163,7 +163,7 @@ const MA_LOI = [
   {
     code: "chat_reader_not_configured",
     status: 503,
-    phaiCo: /chưa cấu hình|máy chủ/,
+    phaiCo: /chưa bật|chưa cấu hình/,
   },
 ];
 

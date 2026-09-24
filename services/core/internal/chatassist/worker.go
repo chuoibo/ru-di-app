@@ -121,7 +121,7 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	return true, h.publish(ctx, j, card)
 }
 
-// dapThem is what the server lays on top of the caller's bundle (ADR-0034
+// dapThem is what the server lays on top of the caller's bundle (ADR-0036
 // §2.3): only things it owns and never encrypted. It never holds a word of the
 // conversation; that arrives from the client or not at all.
 type dapThem struct {

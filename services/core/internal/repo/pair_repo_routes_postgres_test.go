@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"mobile/services/core/internal/domain/pairpaper"
 )
 
 // routeRefusal is an ApiProblem: what the route answers instead of a body.
@@ -479,10 +481,27 @@ func (p *pairRoute) readablePaper(paperID string) (*PairPaper, error) {
 	if _, err := p.contextOr404(paper.ContextID); err != nil {
 		return nil, err
 	}
-	if paper.State == "nhap" && paper.DraftOwnerID != p.actor {
+	if !chiChuThayRepo(paper, p.actor) {
 		return nil, refuse(404, "paper_not_found")
 	}
 	return paper, nil
+}
+
+// chiChuThayRepo is `_chi_chu_thay` on the stored state: a sheet nobody ever
+// sent is its owner's draft whatever its state.
+func chiChuThayRepo(paper *PairPaper, actor string) bool {
+	if paper.DraftOwnerID == actor {
+		return true
+	}
+	if paper.State == "nhap" {
+		return false
+	}
+	for _, v := range paper.Versions {
+		if v.SentAt != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *pairRoute) lockedPaper() (*PairPaper, error) {
@@ -677,13 +696,97 @@ func (p *pairRoute) draftPaper() error {
 	if len(notebook.Constraints) > 0 {
 		uses = append(uses, "rang_buoc")
 	}
-	content, _ := json.Marshal(map[string]any{"ngay": saturday.Format("2006-01-02"),
-		"chang": []any{map[string]any{"gio": "18:30", "viec": "Ăn tối", "place_id": nil, "can_kiem": true}}})
-	nguon, _ := json.Marshal(map[string]any{"scope": "chung", "dung": uses, "luc": p.isoformat()})
+	// The cycle's agreed sheets and the catalogue around their place: the
+	// reads draft_pair_paper makes before it writes. The wording of the draft
+	// is lam_giau_phac's, whose own oracle is the pairpaper golden.
+	history := agreedHistory(papers, notebook)
+	var choCu *Place
+	for _, nd := range history {
+		if id := nd.Chang[0].PlaceID; id != nil && *id != "" {
+			if choCu, err = p.repo.GetPlace(bg, *id); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	var rows []pairpaper.PlaceRow
+	var choCuRow *pairpaper.PlaceRow
+	if choCu != nil {
+		places, err := p.repo.ListPlaces(bg, PlaceFilter{DestinationID: &choCu.DestinationID, Category: &choCu.Category})
+		if err != nil {
+			return err
+		}
+		for _, place := range places {
+			rows = append(rows, placeRow(place))
+		}
+		row := placeRow(*choCu)
+		choCuRow = &row
+	}
+	boxes := make([]string, len(notebook.Constraints))
+	for i, c := range notebook.Constraints {
+		boxes[i] = c.Content
+	}
+	draft := pairpaper.LamGiauPhac(pairpaper.Draft{
+		Content: pairpaper.Content{Ngay: saturday.Format("2006-01-02"),
+			Chang: []pairpaper.Stop{{Gio: "18:30", Viec: "Ăn tối", CanKiem: true}}},
+		Nguon: pairpaper.Nguon{Scope: "chung", Dung: uses, Luc: p.isoformat()},
+	}, history, choCuRow, rows, boxes)
+	stops := []any{}
+	for _, stop := range draft.Content.Chang {
+		stops = append(stops, map[string]any{"gio": stop.Gio, "viec": stop.Viec, "place_id": stop.PlaceID, "can_kiem": stop.CanKiem})
+	}
+	content, _ := json.Marshal(map[string]any{"ngay": draft.Content.Ngay, "chang": stops})
+	nguon, _ := json.Marshal(map[string]any{"scope": "chung", "dung": draft.Nguon.Dung, "luc": draft.Nguon.Luc})
+	var lyDo *string
+	if draft.LyDo != "" {
+		lyDo = &draft.LyDo
+	}
 	_, err = p.repo.CreatePairPaper(bg, PairPaperInput{ContextID: contextID, CycleID: notebook.CycleID,
-		DraftOwnerID: p.actor, Tuan: monday, ExpiresAt: weekEnd, Content: content, Nguon: nguon, AuthorType: "human",
-		Now: p.now})
+		DraftOwnerID: p.actor, Tuan: monday, ExpiresAt: weekEnd, Content: content, LyDo: lyDo, Nguon: nguon,
+		AuthorType: "human", Now: p.now})
 	return err
+}
+
+// agreedHistory is `_lich_su_chu_ky`: the active cycle's agreed contents,
+// newest first (ListPairPapers' order), at most four, unreadable ones skipped.
+func agreedHistory(papers []PairPaper, notebook *PairNotebook) []pairpaper.Content {
+	if notebook == nil || notebook.CycleID == nil || notebook.CycleState == nil || *notebook.CycleState != "active" {
+		return nil
+	}
+	var out []pairpaper.Content
+	for i := range papers {
+		paper := &papers[i]
+		if paper.CycleID == nil || *paper.CycleID != *notebook.CycleID || paper.IsTemporary ||
+			(paper.State != "chot" && paper.State != "da_di" && paper.State != "da_giu") {
+			continue
+		}
+		current := versionOf(paper, paper.CurrentVersion)
+		if current == nil {
+			continue
+		}
+		day, ok := contentDay(current.Content)
+		if !ok {
+			continue
+		}
+		stops := agreedStops(current.Content)
+		if len(stops) == 0 {
+			continue
+		}
+		content := pairpaper.Content{Ngay: day.Format("2006-01-02")}
+		for _, stop := range stops {
+			content.Chang = append(content.Chang, pairpaper.Stop{Gio: stop.gio, Viec: stop.viec, PlaceID: stop.placeID})
+		}
+		out = append(out, content)
+		if len(out) == 4 {
+			break
+		}
+	}
+	return out
+}
+
+func placeRow(place Place) pairpaper.PlaceRow {
+	return pairpaper.PlaceRow{ID: place.ID, Name: place.Name, Category: place.Category, Kinds: place.Kinds,
+		Traits: place.Traits, Rating: place.Rating, RatingCount: place.RatingCount}
 }
 
 func (p *pairRoute) editDraft() error {

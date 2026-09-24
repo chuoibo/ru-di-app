@@ -97,7 +97,7 @@ export function GroupMembersScreen() {
         subtitle={
           trang.pha === "xong"
             ? `${conSong.filter((tv) => tv.state === "active").length} đang ở trong nhóm, ${conSong.filter((tv) => tv.state === "invited").length} đang được mời.`
-            : "Đang đọc danh sách từ máy chủ..."
+            : "Đang đọc danh sách thành viên…"
         }
       />
       <View style={[styles.loiVao, { borderTopColor: colors.line, borderBottomColor: colors.line }]}>
