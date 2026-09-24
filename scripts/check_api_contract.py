@@ -419,13 +419,15 @@ class Contract:
     spelling: dict[str, str] = field(default_factory=dict)
 
 
-#: Go handlers that register chat routes the Python API does not declare.
-#: These are served by `services/core` in front of the proxy (ADR-0031), so a
-#: client calling them is right and the OpenAPI document is simply not the whole
-#: server any more.
+#: Go handlers that register routes the Python API does not declare (the chat
+#: feed and AI, the avatar feed, the web session cookie). These are served by
+#: `services/core` in front of the proxy (ADR-0031), so a client calling them is
+#: right and the OpenAPI document is simply not the whole server any more.
 GO_CHAT_HANDLERS = (
     "services/core/internal/chatassist/handler.go",
     "services/core/internal/chatlegacychange/handler.go",
+    "services/core/internal/avatarfeed/handler.go",
+    "services/core/internal/websession/websession.go",
 )
 
 #: `h.mux.HandleFunc("POST /contexts/{context}/shared-drafts", ...)`

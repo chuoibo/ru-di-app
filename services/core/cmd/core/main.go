@@ -43,6 +43,7 @@ import (
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/routes"
 	"mobile/services/core/internal/sms"
+	"mobile/services/core/internal/websession"
 	"mobile/services/core/ownership"
 )
 
@@ -233,6 +234,24 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				return
 			}
 			fallback.ServeHTTP(w, r)
+		})
+	}
+	if pool != nil {
+		// Keeps a browser signed in across a reload (internal/websession). It
+		// answers its own credentialed CORS, so it sits outside the shared
+		// middleware, which never allows credentials.
+		var webOrigins []string
+		if origins != "" {
+			webOrigins = strings.Split(origins, ",")
+		}
+		webSessions := websession.New(websession.Store{Pool: pool}, webOrigins)
+		inner := front
+		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if websession.Matches(r.URL.Path) {
+				webSessions.ServeHTTP(w, r)
+				return
+			}
+			inner.ServeHTTP(w, r)
 		})
 	}
 	logger.Info("core starting",

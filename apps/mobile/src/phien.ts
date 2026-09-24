@@ -23,18 +23,23 @@
  *   token is lost in the network, and the person is locked out until somebody
  *   rotates the invitation for them. An `Idempotency-Key` turns that into a
  *   replay of the same answer.
- * - **The fallback store.** On web there is no SecureStore. The session is
- *   kept in memory for that session of the browser and nowhere else, which is
- *   the honest behaviour rather than quietly writing a credential to
- *   `localStorage`.
+ * - **The web store.** On web there is no SecureStore, and the bearer is
+ *   still never written to `localStorage`, where any page script can read it
+ *   at rest. It lives in memory; what
+ *   survives a reload is an HttpOnly, path-scoped, SameSite=Strict cookie the
+ *   server sets and no script can read (`phien-web.ts`,
+ *   `services/core/internal/websession`). Before that store existed every
+ *   reload signed the person out (measured 2026-09-24).
  */
 import {
+  BASE_URL,
   datTokenPhien,
   newAttempt,
   tokenPhienHienTai,
   translatedAnonymous,
   translatedAsActor,
 } from "./api";
+import { khoPhienWeb, type KhoAnToan } from "./phien-web";
 
 /** What the server hands back once, and what we keep. */
 export type TinCuoiTomTat = {
@@ -85,12 +90,7 @@ export type Phien = {
   contexts?: NhomTomTat[];
 };
 
-/** Where a secret is kept between launches. */
-export type KhoAnToan = {
-  doc(khoa: string): Promise<string | null>;
-  ghi(khoa: string, giaTri: string): Promise<void>;
-  xoa(khoa: string): Promise<void>;
-};
+export type { KhoAnToan } from "./phien-web";
 
 const KHOA = "rudi.phien";
 
@@ -106,7 +106,7 @@ const LOI_DANG_XUAT: Record<string, string> = {
   http_401: "Phiên đã hết hiệu lực rồi.",
 };
 
-/** In memory only. The fallback, and what the web build always gets. */
+/** In memory only: the fallback where there is neither SecureStore nor a browser (node). */
 export function khoTrongBoNho(): KhoAnToan {
   let giu: string | null = null;
   return {
@@ -125,7 +125,8 @@ export function khoTrongBoNho(): KhoAnToan {
 let khoMacDinh: KhoAnToan | null = null;
 
 /**
- * SecureStore when the platform has it, memory when it does not.
+ * SecureStore when the platform has it; in a browser, the cookie-backed web
+ * store; memory otherwise.
  *
  * Resolved once and remembered, because the answer cannot change inside one
  * run of the app, and because a failed dynamic import should not be retried on
@@ -145,7 +146,10 @@ export async function khoAnToanMacDinh(): Promise<KhoAnToan> {
       xoa: (khoa) => store.deleteItemAsync(khoa),
     };
   } catch {
-    khoMacDinh = khoTrongBoNho();
+    khoMacDinh =
+      typeof document !== "undefined" && typeof fetch === "function"
+        ? khoPhienWeb(BASE_URL)
+        : khoTrongBoNho();
   }
   return khoMacDinh;
 }
@@ -480,7 +484,17 @@ export async function khoiPhucPhien(kho?: KhoAnToan): Promise<Phien | null> {
     return null;
   }
   datTokenPhien(phien.token);
-  return phien;
+  if (phien.contexts !== undefined) return phien;
+  // A session resumed on the web (and any record older than the field) knows
+  // who but not which groups: ask, the way a sign-in by OTP does. Offline, the
+  // person is still signed in; the group list fills on its next refresh.
+  try {
+    const coNhom = chonNhomMacDinh({ ...phien, contexts: await docNhomCuaToi(phien.person_id) });
+    await store.ghi(KHOA, JSON.stringify(coNhom));
+    return coNhom;
+  } catch {
+    return phien;
+  }
 }
 
 /**

@@ -375,6 +375,10 @@
     // The avatar stream's handshake, backoff and pause rules, driven with a
     // fake socket and hand-run timers. See `tests/luong-anh-dai-dien.test.mjs`.
     "src/rudi/nguoi/luong-anh-dai-dien.ts",
+    // The web session store: resume from the HttpOnly cookie, set it once per
+    // token, clear it on sign-out, and never touch Web Storage. See
+    // `tests/phien-web.test.mjs`.
+    "src/phien-web.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
     // deadline check that must be strict at the exact second like the server.
