@@ -79,13 +79,30 @@ test("Thẻ tờ hẹn không mang theo ngân sách", () => {
   assert.ok(!JSON.stringify(bc).includes("1234567"));
 });
 
-test("Tên tài khoản không lên dây; bí danh ổn định trong MỘT gói", () => {
-  const bc = gom([tin("3", { author_id: ban }), tin("2", { author_id: banHai }), tin("1", { author_id: toi })]);
-  assert.deepEqual(bc.luot.map((l) => l.vai), ["toi", "ban", "ban"]);
-  assert.equal(bc.luot[1].biDanh, "Bạn 1");
-  assert.equal(bc.luot[2].biDanh, "Bạn 2");
+test("Id tài khoản không lên dây; người khác mang tên hiển thị, ổn định trong MỘT gói", () => {
+  // ADR-0036 §5: the label is the name the room already sees above each bubble.
+  const ten = { [ban]: "Lan", [banHai]: "Huy", [toi]: "Nam" };
+  const bc = gom([tin("4", { author_id: ban }), tin("3", { author_id: ban }), tin("2", { author_id: banHai }), tin("1", { author_id: toi })], {
+    tenCua: (id) => ten[id],
+  });
+  assert.deepEqual(bc.luot.map((l) => l.vai), ["toi", "ban", "ban", "ban"]);
+  assert.deepEqual(bc.luot.map((l) => l.biDanh), [undefined, "Huy", "Lan", "Lan"]);
   const day = JSON.stringify(bc);
   assert.ok(!day.includes(ban) && !day.includes(banHai) && !day.includes(toi));
+  // The caller is `vai: "toi"`; their own name is the server's to lay on.
+  assert.ok(!day.includes("Nam"));
+});
+
+test("Hai người trùng tên là hai nhãn, theo thứ tự xuất hiện; tên chưa biết lùi về «Bạn N»", () => {
+  const la = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+  const ten = { [ban]: "Lan", [banHai]: " Lan " };
+  const bc = gom([tin("3", { author_id: la }), tin("2", { author_id: banHai }), tin("1", { author_id: ban })], {
+    tenCua: (id) => ten[id],
+  });
+  assert.deepEqual(bc.luot.map((l) => l.biDanh), ["Lan", "Lan (2)", "Bạn 1"]);
+  // Without a name source at all, every friend is still a distinct «Bạn N».
+  const khongTen = gom([tin("2", { author_id: banHai }), tin("1", { author_id: ban })]);
+  assert.deepEqual(khongTen.luot.map((l) => l.biDanh), ["Bạn 1", "Bạn 2"]);
 });
 
 test("Mỗi lượt mang id tin để máy chủ kiểm được, nhưng id người thì không", () => {

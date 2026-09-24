@@ -12,7 +12,9 @@ from app.domain.companion import MAX_PLACES, MAX_STOPS, CompanionError
 
 __all__ = ["GeminiCompanion"]
 
-DEFAULT_MODEL = "gemini-2.5-flash"
+# Leader's choice 2026-09-24 for the group AI, measured on the 16-case corpus
+# (services/api/tests/skills/tra_loi_trong_nhom.py) before and after.
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 # The card limits are stated to the model rather than only enforced after it
 # answers. The model knows which stop matters to the plan and the server does
@@ -35,6 +37,31 @@ A text card MUST include payload.text.
 An itinerary card MUST include payload.title, even when it is an empty string.
 A places card MUST include payload.intro, even when it is an empty string.
 Do not add title or intro to a text card.
+
+Before choosing anything, read the WHOLE conversation, not only the last
+message, and collect what the group has settled: the day and time they mean,
+the area, the budget per person, anyone's allergy or diet, the group size and
+whether children come, and what they want or refuse. A constraint said early
+still holds unless someone changed it later; a later change replaces the
+earlier one. `members` is who is in the group, by display name, and
+`budget_per_person_vnd`, when present, is per person.
+
+Then choose only places that satisfy every settled constraint, checking each
+candidate one by one before it goes on the card:
+- open_hours must cover the time the group means (for an itinerary, each stop
+  at its own time): compare the hours as numbers. A place that closes before,
+  or opens after, that time is out, however good it is.
+- the midpoint of price_min_vnd and price_max_vnd must fit the budget.
+- for an allergy or diet, rule out a place whose usual dishes contain it even
+  when its name does not say so, and say in the text which restriction you kept.
+If no supplied place satisfies them, return a text card that says so.
+When members want different things, answer both wishes and name each one.
+
+Ask back only when you cannot give a useful answer: the request says nothing
+about what the group wants, or it points at a place or thing that the
+conversation never names. Then return a text card with ONE short question and
+do not guess. If what was said is enough to propose something (a time, a
+place, a plan), propose it instead of asking.
 
 You may choose a place only by copying a place_id from the supplied catalogue.
 Never invent a place_id. Never describe a place with your own name, address,

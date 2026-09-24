@@ -48,7 +48,7 @@ func setup(t *testing.T, model http.HandlerFunc) fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "destinations", "outings", "outing_stops"} {
+	for _, table := range []string{"people", "contexts", "memberships", "account_sessions", "messages", "places", "destinations", "outings", "outing_stops", "person_interests"} {
 		if _, err = pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}
@@ -162,11 +162,16 @@ func TestInvocationOnlyInputAndDurableIdempotency(t *testing.T) {
 		t.Fatalf("worker: %v %v", ok, err)
 	}
 	raw, _ := json.Marshal(payload)
-	if bytes.Contains(raw, []byte("unshared history")) || bytes.Contains(raw, []byte("Synthetic peer")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
+	if bytes.Contains(raw, []byte("unshared history")) || !bytes.Contains(raw, []byte("Only this synthetic invocation")) {
 		t.Fatal("inference input scope violated")
 	}
-	if got := payload["members"].([]any); len(got) != 0 {
-		t.Fatal("roster was shared")
+	// ADR-0036 §2.3 and §5: the server lays the roster on top, one entry per
+	// active member by display name. Never an account id.
+	if got := payload["members"].([]any); len(got) != 2 {
+		t.Fatalf("roster has %d entries, want the 2 active members", len(got))
+	}
+	if bytes.Contains(raw, []byte(f.peer)) || bytes.Contains(raw, []byte(f.person)) {
+		t.Fatal("roster carries an account id")
 	}
 	w := f.request("GET", f.route()+"/"+first.ID, f.token, nil)
 	requireCode(t, w, 200)

@@ -10,12 +10,21 @@
  *
  * ## What never travels, and why each one is a rule rather than an oversight
  *
- * **Display names.** A turn carries `vai` ("me", "a friend", "the AI") and,
- * for other people, a `biDanh` minted per bundle ("Bạn 1", "Bạn 2"). The model
- * can still tell two speakers apart without learning who they are. Be honest
- * about the limit, though: a message body can still say "Lan ơi 7h nhé", and
- * we cannot strip that without shredding the text. So the words on screen must
- * say we do not send account names, NOT that we send no names at all.
+ * **Account ids.** A turn carries `vai` ("me", "a friend", "the AI") and,
+ * for other people, a `biDanh`. Never a person id.
+ *
+ * `biDanh` used to be a pseudonym minted per bundle («Bạn 1», «Bạn 2»). Since
+ * 2026-09-24 it is the member's display name, the one the room already sees
+ * above each bubble (ADR-0036 §5, product lead's decision): an answer that
+ * says «Lan dị ứng hải sản» is one the group can act on, and «Bạn 1 dị ứng hải
+ * sản» makes everybody work out who Bạn 1 was. Two members with the same name
+ * are «Lan» and «Lan (2)» so they stay two speakers; a member whose name is not
+ * known yet is «Bạn N». The words above the send button say names go along,
+ * and they changed in the same change, because a stated privacy promise is not
+ * withdrawn from one side (ADR-0036 §2.5). The server runs every label through
+ * the prompt-safety test before a model reads it, since a display name is text
+ * a person typed. «Chỉ gửi lời nhờ» still sends no chat at all; the roster
+ * the server adds still names the members, and `cauBoiCanh(null)` says so.
  *
  * **`image_url`.** Never, under any circumstance. It is an authorised read
  * route, and handing one to a server-side model hands over an entry point
@@ -66,7 +75,10 @@ export type LuotBoiCanh = {
    */
   id: string;
   vai: VaiLuot;
-  /** Stable inside ONE bundle only. Not an identity, and not reused across calls. */
+  /**
+   * The speaker's display name, deduplicated inside ONE bundle («Lan (2)»), or
+   * «Bạn N» when unknown. A label, not an identity: never a person id.
+   */
   biDanh?: string;
   loai: LoaiLuot;
   /** ISO instant, so the model can read pacing. */
@@ -170,7 +182,9 @@ export function vanTay(bc: BoiCanh): string {
  * out of step with the payload is the exact lie this block exists to prevent.
  */
 export function cauBoiCanh(bc: BoiCanh | null): string {
-  if (bc === null) return "Chỉ lời nhờ trong ô này. Không tin nhắn nào đi kèm.";
+  // The server's roster names the members even without a bundle (ADR-0036 §5),
+  // so this sentence says so rather than implying nothing but the prompt goes.
+  if (bc === null) return "Chỉ lời nhờ trong ô này, cùng tên hiển thị của các thành viên. Không tin nhắn nào đi kèm.";
   if (bc.luot.length === 0) return "Nhóm chưa có tin nào, nên mình chỉ gửi lời nhờ trong ô này.";
   if (bc.daCat || bc.luot.length < bc.tongLuot) {
     return `${bc.luot.length} tin gần nhất trong ${bc.tongLuot} tin bạn đang thấy, kèm lời nhờ trong ô này. Phần cũ hơn mình để lại.`;
@@ -181,8 +195,9 @@ export function cauBoiCanh(bc: BoiCanh | null): string {
 /**
  * The speaker label the SCREEN shows. Deliberately not the same string the
  * server puts in front of the model: on screen "toi" is the person reading, so
- * it reads «Bạn»; in the payload it reads «Mình», because there the reader is
- * the model. Two audiences, two words, one source of truth for the role.
+ * it reads «Bạn»; in the payload it reads the caller's own display name (or
+ * «Mình» when that name cannot be used), because there the reader is the
+ * model. Two audiences, two words, one source of truth for the role.
  */
 export function nhanVai(l: LuotBoiCanh): string {
   if (l.vai === "toi") return "Bạn";

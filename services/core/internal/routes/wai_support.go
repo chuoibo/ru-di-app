@@ -16,6 +16,7 @@ import (
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/pyval"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 )
 
 func spendActorWindow(call *endpoint.Call, window *limit.ActorWindow[string]) error {
@@ -62,82 +63,10 @@ func optionalFloatParam(call *endpoint.Call, name string) (*float64, error) {
 	return nil, fmt.Errorf("routes: parameter %q is %T, not a float or None", name, call.Values[name])
 }
 
-func cardValue(raw json.RawMessage) pyjson.Value {
-	if len(raw) == 0 {
-		return pyjson.Null{}
-	}
-	value, err := pyjson.Loads(raw)
-	if err != nil {
-		return pyjson.Null{}
-	}
-	return value
-}
-
-// The orders `class GroupFit` and `class Review` declare in routes/places.py,
-// and therefore the orders pydantic writes.
-var (
-	groupFitFields = []string{"min_people", "max_people", "relation"}
-	reviewFields   = []string{"author", "rating", "body"}
-)
-
-// inFieldOrder rewrites one decoded jsonb object into a model's declared field
-// order. A value that is not an object, or an object missing any of the
-// fields, is returned untouched: pydantic would refuse such a row, and
-// half-building one here would answer with a shape Python never serves.
-func inFieldOrder(value pyjson.Value, fields []string) pyjson.Value {
-	obj, ok := value.(*pyjson.OrderedMap)
-	if !ok {
-		return value
-	}
-	out := pyjson.NewOrderedMap()
-	for _, field := range fields {
-		got, present := obj.Get(field)
-		if !present {
-			return value
-		}
-		out.Set(field, got)
-	}
-	return out
-}
-
-// wireGroupFit rewrites a catalogue row's group_fit into pydantic's field
-// order instead of echoing the column.
-//
-// The column is `jsonb`, and jsonb does not keep the order it was written in:
-// it sorts keys by length and then bytewise, so what went in as
-// {min_people, max_people, relation} comes back out of Postgres as
-// {relation, max_people, min_people} -- `relation` is eight characters, the
-// other two are ten. Python never sees that order because the row passes
-// through a pydantic model on its way out, and a model writes its fields as
-// declared. Echoing the column instead reproduces the storage order, which is
-// the same JSON and a different wire.
-//
-// Measured: identical body lengths, 5694 against 5694, differing from byte 489.
-// Nothing but a byte comparison would have noticed.
-//
-// A row missing one of the three is left alone rather than half-built: pydantic
-// would refuse it, and inventing a shape here would answer with a card Python
-// never serves. No catalogue row is like that, so the corpus cannot reach it.
-func wireGroupFit(raw json.RawMessage) pyjson.Value {
-	return inFieldOrder(cardValue(raw), groupFitFields)
-}
-
-// wireReviews is the same rule one level down: `reviews` is a jsonb ARRAY of
-// objects, so the order has to be restored inside every element. Postgres puts
-// `body` first there -- four characters against six -- while `class Review`
-// declares author, rating, body.
-func wireReviews(raw json.RawMessage) pyjson.Value {
-	value := cardValue(raw)
-	list, ok := value.(pyjson.List)
-	if !ok {
-		return pyjson.List{}
-	}
-	out := make(pyjson.List, 0, len(list))
-	for _, item := range list {
-		out = append(out, inFieldOrder(item, reviewFields))
-	}
-	return out
-}
+// cardValue keeps its name here because a dozen routes read cards with it; the
+// rule itself lives in service, next to the catalogue helpers that also decode
+// jsonb columns, so there is one spelling of "unreadable reads as null".
+func cardValue(raw json.RawMessage) pyjson.Value { return service.JSONValue(raw) }
 
 func cardBytes(value pyjson.Value) (json.RawMessage, error) {
 	if value == nil {

@@ -274,7 +274,14 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
   // `tinChoHoiThoai` hides a `/vote` command once its poll card exists, so that
   // command is not on screen -- and "this is what you are looking at" has to be
   // true in the literal sense. One place decides what is visible.
-  const boiCanhAi = useMemo(() => gomBoiCanhChat({ tin: tinHien, personId }), [tinHien, personId]);
+  // Members' display names go with the bundle (ADR-0036 §5), the same names
+  // `tenNguoi` draws above each bubble. The raw map rather than `tenNguoi`
+  // itself: its «Thành viên» placeholder would make every unknown member one
+  // speaker, and an unknown member has to fall back to a distinct «Bạn N».
+  const boiCanhAi = useMemo(
+    () => gomBoiCanhChat({ tin: tinHien, personId, tenCua: (id) => tenTheoId[id] }),
+    [tinHien, personId, tenTheoId],
+  );
   const toHen = useMemo(() => {
     if (nhanRieng) return null;
     const dangMo = (tin: Tin) => {

@@ -135,3 +135,41 @@ Cùng lúc, `chat-ui-contract.md` đang hứa với người dùng: *"Lịch s�
 - Không cho vẽ hình Nếp lên thẻ trả lời trong nhóm.
 - Không cho bỏ lựa chọn "Chỉ gửi lời nhờ".
 - Không cho đưa nội dung tin nhắn vào endpoint mà không có khối xem trước ở trên nút gửi.
+
+## 5. Bổ sung 2026-09-24: roster dùng tên hiển thị
+
+- Quyết định sản phẩm: leader chốt ngày 2026-09-24. Roster và hội thoại gửi model dùng
+  **tên hiển thị thật** của thành viên, không dùng bí danh «Bạn 1», «Bạn 2» nữa.
+- Vì sao: câu trả lời nói «Lan dị ứng hải sản» là câu cả nhóm dùng được ngay; «Bạn 1 dị ứng
+  hải sản» bắt từng người tự đoán Bạn 1 là ai, trên một thẻ cả phòng đọc. Tên hiển thị là thứ
+  nhóm vốn đã thấy trên mỗi bong bóng chat, và là thứ máy chủ vốn sở hữu (§2.3).
+
+**Thứ tự thay đổi.** Theo §2.5, không được đơn phương rút một lời hứa riêng tư đã nói ra, nên
+**câu trên màn đổi trong cùng thay đổi với hành vi**, trước khi có bản build nào gửi tên:
+
+1. Khối «Xem đúng thứ sắp gửi» (`SoHen.tsx`) thôi nói «Tên tài khoản không đi kèm»; giờ nói
+   tên hiển thị của các thành viên đi kèm để AI biết ai nói gì, còn chữ trong tin nhắn đi
+   nguyên văn. Câu của chế độ «Chỉ gửi lời nhờ» (`cauBoiCanh(null)`) nói thêm tên hiển thị
+   các thành viên cũng đi kèm, vì roster máy chủ đắp lên có tên kể cả khi không có gói.
+2. Client (`gomBoiCanhChat`) đặt `biDanh` của người khác bằng tên hiển thị màn đang vẽ; hai
+   người trùng tên là «Lan» và «Lan (2)» theo thứ tự xuất hiện; chưa biết tên thì «Bạn N».
+   Người gọi vẫn là `vai: "toi"`, không mang tên trong gói.
+3. Máy chủ (`chatassist/roster.go`): người gọi mang tên hiển thị của chính họ; người đã nói
+   giữ nhãn lượt của họ mang; người im lặng mang tên hiển thị, trùng thì thêm « (2)», « (3)».
+   Hội thoại (`hoiThoai`) gọi người gọi bằng đúng nhãn roster trả về, nên roster và hội thoại
+   vẫn nói một bộ từ vựng.
+
+**Lưới an toàn.** Tên hiển thị là chữ người dùng tự gõ về mình, nên mọi nhãn trước khi tới model
+qua đúng phép thử của dòng catalogue (`promptsafety.TextSafe`, tối đa 60 chữ, không ký tự điều
+khiển, không cụm lệnh). Không qua thì **không trích**, không trích cẩn thận hơn:
+
+- tên người gọi không dùng được, hoặc trùng nhãn một người khác trong gói → «Mình»;
+- nhãn lượt không an toàn → lượt đó là «Một người trong nhóm», người đó được xếp như người im lặng;
+- người im lặng có tên rỗng, không an toàn, hoặc tên rơi về id tài khoản → «Bạn N» mới.
+
+Id tài khoản vẫn không bao giờ lên dây. Máy chủ vẫn không đọc bảng tin nhắn (cổng
+`khong_doc_chat_test.go` giữ nguyên). **«Chỉ gửi lời nhờ» vẫn luôn có mặt** và vẫn không gửi
+tin nhắn nào.
+
+Golden dùng chung (`chatassist/testdata/hoi_thoai_golden.json`) thêm trường `toi` (nhãn người
+gọi) và một ca nhãn không an toàn; cả Go lẫn bộ đo Python đọc nó.

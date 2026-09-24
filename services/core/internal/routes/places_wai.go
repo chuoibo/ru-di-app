@@ -2,11 +2,8 @@ package routes
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"io/fs"
-	"math"
-	"math/big"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,11 +13,11 @@ import (
 	"mobile/services/core/internal/domain/areas"
 	"mobile/services/core/internal/domain/catalog"
 	"mobile/services/core/internal/domain/promptsafety"
-	"mobile/services/core/internal/domain/scoring"
 	"mobile/services/core/internal/domain/taste"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
+	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
 	guestweb "mobile/services/core/internal/web/guest"
 )
@@ -28,7 +25,6 @@ import (
 const (
 	nearLimitKM      = 60.0
 	maxReasonRows    = 12
-	maxModelPlaces   = 40
 	groupPhotoLimit  = 20
 	publicPhotoCache = "public, max-age=86400"
 )
@@ -134,7 +130,7 @@ func listPlacesWAI() Route {
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		diemDen, err := destinationOrDefault(ctx, store, destinationID)
+		diemDen, err := service.DestinationOrDefault(ctx, store, destinationID)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
@@ -168,11 +164,11 @@ func listPlacesWAI() Route {
 		if group.Known() {
 			safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
 			sort.SliceStable(safe, func(i, j int) bool {
-				si, sj := scoreOrZero(safe[i], group), scoreOrZero(safe[j], group)
+				si, sj := service.ScoreOrZero(safe[i], group), service.ScoreOrZero(safe[j], group)
 				if si != sj {
 					return si > sj
 				}
-				return placeID(safe[i]) < placeID(safe[j])
+				return service.PlaceID(safe[i]) < service.PlaceID(safe[j])
 			})
 			if len(safe) > maxReasonRows {
 				safe = safe[:maxReasonRows]
@@ -181,7 +177,7 @@ func listPlacesWAI() Route {
 		}
 		out := make([]*pyjson.OrderedMap, 0, len(cards))
 		for _, card := range cards {
-			id := placeID(card)
+			id := service.PlaceID(card)
 			pair := written[id]
 			wired, err := wirePlaceCard(card, pair.reason, pair.verdict, group)
 			if err != nil {
@@ -343,8 +339,8 @@ func getPlaceWAI() Route {
 			return endpoint.Reply{}, err
 		}
 		card.Set("description", textOrNull(place.Description))
-		card.Set("activities", jsonListOrEmpty(place.Activities))
-		card.Set("reviews", wireReviews(place.Reviews))
+		card.Set("activities", service.JSONListOrEmpty(place.Activities))
+		card.Set("reviews", service.WireReviews(place.Reviews))
 		count := int64(0)
 		if v, ok := cards[0].Get("photo_count"); ok {
 			if n, ok := v.(pyjson.Int); ok {
@@ -426,10 +422,10 @@ func searchPlacesWAI() Route {
 		results, _ := rawResults.(pyjson.List)
 		if !group.Known() {
 			group = taste.Profile{Basis: taste.BasisPerson, Interests: []string{}, People: 1}
-			if n := intPtrOf(understood, "budget_per_person_vnd"); n != nil {
+			if n := service.IntPtrOf(understood, "budget_per_person_vnd"); n != nil {
 				group.BudgetPerPersonVND = n
 			}
-			if n := intPtrOf(understood, "group_size"); n != nil {
+			if n := service.IntPtrOf(understood, "group_size"); n != nil {
 				size := *n
 				group.Size = &size
 			}
@@ -552,18 +548,6 @@ func wireTaste(group taste.Profile) *pyjson.OrderedMap {
 	return out
 }
 
-func destinationOrDefault(ctx context.Context, store repo.Repository, destinationID *string) (*repo.Destination, error) {
-	if destinationID != nil {
-		return store.GetDestination(ctx, *destinationID)
-	}
-	rows, err := store.ListDestinations(ctx)
-	if err != nil || len(rows) == 0 {
-		return nil, err
-	}
-	row := rows[0]
-	return &row, nil
-}
-
 func tasteProfile(ctx context.Context, store repo.Repository, call *endpoint.Call, contextID *string) (taste.Profile, error) {
 	if contextID != nil {
 		if call.Actor == nil {
@@ -572,7 +556,7 @@ func tasteProfile(ctx context.Context, store repo.Repository, call *endpoint.Cal
 		if err := requireGroupMember(ctx, call, store, "view_group_preference_profile", *contextID); err != nil {
 			return taste.Profile{}, err
 		}
-		return groupTaste(ctx, store, *contextID, time.Now().UTC())
+		return service.GroupTaste(ctx, store, *contextID, time.Now().UTC())
 	}
 	if call.Actor == nil {
 		return taste.Unknown(), nil
@@ -621,7 +605,7 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 	}
 	out := make([]*pyjson.OrderedMap, 0, len(rows))
 	for _, row := range rows {
-		card := placeRow(row)
+		card := service.PlaceRow(row)
 		count := counts[row.ID]
 		card.Set("photo_count", pyjson.NewInt(count))
 		if cover, ok := covers[row.ID]; ok {
@@ -639,172 +623,11 @@ func withPhotos(ctx context.Context, store repo.Repository, rows []repo.Place) (
 	return out, nil
 }
 
-func placeRow(row repo.Place) *pyjson.OrderedMap {
-	out := pyjson.NewOrderedMap()
-	out.Set("id", pyjson.String(row.ID))
-	out.Set("destination_id", pyjson.String(row.DestinationID))
-	out.Set("name", pyjson.String(row.Name))
-	out.Set("category", pyjson.String(row.Category))
-	out.Set("kinds", stringList(row.Kinds))
-	out.Set("rating", floatOrNull(row.Rating))
-	if row.RatingCount == nil {
-		out.Set("rating_count", pyjson.Null{})
-	} else {
-		out.Set("rating_count", pyjson.NewInt(*row.RatingCount))
-	}
-	out.Set("distance_km", floatOrNull(row.DistanceKM))
-	out.Set("price_min_vnd", intOrNull(row.PriceMinVND))
-	out.Set("price_max_vnd", intOrNull(row.PriceMaxVND))
-	out.Set("address", textOrNull(row.Address))
-	if row.OpenNow == nil {
-		out.Set("open_now", pyjson.Null{})
-	} else {
-		out.Set("open_now", pyjson.Bool(*row.OpenNow))
-	}
-	out.Set("open_hours", textOrNull(row.OpenHours))
-	out.Set("travel_minutes", intOrNull(row.TravelMinutes))
-	out.Set("photo_count", pyjson.NewInt(row.PhotoCount))
-	out.Set("traits", stringList(row.Traits))
-	out.Set("group_fit", wireGroupFit(row.GroupFit))
-	out.Set("activities", jsonListOrEmpty(row.Activities))
-	out.Set("flag", textOrNull(row.Flag))
-	out.Set("lat", pyjson.Float(row.Lat))
-	out.Set("lng", pyjson.Float(row.Lng))
-	out.Set("description", textOrNull(row.Description))
-	out.Set("reviews", wireReviews(row.Reviews))
-	out.Set("source", pyjson.String(row.Source))
-	out.Set("license", textOrNull(row.License))
-	return out
-}
-
-func stringList(values []string) pyjson.List {
-	list := pyjson.List{}
-	for _, value := range values {
-		list = append(list, pyjson.String(value))
-	}
-	return list
-}
-
-func jsonListOrEmpty(raw json.RawMessage) pyjson.Value {
-	if len(raw) == 0 {
-		return pyjson.List{}
-	}
-	value, err := pyjson.Loads(raw)
-	if err != nil {
-		return pyjson.List{}
-	}
-	if list, ok := value.(pyjson.List); ok {
-		return list
-	}
-	return pyjson.List{}
-}
-
-func placeID(place *pyjson.OrderedMap) string {
-	value, _ := place.Get("id")
-	text, _ := value.(pyjson.String)
-	return string(text)
-}
-
-func scoreCard(place *pyjson.OrderedMap, group taste.Profile) (*big.Int, []scoring.Factor, error) {
-	scored, err := scoringPlace(place)
-	if err != nil {
-		return nil, nil, err
-	}
-	return scoring.ScorePlace(scored, group)
-}
-
-func scoreOrZero(place *pyjson.OrderedMap, group taste.Profile) int64 {
-	score, _, err := scoreCard(place, group)
-	if err != nil || score == nil {
-		return 0
-	}
-	if score.IsInt64() {
-		return score.Int64()
-	}
-	return math.MaxInt64
-}
-
-func scoringPlace(place *pyjson.OrderedMap) (scoring.Place, error) {
-	category, _ := place.Get("category")
-	cat, _ := category.(pyjson.String)
-	out := scoring.Place{
-		Category:      string(cat),
-		Kinds:         stringsOf(place, "kinds"),
-		Traits:        stringsOf(place, "traits"),
-		PriceMinVND:   intPtrOf(place, "price_min_vnd"),
-		PriceMaxVND:   intPtrOf(place, "price_max_vnd"),
-		DistanceKM:    floatPtrOf(place, "distance_km"),
-		TravelMinutes: intPtrOf(place, "travel_minutes"),
-	}
-	fitValue, _ := place.Get("group_fit")
-	if fit, ok := fitValue.(*pyjson.OrderedMap); ok {
-		minP := intPtrOf(fit, "min_people")
-		maxP := intPtrOf(fit, "max_people")
-		if minP != nil && maxP != nil {
-			out.GroupFit = &scoring.GroupFit{MinPeople: *minP, MaxPeople: *maxP}
-		}
-	}
-	return out, nil
-}
-
-func stringsOf(place *pyjson.OrderedMap, key string) []string {
-	value, _ := place.Get(key)
-	list, ok := value.(pyjson.List)
-	if !ok {
-		return []string{}
-	}
-	out := make([]string, 0, len(list))
-	for _, item := range list {
-		if text, ok := item.(pyjson.String); ok {
-			out = append(out, string(text))
-		} else {
-			out = append(out, "")
-		}
-	}
-	return out
-}
-
-func intPtrOf(place *pyjson.OrderedMap, key string) *int64 {
-	value, ok := place.Get(key)
-	if !ok {
-		return nil
-	}
-	switch v := value.(type) {
-	case pyjson.Null:
-		return nil
-	case pyjson.Int:
-		n, ok := v.Int64()
-		if !ok {
-			return nil
-		}
-		return &n
-	}
-	return nil
-}
-
-func floatPtrOf(place *pyjson.OrderedMap, key string) *float64 {
-	value, ok := place.Get(key)
-	if !ok {
-		return nil
-	}
-	switch v := value.(type) {
-	case pyjson.Null:
-		return nil
-	case pyjson.Float:
-		n := float64(v)
-		return &n
-	case pyjson.Int:
-		n, _ := v.Big().Float64()
-		return &n
-	}
-	return nil
-}
-
 func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group taste.Profile) (*pyjson.OrderedMap, error) {
 	if reason == nil || verdict == nil {
 		reason, verdict = nil, nil
 	}
-	score, factors, err := scoreCard(place, group)
+	score, factors, err := service.ScoreCard(place, group)
 	if err != nil {
 		return nil, err
 	}
@@ -850,8 +673,8 @@ func wirePlaceCard(place *pyjson.OrderedMap, reason, verdict *string, group tast
 
 func fallbackReason(place *pyjson.OrderedMap) string {
 	var parts []string
-	low := intPtrOf(place, "price_min_vnd")
-	high := intPtrOf(place, "price_max_vnd")
+	low := service.IntPtrOf(place, "price_min_vnd")
+	high := service.IntPtrOf(place, "price_max_vnd")
 	if low != nil && high != nil {
 		lowK, highK := *low/1000, *high/1000
 		band := strconv.FormatInt(lowK, 10) + "k"
@@ -860,7 +683,7 @@ func fallbackReason(place *pyjson.OrderedMap) string {
 		}
 		parts = append(parts, "Khoảng "+band+"/người")
 	}
-	if km := floatPtrOf(place, "distance_km"); km != nil {
+	if km := service.FloatPtrOf(place, "distance_km"); km != nil {
 		parts = append(parts, "cách "+strconv.FormatFloat(*km, 'f', -1, 64)+"km")
 	}
 	head := "Chưa có giá và khoảng cách cho chỗ này. "
@@ -883,7 +706,7 @@ func placeSortLess(a, b *pyjson.OrderedMap) bool {
 	if ratingA != ratingB {
 		return ratingA > ratingB
 	}
-	return placeID(a) < placeID(b)
+	return service.PlaceID(a) < service.PlaceID(b)
 }
 
 func openNowRank(place *pyjson.OrderedMap) int {
@@ -977,51 +800,4 @@ func fetchReasons(places []*pyjson.OrderedMap, group taste.Profile) map[string]r
 		out[key] = pair
 	}
 	return out
-}
-
-func clientPlaces(places []*pyjson.OrderedMap) []*pyjson.OrderedMap {
-	fields := []string{"id", "name", "address", "price_min_vnd", "price_max_vnd", "rating", "distance_km", "open_hours", "category"}
-	out := []*pyjson.OrderedMap{}
-	for _, place := range treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(places))) {
-		entry := pyjson.NewOrderedMap()
-		for _, field := range fields {
-			if value, ok := place.Get(field); ok {
-				entry.Set(field, value)
-			} else {
-				entry.Set(field, pyjson.Null{})
-			}
-		}
-		out = append(out, entry)
-	}
-	return out
-}
-
-func modelPlaceRows(ctx context.Context, store repo.Repository, group taste.Profile) ([]*pyjson.OrderedMap, error) {
-	diemDen, err := destinationOrDefault(ctx, store, nil)
-	if err != nil {
-		return nil, err
-	}
-	filter := repo.PlaceFilter{}
-	if diemDen != nil {
-		filter.DestinationID = &diemDen.ID
-	}
-	rows, err := store.ListPlaces(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	cards := make([]*pyjson.OrderedMap, 0, len(rows))
-	for _, row := range rows {
-		cards = append(cards, placeRow(row))
-	}
-	sort.SliceStable(cards, func(i, j int) bool {
-		si, sj := scoreOrZero(cards[i], group), scoreOrZero(cards[j], group)
-		if si != sj {
-			return si > sj
-		}
-		return placeID(cards[i]) < placeID(cards[j])
-	})
-	if len(cards) > maxModelPlaces {
-		cards = cards[:maxModelPlaces]
-	}
-	return clientPlaces(cards), nil
 }
