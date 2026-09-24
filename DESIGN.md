@@ -1103,6 +1103,8 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
 đó bằng `react-native-svg`, nét tròn đầu tròn góc, tô phẳng, không bóng.
 `KyHoa` (11/09) là tờ ký hoạ của nơi chưa có ảnh: sân khấu theo loại + ≤ 2
 đạo cụ theo tag, một điểm coral, hai khung cắt — xem «Luật Ký Hoạ Trong Sổ».
+Nếp ngoài trạng thái rỗng còn một chỗ đứng thường trực: tờ cài trong lề phải,
+xem «Dock Nếp: tờ giấy cài trong lề sổ» sau mục «Tờ giấy gấp ba».
 - **Ngữ pháp đường**: mọi `d` chỉ gồm lệnh tuyệt đối `M`/`L`/`C`/`Z`, số thập
   phân trơn (không mũ, không `-0`), dựng từ số lúc chạy qua `net.ts`
   (`daGiac`, `netGay`, `cong`, `qCong`, `tron`, `bau`, `cungTron`, `quat`,
@@ -1283,6 +1285,9 @@ khỏi React: `src/rudi/art/{net,nep,motif,gu,canh,ky-hoa}.ts` chỉ trả mản
   bằng chứng khay/bubble sáng-tối ở `docs/archive/claude/2026-09-08/tra-loi-sticker-cho-ti.md`.
 - **Luật Nếp Đứng Xa Tiền.** Nếp chỉ xuất hiện ở trạng thái rỗng và cửa vào;
   **không bao giờ** cạnh số tiền, lỗi, hay xung đột (báo cáo 07/09 §6.4).
+  Dock Nếp là cửa vào thường trực nên cũng theo luật: trên màn tiền chỉ còn
+  mép giấy trơn 10dp, không mặt, không tờ thứ hai, chạm không đưa Nếp ra
+  (ADR-0035 §2.4).
   Không dấu chuyển động, không mặt hào hứng trên mọi tư thế: tay giơ đã nói.
 - **Luật Vòng Hở Không Tiến Độ.** Vòng hở không bao giờ là progress ring:
   không animate, không đi cùng phần trăm, khe luôn rộng. Đường chuyền khi
@@ -1749,6 +1754,94 @@ cuối). Ở head này chỉ bảng `ui-lab` dựng nó; chưa màn người dù
   còn treo cho Phase 2 (spec §20.5 phép đo 2); đòn bẩy vật chất duy nhất còn
   lại là ngữ pháp góc gấp ở tờ dẫn. Ghi để người sau không «sửa» bằng cách
   thêm bóng hay đổi bo.
+
+### Dock Nếp: tờ giấy cài trong lề sổ (`nep/NepDock.tsx`)
+*Extension build trong thế giới đã có (ngữ pháp ToGiay): không roll concept mới;
+dock kế thừa vật liệu, nếp gấp và lề của ToGiay.* Nếp là «mẩu lời hẹn gấp
+giấy», tờ giữ chỗ cho mình (mục «Lớp vẽ» ở trên). Nên dock **không phải nút nổi
+trên trang**: nó là một tờ giấy **cài vào lề phải** của trang, như mẩu giấy
+đánh dấu chỗ đang đọc trong một cuốn sổ thật, và mọi trạng thái là cùng tờ ấy
+cài sâu hay nông. Câu chuyện gốc là «Chừa một chỗ cho nhau»: khi trang đặt một
+tờ khác lên mình, tờ của Nếp rút vào sổ và nhường chỗ. ADR-0033 (dock bám mép)
+và ADR-0035 (cài trong lề) là nguồn; reducer ở `nep/trang-thai.ts`, hình học ở
+`nep/dock-vi-tri.ts`.
+
+- **Lề trang là ngân sách đo được, không phải phong cách.** Đo trên bản chạy
+  (23/09): giờ tin nhắn trong hội thoại kết thúc đúng **16dp** từ mép phải
+  (`LE_TRANG` = `space.md`). Nên mọi thứ nằm nghỉ phải nằm gọn trong 16dp:
+  mép cài lộ **10dp** (`NEP_MEP_HEP`), có việc thì thêm tờ thứ hai lộ **4dp**
+  (`TO_SAU_LO`), tổng **14dp** (`NEP_MEP_DAY`). Vùng chạm mượn phần lề còn
+  lại và dừng đúng ở lề: `slopTrai` = 16 − 10 = 6dp khi cài, **0** khi đã kéo
+  ra. Kéo ra, tờ rộng **56dp** (`NEP_DIA`, bằng con dấu tạo của thanh tab) ×
+  cao **64dp** (`NEP_TO_CAO`: tờ, không phải đồng xu), Nếp tư thế `doi` cỡ 44
+  đứng trên tờ. Ray dọc bên phải, cách đỉnh 16 và cách thanh tab 24 (thanh tab
+  là control, header thì không); vị trí lưu là **tỷ lệ 0..1** trên ray
+  (`rudi.nep.dock.v3`, chỉ `tyLe`), nên xoay máy hay đổi máy vẫn về đúng chỗ.
+  *Lịch sử:* bản đầu nghỉ dạng đĩa 57dp và cắt «20|0», «22:|» trên Khám phá,
+  vùng chạm nuốt «Đồng ý» của lời mời (flow 25).
+- **Ba trạng thái, một chỗ nghỉ.** `an` (mặc định, chỗ nghỉ duy nhất) chỉ lộ
+  mép, **không vẽ Nếp**. `nghi` (đã kéo ra) là **lối đi tới bảng, không phải
+  chỗ đứng**: đóng bảng, đổi màn, một tờ khác đóng lại, hoặc **6 giây** không
+  chạm lần hai (`TU_CAT_MS`) đều đưa về mép; đang kéo dọc thì đồng hồ dừng;
+  trên Android/iOS khi bật trình đọc màn hình thì không tự cất (web không biết
+  được, vẫn tự cất); **không bao giờ lưu xuống đĩa**, mỗi lần mở app bắt đầu
+  cài. `mo` là bảng đang mở, dock không vẽ. **Không có trạng thái `he`**: dòng
+  hé bốn giây từng rộng 234dp và nằm đè giá, giờ mở cửa của thẻ; việc **không
+  bao giờ làm Nếp nở rộng**, không trạng thái nào rộng hơn 56dp đến được mà
+  người dùng không chạm.
+- **Vật liệu là giấy của `ToGiay`.** Mặt `paper`, viền hairline `lineStrong`,
+  **không bóng**: theo «Luật Trong Trang / Trên Trang», bóng thuộc về bản in
+  *dán lên* trang, còn tờ này nằm *trong* mép trang. Góc trên trái **gấp**
+  theo ngữ pháp `ToGiay` (góc mất khỏi đường viền, viền rẽ theo đường chéo,
+  vạt `paperShade` nằm trên mặt, hai cạnh tự do của vạt bằng `ink` 1dp; ô góc
+  8dp, nhỏ hơn mép 10dp để dưới nếp còn một dải giấy thẳng). Bo `radius.small`
+  ở góc dưới trái; **cạnh chạy vào mép màn không viền, không bo**, vì nó chạy
+  tiếp vào trong sổ. Vẽ bằng SVG chứ không View có viền: nếp gấp là góc bị
+  thiếu, và tờ này trôi trên thẻ, ảnh, chat nên không có màu nền nào để «xoá».
+  Đang nhấn thì mặt thành `paperShade`. **Không coral**: theo «Luật Góc Cắt,
+  Không Badge», góc coral thuộc Nếp và `dan`, và góc coral của chính Nếp đã
+  nằm trên tờ khi kéo ra.
+- **Có việc là tờ thứ hai, không phải chấm đỏ.** Một tờ giấy ấm hơn một nấc
+  trượt ra từ sau tờ Nếp, một nhịp `standard`/decelerate rồi đứng yên; hết
+  việc thì cắt, không chào. Màu: `accentSoft` (#fff0ea) ở sáng, **`line`
+  (#363b5e) ở tối**, vì `accentSoft` tối (#3d1a10) cạnh giấy xanh đậm đọc ra
+  vệt gỉ sét (cùng lý do `AlbumAnh` đã loại). Không chữ, không số đếm. Không
+  bao giờ hiện trên màn tiền, cạnh một tờ đang mở, hay sau bảng đang mở: bản
+  ghi (`coViec`) và tín hiệu là hai sự thật, chỉ `hienToSau` nối chúng.
+  *Hiện chưa gì trong app gửi việc cho dock; trạng thái này chỉ tới được qua
+  bản build QA `EXPO_PUBLIC_QA_NEP_VIEC`.*
+- **Màn tiền: chỉ mép trơn** (Luật Nếp Đứng Xa Tiền). Mép 10dp, không mặt,
+  không tờ thứ hai, và **chạm hay kéo cũng không đưa mặt Nếp ra**: mép ở đây là
+  cánh cửa về Nếp từ chỗ khác, không phải khuôn mặt cạnh con số. Luật nằm trong
+  reducer (`luiLai`) chứ không trong component, để màn sau không thừa kế một
+  Nếp đã bật ra cạnh quyết toán.
+- **Nhường chỗ thì không vẽ gì.** Khi bất kỳ tờ nào nằm trên trang (khay,
+  bottom sheet qua `ui/Sheet.tsx`, story, bản đồ; `useNhuongChoNep(true)`, có
+  đếm lồng nhau), dock không vẽ gì, **kể cả mép**: mép còn vẽ đè góc khay cạnh
+  nút ✕ là lỗi xếp lớp, không phải chiều sâu. Không báo gì; tờ cuối đóng thì
+  Nếp về đúng chỗ người dùng để. Bảng của chính Nếp không bắt Nếp nhường.
+- **Cử chỉ.** Chạm mép để kéo ra; chạm lần hai mở bảng (một chạm lỡ không mở
+  cả một tờ đè lên trang). Cất: vuốt **ra ngoài** (> 56dp hoặc > 700dp/s),
+  hoặc thao tác trợ năng **«Cất Nếp vào mép»**. Kéo dọc để dời trên ray.
+  **Không bao giờ vuốt ngang vào trong**: dưới điều hướng cử chỉ, dải Back của
+  Android đo được **29.7dp** và chỉ nuốt cú vuốt ngang vào trong (chạm trong dải
+  vẫn tới app), nên nửa kéo vào trong bị kẹp bỏ chứ không giành; **không khai
+  `setSystemGestureExclusionRects`**, cú vuốt ấy là nút Back của người dùng.
+- **Web: `overflowX: "clip"` trên lớp dock.** Tờ cài rộng 56dp, 46dp nằm ngoài
+  mép phải; bấm vào là focus, và trình duyệt cuộn ngang cả trang để lộ phần
+  bị giấu (đo 24/09 trên `/finance`: trang trượt 46px). `clip` cắt tràn mà
+  không biến lớp thành vùng cuộn; trục dọc để nguyên cho mép trên tờ thứ hai.
+- **Cổng đo: `apps/mobile/tools/xem-dock-nep.mjs`** (puppeteer trên bản web,
+  sáng và tối). Lúc nghỉ, trên tab đầu và trong hội thoại cuộn hết từng nấc:
+  **0 chữ bị che** (153 và 363–414 hộp chữ đã quét ở lượt `dock-1225`); khay
+  mở thì dock không vẽ; đóng bảng thì về mép; kéo ra rồi để yên thì 6 giây sau
+  về mép; màn tiền chỉ còn mép 10dp, chạm không ra mặt; có việc thì không gì
+  rộng hơn 56dp. **Canary:** kéo Nếp ra thì phép đo **phải** thấy chữ bị che
+  (ảnh `thuong-dark-4-keo-ra`: tờ 56dp nằm trên «200…» và «22:…»); canary
+  không đỏ thì cổng mù. Bằng chứng ở ngoài checkout
+  (`~/.cache/rudi-bang-chung/dock-1225/`). *Chưa chứng minh:* ảnh story và bản
+  đồ lúc nhường chỗ (mới là bằng chứng trên mã + test reducer), và bản native
+  thật.
 
 ### Bản tính của sổ (`so/ban-tinh.ts`)
 Chỗ **duy nhất** trong `src/` khai các loại sổ khác nhau ở đâu (spec §13.3,

@@ -1,59 +1,118 @@
-import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useState } from "react";
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Path } from "react-native-svg";
 
 import { TAB_BAR_HEIGHT } from "../adaptive";
-import { typography, useRudiTheme } from "../theme";
+import { so } from "../art/net";
+import { useRudiTheme } from "../theme";
 import { Nep } from "../ui/art/Nep";
 import { useMotion } from "../ui/useMotion";
-import {
-  NEP_DIA,
-  NEP_MEP_CAO,
-  beRongMep,
-  ghimVaoRay,
-  rayDoc,
-  tyLeTuY,
-  yTuTyLe,
-} from "./dock-vi-tri";
+import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, rayDoc, slopTrai, yTuTyLe } from "./dock-vi-tri";
 import { useNep } from "./NepProvider";
-import { nepHien } from "./trang-thai";
+import { hienToSau, nepHien } from "./trang-thai";
 
-/** How long one peeked line stays before it retracts on its own. */
-const HE_MS = 4000;
+/**
+ * Pulled out and not tapped again, Nếp goes back into the edge after this.
+ * Long enough to reach for the second tap, short enough that a stray tap on
+ * the edge does not leave 56dp over the page while the person reads on.
+ */
+export const TU_CAT_MS = 6000;
 /** Past this, a horizontal drag means «tuck Nếp away» rather than «move it». */
 const KEO_AN_DP = 56;
 const KEO_AN_TOC = 700;
 
+/** Nếp stands on the slip at the size the old disc carried. */
+const NEP_CO = 44;
 /**
- * Nếp on the edge of the screen.
+ * The folded corner. Small enough that the tucked edge (10dp) still shows a
+ * sliver of straight paper under the fold, so the fold reads as a corner of
+ * something rather than as the whole visible thing.
+ */
+const GOC = 8;
+/** The second slip rides a little higher than Nếp's, so its top edge shows too. */
+const TO_SAU_CAO_HON = 6;
+
+/**
+ * Nếp on the edge of the screen: a slip of paper tucked into the notebook.
  *
- * The bottom of the shell is already spoken for: `ui/RudiTabBar.tsx` puts the
- * create stamp in the middle of the bar as a real column, so the usual
- * bottom-right chat bubble would sit on the one control the bar cannot lose.
- * Nếp therefore rides a vertical rail on the right edge, and `dock-vi-tri.ts`
- * is the only place that knows where the rail ends.
+ * ## One object, in the margin
  *
- * The hiding gesture is the product idea: Nếp carries a sheet of paper, so
- * swiping it away tucks the sheet into the edge of the notebook and leaves a
- * paper edge showing. That edge is also the whole notification vocabulary:
- * when something is waiting it grows a second layer and warms one step, once,
- * with no repeat and no badge. DESIGN.md forbids Nếp acting as chrome, and a
- * red dot is chrome. Someone watching will notice; someone who is not will not
- * be interrupted.
+ * Nếp is «mẩu lời hẹn gấp giấy» -- a folded slip with an appointment on it,
+ * the one that keeps a seat for you. So Nếp here is not a button floating over
+ * the page. It is a slip tucked into the page's right MARGIN, the way a slip
+ * marks a place in a real notebook, and every state is the same slip tucked
+ * more or less:
  *
- * On money, error and conflict screens the provider forces `an` and refuses to
- * peek (ADR-0033). What remains is a 6dp paper edge with no face and no
- * character, which is a door back to Nếp rather than Nếp standing beside a
- * settlement.
+ *   - `an`   (the default) tucked; its edge shows inside the margin, nothing
+ *            more. Nếp is not drawn: on a money screen this edge is all ADR-0033
+ *            §3 allows, «không mặt, không nhân vật».
+ *   - `nghi` pulled out, because the person tapped the edge; Nếp stands on
+ *            it. A passage to the panel, not a place: closing the panel,
+ *            leaving the screen, a sheet closing or `TU_CAT_MS` without a
+ *            second tap puts it back in the edge, and it is never written to
+ *            disk (ADR-0035).
+ *   - `mo`   the panel is open, and it covers the edge anyway.
+ *
+ * Nothing widens the slip past `nghi` on its own. A line written on it for four
+ * seconds used to announce work (`he`); it lay over a card's price and hours,
+ * so work is now only ever the second slip, and what it is waits in the panel.
+ *
+ * The margin is a measured budget, not a style: text in a conversation ends
+ * exactly 16dp from the right edge, so the tucked slip, the second slip behind
+ * it, and the tap area together stay inside those 16dp (`dock-vi-tri.ts`).
+ * The first cut rested as a 57dp disc and failed exactly there: it cut «20|0»
+ * on Explore, and its tap area caught the «Đồng ý» of an invitation.
+ *
+ * ## Paper, in this system's own grammar
+ *
+ * `paper` with a `lineStrong` hairline, the edge `ToGiay` uses; no shadow,
+ * because DESIGN.md gives a shadow only to a print laid ON the page and this
+ * slip is IN the page's edge. The top-left corner is FOLDED, drawn the way
+ * `ToGiay` folds a letter: the corner is missing, the slip's edge turns along
+ * the diagonal, and the back of the flap lies on the face in `paperShade`, the
+ * tone of the fold across Nếp's own body. Not coral: under «Luật Góc Cắt» the
+ * coral corner belongs to Nếp itself and to `dan`, and Nếp's own corner is
+ * right there on the slip once it is out. The side that runs into the screen
+ * edge has no stroke and no radius, because it continues inside the notebook.
+ *
+ * The slip is drawn in SVG rather than as a bordered View because a fold is a
+ * missing corner: a View can only paint an erasing triangle in some guessed
+ * ground colour, and this slip floats over cards, photos and chat.
+ *
+ * ## Something waiting is a second slip, not a dot
+ *
+ * DESIGN.md forbids Nếp acting as chrome, and a red dot is chrome. When there
+ * is work, a second slip of warmer paper, «ấm lên một nấc» (ADR-0033 §7) --
+ * `accentSoft` in the light theme, the paper family's lighter `line` in the
+ * dark one -- slides out from behind Nếp's once, one beat, and stays.
+ * It never shows on a money screen or beside an open sheet (`hienToSau`).
+ *
+ * ## «Chừa một chỗ cho nhau»
+ *
+ * When the page lays another sheet over itself -- a tray, a bottom sheet --
+ * the slip slides back into the notebook and leaves the room to it, the first
+ * scene ever drawn of Nếp, pulling out a chair for someone else. While the
+ * sheet is up not even the edge is drawn, and nothing is announced; Nếp comes
+ * back where the person left it when the last sheet closes.
  */
 export function NepDock() {
-  const { dock, tyLe, daDocDia, gui, datTyLe } = useNep();
-  const { colors } = useRudiTheme();
+  const { dock, tyLe, gui, datTyLe } = useNep();
+  const { colors, dark, radius } = useRudiTheme();
   const motion = useMotion();
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
+  const [kich, datKich] = useState({ w: NEP_DIA, h: NEP_TO_CAO });
 
   const ray = rayDoc({
     cao: height,
@@ -63,8 +122,16 @@ export function NepDock() {
     day: TAB_BAR_HEIGHT + insets.bottom,
   });
 
+  const dangAn = dock.trangThai === "an";
+  const coToSau = hienToSau(dock);
+  // How much of the slip is tucked into the edge right now.
+  const cai = dangAn ? NEP_DIA - NEP_MEP_HEP : 0;
+
   const y = useSharedValue(yTuTyLe(tyLe, ray));
   const keoX = useSharedValue(0);
+  const caiX = useSharedValue(cai);
+  // 0 = still hidden behind Nếp's slip, 1 = out by its full sliver.
+  const sauRa = useSharedValue(0);
 
   // Follow the stored position once the disk has answered, and follow the rail
   // when the window changes (rotation, split screen).
@@ -72,81 +139,221 @@ export function NepDock() {
     y.value = withSpring(yTuTyLe(tyLe, ray), motion.spring.settle);
   }, [tyLe, ray.tren, ray.duoi, y, motion, ray]);
 
-  // One peeked line retracts by itself. A bubble that waited for a tap would
-  // become a second permanent element on every screen.
+  // The slip sliding into and out of the edge. It decelerates, because a slip
+  // pushed into a notebook stops against the spine; Reduce Motion makes it a cut.
   useEffect(() => {
-    if (dock.trangThai !== "he") return;
-    const t = setTimeout(() => gui({ kieu: "het-gio-he" }), HE_MS);
-    return () => clearTimeout(t);
-  }, [dock.trangThai, gui]);
+    caiX.value = withTiming(cai, motion.timing("standard", "decelerate"));
+  }, [cai, caiX, motion]);
 
+  // The second slip arrives once, in one beat, and then simply stays. Leaving
+  // is a cut: work that is done does not need a farewell.
+  useEffect(() => {
+    sauRa.value = coToSau ? withTiming(1, motion.timing("standard", "decelerate")) : 0;
+  }, [coToSau, sauRa, motion]);
+
+  // A screen reader user reaches the second tap by moving focus, which takes
+  // longer and must not be raced; they have «Cất Nếp vào mép» instead. Only
+  // native can tell: react-native-web answers `true` unconditionally, because
+  // a browser does not say, and trusting it would switch the tuck off for
+  // every web visitor.
+  const [docManHinh, datDocManHinh] = useState(false);
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    let song = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((bat) => song && datDocManHinh(bat));
+    const sub = AccessibilityInfo.addEventListener("screenReaderChanged", datDocManHinh);
+    return () => {
+      song = false;
+      sub.remove();
+    };
+  }, []);
+  // Held while a finger is on the slip: a slow drag along the rail is the
+  // person using Nếp, and the count starts again when it lets go.
+  const [dangKeo, datDangKeo] = useState(false);
+  const dangRa = dock.trangThai === "nghi";
+  useEffect(() => {
+    if (!dangRa || docManHinh || dangKeo) return;
+    const t = setTimeout(() => gui({ kieu: "tu-cat" }), TU_CAT_MS);
+    return () => clearTimeout(t);
+  }, [dangRa, docManHinh, dangKeo, gui]);
+
+  // Only outward and vertical drags mean anything here. Under gesture
+  // navigation the outer ~30dp of the edge belongs to the system's Back swipe,
+  // which is an INWARD drag: a tucked slip that needed one to come out would
+  // hand the person Back instead. So out is a tap, and the inward half of the
+  // drag is clamped away rather than competed for.
+  // The pan callbacks run on the UI thread, where calling a plain JS function
+  // throws («Tried to synchronously call a remote function»): measured 24/09 on
+  // an Android emulator, the first vertical drag along the rail crashed the
+  // app, and the web build (worklets on the JS thread) never showed it. So the
+  // rail is read here, on the JS thread, and the callbacks do only arithmetic
+  // on these numbers -- the same clamp as `ghimVaoRay` and `tyLeTuY`.
+  const y0 = yTuTyLe(tyLe, ray);
+  const { tren, duoi } = ray;
   const keo = Gesture.Pan()
+    .enabled(dock.coSheet === 0)
+    .onStart(() => {
+      runOnJS(datDangKeo)(true);
+    })
+    .onFinalize(() => {
+      runOnJS(datDangKeo)(false);
+    })
     .onUpdate((e) => {
-      y.value = ghimVaoRay(yTuTyLe(tyLe, ray) + e.translationY, ray);
+      y.value = Math.min(duoi, Math.max(tren, y0 + e.translationY));
       keoX.value = Math.max(0, e.translationX);
     })
     .onEnd((e) => {
-      runOnJS(datTyLe)(tyLeTuY(y.value, ray));
+      runOnJS(datTyLe)(duoi > tren ? (y.value - tren) / (duoi - tren) : 0);
       if (e.translationX > KEO_AN_DP || e.velocityX > KEO_AN_TOC) runOnJS(gui)({ kieu: "vuot-ra" });
       keoX.value = withSpring(0, motion.spring.settle);
     });
 
-  const dangAn = dock.trangThai === "an";
-  const rong = dangAn ? beRongMep(dock.coViec) : NEP_DIA;
-  const cao = dangAn ? NEP_MEP_CAO : NEP_DIA;
-
-  const kieuDock = useAnimatedStyle(() => ({
-    transform: [{ translateY: y.value }, { translateX: keoX.value }],
+  const kieuRay = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  const kieuTo = useAnimatedStyle(() => ({ transform: [{ translateX: caiX.value + keoX.value }] }));
+  // It rises and slides out together, from exactly behind Nếp's slip, so
+  // nothing of it shows before the beat.
+  const kieuSau = useAnimatedStyle(() => ({
+    transform: [{ translateX: (1 - sauRa.value) * TO_SAU_LO }, { translateY: (1 - sauRa.value) * TO_SAU_CAO_HON }],
+  }));
+  // Nếp comes into view with the slip and leaves with it, rather than popping.
+  const kieuNep = useAnimatedStyle(() => ({
+    opacity: interpolate(caiX.value, [0, NEP_DIA - NEP_MEP_HEP], [1, 0], Extrapolation.CLAMP),
   }));
 
-  // The panel covers the dock anyway, and an icon sliding under a sheet reads
-  // as a bug rather than as depth. The same for any other open sheet, and for
-  // the screens Nếp is absent from (`trang-thai.ts` rules 3 and 4).
+  // The panel covers the edge anyway, and a slip sliding under a sheet reads
+  // as a bug rather than as depth. The same holds for any other sheet: the
+  // story puts Nếp IN the page's edge and the sheet ON the page, so an edge
+  // still painted over a tray's corner, beside its ✕, is a layering fault.
+  // And for the screens Nếp is absent from (`trang-thai.ts` rules 3 and 4).
   if (!nepHien(dock)) return null;
 
   const nhan = dangAn
-    ? dock.coViec
-      ? "Nếp đang giấu và có tin mới, chạm để mở"
-      : "Nếp đang giấu, chạm để mở"
-    : "Mở Nếp";
+    ? coToSau
+      ? "Nếp đang cài trong mép sổ và có việc mới, chạm để kéo ra"
+      : "Nếp đang cài trong mép sổ, chạm để kéo ra"
+    : coToSau
+      ? "Mở Nếp, có việc mới"
+      : "Mở Nếp";
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.lop, { width }, kieuDock]}>
-      {dock.trangThai === "he" ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => gui({ kieu: "cham" })}
-          style={[styles.bongBong, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}
-          testID="nep-bong-bong"
-        >
-          <Text numberOfLines={1} style={[typography.body, { color: colors.ink }]}>
-            Mình có việc này, xem không?
-          </Text>
-        </Pressable>
-      ) : null}
-
+    <Animated.View
+      pointerEvents="box-none"
+      style={[styles.lop, { width }, Platform.OS === "web" ? CAT_NGANG_WEB : null, kieuRay]}
+    >
       <GestureDetector gesture={keo}>
-        <Pressable
-          accessibilityLabel={nhan}
-          accessibilityRole="button"
-          hitSlop={{ top: 12, bottom: 12, left: 24, right: 12 }}
-          onPress={() => gui({ kieu: "cham" })}
-          style={[
-            dangAn ? styles.mep : styles.dia,
-            {
-              width: rong,
-              height: cao,
-              backgroundColor: dangAn && !dock.coViec ? colors.aiSoft : colors.ai,
-            },
-          ]}
-          testID={dangAn ? "nep-mep" : "nep-dia"}
-        >
-          {dangAn ? null : <Nep pose="doi" size={44} testID="nep-hinh" />}
-        </Pressable>
+        <Animated.View style={[styles.cum, kieuTo]}>
+          {coToSau ? (
+            // The second slip, behind Nếp's. It is never text and never a
+            // count; it is one more slip in the notebook.
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.toSau,
+                {
+                  // A second sheet of paper, one step warmer. In the light
+                  // theme accentSoft is that step. In the dark theme it is
+                  // a deep rust, which beside navy paper reads as a band
+                  // (the reason AlbumAnh refused it too); `line` is the
+                  // paper family's lighter face, the one the fold shows.
+                  backgroundColor: dark ? colors.line : colors.accentSoft,
+                  borderColor: colors.lineStrong,
+                  borderTopLeftRadius: radius.small,
+                  borderBottomLeftRadius: radius.small,
+                },
+                kieuSau,
+              ]}
+              testID="nep-to-sau"
+            />
+          ) : null}
+          <Pressable
+            // Tucking back is otherwise only the outward flick, which a screen
+            // reader user cannot make, and the timed tuck is off for them:
+            // without this, Nếp pulled out stays 56dp over the page until they
+            // leave the screen.
+            accessibilityActions={dangAn ? undefined : [{ name: "activate" }, { name: "cat", label: "Cất Nếp vào mép" }]}
+            accessibilityLabel={nhan}
+            accessibilityRole="button"
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === "cat") gui({ kieu: "vuot-ra" });
+              else if (e.nativeEvent.actionName === "activate") gui({ kieu: "cham" });
+            }}
+            // Tucked, the slip borrows the rest of the margin and not one dp of
+            // the page; out, it borrows nothing (`slopTrai`).
+            hitSlop={{ top: 12, bottom: 12, left: slopTrai(dangAn), right: 12 }}
+            onLayout={(e) => {
+              const { width: w, height: h } = e.nativeEvent.layout;
+              if (w !== kich.w || h !== kich.h) datKich({ w, h });
+            }}
+            onPress={() => gui({ kieu: "cham" })}
+            style={styles.to}
+            testID={dangAn ? "nep-mep" : "nep-dia"}
+          >
+            {({ pressed }) => (
+              <>
+                <MatTo
+                  bong={colors.paperShade}
+                  giay={pressed ? colors.paperShade : colors.paper}
+                  h={kich.h}
+                  muc={colors.ink}
+                  r={radius.small}
+                  vien={colors.lineStrong}
+                  w={kich.w}
+                />
+                <Animated.View style={[styles.oNep, kieuNep]}>
+                  <Nep pose="doi" size={NEP_CO} testID="nep-hinh" />
+                </Animated.View>
+              </>
+            )}
+          </Pressable>
+        </Animated.View>
       </GestureDetector>
     </Animated.View>
   );
 }
+
+/**
+ * The face of the slip: paper with its top-left corner folded down.
+ *
+ * Same order as `ToGiay`'s fold, minus the erasing triangle, because here the
+ * corner is simply not part of the outline: fill, outline (open on the right,
+ * where the slip runs into the notebook), flap, and the flap's two free edges
+ * in ink. Paths use only M/L/C/Z with plain decimals, the grammar Android's
+ * PathParser accepts at mount (`art/net.ts`).
+ */
+function MatTo({ w, h, r, giay, bong, muc, vien }: { w: number; h: number; r: number; giay: string; bong: string; muc: string; vien: string }) {
+  // Inset strokes by half their width so a hairline on the outer edge is drawn
+  // whole instead of clipped to half by the viewport.
+  const o = 0.5;
+  const k = 0.5523 * r;
+  const vienMo = [
+    `M ${so(w)} ${so(o)}`,
+    `L ${so(GOC)} ${so(o)}`,
+    `L ${so(o)} ${so(GOC)}`,
+    `L ${so(o)} ${so(h - r)}`,
+    `C ${so(o)} ${so(h - r + k)} ${so(r - k)} ${so(h - o)} ${so(r)} ${so(h - o)}`,
+    `L ${so(w)} ${so(h - o)}`,
+  ].join(" ");
+  const lat = `M ${so(GOC)} ${so(o)} L ${so(GOC)} ${so(GOC)} L ${so(o)} ${so(GOC)} Z`;
+  const canhLat = `M ${so(GOC)} ${so(o)} L ${so(GOC)} ${so(GOC)} L ${so(o)} ${so(GOC)}`;
+  return (
+    <Svg height={h} pointerEvents="none" style={StyleSheet.absoluteFill} width={w}>
+      <Path d={`${vienMo} Z`} fill={giay} />
+      <Path d={vienMo} fill="none" stroke={vien} strokeWidth={StyleSheet.hairlineWidth} />
+      <Path d={lat} fill={bong} />
+      <Path d={canhLat} fill="none" stroke={muc} strokeLinejoin="round" strokeWidth={1} />
+    </Svg>
+  );
+}
+
+/**
+ * Web only: the tucked slip is 56dp wide and 46dp of it sits past the right
+ * edge. A click focuses it, and the browser scrolls the page sideways to show
+ * the focused element -- measured 24/09 on /finance, the whole page slid 46px
+ * left and the hidden part of the slip came into view. `clip` cuts the
+ * overflow without making the layer a scroll container, so there is nothing
+ * to scroll; the vertical axis stays visible for the second slip's top edge.
+ */
+const CAT_NGANG_WEB = { overflowX: "clip" } as unknown as ViewStyle;
 
 const styles = StyleSheet.create({
   lop: {
@@ -154,26 +361,32 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "flex-end",
-    gap: 8,
-    paddingRight: 0,
   },
-  dia: {
-    borderRadius: NEP_DIA / 2,
+  // Nếp's slip and the slip behind it travel together.
+  cum: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  to: {
+    minHeight: NEP_TO_CAO,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  oNep: {
+    width: NEP_DIA,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
   },
-  mep: {
-    borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 6,
-  },
-  bongBong: {
-    maxWidth: 240,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  toSau: {
+    position: "absolute",
+    left: -TO_SAU_LO,
+    top: -TO_SAU_CAO_HON,
+    bottom: TO_SAU_CAO_HON,
+    width: NEP_DIA,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderRightWidth: 0,
   },
 });
