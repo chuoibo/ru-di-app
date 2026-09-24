@@ -252,7 +252,7 @@ export function NepDock() {
                 {
                   // A second sheet of paper, one step warmer. In the light
                   // theme accentSoft is that step. In the dark theme it is
-                  // #3d1a10, which beside navy paper reads as a rust band
+                  // a deep rust, which beside navy paper reads as a band
                   // (the reason AlbumAnh refused it too); `line` is the
                   // paper family's lighter face, the one the fold shows.
                   backgroundColor: dark ? colors.line : colors.accentSoft,
