@@ -81,6 +81,47 @@ func (f *fake) Audience(_ context.Context, subject string) ([]string, *string, e
 	return viewers, f.versions[subject], nil
 }
 
+const room = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+
+func (f *fake) ContextMembers(_ context.Context, context string) ([]string, error) {
+	if context == room {
+		return []string{alice, bob}, nil
+	}
+	return nil, nil
+}
+
+func TestMembershipChangeTellsTheRoomAndThePersonToResync(t *testing.T) {
+	h := New(newFake(), nil, context.Background(), nil)
+	chans := map[string]chan Event{}
+	for _, p := range []string{alice, bob, carol} {
+		c, _ := h.register(p)
+		chans[p] = c
+	}
+	if err := h.dispatch(context.Background(), "m:"+room+":"+carol); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{alice, bob, carol} {
+		select {
+		case e := <-chans[p]:
+			if e.Type != "ready" {
+				t.Errorf("%s got %+v, want ready", p, e)
+			}
+		default:
+			t.Errorf("%s was not told to resync", p)
+		}
+	}
+	for _, bad := range []string{"m:" + room, "m:x:" + carol, "x:" + room + ":" + carol, "hello"} {
+		_ = h.dispatch(context.Background(), bad)
+	}
+	for p, c := range chans {
+		select {
+		case e := <-c:
+			t.Errorf("%s got %+v from a malformed payload", p, e)
+		default:
+		}
+	}
+}
+
 func TestParseIDs(t *testing.T) {
 	ids, ok := ParseIDs("ids=" + strings.ToUpper(alice) + "," + bob + "," + alice)
 	if !ok || len(ids) != 2 || ids[0] != alice || ids[1] != bob {

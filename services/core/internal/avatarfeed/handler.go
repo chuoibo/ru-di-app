@@ -27,6 +27,7 @@ type Backend interface {
 	Actor(ctx context.Context, digest []byte) (string, error)
 	Versions(ctx context.Context, actor string, ids []string) (map[string]*string, error)
 	Audience(ctx context.Context, subject string) ([]string, *string, error)
+	ContextMembers(ctx context.Context, context string) ([]string, error)
 }
 
 // Event is one frame on the stream. "ready" means: whatever you knew may be
@@ -226,6 +227,33 @@ func (h *Handler) Broadcast(ctx context.Context, subject string) error {
 	return nil
 }
 
+// MembershipChanged is what the listener does when someone entered or left
+// an active membership of room: who may see whose avatar just changed for
+// every active member of room and for the person, so each of them is told to
+// ask again. An answer cached as "not visible" (or a picture now forbidden)
+// does not outlive the membership that decided it.
+func (h *Handler) MembershipChanged(ctx context.Context, room, person string) error {
+	members, err := h.Backend.ContextMembers(ctx, room)
+	if err != nil {
+		return err
+	}
+	h.deliver(append(members, person), Event{Type: "ready"})
+	return nil
+}
+
+// dispatch reads one NOTIFY payload: a bare person id is a new avatar,
+// "m:<context>:<person>" a membership that entered or left `active`.
+func (h *Handler) dispatch(ctx context.Context, payload string) error {
+	if validUUID(payload) {
+		return h.Broadcast(ctx, payload)
+	}
+	parts := strings.Split(payload, ":")
+	if len(parts) == 3 && parts[0] == "m" && validUUID(parts[1]) && validUUID(parts[2]) {
+		return h.MembershipChanged(ctx, parts[1], parts[2])
+	}
+	return nil
+}
+
 // resyncAll tells every open connection to ask again: after the listener
 // (re)connects, notifications sent while it was away are gone.
 func (h *Handler) resyncAll() {
@@ -353,11 +381,9 @@ func (h *Handler) Listen() {
 				if e != nil {
 					break
 				}
-				if validUUID(note.Payload) {
-					ctx, cancel := context.WithTimeout(h.Context, 5*time.Second)
-					_ = h.Broadcast(ctx, note.Payload)
-					cancel()
-				}
+				ctx, cancel := context.WithTimeout(h.Context, 5*time.Second)
+				_ = h.dispatch(ctx, note.Payload)
+				cancel()
 			}
 		}
 		if conn != nil {

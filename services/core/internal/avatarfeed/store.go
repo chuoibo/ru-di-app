@@ -94,3 +94,21 @@ func (s Store) Audience(ctx context.Context, subject string) ([]string, *string,
 	}
 	return viewers, version, rows.Err()
 }
+
+// ContextMembers is every active member of one context.
+func (s Store) ContextMembers(ctx context.Context, context string) ([]string, error) {
+	rows, err := s.Pool.Query(ctx, `SELECT person_id::text FROM memberships WHERE context_id = $1::uuid AND state = 'active'`, context)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
