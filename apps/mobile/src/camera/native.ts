@@ -28,6 +28,9 @@ import { fitLongestEdge, type BillPhoto, type PhotoBackend, type TempPhoto } fro
  */
 export const HAS_CAMERA = Platform.OS !== "web";
 
+/** A PNG larger than this after resizing is a photograph saved as PNG: send JPEG instead. */
+const PNG_TOI_DA = 4 * 1024 * 1024;
+
 /** Build the backend around a mounted `CameraView`.
  *
  * The ref is passed in rather than owned here because the frontend lane owns
@@ -74,7 +77,7 @@ export function nativeBackend(camera: { current: CameraView | null }): PhotoBack
       if (result.canceled) return null;
       const asset = result.assets[0];
       if (asset === undefined) return null;
-      return { uri: asset.uri, width: asset.width, height: asset.height };
+      return { uri: asset.uri, width: asset.width, height: asset.height, laPng: asset.mimeType === "image/png" };
     },
 
     async compress(source: TempPhoto, maxEdge: number, quality: number): Promise<BillPhoto> {
@@ -85,10 +88,22 @@ export function nativeBackend(camera: { current: CameraView | null }): PhotoBack
       if (target !== null) context.resize({ width: target.width, height: target.height });
 
       const rendered = await context.renderAsync();
+      // A PNG may be transparent, and JPEG has no alpha: a transparent avatar
+      // came back as a black disc (measured 2026-09-24). Keep PNG when the
+      // pick was PNG and the result stays small; the server sniffs the bytes
+      // and keeps the alpha. Anything else is a photograph: JPEG, since PNG
+      // would send a lossless several-megabyte file for no readability gain.
+      if (source.laPng) {
+        const png = await rendered.saveAsync({ format: SaveFormat.PNG, base64: false });
+        const bytes = await sizeOf(png.uri);
+        if (bytes <= PNG_TOI_DA) return { uri: png.uri, width: png.width, height: png.height, bytes };
+        if (png.uri.startsWith("file://")) {
+          const bo = new File(png.uri);
+          if (bo.exists) bo.delete();
+        }
+      }
       const saved = await rendered.saveAsync({
         compress: quality,
-        // JPEG, not PNG: a photo of paper is a photograph, and PNG would send
-        // a lossless several-megabyte file for no readability gain.
         format: SaveFormat.JPEG,
         base64: false,
       });

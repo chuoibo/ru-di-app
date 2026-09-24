@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
 	"mobile/services/core/internal/chatlegacychange"
@@ -164,6 +165,9 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		check, cancel := context.WithTimeout(chatCtx, 5*time.Second)
 		var installed bool
 		err := pool.QueryRow(check, `SELECT to_regclass('chat_legacy_changes') IS NOT NULL AND to_regclass('chat_ai_invocations') IS NOT NULL`).Scan(&installed)
+		if err == nil && installed {
+			installed, err = avatarfeed.Installed(check, pool)
+		}
 		cancel()
 		if err != nil {
 			logger.Error("refusing to start", "error", "cannot check the chat schema; is the database reachable? "+chatOffHint)
@@ -207,7 +211,9 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		}
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
 		assistant := chatassist.New(pool, brain.Configured())
+		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
 		go changes.Listen()
+		go avatars.Listen()
 		go assistant.Run(chatCtx)
 		fallback := front
 		feature := cors.New(origins, origins != "").Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -215,10 +221,14 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 				changes.ServeHTTP(w, r)
 				return
 			}
+			if avatarfeed.Matches(r.URL.Path) {
+				avatars.ServeHTTP(w, r)
+				return
+			}
 			assistant.ServeHTTP(w, r)
 		}))
 		front = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if chatlegacychange.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
+			if chatlegacychange.Matches(r.URL.Path) || avatarfeed.Matches(r.URL.Path) || chatassist.Matches(r.URL.Path) {
 				feature.ServeHTTP(w, r)
 				return
 			}
@@ -425,6 +435,9 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	defer pool.Close()
 	if err = chatlegacychange.Migrate(ctx, pool); err == nil {
 		err = chatassist.Migrate(ctx, pool)
+	}
+	if err == nil {
+		err = avatarfeed.Migrate(ctx, pool)
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "chat migration failed:", err)

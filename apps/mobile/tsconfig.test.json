@@ -369,10 +369,13 @@
     // wall owner's comment policy -- pure copy and the six routes.
     "src/rudi/tuong/bai-chi-tiet.ts",
     "src/rudi/nguoi/anh-ca-nhan.ts",
-    // Which avatar frames may ask the server: a refusal is remembered (a roster
-    // of thirty must not send thirty 404s per render), an upload busts every
-    // frame's cache, another account forgets both. See `tests/anh-dai-dien.test.mjs`.
+    // Which avatar each frame shows: the server's version in the address, one
+    // batched ask for the unknown, a push beats an older answer, another account
+    // forgets everything. See `tests/anh-dai-dien.test.mjs`.
     "src/rudi/nguoi/anh-dai-dien.ts",
+    // The avatar stream's handshake, backoff and pause rules, driven with a
+    // fake socket and hand-run timers. See `tests/luong-anh-dai-dien.test.mjs`.
+    "src/rudi/nguoi/luong-anh-dai-dien.ts",
     "src/rudi/nguoi/chinh-sach-tuong.ts",
     // L4 (ADR-0022 §2.3): stories -- the four routes, the ring's label, and a
     // deadline check that must be strict at the exact second like the server.
