@@ -72,28 +72,24 @@ test("màn thường không bị nhầm thành màn tiền, kể cả khi tên b
   }
 });
 
-// The slip belongs to the focused screen (ghiPhieu in phieu.ts). The provider
-// used to clear it on pathname change, and lost the race: expo-router runs the
-// incoming screen's effects before the provider sees the new pathname
-// (measured 24-09: Khám phá declared while the provider was still on /otp).
-import { ghiPhieu } from "../dist-test/rudi/nep/phieu.js";
-
-test("màn được focus khai phiếu thì Nếp đọc được phiếu đó", () => {
-  const p = donPhieu({ man: "explore" });
-  assert.equal(ghiPhieu(null, { kieu: "khai", phieu: p }), p);
+test("màn đăng nhập và lần đầu là màn Nếp vắng, theo cả đoạn đường", async () => {
+  const { nepPhaiVang, nepPhaiLui } = await import("../dist-test/rudi/nep/phieu.js");
+  for (const man of ["/welcome", "login", "/otp", "/personalization"]) assert.equal(nepPhaiVang(man), true, man);
+  for (const man of ["/welcomes", "/messages", "/profile", "/groups/1/chat", "", 7]) assert.equal(nepPhaiVang(man), false, String(man));
+  // The money law is a separate list and does not grow with this one.
+  assert.equal(nepPhaiLui("/personalization"), false);
 });
 
-test("màn rời focus rút phiếu của mình: màn sau không khai gì thì không thừa hưởng", () => {
-  const p = donPhieu({ man: "outings/[id]", soLieu: { soChang: 3 } });
-  const ghi = ghiPhieu(null, { kieu: "khai", phieu: p });
-  assert.equal(ghiPhieu(ghi, { kieu: "bo", phieu: p }), null);
-});
-
-test("màn cũ rời focus muộn không xoá phiếu màn mới vừa khai", () => {
-  const cu = donPhieu({ man: "explore" });
-  const moi = donPhieu({ man: "plan" });
-  let ghi = ghiPhieu(null, { kieu: "khai", phieu: cu });
-  ghi = ghiPhieu(ghi, { kieu: "khai", phieu: moi });
-  ghi = ghiPhieu(ghi, { kieu: "bo", phieu: cu });
-  assert.equal(ghi, moi);
+test("câu «Mình đang thấy» đọc như câu, không như bảng gỡ lỗi", async () => {
+  const { cauNguCanh, donPhieu } = await import("../dist-test/rudi/nep/phieu.js");
+  const phieu = donPhieu({
+    man: "groups/[id]/to-giay",
+    tieuDe: "Tờ giấy của hai mình",
+    loaiSo: "doi",
+    nhip: { kieu: "sap-toi", conNgay: 2 },
+    soLieu: { soChang: 2, soNguoi: "hai bạn" },
+  });
+  assert.equal(cauNguCanh(phieu), "Bạn đang ở Tờ giấy của hai mình · sổ một đôi · còn 2 ngày nữa · hai bạn · 2 chặng.");
+  assert.doesNotMatch(cauNguCanh(phieu), /so[A-Z]/);
+  assert.match(cauNguCanh(null), /chưa kể gì/);
 });

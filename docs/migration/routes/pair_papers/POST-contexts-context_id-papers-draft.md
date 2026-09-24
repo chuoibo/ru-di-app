@@ -97,3 +97,30 @@ Corpus sinh tự động: `parity/scenarios/generated/w8-422/post-contexts-conte
 Diff này đổi `PaperStopInput.place_id`/`PaperStop.place_id` từ `uuid.UUID` sang `StrictStr` 1..80 (đúng kiểu `OutingStopInput.place_id`: danh mục dùng slug như `p-lau-ga`, trước đây mọi chỗ có thật đều bị 422), `_noi_dung_wire` đọc `str(place_id)` thay vì `uuid.UUID(...)`, và `ApiService._chot` (Go `pairsteps.chot`) đọc `get_place` cho từng chặng có id, đặt tên kèo «<tên quán hoặc việc chặng đầu, ≤190 ký tự> · dd/mm» thay vì «Tờ lời rủ dd/mm», rồi sau `link_paper_outing` gọi `replace_outing_stops(expected_revision=None)` cùng transaction: chặng đã đồng ý thành timeline của kèo; id danh mục không còn thì giữ nhãn, bỏ id. Go: `routes/pair_papers.go` (`optionalStringField`), `pairsteps/wire.go`, `pairsteps/papers.go`, `service/pair_store.go` (`GetPlace`, `ReplaceOutingStops`); golden `python_pair_steps.json` tái sinh (+4 ca `agreed_place_*`), repo oracle thêm ca «a catalogue place names the outing and its stop» và dump `outing_stops`.
 
 - `POST /contexts/{context_id}/papers/draft`: Route này đọc nội dung tờ qua `_noi_dung_wire` (hoặc chỉ bị chạm theo tên hàm): `place_id` đã lưu trả nguyên chữ. Mọi hàng ghi trước 23/09 đều là UUID dạng chuẩn (`model_dump` của `uuid.UUID`), nên byte trả lời không đổi với dữ liệu cũ; hàng mang `place_id` không phải UUID trước đây là 409 `paper_wrong_state`, nay đọc được.
+
+## Đổi 2026-09-24 — bản phác đọc lịch sử chu kỳ và danh mục quanh chỗ đã chọn (QA cặp đôi, Đợt 4)
+
+Trước đây bản phác luôn là «18:30 · Ăn tối», không đọc gì của sổ (QA 23/09 mục 11: «insight
+cho đôi hiện là 0»). Giờ `draft_pair_paper` (Go `pairsteps.DraftPaper`) đọc thêm, trước khi ghi,
+theo đúng thứ tự: `list_pair_papers` (như cũ) → `get_place` của chỗ gần nhất trong lịch sử
+(nếu có) → `list_places(destination_id, category)` của chỗ đó (nếu tìm thấy) → `create_pair_paper`.
+Phần chữ do hàm thuần mới `pair_paper.lam_giau_phac` / `pairpaper.LamGiauPhac` quyết:
+
+- **Nguồn**: chỉ tờ `chot`/`da_di`/`da_giu` của **chu kỳ đang hoạt động** (`cycle_id` = chu kỳ của
+  sổ, không `is_temporary`), tối đa 4, mới nhất trước — ADR-0027 §4 (lập sổ = đồng ý lưu lịch sử
+  chu kỳ; lời rủ tạm không lập kho) và §8 (chu kỳ đã đóng không dùng để phác). Tờ đọc không được
+  thì bỏ qua, không làm hỏng lệnh.
+- **Giờ**: giờ chặng chính của tờ đã chốt gần nhất. **Chỗ**: trong cùng thành phố + cùng loại với
+  chỗ tham chiếu, chưa có trong lịch sử, không trùng chữ (gấp chữ thường ASCII + khối Latin tiếng
+  Việt, U+0130 giữ nguyên) với cụm nào của hai ô ràng buộc (tách theo `, ; / \n`, cụm ≥ 2 ký tự) trên
+  tên/loại/kinds/traits; điểm cao nhất, hoà thì nhiều lượt chấm hơn, hoà nữa thì hàng đứng trước.
+  Chặng vẫn `can_kiem=true`; lý do nói rõ đã/chưa kiểm gì (ADR-0027 §7: danh mục không chứng minh
+  món). Câu kiểm là bắt buộc khi có đề xuất chỗ; lý do ≤ 200 ký tự, câu lịch sử nhường trước, tên
+  quá dài thì không đề xuất chỗ.
+- `nguon.dung` thêm `lich_su`, `danh_muc` khi dùng (sau `routine`, trước `rang_buoc`).
+- Sổ chưa có tờ đã chốt nào: byte trả lời và hàng ghi **y như trước**.
+
+Bằng chứng: golden `python_pair_paper*.json` (+`lam_giau_phac`: 25 ca cạnh + 30 ca fuzz luồng riêng,
+Go khớp 100%); `python_pair_steps*.json` (+11 ca `history_*`, bản ghi tờ mang `cycle`); repo oracle
+Postgres thêm ca «an agreed place and new places of its kind» và phủ `SELECT places.id` cho route;
+test API `test_next_weeks_draft_*`, `test_the_draft_avoids_*`, `test_a_sheet_that_was_never_agreed_*`.

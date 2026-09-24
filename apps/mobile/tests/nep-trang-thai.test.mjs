@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { DOCK_DAU, chuyen, hienToSau } from "../dist-test/rudi/nep/trang-thai.js";
+import { DOCK_DAU, chuyen, hienToSau, nepHien } from "../dist-test/rudi/nep/trang-thai.js";
 
 /** Nếp after the person pulled it out of the edge: the one way it comes to rest outside. */
 const RA = chuyen(DOCK_DAU, { kieu: "keo-vao" });
@@ -13,7 +13,7 @@ const RA = chuyen(DOCK_DAU, { kieu: "keo-vao" });
 // the slip's edge in the margin, and «out» is something the person does.
 
 test("Nếp bắt đầu cài trong mép, không có việc, không lui", () => {
-  assert.deepEqual(DOCK_DAU, { trangThai: "an", coViec: false, luiLai: false, nhuongCho: false });
+  assert.deepEqual(DOCK_DAU, { trangThai: "an", coViec: false, luiLai: false, coSheet: 0, vang: false });
 });
 
 test("chạm mép chỉ kéo Nếp ra, chưa mở bảng; chạm lần nữa mới mở", () => {
@@ -24,7 +24,7 @@ test("chạm mép chỉ kéo Nếp ra, chưa mở bảng; chạm lần nữa m�
 
 test("vuốt ra thì Nếp nằm gọn lại trong mép", () => {
   const an = chuyen(RA, { kieu: "vuot-ra" });
-  assert.deepEqual(an, { trangThai: "an", coViec: false, luiLai: false, nhuongCho: false });
+  assert.deepEqual(an, { trangThai: "an", coViec: false, luiLai: false, coSheet: 0, vang: false });
   assert.equal(chuyen(an, { kieu: "keo-vao" }).trangThai, "nghi");
 });
 
@@ -112,28 +112,28 @@ test("đang mở bảng mà vào màn tiền thì bảng đóng lại, không đ
 // Nếp is Nếp pulling out a chair for someone else.
 
 test("nhường chỗ: trang mở một tờ khác thì Nếp rút vào mép, tờ đóng thì Nếp vẫn ở mép", () => {
-  const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(RA, { kieu: "mo-sheet" });
   assert.equal(nhuong.trangThai, "an", "Nếp rút vào mép sổ");
-  assert.equal(nhuong.nhuongCho, true);
+  assert.equal(nhuong.coSheet, 1);
 
-  const traLai = chuyen(nhuong, { kieu: "nhuong-cho", bat: false });
+  const traLai = chuyen(nhuong, { kieu: "dong-sheet" });
   assert.equal(traLai.trangThai, "an", "trả chỗ không lôi Nếp ra đè lên trang");
-  assert.equal(traLai.nhuongCho, false);
+  assert.equal(traLai.coSheet, 0);
 });
 
 test("Nếp đang cài thì sau khi nhường chỗ vẫn cài", () => {
-  const sau = chuyen(chuyen(DOCK_DAU, { kieu: "nhuong-cho", bat: true }), { kieu: "nhuong-cho", bat: false });
+  const sau = chuyen(chuyen(DOCK_DAU, { kieu: "mo-sheet" }), { kieu: "dong-sheet" });
   assert.equal(sau.trangThai, "an");
 });
 
 test("đang nhường chỗ thì chạm vào mép không lôi Nếp ra đè lên tờ đang mở", () => {
-  const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(RA, { kieu: "mo-sheet" });
   assert.equal(chuyen(nhuong, { kieu: "cham" }).trangThai, "an");
   assert.equal(chuyen(nhuong, { kieu: "keo-vao" }).trangThai, "an");
 });
 
 test("đang nhường chỗ thì có việc vẫn được ghi nhận nhưng Nếp không bước ra", () => {
-  const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(RA, { kieu: "mo-sheet" });
   const coViec = chuyen(nhuong, { kieu: "bao-viec" });
   assert.equal(coViec.trangThai, "an", "bước ra lúc này là đè lên tờ người ta đang đọc");
   assert.equal(coViec.coViec, true, "việc không bị nuốt, chỉ đợi");
@@ -142,22 +142,22 @@ test("đang nhường chỗ thì có việc vẫn được ghi nhận nhưng N�
 test("bảng của chính Nếp không làm Nếp nhường chỗ cho chính mình", () => {
   const dangMo = chuyen(RA, { kieu: "cham" });
   assert.equal(dangMo.trangThai, "mo");
-  const sau = chuyen(dangMo, { kieu: "nhuong-cho", bat: true });
+  const sau = chuyen(dangMo, { kieu: "mo-sheet" });
   assert.equal(sau.trangThai, "mo");
 });
 
 test("nhả tờ ra khi đang ở màn tiền thì Nếp vẫn lùi, vì luật tiền mạnh hơn", () => {
   const oManTien = chuyen(RA, { kieu: "doi-man", nepLui: true });
-  const sau = chuyen(chuyen(oManTien, { kieu: "nhuong-cho", bat: true }), { kieu: "nhuong-cho", bat: false });
+  const sau = chuyen(chuyen(oManTien, { kieu: "mo-sheet" }), { kieu: "dong-sheet" });
   assert.equal(sau.trangThai, "an");
   assert.equal(sau.luiLai, true);
 });
 
 test("đổi màn trong lúc còn tờ đang mở không bật Nếp ra đè lên tờ đó", () => {
-  const nhuong = chuyen(RA, { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(RA, { kieu: "mo-sheet" });
   const doiMan = chuyen(nhuong, { kieu: "doi-man", nepLui: false });
   assert.equal(doiMan.trangThai, "an", "tờ chưa đóng thì Nếp chưa trở ra");
-  assert.equal(chuyen(doiMan, { kieu: "nhuong-cho", bat: false }).trangThai, "an");
+  assert.equal(chuyen(doiMan, { kieu: "dong-sheet" }).trangThai, "an");
 });
 
 // The second slip is Nếp SAYING there is work. The work is recorded wherever
@@ -180,9 +180,9 @@ test("màn tiền: có việc vẫn ghi nhận nhưng tờ thứ hai không hi�
 });
 
 test("đang có tờ khác mở: tờ thứ hai không hiện, tờ kia đóng thì hiện lại", () => {
-  const nhuong = chuyen(chuyen(DOCK_DAU, { kieu: "bao-viec" }), { kieu: "nhuong-cho", bat: true });
+  const nhuong = chuyen(chuyen(DOCK_DAU, { kieu: "bao-viec" }), { kieu: "mo-sheet" });
   assert.equal(hienToSau(nhuong), false);
-  assert.equal(hienToSau(chuyen(nhuong, { kieu: "nhuong-cho", bat: false })), true);
+  assert.equal(hienToSau(chuyen(nhuong, { kieu: "dong-sheet" })), true);
 });
 
 test("bảng Nếp đang mở thì không vẽ tờ thứ hai sau lưng nó", () => {
@@ -200,4 +200,27 @@ test("kéo ra mà không chạm tiếp thì tự cất về mép; ở mép hay �
   assert.equal(chuyen(DOCK_DAU, { kieu: "tu-cat" }), DOCK_DAU);
   const mo = chuyen(RA, { kieu: "cham" });
   assert.equal(chuyen(mo, { kieu: "tu-cat" }).trangThai, "mo", "bảng đang mở thì không bị giật đóng");
+});
+
+// Merged with main's couple-QA fix (37cc4534): one sheet count for every
+// surface, and the screens Nếp is absent from.
+test("sheet chồng nhau: Nếp chỉ hiện lại khi sheet cuối đóng, và bộ đếm không âm", () => {
+  const hai = [{ kieu: "mo-sheet" }, { kieu: "mo-sheet" }].reduce(chuyen, RA);
+  assert.equal(nepHien(hai), false);
+  assert.equal(hai.trangThai, "an");
+  const conMot = chuyen(hai, { kieu: "dong-sheet" });
+  assert.equal(nepHien(conMot), false, "còn một sheet thì vẫn chưa hiện");
+  const het = chuyen(conMot, { kieu: "dong-sheet" });
+  assert.equal(nepHien(het), true);
+  assert.equal(chuyen(het, { kieu: "dong-sheet" }).coSheet, 0, "không âm");
+});
+
+test("màn đăng nhập/lần đầu: Nếp vắng, chạm không ra, có việc không nói; ra khỏi thì Nếp cài ở mép", () => {
+  const vang = chuyen(RA, { kieu: "doi-man", nepLui: false, nepVang: true });
+  assert.equal(nepHien(vang), false);
+  assert.equal(chuyen(vang, { kieu: "cham" }).trangThai, "an");
+  assert.equal(hienToSau(chuyen(vang, { kieu: "bao-viec" })), false);
+  const ra = chuyen(vang, { kieu: "doi-man", nepLui: false });
+  assert.equal(ra.vang, false);
+  assert.equal(ra.trangThai, "an");
 });

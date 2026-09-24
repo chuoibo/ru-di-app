@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { docGiaoDienAsync, ghiGiaoDienAsync } from "../kho";
 import { KHOA_DOCK, giaiMaDock, maHoaDock } from "./luu-dock";
-import { donPhieu, ghiPhieu, nepPhaiLui, type PhieuNguCanh, type SuPhieu } from "./phieu";
+import { donPhieu, nepPhaiLui, nepPhaiVang, type PhieuNguCanh } from "./phieu";
 import { DOCK_DAU, chuyen, type DockNep, type SuKienNep } from "./trang-thai";
 
 /**
@@ -34,17 +34,31 @@ export interface NepDieuKhien {
   daDocDia: boolean;
   gui(su: SuKienNep): void;
   datTyLe(t: number): void;
-  /** The focused screen declares its slip, or withdraws the one it declared. */
-  ghiPhieu(su: SuPhieu): void;
-  /** A sheet opened over the page (`true`) or closed (`false`). Counted. */
-  nhuongCho(mo: boolean): void;
+  /** Declare the open screen's slip; returns the id `goPhieu` takes back. */
+  khaiPhieu(p: PhieuNguCanh, duong: string): number;
+  /** Take back a slip, only if it is still the one showing. */
+  goPhieu(id: number): void;
+}
+
+/** A slip and the route it was declared on. */
+interface PhieuDaKhai {
+  id: number;
+  duong: string;
+  phieu: PhieuNguCanh;
 }
 
 const NepContext = createContext<NepDieuKhien | null>(null);
+/**
+ * The dispatcher alone, which never changes identity. A sheet only needs to
+ * say it opened and closed; reading it from `NepContext` would re-render every
+ * mounted sheet each time Nếp moves.
+ */
+const NepGuiContext = createContext<((su: SuKienNep) => void) | null>(null);
 
 export function NepProvider({ children }: { children: ReactNode }) {
   const [dock, gui] = useReducer(chuyen, DOCK_DAU);
-  const [phieu, datPhieu] = useState<PhieuNguCanh | null>(null);
+  const [daKhai, datDaKhai] = useState<PhieuDaKhai | null>(null);
+  const soPhieu = useRef(0);
   const [tyLe, datTyLeRaw] = useState(0.62);
   const [daDocDia, datDaDocDia] = useState(false);
   const duong = usePathname();
@@ -67,19 +81,27 @@ export function NepProvider({ children }: { children: ReactNode }) {
   // The law, applied on every route change: money, errors and conflict are
   // screens Nếp stands away from (DESIGN.md «Luật Nếp Đứng Xa Tiền», ADR-0033).
   useEffect(() => {
-    gui({ kieu: "doi-man", nepLui: nepPhaiLui(duong ?? "") });
+    gui({ kieu: "doi-man", nepLui: nepPhaiLui(duong ?? ""), nepVang: nepPhaiVang(duong ?? "") });
   }, [duong]);
 
-  const guiPhieu = useCallback((su: SuPhieu) => datPhieu((cu) => ghiPhieu(cu, su)), []);
-
-  // Sheets nest: a confirm can open over a tray. Nếp comes back only when the
-  // LAST one closes, so the count is what matters, not the latest event.
-  const soTo = useRef(0);
-  const nhuongCho = useCallback((mo: boolean) => {
-    const truoc = soTo.current;
-    soTo.current = Math.max(0, truoc + (mo ? 1 : -1));
-    if (truoc === 0 && soTo.current > 0) gui({ kieu: "nhuong-cho", bat: true });
-    if (truoc > 0 && soTo.current === 0) gui({ kieu: "nhuong-cho", bat: false });
+  // A screen's slip belongs to that screen, and to the route it was declared
+  // on: a slip is only shown while that route is the open one, so a screen that
+  // forgets to declare cannot inherit the previous one's numbers and have Nếp
+  // answer about a trip the person already left. (It used to be cleared on
+  // every route change instead; a screen still mounted underneath -- a chat
+  // behind the notebook it opened -- then lost its slip for good when the
+  // person came back, QA 24/09.)
+  const phieu = daKhai !== null && daKhai.duong === (duong ?? "") ? daKhai.phieu : null;
+  const khaiPhieu = useCallback((p: PhieuNguCanh, noi: string) => {
+    soPhieu.current += 1;
+    const id = soPhieu.current;
+    datDaKhai({ id, duong: noi, phieu: p });
+    return id;
+  }, []);
+  // Taking a slip back never clears the next screen's: blur of the old screen
+  // and focus of the new one arrive in either order.
+  const goPhieu = useCallback((id: number) => {
+    datDaKhai((truoc) => (truoc?.id === id ? null : truoc));
   }, []);
 
   const datTyLe = useCallback((t: number) => {
@@ -95,11 +117,23 @@ export function NepProvider({ children }: { children: ReactNode }) {
   }, [daDocDia, tyLe]);
 
   const gia = useMemo<NepDieuKhien>(
-    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, ghiPhieu: guiPhieu, nhuongCho }),
-    [dock, phieu, tyLe, daDocDia, datTyLe, guiPhieu, nhuongCho],
+    () => ({ dock, phieu, tyLe, daDocDia, gui, datTyLe, khaiPhieu, goPhieu }),
+    [dock, phieu, tyLe, daDocDia, datTyLe, khaiPhieu, goPhieu],
   );
 
-  return <NepContext.Provider value={gia}>{children}</NepContext.Provider>;
+  return (
+    <NepGuiContext.Provider value={gui}>
+      <NepContext.Provider value={gia}>{children}</NepContext.Provider>
+    </NepGuiContext.Provider>
+  );
+}
+
+/**
+ * Nếp's dispatcher, or null outside a `NepProvider` (a sheet rendered by a
+ * test or a preview has no Nếp to tell, and must not throw).
+ */
+export function useNepGui(): ((su: SuKienNep) => void) | null {
+  return useContext(NepGuiContext);
 }
 
 export function useNep(): NepDieuKhien {
@@ -117,39 +151,36 @@ export function useNep(): NepDieuKhien {
  * render, and comparing by identity would write to the provider on every frame.
  */
 export function useNepNguCanh(tho: unknown): void {
-  const { ghiPhieu: gui } = useNep();
+  const { khaiPhieu, goPhieu } = useNep();
+  const duong = usePathname() ?? "";
   const sach = donPhieu(tho);
   const khoa = sach ? JSON.stringify(sach) : "";
-  // Focus, not mount: a tab stays mounted under a pushed screen, and its slip
-  // must not speak for the screen on top.
+  // On focus, not on mount: a stack keeps the screen underneath mounted, and
+  // it must declare again when the person comes back to it.
   useFocusEffect(
     useCallback(() => {
       if (!khoa) return;
-      const phieu = JSON.parse(khoa) as PhieuNguCanh;
-      gui({ kieu: "khai", phieu });
-      return () => gui({ kieu: "bo", phieu });
-    }, [khoa, gui]),
+      const id = khaiPhieu(JSON.parse(khoa) as PhieuNguCanh, duong);
+      return () => goPhieu(id);
+    }, [khoa, duong, khaiPhieu, goPhieu]),
   );
 }
 
 /**
- * What a surface calls while it lays another sheet over the page.
+ * What a surface that draws its own tray, or takes the whole screen, calls
+ * while it is up: the same count `ui/Sheet.tsx` keeps (`mo-sheet` /
+ * `dong-sheet`), so Nếp tucks into the edge and is not drawn until the last
+ * one closes. «Chừa một chỗ cho nhau» (ADR-0035 §2.5): the tray «Tờ hẹn», the
+ * story viewer and the journey map.
  *
- * «Chừa một chỗ cho nhau»: while the sheet is open Nếp tucks into the notebook
- * edge and leaves the room to it, and comes back to exactly where the person
- * left it when the sheet closes. `ui/Sheet.tsx` calls this for every bottom
- * sheet in the app; a surface that draws its own tray calls it too.
- *
- * Tolerates a missing provider, because sheets render in fixtures and tests
- * that have no Nếp at all -- and a sheet with no Nếp to make room for has
- * nothing to do.
+ * Tolerates a missing provider, because surfaces render in fixtures and tests
+ * that have no Nếp at all.
  */
 export function useNhuongChoNep(dangMo: boolean): void {
-  const nhuong = useContext(NepContext)?.nhuongCho;
+  const gui = useNepGui();
   useEffect(() => {
-    if (!dangMo || !nhuong) return;
-    nhuong(true);
-    return () => nhuong(false);
-  }, [dangMo, nhuong]);
+    if (!dangMo || !gui) return;
+    gui({ kieu: "mo-sheet" });
+    return () => gui({ kieu: "dong-sheet" });
+  }, [dangMo, gui]);
 }
-

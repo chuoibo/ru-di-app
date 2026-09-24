@@ -20,7 +20,7 @@ import { Nep } from "../ui/art/Nep";
 import { useMotion } from "../ui/useMotion";
 import { NEP_DIA, NEP_MEP_HEP, NEP_TO_CAO, TO_SAU_LO, ghimVaoRay, rayDoc, slopTrai, tyLeTuY, yTuTyLe } from "./dock-vi-tri";
 import { useNep } from "./NepProvider";
-import { hienToSau } from "./trang-thai";
+import { hienToSau, nepHien } from "./trang-thai";
 
 /**
  * Pulled out and not tapped again, Nếp goes back into the edge after this.
@@ -183,7 +183,7 @@ export function NepDock() {
   // hand the person Back instead. So out is a tap, and the inward half of the
   // drag is clamped away rather than competed for.
   const keo = Gesture.Pan()
-    .enabled(!dock.nhuongCho)
+    .enabled(dock.coSheet === 0)
     .onStart(() => {
       runOnJS(datDangKeo)(true);
     })
@@ -216,8 +216,8 @@ export function NepDock() {
   // as a bug rather than as depth. The same holds for any other sheet: the
   // story puts Nếp IN the page's edge and the sheet ON the page, so an edge
   // still painted over a tray's corner, beside its ✕, is a layering fault.
-  // It comes back, where the person left it, when the last sheet closes.
-  if (dock.trangThai === "mo" || dock.nhuongCho) return null;
+  // And for the screens Nếp is absent from (`trang-thai.ts` rules 3 and 4).
+  if (!nepHien(dock)) return null;
 
   const nhan = dangAn
     ? coToSau

@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNhuongChoNep } from "../nep/NepProvider";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useNepGui } from "../nep/NepProvider";
 import { lopPhu, useRudiTheme } from "../theme";
 import { useMotion } from "./useMotion";
 
@@ -41,8 +41,6 @@ const KEO_DONG_TOC = 900;
  * instantly.
  */
 export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, style, maxHeight, testID }: SheetProps) {
-  // Every sheet in the app makes room: Nếp tucks into the edge while it is up.
-  useNhuongChoNep(open);
   const { colors, radius, space } = useRudiTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -60,6 +58,16 @@ export function Sheet({ open, onClose, onClosed, children, accessibilityLabel, s
   const wrapperRef = useRef<View>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const nepGui = useNepGui();
+
+  // Nếp is not drawn over an open sheet (`nep/trang-thai.ts` rule 3). Counted
+  // per sheet, and the cleanup also runs when a screen unmounts with its sheet
+  // still open, so the count cannot leak.
+  useEffect(() => {
+    if (!open || !nepGui) return;
+    nepGui({ kieu: "mo-sheet" });
+    return () => nepGui({ kieu: "dong-sheet" });
+  }, [open, nepGui]);
 
   useEffect(() => {
     if (!open || !hien || Platform.OS !== "web") return;

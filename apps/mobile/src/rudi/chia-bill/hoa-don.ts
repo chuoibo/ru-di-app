@@ -146,7 +146,7 @@ export function cauNguonBill(reading: BillReading): string {
   if (!nhapTayHoanToan(reading)) return disclosure(reading).text;
   const n = reading.lines.length;
   if (n === 0) return "Chưa có món nào. Thêm món bên dưới.";
-  return `Bạn nhập tay ${n} món. Máy chủ chưa đọc ảnh nào.`;
+  return `Bạn nhập tay ${n} món, chưa đọc từ ảnh nào.`;
 }
 
 /**
@@ -162,6 +162,6 @@ export function nhanDongMon(
 ): { chu: string; canKiem: boolean } | null {
   if (nhapTayHoanToan(reading)) return null;
   if (line.read === null) return { chu: "Bạn thêm tay", canKiem: false };
-  if (reading.needsReview) return { chu: "Máy chủ đọc từ ảnh, cần bạn kiểm lại", canKiem: true };
-  return { chu: "Máy chủ đọc từ ảnh", canKiem: false };
+  if (reading.needsReview) return { chu: "Rủ Đi đọc từ ảnh, cần bạn kiểm lại", canKiem: true };
+  return { chu: "Rủ Đi đọc từ ảnh", canKiem: false };
 }

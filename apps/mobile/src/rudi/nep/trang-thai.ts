@@ -44,6 +44,17 @@
  *   2. Nothing but the person's tap brings Nếp out, and nothing keeps it out
  *      past the screen it was brought out on.
  *
+ * Two more, both about Nếp not standing on something else (couple QA 23/09):
+ *
+ *   3. While a sheet is open (`coSheet > 0`) Nếp is not drawn at all and goes
+ *      back into the edge. A global floating object painted over an open sheet
+ *      covered its inputs (the «Đừng» box, the «Đi tiếp» field) and read as a
+ *      bug, not as depth. A count, not a flag: sheets can stack, and each
+ *      closes its own. «Chừa một chỗ cho nhau» (ADR-0035 §2.5).
+ *   4. On the sign-in and first-run screens (`vang`) Nếp is absent: Nếp is the
+ *      person's own assistant (`/me/nep/*`) and there is no person yet, and the
+ *      disc sat on the taste chips and the «Tạo nhóm» button.
+ *
  * Pure: no React, no Reanimated, no routing. `NepDock.tsx` maps these states to
  * springs and `NepProvider.tsx` feeds the events in.
  */
@@ -57,18 +68,18 @@ export interface DockNep {
   coViec: boolean;
   /** This screen is one Nếp must stand away from (money, errors, conflict). */
   luiLai: boolean;
-  /**
-   * The page has laid another sheet over itself -- a tray, a bottom sheet --
-   * so Nếp has tucked into the edge to leave the room to it.
-   */
-  nhuongCho: boolean;
+  /** How many sheets are open over the screen; Nếp is not drawn while any is. */
+  coSheet: number;
+  /** A screen Nếp is absent from (sign-in, first run). */
+  vang: boolean;
 }
 
 export const DOCK_DAU: DockNep = Object.freeze({
   trangThai: "an",
   coViec: false,
   luiLai: false,
-  nhuongCho: false,
+  coSheet: 0,
+  vang: false,
 });
 
 export type SuKienNep =
@@ -80,9 +91,14 @@ export type SuKienNep =
   | { kieu: "xong-viec" }
   /** Pulled out and left alone: back into the edge (ADR-0035 §2.2). */
   | { kieu: "tu-cat" }
-  | { kieu: "doi-man"; nepLui: boolean }
-  /** Another sheet opened over the page (`bat`), or the last one closed. */
-  | { kieu: "nhuong-cho"; bat: boolean };
+  | { kieu: "mo-sheet" }
+  | { kieu: "dong-sheet" }
+  | { kieu: "doi-man"; nepLui: boolean; nepVang?: boolean };
+
+/** Whether Nếp is drawn at all. The panel (`mo`) is itself a sheet. */
+export function nepHien(dock: DockNep): boolean {
+  return !dock.vang && dock.coSheet === 0 && dock.trangThai !== "mo";
+}
 
 /**
  * Whether the second slip -- «there is something waiting» -- may show.
@@ -96,7 +112,7 @@ export type SuKienNep =
  * and this is the only place that joins them.
  */
 export function hienToSau(dock: DockNep): boolean {
-  return dock.coViec && !dock.luiLai && !dock.nhuongCho && dock.trangThai !== "mo";
+  return dock.coViec && !dock.luiLai && !dock.vang && dock.coSheet === 0 && dock.trangThai !== "mo";
 }
 
 /** Back into the edge, keeping the badge and the law flag as they are. */
@@ -112,7 +128,7 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       // sheet the person is reading, which is the bug this state exists for.
       // Beside money the edge is only a door, and a tap may not put a face next
       // to a figure (ADR-0033 §2.2).
-      if (dock.nhuongCho || dock.luiLai) return dock;
+      if (dock.coSheet > 0 || dock.luiLai || dock.vang) return dock;
       // From the edge, one tap only brings Nếp out. Opening the panel is a
       // second, deliberate tap: a sheet that sprang open from a stray swipe
       // back would cover the screen the person was actually reading.
@@ -130,7 +146,7 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
       return dock.trangThai === "nghi" ? veMep(dock) : dock;
 
     case "keo-vao":
-      if (dock.nhuongCho || dock.luiLai) return dock;
+      if (dock.coSheet > 0 || dock.luiLai || dock.vang) return dock;
       if (dock.trangThai === "an") return { ...dock, trangThai: "nghi" };
       return dock;
 
@@ -147,17 +163,15 @@ export function chuyen(dock: DockNep, su: SuKienNep): DockNep {
 
     case "doi-man":
       // Every screen starts with Nếp in the edge; out was for the last one.
-      return { ...dock, trangThai: "an", luiLai: su.nepLui };
+      return { ...dock, trangThai: "an", luiLai: su.nepLui && !su.nepVang, vang: su.nepVang === true };
 
-    case "nhuong-cho":
-      if (su.bat) {
-        // Nếp's own panel is a sheet too. It does not make room for itself.
-        if (dock.trangThai === "mo") return dock;
-        return { ...dock, trangThai: "an", nhuongCho: true };
-      }
-      if (!dock.nhuongCho) return dock;
+    case "mo-sheet":
+      // Nếp's own panel is a sheet too, and does not make room for itself.
+      return { ...dock, coSheet: dock.coSheet + 1, trangThai: dock.trangThai === "mo" ? "mo" : "an" };
+
+    case "dong-sheet":
       // The room is given back and Nếp stays in the edge it went to.
-      return { ...dock, nhuongCho: false };
+      return { ...dock, coSheet: Math.max(0, dock.coSheet - 1) };
 
     default:
       return dock;
