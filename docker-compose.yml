@@ -226,6 +226,20 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # Lược đồ chỉ mục truy hồi quán (internal/rag, thiết kế 04 §2.4), với bảng
+  # phiên bản riêng `rag_schema_migrations`. Chạy SAU `migrate-chat`, TRƯỚC
+  # `core`. `serve` không đòi lược đồ này — thiếu nó thì /places/search xếp
+  # trên hàng sống — nhưng có sẵn thì `core rag build` chạy được ngay. Dựng,
+  # đánh giá, đưa lên một phiên bản vẫn là việc tay của người vận hành.
+  migrate-rag:
+    <<: *core-image
+    command: ["migrate-rag"]
+    environment: *api-env
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Cửa trước Go (ADR-0029). Route manifest cho Go thì Go trả lời, còn lại proxy
   # nguyên vẹn sang `api`. Giữ cổng 8099 để mobile, README và script không đổi.
   core:
@@ -262,6 +276,8 @@ services:
       api:
         condition: service_healthy
       migrate-chat:
+        condition: service_completed_successfully
+      migrate-rag:
         condition: service_completed_successfully
     healthcheck:
       # Liveness of core itself, on its loopback port — not a proxied /healthz,

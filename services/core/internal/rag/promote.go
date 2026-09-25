@@ -147,7 +147,11 @@ func Evaluate(ctx context.Context, db Beginner, version int64) (DanhGia, error) 
 }
 
 // thamDo are the gate's probes for one destination: one per hard filter
-// value, never combined, so a violation names its filter.
+// value first, so a violation names its filter; then windows, three a day,
+// the last of each day running past midnight and Sunday's past the end of
+// the week (split in two by giomo.Khung); then every allergen combined with
+// a diet, a budget and a time, so a clause that only breaks beside another
+// is exercised too.
 func thamDo(dest string) []YeuCau {
 	var out []YeuCau
 	for _, a := range tuvung.DiUng.IDs() {
@@ -165,6 +169,21 @@ func thamDo(dest string) []YeuCau {
 			at := day*24*60 + m
 			out = append(out, YeuCau{DiemDen: dest, Luc: &at})
 		}
+	}
+	for day := 0; day < 7; day++ {
+		for _, w := range [][2]int{{11 * 60, 14 * 60}, {18 * 60, 22 * 60}, {22*60 + 30, 26 * 60}} {
+			k := [2]int{day*24*60 + w[0], day*24*60 + w[1]}
+			out = append(out, YeuCau{DiemDen: dest, Khung: &k})
+		}
+	}
+	friday := [2]int{4*24*60 + 18*60, 4*24*60 + 22*60}
+	sundayLate := 6*24*60 + 23*60 + 30
+	for _, a := range tuvung.DiUng.IDs() {
+		b, c := int64(200_000), int64(100_000)
+		k, at := friday, sundayLate
+		out = append(out,
+			YeuCau{DiemDen: dest, DiUng: []string{a}, AnKieng: []string{"chay"}, NganSach: &b, Khung: &k},
+			YeuCau{DiemDen: dest, DiUng: []string{a}, AnKieng: []string{"halal"}, NganSach: &c, Luc: &at})
 	}
 	return out
 }
@@ -263,23 +282,51 @@ func Rollback(ctx context.Context, db Beginner) (from, to int64, err error) {
 	return from, *parent, tx.Commit(ctx)
 }
 
-// LyDoBia are the reasons a place leaves the index.
-var LyDoBia = []string{"unsafe", "takedown", "closed", "source_deleted"}
+// LyDoBia are the reasons a place leaves the index. A build writes and lifts
+// `unsafe` and `source_deleted` itself; LyDoBiaTay are the only ones a person
+// gives, and only a person lifts them.
+var (
+	LyDoBia    = []string{"unsafe", "takedown", "closed", "source_deleted"}
+	LyDoBiaTay = []string{"takedown", "closed"}
+)
 
-// Tombstone removes a place from every version, past and future, until the
-// tombstone is deleted. A reason given by hand replaces one a build wrote,
-// so a takedown is never lifted by the next build.
-func Tombstone(ctx context.Context, q Querier, docID, reason string) error {
-	ok := false
-	for _, r := range LyDoBia {
-		ok = ok || r == reason
+// ErrKhongCoBia is Untombstone on a place no hand tombstone holds.
+var ErrKhongCoBia = errors.New("rag: no takedown or closed tombstone for this place")
+
+func laLyDoTay(reason string) bool {
+	for _, r := range LyDoBiaTay {
+		if r == reason {
+			return true
+		}
 	}
-	if !ok || docID == "" {
+	return false
+}
+
+// Tombstone removes a place from every version, past and future, until
+// Untombstone lifts it. Only `takedown` and `closed` are accepted: the build
+// lifts `unsafe` and `source_deleted` by itself, so a person giving those
+// would see the place come back on the next build. A hand reason replaces
+// one a build wrote, so the next build does not lift it.
+func Tombstone(ctx context.Context, q Querier, docID, reason string) error {
+	if !laLyDoTay(reason) || docID == "" {
 		return ErrLyDo
 	}
 	_, err := q.Exec(ctx, `INSERT INTO rag_tombstones(corpus,doc_id,reason) VALUES('place',$1,$2)
 		ON CONFLICT (corpus,doc_id) DO UPDATE SET reason=EXCLUDED.reason, created_at=clock_timestamp()`, docID, reason)
 	return err
+}
+
+// Untombstone lifts a hand tombstone (`takedown` or `closed`) and says which
+// it was. A build's own tombstones are not lifted here: the next build lifts
+// them when the row is back and safe.
+func Untombstone(ctx context.Context, q Querier, docID string) (string, error) {
+	var reason string
+	err := q.QueryRow(ctx, `DELETE FROM rag_tombstones WHERE corpus='place' AND doc_id=$1 AND reason = ANY($2::text[]) RETURNING reason`,
+		docID, LyDoBiaTay).Scan(&reason)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrKhongCoBia
+	}
+	return reason, err
 }
 
 // TrangThai is `core rag status`.

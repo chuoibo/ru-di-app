@@ -462,6 +462,8 @@ func chayVang(t *testing.T, v tapVang, retrieve func(YeuCau) KetQua) map[string]
 		}
 		if s.coLienQuan == 1 && s.recall < 1 {
 			t.Logf("%s (%s) thiếu: top=%v", q.ID, q.Nhom, top)
+		} else if s.coLienQuan == 1 && s.mrr < 1 {
+			t.Logf("%s (%s) quán đúng đầu tiên ở hạng %.0f: top=%v", q.ID, q.Nhom, 1/s.mrr, top)
 		}
 		g := out[q.Nhom]
 		g.cong(s)
@@ -546,8 +548,8 @@ func biaTay(v tapVang) map[string]bool {
 // The fixture checks itself before it checks anything else.
 func TestVangTuKiem(t *testing.T) {
 	v := docVang(t)
-	if len(v.Quan) != 286 || len(v.TruyVan) != 67 {
-		t.Fatalf("%d places, %d queries; want 286 and 67", len(v.Quan), len(v.TruyVan))
+	if len(v.Quan) != 289 || len(v.TruyVan) != 83 {
+		t.Fatalf("%d places, %d queries; want 289 and 83", len(v.Quan), len(v.TruyVan))
 	}
 	ids := map[string]bool{}
 	for _, q := range v.Quan {
@@ -583,8 +585,8 @@ func TestVangTuKiem(t *testing.T) {
 			t.Errorf("group %s has %d queries", g, perGroup[g])
 		}
 	}
-	// The background shares no tag with the anchors' vocabulary: its hand
-	// label (none) is what the scanner reads too.
+	// The background's word pools name no allergen, diet or atmosphere: a
+	// check of the pools, so the ranking has plain places to rank past.
 	for i, q := range v.Quan {
 		if !strings.HasPrefix(q.ID, "g-") {
 			continue
@@ -594,8 +596,10 @@ func TestVangTuKiem(t *testing.T) {
 			t.Errorf("background %s carries tags %v %v %v", q.ID, h.DiUng, h.AnKieng, h.KhiChat)
 		}
 	}
-	// The anchors' hand labels agree with the scanner: if they did not, the
-	// oracle and the filter would be measuring different things.
+	// Where the anchors' hand labels and the scanner disagree is logged,
+	// never required to agree: the oracle is the hand label, so a scanner
+	// miss on a place a query returns is a violation the numbers show
+	// (TestVangOracleDocLap), not a fixture error.
 	for i, q := range v.Quan {
 		if strings.HasPrefix(q.ID, "g-") {
 			continue
@@ -605,12 +609,51 @@ func TestVangTuKiem(t *testing.T) {
 			continue
 		}
 		if tapHop(h.DiUng) != tapHop(q.DiUng) {
-			t.Errorf("%s: scanner allergens %v, hand label %v", q.ID, h.DiUng, q.DiUng)
+			t.Logf("%s: scanner allergens %v, hand label %v", q.ID, h.DiUng, q.DiUng)
 		}
 		if tapHop(h.AnKieng) != tapHop(q.AnKieng) {
-			t.Errorf("%s: scanner diets %v, hand label %v", q.ID, h.AnKieng, q.AnKieng)
+			t.Logf("%s: scanner diets %v, hand label %v", q.ID, h.AnKieng, q.AnKieng)
 		}
 	}
+}
+
+// The oracle does not lean on the scanner. The milk-tea shop is reworded so
+// the scanner can no longer see its milk («Trà pha kem béo»), its hand label
+// stays «sữa», and a milk-allergic asker asks for tea: the live path returns
+// the shop, and the golden's oracle calls it a violation. With the shop's
+// own words (identity) the same query has none.
+func TestVangOracleDocLap(t *testing.T) {
+	q := truyVanMau{ID: "x01", Nhom: "di_ung", Cau: "Mình dị ứng sữa, tìm quán trà ở Sài Gòn",
+		RangBuoc: rangBuocMau{DiemDen: "d-tphcm", DiUng: []string{"sua"}}}
+	chay := func(v tapVang) (int, []string) {
+		rows, bia := v.rows(), biaTay(v)
+		y, _ := v.yeuCau(q)
+		var top []string
+		for _, h := range xepSong(rows, bia, y).Quan {
+			top = append(top, h.ID)
+		}
+		s, why := cham(q, top, func(id string) string { return v.viPham(q, id) })
+		return s.viPham, why
+	}
+	v := docVang(t)
+	if n, why := chay(v); n != 0 {
+		t.Fatalf("identity: the shop's own words already break the filter: %v", why)
+	}
+	for i := range v.Quan {
+		if v.Quan[i].ID == "sg-tra-sua-chim-se" {
+			v.Quan[i].Ten = "Tiệm Trà Chim Sẻ"
+			v.Quan[i].Kinds = []string{"trà pha kem béo", "trân châu"}
+			v.Quan[i].MoTa = str("Trà pha kem béo, trân châu đường đen.")
+			if tapHop(v.Quan[i].DiUng) != "sua" {
+				t.Fatal("the hand label changed")
+			}
+		}
+	}
+	n, why := chay(v)
+	if n == 0 {
+		t.Fatal("a scanner miss did not show up as a violation: the oracle is not independent of the scanner")
+	}
+	t.Logf("scanner miss seen by the oracle: %v", why)
 }
 
 // The live-row path on the golden set: rag/xephang BM25 plus the vocabulary
@@ -628,8 +671,8 @@ var ghimSong = map[string]string{
 	"khong_dau":     "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"khi_chat":      "n=10 co_lien_quan=10 recall@10=1.0000 ndcg@10=0.9917 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"rang_buoc":     "n=10 co_lien_quan=9 recall@10=1.0000 ndcg@10=0.9590 mrr@10=0.9167 violation@10=0.0000 so_vi_pham=0",
-	"di_ung":        "n=10 co_lien_quan=5 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
+	"di_ung":        "n=26 co_lien_quan=13 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"lien_diem_den": "n=8 co_lien_quan=8 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
 	"bay_injection": "n=7 co_lien_quan=2 recall@10=1.0000 ndcg@10=1.0000 mrr@10=1.0000 violation@10=0.0000 so_vi_pham=0",
-	"tong":          "n=67 co_lien_quan=56 recall@10=1.0000 ndcg@10=0.9810 mrr@10=0.9723 violation@10=0.0000 so_vi_pham=0",
+	"tong":          "n=83 co_lien_quan=64 recall@10=1.0000 ndcg@10=0.9834 mrr@10=0.9758 violation@10=0.0000 so_vi_pham=0",
 }

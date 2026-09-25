@@ -10,12 +10,14 @@
 // lower case), as a whole run of syllables: «tôm» finds «Tôm nướng» and «tom
 // nuong» but not «tomato». Folding merges words that differ only in their
 // marks, and the lists are written around that: a syllable that folds onto a
-// common word is only ever used inside a longer phrase. «cua» (crab) folds
-// onto «của» (of), so crab is «cua rang», «riêu cua», «bánh canh cua»…; «cá»
-// (fish) folds onto «cà» (coffee, aubergine), so fish is «cá kho», «lẩu cá»…
-// Where a merge is left in, it errs toward the safe side: «óc chó» (walnut)
-// also reads as «ốc» (shellfish), which can only hide a place from someone
-// allergic to shellfish, never show them one.
+// common word is never a phrase on its own. «cua» (crab) folds onto «của»
+// (of), so the phrases are «cua rang», «riêu cua», «bánh canh cua»…; «cá»
+// (fish) folds onto «cà» (coffee, aubergine), so «cá kho», «lẩu cá»… Such a
+// syllable alone is read from the text as typed instead (mot_am.go): on a
+// place only with its own marks, in an asker's list after a trigger with its
+// marks or none. Where a merge is left in, it errs toward the safe side:
+// «óc chó» (walnut) also reads as «ốc» (shellfish), which can only hide a
+// place from someone allergic to shellfish, never show them one.
 //
 // Pure: text in, closed ids out. No model ever fills these in (ADR-0017 §2.3).
 package tuvung
@@ -150,10 +152,12 @@ func (v *TuVung) Quet(text string) []string {
 	return v.quet(AmTiet(text), false)
 }
 
-// QuetKhongPhuDinh is Quet that skips a mention negated just before it
-// («không có món chay», «chưa có đồ chay»): for a vocabulary where a wrong yes
-// is the unsafe answer, as a diet is -- a hard filter that lets a place in on
-// «chay» must not let it in on «không chay».
+// QuetKhongPhuDinh is Quet that skips a mention negated in the two syllables
+// just before it («không có món chay», «chưa có đồ chay»). It reads an
+// asker's diets, where the window stays narrow on purpose: a negation read
+// too far («mình không ăn thịt nên tìm quán chay») would drop a diet the
+// asker has. A place's diets are read by AnKiengQuan, which is strict the
+// other way.
 func (v *TuVung) QuetKhongPhuDinh(text string) []string {
 	return v.quet(AmTiet(text), true)
 }
@@ -239,23 +243,28 @@ func KhongDau(text string) bool {
 	return letters
 }
 
-// DiUng is the allergen list. A place is tagged from its own words with Quet
-// (every mention counts, negated or not: a wrong yes only hides a place); an
-// asker's allergens come from DiUngNguoiHoi. MoRongDiUng closes a set over
-// the family, so «hải sản» and «tôm» exclude each other's places.
+// DiUng is the allergen list. A place is tagged from its own words with
+// DiUngQuan (every mention counts, negated or not: a wrong yes only hides a
+// place); an asker's allergens come from DiUngNguoiHoi. MoRongDiUng closes a
+// set over the family, so «hải sản» and «tôm» exclude each other's places.
+// A phrase may name several entries («giáp xác» is shrimp and crab,
+// «shellfish» is those and shellfish, «nuts» is tree nuts and peanuts).
+// One-syllable words that fold onto everyday words («cua», «cá», «trứng»)
+// are not phrases here; they are read only where typed with their own marks
+// (dauMotAm).
 var DiUng = dung("di_ung", []Muc{
-	{ID: "hai_san", Nhan: "hải sản", Cum: []string{"hải sản", "đồ biển", "món biển", "seafood"}},
-	{ID: "tom", Nhan: "tôm", Cum: []string{"tôm", "tôm hùm", "shrimp", "prawn", "lobster"}},
-	{ID: "cua", Nhan: "cua, ghẹ", Cum: []string{"cua biển", "cua đồng", "cua rang", "cua lột", "cua hấp", "cua sốt", "riêu cua", "bánh canh cua", "lẩu cua", "chả cua", "súp cua", "ghẹ hấp", "ghẹ rang", "ghẹ luộc", "crab"}},
-	{ID: "muc", Nhan: "mực, bạch tuộc", Cum: []string{"mực nướng", "mực chiên", "mực xào", "mực hấp", "mực ống", "mực lá", "mực một nắng", "khô mực", "râu mực", "bạch tuộc", "squid", "octopus", "calamari"}},
-	{ID: "oc_so", Nhan: "ốc, sò, nghêu, hàu", Cum: []string{"ốc", "sò điệp", "sò huyết", "sò lông", "sò nướng", "nghêu", "hàu nướng", "hàu sống", "hàu phô mai", "cơm hến", "bún hến", "oyster", "clam", "scallop", "snail"}},
-	{ID: "ca", Nhan: "cá", Cum: []string{"cá kho", "cá nướng", "cá chiên", "cá hấp", "cá lóc", "cá hồi", "cá ngừ", "cá thu", "cá basa", "cá viên", "lẩu cá", "gỏi cá", "chả cá", "bún cá", "cháo cá", "canh cá", "sushi", "sashimi", "fish"}},
-	{ID: "dau_phong", Nhan: "đậu phộng", Cum: []string{"đậu phộng", "lạc rang", "hạt lạc", "kẹo lạc", "peanut"}},
-	{ID: "hat_cay", Nhan: "các loại hạt", Cum: []string{"hạt điều", "hạnh nhân", "óc chó", "hạt dẻ cười", "mắc ca", "macca", "hồ đào", "walnut", "almond", "cashew", "hazelnut", "pistachio"}},
-	{ID: "sua", Nhan: "sữa", Cum: []string{"sữa tươi", "sữa chua", "sữa đặc", "sữa bò", "trà sữa", "cà phê sữa", "bạc xỉu", "phô mai", "bơ sữa", "kem sữa", "kem tươi", "kem bơ", "kem que", "bánh flan", "latte", "cappuccino", "cheese", "milk", "yogurt"}},
-	{ID: "trung", Nhan: "trứng", Cum: []string{"trứng gà", "trứng vịt", "trứng cút", "trứng chiên", "trứng muối", "trứng ốp la", "ốp la", "hột vịt", "hột gà", "bánh flan", "egg"}},
-	{ID: "lua_mi", Nhan: "lúa mì (gluten)", Cum: []string{"mì", "bánh mì", "bột mì", "lúa mì", "bánh bao", "pizza", "pasta", "spaghetti", "gluten"}},
-	{ID: "dau_nanh", Nhan: "đậu nành", Cum: []string{"đậu nành", "đậu hũ", "đậu hủ", "đậu phụ", "tàu hũ", "tào phớ", "nước tương", "xì dầu", "tofu", "soy", "miso"}},
+	{ID: "hai_san", Nhan: "hải sản", Cum: []string{"hải sản", "thủy hải sản", "đồ biển", "món biển", "đồ tanh", "seafood"}},
+	{ID: "tom", Nhan: "tôm", Cum: []string{"tôm", "tôm hùm", "mắm tôm", "mắm ruốc", "tép", "giáp xác", "shrimp", "shrimps", "prawn", "prawns", "lobster", "lobsters", "shellfish", "crustacean", "crustaceans"}},
+	{ID: "cua", Nhan: "cua, ghẹ", Cum: []string{"cua biển", "cua đồng", "cua rang", "cua lột", "cua hấp", "cua sốt", "cua hoàng đế", "cua ghẹ", "riêu cua", "bánh canh cua", "lẩu cua", "chả cua", "súp cua", "ghẹ hấp", "ghẹ rang", "ghẹ luộc", "giáp xác", "crab", "crabs", "shellfish", "crustacean", "crustaceans"}},
+	{ID: "muc", Nhan: "mực, bạch tuộc", Cum: []string{"mực nướng", "mực chiên", "mực xào", "mực hấp", "mực ống", "mực lá", "mực một nắng", "khô mực", "râu mực", "tôm mực", "bạch tuộc", "nhuyễn thể", "squid", "squids", "octopus", "calamari"}},
+	{ID: "oc_so", Nhan: "ốc, sò, nghêu, hàu", Cum: []string{"ốc", "sò điệp", "sò huyết", "sò lông", "sò nướng", "nghêu", "hàu nướng", "hàu sống", "hàu phô mai", "hàu sữa", "cơm hến", "bún hến", "nhuyễn thể", "oyster", "oysters", "clam", "clams", "scallop", "scallops", "snail", "snails", "mussel", "mussels", "shellfish"}},
+	{ID: "ca", Nhan: "cá", Cum: []string{"cá kho", "cá nướng", "cá chiên", "cá hấp", "cá lóc", "cá hồi", "cá ngừ", "cá thu", "cá basa", "cá viên", "cá biển", "cá nhỏ", "lẩu cá", "gỏi cá", "chả cá", "bún cá", "cháo cá", "canh cá", "nước mắm", "đồ tanh", "sushi", "sashimi", "fish"}},
+	{ID: "dau_phong", Nhan: "đậu phộng", Cum: []string{"đậu phộng", "đậu phụng", "dầu phộng", "dầu lạc", "lạc rang", "hạt lạc", "kẹo lạc", "peanut", "peanuts", "nut", "nuts"}},
+	{ID: "hat_cay", Nhan: "các loại hạt", Cum: []string{"hạt điều", "hạnh nhân", "óc chó", "hạt dẻ cười", "hạt dẻ nướng", "hạt dẻ rang", "mắc ca", "macca", "hồ đào", "sữa hạt", "walnut", "walnuts", "almond", "almonds", "cashew", "cashews", "hazelnut", "hazelnuts", "pistachio", "pistachios", "tree nut", "tree nuts", "nut", "nuts"}},
+	{ID: "sua", Nhan: "sữa", Cum: []string{"sữa tươi", "sữa chua", "sữa đặc", "sữa bò", "trà sữa", "cà phê sữa", "cà phê muối", "bạc xỉu", "phô mai", "bơ sữa", "bơ tỏi", "kem sữa", "kem tươi", "kem bơ", "kem que", "sốt kem", "bánh kem", "bánh flan", "bánh sừng bò", "croissant", "latte", "cappuccino", "cheese", "milk", "butter", "cream", "dairy", "lactose", "yogurt"}},
+	{ID: "trung", Nhan: "trứng", Cum: []string{"trứng gà", "trứng vịt", "trứng cút", "trứng chiên", "trứng muối", "trứng ốp la", "ốp la", "hột vịt", "hột gà", "lòng trắng trứng", "lòng đỏ trứng", "bánh flan", "egg", "eggs"}},
+	{ID: "lua_mi", Nhan: "lúa mì (gluten)", Cum: []string{"mì", "bánh mì", "bột mì", "lúa mì", "bánh bao", "bánh ngọt", "bánh quy", "bánh bông lan", "bánh kem", "bánh sừng bò", "croissant", "pizza", "pasta", "spaghetti", "wheat", "gluten"}},
+	{ID: "dau_nanh", Nhan: "đậu nành", Cum: []string{"đậu nành", "sữa đậu nành", "đậu hũ", "đậu hủ", "đậu phụ", "tàu hũ", "tào phớ", "nước tương", "xì dầu", "tofu", "soy", "miso"}},
 	{ID: "me", Nhan: "mè (vừng)", Cum: []string{"hạt mè", "mè rang", "mè đen", "dầu mè", "muối mè", "kẹo mè", "hạt vừng", "dầu vừng", "muối vừng", "sesame"}},
 })
 
@@ -293,72 +302,63 @@ func MoRongDiUng(ids []string) []string {
 	return out
 }
 
-// Allergen triggers, fillers that may sit between a trigger and the allergen,
-// and the connectors of a list («tôm và cua»).
-var (
-	kichDiUng = [][]string{
-		AmTiet("dị ứng"), AmTiet("không ăn được"), AmTiet("không ăn"), AmTiet("kiêng"),
-		AmTiet("tránh"), AmTiet("allergic to"), AmTiet("allergy"),
-	}
-	demDiUng = map[string]bool{"voi": true, "bi": true, "do": true, "mon": true, "cac": true, "loai": true, "nang": true, "nhe": true}
-	noiDiUng = map[string]bool{"va": true, "voi": true, "hoac": true, "hay": true, "ca": true, "lan": true, "and": true, "or": true}
-)
-
-// DiUngNguoiHoi reads the allergens an asker names after a trigger: «mình dị
-// ứng hải sản», «không ăn được tôm và cua», «kiêng đậu phộng». A mention with
-// no trigger is not an allergy -- «quán hải sản» asks for seafood -- so it is
-// not returned. The list after a trigger runs while each word is an
-// allergen phrase, a filler («với», «đồ») or a connector («và», «hoặc»), and
-// stops at the first other word, so «dị ứng tôm, muốn ăn cua rang» names
-// shrimp only. Sorted in declaration order; not closed over families.
-func DiUngNguoiHoi(text string) []string {
-	s := AmTiet(text)
-	found := map[string]bool{}
-	for i := 0; i < len(s); {
-		n := 0
-		for _, k := range kichDiUng {
-			if len(ViTri(s[i:min(len(s), i+len(k))], k)) > 0 && len(k) > n {
-				n = len(k)
-			}
-		}
-		if n == 0 {
-			i++
-			continue
-		}
-		j := i + n
-		for j < len(s) {
-			if id, w := DiUng.cumTai(s, j); w > 0 {
-				found[id] = true
-				j += w
-				continue
-			}
-			if demDiUng[s[j]] || noiDiUng[s[j]] {
-				j++
-				continue
-			}
-			break
-		}
-		i = j
-	}
-	var out []string
-	for _, m := range DiUng.muc {
-		if found[m.ID] {
-			out = append(out, m.ID)
-		}
-	}
-	return out
-}
-
-// cumTai returns the id and length of the longest phrase that starts at
-// position i of s, or 0.
-func (v *TuVung) cumTai(s []string, i int) (string, int) {
-	id, best := "", 0
+// cumTai returns the ids and length of the longest phrases that start at
+// position i of s (every entry that lists a phrase of that length there, in
+// declaration order), or 0.
+func (v *TuVung) cumTai(s []string, i int) ([]string, int) {
+	best := 0
 	for _, j := range v.dau[s[i]] {
 		if c := v.cums[j]; len(c.amTiet) > best && khopTai(s, i, c.amTiet) {
-			id, best = c.id, len(c.amTiet)
+			best = len(c.amTiet)
 		}
 	}
-	return id, best
+	if best == 0 {
+		return nil, 0
+	}
+	want := map[int]bool{}
+	for _, j := range v.dau[s[i]] {
+		if c := v.cums[j]; len(c.amTiet) == best && khopTai(s, i, c.amTiet) {
+			want[c.thuTuID] = true
+		}
+	}
+	var ids []string
+	for k, m := range v.muc {
+		if want[k] {
+			ids = append(ids, m.ID)
+		}
+	}
+	return ids, best
+}
+
+// cumDungTai returns the ids of the phrases of exactly w syllables that
+// start at position i of s, in declaration order, or nil.
+func (v *TuVung) cumDungTai(s []string, i, w int) []string {
+	if i >= len(s) {
+		return nil
+	}
+	want := map[int]bool{}
+	for _, j := range v.dau[s[i]] {
+		if c := v.cums[j]; len(c.amTiet) == w && khopTai(s, i, c.amTiet) {
+			want[c.thuTuID] = true
+		}
+	}
+	var ids []string
+	for k, m := range v.muc {
+		if want[k] {
+			ids = append(ids, m.ID)
+		}
+	}
+	return ids
+}
+
+// coCumDaiTai reports whether a phrase of two syllables or more starts at i.
+func (v *TuVung) coCumDaiTai(s []string, i int) bool {
+	for _, j := range v.dau[s[i]] {
+		if c := v.cums[j]; len(c.amTiet) > 1 && khopTai(s, i, c.amTiet) {
+			return true
+		}
+	}
+	return false
 }
 
 // khopTai reports whether phrase starts at position at of s.
@@ -374,8 +374,9 @@ func khopTai(s []string, at int, phrase []string) bool {
 	return true
 }
 
-// AnKieng is the diet list. Tagging a place uses QuetKhongPhuDinh, and a vegan
-// place is a vegetarian place too (DoiKieng).
+// AnKieng is the diet list. An asker's diets are read with QuetKhongPhuDinh;
+// a place's with AnKiengQuan, from its kinds and traits only. A vegan place
+// is a vegetarian place too (DoiKieng).
 var AnKieng = dung("an_kieng", []Muc{
 	{ID: "chay", Nhan: "ăn chay", Cum: []string{"ăn chay", "đồ chay", "món chay", "quán chay", "nhà hàng chay", "bún chay", "phở chay", "lẩu chay", "buffet chay", "chay tịnh", "thuần chay", "vegetarian", "veggie", "vegan"}},
 	{ID: "thuan_chay", Nhan: "thuần chay", Cum: []string{"thuần chay", "vegan"}},

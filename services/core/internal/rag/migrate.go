@@ -24,8 +24,26 @@ import (
 //go:embed schema_tu_vung.sql
 var schemaTuVungSQL string
 
+//go:embed schema_tu_vung_2.sql
+var schemaTuVung2SQL string
+
+// migrations are the retrieval schema's versions, in order. An applied
+// version is never edited: its checksum is stored and compared.
+var migrations = []struct {
+	version int
+	sql     string
+}{
+	{1, schemaTuVungSQL},
+	{2, schemaTuVung2SQL},
+}
+
 // SchemaVersion is the retrieval schema this binary reads and writes.
-const SchemaVersion = 1
+const SchemaVersion = 2
+
+// NoiCap joins the two syllables of a pair term in the full-text index and
+// in the query (schema_tu_vung_2.sql): a letter to the default parser, so a
+// pair stays one lexeme apart from any syllable.
+const NoiCap = "ǂ"
 
 // Beginner is a pool or a transaction: something a migration, a build or a
 // promotion can open its own transaction (or savepoint) on.
@@ -48,22 +66,24 @@ func Migrate(ctx context.Context, db Beginner) error {
 	if _, err = tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS rag_schema_migrations(version integer PRIMARY KEY,digest text NOT NULL)`); err != nil {
 		return err
 	}
-	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(schemaTuVungSQL)))
-	var old string
-	if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM rag_schema_migrations WHERE version=1),'')`).Scan(&old); err != nil {
-		return err
-	}
-	if old != "" {
-		if old != digest {
-			return fmt.Errorf("retrieval index migration checksum mismatch")
+	for _, m := range migrations {
+		digest := fmt.Sprintf("%x", sha256.Sum256([]byte(m.sql)))
+		var old string
+		if err = tx.QueryRow(ctx, `SELECT COALESCE((SELECT digest FROM rag_schema_migrations WHERE version=$1),'')`, m.version).Scan(&old); err != nil {
+			return err
 		}
-		return tx.Commit(ctx)
-	}
-	if _, err = tx.Exec(ctx, schemaTuVungSQL); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, `INSERT INTO rag_schema_migrations VALUES(1,$1)`, digest); err != nil {
-		return err
+		if old != "" {
+			if old != digest {
+				return fmt.Errorf("retrieval index migration %d checksum mismatch", m.version)
+			}
+			continue
+		}
+		if _, err = tx.Exec(ctx, m.sql); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, `INSERT INTO rag_schema_migrations VALUES($1,$2)`, m.version, digest); err != nil {
+			return err
+		}
 	}
 	return tx.Commit(ctx)
 }

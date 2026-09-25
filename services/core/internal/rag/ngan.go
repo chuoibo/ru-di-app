@@ -33,7 +33,7 @@ type Ngan struct {
 // when there is none -- and the rest of the thirty are the destination's
 // best for the searcher's taste (service.ScoreOrZero, the ranking the
 // routes' catalogue uses). Every row passed the hard filters the words set
-// (an allergy named after «dị ứng», a diet) and none is tombstoned or
+// (an allergy named beside a trigger, a diet) and none is tombstoned or
 // dropped by SafeDeep. It never falls back to the whole catalogue: an empty
 // shortlist is an empty shortlist.
 func (k Kho) DanhSachNgan(ctx context.Context, cau string, group taste.Profile) (Ngan, error) {

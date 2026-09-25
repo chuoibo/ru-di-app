@@ -22,6 +22,10 @@ type golden struct {
 		Chu    string   `json:"chu"`
 		Ra     []string `json:"ra"`
 	} `json:"khong_phu_dinh"`
+	AnKiengQuan []struct {
+		Chu string   `json:"chu"`
+		Ra  []string `json:"ra"`
+	} `json:"an_kieng_quan"`
 	NguoiHoi []struct {
 		Chu string   `json:"chu"`
 		Ra  []string `json:"ra"`
@@ -64,8 +68,22 @@ func TestGoldenQuet(t *testing.T) {
 		t.Fatalf("golden too small: %d, %d", len(g.Quet), len(g.KhongPhuDinh))
 	}
 	for _, c := range g.Quet {
-		if got := byName[c.TuVung].Quet(c.Chu); !same(got, c.Ra) {
+		got := byName[c.TuVung].Quet(c.Chu)
+		if c.TuVung == "di_ung" {
+			// A place's allergens: the phrases plus the one-syllable words
+			// typed with their own marks.
+			got = DiUngQuan(c.Chu)
+		}
+		if !same(got, c.Ra) {
 			t.Errorf("%s.Quet(%q) = %q, want %q", c.TuVung, c.Chu, got, c.Ra)
+		}
+	}
+	if len(g.AnKiengQuan) < 20 {
+		t.Fatalf("only %d an_kieng_quan cases", len(g.AnKiengQuan))
+	}
+	for _, c := range g.AnKiengQuan {
+		if got := AnKiengQuan(c.Chu); !same(got, c.Ra) {
+			t.Errorf("AnKiengQuan(%q) = %q, want %q", c.Chu, got, c.Ra)
 		}
 	}
 	for _, c := range g.KhongPhuDinh {
@@ -192,5 +210,90 @@ func TestAmTietIsFoldThenSyllables(t *testing.T) {
 	want := []string{"ca", "phe", "da", "lat", "24", "7"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("AmTiet = %q, want %q", got, want)
+	}
+}
+
+// catCau keeps AmTiet's syllables one for one, with the raw forms and the
+// breaks beside them.
+func TestCatCauMatchesAmTiet(t *testing.T) {
+	for _, text := range []string{"Cà phê, ĐÀ LẠT! 24/7", "Món chay: không có.", "dị ứng cả tôm lẫn cua", "Non-halal; x́y", "", "!!!"} {
+		c := catCau(text)
+		if !reflect.DeepEqual(c.s, AmTiet(text)) && !(len(c.s) == 0 && len(AmTiet(text)) == 0) {
+			t.Errorf("%q: %q, AmTiet %q", text, c.s, AmTiet(text))
+		}
+		if len(c.raw) != len(c.s) || len(c.ngat) != len(c.s) {
+			t.Errorf("%q: lengths %d %d %d", text, len(c.s), len(c.raw), len(c.ngat))
+		}
+	}
+	c := catCau("Món chay: không có. Cả tôm, cua")
+	if !reflect.DeepEqual(c.raw, []string{"món", "chay", "không", "có", "cả", "tôm", "cua"}) ||
+		!reflect.DeepEqual(c.ngat, []uint8{0, 0, ngatHaiCham, 0, ngatCau, 0, ngatVe}) || !c.coDau {
+		t.Fatalf("%+v", c)
+	}
+}
+
+// Every one-syllable allergen word is read on a place typed with its own
+// marks, and never typed as the everyday word it folds onto; after a trigger
+// it is read typed either way.
+func TestMotAmChiDocDungDau(t *testing.T) {
+	dongAmCua := map[string][]string{
+		"cua": {"của", "cửa"}, "ghe": {"ghé", "ghế"}, "ca": {"cà", "cả", "ca"}, "muc": {"mức", "mục"}, "so": {"số", "sợ"},
+		"hau": {"hậu", "hầu"}, "hen": {"hẹn"}, "tep": {}, "ruoc": {"rước"}, "mam": {"mâm", "mầm"}, "trung": {"trung", "trúng"},
+		"sua": {"sửa", "sứa"}, "me": {"mẹ", "mê", "me"}, "vung": {"vùng"}, "lac": {"lác"}, "hat": {"hát"}, "chao": {"cháo", "chào"},
+		"hs": {},
+	}
+	for key, d := range dauMotAm {
+		others, ok := dongAmCua[key]
+		if !ok {
+			t.Errorf("%s: no collisions listed for this test", key)
+		}
+		if d.quan != nil {
+			if got := DiUngQuan("Quán có " + d.co + " ngon"); !reflect.DeepEqual(got, DiUng.LocHopLe(d.quan)) {
+				t.Errorf("place «%s» read %v, want %v", d.co, got, d.quan)
+			}
+		} else if got := DiUngQuan("Quán có " + d.co + " ngon"); len(got) != 0 {
+			t.Errorf("place «%s» read %v; it is never read on a place", d.co, got)
+		}
+		for _, o := range others {
+			if got := DiUngQuan("Quán có " + o + " ngon"); len(got) != 0 {
+				t.Errorf("place «%s» (not «%s») read %v", o, d.co, got)
+			}
+		}
+		want := DiUng.LocHopLe(d.hoi)
+		for _, text := range []string{"Mình dị ứng " + d.co, promptsafety.Fold("Mình dị ứng " + d.co)} {
+			if got := DiUngNguoiHoi(text); !reflect.DeepEqual(got, want) {
+				t.Errorf("asker %q read %v, want %v", text, got, want)
+			}
+		}
+		for _, o := range others {
+			if o == key {
+				continue // a bare form is the allergen after a trigger
+			}
+			if got := DiUngNguoiHoi("Mình dị ứng " + o); len(got) != 0 {
+				t.Errorf("asker «dị ứng %s» read %v", o, got)
+			}
+		}
+	}
+}
+
+// The place diet list is AnKieng without «ăn chay», plus what only a place
+// says: one list, so the two never drift.
+func TestAnKiengQuanTuAnKieng(t *testing.T) {
+	quan := map[string]map[string]bool{}
+	for _, m := range anKiengQuan.Muc() {
+		quan[m.ID] = map[string]bool{}
+		for _, c := range m.Cum {
+			quan[m.ID][c] = true
+		}
+	}
+	for _, m := range AnKieng.Muc() {
+		for _, c := range m.Cum {
+			if quan[m.ID][c] == (c == "ăn chay") {
+				t.Errorf("%s/%q: in the place list = %v", m.ID, c, quan[m.ID][c])
+			}
+		}
+	}
+	if !reflect.DeepEqual(anKiengQuan.IDs(), AnKieng.IDs()) {
+		t.Fatalf("ids %v, %v", anKiengQuan.IDs(), AnKieng.IDs())
 	}
 }

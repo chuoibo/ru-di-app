@@ -188,3 +188,11 @@ Một đường gọi AI duy nhất là hàng đợi lời gọi (`POST /context
 
 - `POST /contexts/{context_id}/messages`: hành vi ĐỔI có chủ ý. Chữ «/plan …», «@Rủ Đi …», «/chia-bill …» là tin nhắn thường: `intent` null, `intent_error` null, không gọi mô hình, không ghi thẻ. Thân trả lời bỏ hai trường `companion` và `expense_card`; `intent` chỉ còn `"vote"`, `intent_error` chỉ còn `"vote_malformed"`. Nhánh `/vote` không đổi một byte (kịch bản `wai/messages-flow.yaml`). Hai bên đổi cùng lúc, `PostedMessageResponse` và `clonePosted` cùng thứ tự trường `intent, vote, intent_error`.
 - `POST /contexts/{context_id}/messages/{message_id}/expense-draft`: không đổi. Kịch bản `wai/ai-turn-and-expense-draft.yaml` giữ nửa này, bỏ sáu bước `ai-turn`.
+
+## Đổi 2026-09-25 — `POST /places/search` gửi brain danh sách ngắn: lệch Go-only có tên, CHỜ LEAD XÁC NHẬN
+
+Lát 8 (`a97b6e9`, sửa theo review phản biện ở commit kế sau `5c3a3c1`) đổi **payload bản Go gửi brain**, không đổi route Python: thay vì cả danh mục, Go gửi `rag.DanhSachNgan` — tối đa 30 hàng sống, lọc theo điểm đến khi câu nêu được, hàng trúng từ vựng trước (chỉ mục đang active, hoặc `rag/xephang` trên hàng sống), phần còn lại theo gu người tìm; mọi hàng qua `Filter` rồi `SafeDeep`; dị ứng người hỏi nêu (trước hoặc sau từ kích) và chế độ ăn là lọc cứng. Python (oracle) vẫn gửi cả danh mục.
+
+- **Đây là lệch Go↔Python có chủ ý, chỉ nằm trên payload gửi brain** (thiết kế 04 §7, §10.8; ADR-0040 §2.14 còn là đề xuất). Hàng manifest vẫn `python: live`, `state: LIVE-GO`.
+- **Parity không thấy được**: `GET-places-and-search.yaml` chạy không khoá nên cả hai phía trả `unavailable`; mỗi lượt tìm vẫn đúng một lời gọi brain; không ghi DB. Bằng chứng thay thế là `internal/routes/places_search_shortlist_postgres_test.go` (đọc đúng thân brain nhận: 30/5003 hàng).
+- **Lead phải xác nhận lệch này trước khi nó vào `main`** (thiết kế 04 §10.8 và ADR-0040 §2.14 đều ghi vậy). Chưa có xác nhận ở thời điểm ghi mục này.

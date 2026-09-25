@@ -7,7 +7,7 @@
 //	core migrate-chat  install the chat change feed and AI engine schema
 //	                   (alias: migrate-chat-candidate, the name older scripts use)
 //	core migrate-rag   install the retrieval index schema (internal/rag)
-//	core rag ...       build | eval | promote | rollback | status | tombstone
+//	core rag ...       build | eval | promote | rollback | status | tombstone | untombstone
 //	                   the retrieval index (see cmd/core/rag.go)
 //
 // MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in

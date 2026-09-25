@@ -48,7 +48,7 @@ func TestThuatTruyVanDropsStopWordsAndSlotSpans(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("terms %q, want %q", got, want)
 	}
-	if q := tsQuery(got); q != "'lau' | 'nam' | 'ngon' | 'launam'" {
+	if q := tsQuery(got); q != "'lau' | 'nam' | 'ngon' | 'lauǂnam'" {
 		t.Fatalf("tsquery %q", q)
 	}
 	if tsQuery(thuatTruyVan(YeuCau{Cau: "ở đâu vậy?"})) != "'vay'" {

@@ -116,9 +116,43 @@ func SafeDeep(place *tree.OrderedMap) (*tree.OrderedMap, KetQuaSau) {
 					report.CachLy = append(report.CachLy, key+d)
 				}
 			}
+		case "id", "destination_id", "category", "source", "name", "address", "open_hours", "kinds", "traits":
+			// Checked above by Safe and identity: unsafe drops the row.
+		default:
+			// Any other field, known or not (a number that arrived as text,
+			// a source_ref an import added), is read string by string at
+			// every depth: "every text field" has no exceptions.
+			if !everyStringSafe(value, maxAddress) {
+				out.Set(key, tree.Null{})
+				report.CachLy = append(report.CachLy, key)
+			}
 		}
 	}
 	return out, report
+}
+
+// everyStringSafe reports whether every string inside value -- itself, or
+// any item of a list or value of an object, at any depth -- is safe text
+// under the bound.
+func everyStringSafe(value tree.Value, maxChars int) bool {
+	switch v := value.(type) {
+	case tree.String:
+		return fieldSafe(v, maxChars)
+	case tree.List:
+		for _, item := range v {
+			if !everyStringSafe(item, maxChars) {
+				return false
+			}
+		}
+	case *tree.OrderedMap:
+		for _, k := range v.Keys() {
+			item, _ := v.Get(k)
+			if !everyStringSafe(item, maxChars) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // keepSafe filters a list field. It returns the kept items and the suffixes
@@ -144,8 +178,9 @@ func keepSafe(value tree.Value, most int, ok func(tree.Value) bool) (tree.List, 
 	}
 }
 
-// reviewSafe is one review: an object whose author and body are safe text.
-// Its rating is a number and carries no words.
+// reviewSafe is one review: an object whose author and body are safe text,
+// and whose every other string -- a note, a rating sent as text, anything
+// nested -- is safe under the body's bound.
 func reviewSafe(value tree.Value) bool {
 	review, ok := value.(*tree.OrderedMap)
 	if !ok {
@@ -156,14 +191,21 @@ func reviewSafe(value tree.Value) bool {
 	if _, isText := body.(tree.String); !isText {
 		return false
 	}
-	return fieldSafe(body, maxReviewBody) && fieldSafe(author, maxName)
+	if !fieldSafe(body, maxReviewBody) || !fieldSafe(author, maxName) {
+		return false
+	}
+	for _, k := range review.Keys() {
+		if k == "body" || k == "author" {
+			continue
+		}
+		if item, _ := review.Get(k); !everyStringSafe(item, maxReviewBody) {
+			return false
+		}
+	}
+	return true
 }
 
+// groupFitSafe is group_fit: its relation and every other string in it.
 func groupFitSafe(value tree.Value) bool {
-	fit, ok := value.(*tree.OrderedMap)
-	if !ok {
-		return true
-	}
-	relation, _ := fit.Get("relation")
-	return fieldSafe(relation, maxItem)
+	return everyStringSafe(value, maxItem)
 }

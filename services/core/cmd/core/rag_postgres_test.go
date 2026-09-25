@@ -111,7 +111,8 @@ func TestRagCLILifecycle(t *testing.T) {
 		t.Fatalf("status: %v", s)
 	}
 	core(0, "rag", "tombstone", "ha-cli-hai", "takedown")
-	core(1, "rag", "tombstone", "ha-cli-hai", "vi_sao_khong")
+	core(2, "rag", "tombstone", "ha-cli-hai", "vi_sao_khong")
+	core(2, "rag", "tombstone", "ha-cli-hai", "unsafe")
 	b2 := core(0, "rag", "build")
 	core(0, "rag", "eval", fmt.Sprint(int64(b2["phien_ban"].(float64))))
 	core(0, "rag", "promote", fmt.Sprint(int64(b2["phien_ban"].(float64))))
@@ -120,5 +121,13 @@ func TestRagCLILifecycle(t *testing.T) {
 	}
 	if s := core(0, "rag", "status"); s["bia"].(map[string]any)["takedown"] != float64(1) {
 		t.Fatalf("status after rollback: %v", s)
+	}
+	// The takedown is lifted by hand, and only by hand: once.
+	if u := core(0, "rag", "untombstone", "ha-cli-hai"); u["lifted"] != "takedown" {
+		t.Fatalf("untombstone: %v", u)
+	}
+	core(1, "rag", "untombstone", "ha-cli-hai")
+	if s := core(0, "rag", "status"); s["bia"].(map[string]any)["takedown"] != nil {
+		t.Fatalf("status after untombstone: %v", s)
 	}
 }

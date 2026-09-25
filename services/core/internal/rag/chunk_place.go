@@ -68,7 +68,9 @@ type HoSo struct {
 // DungHoSo builds a place's profile and chunks from its live row. The row
 // goes through promptsafety.SafeDeep first: a row it drops comes back with
 // report.Bo set and no profile (the index tombstones it `unsafe`); a field it
-// quarantines is simply absent from every chunk and every tag.
+// quarantines is absent from every chunk and from the diet and atmosphere
+// tags, but its raw words still count toward the allergen tags, which can
+// only hide the place.
 func DungHoSo(p repo.Place) (HoSo, promptsafety.KetQuaSau) {
 	safe, report := promptsafety.SafeDeep(treejson.MapTo(service.PlaceRow(p)))
 	if report.Bo {
@@ -122,15 +124,68 @@ func DungHoSo(p repo.Place) (HoSo, promptsafety.KetQuaSau) {
 		h.Doan = append(h.Doan, doan(p.ID, FacetDanhGia, strings.Join(kept, "\n")))
 	}
 
-	// Tags come from the same safe words the chunks hold, the address
-	// excepted: a street name is not a menu.
+	// Allergens come from the raw text of every descriptive field, the ones
+	// SafeDeep quarantined included and a description past its length bound
+	// in full: the scan is deterministic, reaches no model, and can only
+	// hide a place, so a field that may not be quoted may still keep a
+	// seafood-allergic asker away from a seafood place (design 04 §4a).
+	var diUng []string
+	for _, text := range chuMoTa(treejson.MapTo(service.PlaceRow(p))) {
+		diUng = append(diUng, tuvung.DiUngQuan(text)...)
+	}
+	h.DiUng = tuvung.DiUng.LocHopLe(diUng)
+	// Diets come only from what the place declares about itself, its kinds
+	// and traits, each read alone; a review or a description saying «chay»
+	// may be a wish, a complaint or the past, and a wrong yes here is the
+	// unsafe answer.
+	var anKieng []string
+	for _, field := range append(append([]string(nil), kinds...), traits...) {
+		anKieng = append(anKieng, tuvung.AnKiengQuan(field)...)
+	}
+	h.AnKieng = tuvung.DoiKieng(anKieng)
+	// Atmospheres, a soft preference, come from the same safe words the
+	// chunks hold, the address excepted: a street name is not a menu.
 	words := strings.Join(append(append(append([]string{chu(safe, "name")}, kinds...), traits...), activities...), " · ") +
 		"\n" + description + "\n" + strings.Join(reviews, "\n")
-	s := tuvung.AmTiet(words)
-	h.DiUng = tuvung.DiUng.QuetAmTiet(s)
-	h.AnKieng = tuvung.DoiKieng(tuvung.AnKieng.QuetAmTietKhongPhuDinh(s))
-	h.KhiChat = tuvung.KhiChat.QuetAmTiet(s)
+	h.KhiChat = tuvung.KhiChat.QuetAmTiet(tuvung.AmTiet(words))
 	return h, report
+}
+
+// khongMoTa are the fields of a catalogue row that say what the row is, not
+// what the place serves: ids, the category, provenance, where it is, when it
+// opens, and who wrote or photographed. A street name is not a menu.
+var khongMoTa = map[string]bool{
+	"id": true, "destination_id": true, "category": true, "source": true, "license": true, "address": true,
+	"open_hours": true, "photo_author": true, "photo_license": true, "author": true,
+}
+
+// chuMoTa returns every string of a raw catalogue row outside khongMoTa, at
+// any depth (a review's body and any extra note, group_fit, an activity),
+// each on its own so no phrase runs from one field into the next.
+func chuMoTa(v tree.Value) []string {
+	var out []string
+	var walk func(tree.Value)
+	walk = func(v tree.Value) {
+		switch x := v.(type) {
+		case tree.String:
+			if s := strings.TrimSpace(string(x)); s != "" {
+				out = append(out, s)
+			}
+		case tree.List:
+			for _, item := range x {
+				walk(item)
+			}
+		case *tree.OrderedMap:
+			for _, k := range x.Keys() {
+				if !khongMoTa[k] {
+					item, _ := x.Get(k)
+					walk(item)
+				}
+			}
+		}
+	}
+	walk(v)
+	return out
 }
 
 func doan(docID, facet, body string) Doan {

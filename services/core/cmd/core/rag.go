@@ -14,7 +14,7 @@ import (
 )
 
 // ragUsage is `core rag` without a valid subcommand.
-const ragUsage = "usage: core rag build | eval <version> | promote <version> | rollback | status | tombstone <doc_id> <unsafe|takedown|closed|source_deleted>"
+const ragUsage = "usage: core rag build | eval <version> | promote <version> | rollback | status | tombstone <doc_id> <takedown|closed> | untombstone <doc_id>"
 
 // ragCommand is one parsed `core rag` call.
 type ragCommand struct {
@@ -46,10 +46,18 @@ func parseRag(args []string) (ragCommand, error) {
 		}
 		c.version = v
 	case "tombstone":
-		if len(args) != 3 {
+		// Only the reasons a person gives: a build writes and lifts
+		// `unsafe` and `source_deleted` itself, so one given by hand would
+		// be undone by the next build.
+		if len(args) != 3 || args[1] == "" || (args[2] != "takedown" && args[2] != "closed") {
 			return ragCommand{}, errors.New(ragUsage)
 		}
 		c.docID, c.reason = args[1], args[2]
+	case "untombstone":
+		if len(args) != 2 || args[1] == "" {
+			return ragCommand{}, errors.New(ragUsage)
+		}
+		c.docID = args[1]
 	default:
 		return ragCommand{}, errors.New(ragUsage)
 	}
@@ -107,6 +115,10 @@ func runRag(args []string, getenv func(string) string, stdout, stderr io.Writer)
 	case "tombstone":
 		err = rag.Tombstone(ctx, pool, c.docID, c.reason)
 		out = map[string]string{"doc_id": c.docID, "reason": c.reason}
+	case "untombstone":
+		var reason string
+		reason, err = rag.Untombstone(ctx, pool, c.docID)
+		out = map[string]string{"doc_id": c.docID, "lifted": reason}
 	}
 	if err != nil {
 		fmt.Fprintln(stderr, "rag:", err)

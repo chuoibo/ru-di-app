@@ -31,7 +31,7 @@ type YeuCau struct {
 	// DiUng are the allergens the asker named (tuvung.DiUng ids); a place
 	// whose own words mention any of them, or any of their family, is out.
 	DiUng []string
-	// AnKieng are the diets a place must declare in its own words.
+	// AnKieng are the diets a place must declare in its kinds or traits.
 	AnKieng []string
 	// NganSach is the ceiling per person in whole đồng: a place whose lowest
 	// price is above it is out; one with no price stays, flagged and last.
@@ -95,9 +95,10 @@ const (
 
 // DocCau reads what a question's words alone can say, with no model: the one
 // destination they name (never a default; see ResolveDestination), the
-// allergens named after a trigger, the diets, the categories and the
-// atmospheres. It is what the public search uses, and the deterministic half
-// of what the engine's preprocess hands Retrieve beside Understand's slots.
+// allergens named beside a trigger (tuvung.DiUngNguoiHoi), the diets, the
+// categories and the atmospheres. It is what the public search uses, and the
+// deterministic half of what the engine's preprocess hands Retrieve beside
+// Understand's slots.
 func DocCau(cau string, dests []DiemDen) (YeuCau, DiemDenGiai) {
 	dd := ResolveDestination(dests, GoiY{Cau: cau})
 	y := YeuCau{
@@ -157,12 +158,12 @@ func thuatTruyVan(y YeuCau) []string {
 }
 
 // tsQuery renders terms as a to_tsquery('simple', …) OR-query. A pair's '_'
-// is dropped, the spelling rag_chunks.tsv indexes it under. Terms hold only
-// letters, digits and '_' (tuvung.AmTiet), so quoting each is enough.
+// becomes NoiCap, the spelling rag_chunks.tsv indexes it under. Terms hold
+// only letters, digits and '_' (tuvung.AmTiet), so quoting each is enough.
 func tsQuery(terms []string) string {
 	parts := make([]string, 0, len(terms))
 	for _, t := range terms {
-		t = strings.ReplaceAll(t, "_", "")
+		t = strings.ReplaceAll(t, "_", NoiCap)
 		if t == "" || strings.ContainsAny(t, `'\`) {
 			continue
 		}

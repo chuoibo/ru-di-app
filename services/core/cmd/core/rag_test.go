@@ -13,6 +13,10 @@ func TestRagArgumentsAreCheckedFirst(t *testing.T) {
 	for _, args := range [][]string{
 		{"rag"}, {"rag", "burn"}, {"rag", "eval"}, {"rag", "eval", "x"}, {"rag", "promote", "0"},
 		{"rag", "promote", "-3"}, {"rag", "build", "extra"}, {"rag", "tombstone", "p-1"}, {"rag", "status", "now"},
+		// A build's own reasons are refused by hand: the next build would
+		// lift them silently (review finding 9).
+		{"rag", "tombstone", "p-1", "unsafe"}, {"rag", "tombstone", "p-1", "source_deleted"}, {"rag", "tombstone", "p-1", "vi_sao"},
+		{"rag", "untombstone"}, {"rag", "untombstone", "p-1", "takedown"},
 	} {
 		var out, errs bytes.Buffer
 		if code := run(args, noEnv, &out, &errs); code != 2 || !strings.Contains(errs.String(), "usage: core rag") {
@@ -29,6 +33,12 @@ func TestRagArgumentsAreCheckedFirst(t *testing.T) {
 	}
 	c, err := parseRag([]string{"tombstone", "p-quan", "takedown"})
 	if err != nil || c.docID != "p-quan" || c.reason != "takedown" {
+		t.Fatalf("%+v %v", c, err)
+	}
+	if c, err := parseRag([]string{"tombstone", "p-quan", "closed"}); err != nil || c.reason != "closed" {
+		t.Fatalf("%+v %v", c, err)
+	}
+	if c, err := parseRag([]string{"untombstone", "p-quan"}); err != nil || c.name != "untombstone" || c.docID != "p-quan" {
 		t.Fatalf("%+v %v", c, err)
 	}
 }
