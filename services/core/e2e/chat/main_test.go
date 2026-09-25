@@ -40,14 +40,12 @@ func TestChatE2EReachesGoFrontDoor(t *testing.T) {
 		t.Fatalf("câu trả lời không có hình dạng feed của Go: %s", response.trim())
 	}
 
-	// The sealed entry points prove the AI writer is the Go module, not the old
-	// implicit-history path.
-	sealed := client.Do("POST", "/contexts/"+stack.GroupID+"/ai-turn",
+	// The old automatic turn is deleted in both backends (ADR-0036 §2.1): Go
+	// has no route for it, so the front door proxies it and Python answers
+	// 404. Anything else means one side still serves it.
+	gone := client.Do("POST", "/contexts/"+stack.GroupID+"/ai-turn",
 		map[string]any{"prompt": "xin chào"}, Idem(newKey()))
-	if sealed.Status != http.StatusForbidden {
-		t.Fatalf("ai-turn cũ phải bị niêm phong 403, nhận %d — %s", sealed.Status, sealed.trim())
-	}
-	if code, _ := sealed.JSON["code"].(string); code != "explicit_invocation_required" {
-		t.Fatalf("ai-turn bị chặn nhưng sai lý do: %s", sealed.trim())
+	if gone.Status != http.StatusNotFound {
+		t.Fatalf("ai-turn cũ phải không còn (404), nhận %d — %s", gone.Status, gone.trim())
 	}
 }

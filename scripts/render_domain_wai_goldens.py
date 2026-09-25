@@ -218,10 +218,6 @@ def parse_vote(*, args):
     return chat_intent.parse_vote(args)
 
 
-def plan_turn(*, conversation, requested=False):
-    return companion_mod.plan_turn(conversation, requested=requested)
-
-
 def ground_card(*, raw, allowed_places):
     return companion_mod.ground_card(raw, allowed_places)
 
@@ -283,7 +279,6 @@ FUNCTIONS = {
     "is_sticker": is_sticker,
     "parse_intent": parse_intent,
     "parse_vote": parse_vote,
-    "plan_turn": plan_turn,
     "ground_card": ground_card,
     "summarise_conversation": summarise_conversation,
     "has_conversation": has_conversation,
@@ -546,41 +541,20 @@ def chat_intent_fuzz(seed=SEED, count=120):
 # ---- companion ----
 
 
+# `plan_turn` (the speaking cadence) was deleted with the automatic companion
+# (ADR-0036 §2.1); only the grounding whitelist remains to be replayed.
+
+
 def companion_constants():
     return {
-        "DEFAULT_LIMITS": companion_mod.DEFAULT_LIMITS,
         "MAX_PLACES": companion_mod.MAX_PLACES,
         "MAX_STOPS": companion_mod.MAX_STOPS,
-        "names": ["plan_turn", "ground_card"],
+        "names": ["ground_card"],
     }
-
-
-def human(t=0):
-    return {"author_kind": "human", "created_at": at(t)}
-
-
-def ai(t=0):
-    return {"author_kind": "ai", "created_at": at(t)}
 
 
 def companion_edges():
     out = []
-
-    def conv(msgs, **kw):
-        return {"conversation": {"messages": msgs, "now": NOW}, **kw}
-
-    out.append(case("plan_turn", "empty", conv([])))
-    out.append(case("plan_turn", "human-ok", conv([human(-10)])))
-    out.append(case("plan_turn", "ai-last", conv([human(-20), ai(-1)])))
-    out.append(
-        case(
-            "plan_turn", "ai-last-requested", conv([human(-20), ai(-1)], requested=True)
-        )
-    )
-    out.append(case("plan_turn", "cooldown", conv([human(-100), ai(-30), human(-5)])))
-    ceiling = [human(-200)] + [ai(-180 + i) for i in range(3)] + [human(-1)]
-    out.append(case("plan_turn", "ceiling", conv(ceiling)))
-    out.append(case("plan_turn", "ceiling-requested", conv(ceiling, requested=True)))
     place = {"id": "p1", "name": "Chợ", "address": "A"}
     out.append(
         case(
@@ -634,20 +608,54 @@ def companion_edges():
 
 def companion_fuzz(seed=SEED, count=40):
     rng = random.Random(seed)
+    catalogue = [
+        {"id": "p1", "name": "Chợ", "address": "A"},
+        {"id": "p2", "name": "Quán Ốc", "address": "B", "price_min_vnd": 50000},
+        {"id": "p3", "name": "Cà phê", "address": "C"},
+    ]
+    texts = ("hello", "Tối nay đi đâu?", "Chợ đêm", "  ", "", 7, None)
+
+    def pick_ids():
+        # Mostly real ids, so most cards survive to the rebuild; an invented
+        # one now and then must sink the whole card.
+        return [
+            "missing" if rng.random() < 0.05 else rng.choice(("p1", "p2", "p3"))
+            for _ in range(rng.randrange(0, 8))
+        ]
+
     out = []
     for i in range(count):
-        n = rng.randrange(0, 8)
-        msgs = [
-            human(-100 + j) if rng.random() < 0.6 else ai(-100 + j) for j in range(n)
-        ]
+        kind = rng.choice(
+            ("text", "places", "places", "itinerary", "itinerary", "poll")
+        )
+        if kind == "text":
+            payload = {"text": rng.choice(texts)}
+        elif kind == "places":
+            payload = {"place_ids": pick_ids()}
+            if rng.random() < 0.5:
+                payload["intro"] = rng.choice(
+                    texts[:5] if rng.random() < 0.8 else texts
+                )
+        else:
+            payload = {
+                "stops": [
+                    {"place_id": place_id, "time_text": "18:00", "note": "x"}
+                    for place_id in pick_ids()
+                ]
+            }
+            if rng.random() < 0.5:
+                payload["title"] = rng.choice(
+                    texts[:5] if rng.random() < 0.8 else texts
+                )
+        raw = {"kind": kind, "payload": payload}
+        if rng.random() < 0.2:
+            raw["extra"] = "dropped"
+        places = catalogue if rng.random() < 0.9 else []
         out.append(
             case(
-                "plan_turn",
+                "ground_card",
                 f"fuzz/{i}",
-                {
-                    "conversation": {"messages": msgs, "now": NOW},
-                    "requested": rng.random() < 0.3,
-                },
+                {"raw": raw, "allowed_places": places},
             )
         )
     return out

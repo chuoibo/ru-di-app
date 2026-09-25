@@ -107,17 +107,6 @@ def test_ready_answers_with_the_token(brain_client):
     assert response.json() == {"status": "ready"}
 
 
-def test_companion_plan_refuses_a_malformed_body(brain_client):
-    client, _app = brain_client
-    response = client.post(
-        "/internal/brain/v1/companion-plan",
-        headers={INTERNAL_TOKEN_HEADER: TEST_TOKEN},
-        json={"conversation": "not-a-dict"},
-    )
-    assert response.status_code == 422
-    assert response.json() == {"code": "brain_request_invalid"}
-
-
 def test_capabilities_require_internal_token_and_never_return_key(
     brain_client, monkeypatch
 ):
@@ -143,12 +132,12 @@ def test_idempotency_key_does_not_reserve_a_brain_call(brain_client):
 
     client, _app = brain_client
     response = client.post(
-        "/internal/brain/v1/companion-plan",
+        "/internal/brain/v1/place-search",
         headers={
             INTERNAL_TOKEN_HEADER: TEST_TOKEN,
             "Idempotency-Key": "brain-must-not-touch-the-store",
         },
-        json={"conversation": {}},
+        json={"query": "x"},
     )
     assert response.status_code == 422
     assert response.json() == {"code": "brain_request_invalid"}

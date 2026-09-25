@@ -136,3 +136,23 @@ one-shot `migrate-chat`, sau `migrate` (alembic) và trước `core`.
 
 Muốn có AI trên 8099 thì stack đó phải chạy `prod`, tức là seed phải đi qua
 phiên thật thay vì header actor. Đó là việc riêng, chưa làm.
+
+## Checkpoint 24-09-2026 — xoá v1: một đường gọi AI (ADR-0036 §2.1, §3b)
+
+Đường AI duy nhất còn lại là hàng đợi lời gọi của `internal/chatassist`
+(`POST /contexts/{id}/ai-invocations`). Xoá trong **một commit** ở cả Go lẫn
+Python cùng manifest: route `ai-turn`, nhánh companion (`/plan`, `@Rủ Đi`) và
+nhánh `/chia-bill` của `POST /messages`, nhịp `PlanTurn`/`plan_turn` cùng route
+brain `companion-plan`, hai cửa sổ `companion_turn_limiter` và
+`message_intent_limiter`. `ai-turn` giờ không có ở đâu: cửa trước Go proxy sang
+Python, Python trả 404. Nhánh `/vote` giữ nguyên.
+
+- `POST /messages` thu hẹp: bỏ `companion` và `expense_card`; `intent` chỉ còn
+  `"vote"`, `intent_error` chỉ còn `"vote_malformed"`. Chữ «/plan …», «@Rủ Đi …»,
+  «/chia-bill …» là tin thường. Client vẫn chặn chúng tại chỗ và mở khay AI.
+- Bất biến «mọi mã từ chối có câu người đọc» chuyển từ
+  `cau-chu-im-lang.test.mjs` (gác `ai-turn`) sang `cau-chu-goi-ai.test.mjs`:
+  đọc mã từ chính handler Go mà `goiAi`/`thuLaiAi` gọi.
+- Hệ quả cho stack `dev` (8099): engine AI tắt ở `dev` (bảng trên), và `ai-turn`
+  từng là đường AI duy nhất ở đó. Từ mốc này stack `dev` không có AI nhóm nào
+  cho tới khi seed chạy bằng phiên thật.

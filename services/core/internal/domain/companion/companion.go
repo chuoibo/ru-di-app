@@ -1,9 +1,9 @@
-// Package companion is app.domain.companion: cadence and card grounding.
+// Package companion is app.domain.companion: AI card grounding. The speaking
+// cadence (PlanTurn) left with the automatic companion (ADR-0036 §2.1).
 package companion
 
 import (
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"mobile/services/core/internal/domain/tree"
@@ -23,59 +23,6 @@ func (e *Error) Error() string { return e.Code }
 func refuse(code string) error { return &Error{Code: code} }
 
 func malformed() error { return refuse("companion_card_malformed") }
-
-// Decision is plan_turn's answer.
-type Decision struct {
-	MaySpeak bool
-	Reason   string
-}
-
-// PlanTurn is plan_turn after timestamps have been parsed as aware instants.
-func PlanTurn(authorKinds []string, created []time.Time, now time.Time, requested bool) Decision {
-	human := false
-	for _, kind := range authorKinds {
-		if kind == "human" {
-			human = true
-			break
-		}
-	}
-	if !human {
-		return Decision{Reason: "no_conversation"}
-	}
-	if !requested && len(authorKinds) > 0 && authorKinds[len(authorKinds)-1] == "ai" {
-		return Decision{Reason: "already_spoke_last"}
-	}
-	window := 20
-	start := 0
-	if len(authorKinds) > window {
-		start = len(authorKinds) - window
-	}
-	ai := 0
-	for _, kind := range authorKinds[start:] {
-		if kind == "ai" {
-			ai++
-		}
-	}
-	if ai >= 3 {
-		reason := "rate_limited"
-		if requested {
-			reason = "asked_too_often"
-		}
-		return Decision{Reason: reason}
-	}
-	if !requested {
-		for i := len(authorKinds) - 1; i >= 0; i-- {
-			if authorKinds[i] != "ai" {
-				continue
-			}
-			if now.Sub(created[i]).Seconds() < 90 {
-				return Decision{Reason: "cooldown"}
-			}
-			break
-		}
-	}
-	return Decision{MaySpeak: true, Reason: "ok"}
-}
 
 func boundedText(payload *tree.OrderedMap, key string) (string, error) {
 	value, ok := payload.Get(key)

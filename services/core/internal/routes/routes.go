@@ -156,7 +156,6 @@ func All() []Route {
 		reactToMessage(),
 		unreactToMessage(),
 		createChatExpenseDraft(),
-		takeCompanionTurnRoute(),
 		setContextMemberRole(),
 		markContextRead(),
 		listDestinations(),

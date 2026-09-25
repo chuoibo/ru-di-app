@@ -1,20 +1,25 @@
-# WAI · ai-turn và expense-draft: hai lối vào AI cũ của chat.
+# WAI · expense-draft: lối vào AI cũ còn lại của chat.
+#
+# Tên file và `id` giữ nguyên để bằng chứng cũ (docs/migration/live-go-25-route-wai.md)
+# còn trỏ đúng. Nửa `ai-turn` đã bị xoá cùng route ở cả Go lẫn Python theo
+# ADR-0036 §2.1 (AI chỉ chạy khi được gọi tường minh qua hàng đợi lời gọi), nên
+# không còn gì để so: cả hai stack cùng trả 404 cho nó.
 #
 # Không stack nào trong tầng parity được cấp khoá provider, nên cả hai bên đều
-# tất định: suggester trả None và brain trả thẻ rỗng. Đó chính là thứ đáng so —
-# cùng một hình dạng từ chối, cùng một mã, cùng một chỗ dừng trước khi tiêu tiền.
-# Không cần stub: thiếu khoá là một câu trả lời, không phải một lỗ hổng đo đạc.
+# tất định: brain trả thẻ rỗng. Đó chính là thứ đáng so — cùng một hình dạng từ
+# chối, cùng một mã, cùng một chỗ dừng trước khi tiêu tiền. Không cần stub:
+# thiếu khoá là một câu trả lời, không phải một lỗ hổng đo đạc.
 #
 # Ghi chú cho người đọc sau: từ 23-09-2026 engine AI nhóm và feed thay đổi
-# BẬT MẶC ĐỊNH ở prod, và khi bật thì hai route này bị `internal/chatassist`
-# niêm phong thành `403 explicit_invocation_required` — một đổi hành vi **có
-# chủ ý** theo ADR-0031, không phải hồi quy. Tầng parity đặt RÕ
+# BẬT MẶC ĐỊNH ở prod, và khi bật thì route này bị `internal/chatassist` niêm
+# phong thành `403 explicit_invocation_required` — một đổi hành vi **có chủ ý**
+# theo ADR-0031, không phải hồi quy. Tầng parity đặt RÕ
 # `MOBILE_CHAT_CHANGES_CANDIDATE=0` trong `scripts/parity_stacks.sh`, nên ở đây
-# chúng vẫn là cổng cũ và vẫn phải khớp Python. Nghĩa là kịch bản này đo đường
-# legacy, KHÔNG đo thứ production đang phục vụ cho hai route này; đường đó do
+# nó vẫn là cổng cũ và vẫn phải khớp Python. Nghĩa là kịch bản này đo đường
+# legacy, KHÔNG đo thứ production đang phục vụ cho route này; đường đó do
 # `scripts/chat_e2e_go.sh` đo.
 id: wai/ai-turn-and-expense-draft
-routes: ['POST /contexts/{context_id}/ai-turn', 'POST /contexts/{context_id}/messages/{message_id}/expense-draft']
+routes: ['POST /contexts/{context_id}/messages/{message_id}/expense-draft']
 auth_mode: dev
 personas:
   owner: {}
@@ -80,52 +85,6 @@ steps:
       body_raw: '{"kind":"text","body":"Tối qua cả nhóm ăn hết một trăm nghìn"}'
     bind:
       msg: {from: body, pointer: /id, class: uuid}
-
-  # ai-turn
-  - id: anonymous_takes_turn
-    as: anonymous
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/ai-turn'
-      headers:
-        content-type: 'application/json'
-  - id: stranger_takes_turn
-    as: stranger
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/ai-turn'
-      headers:
-        content-type: 'application/json'
-  - id: owner_takes_turn_no_body
-    as: owner
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/ai-turn'
-      headers:
-        content-type: 'application/json'
-  - id: owner_takes_turn_requested
-    as: owner
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/ai-turn'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"requested":true}'
-  - id: member_takes_turn
-    as: member
-    request:
-      method: POST
-      path: '/contexts/{{ctx}}/ai-turn'
-      headers:
-        content-type: 'application/json'
-      body_raw: '{"requested":true}'
-  - id: owner_takes_turn_unknown_context
-    as: owner
-    request:
-      method: POST
-      path: '/contexts/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/ai-turn'
-      headers:
-        content-type: 'application/json'
 
   # expense-draft
   - id: anonymous_drafts_expense

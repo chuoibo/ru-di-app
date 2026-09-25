@@ -71,7 +71,6 @@ from app.api.schemas import ErrorResponse
 from app.api.search_rate_limit import (
     FixedWindowLimiter,
     build_chat_expense_limiter,
-    build_companion_turn_limiter,
     build_contextual_suggestion_limiter,
     build_face_detection_limiter,
     build_receipt_scan_limiter,
@@ -170,14 +169,6 @@ def create_app(
     # F26 uses vision too, but owns a fourth window so retries do not consume
     # the bill reader's allowance.
     application.state.screenshot_scan_limiter = build_screenshot_scan_limiter()
-    # The companion talks with the same key. `plan_turn` is a conversation
-    # cadence and not a ceiling -- the caller lifts it by saying one more
-    # thing -- so the turn needs a window like every other model route.
-    application.state.companion_turn_limiter = build_companion_turn_limiter()
-    # M3: a slash command or mention in `POST /messages` reaches the companion
-    # too, through its own window -- same size, never the same object, so one
-    # route cannot drain the other's and the ownership gate can tell them apart.
-    application.state.message_intent_limiter = build_companion_turn_limiter()
     # And the proactive card, which had nothing at all in front of it: no
     # cache, no cadence, one model call per GET.
     application.state.suggestion_limiter = build_suggestion_limiter()

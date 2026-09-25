@@ -25,10 +25,9 @@ import { useNepAnh } from "./useNepAnh";
  * more. If the line looks thin, that is the point: it is the real payload.
  *
  * Until `/me/nep/*` exists (đợt C) the composer says so out loud instead of
- * pretending to think. `screens/chat/ai.ts` draws the line the shell already
- * keeps: `rate_limited` and `cooldown` are deliberate silence and draw nothing,
- * but `unavailable` must be said. A spinner that never resolves is the version
- * of this screen that lies.
+ * pretending to think. The line the shell keeps: deliberate silence draws
+ * nothing, but an AI that is unavailable must be said. A spinner that never
+ * resolves is the version of this screen that lies.
  */
 
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {

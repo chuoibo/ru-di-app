@@ -1,4 +1,4 @@
-"""Pure speaking and grounding rules for the group companion.
+"""Pure grounding rules for AI cards.
 
 The model is allowed to choose catalogue identifiers, but it is never trusted
 to describe a place. Rebuilding every card here makes that boundary structural:
@@ -7,14 +7,6 @@ or persuasive prose returned by the model.
 """
 
 from __future__ import annotations
-
-from datetime import datetime
-
-DEFAULT_LIMITS = {
-    "window_messages": 20,
-    "max_ai_messages_per_window": 3,
-    "cooldown_seconds": 90,
-}
 
 MAX_PLACES = 5
 MAX_STOPS = 6
@@ -27,86 +19,6 @@ class CompanionError(Exception):
     def __init__(self, code: str) -> None:
         super().__init__(code)
         self.code = code
-
-
-def _aware_datetime(value: object) -> datetime:
-    if isinstance(value, datetime):
-        parsed = value
-    elif isinstance(value, str):
-        parsed = datetime.fromisoformat(value)
-    else:
-        raise TypeError("companion timestamp must be an ISO-8601 string")
-
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise CompanionError("companion_timestamp_naive")
-    return parsed
-
-
-def plan_turn(
-    conversation: dict,
-    limits: dict | None = None,
-    *,
-    requested: bool = False,
-) -> dict:
-    """Decide whether the companion may speak using metadata only.
-
-    Every timestamp is validated before any early return. Otherwise a malformed
-    older row could stay hidden whenever a higher-priority speaking rule fires,
-    making the cap depend on which path happened to inspect the history.
-
-    Two of the four rules are a cadence for a companion that VOLUNTEERS:
-    `already_spoke_last` stops it monologuing and `cooldown` stops it answering
-    every line of a fast exchange. `requested=True` means a person asked it
-    something, and neither rule describes that turn -- staying quiet there is
-    not tact, it is a question dropped on the floor, and a caller cannot tell
-    that apart from an outage.
-
-    The other two rules hold either way. `no_conversation` is not a courtesy:
-    with nothing said there is nothing to answer. The per-window ceiling is the
-    bill, and a flag the caller sets cannot be allowed to lift it, or there is
-    no ceiling. It refuses under its own name when the turn was asked for, so
-    that a client sorting reasons into "silence" and "could not answer" cannot
-    file a question it asked under silence.
-    """
-
-    messages = conversation["messages"]
-    now = _aware_datetime(conversation["now"])
-    message_times = [_aware_datetime(message["created_at"]) for message in messages]
-
-    resolved_limits = dict(DEFAULT_LIMITS)
-    if limits is not None:
-        resolved_limits.update(limits)
-
-    if not any(message.get("author_kind") == "human" for message in messages):
-        return {"may_speak": False, "reason": "no_conversation"}
-
-    if not requested and messages[-1].get("author_kind") == "ai":
-        return {"may_speak": False, "reason": "already_spoke_last"}
-
-    window_size = resolved_limits["window_messages"]
-    recent_messages = messages[-window_size:] if window_size else []
-    ai_messages = sum(message.get("author_kind") == "ai" for message in recent_messages)
-    if ai_messages >= resolved_limits["max_ai_messages_per_window"]:
-        reason = "asked_too_often" if requested else "rate_limited"
-        return {"may_speak": False, "reason": reason}
-
-    if not requested:
-        latest_ai_at = next(
-            (
-                created_at
-                for message, created_at in reversed(
-                    list(zip(messages, message_times, strict=True))
-                )
-                if message.get("author_kind") == "ai"
-            ),
-            None,
-        )
-        if latest_ai_at is not None:
-            elapsed_seconds = (now - latest_ai_at).total_seconds()
-            if elapsed_seconds < resolved_limits["cooldown_seconds"]:
-                return {"may_speak": False, "reason": "cooldown"}
-
-    return {"may_speak": True, "reason": "ok"}
 
 
 def _malformed() -> CompanionError:

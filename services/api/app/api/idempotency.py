@@ -498,7 +498,7 @@ class IdempotencyMiddleware:
             if (
                 len(path_parts) >= 3
                 and path_parts[0] == "contexts"
-                and path_parts[2] in {"messages", "ai-turn", "read-mark"}
+                and path_parts[2] in {"messages", "read-mark"}
             ):
                 scope["chat_authorized_replay"] = outcome.response
                 await self.app(scope, _replaying(body), send)

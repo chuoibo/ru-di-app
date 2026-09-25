@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 from app.api import companion_places
 from app.api.chat_expense_skill import ChatExpenseReader, run_chat_expense_skill
 from app.api.cursors import CursorError, decode_cursor, encode_cursor
-from app.api.deps import Actor, Companion, ContextualSuggester, Reeler, Suggester
+from app.api.deps import Actor, ContextualSuggester, Reeler, Suggester
 from app.api.errors import ApiProblem, RepositoryConflict
 from app.api.google_identity import GoogleTokenInvalid, GoogleTokenVerifier
 from app.api.limits import OBJECTION_KINDS, QUOTA_CONSUMING_OBJECTIONS
@@ -94,7 +94,6 @@ from app.api.schemas import (
     CheckinCreateRequest,
     CloseNotebookRequest,
     ClosePreviewResponse,
-    CompanionTurnResponse,
     ContextBalanceEntry,
     ContextBalancesResponse,
     ContextBatchesResponse,
@@ -268,11 +267,10 @@ from app.domain.bill import BillError, allocator_input_from_bill
 from app.domain.blocking import DIRECT_MESSAGE_UNAVAILABLE, dm_allowed
 from app.domain.budget import build_group_budget
 from app.domain.capability import CapabilityScopeError, capability_scope
-from app.domain.chat_expense import ChatExpenseError
 from app.domain.chat_intent import parse_intent, parse_vote
 from app.domain.chat_theme import is_theme
 from app.domain.collection import CollectionError, transition, unmet_publish_gates
-from app.domain.companion import CompanionError, ground_card, plan_turn
+from app.domain.companion import CompanionError, ground_card
 from app.domain.contract import AllocationError
 from app.domain.conversation import has_conversation, summarise_conversation
 from app.domain.direct import (
@@ -363,7 +361,6 @@ from app.web.objection_view import (
 
 logger = logging.getLogger(__name__)
 
-CONTEXT_WINDOW = 40
 #: How far back F32 reads check-ins when working out what kind of place a
 #: group keeps choosing. A ceiling rather than a window: the digest is a
 #: shape, and one more year of arrivals does not change it.
@@ -5459,179 +5456,56 @@ class ApiService:
         context_id: uuid.UUID,
         posted: MessageResponse,
         actor: Actor,
-        *,
-        companion: Companion,
-        companion_limiter,
-        expense_reader: ChatExpenseReader | None = None,
     ) -> PostedMessageResponse:
         """What the stored message asked for, done after it is safely stored.
 
-        `/plan` and `@Rủ Đi` are a requested companion turn; `/vote` creates a
-        poll and a poll card in the caller's name; `/chia-bill` is answered
-        honestly as not available until the batch reader lands. Nothing here
-        raises after the store: a companion refused by the window becomes
-        `companion_rate_limited` in the body, because a 429 on a message the
+        Only `/vote` is acted on: it creates a poll and a poll card in the
+        caller's name, and calls no model. Every other command (`/plan`,
+        `@Rủ Đi`, `/chia-bill`) is an ordinary text message -- AI runs only
+        when a person invokes it through the invocation queue (ADR-0036 §2.1).
+        Nothing here raises after the store because of the text itself: a
+        malformed vote is named in the body, since a 4xx on a message the
         server already kept would make the client retry into a duplicate.
         """
         base = posted.model_dump()
         intent = parse_intent(posted.body) if posted.kind == "text" else None
-        if intent is None:
+        if intent is None or intent["intent"] != "vote":
             return PostedMessageResponse(**base)
-        name = intent["intent"]
-        if name in ("plan", "mention"):
-            try:
-                companion_limiter.check(actor.id)
-            except ApiProblem as limited:
-                if limited.status_code != 429:
-                    raise
-                return PostedMessageResponse(
-                    **base, intent=name, intent_error="companion_rate_limited"
-                )
-            turn = self.take_companion_turn(
-                context_id, actor, companion, requested=True
-            )
-            return PostedMessageResponse(**base, intent=name, companion=turn)
-        if name == "vote":
-            spec = parse_vote(intent["args"])
-            if spec is None:
-                return PostedMessageResponse(
-                    **base, intent="vote", intent_error="vote_malformed"
-                )
-            vote = self.create_vote(
-                context_id,
-                VoteCreateRequest(
-                    question=spec["question"],
-                    options=[VoteOptionInput(label=label) for label in spec["options"]],
-                ),
-                actor,
-            )
-            # The poll card is the PERSON's, not the companion's: authored by
-            # the caller, so the cadence does not read it as an AI turn and no
-            # ceiling is spent on it.
-            self.repository.create_message(
-                context_id=context_id,
-                author_id=actor.id,
-                kind="ai_card",
-                body=None,
-                image_url=None,
-                card={
-                    "kind": "poll",
-                    "payload": {
-                        "vote_id": str(vote.id),
-                        "question": vote.question,
-                        "options": [
-                            {"id": str(option.id), "label": option.label}
-                            for option in vote.options
-                        ],
-                    },
-                },
-                now=_now(),
-            )
-            return PostedMessageResponse(**base, intent="vote", vote=vote)
-        # `/chia-bill`: one companion slot for the whole batch, then read the
-        # recent human text with the same identity-free reader the per-message
-        # draft route uses. The model never sees who paid; the author of each
-        # message is who paid, and the active roster is who shares.
-        if expense_reader is None:
+        spec = parse_vote(intent["args"])
+        if spec is None:
             return PostedMessageResponse(
-                **base, intent="chia_bill", intent_error="chia_bill_not_available"
+                **base, intent="vote", intent_error="vote_malformed"
             )
-        try:
-            companion_limiter.check(actor.id)
-        except ApiProblem as limited:
-            if limited.status_code != 429:
-                raise
-            return PostedMessageResponse(
-                **base, intent="chia_bill", intent_error="companion_rate_limited"
-            )
-        outcome = self._draft_expenses_from_chat(
-            context_id, actor, posted.id, expense_reader
-        )
-        if isinstance(outcome, str):
-            return PostedMessageResponse(
-                **base, intent="chia_bill", intent_error=outcome
-            )
-        return PostedMessageResponse(**base, intent="chia_bill", expense_card=outcome)
-
-    CHIA_BILL_WINDOW = 20
-    CHIA_BILL_MODEL_CALLS = 8
-
-    def _draft_expenses_from_chat(
-        self,
-        context_id: uuid.UUID,
-        actor: Actor,
-        command_id: uuid.UUID,
-        reader: ChatExpenseReader,
-    ) -> MessageResponse | str:
-        """Read recent human text into one `expense_draft` card, or say why not.
-
-        At most `CHIA_BILL_WINDOW` recent messages are considered and at most
-        `CHIA_BILL_MODEL_CALLS` of them reach the model: a command over a long
-        evening's chatter must cost a bounded number of model calls. A reading
-        that names a person sinks the whole batch -- the reader's contract says
-        it cannot, so one that does is not to be trusted for the others either.
-        Nothing here creates an expense: a card is a draft somebody confirms.
-        """
-        del actor  # the caller's membership was proved when the message was stored
-        page = self.repository.list_messages(context_id, limit=self.CHIA_BILL_WINDOW)
-        candidates = [
-            message
-            for message in page.messages
-            if message.id != command_id
-            and message.kind == "text"
-            and message.author_id is not None
-            and isinstance(message.body, str)
-            and message.body.strip()
-            and parse_intent(message.body) is None
-        ]
-        shared_by = sorted(
-            (
-                membership.person_id
-                for membership in self.repository.list_members(context_id)
-                if membership.state == "active"
+        vote = self.create_vote(
+            context_id,
+            VoteCreateRequest(
+                question=spec["question"],
+                options=[VoteOptionInput(label=label) for label in spec["options"]],
             ),
-            key=lambda person_id: person_id.bytes,
+            actor,
         )
-        drafts: list[dict] = []
-        for message in candidates[: self.CHIA_BILL_MODEL_CALLS]:
-            try:
-                reading = run_chat_expense_skill(message.body, reader=reader)
-            except ChatExpenseError as refused:
-                if refused.code == "CHAT_READER_NOT_CONFIGURED":
-                    return "chia_bill_not_available"
-                if refused.code == "MODEL_NAMED_A_PERSON":
-                    logger.warning("chia-bill: reader named a person; batch sunk")
-                    return "chia_bill_refused"
-                continue  # unreadable: not an expense, move on
-            except RuntimeError as broken:
-                logger.warning("chia-bill: reader failed (%s)", type(broken).__name__)
-                return "chia_bill_not_available"
-            if not reading["is_expense"]:
-                continue
-            drafts.append(
-                {
-                    "title": reading["title"],
-                    "amount_vnd": int(reading["amount_vnd"]),
-                    "paid_by_id": str(message.author_id),
-                    "shared_by": [str(person_id) for person_id in shared_by],
-                    "source_message_id": str(message.id),
-                    "needs_review": True,
-                }
-            )
-        if not drafts:
-            return "chia_bill_no_expenses"
-        # Oldest first, the order they were spent in.
-        drafts.reverse()
-        record = self.repository.create_message(
+        # The poll card is the PERSON's, not an AI's: authored by the caller
+        # and no ceiling is spent on it.
+        self.repository.create_message(
             context_id=context_id,
-            author_id=None,
+            author_id=actor.id,
             kind="ai_card",
             body=None,
             image_url=None,
-            card={"kind": "expense_draft", "payload": {"drafts": drafts}},
+            card={
+                "kind": "poll",
+                "payload": {
+                    "vote_id": str(vote.id),
+                    "question": vote.question,
+                    "options": [
+                        {"id": str(option.id), "label": option.label}
+                        for option in vote.options
+                    ],
+                },
+            },
             now=_now(),
         )
-        return _wire_message(record)
+        return PostedMessageResponse(**base, intent="vote", vote=vote)
 
     def list_context_messages(
         self,
@@ -5768,153 +5642,6 @@ class ApiService:
                 needs_review=reading["needs_review"],
             ),
             reason=None,
-        )
-
-    def take_companion_turn(
-        self,
-        context_id: uuid.UUID,
-        actor: Actor,
-        companion: Companion,
-        *,
-        requested: bool = False,
-    ) -> CompanionTurnResponse:
-        """Let the companion suggest one grounded card, or stay silent.
-
-        The speaking decision receives metadata only, and this workflow has one
-        write capability: creating an AI message after grounding succeeds. It
-        cannot create expenses or obligations on behalf of a model.
-
-        `requested` says a person asked for this turn rather than the client
-        offering one, and only reaches `plan_turn`. It buys no permission and no
-        extra data: the membership check above and the catalogue grounding below
-        are identical either way.
-        """
-
-        _require_permission(
-            "invoke_group_companion",
-            actor,
-            {"is_group_member": self.repository.is_member(context_id, actor.id)},
-        )
-        # BEFORE the conversation is read, not after. A refusal written once
-        # the messages are already in memory is a refusal that has already done
-        # the thing it refuses -- and the code is its own, because the shared
-        # 403 sentence would say «bạn không có quyền» about a permission the
-        # person does have and a consent nobody has given yet.
-        if self._pair_chat_consent(context_id) is False:
-            raise ApiProblem(
-                403,
-                "pair_chat_consent_required",
-                "Cả hai cùng đồng ý cho Nếp đọc tin nhắn thì Nếp mới nói được.",
-            )
-
-        page = self.repository.list_messages(context_id, limit=CONTEXT_WINDOW)
-        messages = list(reversed(page.messages))
-        metadata = [
-            {
-                "id": str(message.id),
-                # A poll card is posted in a PERSON's name (`/vote`); only a
-                # card with no author is the companion speaking.
-                "author_kind": (
-                    "ai"
-                    if message.kind == "ai_card" and message.author_id is None
-                    else "human"
-                ),
-                "created_at": message.created_at.isoformat(),
-            }
-            for message in messages
-        ]
-        decision = plan_turn(
-            {"messages": metadata, "now": _now().isoformat()}, requested=requested
-        )
-        if not decision["may_speak"]:
-            return CompanionTurnResponse(
-                context_id=context_id,
-                spoke=False,
-                reason=decision["reason"],
-                message=None,
-            )
-
-        model_conversation = [
-            {
-                "id": str(message.id),
-                "author_id": (
-                    str(message.author_id) if message.author_id is not None else None
-                ),
-                "author_kind": (
-                    "ai"
-                    if message.kind == "ai_card" and message.author_id is None
-                    else "human"
-                ),
-                "kind": message.kind,
-                "body": message.body,
-                "image_url": message.image_url,
-                "card": message.card,
-                "created_at": message.created_at.isoformat(),
-            }
-            for message in messages
-            # A taken-back message still counts for the cadence (it happened)
-            # but has no words to hand the model (ADR-0021 §2.3).
-            if message.kind != "deleted"
-        ]
-        members = []
-        for membership in self.repository.list_members(context_id):
-            person = self.repository.get_person(membership.person_id)
-            if person is not None:
-                members.append(
-                    {"id": str(person.id), "display_name": person.display_name}
-                )
-        places = companion_places.load_place_catalogue(
-            self.model_place_rows(self.group_taste(context_id))
-        )
-
-        try:
-            raw = companion.reply(
-                conversation=model_conversation,
-                members=members,
-                places=places,
-                budget_per_person_vnd=self.group_taste(
-                    context_id
-                ).budget_per_person_vnd,
-            )
-        except (CompanionError, RuntimeError) as error:
-            # The exception type, never the exception text: a backend error
-            # carries both the prompt (the group's own words) and the API key
-            # often enough that the message itself is the classic leak.
-            logger.warning("companion turn: backend failed (%s)", type(error).__name__)
-            return CompanionTurnResponse(
-                context_id=context_id,
-                spoke=False,
-                reason="unavailable",
-                message=None,
-            )
-
-        try:
-            grounded = ground_card(raw, places)
-        except CompanionError as error:
-            # The refusal code is ours and is a closed set. What provoked the
-            # refusal is model output shaped by a private group's own text.
-            logger.warning("companion turn: card refused (%s)", error.code)
-            return CompanionTurnResponse(
-                context_id=context_id,
-                spoke=False,
-                reason="ungrounded",
-                message=None,
-            )
-
-        record = self.repository.create_message(
-            context_id=context_id,
-            author_id=None,
-            kind="ai_card",
-            body=None,
-            image_url=None,
-            card=grounded,
-            now=_now(),
-        )
-        return CompanionTurnResponse(
-            context_id=context_id,
-            spoke=True,
-            reason="ok",
-            message=_wire_message(record),
         )
 
     def set_context_member_role(

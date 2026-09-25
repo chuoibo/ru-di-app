@@ -137,20 +137,6 @@ func optionalObjectField(model *pyval.Model, name string) (*pyjson.OrderedMap, e
 	return nil, fmt.Errorf("routes: %s.%s is %T, not an object or None", model.Class, name, value)
 }
 
-func optionalBodyModel(call *endpoint.Call, name string) (*pyval.Model, error) {
-	value, ok := call.Values[name]
-	if !ok || value == nil {
-		return nil, nil
-	}
-	switch v := value.(type) {
-	case pyjson.Null:
-		return nil, nil
-	case *pyval.Model:
-		return v, nil
-	}
-	return nil, fmt.Errorf("routes: body %q is %T, not a model or None", name, value)
-}
-
 func uuidBytesLess(a, b string) bool {
 	return bytes.Compare(uuidRaw(a), uuidRaw(b)) < 0
 }

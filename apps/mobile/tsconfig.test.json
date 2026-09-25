@@ -96,7 +96,6 @@
     // the failure it guards is the app casting the deciding vote. See
     // `tests/ket-qua-binh-chon.test.mjs`.
     "src/screens/binh-chon/ket-qua.ts",
-    "src/screens/chat/ai.ts",
     "src/screens/chat/nhom.ts",
     "src/screens/chat/nhap-tu-chat.ts",
     // F31/F33/F34/F36. Compile both the four-route client and the markup the

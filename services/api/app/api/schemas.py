@@ -1822,26 +1822,6 @@ class ChatExpenseDraftResponse(ApiModel):
         return self
 
 
-class CompanionTurnRequest(ApiModel):
-    """Whether a person asked for this turn or the client is offering one.
-
-    The body is optional and the default is the offer, because that is what the
-    shipped client sends: it posts this route after every message with no body
-    at all. Only a caller that knows a human addressed the companion should set
-    the flag -- the server cannot tell, and deliberately does not look, since
-    `plan_turn` is handed message metadata and never message text.
-    """
-
-    requested: bool = False
-
-
-class CompanionTurnResponse(ApiModel):
-    context_id: UUID
-    spoke: bool
-    reason: str
-    message: MessageResponse | None
-
-
 class MessageListResponse(ApiModel):
     context_id: UUID
     messages: list[MessageResponse]
@@ -1851,28 +1831,16 @@ class MessageListResponse(ApiModel):
 
 class PostedMessageResponse(MessageResponse):
     """`POST /messages` answers with the stored message and what the server did
-    about a slash command or mention in it (M3, `app/domain/chat_intent.py`).
+    about a `/vote` command in it (M3, `app/domain/chat_intent.py`).
 
-    The message is ALWAYS stored first; the companion, the vote or a refusal
-    ride along in the same answer so a rate-limited or refused intent never
-    turns into a lost message and a retried duplicate.
+    The message is ALWAYS stored first; the vote or a refusal rides along in
+    the same answer so a refused intent never turns into a lost message and a
+    retried duplicate. No other command is acted on here (ADR-0036 §2.1).
     """
 
-    intent: Literal["plan", "chia_bill", "vote", "mention"] | None = None
-    companion: CompanionTurnResponse | None = None
+    intent: Literal["vote"] | None = None
     vote: VoteResponse | None = None
-    # `/chia-bill`: one server-authored `expense_draft` card, or nothing.
-    expense_card: MessageResponse | None = None
-    intent_error: (
-        Literal[
-            "vote_malformed",
-            "companion_rate_limited",
-            "chia_bill_not_available",
-            "chia_bill_no_expenses",
-            "chia_bill_refused",
-        ]
-        | None
-    ) = None
+    intent_error: Literal["vote_malformed"] | None = None
 
 
 class BatchCreateRequest(ApiModel):

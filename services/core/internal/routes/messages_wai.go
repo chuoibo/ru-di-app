@@ -21,9 +21,6 @@ import (
 )
 
 const (
-	contextWindow           = 40
-	chiaBillWindow          = 20
-	chiaBillModelCalls      = 8
 	chatExpenseNoText       = "Tin nhắn không mô tả một khoản chi."
 	chatUnreadableDetail    = "Không đọc được khoản chi từ tin nhắn. Hãy kiểm tra lại nội dung."
 	modelNamedPersonDetail  = "AI đã cố nêu người trả hoặc người tham gia; bản nháp bị từ chối để danh tính chỉ được đọc từ dữ liệu nhóm."
@@ -444,41 +441,6 @@ func createChatExpenseDraft() Route {
 	}}
 }
 
-func takeCompanionTurnRoute() Route {
-	return Route{ID: "POST /contexts/{context_id}/ai-turn", Status: 200, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
-		if err := spendActorWindow(call, call.Limits.CompanionTurnLimiter); err != nil {
-			return endpoint.Reply{}, err
-		}
-		contextID, err := pathUUID(call, "context_id")
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
-		requested := false
-		request, err := optionalBodyModel(call, "request")
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
-		if request != nil {
-			flag, err := optionalBoolField(request, "requested")
-			if err != nil {
-				return endpoint.Reply{}, err
-			}
-			if flag != nil {
-				requested = *flag
-			}
-		}
-		store, err := groupStore(ctx, call)
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
-		turn, err := takeCompanionTurn(ctx, call, store, contextID, requested)
-		if err != nil {
-			return endpoint.Reply{}, err
-		}
-		return endpoint.Reply{Body: turn}, nil
-	}}
-}
-
 func setContextMemberRole() Route {
 	return Route{ID: "PUT /contexts/{context_id}/members/{person_id}/role", Status: 200, Serve: func(ctx context.Context, call *endpoint.Call) (endpoint.Reply, error) {
 		contextID, err := pathUUID(call, "context_id")
@@ -571,323 +533,69 @@ func markContextRead() Route {
 	}}
 }
 
+// actOnMessageIntent acts on a `/vote` command in a stored text message and on
+// nothing else. `/plan`, `@Rủ Đi` and `/chia-bill` are ordinary text: AI runs
+// only when a person invokes it through the invocation queue (ADR-0036 §2.1),
+// so no branch here may reach a model, the message table or a limiter.
 func actOnMessageIntent(ctx context.Context, call *endpoint.Call, store repo.Repository, contextID string, posted *pyjson.OrderedMap, stored repo.Message) (*pyjson.OrderedMap, error) {
 	out := clonePosted(posted)
 	if stored.Kind != "text" || stored.Body == nil {
 		return out, nil
 	}
 	intent := chatintent.Parse(*stored.Body)
-	if intent == nil {
+	if intent == nil || intent.Intent != chatintent.Vote {
 		return out, nil
 	}
-	if call.ExplicitChatInvocation && intent.Intent != chatintent.Vote {
-		out.Set("intent", pyjson.String(intent.Intent))
-		out.Set("intent_error", pyjson.String("explicit_invocation_required"))
-		return out, nil
-	}
-	switch intent.Intent {
-	case chatintent.Plan, chatintent.Mention:
-		if err := spendActorWindow(call, call.Limits.MessageIntentLimiter); err != nil {
-			if refused, ok := err.(*endpoint.Refusal); ok && refused.Problem.Status == 429 {
-				out.Set("intent", pyjson.String(intent.Intent))
-				out.Set("intent_error", pyjson.String("companion_rate_limited"))
-				return out, nil
-			}
-			return nil, err
-		}
-		turn, err := takeCompanionTurn(ctx, call, store, contextID, true)
-		if err != nil {
-			return nil, err
-		}
-		out.Set("intent", pyjson.String(intent.Intent))
-		out.Set("companion", turn)
-		return out, nil
-	case chatintent.Vote:
-		spec := chatintent.ParseVote(intent.Args)
-		if spec == nil {
-			out.Set("intent", pyjson.String("vote"))
-			out.Set("intent_error", pyjson.String("vote_malformed"))
-			return out, nil
-		}
-		if err := requireGroupMember(ctx, call, store, "create_vote", contextID); err != nil {
-			return nil, err
-		}
-		options := make([]repo.VoteOptionInput, len(spec.Options))
-		for i, label := range spec.Options {
-			options[i] = repo.VoteOptionInput{Label: label}
-		}
-		vote, err := store.CreateVote(ctx, repo.VoteInput{
-			ContextID: contextID, CreatedByID: call.Actor.ID, Question: spec.Question,
-			Options: options, Now: time.Now().UTC(),
-		})
-		if err != nil {
-			return nil, err
-		}
-		wired, err := wireVote(vote, call.Actor.ID)
-		if err != nil {
-			return nil, err
-		}
-		payload := pyjson.NewOrderedMap()
-		payload.Set("vote_id", pyjson.String(vote.ID))
-		payload.Set("question", pyjson.String(vote.Question))
-		opts := pyjson.List{}
-		for _, option := range vote.Options {
-			entry := pyjson.NewOrderedMap()
-			entry.Set("id", pyjson.String(option.ID))
-			entry.Set("label", pyjson.String(option.Label))
-			opts = append(opts, entry)
-		}
-		payload.Set("options", opts)
-		card := pyjson.NewOrderedMap()
-		card.Set("kind", pyjson.String("poll"))
-		card.Set("payload", payload)
-		raw, err := cardBytes(card)
-		if err != nil {
-			return nil, err
-		}
-		author := call.Actor.ID
-		if _, err := store.CreateMessage(ctx, repo.MessageInput{
-			ContextID: contextID, AuthorID: &author, Kind: "ai_card", Now: time.Now().UTC(), Card: raw,
-		}); err != nil {
-			return nil, err
-		}
+	spec := chatintent.ParseVote(intent.Args)
+	if spec == nil {
 		out.Set("intent", pyjson.String("vote"))
-		out.Set("vote", wired)
-		return out, nil
-	default:
-		client := brain.Configured()
-		if client == nil {
-			out.Set("intent", pyjson.String("chia_bill"))
-			out.Set("intent_error", pyjson.String("chia_bill_not_available"))
-			return out, nil
-		}
-		if err := spendActorWindow(call, call.Limits.MessageIntentLimiter); err != nil {
-			if refused, ok := err.(*endpoint.Refusal); ok && refused.Problem.Status == 429 {
-				out.Set("intent", pyjson.String("chia_bill"))
-				out.Set("intent_error", pyjson.String("companion_rate_limited"))
-				return out, nil
-			}
-			return nil, err
-		}
-		outcome, err := draftExpensesFromChat(ctx, store, contextID, stored.ID)
-		if err != nil {
-			return nil, err
-		}
-		out.Set("intent", pyjson.String("chia_bill"))
-		if outcome.code != "" {
-			out.Set("intent_error", pyjson.String(outcome.code))
-			return out, nil
-		}
-		out.Set("expense_card", outcome.card)
+		out.Set("intent_error", pyjson.String("vote_malformed"))
 		return out, nil
 	}
-}
-
-type chiaOutcome struct {
-	code string
-	card *pyjson.OrderedMap
-}
-
-func draftExpensesFromChat(ctx context.Context, store repo.Repository, contextID, commandID string) (chiaOutcome, error) {
-	page, err := store.ListMessages(ctx, contextID, chiaBillWindow, nil, nil)
+	if err := requireGroupMember(ctx, call, store, "create_vote", contextID); err != nil {
+		return nil, err
+	}
+	options := make([]repo.VoteOptionInput, len(spec.Options))
+	for i, label := range spec.Options {
+		options[i] = repo.VoteOptionInput{Label: label}
+	}
+	vote, err := store.CreateVote(ctx, repo.VoteInput{
+		ContextID: contextID, CreatedByID: call.Actor.ID, Question: spec.Question,
+		Options: options, Now: time.Now().UTC(),
+	})
 	if err != nil {
-		return chiaOutcome{}, err
+		return nil, err
 	}
-	shared, err := activeSharedBy(ctx, store, contextID)
+	wired, err := wireVote(vote, call.Actor.ID)
 	if err != nil {
-		return chiaOutcome{}, err
-	}
-	drafts := pyjson.List{}
-	calls := 0
-	for _, message := range page.Messages {
-		if message.ID == commandID || message.Kind != "text" || message.AuthorID == nil || message.Body == nil {
-			continue
-		}
-		if strings.TrimSpace(*message.Body) == "" || chatintent.Parse(*message.Body) != nil {
-			continue
-		}
-		if calls >= chiaBillModelCalls {
-			break
-		}
-		calls++
-		reading, err := readChatExpense(*message.Body)
-		if err != nil {
-			if refused := brainErr(err); refused != nil {
-				switch refused.Code {
-				case "chat_reader_not_configured", "chat_reader_unavailable", "brain_unavailable":
-					return chiaOutcome{code: "chia_bill_not_available"}, nil
-				case "chat_expense_model_named_a_person":
-					return chiaOutcome{code: "chia_bill_refused"}, nil
-				default:
-					continue
-				}
-			}
-			return chiaOutcome{code: "chia_bill_not_available"}, nil
-		}
-		if !reading.isExpense {
-			continue
-		}
-		entry := pyjson.NewOrderedMap()
-		entry.Set("title", pyjson.String(reading.title))
-		entry.Set("amount_vnd", pyjson.NewInt(reading.amount))
-		entry.Set("paid_by_id", pyjson.String(*message.AuthorID))
-		people := pyjson.List{}
-		for _, id := range shared {
-			people = append(people, pyjson.String(id))
-		}
-		entry.Set("shared_by", people)
-		entry.Set("source_message_id", pyjson.String(message.ID))
-		entry.Set("needs_review", pyjson.Bool(true))
-		drafts = append(drafts, entry)
-	}
-	if len(drafts) == 0 {
-		return chiaOutcome{code: "chia_bill_no_expenses"}, nil
-	}
-	for i, j := 0, len(drafts)-1; i < j; i, j = i+1, j-1 {
-		drafts[i], drafts[j] = drafts[j], drafts[i]
+		return nil, err
 	}
 	payload := pyjson.NewOrderedMap()
-	payload.Set("drafts", drafts)
+	payload.Set("vote_id", pyjson.String(vote.ID))
+	payload.Set("question", pyjson.String(vote.Question))
+	opts := pyjson.List{}
+	for _, option := range vote.Options {
+		entry := pyjson.NewOrderedMap()
+		entry.Set("id", pyjson.String(option.ID))
+		entry.Set("label", pyjson.String(option.Label))
+		opts = append(opts, entry)
+	}
+	payload.Set("options", opts)
 	card := pyjson.NewOrderedMap()
-	card.Set("kind", pyjson.String("expense_draft"))
+	card.Set("kind", pyjson.String("poll"))
 	card.Set("payload", payload)
 	raw, err := cardBytes(card)
 	if err != nil {
-		return chiaOutcome{}, err
-	}
-	record, err := store.CreateMessage(ctx, repo.MessageInput{
-		ContextID: contextID, Kind: "ai_card", Card: raw, Now: time.Now().UTC(),
-	})
-	if err != nil {
-		return chiaOutcome{}, err
-	}
-	return chiaOutcome{card: wireMessage(record, nil, nil)}, nil
-}
-
-func takeCompanionTurn(ctx context.Context, call *endpoint.Call, store repo.Repository, contextID string, requested bool) (*pyjson.OrderedMap, error) {
-	if err := requireGroupMember(ctx, call, store, "invoke_group_companion", contextID); err != nil {
 		return nil, err
 	}
-	consent, err := service.PairChatConsent(ctx, store, contextID, time.Now().UTC())
-	if err != nil {
+	author := call.Actor.ID
+	if _, err := store.CreateMessage(ctx, repo.MessageInput{
+		ContextID: contextID, AuthorID: &author, Kind: "ai_card", Now: time.Now().UTC(), Card: raw,
+	}); err != nil {
 		return nil, err
 	}
-	if consent != nil && !*consent {
-		return nil, endpoint.Refuse(403, "pair_chat_consent_required", "Cả hai cùng đồng ý cho Nếp đọc tin nhắn thì Nếp mới nói được.")
-	}
-	silent := func(reason string) *pyjson.OrderedMap {
-		out := pyjson.NewOrderedMap()
-		out.Set("context_id", pyjson.String(contextID))
-		out.Set("spoke", pyjson.Bool(false))
-		out.Set("reason", pyjson.String(reason))
-		out.Set("message", pyjson.Null{})
-		return out
-	}
-	page, err := store.ListMessages(ctx, contextID, contextWindow, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	messages := make([]repo.Message, len(page.Messages))
-	copy(messages, page.Messages)
-	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
-		messages[i], messages[j] = messages[j], messages[i]
-	}
-	kinds := make([]string, len(messages))
-	created := make([]time.Time, len(messages))
-	for i, message := range messages {
-		if message.Kind == "ai_card" && message.AuthorID == nil {
-			kinds[i] = "ai"
-		} else {
-			kinds[i] = "human"
-		}
-		created[i] = message.CreatedAt
-	}
-	decision := companion.PlanTurn(kinds, created, time.Now().UTC(), requested)
-	if !decision.MaySpeak {
-		return silent(decision.Reason), nil
-	}
-	conversation := pyjson.List{}
-	for _, message := range messages {
-		if message.Kind == "deleted" {
-			continue
-		}
-		row := pyjson.NewOrderedMap()
-		row.Set("id", pyjson.String(message.ID))
-		row.Set("author_id", textOrNull(message.AuthorID))
-		kind := "human"
-		if message.Kind == "ai_card" && message.AuthorID == nil {
-			kind = "ai"
-		}
-		row.Set("author_kind", pyjson.String(kind))
-		row.Set("kind", pyjson.String(message.Kind))
-		row.Set("body", textOrNull(message.Body))
-		row.Set("image_url", textOrNull(message.ImageURL))
-		row.Set("card", cardValue(message.Card))
-		row.Set("created_at", pyjson.String(pyjson.DateTime(message.CreatedAt.UTC())))
-		conversation = append(conversation, row)
-	}
-	members := pyjson.List{}
-	roster, err := store.ListMembers(ctx, contextID)
-	if err != nil {
-		return nil, err
-	}
-	for _, membership := range roster {
-		person, err := store.GetPerson(ctx, membership.PersonID)
-		if err != nil {
-			return nil, err
-		}
-		if person == nil {
-			continue
-		}
-		entry := pyjson.NewOrderedMap()
-		entry.Set("id", pyjson.String(person.ID))
-		entry.Set("display_name", pyjson.String(person.DisplayName))
-		members = append(members, entry)
-	}
-	group, err := service.GroupTaste(ctx, store, contextID, time.Now().UTC())
-	if err != nil {
-		return nil, err
-	}
-	places, err := service.ModelPlaceRows(ctx, store, group)
-	if err != nil {
-		return nil, err
-	}
-	placeList := pyjson.List{}
-	for _, place := range places {
-		placeList = append(placeList, place)
-	}
-	payload := pyjson.NewOrderedMap()
-	payload.Set("conversation", conversation)
-	payload.Set("members", members)
-	payload.Set("places", placeList)
-	if group.BudgetPerPersonVND == nil {
-		payload.Set("budget_per_person_vnd", pyjson.Null{})
-	} else {
-		payload.Set("budget_per_person_vnd", pyjson.NewInt(*group.BudgetPerPersonVND))
-	}
-	raw, err := brain.Configured().PostJSON("companion-reply", payload)
-	if err != nil {
-		return silent("unavailable"), nil
-	}
-	grounded, err := companion.GroundCard(treejson.To(raw), treejson.MapsTo(places))
-	if err != nil {
-		return silent("ungrounded"), nil
-	}
-	stored, err := cardBytes(treejson.From(grounded))
-	if err != nil {
-		return nil, err
-	}
-	record, err := store.CreateMessage(ctx, repo.MessageInput{
-		ContextID: contextID, Kind: "ai_card", Card: stored, Now: time.Now().UTC(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	out := pyjson.NewOrderedMap()
-	out.Set("context_id", pyjson.String(contextID))
-	out.Set("spoke", pyjson.Bool(true))
-	out.Set("reason", pyjson.String("ok"))
-	out.Set("message", wireMessage(record, nil, nil))
+	out.Set("intent", pyjson.String("vote"))
+	out.Set("vote", wired)
 	return out, nil
 }
 
@@ -1040,9 +748,7 @@ func clonePosted(message *pyjson.OrderedMap) *pyjson.OrderedMap {
 		out.Set(key, value)
 	}
 	out.Set("intent", pyjson.Null{})
-	out.Set("companion", pyjson.Null{})
 	out.Set("vote", pyjson.Null{})
-	out.Set("expense_card", pyjson.Null{})
 	out.Set("intent_error", pyjson.Null{})
 	return out
 }

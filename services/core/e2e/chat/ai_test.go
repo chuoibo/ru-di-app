@@ -24,18 +24,21 @@ func TestGoiAiCoXacNhan(t *testing.T) {
 
 	t.Run("I1 lối vào ngầm cũ bị niêm phong", func(t *testing.T) {
 		// Both of these used to let the model read history without anyone
-		// choosing to share it. They must refuse, and refuse by name.
-		for _, path := range []string{
-			"/contexts/" + group + "/ai-turn",
-			"/contexts/" + group + "/messages/" + newUUID() + "/expense-draft",
-		} {
-			response := author.Do("POST", path, map[string]any{"prompt": "x"}, Idem(newKey()))
-			if response.Status != http.StatusForbidden {
-				t.Fatalf("%s phải 403, nhận %d — %s", path, response.Status, response.trim())
-			}
-			if code, _ := response.JSON["code"].(string); code != "explicit_invocation_required" {
-				t.Fatalf("%s bị chặn nhưng sai mã: %s", path, response.trim())
-			}
+		// choosing to share it. The per-message expense draft is sealed by
+		// name; the automatic turn is deleted everywhere (ADR-0036 §2.1), so
+		// it is not served at all.
+		draft := "/contexts/" + group + "/messages/" + newUUID() + "/expense-draft"
+		response := author.Do("POST", draft, map[string]any{"prompt": "x"}, Idem(newKey()))
+		if response.Status != http.StatusForbidden {
+			t.Fatalf("%s phải 403, nhận %d — %s", draft, response.Status, response.trim())
+		}
+		if code, _ := response.JSON["code"].(string); code != "explicit_invocation_required" {
+			t.Fatalf("%s bị chặn nhưng sai mã: %s", draft, response.trim())
+		}
+		turn := "/contexts/" + group + "/ai-turn"
+		response = author.Do("POST", turn, map[string]any{"prompt": "x"}, Idem(newKey()))
+		if response.Status != http.StatusNotFound {
+			t.Fatalf("%s phải không còn (404), nhận %d — %s", turn, response.Status, response.trim())
 		}
 	})
 
