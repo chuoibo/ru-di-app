@@ -65,7 +65,7 @@ def _place_ids(card: dict) -> list[object]:
         return []
     ids = [pl.get("id") for pl in payload.get("places") or [] if _la_dict(pl)]
     ids += [
-        (st.get("place") or {}).get("id")
+        st["place"].get("id") if _la_dict(st.get("place")) else None
         for st in payload.get("stops") or []
         if _la_dict(st)
     ]
@@ -99,7 +99,12 @@ def dem_the_ai(
             continue
         for part in parts:
             ids = _place_ids(part)
-            if part["kind"] in ("places", "itinerary") and not ids:
+            # An entry whose id cannot be read is a shape the check cannot see
+            # into: GroundCard always gives a catalogue place with an id, so a
+            # missing one is drift, and it counts as blind, never as clean.
+            if part["kind"] in ("places", "itinerary") and (
+                not ids or any(not i for i in ids)
+            ):
                 blind += 1
             unknown += sum(1 for i in ids if i and i not in catalogue)
     return answers, unknown, blind, ",".join(sorted(kinds))

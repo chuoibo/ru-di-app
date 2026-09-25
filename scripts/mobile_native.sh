@@ -1769,6 +1769,14 @@ print(hit[0]["id"] if hit else "")')"
   # this check passed for a week while reading `items`/`days` nobody sends).
   [ "${so_mu:-1}" -eq 0 ] || hong "sau flow 40: $so_mu phần thẻ AI (kể cả tra_loi không có phần đọc được) không đọc được place id nào — máy đo mù với hình dạng thẻ."
   [ "${so_la:-1}" -eq 0 ] || hong "sau flow 40: thẻ AI nêu $so_la place_id KHÔNG có trong GET /places — grounding thủng."
+  # The app under test is built from this tree, whose server declares
+  # `mention`: its /plan must come back as an in-thread `tra_loi` reply. A bare
+  # card here means the app stopped naming the trigger message, which the
+  # flow's text waits alone cannot see (they still accept the older labels).
+  case "$loai" in
+    *tra_loi\[*) ;;
+    *) hong "sau flow 40: không có câu trả lời trong luồng (tra_loi) — chỉ thấy «$loai»; app đã thôi nêu tin /plan làm trigger." ;;
+  esac
   echo "máy chủ xác nhận: nhóm «Plan QA» có $so_ai câu trả lời AI ($loai), mọi địa điểm đều trong catalogue"
 }
 

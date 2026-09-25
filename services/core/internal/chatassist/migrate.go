@@ -32,11 +32,10 @@ var scopeSQL string
 // the `@Rủ Đi` message it answers, and the room it runs in carries its lane.
 // A fourth file, for the reason version 2 was a second one.
 //
-// Its deadlock note (above chat_ai_trigger_deleted) is wrong: publish takes
-// the feed head BEFORE the trigger, not after, the order of every Go chat
-// write. The comment is inside the checksummed text, so correcting it would
-// fail every database that installed this version; giuTrigger carries the
-// correct order and why.
+// Its deadlock note was corrected before the version reached main (the first
+// text claimed publish locked the message before the feed head, the order that
+// deadlocked). That changed its checksum; no shared database had installed it,
+// so only scratch databases on the working branch need it reinstalled.
 //
 //go:embed schema_luong.sql
 var luongSQL string

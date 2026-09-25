@@ -44,9 +44,10 @@ CREATE INDEX chat_ai_room_active ON chat_ai_invocations(context_id, created_at)
 --
 -- Deadlock note, because this is a second writer on a table Python owns
 -- (precedent: chatlegacychange/schema.sql). A deletion locks the message
--- FOR UPDATE first, then this trigger updates the job. publish() takes a KEY
--- SHARE lock on the same message BEFORE it locks the feed or the job, so the
--- two serialise on the message row and never hold each other's next lock.
+-- FOR UPDATE after taking the room's feed head (chatlegacychange BeforeWrite),
+-- then this trigger updates the job. publish() takes the same order: the feed
+-- head first, then a KEY SHARE lock on the message, then the job, so the two
+-- serialise on the feed head and never hold each other's next lock.
 CREATE FUNCTION chat_ai_trigger_deleted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
     UPDATE chat_ai_invocations SET status='cancelled',code='trigger_deleted',

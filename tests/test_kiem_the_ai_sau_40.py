@@ -96,6 +96,20 @@ class DemTheAi(unittest.TestCase):
         drifted = {"kind": "places", "payload": {"items": [{"id": "p-lau"}]}}
         self.assertEqual(kiem.dem_the_ai([tra_loi(drifted)], CATALOGUE)[:3], (1, 0, 1))
 
+    def test_an_entry_whose_id_moved_is_blind_not_clean(self):
+        # The id under another key, in a places list and in a stop; and a stop
+        # whose place is not an object at all. Each used to pass as clean.
+        for part in (
+            places({"place_id": "p-lau"}),
+            places(PLACE, {"place_id": "p-cafe"}),
+            itinerary({"place_id": "p-lau"}),
+            {"kind": "itinerary", "payload": {"stops": [{"place": "p-lau"}]}},
+        ):
+            with self.subTest(part):
+                self.assertEqual(
+                    kiem.dem_the_ai([tra_loi(text(), part)], CATALOGUE)[:3], (1, 0, 1)
+                )
+
     def test_a_tra_loi_with_no_part_it_can_read_is_blind(self):
         for phan in ([], [{"kind": "poll", "payload": {}}], None):
             with self.subTest(phan):
@@ -162,6 +176,11 @@ class HarnessUsesTheCheck(unittest.TestCase):
             'python3 "$REPO/scripts/kiem_the_ai_sau_40.py" "$goc" "$tok" "$ctx"', body
         )
         self.assertIn("IFS='|' read -r so_ai so_la so_mu loai", body)
+
+    def test_the_hook_requires_an_in_thread_answer(self):
+        # The flow's own waits still accept the pre-slice-7 labels, so the
+        # server-side label is the only place a bare card can be refused.
+        self.assertRegex(self.body(), r'case "\$loai" in\n\s*\*tra_loi\\\[\*\) ;;')
 
     def test_no_inline_top_level_filter_is_left(self):
         self.assertNotIn('("text", "places", "itinerary")', self.body())
