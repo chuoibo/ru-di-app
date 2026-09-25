@@ -111,10 +111,16 @@ và ở `f251db7` mỗi job chỉ làm một việc: gửi một payload sang br
   của ADK ra ngoài mà không cần một dòng mã nào của ta.
 - Không bật `MOBILE_AI_ENGINE_NEP=go` ở bất kỳ host nào trước khi: eval T1 (stub) xanh trong CI (lát 6b),
   ADR này được ký, review bảo mật việc giữ khoá Gemini trong tiến trình core (thiết kế 01 §9 câu 4)
-  xong, **và luật tiền tất định (`guard/tien.go`) qua cả hai ngưỡng trên một corpus niêm phong mà
-  tác giả luật chưa từng mở, xét theo cận của khoảng tin cậy 95% chứ không theo số điểm: cận dưới
-  của recall ≥ 0,95 và cận trên của tỉ lệ bắt nhầm ≤ 0,02** (khoảng Wilson hai phía, như review vòng
-  3 lát 6 đã đo), do người khác đo trên đúng SHA sau khi commit (Lead có thể đổi hai con số khi ký).
+  xong, **và hai ngưỡng sau qua trên một corpus niêm phong mà tác giả luật chưa từng mở, xét theo cận
+  của khoảng tin cậy 95% chứ không theo số điểm: (a) luật tiền tất định (`guard/tien.go`) ĐỨNG MỘT MÌNH
+  có cận trên của tỉ lệ bắt nhầm ≤ 0,02; (b) HỢP của luật tiền và bộ phân loại tiền của bước Understand
+  (lát 9, lời gọi model thật, số lời gọi do Lead duyệt) có cận dưới của recall ≥ 0,95** (khoảng Wilson
+  hai phía), do người khác đo trên đúng SHA sau khi commit (Lead có thể đổi hai con số khi ký).
+  Recall không còn đòi ở luật tất định một mình (sửa ngày 2026-09-25 sau hai lần đo niêm phong): v2
+  cho 0,873 / bắt nhầm 0,015, v3 cho 0,850 / 0,029 — mỗi vòng thêm mẫu regex để đuổi recall lại sinh
+  bắt nhầm mới ở chính câu hỏi quán (review vòng 4: 21/29 câu hỏi quán/kế hoạch của reviewer bị chặn
+  so với 4/29 ở bản trước). Luật tất định vì thế đóng băng về recall: chỉ nhận sửa làm GIẢM bắt nhầm
+  hoặc sửa hồi quy, không thêm mẫu mới để đuổi recall; recall là việc của lớp phân loại.
   Corpus đó phải có **ít nhất 220 câu mỗi lớp** (tiền / không phải tiền): dưới 189 câu không phải
   tiền thì ngưỡng bắt nhầm không chứng minh được kể cả khi 0 lỗi (0/188 có cận trên 0,02002), còn
   ở đúng 220 câu mỗi lớp, «đạt» nghĩa là 0 câu bắt nhầm (1/220 có cận trên 0,025) và ít nhất 216/220
