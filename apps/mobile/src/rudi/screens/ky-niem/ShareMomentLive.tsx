@@ -11,8 +11,7 @@
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ApiError, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import type { Phien } from "../../../phien";
@@ -20,8 +19,10 @@ import { boAnh, chonAnh, nenVaDung, type GiaiDoanTaiAnh, type TempPhoto } from "
 import { tiLeKhung } from "../../ky-niem/ti-le";
 import { laPair } from "../../nhan-rieng/nhan-rieng";
 import { CAPTION_DAI_NHAT, dangAnhLenTuong } from "../../ky-niem/ky-niem";
-import { typography, useRudiTheme } from "../../theme";
-import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Nep } from "../../ui/art/Nep";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 
 function loiRaChu(error: unknown): string {
   if (error instanceof ApiError) return error.message;
@@ -43,7 +44,7 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
   // họ đang gắn vào đâu, máy chủ tra tên của chính nó.
   const placeId = typeof params.place === "string" && params.place !== "" ? params.place : null;
   const tenCho = typeof params.ten === "string" && params.ten !== "" ? params.ten : null;
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const contextId = phien.context_id;
   const nhom = phien.contexts?.find((n) => n.id === contextId);
   const laDoi = laPair(nhom);
@@ -135,30 +136,33 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
         </Text>
       )}
       {thongBao !== null ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-      {/* The print: the picture whole on paper, the caption written under it. */}
-      <View style={[styles.instax, { backgroundColor: colors.card, borderColor: colors.line, borderRadius: radius.small }]}>
+      {/* The print: the picture whole on paper, the caption written by hand on
+          its white margin (ADR-0037 D1, plan S6). An empty print is itself
+          the way to pick a photo. */}
+      <View style={[styles.instax, { backgroundColor: colors.card, borderColor: colors.lineStrong }, bongGiay(2, dark)]}>
         {anh === null ? (
-          <View accessibilityLabel="Chưa chọn ảnh" style={[styles.khungTrong, { backgroundColor: colors.accentSoft, borderRadius: radius.small }]}>
-            <Ionicons color={colors.accent} name="camera-outline" size={40} />
-            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chọn một tấm từ thư viện.</Text>
-          </View>
+          <Pressable accessibilityLabel="Chưa chọn ảnh, chạm để chọn" accessibilityRole="button" disabled={ban} onPress={() => void chon()} style={[styles.khungTrong, { backgroundColor: colors.ground, borderColor: colors.lineStrong }]}>
+            <Nep gap="trang" pose="giu-khung" size={88} />
+            <Text style={[typography.caption, { color: colors.inkSoft }]}>Chưa có ảnh. Chạm để chọn một tấm.</Text>
+          </Pressable>
         ) : (
           // The frame takes the photo's own shape, within a portrait-to-wide
           // range: a square frame put two grey bands beside every portrait
           // photo and read as a card still loading, not as a print (QA 23/09).
-          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), borderRadius: radius.small, backgroundColor: colors.ground }]} />
+          <Image accessibilityLabel="Ảnh đã chọn" contentFit="contain" source={{ uri: anh.uri }} style={[styles.anh, { aspectRatio: tiLeKhung(anh), backgroundColor: colors.ground }]} />
         )}
+        <ONhapMuc
+          accessibilityLabel="Ô câu chú thích"
+          helper={`${conLai} ký tự còn lại`}
+          maxLength={CAPTION_DAI_NHAT}
+          multiline
+          numberOfLines={2}
+          onChangeText={setCaption}
+          placeholder="Đà Lạt về đêm"
+          value={caption}
+        />
       </View>
       <RudiButton disabled={ban} icon="images-outline" label={anh === null ? "Chọn ảnh" : "Chọn ảnh khác"} onPress={() => void chon()} variant="outline" />
-      <Field
-        accessibilityLabel="Ô câu chú thích"
-        label={`Một câu cho khoảnh khắc (${conLai} ký tự còn lại)`}
-        maxLength={CAPTION_DAI_NHAT}
-        multiline
-        onChangeText={setCaption}
-        placeholder="Ví dụ: Đà Lạt về đêm"
-        value={caption}
-      />
       <Text style={[typography.caption, { color: colors.inkSoft }]}>Đăng vào {tenNhom}. Vị trí và thông tin máy chụp trong ảnh được xoá trước khi lưu.</Text>
     </RudiScreen>
   );
@@ -166,8 +170,9 @@ export function ShareMomentLiveScreen({ phien }: { phien: Phien }) {
 
 const styles = StyleSheet.create({
   screen: { maxWidth: 640 },
-  instax: { gap: 10, padding: 12, paddingBottom: 18, borderWidth: 1 },
-  khungTrong: { alignItems: "center", justifyContent: "center", gap: 8, aspectRatio: 1 },
+  // An instax print: narrow sides, a deep bottom margin for the words.
+  instax: { gap: 14, padding: 12, paddingBottom: 22, borderWidth: 1, borderRadius: 3 },
+  khungTrong: { alignItems: "center", justifyContent: "center", gap: 8, aspectRatio: 1, borderWidth: 1, borderStyle: "dashed" },
   anh: { width: "100%" },
   footer: { paddingHorizontal: 16, gap: 6 },
   chuThich: { textAlign: "center" },

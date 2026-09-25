@@ -17,7 +17,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Phien } from "../../../phien";
 import { FinanceError } from "../../../screens/ca-nhan/tai-chinh";
 import { phanSo, tiLe } from "../../../screens/thanh-tich/thanh-tich";
-import { demHuyHieuMo, docThanhTich, type HuyHieu, type ThanhTich } from "../../ky-niem/ky-niem";
+import { demHuyHieuMo, docThanhTich, huyHieuMoi, type HuyHieu, type ThanhTich } from "../../ky-niem/ky-niem";
+import { docGiaoDienAsync, ghiGiaoDienAsync } from "../../kho";
+import { Nep } from "../../ui/art/Nep";
+import { NepDien } from "../../ui/NepDien";
+import { Tem } from "../../ui/Tem";
 import { displayFace, typography, useRudiTheme } from "../../theme";
 import { RudiScreen, SectionHeader, TopBar, type IconName } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
@@ -53,10 +57,28 @@ function phuHuyHieu(h: HuyHieu): string {
   return h.dieuKien;
 }
 
+/** Where this phone remembers which badges it has already shown opened. */
+const KHOA_DA_THAY = "rudi.huy-hieu-da-thay";
+
 export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
   const { colors, radius } = useRudiTheme();
   const [moCachTinh, setMoCachTinh] = useState(false);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
+  // M8: a badge opened since the last look gets its moment, once.
+  const [moi, setMoi] = useState<string | null>(null);
+  useEffect(() => {
+    if (trang.pha !== "xong") return;
+    const mo = trang.tt.huyHieu.filter((h) => h.trangThai === "mo").map((h) => h.id);
+    let song = true;
+    void docGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`).then((tho) => {
+      if (!song) return;
+      setMoi(huyHieuMoi(mo, tho));
+      void ghiGiaoDienAsync(`${KHOA_DA_THAY}:${phien.person_id}`, JSON.stringify(mo));
+    });
+    return () => {
+      song = false;
+    };
+  }, [trang, phien.person_id]);
 
   const doc = async () => {
     try {
@@ -116,34 +138,35 @@ export function AchievementsLiveScreen({ phien }: { phien: Phien }) {
       </View>
 
       {noiBat !== undefined ? (
-        // The one badge worth remembering today, and the rule that earned it.
+        // The one badge worth remembering today, as a stamp, and the rule that
+        // earned it. Newly opened, Nếp lifts it (M8).
         <View style={[styles.noiBat, { backgroundColor: colors.accentSoft, borderRadius: radius.base }]}>
-          <View style={[styles.noiBatIcon, { backgroundColor: colors.card }]}>
-            <Ionicons color={colors.accent} name="ribbon" size={30} />
-          </View>
+          <Tem accessibilityLabel={`Huy hiệu ${(huyHieu.find((h) => h.id === moi) ?? noiBat).ten}`} cao={96} rong={80}>
+            <Nep gap="trang" pose="vui" size={48} />
+          </Tem>
           <View style={styles.flex}>
-            <Stamp label="Đã mở" />
-            <Text style={[typography.h2, { color: colors.ink }]}>{noiBat.ten}</Text>
-            <Text style={[typography.body, { color: colors.inkSoft }]}>{noiBat.dieuKien}</Text>
+            <Stamp label={moi ? "Mới mở" : "Đã mở"} tone="ink" />
+            <Text style={[typography.h2, { color: colors.ink }]}>{(huyHieu.find((h) => h.id === moi) ?? noiBat).ten}</Text>
+            <Text style={[typography.body, { color: colors.inkSoft }]}>{(huyHieu.find((h) => h.id === moi) ?? noiBat).dieuKien}</Text>
           </View>
+          {moi ? <NepDien khoanhKhac="M8" suKien={`huy-hieu:${moi}`} /> : null}
         </View>
       ) : null}
 
       <SectionHeader title="Huy hiệu" />
       <Text style={[typography.note, { color: colors.inkSoft }]}>{demHuyHieuMo(huyHieu)}</Text>
-      <View>
+      {/* The collection as a sheet of stamps: an earned one printed with Nếp,
+          one still ahead only its perforated outline (ADR-0037 D1, plan S6). */}
+      <View style={styles.luoiTem}>
         {huyHieu.map((h) => {
           const mo = h.trangThai === "mo";
           return (
-            <View key={h.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
-              <View style={[styles.hangIcon, { backgroundColor: mo ? colors.accentSoft : colors.card, borderColor: mo ? colors.accentSoft : colors.line }]}>
-                <Ionicons color={mo ? colors.accent : colors.inkFaint} name={bieuTuongHuyHieu(h)} size={20} />
-              </View>
-              <View style={styles.flex}>
-                <Text style={[typography.label, { color: colors.ink }]}>{h.ten}</Text>
-                <Text style={[typography.caption, { color: colors.inkSoft }]}>{phuHuyHieu(h)}</Text>
-              </View>
-              {mo ? <Stamp label="Đã mở" /> : <Text style={[typography.caption, { color: colors.inkSoft }]}>{chuTrangThai(h)}</Text>}
+            <View accessibilityLabel={`${h.ten}. ${chuTrangThai(h)}. ${phuHuyHieu(h)}`} accessible key={h.id} style={styles.oTem}>
+              <Tem cao={84} khoa={!mo} rong={70}>
+                {mo ? <Nep gap="trang" pose="nhay" size={40} /> : <Ionicons color={colors.inkSoft} name={bieuTuongHuyHieu(h)} size={22} />}
+              </Tem>
+              <Text numberOfLines={2} style={[typography.label, styles.giua, { color: colors.ink }]}>{h.ten}</Text>
+              <Text numberOfLines={3} style={[typography.caption, styles.giua, { color: colors.inkSoft }]}>{mo ? "Đã mở" : chuTrangThai(h)}</Text>
             </View>
           );
         })}
@@ -197,7 +220,8 @@ const styles = StyleSheet.create({
   thanh: { height: 8, overflow: "hidden", marginTop: 6 },
   thanhDay: { height: 8 },
   noiBat: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16 },
-  noiBatIcon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
   hang: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
-  hangIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  luoiTem: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  oTem: { width: 100, alignItems: "center", gap: 4 },
+  giua: { textAlign: "center" },
 });

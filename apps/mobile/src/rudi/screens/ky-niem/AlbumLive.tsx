@@ -27,7 +27,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Phien } from "../../../phien";
 import { AlbumError } from "../../../screens/album/album-api";
+import { docKeoCuaNhom } from "../../keo/keo";
+import { homNay } from "../../keo/nhip-keo";
 import {
+  cauKeAlbumRong,
   cauThongKeAlbum,
   cauThuocPhim,
   layAlbum,
@@ -67,6 +70,9 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
   const router = useRouter();
   const { colors } = useRudiTheme();
   const [trang, setTrang] = useState<TrangKe>({ pha: "dang-doc" });
+  // B4: an empty shelf asks the plan list whether an outing is merely ahead.
+  const [keoNhom, setKeoNhom] = useState<{ title: string; starts_on: string }[]>([]);
+  const cauRong = cauKeAlbumRong(keoNhom, homNay());
 
   const doc = async () => {
     try {
@@ -81,6 +87,12 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
     void layDanhSachAlbum(contextId, phien.person_id)
       .then((ds) => {
         if (song) setTrang({ pha: "xong", albums: ds.albums });
+        if (song && ds.albums.length === 0) {
+          // Only a sentence depends on it: a failed read keeps «Chưa có kèo nào».
+          void docKeoCuaNhom(contextId, phien.person_id).then((keo) => {
+            if (song) setKeoNhom(keo);
+          }, () => undefined);
+        }
       })
       .catch((error: unknown) => {
         if (song) setTrang({ pha: "hong", loi: loiRaChu(error) });
@@ -102,11 +114,11 @@ export function AlbumNhomLiveScreen({ phien, contextId }: { phien: Phien; contex
       {trang.pha === "hong" ? <ErrorState body={trang.loi} onRetry={() => void doc()} title="Chưa đọc được album" /> : null}
       {trang.pha === "xong" && trang.albums.length === 0 ? (
         <EmptyState
-          body="Tạo một kèo ở Lên plan; ảnh và check-in trong những ngày đó sẽ về đây."
+          body={cauRong.than}
           illustration={<Canh id="chua-co-keo" width={168} />}
           kind="first-use"
           layout="inline"
-          title="Chưa có kèo nào"
+          title={cauRong.tieuDe}
         />
       ) : null}
       {trang.pha === "xong"

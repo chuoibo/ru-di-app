@@ -41,6 +41,8 @@ không lạc.
    - Flow 24, 25, 30, 34, 37, 45, 48 (S5: nhóm là gáy sổ, avatar mang vòng mực người, thanh
      ghim nằm trên dải nền, khay công cụ là vật ký hoạ, bình chọn trên giấy nhớ, tờ hẹn chung
      trên giấy kẻ, hồ sơ người cùng nhóm có «Kết bạn»). Nhãn và chữ flow bấm giữ nguyên.
+   - Flow 11, 24, 32, 33 (S6: tường là ảnh in nghiêng có băng dính, thả khoảnh khắc là tấm
+     instax, hồ sơ là trang hộ chiếu, thành tích là tờ tem). Nhãn giữ nguyên.
    - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&

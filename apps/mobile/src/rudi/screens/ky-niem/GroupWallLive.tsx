@@ -37,8 +37,10 @@ import {
   nguonAnh,
   type BinhLuan,
   type KyNiem,
+  nghiengAnh,
 } from "../../ky-niem/ky-niem";
-import { typography, useRudiTheme } from "../../theme";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
+import { Washi } from "../../ui/Washi";
 import { Chip, Field, Inline, RudiButton, RudiScreen, SearchField, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { EmptyState } from "../../ui/EmptyState";
@@ -70,7 +72,7 @@ function gioViet(iso: string): string {
 
 export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contextId: string }) {
   const router = useRouter();
-  const { colors, radius } = useRudiTheme();
+  const { colors, dark, radius } = useRudiTheme();
   const me = phien.person_id;
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [roster, setRoster] = useState<ThanhVien[]>([]);
@@ -267,12 +269,15 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                 <View style={styles.dong}>
                   <AvatarNguoi name={tacGia} personId={k.authorId} size={36} />
                   <View style={styles.flex}>
-                    <Text style={[typography.label, { color: colors.ink }]}>{tacGia}</Text>
+                    <Text style={[typography.label, { color: k.authorId ? mucNguoi(k.authorId, dark) : colors.ink }]}>{tacGia}</Text>
                     <Text style={[typography.caption, { color: colors.inkFaint }]}>{gioViet(k.createdAt)}</Text>
                   </View>
                 </View>
                 {anh !== null ? (
-                  <KhungAnh xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
+                  // A print pinned to the wall: a slight lean of its own and a
+                  // strip of washi over the top edge (ADR-0037 D1, plan S6).
+                  <View style={styles.khungDan}>
+                  <KhungAnh tilt={nghiengAnh(k.id)} xuatXu={`${tacGia} · ${gioViet(k.createdAt)}`}>
                     <Image
                       accessibilityLabel={cauKyNiem(k)}
                       contentFit="cover"
@@ -286,6 +291,8 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
                       style={[styles.anh, { aspectRatio: tiLe[k.id] ?? 4 / 3, backgroundColor: colors.line }]}
                     />
                   </KhungAnh>
+                  <Washi style={styles.bangDinh} tilt={nghiengAnh(k.id) > 0 ? -2 : 2} />
+                  </View>
                 ) : null}
                 {k.kind === "checkin" ? (
                   <View style={styles.checkin}>
@@ -348,6 +355,8 @@ export function GroupWallLiveScreen({ phien, contextId }: { phien: Phien; contex
 }
 
 const styles = StyleSheet.create({
+  khungDan: { paddingTop: 6 },
+  bangDinh: { position: "absolute", top: -4, alignSelf: "center", width: 84, height: 22 },
   flex: { flex: 1 },
   khung: { gap: 16 },
   form: { gap: 10, paddingBottom: 4 },
