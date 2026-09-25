@@ -2,7 +2,7 @@
 {
   "man": "groups/[id]/chat",
   "tieu_de": "Chat nhóm",
-  "nhanUI": ["Thêm vào cuộc trò chuyện", "Ảnh", "Sticker", "Bình chọn", "Tờ hẹn", "Tờ giấy", "Câu hỏi", "Thêm lựa chọn", "Gửi bình chọn", "Bỏ phiếu …", "Xem các phiếu", "Chốt bình chọn", "Đóng bình chọn", "Tiếp tục bình chọn", "Mở tờ hẹn chung cho lựa chọn này", "Mở tờ hẹn chung", "Tờ hẹn chung của hội", "Sửa cùng hội", "Lưu cho cả hội", "Chốt thành kèo", "Mở kèo của hội", "Bỏ tờ hẹn", "Giữ lại", "Thêm chặng", "Rủ hội một buổi", "Mình đang thấy", "Gửi kèm tin gần nhất", "Chỉ gửi lời nhờ", "Gửi lời nhờ cho AI", "@Rủ Đi", "/vote", "Sửa tờ hẹn này", "Tự tạo kèo", "Cài đặt nhóm", "Tên nhóm", "Lưu tên", "Rời nhóm", "Thành viên nhóm", "Ô soạn tin"],
+  "nhanUI": ["Thêm vào cuộc trò chuyện", "Ảnh", "Sticker", "Bình chọn", "Tờ hẹn", "Tờ giấy", "Câu hỏi", "Thêm lựa chọn", "Gửi bình chọn", "Bỏ phiếu …", "Xem các phiếu", "Chốt bình chọn", "Đóng bình chọn", "Tiếp tục bình chọn", "Mở tờ hẹn chung cho lựa chọn này", "Mở tờ hẹn chung", "Tờ hẹn chung của hội", "Sửa cùng hội", "Lưu cho cả hội", "Chốt thành kèo", "Mở kèo của hội", "Bỏ tờ hẹn", "Giữ lại", "Thêm chặng", "Rủ hội một buổi", "Hỏi Rủ Đi AI", "@Rủ Đi", "/plan", "/chia-bill", "Xem", "Chỉ gửi lời nhờ", "Rủ Đi AI chưa nhận lời nhờ", "Thử lại", "Bỏ", "/vote", "Sửa tờ hẹn này", "Tự tạo kèo", "Cài đặt nhóm", "Tên nhóm", "Lưu tên", "Rời nhóm", "Thành viên nhóm", "Ô soạn tin"],
   "di_toi": [
     {"nhan": "Tự tạo kèo", "man": "outings/new"},
     {"nhan": "Sửa tờ hẹn này", "man": "outings/new"},
@@ -13,7 +13,7 @@
   "tien": false
 }
 ---
-Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là chỗ cả hội cùng quyết: tạo bình chọn, sửa chung một tờ hẹn, và nhờ Rủ Đi AI phác một buổi. Mọi công cụ nằm trong khay mở từ nút «Thêm vào cuộc trò chuyện» (dấu cộng cạnh «Ô soạn tin»).
+Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là chỗ cả hội cùng quyết: tạo bình chọn, sửa chung một tờ hẹn, và nhờ Rủ Đi AI ngay trong cuộc trò chuyện. Rủ Đi AI trả lời như một thành viên, bằng một tin trả lời vào đúng tin nhờ. Mọi công cụ nằm trong khay mở từ nút «Thêm vào cuộc trò chuyện» (dấu cộng cạnh «Ô soạn tin»).
 
 ## Mở khay công cụ
 
@@ -54,13 +54,13 @@ Màn chat của một nhóm hay của hai người. Ngoài nhắn tin, đây là
 4. Cả hội ưng thì bấm «Chốt thành kèo»; sau đó nút đổi thành «Mở kèo của hội».
 5. Muốn bỏ tờ thì bấm «Bỏ tờ hẹn», rồi chọn «Bỏ tờ hẹn» lần nữa để xác nhận hoặc «Giữ lại».
 
-## Nhờ Rủ Đi AI phác một buổi
+## Nhờ Rủ Đi AI ngay trong nhóm
 
-1. Mở khay, bấm «Tờ hẹn». Chat nhóm còn trống thì bấm «Rủ hội một buổi».
-2. Viết lời nhờ, ví dụ thời gian và kiểu buổi đi. Gõ «@Rủ Đi» kèm lời nhờ ngay trong ô soạn tin cũng là một cách gọi.
-3. Nếu có khung «Mình đang thấy», khung đó cho xem đúng những gì gửi kèm. Bấm «Chỉ gửi lời nhờ» nếu không muốn gửi kèm tin gần nhất, bấm «Gửi kèm tin gần nhất» để bật lại. Không có khung này thì chỉ lời nhờ được gửi.
-4. Bấm «Gửi lời nhờ cho AI» và chờ thẻ trả lời.
-5. Trên thẻ, bấm «Sửa tờ hẹn này» để xem lại rồi xác nhận thành kèo.
+1. Gõ «@Rủ Đi» kèm lời nhờ trong ô soạn tin. Gõ «/plan» ở đầu tin để nhờ phác một buổi, «/chia-bill» để nhờ gom khoản chi cho cả hội xác nhận. Hoặc mở khay, bấm «Tờ hẹn» (chat nhóm còn trống thì bấm «Rủ hội một buổi»), rồi bấm «Hỏi Rủ Đi AI» để ô soạn tin được điền sẵn «/plan».
+2. Ngay trên nút gửi có một dòng nói sẽ kèm bao nhiêu tin gần đây. Bấm «Xem» để thấy đúng những tin đó; bấm «Chỉ gửi lời nhờ» nếu không muốn kèm tin nào, bấm lại dòng đó để kèm lại.
+3. Gửi như tin thường. Cả nhóm thấy lời nhờ của bạn, và Rủ Đi AI trả lời vào đúng tin đó.
+4. Nếu tin đã gửi mà chỉ bạn thấy dòng «Rủ Đi AI chưa nhận lời nhờ», bấm «Thử lại» để gửi lại lời nhờ, hoặc «Bỏ».
+5. Câu trả lời có tờ hẹn thì bấm «Sửa tờ hẹn này» để xem lại rồi xác nhận thành kèo.
 
 ## Tự tạo kèo không cần AI
 

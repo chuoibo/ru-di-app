@@ -23,7 +23,7 @@ Màn «Kèo mới» dựng khung của một buổi đi: tên, ngày, số ngư�
 
 ## Xác nhận một tờ hẹn Rủ Đi AI đã phác
 
-1. Mở từ thẻ tờ hẹn trong chat nhóm, màn này hiện tên «Sửa tờ hẹn» và mục «Các chặng trong tờ hẹn».
+1. Mở từ tờ hẹn trong câu trả lời của Rủ Đi AI ở chat nhóm, màn này hiện tên «Sửa tờ hẹn» và mục «Các chặng trong tờ hẹn».
 2. Xem lại tên, ngày, số người và giờ của từng chặng; sửa chỗ nào chưa đúng.
 3. Bấm «Xác nhận và tạo kèo». Các chặng đi theo sang kèo mới.
 
