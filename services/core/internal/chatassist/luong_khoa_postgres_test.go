@@ -202,7 +202,8 @@ func (b banKhoa) mot(t *testing.T, act string, ep, ghiTruoc bool) ketQua {
 	requireCode(t, w, 202)
 	var v Invocation
 	_ = json.Unmarshal(w.Body.Bytes(), &v)
-	j, ok, err := b.handler.claimNext(ctx, v.ID)
+	// The job this round created, at its first entry into the queue.
+	j, ok, err := b.handler.claimTin(ctx, v.ID, 1, "")
 	if err != nil || !ok {
 		t.Fatalf("claim %v %v", ok, err)
 	}

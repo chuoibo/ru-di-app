@@ -125,7 +125,8 @@ func TestClaimByIDRunsANamedJobExactlyOnce(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ok, err := f.handler.ClaimByID(context.Background(), named.ID)
+			// Every consumer holds the same message: the job's first enqueue.
+			ok, err := f.handler.ClaimByID(context.Background(), named.ID, 1)
 			if err != nil {
 				t.Error(err)
 			}
@@ -149,7 +150,7 @@ func TestClaimByIDRunsANamedJobExactlyOnce(t *testing.T) {
 	if olderStatus != "queued" || namedStatus != "succeeded" {
 		t.Fatalf("older=%s named=%s: ClaimByID must take only the job it names", olderStatus, namedStatus)
 	}
-	if ok, err := f.handler.ClaimByID(ctx, named.ID); ok || err != nil {
+	if ok, err := f.handler.ClaimByID(ctx, named.ID, 1); ok || err != nil {
 		t.Fatalf("a finished job was claimed again: %v %v", ok, err)
 	}
 }

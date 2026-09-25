@@ -429,6 +429,18 @@ func TestLoiMoHinh(t *testing.T) {
 	if MaCua(m.err) != cau.ProviderUnavailable || m.res.Record.LoiMoHinh != obs.Loi5xx || m.res.Record.SoGoiMoHinh != 1 {
 		t.Fatalf("500: %v %+v", m.err, m.res.Record)
 	}
+	// A 5xx or a 429 is transient, worth a retry later; a 400 is not.
+	if !TamThoi(m.err) {
+		t.Fatal("a 500 is not marked transient")
+	}
+	m = chayLuot(t, luotCoBan(), llm.Buoc{Loi: genai.APIError{Code: 429}}, llm.Buoc{Loi: genai.APIError{Code: 429}}, llm.Buoc{Loi: genai.APIError{Code: 429}})
+	if MaCua(m.err) != cau.ProviderUnavailable || !TamThoi(m.err) || m.res.Record.SoGoiMoHinh != 3 {
+		t.Fatalf("429 x3: %v %+v", m.err, m.res.Record)
+	}
+	m = chayLuot(t, luotCoBan(), llm.Buoc{Loi: genai.APIError{Code: 400}})
+	if MaCua(m.err) != cau.ProviderUnavailable || TamThoi(m.err) {
+		t.Fatalf("400: %v transient=%v", m.err, TamThoi(m.err))
+	}
 	m = chayLuot(t, luotCoBan(), llm.Buoc{Text: "", Finish: genai.FinishReasonSafety})
 	if MaCua(m.err) != cau.InvalidAIResult || m.res.Record.LoiMoHinh != obs.LoiSafety {
 		t.Fatalf("safety: %v %+v", m.err, m.res.Record)

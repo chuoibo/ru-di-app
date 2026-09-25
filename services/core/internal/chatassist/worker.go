@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/llm"
+	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/pyjson"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
@@ -34,15 +39,25 @@ type work struct {
 	createdAt time.Time
 	// Which attempt this claim is (1 for the first).
 	attempt int
+	// Which entry into the queue this claim took (enqueue_seq).
+	seq int64
+	// Model calls earlier attempts of this job already spent (model_calls).
+	modelCalls int
 }
 
 // WorkerConfig sizes the inference workers. The defaults are what the engine
 // ran with before it could be sized: two workers, a 75 second lease.
 type WorkerConfig struct {
-	// Workers is how many jobs this process runs at once.
+	// Workers is how many jobs this process runs at once, whichever path
+	// claimed them (the broker's consumer or the Postgres poller).
 	Workers int
-	// Tick is how often an idle worker looks for a job.
+	// Tick is how often the poller looks for any due job while no broker
+	// consumer is attached.
 	Tick time.Duration
+	// NetEvery is how often the poller looks for jobs due for longer than
+	// NetLag, broker or not: the net under a lost message or a lapsed lease.
+	NetEvery time.Duration
+	NetLag   time.Duration
 	// Lease is how long a claim holds a job without a heartbeat.
 	Lease time.Duration
 	// Heartbeat renews the lease while a job runs, and notices a job that was
@@ -63,7 +78,8 @@ const (
 // shorter lease on a replica without heartbeat would let a second worker take
 // a job the first is still running.
 func DefaultWorkerConfig() WorkerConfig {
-	return WorkerConfig{Workers: 2, Tick: 250 * time.Millisecond, Lease: 75 * time.Second, Heartbeat: 5 * time.Second, SweepEvery: 5 * time.Second}
+	return WorkerConfig{Workers: 2, Tick: 250 * time.Millisecond, NetEvery: 2 * time.Second, NetLag: 5 * time.Second,
+		Lease: 75 * time.Second, Heartbeat: 5 * time.Second, SweepEvery: 5 * time.Second}
 }
 
 // WorkerConfigFromEnv reads MOBILE_AI_WORKERS (1..64) and
@@ -94,65 +110,210 @@ func WorkerConfigFromEnv(getenv func(string) string) (WorkerConfig, error) {
 }
 
 // WithWorker sets the worker configuration. New uses DefaultWorkerConfig.
+// Call it before the workers start.
 func (h *Handler) WithWorker(cfg WorkerConfig) *Handler {
 	h.worker = cfg
 	return h
 }
 
-// Run is RunSweeper plus RunWorkers: what a process that both serves and
-// works runs. Leases recover a crashed worker; retries may repeat inference,
-// but publication is transactionally once-only.
-func (h *Handler) Run(ctx context.Context) {
-	var both sync.WaitGroup
-	both.Add(2)
-	go func() { defer both.Done(); h.RunSweeper(ctx) }()
-	go func() { defer both.Done(); h.RunWorkers(ctx) }()
-	both.Wait()
-}
+// The queues this engine's jobs ride, one per scope: the same CASE as the
+// enqueue trigger (schema_hang_doi.sql).
+const (
+	HangNhom = "ai.group"
+	HangNep  = "ai.nep"
+)
 
-// RunWorkers owns the bounded inference workers.
-func (h *Handler) RunWorkers(ctx context.Context) {
-	var workers sync.WaitGroup
-	for i := 0; i < h.worker.Workers; i++ {
-		workers.Add(1)
-		go func() {
-			defer workers.Done()
-			timer := time.NewTicker(h.worker.Tick)
-			defer timer.Stop()
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-timer.C:
-					j, ok, err := h.claimNext(ctx, "")
-					if err == nil && ok {
-						_ = h.runJob(ctx, j)
-					}
-				}
-			}
-		}()
+// Queues are the queues a worker of this engine may consume.
+var Queues = []string{HangNhom, HangNep}
+
+func scopeCuaHang(queue string) (string, bool) {
+	switch queue {
+	case HangNhom:
+		return "group", true
+	case HangNep:
+		return scopeMe, true
 	}
-	workers.Wait()
+	return "", false
 }
 
-// RunSweeper runs the retention and lease sweeps on their own clock. A process
-// that serves but runs no workers still runs it: the fifteen-minute bound on
-// shared plaintext must hold even when the worker fleet is scaled to zero.
-func (h *Handler) RunSweeper(ctx context.Context) {
-	timer := time.NewTicker(h.worker.SweepEvery)
-	defer timer.Stop()
+// WithQueues limits this process to the jobs of these queues, on the broker
+// and in the poller alike: a worker that consumes only ai.nep must not poll a
+// group job either. Unset means both.
+func (h *Handler) WithQueues(queues []string) (*Handler, error) {
+	var scopes []string
+	for _, q := range queues {
+		s, ok := scopeCuaHang(q)
+		if !ok {
+			return nil, fmt.Errorf("chatassist: no jobs ride queue %q", q)
+		}
+		scopes = append(scopes, s)
+	}
+	if len(scopes) == 0 {
+		return nil, errors.New("chatassist: a worker needs at least one queue")
+	}
+	h.scopes = scopes
+	return h, nil
+}
+
+func (h *Handler) scopeList() []string {
+	if h.scopes == nil {
+		return []string{"group", scopeMe}
+	}
+	return h.scopes
+}
+
+// WithNhipPool gives the heartbeat and the per-call model counter a pool of
+// their own (design 02 §6): two statements that must not wait behind the
+// jobs' own queries when the main pool is busy. Unset, they use the main
+// pool.
+func (h *Handler) WithNhipPool(p *pgxpool.Pool) *Handler {
+	h.nhip = p
+	return h
+}
+
+func (h *Handler) nhipPool() *pgxpool.Pool {
+	if h.nhip != nil {
+		return h.nhip
+	}
+	return h.pool
+}
+
+// The process's job slots, shared by the consumer and the poller.
+func (h *Handler) slotChan() chan struct{} {
+	h.slotsOnce.Do(func() { h.slots = make(chan struct{}, h.worker.Workers) })
+	return h.slots
+}
+
+func (h *Handler) tryAcquire() bool {
+	select {
+	case h.slotChan() <- struct{}{}:
+		return true
+	default:
+		return false
+	}
+}
+
+func (h *Handler) acquire(ctx context.Context) bool {
+	select {
+	case h.slotChan() <- struct{}{}:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
+func (h *Handler) releaseSlot() { <-h.slotChan() }
+
+// Broker is what the poller needs to know of the broker side: whether its
+// consumers are attached right now (jobs.Ket).
+type Broker interface{ Song() bool }
+
+// RunWorkers is the Postgres poller, and it always runs (design 02 §4 step
+// 6). Every NetEvery it claims jobs due for longer than NetLag -- a message
+// that never came, a lease that lapsed. While broker is nil or not attached
+// it also claims every Tick any job that is due. It claims only while a slot
+// is free, and each job runs under its lease and heartbeat. It returns once
+// ctx ends and every job it started has finished or been released.
+func (h *Handler) RunWorkers(ctx context.Context, broker Broker) {
+	fast := time.NewTicker(h.worker.Tick)
+	defer fast.Stop()
+	net := time.NewTicker(h.worker.NetEvery)
+	defer net.Stop()
+	var running sync.WaitGroup
+	defer running.Wait()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-timer.C:
-			_ = h.Sweep(ctx)
+		case <-fast.C:
+			if brokerUp(broker) {
+				continue
+			}
+			h.poll(ctx, 0, broker, &running)
+		case <-net.C:
+			h.poll(ctx, h.worker.NetLag, broker, &running)
 		}
 	}
 }
 
-// Sweep bounds plaintext retention to the sharing window and fails jobs whose
-// last lease lapsed with no attempts left.
+func brokerUp(b Broker) bool { return b != nil && b.Song() }
+
+// poll claims due jobs while a slot is free, and starts each one. While the
+// broker is down, a slot that finishes its job claims the next due one at
+// once instead of waiting for the next tick: the tick only bounds how long a
+// job waits when every slot was idle.
+func (h *Handler) poll(ctx context.Context, lag time.Duration, broker Broker, running *sync.WaitGroup) {
+	for ctx.Err() == nil {
+		if !h.tryAcquire() {
+			return
+		}
+		j, ok, err := h.claimNext(ctx, lag)
+		if err != nil || !ok {
+			h.releaseSlot()
+			return
+		}
+		running.Add(1)
+		go func() {
+			defer running.Done()
+			defer h.releaseSlot()
+			for {
+				_ = h.runJob(ctx, j)
+				if ctx.Err() != nil || brokerUp(broker) {
+					return
+				}
+				next, ok, err := h.claimNext(ctx, 0)
+				if err != nil || !ok {
+					return
+				}
+				j = next
+			}
+		}()
+	}
+}
+
+// XuLyTin is the broker consumer's handler (jobs.Ket.Handler). It claims the
+// job the message names at the enqueue it names, and runs it. It returns nil
+// once the job's terminal transaction committed, or when the claim found
+// nothing to do -- a duplicate, a job done or cancelled, a message from an
+// earlier entry into the queue, a job another worker holds -- and the message
+// is acknowledged then. A database error is jobs.ErrTamDung: the message is
+// requeued and the consumer pauses while the poller carries on.
+func (h *Handler) XuLyTin(ctx context.Context, queue string, m jobs.Message) error {
+	scope, ok := scopeCuaHang(queue)
+	if !ok {
+		return jobs.ErrMalformed
+	}
+	if !h.acquire(ctx) {
+		return ctx.Err()
+	}
+	defer h.releaseSlot()
+	j, ok, err := h.claimTin(ctx, m.Ref, m.Seq, scope)
+	if err != nil {
+		return errors.Join(jobs.ErrTamDung, err)
+	}
+	if !ok {
+		return nil
+	}
+	if err = h.runJob(ctx, j); err != nil && !errors.Is(err, aiharness.ErrHuy) {
+		return errors.Join(jobs.ErrTamDung, err)
+	}
+	return nil
+}
+
+// DinhKy is the sweep as a periodic task (jobs.DinhKy). Every process that
+// serves or works runs it, so the fifteen-minute bound on shared plaintext
+// holds even with the worker fleet scaled to zero.
+func (h *Handler) DinhKy() jobs.DinhKy {
+	return jobs.DinhKy{Ten: "chatassist.sweep", Nhip: h.worker.SweepEvery, Chay: func(ctx context.Context, _ *pgxpool.Pool) error {
+		return h.Sweep(ctx)
+	}}
+}
+
+// Sweep bounds plaintext retention to the sharing window and fails the jobs a
+// lapsed lease left behind with no way forward: no attempts left, or content
+// already out (a second worker must not write the answer again). One process
+// sweeps at a time: the pass holds pg_try_advisory_xact_lock, and a process
+// that finds it taken skips, since the holder does the same idempotent work.
 func (h *Handler) Sweep(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -161,6 +322,13 @@ func (h *Handler) Sweep(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
+	var mine bool
+	if err = tx.QueryRow(ctx, `SELECT pg_try_advisory_xact_lock(hashtextextended('chatassist:sweep',0))`).Scan(&mine); err != nil {
+		return err
+	}
+	if !mine {
+		return tx.Commit(ctx)
+	}
 	// Bound plaintext retention to the explicit sharing window, including failed jobs.
 	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET prompt=NULL,boi_canh=NULL,status=CASE WHEN status IN ('queued','running') THEN 'failed' ELSE status END,code=CASE WHEN status IN ('queued','running') THEN 'sharing_expired' ELSE code END,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE prompt IS NOT NULL AND share_expires_at<=clock_timestamp()`)
 	if err != nil {
@@ -172,7 +340,10 @@ func (h *Handler) Sweep(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND attempts>=3`)
+	// Lease after first content (design 02 §4 step 7): a worker that died
+	// after its first part or delta left is not replaced; the job fails, what
+	// was shown stays, and the reader is told it was cut off.
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND (attempts>=3 OR first_token_at IS NOT NULL)`)
 	if err != nil {
 		return err
 	}
@@ -185,23 +356,48 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	if err := h.Sweep(ctx); err != nil {
 		return work{}, false, err
 	}
-	return h.claimNext(ctx, "")
+	return h.claimNext(ctx, 0)
 }
 
-// ClaimByID claims one named job, the entry a broker consumer uses when a
-// message names the job to run. It claims only what claimNext would: a queued
-// job, or a running one whose lease lapsed, with attempts left and its sharing
-// window open. False with no error means someone else has it, or it is done.
-func (h *Handler) ClaimByID(ctx context.Context, id string) (bool, error) {
-	j, ok, err := h.claimNext(ctx, id)
+// ClaimByID claims the job a broker message names, at the enqueue it names,
+// and runs it: claimByID(ref, seq) of design 02 §4 step 3. False with no error
+// means there was nothing to run.
+func (h *Handler) ClaimByID(ctx context.Context, id string, seq int64) (bool, error) {
+	j, ok, err := h.claimTin(ctx, id, seq, "")
 	if err != nil || !ok {
 		return ok, err
 	}
 	return true, h.runJob(ctx, j)
 }
 
-// claimNext takes the oldest claimable job, or exactly the job named by id.
-func (h *Handler) claimNext(ctx context.Context, id string) (work, bool, error) {
+// What makes a job claimable at all: queued, or running under a lapsed lease
+// before any content left it; attempts left; its sharing window open.
+const claimable = `(status='queued' OR (status='running' AND lease_until<clock_timestamp() AND first_token_at IS NULL)) AND attempts<3 AND share_expires_at>clock_timestamp()`
+
+// The one UPDATE every claim runs; only the choice of candidate differs.
+const claimSet = `UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts,j.enqueue_seq,j.model_calls`
+
+// claimPoll takes the oldest claimable job due at least $3 seconds ago, of the
+// scopes in $4.
+const claimPoll = `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE ` + claimable + ` AND available_at<=clock_timestamp()-make_interval(secs => $3) AND scope=ANY($4) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) ` + claimSet
+
+// claimMessage takes exactly the job $3 at enqueue $4, when it is due. $5 is
+// the scope its queue carries ("" for any): a message cannot claim a job of
+// another queue.
+const claimMessage = `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE id=$3 AND enqueue_seq=$4 AND ($5='' OR scope=$5) AND ` + claimable + ` AND available_at<=clock_timestamp() FOR UPDATE SKIP LOCKED) ` + claimSet
+
+// claimNext takes the oldest claimable job of this process's queues due at
+// least lag ago.
+func (h *Handler) claimNext(ctx context.Context, lag time.Duration) (work, bool, error) {
+	return h.claimWith(ctx, claimPoll, lag.Seconds(), h.scopeList())
+}
+
+// claimTin takes the job a message names, at the enqueue it names.
+func (h *Handler) claimTin(ctx context.Context, id string, seq int64, scope string) (work, bool, error) {
+	return h.claimWith(ctx, claimMessage, id, seq, scope)
+}
+
+func (h *Handler) claimWith(ctx context.Context, sql string, args ...any) (work, bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	tx, err := h.pool.Begin(ctx)
@@ -211,7 +407,7 @@ func (h *Handler) claimNext(ctx context.Context, id string) (work, bool, error) 
 	defer tx.Rollback(ctx)
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() AND ($3='' OR id::text=$3) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts`, j.lease, h.worker.Lease.Seconds(), id).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin, &j.createdAt, &j.attempt)
+	err = tx.QueryRow(ctx, sql, append([]any{j.lease, h.worker.Lease.Seconds()}, args...)...).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin, &j.createdAt, &j.attempt, &j.seq, &j.modelCalls)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -242,7 +438,7 @@ func (h *Handler) heartbeat(ctx context.Context, j work, cancelJob context.Cance
 				return
 			case <-timer.C:
 				beat, cancel := context.WithTimeout(ctx, 2*time.Second)
-				tag, err := h.pool.Exec(beat, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()+make_interval(secs => $3) WHERE id=$1 AND lease_id=$2 AND status='running'`, j.id, j.lease, h.worker.Lease.Seconds())
+				tag, err := h.nhipPool().Exec(beat, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()+make_interval(secs => $3) WHERE id=$1 AND lease_id=$2 AND status='running'`, j.id, j.lease, h.worker.Lease.Seconds())
 				cancel()
 				if err == nil && tag.RowsAffected() == 0 {
 					cancelJob()
@@ -254,13 +450,93 @@ func (h *Handler) heartbeat(ctx context.Context, j work, cancelJob context.Cance
 	return func() { close(done); <-finished }
 }
 
-// runJob runs one claimed job under its time budget and heartbeat.
+// Why a job's context was cancelled, when it was not its own clock.
+var (
+	// errDungTho: the worker is stopping (SIGTERM). The job goes back to the
+	// queue rather than failing.
+	errDungTho = errors.New("chatassist: the worker is stopping")
+	// errMatLease: the heartbeat found the job no longer this worker's.
+	errMatLease = errors.New("chatassist: the job's lease is gone")
+)
+
+// dangDung reports whether ctx was cancelled because the worker is stopping.
+func dangDung(ctx context.Context) bool { return errors.Is(context.Cause(ctx), errDungTho) }
+
+// runJob runs one claimed job under its time budget and heartbeat. The job's
+// context is its own: stopping the worker (ctx ending) cancels it with
+// errDungTho, and whatever the job was doing then, it is released back to the
+// queue instead of failed (design 02 §4 step 9). The release matches nothing
+// when the job had already ended, or had content out.
 func (h *Handler) runJob(ctx context.Context, j work) error {
-	ctx, cancelJob := context.WithTimeout(ctx, 70*time.Second)
-	defer cancelJob()
-	stop := h.heartbeat(ctx, j, cancelJob)
+	jobCtx, cancel := context.WithCancelCause(context.WithoutCancel(ctx))
+	defer cancel(nil)
+	stopWatch := context.AfterFunc(ctx, func() { cancel(errDungTho) })
+	defer stopWatch()
+	jobCtx, cancelTime := context.WithTimeout(jobCtx, 70*time.Second)
+	defer cancelTime()
+	stop := h.heartbeat(jobCtx, j, func() { cancel(errMatLease) })
 	defer stop()
-	return h.process(ctx, j)
+	err := h.process(jobCtx, j)
+	if dangDung(jobCtx) {
+		return h.release(jobCtx, j)
+	}
+	return err
+}
+
+// release hands a job back to the queue when its worker stops: queued, the
+// attempt it used given back, the lease cleared, due now. The enqueue trigger
+// numbers the new entry, so another worker gets a message for it at once
+// instead of waiting on the poller. A job whose content already went out is
+// not released -- no second worker may start it over -- and the sweep fails
+// it as worker_interrupted once its lease lapses.
+func (h *Handler) release(ctx context.Context, j work) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='queued',attempts=attempts-1,lease_id=NULL,lease_until=NULL,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL`, j.id, j.lease)
+	return err
+}
+
+// retryLater puts a job whose turn failed on a transient provider error back
+// in the queue after a backoff, when every condition of design 02 §4 step 5
+// holds: no content out yet, attempts left, model calls left, and the retry
+// still inside thirty seconds of the question. It reports whether it did; the
+// caller fails the job otherwise. The trigger enqueues it, due at the end of
+// the backoff, so the relay publishes it only then.
+func (h *Handler) retryLater(ctx context.Context, j work) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	tag, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='queued',lease_id=NULL,lease_until=NULL,available_at=clock_timestamp()+make_interval(secs => $3),updated_at=clock_timestamp() WHERE id=$1 AND lease_id=$2 AND status='running' AND first_token_at IS NULL AND attempts<3 AND model_calls<$4 AND clock_timestamp()+make_interval(secs => $3)<created_at+interval '30 seconds'`, j.id, j.lease, choLai(j.attempt).Seconds(), llm.MaxModelCallsPerTurn)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() == 1, nil
+}
+
+// choLai is the wait before the next attempt: one second after the first,
+// four after the second, each within ±20 % so retries of one outage spread.
+func choLai(attempt int) time.Duration {
+	base := time.Second
+	if attempt >= 2 {
+		base = 4 * time.Second
+	}
+	return time.Duration(float64(base) * (0.8 + 0.4*rand.Float64()))
+}
+
+// giuLuot is Turn.GiuLuot for j (design 01 §2, design 02 §6): one model call
+// taken in the job's row before it goes out, under this worker's lease, never
+// past llm.MaxModelCallsPerTurn across every attempt of the job. Zero rows --
+// the ceiling, or a lease gone -- is no call.
+func (h *Handler) giuLuot(j work) func(context.Context) error {
+	return func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		var n int
+		err := h.nhipPool().QueryRow(ctx, `UPDATE chat_ai_invocations SET model_calls=model_calls+1 WHERE id=$1 AND lease_id=$2 AND model_calls<$3 RETURNING model_calls`, j.id, j.lease, llm.MaxModelCallsPerTurn).Scan(&n)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return llm.ErrHetNganSach
+		}
+		return err
+	}
 }
 
 // ProcessOne is also the deterministic worker entry point for PostgreSQL gates.
@@ -400,7 +676,13 @@ func (h *Handler) prepare(ctx context.Context, j work) (dapThem, error) {
 	return dapThem{places: places, members: members, toi: toi, budget: group.BudgetPerPersonVND}, tx.Commit(ctx)
 }
 
+// finishFailure fails a group job with code -- unless the worker is stopping,
+// in which case whatever failed failed because of the stop, and the job is
+// released instead.
 func (h *Handler) finishFailure(ctx context.Context, j work, code string) error {
+	if dangDung(ctx) {
+		return h.release(ctx, j)
+	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
 	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)

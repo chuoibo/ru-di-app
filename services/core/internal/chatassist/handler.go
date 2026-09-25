@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -36,6 +37,14 @@ type Handler struct {
 	// waits on a probe of the brain.
 	nepEngine *aiharness.Engine
 	nepGo     bool
+	// scopes limits the jobs this process claims (WithQueues); nil is all.
+	scopes []string
+	// nhip, when set, carries the heartbeat and the model-call counter
+	// (WithNhipPool).
+	nhip *pgxpool.Pool
+	// slots bound the jobs this process runs at once, however claimed.
+	slotsOnce sync.Once
+	slots     chan struct{}
 }
 
 // Invocation excludes inputs and session digests from every public response.
@@ -607,7 +616,11 @@ func (h *Handler) mutate(w http.ResponseWriter, r *http.Request, action string) 
 			failure(w, e)
 			return
 		}
-		tag, e := tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='queued',code=NULL,session_digest=$2,updated_at=clock_timestamp() WHERE id=$1 AND status='failed' AND attempts<3 AND prompt IS NOT NULL AND share_expires_at>clock_timestamp()`, v.ID, g.digest)
+		// A retry is a new turn the caller pressed for (design 02 §4 step 5):
+		// no content out yet, its own model calls, due now. The enqueue
+		// trigger numbers it and writes its outbox row in this transaction.
+		// attempts<3 still bounds the job as a whole.
+		tag, e := tx.Exec(r.Context(), `UPDATE chat_ai_invocations SET status='queued',code=NULL,session_digest=$2,first_token_at=NULL,model_calls=0,available_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND status='failed' AND attempts<3 AND prompt IS NOT NULL AND share_expires_at>clock_timestamp()`, v.ID, g.digest)
 		if daCoTraLoi(e) {
 			// While this one sat failed, a newer call took its message.
 			refuse(w, 409, "invocation_trigger_taken")

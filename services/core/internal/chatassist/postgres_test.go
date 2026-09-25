@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
+	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -52,6 +53,11 @@ func setup(t *testing.T, model http.HandlerFunc) fixture {
 		if _, err = pool.Exec(ctx, fmt.Sprintf("CREATE TABLE %s (LIKE public.%s INCLUDING ALL)", table, table)); err != nil {
 			t.Fatal(err)
 		}
+	}
+	// The order `core migrate-chat` runs: the outbox first, since version 5's
+	// trigger calls jobs_them.
+	if err = jobs.Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
 	}
 	if err = Migrate(ctx, pool); err != nil {
 		t.Fatal(err)

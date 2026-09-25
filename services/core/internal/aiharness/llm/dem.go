@@ -27,6 +27,8 @@ type Dem struct {
 	giu func(context.Context) error
 	// cho is the wait before retry n (1-based).
 	cho func(n int) time.Duration
+	// lim, when set, is asked before every call (GioiHan).
+	lim GioiHan
 
 	mu sync.Mutex
 	n  int
@@ -44,6 +46,11 @@ func NewDem(inner model.LLM, max int, giu func(context.Context) error) *Dem {
 
 // WithWait replaces the retry waits (tests pass zero).
 func (d *Dem) WithWait(cho func(n int) time.Duration) *Dem { d.cho = cho; return d }
+
+// WithGioiHan asks lim before every call, the first try and every retry. A
+// refusal ends the call with ErrGioiHan before it is counted; a limiter that
+// fails to answer lets the call through (fail open, design 02 §6).
+func (d *Dem) WithGioiHan(lim GioiHan) *Dem { d.lim = lim; return d }
 
 // Name is the wrapped model's name.
 func (d *Dem) Name() string { return d.inner.Name() }
@@ -93,6 +100,14 @@ const maxRetry = 2
 func (d *Dem) GenerateContent(ctx context.Context, req *model.LLMRequest, stream bool) iter.Seq2[*model.LLMResponse, error] {
 	return func(yield func(*model.LLMResponse, error) bool) {
 		for lan := 0; ; lan++ {
+			// The limiter before the counter: a call it refuses never
+			// leaves the process, so it must not spend the turn's budget.
+			if d.lim != nil {
+				if ok, err := d.lim.Xin(ctx, d.inner.Name()); err == nil && !ok {
+					yield(nil, ErrGioiHan)
+					return
+				}
+			}
 			if err := d.giuMot(ctx); err != nil {
 				yield(nil, err)
 				return

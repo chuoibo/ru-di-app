@@ -202,6 +202,77 @@ func TestDemChanTaiTran(t *testing.T) {
 	}
 }
 
+type gioiHanGia struct {
+	cho  bool
+	loi  error
+	hoi  int
+	name string
+}
+
+func (g *gioiHanGia) Xin(_ context.Context, model string) (bool, error) {
+	g.hoi++
+	g.name = model
+	return g.cho, g.loi
+}
+
+// The limiter is asked before every call, the first and each retry, and
+// before the counter: a refused call never leaves and is never counted. A
+// limiter that cannot answer lets the call through (fail open).
+func TestDemHoiGioiHanTruocMoiLoiGoi(t *testing.T) {
+	g := &gioiHanGia{}
+	stub := NewStub(Buoc{Text: "không tới"})
+	held := 0
+	d := NewDem(stub, MaxModelCallsPerTurn, func(context.Context) error { held++; return nil }).WithGioiHan(g).WithWait(khongCho)
+	if _, err := chay(t, d); !errors.Is(err, ErrGioiHan) || stub.SoGoi() != 0 || d.SoGoi() != 0 || held != 0 || g.hoi != 1 || g.name != Model {
+		t.Fatalf("từ chối: err=%v stub=%d đếm=%d giữ=%d hỏi=%d model=%q", err, stub.SoGoi(), d.SoGoi(), held, g.hoi, g.name)
+	}
+	if PhanLoai(ErrGioiHan) != obs.Loi429 {
+		t.Fatal("a refusal of our own limiter is not classed as the 429 it stands for")
+	}
+	g = &gioiHanGia{cho: true}
+	stub = NewStub(Buoc{Loi: genai.APIError{Code: 503}}, Buoc{Text: "ok"})
+	d = NewDem(stub, MaxModelCallsPerTurn, nil).WithGioiHan(g).WithWait(khongCho)
+	if text, err := chay(t, d); err != nil || text != "ok" || g.hoi != 2 {
+		t.Fatalf("thử lại: text=%q err=%v hỏi=%d, muốn hỏi trước cả lần thử lại", text, err, g.hoi)
+	}
+	g = &gioiHanGia{loi: errors.New("redis down")}
+	stub = NewStub(Buoc{Text: "ok"})
+	d = NewDem(stub, MaxModelCallsPerTurn, nil).WithGioiHan(g).WithWait(khongCho)
+	if text, err := chay(t, d); err != nil || text != "ok" || stub.SoGoi() != 1 {
+		t.Fatalf("fail open: text=%q err=%v stub=%d", text, err, stub.SoGoi())
+	}
+}
+
+// The limiter's key is namespaced and refuses a name that could escape it.
+func TestGioiHanRedisKhoa(t *testing.T) {
+	g, err := NewGioiHanRedis(nil, "main", 60)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if k, err := g.Key(Model); err != nil || k != "rudi:main:rl:model:"+Model {
+		t.Fatalf("%q %v", k, err)
+	}
+	for _, bad := range []string{"", "Model", "a b", "x:y", "../x"} {
+		if _, err := g.Key(bad); err == nil {
+			t.Errorf("key for %q accepted", bad)
+		}
+	}
+	for _, rpm := range []int{0, -1, 100001} {
+		if _, err := NewGioiHanRedis(nil, "main", rpm); err == nil {
+			t.Errorf("rpm %d accepted", rpm)
+		}
+	}
+	if _, err := NewGioiHanRedis(nil, "a:b", 60); err == nil {
+		t.Error("namespace with a colon accepted")
+	}
+	if g.interval != time.Second || g.tolerance != 5*time.Second {
+		t.Fatalf("60 rpm: interval %v tolerance %v, want 1s and a 5 s burst", g.interval, g.tolerance)
+	}
+	if _, err := RedisOptions("redis://:hunter2-secret@[::1"); err == nil || strings.Contains(err.Error(), "hunter2") {
+		t.Fatalf("a bad URL: %v", err)
+	}
+}
+
 func TestPhanLoai(t *testing.T) {
 	for _, c := range []struct {
 		err  error

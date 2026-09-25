@@ -155,9 +155,22 @@ type Result struct {
 }
 
 // Loi is a turn that ended without an answer.
-type Loi struct{ Ma cau.Ma }
+type Loi struct {
+	Ma cau.Ma
+	// TamThoi marks a provider failure worth trying again after a pause: a
+	// 429 or a 5xx that the model layer already retried, or the per-model
+	// rate limiter refusing the call. The worker decides whether the job
+	// still may (design 02 §4 step 5); the engine only says what happened.
+	TamThoi bool
+}
 
 func (e *Loi) Error() string { return "aiharness: turn ended with " + string(e.Ma) }
+
+// TamThoi reports whether err is a transient provider failure (Loi.TamThoi).
+func TamThoi(err error) bool {
+	var l *Loi
+	return errors.As(err, &l) && l.TamThoi
+}
 
 // ErrHuy is a turn stopped from outside: the job's context was cancelled
 // because its lease is gone (cancelled, revoked, taken over) or the worker is
@@ -184,6 +197,9 @@ type Engine struct {
 	now    func() time.Time
 	cho    func(int) time.Duration
 	han    time.Duration
+	// gioiHan, when set, is asked before every model call (the per-model
+	// rate limiter, design 02 §6); nil lets every call through.
+	gioiHan llm.GioiHan
 }
 
 // Option configures an Engine.
@@ -204,6 +220,11 @@ func WithClock(now func() time.Time) Option { return func(e *Engine) { e.now = n
 
 // WithRetryWait sets the waits between model retries (tests pass zero).
 func WithRetryWait(cho func(int) time.Duration) Option { return func(e *Engine) { e.cho = cho } }
+
+// WithGioiHan sets the per-model call rate limiter. A refusal before any
+// content ends the turn as a transient provider failure (Loi.TamThoi); a
+// limiter that cannot answer lets the call through.
+func WithGioiHan(g llm.GioiHan) Option { return func(e *Engine) { e.gioiHan = g } }
 
 // withHanLuot shortens the turn deadline (tests).
 func withHanLuot(d time.Duration) Option { return func(e *Engine) { e.han = d } }
@@ -228,13 +249,14 @@ func New(opts ...Option) (*Engine, error) {
 }
 
 // FromEnv builds the production engine: Gemini from GEMINI_API_KEY (and a
-// loopback MOBILE_GEMINI_BASE_URL, if any).
-func FromEnv(ctx context.Context, getenv func(string) string, logger *slog.Logger) (*Engine, error) {
+// loopback MOBILE_GEMINI_BASE_URL, if any), with any further options (the
+// worker passes its rate limiter).
+func FromEnv(ctx context.Context, getenv func(string) string, logger *slog.Logger, opts ...Option) (*Engine, error) {
 	m, err := llm.GeminiFromEnv(ctx, getenv)
 	if err != nil {
 		return nil, err
 	}
-	return New(WithModel(m), WithLogger(logger))
+	return New(append([]Option{WithModel(m), WithLogger(logger)}, opts...)...)
 }
 
 func ms(d time.Duration) int { return int(d / time.Millisecond) }
@@ -318,7 +340,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 	if conLai <= 0 {
 		return Result{}, &Loi{Ma: cau.HetNganSach}
 	}
-	dem := llm.NewDem(e.model, conLai, t.GiuLuot)
+	dem := llm.NewDem(e.model, conLai, t.GiuLuot).WithGioiHan(e.gioiHan)
 	if e.cho != nil {
 		dem.WithWait(e.cho)
 	}
@@ -362,7 +384,7 @@ func (e *Engine) nep(ctx context.Context, t Turn, s Sink, rec *obs.TurnRecord, b
 		return Result{}, &Loi{Ma: cau.InvalidAIResult}
 	default:
 		rec.LoiMoHinh = llm.PhanLoai(err)
-		return Result{}, &Loi{Ma: cau.ProviderUnavailable}
+		return Result{}, &Loi{Ma: cau.ProviderUnavailable, TamThoi: rec.LoiMoHinh == obs.Loi429 || rec.LoiMoHinh == obs.Loi5xx}
 	}
 	if llm.BiChanAnToan(snap.Finish) {
 		rec.LoiMoHinh = obs.LoiSafety

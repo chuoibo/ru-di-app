@@ -8,8 +8,14 @@
 # CORE_TEST_DATABASE_URL, CORE_TEST_REDIS_URL, CORE_TEST_AMQP_URL -- and from a
 # disposable container on a random loopback port otherwise. The first form is
 # how the tier runs on a machine without Docker; the second is the default.
-# Neither database needs Alembic: the jobs package owns its tables and migrates
-# them into a schema of its own per test.
+#
+# The database is migrated by Alembic, as in go_postgres_tier.sh: the job
+# queue's end-to-end tests (internal/chatassist) copy the public tables the AI
+# engine joins -- people, contexts, memberships, messages -- into a schema of
+# their own, then install internal/jobs and chatassist there. A disposable
+# database is migrated here from the API image (`--image TAG`, or built from
+# this tree under the tag go_postgres_tier.sh and the parity stacks use); a
+# database given by CORE_TEST_DATABASE_URL must already be at `alembic head`.
 #
 # The ways this tier could read green while measuring nothing, all refused:
 #   * no service: the tests skip. CORE_REQUIRE_BROKER_TESTS=1 and
@@ -26,9 +32,17 @@ cd "$(dirname "$0")/.."
 PG_IMAGE="${MOBILE_TEST_POSTGRES_IMAGE:-postgres:16-alpine}"
 REDIS_IMAGE="${MOBILE_TEST_REDIS_IMAGE:-redis:7-alpine}"
 RABBIT_IMAGE="${MOBILE_TEST_RABBITMQ_IMAGE:-rabbitmq:3.13-alpine}"
-SENTINELS=(TestBrokerTierReachesRedis TestBrokerTierReachesRabbitAndPostgres)
+# One per service family, and the queue end to end through the AI engine.
+SENTINELS=(TestBrokerTierReachesRedis TestBrokerTierReachesRabbitAndPostgres TestHangDoiDauCuoiQuaBroker)
 
-[ "${1:-}" = "--" ] && shift
+image=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --image) image="$2"; shift 2 ;;
+    --) shift; break ;;
+    *) break ;;
+  esac
+done
 go_args=("$@")
 if [ ${#go_args[@]} -eq 0 ]; then
   while IFS= read -r dir; do
@@ -91,8 +105,18 @@ if [ -z "${CORE_TEST_DATABASE_URL:-}" ]; then
   containers+=("$name")
   wait_for "$name" 60 docker exec "$name" pg_isready -h 127.0.0.1 -U mobile -d mobile
   export CORE_TEST_DATABASE_URL="postgresql://mobile:$password@127.0.0.1:$port/mobile"
+  if [ -z "$image" ]; then
+    # Same tag scheme as go_postgres_tier.sh, so one build serves both.
+    image="mobile-parity-api:$(git rev-parse --short HEAD)-$(printf '%s' "$PWD" | cksum | cut -d' ' -f1)"
+    echo "--- dựng ảnh API từ cây này: $image"
+    ( cd services/api && docker build -q -t "$image" . ) >/dev/null
+  fi
+  echo "--- alembic upgrade head (từ ảnh API)"
+  docker run --rm --network host \
+    -e MOBILE_DATABASE_URL="postgresql+psycopg://mobile:$password@127.0.0.1:$port/mobile" \
+    "$image" alembic upgrade head >"$log" 2>&1 || { tail -20 "$log" >&2; exit 1; }
 else
-  echo "--- PostgreSQL có sẵn từ CORE_TEST_DATABASE_URL"
+  echo "--- PostgreSQL có sẵn từ CORE_TEST_DATABASE_URL (phải đã ở alembic head)"
 fi
 
 if [ -z "${CORE_TEST_REDIS_URL:-}" ]; then

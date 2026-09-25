@@ -415,9 +415,9 @@ func (h *Handler) WithNepGo() *Handler {
 //   - worker in `core work` (WithNepGo): the host's choice only. Nothing here
 //     knows whether any `core work` is up. Design 01 §1 derives this from a
 //     worker heartbeat, and no slice has built one yet: the heartbeat of
-//     slice 4 renews one job's lease, it is not a worker's presence. Until a
-//     worker liveness record exists (with the queue, slice 10, at the
-//     earliest), a question asked with no worker up waits and ends as
+//     slice 4 renews one job's lease, it is not a worker's presence, and the
+//     queue of slice 10 added none either. Until a worker liveness record
+//     exists, a question asked with no worker up waits and ends as
 //     sharing_expired when its fifteen minutes close -- as it does on the
 //     brain path, whose probe asks the brain, not the workers.
 func (h *Handler) nepSanSang(ctx context.Context) bool {
@@ -484,24 +484,37 @@ func luotEngine(j work) (aiharness.Turn, error) {
 //
 // A turn stopped from outside (aiharness.ErrHuy: the heartbeat found the
 // lease gone and cancelled the job, or the worker is stopping) touches
-// nothing: the job is not this worker's to end. A lost lease already belongs
-// to someone else or to a cancellation; a stopping worker's lease lapses, and
-// the job is claimed again while it has attempts left, or failed by the sweep
-// as worker_interrupted -- the same recovery as a crashed worker. It writes
-// no metrics row either: nothing about the model or the provider happened.
+// nothing here: the job is not this turn's to end. A lost lease already
+// belongs to someone else or to a cancellation; a stopping worker releases
+// the job back to the queue in runJob. It writes no metrics row either:
+// nothing about the model or the provider happened.
+//
+// Every model call of the turn is first taken on the job's row (giuLuot), so
+// the ceiling holds across attempts and workers. A transient provider failure
+// (a 429 or 5xx after the model layer's own retries, or the rate limiter's
+// refusal) goes back to the queue after a backoff when retryLater allows it;
+// otherwise it fails the job like any other code.
 func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
 	turn, err := luotEngine(j)
 	if err != nil {
 		return h.nepThatBai(ctx, j, "invalid_ai_result")
 	}
+	turn.DaGoiTruoc = j.modelCalls
+	turn.GiuLuot = h.giuLuot(j)
 	res, runErr := h.nepEngine.Run(ctx, turn, aiharness.BoQua{})
 	if errors.Is(runErr, aiharness.ErrHuy) {
 		return runErr
 	}
-	if runErr != nil {
-		err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
-	} else {
+	switch {
+	case runErr == nil:
 		err = h.nepXong(ctx, j, res.Text)
+	case aiharness.TamThoi(runErr) && !dangDung(ctx):
+		var later bool
+		if later, err = h.retryLater(ctx, j); err == nil && !later {
+			err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
+		}
+	default:
+		err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
 	}
 	h.ghiSoDo(ctx, res.Record)
 	return err
@@ -572,6 +585,10 @@ func (h *Handler) nepXong(ctx context.Context, j work, text string) error {
 // group path keeps a failed prompt for its retry route; Nếp has none, so a
 // question the device will simply ask again has no reason to stay.
 func (h *Handler) nepThatBai(ctx context.Context, j work, code string) error {
+	if dangDung(ctx) {
+		// The worker is stopping; the failure is the stop's, not the job's.
+		return h.release(ctx, j)
+	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
 	_, err := h.pool.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code=$3,prompt=NULL,boi_canh=NULL,lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE id=$1 AND status='running' AND lease_id=$2`, j.id, j.lease, code)

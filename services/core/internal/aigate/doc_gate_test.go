@@ -318,8 +318,8 @@ func writeOnlyViolation(table, q string) string {
 // store words: anything but an id, a number, a boolean or a timestamp, unless
 // a CHECK holds it to a closed list or a hex shape.
 var (
-	colPlain  = regexp.MustCompile(`^\w+ (uuid|smallint|integer|boolean|timestamptz)\b`)
-	colClosed = regexp.MustCompile(`^\w+ (text|char\(\d+\))( NOT NULL)? CHECK \(\w+ (IN \('[a-z0-9_]*'(,'[a-z0-9_]*')*\)|~ '\^\[0-9a-f\]\{\d+\}\$')\)$`)
+	colPlain  = regexp.MustCompile(`^\w+ (uuid|smallint|integer|bigint|boolean|timestamptz)\b`)
+	colClosed = regexp.MustCompile(`^\w+ (text|char\(\d+\))( NOT NULL)? CHECK \(\w+ (IN \('[a-z0-9_.]*'(,'[a-z0-9_.]*')*\)|~ '\^\[0-9a-f\]\{\d+\}\$')\)$`)
 )
 
 func columnMayHoldText(def string) bool {

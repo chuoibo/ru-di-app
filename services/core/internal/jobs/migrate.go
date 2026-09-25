@@ -17,7 +17,29 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-// Migrate installs the outbox. Run by `core migrate-chat`, never by a request.
+// SchemaVersion is the outbox schema this binary reads and writes. `serve`
+// and `work` refuse to start below it, as they do below chatassist's: the
+// job table's trigger calls jobs_them, so a database without it fails every
+// question at INSERT instead of once, loudly, at startup.
+const SchemaVersion = 1
+
+// SchemaSQL is the embedded version 1, for the gates that read it.
+func SchemaSQL() string { return schemaSQL }
+
+// SchemaCurrent reports whether the outbox is installed at SchemaVersion or
+// later. It runs no DDL.
+func SchemaCurrent(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
+	var table bool
+	if err := pool.QueryRow(ctx, `SELECT to_regclass('job_schema_migrations') IS NOT NULL AND to_regclass('job_outbox') IS NOT NULL`).Scan(&table); err != nil || !table {
+		return false, err
+	}
+	var current bool
+	err := pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM job_schema_migrations WHERE version >= $1)`, SchemaVersion).Scan(&current)
+	return current, err
+}
+
+// Migrate installs the outbox. Run by `core migrate-chat`, never by a request,
+// and before chatassist.Migrate: the job table's trigger calls jobs_them.
 // Its own version table, so it never competes for a chatassist version number.
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	tx, err := pool.Begin(ctx)

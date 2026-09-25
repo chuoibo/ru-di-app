@@ -16,6 +16,7 @@ import (
 	"mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/chatassist"
+	"mobile/services/core/internal/jobs"
 	"mobile/services/core/internal/testdb"
 )
 
@@ -29,7 +30,7 @@ func uuid() string {
 }
 
 // setup builds a private schema with the tables chatassist's migration
-// references, runs chatassist.Migrate then metrics.Migrate (twice: it must be
+// references, runs jobs.Migrate, chatassist.Migrate then metrics.Migrate (twice: it must be
 // idempotent), exactly the order `core migrate-chat` uses.
 func setup(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -55,6 +56,9 @@ func setup(t *testing.T) *pgxpool.Pool {
 	}
 	if installed, err := metrics.Installed(ctx, pool); err != nil || installed {
 		t.Fatalf("trước migrate: installed=%v err=%v", installed, err)
+	}
+	if err = jobs.Migrate(ctx, pool); err != nil {
+		t.Fatal(err)
 	}
 	if err = chatassist.Migrate(ctx, pool); err != nil {
 		t.Fatal(err)

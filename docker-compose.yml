@@ -288,6 +288,71 @@ services:
       start_period: 2s
       retries: 30
 
+  # Hàng đợi job AI (lát 10, ADR-0038 đề xuất): RabbitMQ, Redis và `core work`.
+  # Nằm sau profile `hang-doi`, không nằm trong `make up`: stack dev chạy
+  # MOBILE_AUTH_MODE=dev nên core tắt engine AI, và ba service này CHƯA được
+  # dựng thử trên máy có Docker (lát 10 làm ở máy không có daemon; ảnh chỉ được
+  # ghim digest qua registry). Bật bằng
+  #   docker compose --profile hang-doi up -d
+  # Postgres vẫn là nguồn sự thật: tắt cả ba thì worker trong core poll như cũ.
+  # Không publish cổng nào; vẫn một mạng (xem đầu file).
+  rabbitmq:
+    # 4.1-alpine, multi-arch index digest lấy ngày 2026-09-25.
+    image: rabbitmq:4.1-alpine@sha256:8146e69328150e9162c7ca5bfc4b29de4df2d92179ad84d0cc29e55eb27953b5
+    profiles: ["hang-doi"]
+    environment:
+      RABBITMQ_DEFAULT_USER: rudi
+      RABBITMQ_DEFAULT_PASS: rudi-dev-only
+    healthcheck:
+      # `ping` trả lời trước khi listener AMQP mở; hỏi đúng cổng.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      start_period: 20s
+      retries: 20
+
+  redis:
+    # 7.4-alpine, multi-arch index digest lấy ngày 2026-09-25. Chữ stream và
+    # bộ đếm limiter không bao giờ xuống đĩa; đầy thì bỏ khoá sắp hết hạn trước.
+    image: redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    profiles: ["hang-doi"]
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-ttl"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # `core work`: relay outbox + consumer ai.group/ai.nep + poller dự phòng +
+  # tác vụ định kỳ. Nhân bản bằng `--scale worker=N`. SIGTERM thì job chưa có
+  # nội dung được nhả về hàng ngay; 75 s là trần job 70 s cộng biên.
+  worker:
+    <<: *core-image
+    profiles: ["hang-doi"]
+    command: ["work"]
+    environment:
+      <<: *api-env
+      MOBILE_BRAIN_URL: http://api:8000
+      MOBILE_INTERNAL_TOKEN: ${MOBILE_INTERNAL_TOKEN:-local-brain-token}
+      MOBILE_AI_ENGINE_NEP: brain
+      MOBILE_AMQP_URL: amqp://rudi:rudi-dev-only@rabbitmq:5672/
+      MOBILE_REDIS_URL: redis://redis:6379/0
+      MOBILE_CORE_LIVENESS_LISTEN: 127.0.0.1:8001
+    stop_grace_period: 75s
+    depends_on:
+      migrate-chat:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/core", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 20
+
   # Không nằm trong `docker compose up`: seed là thao tác có chủ đích, không
   # phải thứ chạy lén mỗi lần ai đó khởi động lại hệ. `make seed` gọi nó.
   seed: &seed-service

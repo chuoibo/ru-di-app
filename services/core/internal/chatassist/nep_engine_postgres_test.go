@@ -202,67 +202,154 @@ func TestNepQuaEngineGoChanDauRa(t *testing.T) {
 }
 
 // A provider failure keeps the brain path's code, so the app's sentence is
-// the one it always showed.
+// the one it always showed. Since slice 10 a 5xx is transient: the job goes
+// back to the queue after a backoff (retryLater) while it has attempts left,
+// and the attempt that has none fails it with that code.
 func TestNepQuaEngineGoLoiNhaCungCap(t *testing.T) {
-	n := setupNepGo(t, llm.Buoc{Loi: genai.APIError{Code: 500}})
-	id, done := n.ask(t, nepThan("đi đâu?"))
-	if done.Status != "failed" || done.Code == nil || *done.Code != "provider_unavailable" {
-		t.Fatalf("kết quả: %+v", done)
-	}
-	if h := n.soDo(t, id); h.ketThuc != "that_bai" || h.code == nil || *h.code != "provider_unavailable" {
-		t.Fatalf("hàng số đo: %+v", h)
-	}
-}
-
-// A turn stopped from outside (the heartbeat cancelled the job, or the worker
-// is stopping) is not a provider failure: the job is left to its lease, not
-// failed with provider_unavailable, and no metrics row says otherwise. Once
-// the lease lapses the next claim runs it again and answers.
-func TestNepQuaEngineGoHuyTuNgoai(t *testing.T) {
-	n := setupNepGo(t, llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: "Đi dạo hồ nhé."})
+	loi := llm.Buoc{Loi: genai.APIError{Code: 500}}
+	n := setupNepGo(t, loi, loi, loi)
 	ctx := context.Background()
 	code, job, raw := n.f.nepPost(t, n.f.token, nepThan("đi đâu?"))
 	if code != 202 {
 		t.Fatalf("status=%d body=%s", code, raw)
 	}
-	j, ok, err := n.f.handler.claim(ctx)
-	if !ok || err != nil {
-		t.Fatalf("claim=%v %v", ok, err)
-	}
-	runCtx, cancel := context.WithCancel(ctx)
-	time.AfterFunc(50*time.Millisecond, cancel)
-	if err := n.f.handler.runJob(runCtx, j); !errors.Is(err, aiharness.ErrHuy) {
-		t.Fatalf("runJob: %v", err)
-	}
-	var status, lease string
-	var coKetQua, coMa, conHoi bool
-	if err := n.f.pool.QueryRow(ctx, `SELECT status, COALESCE(lease_id::text,''), result IS NOT NULL, code IS NOT NULL, prompt IS NOT NULL FROM chat_ai_invocations WHERE id=$1`, job.ID).
-		Scan(&status, &lease, &coKetQua, &coMa, &conHoi); err != nil {
-		t.Fatal(err)
-	}
-	if status != "running" || lease != j.lease || coKetQua || coMa || !conHoi {
-		t.Fatalf("job bị đụng: status=%s lease khớp=%v kết quả=%v mã=%v còn câu hỏi=%v", status, lease == j.lease, coKetQua, coMa, conHoi)
-	}
-	var hang int
-	_ = n.f.pool.QueryRow(ctx, `SELECT count(*) FROM ai_turn_metrics WHERE invocation_id=$1`, job.ID).Scan(&hang)
-	if hang != 0 {
-		t.Fatalf("%d hàng số đo cho lượt bị huỷ", hang)
-	}
-	// The lease lapses; the job is claimed again and answered.
-	if _, err := n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()-interval '1 second' WHERE id=$1`, job.ID); err != nil {
-		t.Fatal(err)
-	}
-	if ok, err := n.f.handler.ProcessOne(ctx); !ok || err != nil {
-		t.Fatalf("ProcessOne=%v %v", ok, err)
+	for lan := 1; lan <= 3; lan++ {
+		if lan > 1 {
+			// The backoff is the queue's to wait out, not this test's.
+			if _, err := n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET available_at=clock_timestamp() WHERE id=$1`, job.ID); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if ok, err := n.f.handler.ProcessOne(ctx); !ok || err != nil {
+			t.Fatalf("lần %d: ProcessOne=%v %v", lan, ok, err)
+		}
+		var status string
+		var ma *string
+		var cho float64
+		if err := n.f.pool.QueryRow(ctx, `SELECT status, code, EXTRACT(EPOCH FROM available_at-clock_timestamp()) FROM chat_ai_invocations WHERE id=$1`, job.ID).Scan(&status, &ma, &cho); err != nil {
+			t.Fatal(err)
+		}
+		if lan < 3 {
+			// 1 s after the first attempt, 4 s after the second, ±20 %.
+			tu, den := 0.7, 1.2
+			if lan == 2 {
+				tu, den = 3.1, 4.8
+			}
+			if status != "queued" || ma != nil || cho < tu || cho > den {
+				t.Fatalf("lần %d: status=%s code=%v chờ=%.2fs, muốn queued sau %.1f–%.1fs", lan, status, ma, cho, tu, den)
+			}
+			continue
+		}
+		if status != "failed" || ma == nil || *ma != "provider_unavailable" {
+			t.Fatalf("lần cuối: status=%s code=%v", status, ma)
+		}
 	}
 	w := n.f.request("GET", "/me/nep/ai-invocations/"+job.ID, n.f.token, nil)
 	requireCode(t, w, 200)
 	var done NepInvocation
 	_ = json.Unmarshal(w.Body.Bytes(), &done)
-	if done.Status != "succeeded" || done.Text == nil || *done.Text != "Đi dạo hồ nhé." {
-		t.Fatalf("lần hai: %+v", done)
+	if done.Status != "failed" || done.Code == nil || *done.Code != "provider_unavailable" {
+		t.Fatalf("kết quả: %+v", done)
 	}
-	if h := n.soDo(t, job.ID); h.lanThu != 2 || h.ketThuc != "xong" {
-		t.Fatalf("hàng số đo lần hai: %+v", h)
+	var hang int
+	var ma string
+	if err := n.f.pool.QueryRow(ctx, `SELECT count(*), min(code) FROM ai_turn_metrics WHERE invocation_id=$1 AND ket_thuc='that_bai'`, job.ID).Scan(&hang, &ma); err != nil || hang != 3 || ma != "provider_unavailable" {
+		t.Fatalf("hàng số đo: %d %q %v", hang, ma, err)
 	}
+	if n.stub.SoGoi() != 3 {
+		t.Fatalf("stub trả lời %d lần, muốn 3", n.stub.SoGoi())
+	}
+}
+
+// A turn stopped from outside is not a provider failure, and no metrics row
+// says otherwise. What happens to the job depends on who stopped it:
+//
+//   - its lease went (cancelled, taken over): the job is not this worker's,
+//     and nothing is touched; once the lease lapses the next claim runs it;
+//   - the worker is stopping (SIGTERM): the job is released back to the queue
+//     at once (design 02 §4 step 9) -- queued, the attempt given back, a new
+//     enqueue_seq and its outbox row -- so another worker takes it now rather
+//     than after the lease.
+func TestNepQuaEngineGoHuyTuNgoai(t *testing.T) {
+	type hang struct {
+		status, lease      string
+		attempts           int
+		seq                int64
+		ketQua, ma, conHoi bool
+		soDo, outbox       int
+	}
+	doc := func(t *testing.T, n nepGo, id string) hang {
+		t.Helper()
+		var h hang
+		if err := n.f.pool.QueryRow(context.Background(), `SELECT status, COALESCE(lease_id::text,''), attempts, enqueue_seq, result IS NOT NULL, code IS NOT NULL, prompt IS NOT NULL,
+			(SELECT count(*) FROM ai_turn_metrics WHERE invocation_id=$1), (SELECT count(*) FROM job_outbox WHERE ref_id=$1)
+			FROM chat_ai_invocations WHERE id=$1`, id).
+			Scan(&h.status, &h.lease, &h.attempts, &h.seq, &h.ketQua, &h.ma, &h.conHoi, &h.soDo, &h.outbox); err != nil {
+			t.Fatal(err)
+		}
+		return h
+	}
+	xongLanSau := func(t *testing.T, n nepGo, id string, lanThu int) {
+		t.Helper()
+		if ok, err := n.f.handler.ProcessOne(context.Background()); !ok || err != nil {
+			t.Fatalf("ProcessOne=%v %v", ok, err)
+		}
+		w := n.f.request("GET", "/me/nep/ai-invocations/"+id, n.f.token, nil)
+		requireCode(t, w, 200)
+		var done NepInvocation
+		_ = json.Unmarshal(w.Body.Bytes(), &done)
+		if done.Status != "succeeded" || done.Text == nil || *done.Text != "Đi dạo hồ nhé." {
+			t.Fatalf("lần sau: %+v", done)
+		}
+		if h := n.soDo(t, id); h.lanThu != lanThu || h.ketThuc != "xong" {
+			t.Fatalf("hàng số đo lần sau: %+v", h)
+		}
+	}
+	batDau := func(t *testing.T) (nepGo, string, work) {
+		t.Helper()
+		n := setupNepGo(t, llm.Buoc{Text: "không bao giờ tới", Cho: time.Minute}, llm.Buoc{Text: "Đi dạo hồ nhé."})
+		n.f.handler.WithWorker(fastWorker())
+		code, job, raw := n.f.nepPost(t, n.f.token, nepThan("đi đâu?"))
+		if code != 202 {
+			t.Fatalf("status=%d body=%s", code, raw)
+		}
+		j, ok, err := n.f.handler.claim(context.Background())
+		if !ok || err != nil {
+			t.Fatalf("claim=%v %v", ok, err)
+		}
+		return n, job.ID, j
+	}
+
+	t.Run("mất lease", func(t *testing.T) {
+		n, id, j := batDau(t)
+		ctx := context.Background()
+		other := newID()
+		time.AfterFunc(50*time.Millisecond, func() {
+			_, _ = n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_id=$2 WHERE id=$1`, id, other)
+		})
+		if err := n.f.handler.runJob(ctx, j); !errors.Is(err, aiharness.ErrHuy) {
+			t.Fatalf("runJob: %v", err)
+		}
+		if h := doc(t, n, id); h.status != "running" || h.lease != other || h.ketQua || h.ma || !h.conHoi || h.soDo != 0 || h.seq != 1 {
+			t.Fatalf("job bị đụng: %+v", h)
+		}
+		if _, err := n.f.pool.Exec(ctx, `UPDATE chat_ai_invocations SET lease_until=clock_timestamp()-interval '1 second' WHERE id=$1`, id); err != nil {
+			t.Fatal(err)
+		}
+		xongLanSau(t, n, id, 2)
+	})
+
+	t.Run("worker dừng", func(t *testing.T) {
+		n, id, j := batDau(t)
+		runCtx, cancel := context.WithCancel(context.Background())
+		time.AfterFunc(50*time.Millisecond, cancel)
+		if err := n.f.handler.runJob(runCtx, j); err != nil {
+			t.Fatalf("runJob: %v", err)
+		}
+		if h := doc(t, n, id); h.status != "queued" || h.lease != "" || h.attempts != 0 || h.seq != 2 || h.outbox != 2 || h.ketQua || h.ma || !h.conHoi || h.soDo != 0 {
+			t.Fatalf("job chưa được nhả đúng: %+v", h)
+		}
+		// The attempt was given back, so the next run is attempt 1 again.
+		xongLanSau(t, n, id, 1)
+	})
 }

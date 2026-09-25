@@ -21,6 +21,10 @@ func PhanLoai(err error) obs.LoiMoHinh {
 	if errors.Is(err, ErrKhongUngVien) {
 		return obs.LoiSafety
 	}
+	// Our own limiter refusing is the 429 it stands in for.
+	if errors.Is(err, ErrGioiHan) {
+		return obs.Loi429
+	}
 	code := 0
 	var v genai.APIError
 	var p *genai.APIError

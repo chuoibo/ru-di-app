@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"mobile/services/core/internal/aiharness/obs"
+	"mobile/services/core/internal/jobs"
 )
 
 //go:embed schema.sql
@@ -108,20 +109,17 @@ func Xoa(ctx context.Context, q Execer) (int64, error) {
 	return tag.RowsAffected(), nil
 }
 
-// RunPurger runs Xoa every `every` until ctx ends. A database without the
-// schema (a host that never ran the Go engine) fails quietly: there is
-// nothing to purge there.
-func RunPurger(ctx context.Context, pool *pgxpool.Pool, every time.Duration) {
-	timer := time.NewTicker(every)
-	defer timer.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-timer.C:
-			c, cancel := context.WithTimeout(ctx, 30*time.Second)
-			_, _ = Xoa(c, pool)
-			cancel()
+// DinhKy is the thirty-day purge as a periodic task (jobs.DinhKy), run by
+// every process that runs AI workers. A database without the schema (a host
+// that never ran the Go engine) is a pass with nothing to purge, not a
+// failure.
+func DinhKy() jobs.DinhKy {
+	return jobs.DinhKy{Ten: "aiharness.xoa_so_do", Nhip: 10 * time.Minute, Chay: func(ctx context.Context, pool *pgxpool.Pool) error {
+		ok, err := Installed(ctx, pool)
+		if err != nil || !ok {
+			return err
 		}
-	}
+		_, err = Xoa(ctx, pool)
+		return err
+	}}
 }
