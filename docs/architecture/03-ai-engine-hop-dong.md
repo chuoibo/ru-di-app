@@ -65,14 +65,14 @@ worker: aiharness.Engine.Run(turn, sink)
 | 3 | Go 1.23.4 → 1.25 | xong: `637b7f3` (1.25.14) |
 | 4 | Tách worker: `claimByID`, heartbeat, `core work`, pool riêng | xong: `d596621` (pool riêng và semaphore tool để lát 6/10) |
 | 5 | Cổng đọc xuyên gói (`go/packages`), phải có trước khi engine chuyển code | xong: `71fb311` (`internal/aigate`) |
-| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | đang làm |
-| 7 | Nhóm trong luồng (lõi, còn đi brain): tin @ là tin thường, chip, `tra_loi`, `reply_to` | đang làm |
-| 8 | RAG S1 từ vựng; `thoigian`, `giomo`, `Fold`, `SafeDeep`; sửa lỗi quán mặc định Đà Lạt trên đường Go | chưa |
+| 6 | Engine S1: Nếp qua Go, chưa stream; `Engine.Run`; eval T1 trong CI | xong: `0a752a7` (sau cờ `MOBILE_AI_ENGINE_NEP=go`, mặc định vẫn `brain`); review phản biện đang chạy |
+| 7 | Nhóm trong luồng (lõi, còn đi brain): tin @ là tin thường, chip, `tra_loi`, `reply_to` | xong phần lõi: `5af8655`; chưa mở ảnh chụp, chưa chạy Maestro 49 (cần máy); review phản biện đang chạy |
+| 8 | RAG S1 từ vựng; `thoigian`, `giomo`, `Fold`, `SafeDeep`; sửa lỗi quán mặc định Đà Lạt trên đường Go | một phần: `giomo` `2acd75b`, `thoigian` + `Fold` trong `0a752a7`, `rag/xephang` `544ebc7`; gói `rag`, `tuvung`, `SafeDeep`, shortlist `/places/search` đang làm |
 | 9 | Engine S2: nhóm qua Go, understand, fast path, agent, `chia_bill` port; cổng ≥14/16 | chưa |
-| 10 | Hàng đợi: outbox, RabbitMQ, poller dự phòng, tác vụ định kỳ, limiter theo lời gọi | chưa |
-| 11 | Stream SSE; bảng Nếp mới và animation (`/impeccable`, sửa `DESIGN.md`) | chưa |
+| 10 | Hàng đợi: outbox, RabbitMQ, poller dự phòng, tác vụ định kỳ, limiter theo lời gọi | một phần: gói `jobs` `d76a0a4`, tầng broker `7246744`; chưa nối vào `chatassist` (migration, trigger, consumer, `retryLater`, định kỳ, limiter) |
+| 11 | Stream SSE; bảng Nếp mới và animation (`/impeccable`, sửa `DESIGN.md`) | một phần: gói `aistream` `9bb26b0`, client `ai/sse.ts` `aab71de`; chưa có route `/events`, writer trong worker, cửa sổ 48 ký tự, UI |
 | 12 | Stream cả phòng qua frame WS; UI nhóm hoàn thiện | chưa |
-| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | chưa |
+| 13 | Nếp tại chỗ: phiếu v2, sổ tay app, chip, tool phía máy chủ | một phần: dữ liệu sổ tay 13 màn + cổng lệch `e69012b`, sửa theo lát 7 `603515f`; gói Go `huongdan` đang làm |
 | 14 | Chia bill từ thẻ, dấu «Đã ghi vào sổ» suy từ dòng chi tiêu thật | chưa |
 | 15 | Trí nhớ Nếp | chưa |
 | 16 | RAG vector, làm giàu, độ tươi | chưa |
