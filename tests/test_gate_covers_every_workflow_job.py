@@ -84,7 +84,7 @@ COVERED_BY: dict[str, tuple[str, ...]] = {
     # preflight at all. They share a job because they need the identical
     # setup, and stay two stages for the reason given just above.
     "contract": ("contract", "cors"),
-    "core": ("ownership", "python-touch", "go-vet", "go-test", "go-postgres"),
+    "core": ("ownership", "python-touch", "go-vet", "go-test", "go-postgres", "go-broker"),
     "parity": ("parity",),
     # The third link in the chain `client-routes` and `server-routes` are the
     # first two of, and a job of its own rather than a fifth stage on `api`

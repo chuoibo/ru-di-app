@@ -256,6 +256,12 @@ jobs:
         # `go test -tags postgres`; a skip or a missing sentinel fails.
         run: scripts/go_postgres_tier.sh
 
+      - name: Redis and RabbitMQ tests on disposable brokers
+        # The AI stream (Redis Streams) and the job outbox relay (RabbitMQ with
+        # publisher confirms) against real services; a skip or a missing
+        # sentinel fails.
+        run: scripts/go_broker_tier.sh
+
       - name: Route manifest matches the app and the binary
         # Selftest first: the gate must be seen red on each failure it exists for.
         run: |

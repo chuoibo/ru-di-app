@@ -276,6 +276,12 @@ INLINE_STEPS: dict[str, Covered] = {
         body_sha="e9f9152379fb882b",
         why="",
     ),
+    "test.yml::core::Redis and RabbitMQ tests on disposable brokers": Covered(
+        kind=GATE_KIND,
+        stages=("go-broker",),
+        body_sha="d047409862b0e7ef",
+        why="",
+    ),
     "test.yml::core::Route manifest matches the app and the binary": Covered(
         kind=GATE_KIND,
         stages=("ownership",),
