@@ -102,6 +102,37 @@ func (r Repository) ListPlaces(ctx context.Context, filter PlaceFilter) ([]Place
 	return out, nil
 }
 
+// PlacesByID reads the places with these ids, in id order; an id with no row
+// is simply absent. Not a Python port: the retrieval index (internal/rag)
+// hydrates its ranked candidates from live rows with it, so a hit is always
+// checked against the catalogue as it is now.
+func (r Repository) PlacesByID(ctx context.Context, ids []string) ([]Place, error) {
+	out := []Place{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.Q.Query(ctx, `SELECT places.id, places.destination_id, places.name, places.category, places.kinds,
+	               places.address, places.lat, places.lng, places.rating, places.rating_count,
+	               places.price_min_vnd, places.price_max_vnd, places.open_hours, places.open_now,
+	               places.travel_minutes, places.distance_km, places.photo_count, places.traits,
+	               places.group_fit, places.activities, places.flag, places.description,
+	               places.reviews, places.source, places.source_ref, places.license,
+	               places.created_at, places.updated_at
+	          FROM places WHERE places.id = ANY($1::text[]) ORDER BY places.id COLLATE "C"`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		p, err := scanPlace(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
 // scanPlace reads one row of every mapped column in declaration order and
 // builds the record the way _place_record does.
 func scanPlace(row pgx.Row) (Place, error) {

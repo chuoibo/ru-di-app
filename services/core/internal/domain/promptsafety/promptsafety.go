@@ -40,9 +40,13 @@ func fold(text string) string {
 			b.WriteRune(r)
 		}
 	}
-	collapsed := regexp.MustCompile(`\s+`).ReplaceAllString(b.String(), " ")
+	collapsed := whitespace.ReplaceAllString(b.String(), " ")
 	return strings.ToLower(collapsed)
 }
+
+// whitespace is the pattern fold collapses, compiled once instead of on every
+// call; the same expression, so the same result (the oracle goldens hold it).
+var whitespace = regexp.MustCompile(`\s+`)
 
 // Fold is the normalisation every pattern here reads: NFD with the marks
 // dropped, đ as d, whitespace collapsed, lower case. Exported for the AI

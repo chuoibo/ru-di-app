@@ -1,0 +1,68 @@
+{
+  "ghi_chu": "Ca tính tay cho domain/tuvung. Mỗi dòng: chữ vào, id đóng ra theo thứ tự khai báo. Chữ là câu bịa, không tên người thật, không địa chỉ thật.",
+  "quet": [
+    {"tu_vung": "di_ung", "chu": "Tôm nướng muối ớt, lẩu hải sản", "ra": ["hai_san", "tom"]},
+    {"tu_vung": "di_ung", "chu": "tom nuong muoi ot, lau hai san", "ra": ["hai_san", "tom"]},
+    {"tu_vung": "di_ung", "chu": "Sốt tomato kiểu Ý", "ra": []},
+    {"tu_vung": "di_ung", "chu": "Quán của hai chị em, cà phê muối", "ra": []},
+    {"tu_vung": "di_ung", "chu": "Riêu cua và bánh canh cua", "ra": ["cua"]},
+    {"tu_vung": "di_ung", "chu": "Mức giá dễ chịu, mục yêu thích", "ra": []},
+    {"tu_vung": "di_ung", "chu": "Mực một nắng nướng than", "ra": ["muc"]},
+    {"tu_vung": "di_ung", "chu": "Ốc len xào dừa, sò điệp nướng mỡ hành", "ra": ["oc_so"]},
+    {"tu_vung": "di_ung", "chu": "Hẹn hò buổi tối", "ra": []},
+    {"tu_vung": "di_ung", "chu": "Cơm hến kiểu Huế", "ra": ["oc_so"]},
+    {"tu_vung": "di_ung", "chu": "Lẩu cá kèo, cá kho tộ", "ra": ["ca"]},
+    {"tu_vung": "di_ung", "chu": "Cà phê trứng và bánh flan", "ra": ["sua", "trung"]},
+    {"tu_vung": "di_ung", "chu": "Trung tâm thành phố, sửa chữa xe", "ra": ["sua"], "vi_sao": "«sửa chữa» gập thành «sữa chua»: nhầm về phía an toàn, chỉ giấu quán khỏi người dị ứng sữa"},
+    {"tu_vung": "di_ung", "chu": "Bánh mì chảo, mì Quảng", "ra": ["lua_mi"]},
+    {"tu_vung": "di_ung", "chu": "Gỏi cuốn chấm tương đậu phộng", "ra": ["dau_phong"]},
+    {"tu_vung": "di_ung", "chu": "Tàu hũ nước đường gừng", "ra": ["dau_nanh"]},
+    {"tu_vung": "di_ung", "chu": "Chè mè đen, vùng ven hồ", "ra": ["me"]},
+    {"tu_vung": "di_ung", "chu": "Giá hạt dẻ cho sinh viên", "ra": []},
+    {"tu_vung": "di_ung", "chu": "Kem bơ và trà sữa", "ra": ["sua"]},
+    {"tu_vung": "di_ung", "chu": "Bánh óc chó", "ra": ["oc_so", "hat_cay"]},
+    {"tu_vung": "an_kieng", "chu": "Quán chay tịnh, có món thuần chay", "ra": ["chay", "thuan_chay"]},
+    {"tu_vung": "an_kieng", "chu": "Cơm cháy chà bông", "ra": []},
+    {"tu_vung": "an_kieng", "chu": "Chạy bộ quanh hồ", "ra": []},
+    {"tu_vung": "an_kieng", "chu": "Halal food", "ra": ["halal"]},
+    {"tu_vung": "loai_cho", "chu": "quán cà phê yên tĩnh", "ra": ["cafe"]},
+    {"tu_vung": "loai_cho", "chu": "đi chơi đêm, ăn đêm ở chợ đêm", "ra": ["vui-choi", "di-choi-dem"]},
+    {"tu_vung": "loai_cho", "chu": "phố cổ về khuya", "ra": ["di-choi-dem"]},
+    {"tu_vung": "loai_cho", "chu": "quán ăn bình dân", "ra": ["quan-an-local"]},
+    {"tu_vung": "khi_chat", "chu": "Chỗ nào chill chill, view đồi, có ổ cắm để làm việc", "ra": ["yen_tinh", "view_dep", "lam_viec"]},
+    {"tu_vung": "khi_chat", "chu": "cho nhom dong tu tap, soi dong", "ra": ["soi_dong", "nhom_dong"]},
+    {"tu_vung": "khi_chat", "chu": "Sáng sớm uống cà phê", "ra": []}
+  ],
+  "khong_phu_dinh": [
+    {"tu_vung": "an_kieng", "chu": "Không có món chay", "ra": []},
+    {"tu_vung": "an_kieng", "chu": "Chưa có đồ chay nhưng có buffet chay cuối tuần", "ra": ["chay"]},
+    {"tu_vung": "an_kieng", "chu": "ko đồ chay", "ra": []},
+    {"tu_vung": "an_kieng", "chu": "Có món chay", "ra": ["chay"]}
+  ],
+  "nguoi_hoi": [
+    {"chu": "Mình dị ứng hải sản, tìm quán lẩu", "ra": ["hai_san"]},
+    {"chu": "minh di ung hai san", "ra": ["hai_san"]},
+    {"chu": "Tìm quán hải sản ngon", "ra": []},
+    {"chu": "Bạn mình không ăn được tôm và cua rang", "ra": ["tom", "cua"]},
+    {"chu": "Dị ứng tôm, muốn ăn cua rang me", "ra": ["tom"]},
+    {"chu": "bị dị ứng với đậu phộng", "ra": ["dau_phong"]},
+    {"chu": "kiêng đồ ngọt", "ra": []},
+    {"chu": "Không ăn cay được", "ra": []},
+    {"chu": "allergic to peanut and shrimp", "ra": ["tom", "dau_phong"]},
+    {"chu": "dị ứng hải sản với cả trứng gà", "ra": ["hai_san", "trung"]}
+  ],
+  "mo_rong_di_ung": [
+    {"vao": ["tom"], "ra": ["hai_san", "tom"]},
+    {"vao": ["hai_san"], "ra": ["hai_san", "tom", "cua", "muc", "oc_so", "ca"]},
+    {"vao": ["dau_phong", "khong_co"], "ra": ["dau_phong"]},
+    {"vao": ["ca", "sua"], "ra": ["hai_san", "ca", "sua"]},
+    {"vao": [], "ra": []}
+  ],
+  "khong_dau": [
+    {"chu": "quan ca phe yen tinh o da lat", "ra": true},
+    {"chu": "quán cà phê", "ra": false},
+    {"chu": "Da Lat co gi", "ra": true},
+    {"chu": "đi đâu", "ra": false},
+    {"chu": "123 !!!", "ra": false}
+  ]
+}

@@ -6,6 +6,9 @@
 //	core routes --json list the routes this binary serves itself
 //	core migrate-chat  install the chat change feed and AI engine schema
 //	                   (alias: migrate-chat-candidate, the name older scripts use)
+//	core migrate-rag   install the retrieval index schema (internal/rag)
+//	core rag ...       build | eval | promote | rollback | status | tombstone
+//	                   the retrieval index (see cmd/core/rag.go)
 //
 // MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in
 // whichever process runs the AI workers; the default is the brain.
@@ -58,7 +61,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat")
+		fmt.Fprintln(stderr, "usage: core serve | work | healthcheck | routes --json | features --json | migrate-chat | migrate-rag | rag")
 		return 2
 	}
 	switch args[0] {
@@ -74,6 +77,10 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return listFeatures(args[1:], stdout, stderr)
 	case "migrate-chat", "migrate-chat-candidate":
 		return migrateChat(getenv, stdout, stderr)
+	case "migrate-rag":
+		return migrateRag(getenv, stdout, stderr)
+	case "rag":
+		return runRag(args[1:], getenv, stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
 		return 2

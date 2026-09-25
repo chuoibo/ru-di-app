@@ -16,6 +16,7 @@ import (
 	"mobile/services/core/internal/domain/taste"
 	"mobile/services/core/internal/httpapi/endpoint"
 	"mobile/services/core/internal/pyjson"
+	"mobile/services/core/internal/rag"
 	"mobile/services/core/internal/repo"
 	"mobile/services/core/internal/service"
 	"mobile/services/core/internal/treejson"
@@ -384,22 +385,22 @@ func searchPlacesWAI() Route {
 			body.Set("group", wireGroupSummary(group))
 			return endpoint.Reply{Body: body}
 		}
-		rows, err := store.ListPlaces(ctx, repo.PlaceFilter{})
+		// The model sees a shortlist, never the catalogue: at most
+		// rag.ToiDaNgan rows of the destination the words name. A Go-only
+		// deviation on the brain payload (design 04 §7): parity runs keyless,
+		// so both stacks answer `unavailable` whatever the payload, and
+		// places_search_shortlist_postgres_test.go is the evidence instead.
+		ngan, err := rag.Kho{Q: store.Q}.DanhSachNgan(ctx, query, group)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		cards, err := withPhotos(ctx, store, rows)
+		cards, err := withPhotos(ctx, store, ngan.Rows)
 		if err != nil {
 			return endpoint.Reply{}, err
 		}
-		safe := treejson.MapsFrom(promptsafety.Filter(treejson.MapsTo(cards)))
 		payload := pyjson.NewOrderedMap()
 		payload.Set("query", pyjson.String(query))
-		list := pyjson.List{}
-		for _, card := range safe {
-			list = append(list, card)
-		}
-		payload.Set("catalogue", list)
+		payload.Set("catalogue", modelShortlist(cards))
 		payload.Set("group", wireTaste(group))
 		client := brain.Configured()
 		raw, err := client.PostJSON("place-search", payload)
@@ -469,6 +470,22 @@ func searchPlacesWAI() Route {
 }
 
 type reasonPair struct{ reason, verdict *string }
+
+// modelShortlist is what the search model may read of the shortlist: the
+// rows promptsafety.Filter keeps (the oracle's rule), each then cut by
+// promptsafety.SafeDeep -- a row it drops is gone, a quarantined review,
+// activity or description is emptied -- in the shortlist's order.
+func modelShortlist(cards []*pyjson.OrderedMap) pyjson.List {
+	list := pyjson.List{}
+	for _, card := range promptsafety.Filter(treejson.MapsTo(cards)) {
+		deep, report := promptsafety.SafeDeep(card)
+		if report.Bo {
+			continue
+		}
+		list = append(list, treejson.MapFrom(deep))
+	}
+	return list
+}
 
 func wireDestination(row repo.Destination, km *float64) *pyjson.OrderedMap {
 	out := pyjson.NewOrderedMap()

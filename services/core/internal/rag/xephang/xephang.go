@@ -7,8 +7,9 @@
 // safety oracle folds it (promptsafety.Fold: marks dropped, đ as d, lower
 // case), so a query typed without diacritics finds a text written with them.
 // It is cut into syllables at every character that is not a letter or a
-// digit. And every pair of neighbouring syllables is added as one more term,
-// joined by an underscore («ca_phe»): Vietnamese builds words from syllables,
+// digit (both steps are tuvung.AmTiet). And every pair of neighbouring
+// syllables is added as one more term, joined by an underscore
+// («ca_phe»): Vietnamese builds words from syllables,
 // and the pair is what tells «cà phê» from «phê duyệt» and «bún chả» from
 // «chả giò». Ranking is BM25 over those terms, ties broken by id, so the same
 // index and query give the same list on every run.
@@ -18,9 +19,8 @@ import (
 	"math"
 	"sort"
 	"strings"
-	"unicode"
 
-	"mobile/services/core/internal/domain/promptsafety"
+	"mobile/services/core/internal/domain/tuvung"
 )
 
 // BM25 constants. The usual ones; the golden sets that use this package pin
@@ -30,11 +30,11 @@ const (
 	b  = 0.75
 )
 
-// AmTiet folds text and cuts it into syllables, in order.
+// AmTiet folds text and cuts it into syllables, in order. It is
+// tuvung.AmTiet, the engine's one tokenizer: the closed vocabularies match on
+// exactly the syllables this package ranks on.
 func AmTiet(text string) []string {
-	return strings.FieldsFunc(promptsafety.Fold(text), func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-	})
+	return tuvung.AmTiet(text)
 }
 
 // Thuat returns the terms of text: its syllables, then each pair of
@@ -114,12 +114,19 @@ func (m *ChiMuc) Len() int { return len(m.ids) }
 // positive score, best first, ties broken by id. A query term repeated counts
 // once: repeating a word is not asking for it harder.
 func (m *ChiMuc) Tim(query string, k int) []KetQua {
+	return m.TimThuat(Thuat(query), k)
+}
+
+// TimThuat is Tim on terms the caller already derived with Thuat and then
+// narrowed (the retrieval query drops stop words and the words a slot took):
+// the same ranking, without folding or pairing the query a second time.
+func (m *ChiMuc) TimThuat(query []string, k int) []KetQua {
 	if k <= 0 || len(m.ids) == 0 {
 		return nil
 	}
 	var terms []string
 	seen := map[string]bool{}
-	for _, t := range Thuat(query) {
+	for _, t := range query {
 		if !seen[t] && m.df[t] > 0 {
 			seen[t] = true
 			terms = append(terms, t)
