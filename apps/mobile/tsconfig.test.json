@@ -352,6 +352,10 @@
     "src/rudi/chat/ban-nhap-cong-cu.ts",
     "src/rudi/chat/chat-route.ts",
     "src/rudi/ai/boi-canh.ts",
+    // The SSE reader for a streamed AI answer: chunking, resume and the
+    // three ways it gives up are all behaviour, so the function is run.
+    // See `tests/sse-doc.test.mjs`.
+    "src/rudi/ai/sse.ts",
     "src/rudi/chat/boi-canh-chat.ts",
     "src/rudi/chat/ai-invocations.ts",
     "src/rudi/chat/to-hen-chung.ts",
