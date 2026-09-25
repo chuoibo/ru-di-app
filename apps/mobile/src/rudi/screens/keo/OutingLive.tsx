@@ -51,9 +51,13 @@ import {
 import { homNay, nhanNhip, nhipKeo } from "../../keo/nhip-keo";
 import { useNepNguCanh } from "../../nep/NepProvider";
 import { typography, useRudiTheme } from "../../theme";
-import { Chip, Field, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
+import { Chip, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from "../../ui";
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
+import { BanXoay } from "../../ui/BanXoay";
+import { NepDien } from "../../ui/NepDien";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { StampButton } from "../../ui/StampButton";
 import { ReorderList } from "../../ui/ReorderList";
 import { Sheet } from "../../ui/Sheet";
 import { SkeletonGroup, SkeletonLines, SkeletonRow } from "../../ui/Skeleton";
@@ -97,9 +101,23 @@ function dongDiaDiem(stop: ChangDung): { chu: string; tone: "accent" | "inkFaint
   return { chu: stop.place_name, tone: "accent" };
 }
 
+/** «19:30» → minutes from midnight; anything else is no hour yet. */
+function phutTuGio(gio: string): number | null {
+  const khop = /^(\d{1,2}):(\d{2})$/.exec(gio.trim());
+  if (!khop) return null;
+  const h = Number(khop[1]);
+  const m = Number(khop[2]);
+  return h < 24 && m < 60 ? h * 60 + m : null;
+}
+
+/** Minutes from midnight → «19:30», as the stop's hour is spelled. */
+function gioTuPhut(phut: number): string {
+  return `${String(Math.floor(phut / 60)).padStart(2, "0")}:${String(phut % 60).padStart(2, "0")}`;
+}
+
 export function OutingLiveScreen({ phien }: { phien: Phien }) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; vua?: string }>();
   const { colors } = useRudiTheme();
   const { fontScale } = useWindowDimensions();
   const outingId = thamSoChuoi(params.id);
@@ -277,12 +295,12 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
         <Sheet accessibilityLabel="Chặng mới" onClose={() => setMoThem(false)} open={moThem}>
           <View style={styles.khay}>
             <Text style={[typography.h2, { color: colors.ink }]}>Chặng mới</Text>
-            <View style={styles.hang}>
-              <View style={styles.oGio}>
-                <Field accessibilityLabel="Ô giờ chặng" icon="time-outline" keyboardType="numbers-and-punctuation" label="Giờ" onChangeText={setGio} value={gio} />
-              </View>
+            {/* The hour on a dial (typing stays behind «Ô giờ chặng»), the stop
+                written beside it on a pen line (ADR-0037 D1, plan S3). */}
+            <View style={styles.hangChang}>
+              <BanXoay co={140} nhan="Giờ chặng" oLabel="Ô giờ chặng" onChange={(p) => setGio(gioTuPhut(p))} phut={phutTuGio(gio)} testID="gio-chang" />
               <View style={styles.flex}>
-                <Field accessibilityLabel="Ô tên chặng" icon="flag-outline" label="Chặng" onChangeText={setNhan} placeholder="Ví dụ: Ăn tối" value={nhan} />
+                <ONhapMuc accessibilityLabel="Ô tên chặng" label="Chặng" onChangeText={setNhan} placeholder="Ăn tối" value={nhan} />
               </View>
             </View>
             <Text style={[typography.caption, { color: colors.inkSoft }]}>Địa điểm trong danh mục (tuỳ chọn)</Text>
@@ -298,7 +316,7 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
               ))}
             </ScrollView>
             {thongBao !== null && moThem ? <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{thongBao}</Text> : null}
-            <RudiButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} />
+            <StampButton disabled={dangGhi} label="Thêm chặng" loading={dangGhi} onPress={() => void themChangMoi(trang.keo)} size="vua" tilt={-1} />
           </View>
         </Sheet>
         <Sheet accessibilityLabel="Gắn địa điểm" onClose={() => setGanChoChang(null)} open={ganChoChang !== null}>
@@ -366,7 +384,16 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
       {trang.pha === "xong" && !hanhTrinh ? (
         <ScrollView scrollEnabled={!dragging} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}>
           <View style={styles.dau}>
-            <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            {/* M5: the outing just made from «Kèo mới» (`?vua=tao`): Nếp sets
+                off beside its title, once. Opened any other way, it is not news. */}
+            {params.vua === "tao" ? (
+              <View style={styles.dauVuaTao}>
+                <Text style={[typography.h1, styles.flex1, { color: colors.ink }]}>{trang.keo.title}</Text>
+                <NepDien khoanhKhac="M5" suKien={`keo-tao:${trang.keo.id}`} />
+              </View>
+            ) : (
+              <Text style={[typography.h1, { color: colors.ink }]}>{trang.keo.title}</Text>
+            )}
             <Text style={[typography.body, { color: colors.inkSoft }]}>
               {nhanKhoangNgay(trang.keo.starts_on, trang.keo.ends_on)} · {trang.keo.headcount} người
               {nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay())) ? ` · ${nhanNhip(nhipKeo(trang.keo.starts_on, trang.keo.ends_on, homNay()))}` : ""}
@@ -482,6 +509,9 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
+  dauVuaTao: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  flex1: { flex: 1 },
   hangChip: { flexDirection: "row", gap: 6, paddingRight: 8 },
   flex: { flex: 1 },
   // The map is the page here: it runs to the bottom edge and the journey
@@ -494,7 +524,5 @@ const styles = StyleSheet.create({
   oTien: { gap: 2, minWidth: 140 },
   khay: { gap: 12, paddingBottom: 4 },
   form: { gap: 12 },
-  hang: { flexDirection: "row", gap: 10 },
-  oGio: { width: 118 },
   danhSach: { paddingVertical: 4, gap: 10 },
 });

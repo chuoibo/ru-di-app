@@ -211,7 +211,7 @@ test("mọi khung qua ngữ pháp Java; khung cuối và khung tĩnh nằm trong
     const tm = TIET_MUC[id];
     const tinh = tm.khoa[tm.khungTinh].tt;
     kiemLop(`${id} khung tĩnh`, tuTheRoi(tinh), 96, 96, 1);
-    if (id !== "buoc-di" && id !== "gap-thu") kiemLop(`${id} khung cuối`, tuTheRoi(khopTai(tm, tm.ms)), 96, 96, 1);
+    if (id !== "gap-thu") kiemLop(`${id} khung cuối`, tuTheRoi(khopTai(tm, tm.ms)), 96, 96, 1);
   }
 });
 

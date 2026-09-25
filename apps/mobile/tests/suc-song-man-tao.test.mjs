@@ -37,14 +37,7 @@ const PHAM_VI = [
 ];
 
 /** Screens not redone yet. Strike each one off in the slice that redoes it. */
-const NO = [
-  "Create.tsx",
-  "LoiMoi.tsx",
-  "keo/CreateOutingLive.tsx",
-  "groups/New.tsx",
-  "groups/Invite.tsx",
-  "friends/AddFriend.tsx",
-];
+const NO = [];
 
 /** The paper stage's primitives, by the module they live in. */
 const PRIMITIVE = {
@@ -75,6 +68,8 @@ const PRIMITIVE = {
   SoBia: "SoBia",
   ChuKy: "ChuKy",
   LaLich: "LaLich",
+  // S3, the «Tạo mới» desk: its paper objects are drawn layers.
+  VeLop: "art/VeLop",
 };
 
 /** Strip comments and string bodies, so a primitive named in prose does not count. */

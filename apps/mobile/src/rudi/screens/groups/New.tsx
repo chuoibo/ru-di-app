@@ -16,7 +16,7 @@
  */
 import { Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { ApiError, newAttempt, thongDiepNguoiDoc, type Attempt } from "../../../api";
 import { docNhomCuaToi, ganDanhSachNhom } from "../../../phien";
@@ -24,13 +24,18 @@ import { taoNhom } from "../../../screens/vao-cua/cong-api";
 import { manDau } from "../../duong-vao";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, RudiScreen, TopBar } from "../../ui";
+import { ChuThichLe } from "../../ui/ChuThichLe";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { SoBia } from "../../ui/SoBia";
+import { StampButton } from "../../ui/StampButton";
 
 type Trang = { pha: "nhap" } | { pha: "dang-mo" } | { pha: "hong"; loi: string };
 
 export function GroupNewScreen() {
   const router = useRouter();
   const { colors } = useRudiTheme();
+  const { width } = useWindowDimensions();
   const { phien, phienDaDoc, datPhien } = useRudiSession();
   const [ten, setTen] = useState("");
   const [trang, setTrang] = useState<Trang>({ pha: "nhap" });
@@ -65,46 +70,56 @@ export function GroupNewScreen() {
 
   const dangMo = trang.pha === "dang-mo";
 
+  // A new notebook on the table (ADR-0037 D1, plan S3): its cloth cover, and
+  // the group's name written on the label pasted on the front.
+  const rongBia = Math.min(300, width - 64);
   return (
     <RudiScreen contentStyle={styles.screen} testID="group-new-screen">
       <TopBar title="Nhóm mới" />
-      <Heading
-        title="Đặt tên cho hội"
-        subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau, bằng lời mời đích danh hoặc link."
+      <Heading title="Đặt tên cho hội" subtitle="Bạn là quản trị của nhóm này. Mời bạn bè sau." />
+      <SoBia
+        cao={Math.round(rongBia * 0.62)}
+        nhan={
+          <View style={[styles.nhan, { backgroundColor: colors.card, borderColor: colors.coverLineStrong }]}>
+            <ONhapMuc
+              accessibilityLabel="Ô tên nhóm"
+              autoFocus
+              editable={!dangMo}
+              maxLength={200}
+              onChangeText={setTen}
+              onSubmitEditing={() => void mo()}
+              placeholder="Hội cafe cuối tuần"
+              returnKeyType="done"
+              style={styles.giua}
+              value={ten}
+            />
+          </View>
+        }
+        rong={rongBia}
+        style={styles.bia}
+        ten={[]}
+        testID="bia-nhom-moi"
       />
+      {trang.pha === "hong" ? (
+        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+      ) : null}
+      <StampButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} size="vua" tilt={-1} />
       {/* A couple is not a group: QA 23/09 found two people inventing «Minh &
           Linh» here because nothing pointed them at the direct conversation,
           where the two-person notebook lives. */}
       <Pressable accessibilityRole="link" onPress={() => router.push("/friends/add")}>
-        <Text style={[typography.caption, { color: colors.inkSoft }]}>
+        <ChuThichLe icon="people-outline">
           Chỉ hai người? Không cần nhóm: kết bạn bằng số điện thoại rồi nhắn riêng, sổ hai người nằm ở đó.{" "}
-          <Text style={{ color: colors.accent }}>Thêm bạn</Text>
-        </Text>
+          <Text style={{ color: colors.ink, textDecorationLine: "underline" }}>Thêm bạn</Text>
+        </ChuThichLe>
       </Pressable>
-      <View style={styles.form}>
-        <Field
-          accessibilityLabel="Ô tên nhóm"
-          autoFocus
-          editable={!dangMo}
-          icon="people-outline"
-          label="Tên nhóm"
-          maxLength={200}
-          onChangeText={setTen}
-          onSubmitEditing={() => void mo()}
-          placeholder="Ví dụ: Hội cafe cuối tuần"
-          returnKeyType="done"
-          value={ten}
-        />
-        {trang.pha === "hong" ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        ) : null}
-        <RudiButton disabled={dangMo} label="Mở nhóm" loading={dangMo} onPress={() => void mo()} />
-      </View>
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { gap: 20, maxWidth: 560 },
-  form: { gap: 14 },
+  bia: { alignSelf: "center" },
+  nhan: { borderWidth: 1, borderRadius: 3, paddingHorizontal: 12, paddingVertical: 6 },
+  giua: { textAlign: "center" },
 });

@@ -32,6 +32,9 @@ không lạc.
    - Flow 28 (bàn gán món mới, cuộn-về-đầu khi đổi bước).
    - Flow 29 (đợt thu, trang sổ).
    - Flow 47 (sổ đôi: bìa sổ, giao kèo có chữ ký, tờ bút chì).
+   - Flow 21, 22, 24, 27 (S3: lời mời là phong bì, nhóm mới là bìa sổ, kèo mới là câu rủ có lá
+     lịch và đĩa giờ chặng). Chữ và nhãn flow bấm giữ nguyên; «Ô ngày đi»/«Ô ngày về» của Kèo
+     mới nay là lá lịch, không flow nào gõ vào hai ô này.
    - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&

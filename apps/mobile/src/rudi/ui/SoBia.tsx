@@ -25,14 +25,24 @@ const DAU_TRANG = 20;
 
 export function SoBia({
   ten,
+  nhan,
   mo,
   rong = 132,
+  cao: caoDat,
   trang,
   style,
   testID,
 }: {
   /** One label per name on the cover. */
   ten: readonly string[];
+  /**
+   * A label of the caller's own in place of the name labels -- a new group's
+   * notebook takes its name typed straight onto the cover. The book is then no
+   * longer one image: what the label holds stays reachable on its own.
+   */
+  nhan?: ReactNode;
+  /** The cover's height; a book's proportion (1.32 of the width) by default. */
+  cao?: number;
   /** 0 shut .. 1 open; a shared value for the opening moment, else shut. */
   mo?: SharedValue<number>;
   rong?: number;
@@ -42,7 +52,7 @@ export function SoBia({
   testID?: string;
 }) {
   const { brand, colors, dark } = useRudiTheme();
-  const cao = Math.round(rong * 1.32);
+  const cao = caoDat ?? Math.round(rong * 1.32);
   const cho = mo ? choLatBia(rong, cao) : { trai: 0, doc: 0 };
   const soDong = Math.max(0, Math.floor((cao - DAU_TRANG - 8) / DONG));
   const lat = useAnimatedStyle(() => {
@@ -57,9 +67,9 @@ export function SoBia({
   });
   return (
     <View
-      accessibilityLabel={`Sổ của ${ten.join(" và ")}`}
-      accessibilityRole="image"
-      accessible
+      accessibilityLabel={nhan ? undefined : `Sổ của ${ten.join(" và ")}`}
+      accessibilityRole={nhan ? undefined : "image"}
+      accessible={!nhan}
       style={[{ width: rong + cho.trai, height: cao + 2 * cho.doc, paddingLeft: cho.trai, paddingTop: cho.doc }, style]}
       testID={testID}
     >
@@ -88,7 +98,7 @@ export function SoBia({
         <Animated.View style={[StyleSheet.absoluteFill, styles.bia, { backgroundColor: colors.cover, transformOrigin: "left center" }, lat]}>
           <View style={[styles.gay, { backgroundColor: phuMau(colors.ink, dark ? 0.35 : 0.45) }]} />
           <View style={styles.nhan}>
-            {ten.map((t) => (
+            {nhan ?? ten.map((t) => (
               <View key={t} style={[styles.the, { backgroundColor: colors.card, borderColor: colors.coverLineStrong }]}>
                 <Text numberOfLines={1} style={[typography.label, { color: colors.ink }]}>
                   {t}

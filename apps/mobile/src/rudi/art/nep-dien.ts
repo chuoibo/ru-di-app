@@ -150,6 +150,9 @@ const buocDi: TietMuc = {
   ms: 1200,
   khungTinh: 1,
   moTa: "Nếp vẫy tay rồi lên đường",
+  // Nếp sets off and stays on the page: the last frame is what remains on the
+  // screen afterwards, and a figure walked half out of its box stayed there
+  // cut in two (S3, live capture of M5).
   vat: null,
   nhip: [],
   khoa: [
@@ -157,10 +160,10 @@ const buocDi: TietMuc = {
     { t: 200, em: "standard", tt: tuThe({ bieuCam: "hao-hung", nhin: [1.4, -0.4], tayGan: [14, 62], tayXa: [84, 32] }) },
     { t: 360, em: "standard", tt: tuThe({ bieuCam: "hao-hung", nhin: [1.4, -0.4], tayGan: [14, 62], tayXa: [90, 38] }) },
     { t: 520, em: "standard", tt: tuThe({ bieuCam: "hao-hung", nhin: [1.4, -0.4], tayGan: [14, 62], tayXa: [84, 32] }) },
-    { t: 700, em: "standard", tt: tuThe({ dx: 8, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_A, tayGan: [30, 64], tayXa: [86, 40] }) },
-    { t: 880, em: "standard", tt: tuThe({ dx: 22, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_B, tayGan: [16, 70], tayXa: [86, 40] }) },
-    { t: 1040, em: "standard", tt: tuThe({ dx: 36, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_A, tayGan: [30, 64], tayXa: [86, 40] }) },
-    { t: 1200, em: "standard", tt: tuThe({ dx: 50, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_B, tayGan: [16, 70], tayXa: [86, 40] }) },
+    { t: 700, em: "standard", tt: tuThe({ dx: 2, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_A, tayGan: [30, 64], tayXa: [80, 40] }) },
+    { t: 880, em: "standard", tt: tuThe({ dx: 4, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_B, tayGan: [16, 70], tayXa: [80, 40] }) },
+    { t: 1040, em: "standard", tt: tuThe({ dx: 6, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_A, tayGan: [30, 64], tayXa: [80, 40] }) },
+    { t: 1200, em: "standard", tt: tuThe({ dx: 8, nghieng: 9, bieuCam: "hao-hung", nhin: [1.6, -0.2], ...BUOC_B, tayGan: [16, 70], tayXa: [80, 40] }) },
   ],
 };
 

@@ -27,7 +27,11 @@ import { layIdTuSo, moiVaoNhom } from "../../../screens/vao-cua/cong-api";
 import { moiBangSo } from "../../moi-bang-so";
 import { useRudiSession } from "../../session";
 import { typography, useRudiTheme } from "../../theme";
-import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
+import { DauLon } from "../../ui/DauLon";
+import { ONhapMuc } from "../../ui/ONhapMuc";
+import { PhongBi } from "../../ui/PhongBi";
+import { StampButton } from "../../ui/StampButton";
 
 type Trang =
   | { pha: "nhap" }
@@ -99,6 +103,11 @@ export function GroupInviteScreen() {
               : `Người này đã dùng Rủ Đi và có tên riêng, nên cả nhóm sẽ thấy tên do chính họ đặt, không phải «${trang.ten}». Lời mời đang chờ ở tab Tin nhắn của họ.`
           }
         />
+        {/* The envelope, sealed: the letter went (ADR-0037 D1). */}
+        <PhongBi style={styles.phongBi} testID="loi-moi-da-gui">
+          <Text style={[typography.title, { color: colors.ink }]}>Gửi {trang.ten}</Text>
+          <DauLon co="vua" dong nhan="Đã gửi" tilt={-4} tone="ink" />
+        </PhongBi>
         <RudiButton label="Xem thành viên" onPress={() => router.back()} />
         <RudiButton
           label="Mời thêm người"
@@ -121,39 +130,39 @@ export function GroupInviteScreen() {
         title="Mời bằng số điện thoại"
         subtitle="Số điện thoại chỉ dùng để nhận ra đúng người khi họ đăng nhập; Rủ Đi không lưu số."
       />
-      <View style={styles.form}>
-        <Field
-          accessibilityLabel="Ô số điện thoại người được mời"
-          autoComplete="tel"
-          editable={!dangMoi}
-          icon="call-outline"
-          keyboardType="phone-pad"
-          label="Số điện thoại"
-          onChangeText={setPhone}
-          placeholder="Số di động của bạn ấy"
-          textContentType="telephoneNumber"
-          value={phone}
-        />
-        <Field
+      {/* The invitation is a letter: its address is who it goes to (plan S3). */}
+      <PhongBi style={styles.phongBi} testID="phong-bi-moi">
+        <Text style={[typography.stamp, { color: colors.inkSoft }]}>Lời mời vào nhóm</Text>
+        <ONhapMuc
           accessibilityLabel="Ô tên người được mời"
           editable={!dangMoi}
-          icon="person-outline"
-          label="Tên"
+          label="Gửi"
           maxLength={200}
           onChangeText={setTen}
           placeholder="Bạn gọi người này là gì"
           value={ten}
         />
-        {trang.pha === "hong" ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        ) : null}
-        <RudiButton disabled={dangMoi} label="Gửi lời mời" loading={dangMoi} onPress={() => void moi()} />
-      </View>
+        <ONhapMuc
+          accessibilityLabel="Ô số điện thoại người được mời"
+          autoComplete="tel"
+          editable={!dangMoi}
+          keyboardType="phone-pad"
+          label="Số di động"
+          onChangeText={setPhone}
+          placeholder="Số di động của bạn ấy"
+          textContentType="telephoneNumber"
+          value={phone}
+        />
+      </PhongBi>
+      {trang.pha === "hong" ? (
+        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+      ) : null}
+      <StampButton disabled={dangMoi} label="Gửi lời mời" loading={dangMoi} onPress={() => void moi()} size="vua" tilt={-1} />
     </RudiScreen>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { gap: 20, maxWidth: 560 },
-  form: { gap: 14 },
+  phongBi: { alignSelf: "stretch" },
 });

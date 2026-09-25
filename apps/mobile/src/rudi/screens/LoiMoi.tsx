@@ -40,7 +40,13 @@ import { layLoiMoiDen } from "../loi-moi-den";
 import { CUA_FIXTURE_DEV } from "../cua-fixture";
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
-import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../ui";
+import { Heading, RudiButton, RudiScreen, TopBar } from "../ui";
+import { ChuThichLe } from "../ui/ChuThichLe";
+import { DauLon } from "../ui/DauLon";
+import { NepTrongTrang } from "../ui/NepRoi";
+import { ONhapMuc } from "../ui/ONhapMuc";
+import { PhongBi } from "../ui/PhongBi";
+import { StampButton } from "../ui/StampButton";
 
 type Trang =
   | { pha: "cho-ma" }
@@ -116,8 +122,12 @@ export function LoiMoiScreen() {
           title={daVao ? "Xong, bạn đã ở trong nhóm" : "Đã đăng nhập"}
           subtitle={cauSauKhiNhan(daVao ? "active" : "invited", "phien")}
         />
+        {/* The letter taken out of its envelope, stamped with where it stands. */}
+        <PhongBi testID="loi-moi-mo">
+          <DauLon co="vua" dong nhan={daVao ? "Đã vào nhóm" : "Chờ bạn gật"} tilt={-4} tone="ink" />
+        </PhongBi>
         {daVao ? (
-          <RudiButton label="Vào nhóm" onPress={() => router.replace("/explore")} />
+          <StampButton label="Vào nhóm" onPress={() => router.replace("/explore")} size="vua" tilt={-1} />
         ) : (
           <>
             {/* The step that used to be missing, and it is a step rather than
@@ -125,12 +135,7 @@ export function LoiMoiScreen() {
                 name; what is left is this person saying yes, and saying yes is
                 a press. Doing it silently on their behalf would put somebody
                 in a group without ever asking. */}
-            <RudiButton
-              disabled={dangVao}
-              label="Đồng ý vào nhóm"
-              loading={dangVao}
-              onPress={() => void dongY(trang.phien)}
-            />
+            <StampButton disabled={dangVao} label="Đồng ý vào nhóm" loading={dangVao} onPress={() => void dongY(trang.phien)} size="vua" tilt={-1} />
             <RudiButton
               label="Để sau"
               onPress={() => router.replace("/welcome")}
@@ -149,32 +154,29 @@ export function LoiMoiScreen() {
         title="Bạn được rủ đi"
         subtitle="Dán mã trong lời mời. Rủ Đi chỉ vào được bằng lời mời của một người đã ở trong nhóm."
       />
-      <View style={styles.form}>
-        <Field
-          autoCapitalize="none"
-          autoCorrect={false}
-          icon="mail-open-outline"
-          label="Mã lời mời"
-          onChangeText={setMa}
-          placeholder="Dán mã ở đây"
-          value={ma}
-        />
-        <RudiButton
-          disabled={trang.pha === "dang-doi"}
-          label="Nhận lời mời"
-          loading={trang.pha === "dang-doi"}
-          onPress={() => void nhan()}
-        />
-        {trang.pha === "hong" ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
-        ) : null}
+      {/* An envelope with a letter in it: the code is what the letter says
+          (ADR-0037 D1, plan S3). Nếp brings it over. */}
+      <View style={styles.canh}>
+        <NepTrongTrang pose="dua-giay" size={96} />
+        <PhongBi style={styles.flex} testID="phong-bi-loi-moi">
+          <ONhapMuc
+            accessibilityLabel="Mã lời mời"
+            autoCapitalize="none"
+            autoCorrect={false}
+            label="Mã lời mời"
+            onChangeText={setMa}
+            placeholder="Dán mã ở đây"
+            value={ma}
+          />
+        </PhongBi>
       </View>
-      <View>
-        <Text style={[typography.caption, { color: colors.inkFaint }]}>
-          Chưa có lời mời? Nhờ một người trong nhóm gửi cho bạn. Đây là chủ ý, không phải thiếu sót:
-          không ai tự tạo tài khoản trước khi có bạn rủ đi.
-        </Text>
-      </View>
+      <StampButton disabled={trang.pha === "dang-doi"} label="Nhận lời mời" loading={trang.pha === "dang-doi"} onPress={() => void nhan()} size="vua" tilt={-1} />
+      {trang.pha === "hong" ? (
+        <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.warn }]}>{trang.loi}</Text>
+      ) : null}
+      <ChuThichLe icon="mail-open-outline">
+        Chưa có lời mời? Nhờ một người trong nhóm gửi cho bạn. Đây là chủ ý, không phải thiếu sót: không ai tự tạo tài khoản trước khi có bạn rủ đi.
+      </ChuThichLe>
       {/* The fixture door exists only on a QA build (`cua-fixture.ts`); a real
           person reading «bản trải nghiệm» here took it for a demo app. */}
       {CUA_FIXTURE_DEV ? (
@@ -189,5 +191,6 @@ export function LoiMoiScreen() {
 }
 
 const styles = StyleSheet.create({
-  form: { gap: 14 },
+  canh: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  flex: { flex: 1 },
 });

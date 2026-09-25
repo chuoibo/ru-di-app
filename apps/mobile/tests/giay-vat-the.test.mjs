@@ -172,3 +172,24 @@ test("nét chữ ký: một đường mở, đúng ngữ pháp Java, nằm trong
     assert.equal(netChuKy(w, 16), d, "cùng bề rộng, cùng nét");
   }
 });
+
+test("năm vật trên bàn «Tạo mới»: đủ năm, hợp lệ trong khung 64, có giấy và viền mực, tất định, có câu mô tả", async () => {
+  const { KHUNG_VAT, MO_TA_VAT, VAT_BAN, hinhVat } = await import("../dist-test/rudi/art/vat-ban.js");
+  assert.deepEqual([...VAT_BAN], ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap"]);
+  const daThay = new Set();
+  for (const vat of VAT_BAN) {
+    const lop = hinhVat(vat);
+    kiemLop(`vật ${vat}`, lop, KHUNG_VAT, KHUNG_VAT, 0);
+    assert.ok(lop.some((l) => l.mau === "giay" && l.net === undefined), `${vat}: không có mặt giấy`);
+    assert.ok(lop.some((l) => l.mau === "muc" && l.net !== undefined), `${vat}: không có viền mực`);
+    // Paper first: nothing drawn before the sheet it sits on.
+    assert.equal(lop[0].mau, "giay", `${vat}: lớp đầu phải là mặt giấy`);
+    assert.deepEqual(hinhVat(vat), lop, `${vat}: vẽ hai lần ra hai hình`);
+    assert.match(MO_TA_VAT[vat], /^Ký hoạ /);
+    const dau = JSON.stringify(lop);
+    assert.ok(!daThay.has(dau), `${vat}: trùng hình với vật khác`);
+    daThay.add(dau);
+  }
+  // The money object alone carries the money teal; the others never do.
+  for (const vat of VAT_BAN) assert.equal(hinhVat(vat).some((l) => l.mau === "split"), vat === "hoa-don", `${vat}: teal là màu của tiền`);
+});
