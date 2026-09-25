@@ -151,13 +151,17 @@ func TestNapTuChoiMoiLoi(t *testing.T) {
 		// «» pair up on every line, in order (review 13 round 3, NF3). Each
 		// case breaks one part of the rule: a « left open at the end of the
 		// line, a » with no « before it, a « opened again before it closed,
-		// marks reversed, a quote across two lines, and one outside the steps.
+		// marks reversed, a quote across two lines, and reversed marks on each
+		// kind of line that is not a step: the overview, a section heading and
+		// prose inside a section (review 13 round 4, NF4).
 		{"« không đóng trên dòng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút B."`},
 		{"» thừa", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B»»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút B»»."`},
 		{"« mở lại trước khi đóng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút Z «Nút B»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút Z «Nút B»."`},
 		{"» « đảo ngược", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm »Nút Z«."), `a.md: « và » không thành cặp trên dòng: "1. Bấm »Nút Z«."`},
 		{"«…» vắt qua hai dòng", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút\nZ»."), `a.md: « và » không thành cặp trên dòng: "1. Bấm «Nút"`},
 		{"» « đảo ngược ở tổng quan", thay("data/a.md", "Tổng quan của màn A.", "Tổng quan của màn A, có nút »Nút Z«."), `a.md: « và » không thành cặp trên dòng: "Tổng quan của màn A, có nút »Nút Z«."`},
+		{"» « đảo ngược ở tiêu đề mục", thay("data/a.md", "## Đi sang B", "## Đi sang »Nút B«"), `a.md: « và » không thành cặp trên dòng: "## Đi sang »Nút B«"`},
+		{"» « đảo ngược ở văn trong mục", thay("data/a.md", "1. Bấm «Nút B».", "1. Bấm «Nút B».\nXem »Nút Z«."), `a.md: « và » không thành cặp trên dòng: "Xem »Nút Z«."`},
 		{"quá năm bước", thay("data/a.md", "1. Bấm «Nút B».", "1. a\n2. b\n3. c\n4. d\n5. e\n6. Bấm «Nút B»."), "có 6 bước, tối đa 5"},
 		{"mục không có bước", thay("data/a.md", "1. Bấm «Nút B».", "Bấm «Nút B»."), "mục «Đi sang B» không có bước nào"},
 		{"tiêu đề ###", thay("data/a.md", "## Đi sang B", "### Đi sang B"), "chỉ dùng tiêu đề «## »"},

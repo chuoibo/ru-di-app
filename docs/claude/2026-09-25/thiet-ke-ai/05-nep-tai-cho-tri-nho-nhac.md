@@ -104,16 +104,21 @@ bị thay, vì gu vẫn bị cấm.
   truy hồi, 1–5 bước; id mục = `<tệp>/<slug tiêu đề>`. Luật nạp (`huongdan.nap`, phaiNap panic lúc init):
   mọi `man`/`di_toi[].man` có trong `_rut.json`; không `di_toi` nào về chính màn đó; mọi `di_toi` là một
   cạnh của mã (`_rut.json` `di_toi`, thanh tab, hoặc ngoại lệ có tên `canhNgoaiRut` kèm lý do — hiện chỉ
-  `plan → create`, nút «Tạo mới» của `RudiTabBar`); « và » thành cặp trên từng dòng, theo thứ tự (mỗi « đóng
-  bằng » trước « kế tiếp và trước khi hết dòng, mỗi » đóng một «: dấu lẻ, lồng hay đảo ngược đều bị từ chối, vì
-  chữ nằm ngoài một cặp «…» thì không luật nhãn nào đọc; sửa theo review lát 13 vòng 3); mọi «…», kể cả trong
+  `plan → create`, nút «Tạo mới» của `RudiTabBar`); « và » thành cặp trên mọi dòng của thân, kể cả tiêu đề
+  mục và văn trong mục, theo thứ tự (mỗi « đóng bằng » trước « kế tiếp và trước khi hết dòng, mỗi » đóng một «:
+  dấu lẻ, lồng hay đảo ngược đều bị từ chối, vì chữ nằm ngoài một cặp «…» thì không luật nhãn nào đọc; sửa theo
+  review lát 13 vòng 3, ca tiêu đề mục và văn trong mục thêm theo vòng 4); mọi «…», kể cả trong
   tiêu đề mục và tổng quan, khai trong `nhanUI`; `tien` phải đúng theo route (`manTienDau` = `MAN_NEP_LUI`). Màn tiền: một mục duy nhất, tiêu đề
   cố định «Tới màn này và đi tiếp», không chữ số, mọi dòng là bước, mỗi bước trích ít nhất một «cửa» và **chỉ
   trích cửa** (tiêu đề mục in trên màn như «Chi theo nhóm», hay nút trả tiền đứng cạnh một cửa, đều không được
   trích; nhắc tới tiêu đề mục thì viết chữ thường, không «…»); cửa là nhãn của
   một lối vào/ra đã khai mà **là cạnh có nhãn của mã** (`_rut.json` `canh`: nút mang đúng nhãn đó và điều
   hướng tới đúng màn đó), hoặc tiêu đề của một màn không phải màn tiền có lối vào, in trên màn đó; tiêu đề của
-  chính màn tiền không phải cửa, dù có in trên màn hay không. Người
+  chính màn tiền không phải cửa, dù có in trên màn hay không. **Còn mở (P8):** văn xuôi dạy trả tiền không đặt
+  trong «…» trên một dòng có cửa thì luật không thấy, kể cả tên nút đặt trong dấu na ná « » như ‹…›, "…" (hay
+  “…”) và 《…》: luật nhãn và luật cặp chỉ đọc « và », nên bước
+  `- Bấm «Xem quyết toán», chuyển khoản xong thì bấm ‹Đánh dấu đã trả›.` trên `tai-chinh.md` nạp được ở cả Go và
+  mobile (probe Y2 của review lát 13 vòng 4); người review văn giữ. Người
   review viết văn; model soạn nháp chỉ khi Lead duyệt số lời gọi.
 - **`buoc` và `hanhDong` đi trên phiếu v2, không vào front matter.** Trạng thái màn thuộc về mã màn đó
   (registry đóng `BuocMan` trong `phieu.ts`), không thuộc văn sổ tay. Lát 9 thêm bảng Go `buocMuc`

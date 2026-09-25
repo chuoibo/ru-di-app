@@ -776,7 +776,9 @@ test("(e) canary: front matter có khoá trùng bị từ chối, kể cả nhan
 test("(e) canary: « và » phải thành cặp trên từng dòng, theo thứ tự", () => {
   // Each case breaks one part of the rule: a « left open at the end of the
   // line, a » with no « before it, a « opened again before it closed, marks
-  // reversed, a quote across two lines, and one outside the steps.
+  // reversed, a quote across two lines, and reversed marks on each kind of
+  // line that is not a step: the overview, a section heading and prose inside
+  // a section (review 13 round 4, NF4).
   const loiDong = (ten, ...dong) => dong.map((d) => `${ten}: « và » không thành cặp trên dòng: ${JSON.stringify(d)}`);
   const buoc = (dong) => MAU_DUNG.replace("1. Bấm «Tạo kèo».", dong);
   assert.deepEqual(kiemSoTay("x.md", buoc("1. Bấm «Tạo kèo."), NGU_CANH), loiDong("x.md", "1. Bấm «Tạo kèo."));
@@ -791,6 +793,14 @@ test("(e) canary: « và » phải thành cặp trên từng dòng, theo thứ t
   const tongQuan = MAU_DUNG.replace("Tổng quan ngắn.", "Tổng quan ngắn, có nút »Tạo kèo«.");
   assert.notEqual(tongQuan, MAU_DUNG);
   assert.deepEqual(kiemSoTay("x.md", tongQuan, NGU_CANH), loiDong("x.md", "Tổng quan ngắn, có nút »Tạo kèo«."));
+  // The Go loader's two cases for a heading and for prose inside a section,
+  // on its fixture, so both sides hold them with the same lines.
+  const aGo = (cu, moi) => {
+    assert.ok(A_GO.includes(cu), `fixture drifted: ${cu}`);
+    return [{ ten: "a.md", noiDung: A_GO.replace(cu, moi) }, { ten: "tien.md", noiDung: TIEN_GO }];
+  };
+  assert.deepEqual(kiemTatCa(aGo("## Đi sang B", "## Đi sang »Nút B«"), nguCanhGo()), loiDong("a.md", "## Đi sang »Nút B«"));
+  assert.deepEqual(kiemTatCa(aGo("1. Bấm «Nút B».", "1. Bấm «Nút B».\nXem »Nút Z«."), nguCanhGo()), loiDong("a.md", "Xem »Nút Z«."));
   // Review 13 round 3, probe Q1 exactly, on the real finance manual: the
   // payment button between reversed marks, beside a door.
   const q1 = "- Bấm «Xem quyết toán», chuyển khoản xong thì bấm »Đánh dấu đã trả«.";
