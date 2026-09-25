@@ -319,11 +319,11 @@
     },
     {
       "path": "parity/go.mod",
-      "sha256": "621bb5526109dbe623c965bf668fd38589f690a5d123b711852b393aa37d70d8",
+      "sha256": "27c64389bec9727fdb6f1b8f5e21a601630f97b4c056c9b73106e95d2ab68415",
       "rules": [
         "long-number"
       ],
-      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync)."
+      "reason": "go.mod của module parity (ADR-0029). Dòng require gián tiếp github.com/jackc/pgservicefile mang pseudo-version v0.0.0-yyyymmddhhmmss-commit — chuỗi số là mốc thời gian của commit upstream, không phải số tài khoản. Ghim 2026-09-14; go 1.23 / toolchain go1.23.4 giữ nguyên, pgx ghim v5.7.1 vì v5.11 đòi go 1.25. Ghim lại 2026-09-14 khi cmd/parity dùng pgxpool trực tiếp (thêm jackc/puddle/v2 và golang.org/x/sync). Ghim lại 2026-09-25 khi nâng go 1.25.0 / toolchain go1.25.14 (lát 3); câu «go 1.23 / toolchain go1.23.4 giữ nguyên» ở trên là của lần ghim trước. Đã kiểm bằng máy: chỗ luật bắt duy nhất nằm trong pseudo-version của pgservicefile."
     },
     {
       "path": "parity/go.sum",
@@ -561,19 +561,19 @@
     },
     {
       "path": "services/core/go.mod",
-      "sha256": "fefba16f2811f754396ac7c121c61d66f01ad13efd4001d0590d34ce7c637da9",
+      "sha256": "8b608a72f725403d55d2cee87ffbfd9f853b3db73db45c38e810d38daac3491f",
       "rules": [
         "long-number"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc."
+      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0037, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 sau khi gộp lát 3 (go 1.25.0 / toolchain go1.25.14), x/tools v0.49.0 cho aigate, amqp091-go v1.15.0 cho jobs, adk + genai cho lát 6: đã kiểm bằng máy rằng cả 3 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>."
     },
     {
       "path": "services/core/go.sum",
-      "sha256": "f62f0cab93c2937653dc8a05e0f526ca689b78fbcc5f082b8a2e5d2f7b9ea0eb",
+      "sha256": "bc52de8dfe9046cab7e4671686c2ed5a6c4b6edc4219a025e40450f240bc7565",
       "rules": [
         "long-number"
       ],
-      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc."
+      "reason": "Pseudo-version Go (v0.0.0-<ngày giờ>-<hash>) trùng mẫu long-number. Thêm coder/websocket + go-redis/v9 cho chat v2 realtime; không có dữ liệu người dùng trong file khai phụ thuộc. Thêm google.golang.org/adk v1.7.0 + google.golang.org/genai v1.71.0 cho engine AI Go (ADR-0037, lát 6); pseudo-version của genproto/go-rendezvous vẫn là ngày giờ, không có dữ liệu người dùng. Ghim lại 2026-09-25 cùng lượt với go.mod (lát 3, aigate, jobs, lát 6): đã kiểm bằng máy rằng cả 13 chỗ luật bắt đều nằm trong chuỗi pseudo-version v0.0.0-<14 số>-<12 hex>."
     },
     {
       "path": "tests/qa/package-lock.json",

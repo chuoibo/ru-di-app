@@ -30,6 +30,10 @@ type work struct {
 	trigger string
 	// How many shared turns the server confirmed at create (so_tin_doc).
 	soTin int
+	// When the question was stored: the only «now» the Go engine reads.
+	createdAt time.Time
+	// Which attempt this claim is (1 for the first).
+	attempt int
 }
 
 // WorkerConfig sizes the inference workers. The defaults are what the engine
@@ -207,7 +211,7 @@ func (h *Handler) claimNext(ctx context.Context, id string) (work, bool, error) 
 	defer tx.Rollback(ctx)
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() AND ($3='' OR id::text=$3) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0)`, j.lease, h.worker.Lease.Seconds(), id).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin)
+	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() AND ($3='' OR id::text=$3) ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+make_interval(secs => $2),updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command,COALESCE(j.trigger_message_id::text,''),COALESCE(j.so_tin_doc,0),j.created_at,j.attempts`, j.lease, h.worker.Lease.Seconds(), id).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command, &j.trigger, &j.soTin, &j.createdAt, &j.attempt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}

@@ -44,6 +44,18 @@ func fold(text string) string {
 	return strings.ToLower(collapsed)
 }
 
+// Fold is the normalisation every pattern here reads: NFD with the marks
+// dropped, đ as d, whitespace collapsed, lower case. Exported for the AI
+// engine's guard, unchanged: this package is an oracle port.
+func Fold(text string) string { return fold(text) }
+
+// LooksLikeInstruction is the instruction catalogue alone, on folded text:
+// what field_is_safe refuses a field for, without the length and control
+// character checks. The AI engine's guard runs it on every untrusted source.
+func LooksLikeInstruction(text string) bool {
+	return instruction.FindString(fold(text)) != ""
+}
+
 func fieldSafe(value tree.Value, maxChars int) bool {
 	if value == nil {
 		return true

@@ -6,6 +6,9 @@
 //	core routes --json list the routes this binary serves itself
 //	core migrate-chat  install the chat change feed and AI engine schema
 //	                   (alias: migrate-chat-candidate, the name older scripts use)
+//
+// MOBILE_AI_ENGINE_NEP=go runs Nếp on the Go engine (internal/aiharness) in
+// whichever process runs the AI workers; the default is the brain.
 package main
 
 import (
@@ -24,6 +27,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness"
+	aimetrics "mobile/services/core/internal/aiharness/metrics"
 	"mobile/services/core/internal/avatarfeed"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatassist"
@@ -121,6 +126,12 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		logger.Error("refusing to start", "error", err.Error())
 		return 1
 	}
+	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	logger.Info("Nếp engine chosen", "env", EnvAIEngineNep, "engine", nepEngineName(nepGo), "runs_here", chat.on && inproc)
 	if chat.on {
 		// On by default, so a host that pulls a chat route back to Python gets
 		// a refusal it can read, never a front door that quietly lost the AI.
@@ -230,8 +241,24 @@ func serveUntil(ctx context.Context, getenv func(string) string, stderr io.Write
 		changes := chatlegacychange.New(chatlegacychange.Store{Pool: pool}, chatCtx, allowedOrigins)
 		assistant := chatassist.New(pool, brain.Configured()).WithWorker(workerCfg)
 		avatars := avatarfeed.New(avatarfeed.Store{Pool: pool}, pool, chatCtx, allowedOrigins)
+		if nepGo {
+			if inproc {
+				engine, err := nepEngine(chatCtx, getenv, logger)
+				if err == nil {
+					err = aiSchemaReady(chatCtx, pool)
+				}
+				if err != nil {
+					logger.Error("refusing to start", "error", err.Error())
+					return 1
+				}
+				assistant.WithNepEngine(engine)
+			} else {
+				assistant.WithNepGo()
+			}
+		}
 		go changes.Listen()
 		go avatars.Listen()
+		go aimetrics.RunPurger(chatCtx, pool, aimetricsPurgeEvery)
 		if inproc {
 			go assistant.Run(chatCtx)
 		} else {
@@ -374,6 +401,18 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		logger.Error("refusing to start", "error", "no model service configured (MOBILE_BRAIN_URL or MOBILE_PYTHON_UPSTREAM, and MOBILE_INTERNAL_TOKEN): a worker would claim every job only to fail it")
 		return 1
 	}
+	nepGo, err := nepEngineGo(getenv(EnvAIEngineNep))
+	if err != nil {
+		logger.Error("refusing to start", "error", err.Error())
+		return 1
+	}
+	var engine *aiharness.Engine
+	if nepGo {
+		if engine, err = nepEngine(ctx, getenv, logger); err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+	}
 	pool, err := db.Open(ctx, getenv(db.EnvDatabaseURL))
 	if err != nil {
 		logger.Error("refusing to start", "error", err.Error())
@@ -387,10 +426,66 @@ func workUntil(ctx context.Context, getenv func(string) string, stderr io.Writer
 		logger.Error("refusing to start", "error", "the chat schema is missing or unreachable: run `core migrate-chat` (compose: service migrate-chat) first")
 		return 1
 	}
-	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()))
-	chatassist.New(pool, client).WithWorker(cfg).Run(ctx)
+	assistant := chatassist.New(pool, client).WithWorker(cfg)
+	if nepGo {
+		if err := aiSchemaReady(ctx, pool); err != nil {
+			logger.Error("refusing to start", "error", err.Error())
+			return 1
+		}
+		assistant.WithNepEngine(engine)
+	}
+	logger.Info("AI worker started", "workers", cfg.Workers, "lease_seconds", int(cfg.Lease.Seconds()), "nep_engine", nepEngineName(nepGo))
+	go aimetrics.RunPurger(ctx, pool, aimetricsPurgeEvery)
+	assistant.Run(ctx)
 	logger.Info("AI worker stopped")
 	return 0
+}
+
+// EnvAIEngineNep chooses what answers Nếp: unset or "brain" keeps the Python
+// brain's nep-reply; "go" runs the Go engine (internal/aiharness), which calls
+// Gemini from this process with GEMINI_API_KEY. Read once at startup.
+const EnvAIEngineNep = "MOBILE_AI_ENGINE_NEP"
+
+// aimetricsPurgeEvery is how often the thirty-day purge of ai_turn_metrics runs.
+const aimetricsPurgeEvery = 10 * time.Minute
+
+func nepEngineGo(raw string) (bool, error) {
+	switch raw {
+	case "", "brain":
+		return false, nil
+	case "go":
+		return true, nil
+	}
+	return false, fmt.Errorf("%s must be brain or go, got %q", EnvAIEngineNep, raw)
+}
+
+func nepEngineName(goEngine bool) string {
+	if goEngine {
+		return "go"
+	}
+	return "brain"
+}
+
+// nepEngine builds the Go engine for a process that runs Nếp's jobs, and
+// refuses what would only fail every job later: no key, or a base URL that is
+// not loopback. It opens no connection; the key is never logged.
+func nepEngine(ctx context.Context, getenv func(string) string, logger *slog.Logger) (*aiharness.Engine, error) {
+	engine, err := aiharness.FromEnv(ctx, getenv, logger)
+	if err != nil {
+		return nil, fmt.Errorf("%s=go: %w", EnvAIEngineNep, err)
+	}
+	return engine, nil
+}
+
+// aiSchemaReady refuses a database without the engine's metrics schema.
+func aiSchemaReady(ctx context.Context, pool *pgxpool.Pool) error {
+	check, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	installed, err := aimetrics.Installed(check, pool)
+	if err != nil || !installed {
+		return fmt.Errorf("%s=go needs the AI engine schema: run `core migrate-chat` (compose: service migrate-chat) first", EnvAIEngineNep)
+	}
+	return nil
 }
 
 func healthcheck(getenv func(string) string, stderr io.Writer) int {
@@ -574,6 +669,11 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 	if err = chatlegacychange.Migrate(ctx, pool); err == nil {
 		err = chatassist.Migrate(ctx, pool)
 	}
+	// The AI engine's own table, after chatassist: its rows reference
+	// chat_ai_invocations. Its own version table; no chatassist version.
+	if err == nil {
+		err = aimetrics.Migrate(ctx, pool)
+	}
 	if err == nil {
 		err = avatarfeed.Migrate(ctx, pool)
 	}
@@ -581,6 +681,6 @@ func migrateChat(getenv func(string) string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "chat migration failed:", err)
 		return 1
 	}
-	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi và engine AI nhóm. Ownership route giữ nguyên.")
+	fmt.Fprintln(stdout, "Đã áp dụng migration chat: feed thay đổi, engine AI nhóm và bảng số đo engine AI. Ownership route giữ nguyên.")
 	return 0
 }

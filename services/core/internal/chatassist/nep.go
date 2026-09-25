@@ -12,9 +12,13 @@ import (
 	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/aiharness"
+	"mobile/services/core/internal/aiharness/metrics"
+	"mobile/services/core/internal/aiharness/obs"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/domain/nepphieu"
 	"mobile/services/core/internal/pyjson"
 )
 
@@ -85,7 +89,7 @@ type goiNep struct {
 var (
 	// The same closed lists as phieu.ts. `nep_phieu_test.go` reads phieu.ts and
 	// fails when the two drift.
-	manNepLui   = []string{"finance", "settlements", "batches", "smart-split"}
+	manNepLui   = nepphieu.ManLui
 	khoaSoLieu  = map[string]bool{"soNguoi": true, "soChang": true, "soAnh": true, "soNgay": true, "soMuc": true, "soViec": true}
 	kieuNhip    = map[string]bool{"sap-toi": true, "hom-nay": true, "dang-dien-ra": true, "da-qua": true, "khong-ro": true}
 	loaiSoHopLe = map[string]bool{"hoi": true, "hai-nguoi": true, "doi": true}
@@ -93,16 +97,9 @@ var (
 )
 
 // nepPhaiLui is `nepPhaiLui` of phieu.ts: whole first segment, never a prefix,
-// so `financial-report` is not a money screen.
-func nepPhaiLui(man string) bool {
-	dau := strings.Split(strings.TrimLeft(man, "/"), "/")[0]
-	for _, m := range manNepLui {
-		if dau == m {
-			return true
-		}
-	}
-	return false
-}
+// so `financial-report` is not a money screen. The rule lives in
+// domain/nepphieu because the Go engine applies it too.
+func nepPhaiLui(man string) bool { return nepphieu.PhaiLui(man) }
 
 func chuTrongHan(s string, han int) bool {
 	return utf8.ValidString(s) && utf8.RuneCountInString(s) <= han
@@ -261,7 +258,7 @@ func (h *Handler) nepCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = tx.Rollback(r.Context())
-	available := h.available(r.Context())
+	available := h.nepSanSang(r.Context())
 	tx, person, digest, err := h.beginNep(r)
 	if err != nil {
 		failure(w, err)
@@ -393,12 +390,40 @@ func docTraLoi(raw pyjson.Value) (string, bool) {
 	return text, true
 }
 
+// WithNepEngine runs Nếp's jobs on the Go engine (MOBILE_AI_ENGINE_NEP=go):
+// the same queue, lease, sealed {text} result and failure codes, with the
+// model called from Go through aiharness instead of the brain's nep-reply.
+func (h *Handler) WithNepEngine(e *aiharness.Engine) *Handler {
+	h.nepEngine, h.nepGo = e, e != nil
+	return h
+}
+
+// WithNepGo marks a process that serves Nếp's routes while the jobs run on
+// the Go engine in `core work`: asking Nếp then never probes the brain.
+func (h *Handler) WithNepGo() *Handler {
+	h.nepGo = true
+	return h
+}
+
+// nepSanSang says whether a question to Nếp can be taken at all. On the Go
+// engine that is the host's choice, made and checked at startup (the worker
+// refuses to start without its key); on the brain it is the brain's probe.
+func (h *Handler) nepSanSang(ctx context.Context) bool {
+	if h.nepGo {
+		return true
+	}
+	return h.available(ctx)
+}
+
 // processNep runs one personal job. It never calls prepare: nothing the
 // server owns about a room -- roster, taste, budget, catalogue -- belongs in a
 // question the person asked on their own.
 func (h *Handler) processNep(ctx context.Context, j work) error {
 	if err := h.nepConSong(ctx, j); err != nil {
 		return h.nepThatBai(ctx, j, "sharing_unavailable")
+	}
+	if h.nepEngine != nil {
+		return h.nepQuaEngine(ctx, j)
 	}
 	payload, err := nepPayload(j.goi, j.prompt)
 	if err != nil {
@@ -415,6 +440,56 @@ func (h *Handler) processNep(ctx context.Context, j work) error {
 		return h.nepThatBai(ctx, j, "invalid_ai_result")
 	}
 	return h.nepXong(ctx, j, text)
+}
+
+// luotEngine is the engine's turn, built from the stored job alone: the slip,
+// the session and the question the device sent, and the instant the question
+// was stored. Nothing is looked up.
+func luotEngine(j work) (aiharness.Turn, error) {
+	var g goiNep
+	if len(j.goi) > 0 {
+		if err := json.Unmarshal(j.goi, &g); err != nil {
+			return aiharness.Turn{}, err
+		}
+	}
+	t := aiharness.Turn{Bot: obs.BotNep, InvocationID: j.id, LanThu: j.attempt, Lenh: obs.LenhHoi, Luc: j.createdAt, LoiNho: j.prompt}
+	if p := g.Phieu; p != nil {
+		t.PhieuNep = &aiharness.PhieuNep{Man: p.Man, TieuDe: p.TieuDe, LoaiSo: p.LoaiSo, SoLieu: p.SoLieu, GoiY: p.GoiY}
+		if p.Nhip != nil {
+			t.PhieuNep.Nhip = &aiharness.Nhip{Kieu: p.Nhip.Kieu, ConNgay: p.Nhip.ConNgay, TruocNgay: p.Nhip.TruocNgay}
+		}
+	}
+	for _, l := range g.Luot {
+		t.LuotNep = append(t.LuotNep, aiharness.LuotNep{Vai: l.Vai, Chu: l.Chu})
+	}
+	return t, nil
+}
+
+// nepQuaEngine runs the job on the Go engine. The answer is sealed by the same
+// nepXong as the brain's; a turn that ends without one fails the job with the
+// engine's code, whose sentence the app already has (LOI_KET_QUA_NEP). One
+// metrics row follows the terminal transition, and never decides it.
+func (h *Handler) nepQuaEngine(ctx context.Context, j work) error {
+	turn, err := luotEngine(j)
+	if err != nil {
+		return h.nepThatBai(ctx, j, "invalid_ai_result")
+	}
+	res, runErr := h.nepEngine.Run(ctx, turn, aiharness.BoQua{})
+	if runErr != nil {
+		err = h.nepThatBai(ctx, j, string(aiharness.MaCua(runErr)))
+	} else {
+		err = h.nepXong(ctx, j, res.Text)
+	}
+	h.ghiSoDo(ctx, res.Record)
+	return err
+}
+
+// ghiSoDo writes the turn's metrics row: enums and numbers only
+// (aiharness/obs), after the job has ended, on a short clock of its own.
+func (h *Handler) ghiSoDo(ctx context.Context, rec obs.TurnRecord) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+	defer cancel()
+	_ = metrics.Ghi(ctx, h.pool, rec)
 }
 
 // nepConSong confirms the session that asked is still live and the job is

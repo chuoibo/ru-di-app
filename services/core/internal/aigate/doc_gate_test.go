@@ -13,6 +13,8 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/packages"
+
+	aimetrics "mobile/services/core/internal/aiharness/metrics"
 )
 
 // The AI paths promise what they read (ADR-0036 §2.3–§2.4, §4; ADR-0033 §4):
@@ -240,6 +242,11 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 		"(*" + pkgChat + ".Handler).nepXong",
 		pkgChat + ".phien",
 		"(*mobile/services/core/internal/brain.Client).PostJSONContext",
+		// The Go engine (MOBILE_AI_ENGINE_NEP=go) and its metrics writer are
+		// on the path too; a walk that stops at the engine proves nothing
+		// about it.
+		"(*mobile/services/core/internal/aiharness.Engine).Run",
+		"mobile/services/core/internal/aiharness/metrics.Ghi",
 	} {
 		if !c.funcs[must] {
 			t.Fatalf("closure never reaches %s; the walk is broken", must)
@@ -251,6 +258,14 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 		t.Fatal("no SQL found on Nếp's path; the extraction has slipped")
 	}
 	for _, name := range sortedKeys(used) {
+		if nepWriteOnly[name] {
+			for _, q := range used[name] {
+				if v := writeOnlyViolation(name, q); v != "" {
+					t.Errorf("Nếp's path %s: %q", v, q)
+				}
+			}
+			continue
+		}
 		if !allowed[name] {
 			t.Errorf("Nếp's path reaches table %s: %q", name, used[name][0])
 		}
@@ -268,6 +283,99 @@ func TestNepReadsNothingForContextAcrossPackages(t *testing.T) {
 		}
 	}
 	t.Logf("Nếp closure: %d functions, tables %v", len(c.funcs), sortedKeys(used))
+}
+
+// nepWriteOnly are the tables Nếp's path may write and never read, each named
+// here with why it cannot carry context.
+//
+// ai_turn_metrics (aiharness/metrics, ADR-0037 §2.8): one row per turn the Go
+// engine ran, written after the job ended. It is not context: the path only
+// INSERTs into it, so nothing in it can reach a model; and it cannot hold
+// words, so nothing of a question or an answer can be kept there either --
+// every column is an id, a number, a boolean, a timestamp, or text held by a
+// CHECK to a closed list (TestAiTurnMetricsHoldsNoFreeText below, and the
+// live catalogue check in aiharness/metrics).
+var nepWriteOnly = map[string]bool{"ai_turn_metrics": true}
+
+var insertOnly = regexp.MustCompile(`(?is)^\s*insert\s+into\s+([a-z_][a-z0-9_.]*)\s*\(`)
+
+// writeOnlyViolation says what is wrong with q naming a write-only table, or
+// "" when q is an INSERT into it and names no other table.
+func writeOnlyViolation(table, q string) string {
+	m := insertOnly.FindStringSubmatch(q)
+	if m == nil || !strings.EqualFold(m[1], table) {
+		return "does more than INSERT into " + table
+	}
+	for _, other := range sqlTable.FindAllStringSubmatch(q, -1) {
+		if !strings.EqualFold(other[1], table) {
+			return "reads " + other[1] + " while writing " + table
+		}
+	}
+	return ""
+}
+
+// columnMayHoldText says whether a column definition of CREATE TABLE could
+// store words: anything but an id, a number, a boolean or a timestamp, unless
+// a CHECK holds it to a closed list or a hex shape.
+var (
+	colPlain  = regexp.MustCompile(`^\w+ (uuid|smallint|integer|boolean|timestamptz)\b`)
+	colClosed = regexp.MustCompile(`^\w+ (text|char\(\d+\))( NOT NULL)? CHECK \(\w+ (IN \('[a-z0-9_]*'(,'[a-z0-9_]*')*\)|~ '\^\[0-9a-f\]\{\d+\}\$')\)$`)
+)
+
+func columnMayHoldText(def string) bool {
+	return !colPlain.MatchString(def) && !colClosed.MatchString(def)
+}
+
+// The table Nếp writes holds no free text, read from the migration the binary
+// embeds.
+func TestAiTurnMetricsHoldsNoFreeText(t *testing.T) {
+	sql := regexp.MustCompile(`(?m)^\s*--.*$`).ReplaceAllString(aimetrics.SchemaSQL(), "")
+	body := regexp.MustCompile(`(?s)CREATE TABLE ai_turn_metrics \((.*?)\);`).FindStringSubmatch(sql)
+	if body == nil {
+		t.Fatal("cannot find CREATE TABLE ai_turn_metrics in the embedded migration")
+	}
+	n := 0
+	for _, line := range strings.Split(body[1], "\n") {
+		def := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(line), ","))
+		if def == "" || strings.HasPrefix(def, "PRIMARY KEY") {
+			continue
+		}
+		n++
+		if columnMayHoldText(def) {
+			t.Errorf("ai_turn_metrics column can hold free text: %s", def)
+		}
+	}
+	if n < 20 {
+		t.Fatalf("read only %d columns; the parse slipped", n)
+	}
+	if regexp.MustCompile(`(?i)\b(jsonb?|bytea|varchar|character varying)\b`).MatchString(sql) {
+		t.Error("the migration declares a type that can hold free text")
+	}
+}
+
+// Canaries for the two rules above: a read of the write-only table, a join
+// through it, and a column that could carry words are all red.
+func TestWriteOnlyAndNoFreeTextCanRed(t *testing.T) {
+	if writeOnlyViolation("ai_turn_metrics", "INSERT INTO ai_turn_metrics(invocation_id,bot) VALUES($1,$2)") != "" {
+		t.Fatal("the metrics INSERT itself is refused")
+	}
+	for _, q := range []string{
+		"SELECT prompt_version FROM ai_turn_metrics WHERE invocation_id=$1",
+		"INSERT INTO ai_turn_metrics(invocation_id) SELECT id FROM messages",
+		"UPDATE ai_turn_metrics SET code=$2",
+	} {
+		if writeOnlyViolation("ai_turn_metrics", q) == "" {
+			t.Errorf("not caught: %s", q)
+		}
+	}
+	for _, def := range []string{"note text", "detail text NOT NULL", "tool_args jsonb", "cau text CHECK (char_length(cau) <= 160)", "bot text NOT NULL CHECK (bot IN ('nep','Tối nay đi đâu'))"} {
+		if !columnMayHoldText(def) {
+			t.Errorf("not caught: %s", def)
+		}
+	}
+	if columnMayHoldText("bot text NOT NULL CHECK (bot IN ('nep','nhom'))") || columnMayHoldText("lan_thu smallint NOT NULL") {
+		t.Fatal("a closed column was taken for free text")
+	}
 }
 
 // The group engine may touch `messages` (ownership of a shared turn, the

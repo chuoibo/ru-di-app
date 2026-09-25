@@ -58,12 +58,13 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { LOI_GOI_AI } from "../dist-test/rudi/chat/ai-invocations.js";
-import { LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
+import { LOI_KET_QUA_NEP, LOI_NEP } from "../dist-test/rudi/nep/hoi.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const GOC_APP = join(HERE, "..");
 const GOC_REPO = join(GOC_APP, "..", "..");
 const CHATASSIST = join(GOC_REPO, "services", "core", "internal", "chatassist");
+const CAU_ENGINE = join(GOC_REPO, "services", "core", "internal", "aiharness", "cau", "cau.go");
 
 /**
  * Mã phát ra trên đường client gọi nhưng client không bao giờ thấy. Mỗi dòng
@@ -275,6 +276,79 @@ for (const duong of DUONG) test(`${duong.ten}: không câu nào lộ chữ của
     assert.doesNotMatch(cau, /[—–]/, `câu dùng gạch dài: ${cau}`);
     assert.ok(cau.trim().length > 20, `câu quá ngắn để nói được việc gì: ${cau}`);
   }
+});
+
+/* ------------------------------------------------ 3b. mã kết quả của Nếp - */
+
+/**
+ * Một câu hỏi Nếp đã được worker nhận có thể kết thúc bằng một mã thay cho câu
+ * trả lời; app đọc mã ở `LOI_KET_QUA_NEP`. Mã đến từ ba chỗ, đều đọc từ mã Go:
+ * (1) `nepThatBai(ctx, j, "mã")` trong `chatassist/nep.go`, (2) hai mã của lượt
+ * quét trong `chatassist/worker.go`, (3) bảng câu cố định của engine Go
+ * (`aiharness/cau/cau.go`, ADR-0037 §2.9), vì với `MOBILE_AI_ENGINE_NEP=go` mã
+ * của engine đi thẳng vào cột `code`. Câu của engine trong app phải đúng TỪNG
+ * CHỮ câu trong cau.go: một nguồn sự thật, hai bản chép, và cổng này giữ chúng
+ * không lệch.
+ */
+function bangCauEngine() {
+  const nguon = readFileSync(CAU_ENGINE, "utf8");
+  const ten = new Map();
+  for (const m of nguon.matchAll(/^\s*(\w+)\s+Ma\s*=\s*"([a-z_]+)"/gm)) ten.set(m[1], m[2]);
+  const khoi = /var bang = \[\]dong\{([\s\S]*?)\n\}/.exec(nguon);
+  assert.ok(khoi, "không thấy bảng câu `bang` trong aiharness/cau/cau.go");
+  const bang = new Map();
+  // Every row must be in the one shape this reader knows: a row it could not
+  // read would otherwise be a code with no sentence that nobody sees.
+  for (const dong of khoi[1].split("\n").map((d) => d.trim()).filter((d) => d.startsWith("{"))) {
+    const m = /^\{(\w+),\s*"([^"]+)"\},$/.exec(dong);
+    assert.ok(m, `dòng bảng trong cau.go không đúng dạng {TenHang, "câu"},: ${dong}`);
+    assert.ok(ten.has(m[1]), `cau.go dùng ${m[1]} mà không khai hằng`);
+    bang.set(ten.get(m[1]), m[2]);
+  }
+  assert.ok(bang.size >= 6, `chỉ đọc được ${bang.size} câu trong cau.go, bộ đọc đang hỏng`);
+  return bang;
+}
+
+function maKetQuaNep() {
+  const ma = new Set();
+  const nep = readFileSync(join(CHATASSIST, "nep.go"), "utf8");
+  for (const m of nep.matchAll(/\bnepThatBai\(\s*ctx\s*,\s*j\s*,\s*"([a-z_]+)"\s*\)/g)) ma.add(m[1]);
+  assert.ok(ma.size >= 2, `chỉ thấy ${ma.size} mã nepThatBai trong nep.go`);
+  const worker = readFileSync(join(CHATASSIST, "worker.go"), "utf8");
+  // `code='…'`, or `code=CASE WHEN … THEN '…'`; never `status=CASE … THEN 'failed'`.
+  const quet = [...worker.matchAll(/\bcode\s*=\s*'([a-z_]+)'|\bcode\s*=\s*CASE\b[^;`]*?\bTHEN '([a-z_]+)'/g)].map((m) => m[1] ?? m[2]);
+  assert.ok(quet.includes("sharing_expired") && quet.includes("worker_interrupted"), `mã của lượt quét: ${quet}`);
+  for (const m of quet) ma.add(m);
+  for (const m of bangCauEngine().keys()) ma.add(m);
+  return ma;
+}
+
+test("Nếp: mọi mã một câu hỏi có thể kết thúc đều có câu trong LOI_KET_QUA_NEP, và không câu chết", () => {
+  const ma = maKetQuaNep();
+  const thieu = [...ma].filter((m) => !(m in LOI_KET_QUA_NEP)).sort();
+  assert.deepEqual(thieu, [], `mã kết thúc không có câu: ${thieu.join(", ")}. Thêm vào src/rudi/nep/hoi.ts.`);
+  const thua = Object.keys(LOI_KET_QUA_NEP).filter((m) => !ma.has(m));
+  assert.deepEqual(thua, [], `câu cho mã không còn phát: ${thua.join(", ")}`);
+});
+
+test("Nếp: câu của engine Go trong app đúng từng chữ với aiharness/cau/cau.go", () => {
+  for (const [ma, cau] of bangCauEngine()) {
+    assert.equal(LOI_KET_QUA_NEP[ma], cau, `${ma}: app nói «${LOI_KET_QUA_NEP[ma]}», cau.go nói «${cau}»`);
+  }
+});
+
+test("Nếp: câu kết quả giọng người, không hai mã chung một câu", () => {
+  const theoCau = new Map();
+  for (const [ma, cau] of Object.entries(LOI_KET_QUA_NEP)) {
+    assert.doesNotMatch(cau, /[a-z]+_[a-z_]+/, `${ma}: câu chứa mã máy: ${cau}`);
+    assert.doesNotMatch(cau, /lỗi/i, `${ma}: câu viết như báo lỗi: ${cau}`);
+    assert.doesNotMatch(cau, /\b(4\d\d|5\d\d)\b|HTTP/i, `${ma}: câu nhắc mã HTTP: ${cau}`);
+    assert.doesNotMatch(cau, /[—–]/, `${ma}: câu dùng gạch dài: ${cau}`);
+    assert.ok(cau.trim().length > 20, `${ma}: câu quá ngắn: ${cau}`);
+    theoCau.set(cau, [...(theoCau.get(cau) ?? []), ma]);
+  }
+  const dungChung = [...theoCau.values()].filter((ds) => ds.length > 1);
+  assert.deepEqual(dungChung, [], `những mã này đọc ra cùng một câu: ${JSON.stringify(dungChung)}`);
 });
 
 /* ------------------------------------------------ 4. lệnh AI là tin thường, rồi mới là lời gọi */

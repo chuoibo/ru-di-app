@@ -100,6 +100,11 @@ export const LOI_NEP: Record<string, string> = {
 /**
  * Why a question the worker picked up ended without an answer. These never
  * come back as an HTTP refusal, so they are not in `LOI_NEP`.
+ *
+ * The last four come from the Go engine (MOBILE_AI_ENGINE_NEP=go). Their
+ * words are fixed in `services/core/internal/aiharness/cau/cau.go`, and
+ * `tests/cau-chu-goi-ai.test.mjs` holds each sentence here to that file,
+ * word for word.
  */
 export const LOI_KET_QUA_NEP: Record<string, string> = {
   provider_unavailable: "Nếp chưa trả lời được lúc này. Bạn thử lại sau ít phút nhé.",
@@ -107,6 +112,11 @@ export const LOI_KET_QUA_NEP: Record<string, string> = {
   sharing_unavailable: "Phiên đăng nhập vừa đổi nên Nếp dừng câu này. Bạn hỏi lại nhé.",
   sharing_expired: "Câu hỏi chờ lâu quá nên Nếp đã bỏ đi. Bạn hỏi lại nhé.",
   worker_interrupted: "Nếp bị ngắt giữa chừng. Bạn hỏi lại nhé.",
+  nep_lui_man_tien: "Ở màn tiền Nếp không trả lời, để bạn tự xem số liệu cho rõ. Ra màn khác rồi hỏi Nếp nhé.",
+  nep_khong_cham_tien:
+    "Nếp không làm việc tiền nong: không chuyển, không ghi nợ, không chia hay nhắc ai trả. Bạn tự xem ở màn tiền nhé.",
+  ai_tra_loi_bi_chan: "Nếp vừa viết ra một câu không nên gửi nên đã dừng lại. Bạn hỏi lại theo cách khác nhé.",
+  ai_het_ngan_sach: "Câu này cần nghĩ lâu hơn sức Nếp cho một lượt. Bạn hỏi gọn lại từng ý nhé.",
 };
 
 export function cauKetQuaNep(code: string | null): string {

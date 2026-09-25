@@ -17,6 +17,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"mobile/services/core/internal/aiharness"
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
@@ -29,6 +30,12 @@ type Handler struct {
 	brain  *brain.Client
 	mux    *featureroute.Mux
 	worker WorkerConfig
+	// nepEngine, when set, runs Nếp's jobs in Go instead of the brain's
+	// nep-reply (MOBILE_AI_ENGINE_NEP=go). nepGo says the host chose the Go
+	// engine even where this process runs no worker, so asking Nếp never
+	// waits on a probe of the brain.
+	nepEngine *aiharness.Engine
+	nepGo     bool
 }
 
 // Invocation excludes inputs and session digests from every public response.

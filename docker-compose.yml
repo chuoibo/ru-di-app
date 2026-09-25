@@ -248,6 +248,11 @@ services:
       MOBILE_CORE_CANDIDATE_ROUTES: ${MOBILE_CORE_CANDIDATE_ROUTES:-}
       # Rollback without a rebuild: `MOBILE_FORCE_PYTHON=all make up`.
       MOBILE_FORCE_PYTHON: ${MOBILE_FORCE_PYTHON:-}
+      # What answers Nếp's questions (ADR-0037, slice 6): `brain` (default) is
+      # the Python brain's nep-reply; `go` runs the Go engine in this process,
+      # which then calls Gemini itself with GEMINI_API_KEY. Read once at start.
+      MOBILE_AI_ENGINE_NEP: ${MOBILE_AI_ENGINE_NEP:-brain}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "${MOBILE_API_PORT:-8099}:8000"
     depends_on:
