@@ -60,7 +60,7 @@ if (!existsSync(INDEX)) {
       const cu = lyDoBanDungCu(EXPORT_DIR, ROOT);
       assert.equal(cu, null, cu);
       server = await serve(EXPORT_DIR);
-      page = await launch(chromeBin);
+      page = await launch(chromeBin, { webgl: true });
       await page.viewport(390, 844);
       // Map controls must remain usable when the former stylesheet CDN is
       // unavailable. The export now serves the installed MapLibre CSS.

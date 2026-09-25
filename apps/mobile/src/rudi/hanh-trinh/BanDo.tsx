@@ -1,12 +1,13 @@
 /** Web MapLibre GL. Native override: BanDo.native.tsx. */
 
 import { createElement, useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { GeoJSONSource, Map, Marker, NavigationControl, Popup, type MapLayerMouseEvent, type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { TAM_DA_LAT } from "./toa-do-mau";
 import { DEM_KHOP, hopGioi, hopHanhTrinh, muiTenDoan, tapHop, type BanDoProps, type MocBanDo } from "./kieu-ban-do";
+import { typography, useRudiTheme } from "../theme";
 
 function veMoc(moc: MocBanDo, mauMoc: readonly string[], mauInk: string, mauChon: string, mauVien: string): HTMLElement {
   const el = document.createElement("button");
@@ -62,6 +63,7 @@ export function BanDo({
   onChonDoan,
   onNen,
 }: BanDoProps) {
+  const { colors } = useRudiTheme();
   const cbs = useRef({ onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo });
   cbs.current = { onUserMove, onChonMoc, onChonDoan, onNen, onGhim, mauMoc, mauMocInk, mauMocChon, mauVien, mauVienDuong, mauDuong, mauDuongMo };
   const mapRef = useRef<Map | null>(null);
@@ -71,17 +73,32 @@ export function BanDo({
   const loaded = useRef(false);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [san, setSan] = useState(false);
+  const [webgl2, setWebgl2] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    try {
+      setWebgl2(Boolean(document.createElement("canvas").getContext("webgl2")));
+    } catch {
+      setWebgl2(false);
+    }
+  }, []);
 
   useEffect(() => {
     const el = host;
-    if (!el) return;
-    const map = new Map({
-      container: el,
-      style: kieu.startsWith("{") ? JSON.parse(kieu) : kieu,
-      center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
-      zoom: 12,
-      attributionControl: { compact: true },
-    });
+    if (!el || !webgl2) return;
+    let map: Map;
+    try {
+      map = new Map({
+        container: el,
+        style: kieu.startsWith("{") ? JSON.parse(kieu) : kieu,
+        center: [TAM_DA_LAT.lng, TAM_DA_LAT.lat],
+        zoom: 12,
+        attributionControl: { compact: true },
+      });
+    } catch {
+      setWebgl2(false);
+      return;
+    }
     map.addControl(new NavigationControl({ showCompass: true, showZoom: false, visualizePitch: true }), "top-right");
     map.on("load", () => {
       loaded.current = true;
@@ -171,7 +188,7 @@ export function BanDo({
     };
     // `kieu` is in the deps: a theme change swaps the basemap, and the map is
     // rebuilt with its sources rather than restyled underneath them.
-  }, [host, kieu]);
+  }, [host, kieu, webgl2]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -314,17 +331,39 @@ export function BanDo({
 
   return (
     <View collapsable={false} style={[styles.fill, { backgroundColor: mauNen }]} testID="ban-do-hanh-trinh">
-      {createElement("div", {
-        id: "ban-do-hanh-trinh",
-        ref: (node: HTMLDivElement | null) => {
-          setHost(node);
-        },
-        style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: mauNen },
-      })}
+      {webgl2 ? createElement("div", {
+          id: "ban-do-hanh-trinh",
+          ref: (node: HTMLDivElement | null) => {
+            setHost(node);
+          },
+          style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: mauNen },
+        }) : (
+          <View accessibilityLabel="Bản đồ không khả dụng" style={styles.fallback}>
+            <View style={[styles.routeLine, { backgroundColor: colors.line }]}>
+              <View style={[styles.routeDot, { backgroundColor: colors.accent }]} />
+              <View style={[styles.routeDot, { backgroundColor: colors.accent }]} />
+            </View>
+            <View style={styles.fallbackCopy}>
+              <Text style={[typography.h2, { color: colors.ink }]}>
+                {webgl2 === null ? "Đang mở hành trình" : "Đường đi vẫn ở đây"}
+              </Text>
+              <Text style={[typography.note, { color: colors.inkSoft }]}>
+                {webgl2 === null
+                  ? "Đang chuẩn bị bản đồ cho trang ngày của hội."
+                  : "Thiết bị chưa hiển thị được bản đồ. Chọn mốc trong trang ngày bên dưới để xem giờ và địa điểm."}
+              </Text>
+              {webgl2 === false ? <Text style={[typography.caption, { color: colors.inkSoft }]}>{mocs.length} mốc có vị trí</Text> : null}
+            </View>
+          </View>
+        )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1, minHeight: 220, position: "relative" },
+  fallback: { flex: 1, flexDirection: "row", alignItems: "center", paddingHorizontal: 28, paddingVertical: 24, gap: 24 },
+  fallbackCopy: { flex: 1, gap: 10, maxWidth: 400 },
+  routeLine: { width: 2, height: 100, justifyContent: "space-between", alignItems: "center" },
+  routeDot: { width: 12, height: 12, borderRadius: 6 },
 });
