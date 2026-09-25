@@ -24,7 +24,9 @@ import {
 import { danhSachThanhVien, type ThanhVien } from "../../../screens/vao-cua/cong-api";
 import { tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 import { useRudiSession } from "../../session";
-import { typography, useRudiTheme } from "../../theme";
+import { mucNguoi, typography, useRudiTheme } from "../../theme";
+import { ChuThichLe } from "../../ui/ChuThichLe";
+import { StampButton } from "../../ui/StampButton";
 import { Heading, ListRow, RudiButton, RudiScreen, TopBar } from "../../ui";
 import { AvatarNguoi } from "../../ui/AvatarNguoi";
 import { ErrorState } from "../../ui/ErrorState";
@@ -38,7 +40,7 @@ type Trang =
 
 export function GroupMembersScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { phien, phienDaDoc } = useRudiSession();
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
@@ -121,7 +123,8 @@ export function GroupMembersScreen() {
               <View key={tv.id} style={[styles.hang, { borderBottomColor: colors.line }]}>
                 <AvatarNguoi name={ten} personId={tv.person_id} ring={laToi} size={40} />
                 <View style={styles.hangChu}>
-                  <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : colors.ink }]}>
+                  {/* Each member in their own ink (ADR-0037 D6); somebody still only invited is pencil. */}
+                  <Text style={[typography.body, { color: duocMoi ? colors.inkSoft : mucNguoi(tv.person_id, dark) }]}>
                     {ten}
                     {laToi ? " (bạn)" : ""}
                   </Text>
@@ -148,15 +151,11 @@ export function GroupMembersScreen() {
           {loiVaiTro ? <Text style={[typography.caption, { color: colors.warn }]}>{loiVaiTro}</Text> : null}
         </View>
       ) : null}
-      <RudiButton
-        icon="person-add-outline"
-        label="Mời bằng số điện thoại"
-        onPress={() => router.push(`/groups/${id}/invite` as never)}
-      />
-      <Text style={[typography.caption, { color: colors.inkFaint }]}>
-        Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng
-        ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
-      </Text>
+      <StampButton label="Mời bằng số điện thoại" onPress={() => router.push(`/groups/${id}/invite` as never)} size="vua" tilt={-1} />
+      {/* Consent, said where the invitation starts: a margin note, still read. */}
+      <ChuThichLe icon="mail-open-outline">
+        Người được mời thấy lời mời ở tab Tin nhắn ngay khi đăng nhập bằng số đó, và chính họ bấm «Đồng ý». Không ai bị đưa vào nhóm mà chưa gật đầu.
+      </ChuThichLe>
     </RudiScreen>
   );
 }

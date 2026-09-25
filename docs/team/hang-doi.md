@@ -38,6 +38,9 @@ không lạc.
    - Flow 26 và 35 (S4: Khám phá có sân khấu thành phố ở đầu, gập đi khi đang lọc/tìm; Đi đâu
      là lưới bưu thiếp). Flow 26 cuộn tới «Tiệm Nướng Xóm Lào» bằng scrollUntilVisible nên vẫn
      tới; cần xem «1 kết quả» còn trong màn khi lọc (sân khấu đã gập lúc đó).
+   - Flow 24, 25, 30, 34, 37, 45, 48 (S5: nhóm là gáy sổ, avatar mang vòng mực người, thanh
+     ghim nằm trên dải nền, khay công cụ là vật ký hoạ, bình chọn trên giấy nhớ, tờ hẹn chung
+     trên giấy kẻ, hồ sơ người cùng nhóm có «Kết bạn»). Nhãn và chữ flow bấm giữ nguyên.
    - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&

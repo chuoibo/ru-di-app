@@ -10,7 +10,7 @@ import { type Diem, type LopVe, bau, daGiac, duong, khungBo, netGay, tron } from
 
 export const KHUNG_VAT = 64;
 
-export const VAT_BAN = ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap"] as const;
+export const VAT_BAN = ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap", "sticker", "phieu-bau"] as const;
 export type VatBan = (typeof VAT_BAN)[number];
 
 /** A short sentence for each drawing, for the one place it is read aloud. */
@@ -20,6 +20,8 @@ export const MO_TA_VAT: Readonly<Record<VatBan, string>> = Object.freeze({
   "anh-in": "Ký hoạ một tấm ảnh in",
   polaroid: "Ký hoạ một tấm polaroid",
   "thu-gap": "Ký hoạ một lá thư gấp ba",
+  sticker: "Ký hoạ một miếng sticker đang bóc",
+  "phieu-bau": "Ký hoạ hai tờ giấy nhớ bình chọn",
 });
 
 const NET = 2;
@@ -158,6 +160,36 @@ function thuGap(): LopVe[] {
   ];
 }
 
+function sticker(): LopVe[] {
+  // A round sticker, its edge peeling up in coral, a smile on it.
+  const cx = 30;
+  const cy = 32;
+  const r = 20;
+  return [
+    { d: tron(cx, cy, r), mau: "giay" },
+    { d: tron(cx, cy, r), mau: "muc", net: NET },
+    { d: daGiac([[44, 18], [52, 14], [48, 26]]), mau: "gap" },
+    { d: netGay([[44, 18], [52, 14], [48, 26]]), mau: "muc", net: 1.4 },
+    { d: tron(23, 28, 2.2), mau: "muc" },
+    { d: tron(37, 28, 2.2), mau: "muc" },
+    { d: duong("M", 22, 37, "C", 26, 43, 34, 43, 38, 37), mau: "muc", net: NET },
+  ];
+}
+
+function phieuBau(): LopVe[] {
+  // Two sticky notes, one behind the other, the front one ticked.
+  const sau = khung(8, 10, 32, 32, -8);
+  const truoc = khung(24, 20, 32, 32, 5);
+  const [tx, ty] = xoay([[34, 36]], 5, 40, 36)[0];
+  return [
+    { d: daGiac(sau), mau: "giay" },
+    { d: vienKin(sau), mau: "muc", net: 1.4 },
+    { d: daGiac(truoc), mau: "mo" },
+    { d: vienKin(truoc), mau: "muc", net: NET },
+    { d: netGay([[tx - 6, ty], [tx - 1, ty + 5], [tx + 9, ty - 6]]), mau: "muc", net: 2.6 },
+  ];
+}
+
 /** The drawing of one desk object, as layers in the 64 x 64 frame. */
 export function hinhVat(vat: VatBan): LopVe[] {
   switch (vat) {
@@ -171,5 +203,9 @@ export function hinhVat(vat: VatBan): LopVe[] {
       return polaroid();
     case "thu-gap":
       return thuGap();
+    case "sticker":
+      return sticker();
+    case "phieu-bau":
+      return phieuBau();
   }
 }

@@ -173,9 +173,9 @@ test("nét chữ ký: một đường mở, đúng ngữ pháp Java, nằm trong
   }
 });
 
-test("năm vật trên bàn «Tạo mới»: đủ năm, hợp lệ trong khung 64, có giấy và viền mực, tất định, có câu mô tả", async () => {
+test("vật giấy của bàn «Tạo mới» và khay chat: đủ bảy, hợp lệ trong khung 64, có giấy và viền mực, tất định, có câu mô tả", async () => {
   const { KHUNG_VAT, MO_TA_VAT, VAT_BAN, hinhVat } = await import("../dist-test/rudi/art/vat-ban.js");
-  assert.deepEqual([...VAT_BAN], ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap"]);
+  assert.deepEqual([...VAT_BAN], ["lich", "hoa-don", "anh-in", "polaroid", "thu-gap", "sticker", "phieu-bau"]);
   const daThay = new Set();
   for (const vat of VAT_BAN) {
     const lop = hinhVat(vat);

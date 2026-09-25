@@ -7,7 +7,10 @@ import { cauBoiCanh, nhanVai, type BoiCanh } from "../../ai/boi-canh";
 import { docBanNhapCongCu, ghiBanNhapCongCu, loiBinhChon, loiBinhChonTheoO, type BanNhapCongCu, type LoiBinhChonTheoO } from "../../chat/ban-nhap-cong-cu";
 import { chuKhay } from "../../chat/khay-cong-cu";
 import { docTheAi, type Tin } from "../../chat/tin-song";
+import { KHUNG_VAT, hinhVat, type VatBan } from "../../art/vat-ban";
 import { typography, useRudiTheme } from "../../theme";
+import { VeLop } from "../../ui/art/VeLop";
+import { ONhapMuc } from "../../ui/ONhapMuc";
 import { Field, IconButton, RudiButton } from "../../ui";
 
 export type KhayChat = "tools" | "poll" | "plan" | null;
@@ -160,13 +163,14 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
       onPanel(null);
     }
   };
-  const tools: { icon: keyof typeof Ionicons.glyphMap; label: string; action: () => void }[] = [
-    { icon: "image-outline", label: "Ảnh", action: onImage },
-    { icon: "happy-outline", label: "Sticker", action: onSticker },
-    { icon: "stats-chart-outline", label: "Bình chọn", action: () => onPanel("poll") },
+  // Each tool is the paper thing it puts into the conversation (ADR-0037 D1).
+  const tools: { vat: VatBan; label: string; action: () => void }[] = [
+    { vat: "anh-in", label: "Ảnh", action: onImage },
+    { vat: "sticker", label: "Sticker", action: onSticker },
+    { vat: "phieu-bau", label: "Bình chọn", action: () => onPanel("poll") },
     chu.congCuHen.dich === "to-giay"
-      ? { icon: "mail-outline", label: chu.congCuHen.label, action: () => { onPanel(null); onToGiay?.(); } }
-      : { icon: "trail-sign-outline", label: chu.congCuHen.label, action: () => onPanel("plan") },
+      ? { vat: "thu-gap", label: chu.congCuHen.label, action: () => { onPanel(null); onToGiay?.(); } }
+      : { vat: "lich", label: chu.congCuHen.label, action: () => onPanel("plan") },
   ];
   const hasDraft = panel === "poll" ? !!draft.question || draft.choices.some(Boolean) : panel === "plan" && !!draft.prompt;
   return (
@@ -189,21 +193,22 @@ export function CongCuChat({ personId, contextId, panel, onPanel, onImage, onSti
           <View style={styles.toolRow}>{tools.map((tool) => (
             <Pressable key={tool.label} accessibilityRole="button" accessibilityLabel={tool.label} disabled={busy} onPress={tool.action}
               style={({ pressed }) => [styles.tool, pressed && styles.pressed]}>
-              <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><Ionicons name={tool.icon} size={25} color={colors.ink} /></View>
+              <View style={[styles.toolIcon, { backgroundColor: colors.ground, borderColor: colors.line }]}><VeLop height={44} khungH={KHUNG_VAT} khungW={KHUNG_VAT} lop={hinhVat(tool.vat)} width={44} /></View>
               {/* Stretched to the column: measured at its own width, Android wrapped
                   «Tờ giấy» after «Tờ» and the second line never showed (24/09). */}
               <Text numberOfLines={2} style={[typography.caption, styles.toolNhan, { color: colors.ink }]}>{tool.label}</Text>
             </Pressable>
           ))}</View>
         ) : panel === "poll" ? (
-          <View style={styles.form}>
-            <Field label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
+          // Written on a sticky note, one pen line per choice (plan S5).
+          <View style={[styles.form, styles.giayNho, { backgroundColor: colors.card, borderColor: colors.lineStrong }]}>
+            <ONhapMuc label="Câu hỏi" accessibilityLabel="Câu hỏi bình chọn" value={draft.question} onChangeText={(question) => update({ question })} editable={!busy} maxLength={180} placeholder={chu.goiYPoll} />
             {/* The message sits under the box it belongs to. One sentence under
                 the whole form said something was wrong but not where, so fixing
                 it meant re-reading every box (reviewer C4, heuristic 9). */}
             {fieldErrors?.question ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.question}</Text> : null}
             {draft.choices.map((choice, index) => <View key={index} style={styles.o}>
-              <Field label={`Lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
+              <ONhapMuc label={`Lựa chọn ${index + 1}`} value={choice} editable={!busy} onChangeText={(value) => update({ choices: held.current.choices.map((old, i) => index === i ? value : old) })} maxLength={100} />
               {fieldErrors?.choices[index] ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{fieldErrors.choices[index]}</Text> : null}
             </View>)}
             {draft.choices.length < 6 ? <RudiButton label="Thêm lựa chọn" variant="ghost" compact disabled={busy} onPress={() => update({ choices: [...held.current.choices, ""] })} /> : null}
@@ -281,7 +286,8 @@ const styles = StyleSheet.create({
   toolRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "space-between" },
   tool: { alignItems: "center", justifyContent: "center", minWidth: 62, flex: 1, gap: 7, paddingVertical: 10 },
   toolNhan: { alignSelf: "stretch", textAlign: "center" },
-  toolIcon: { width: 48, height: 48, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  toolIcon: { width: 56, height: 56, borderWidth: 1, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  giayNho: { borderWidth: 1, borderRadius: 4, padding: 12, marginTop: 4 },
   form: { gap: 12, paddingBottom: 4 },
   scroll: { flexGrow: 0 },
   footer: { flexShrink: 0, gap: 8, paddingTop: 10 },

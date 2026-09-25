@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useRudiSession } from "../session";
 import { typography, useRudiTheme } from "../theme";
 import { Nep } from "../ui/art/Nep";
+import type { PoseNep } from "../art/nep";
 import { RudiButton } from "../ui";
 import { anhDanhMuc, MediaSlot } from "../ui/MediaSlot";
 import { Sheet } from "../ui/Sheet";
@@ -33,6 +34,16 @@ import { useNepHoi } from "./useNepHoi";
  * this person alone and is shown here, never in any room (§2.8).
  */
 
+/** What Nếp holds, by the screen the panel was opened from. */
+function tuTheTheoMan(man: string | undefined): PoseNep {
+  if (man === undefined) return "gop-y";
+  if (man.includes("to-giay")) return "dua-giay";
+  if (man.includes("chat") || man === "messages") return "goi-loi";
+  if (man === "explore" || man.startsWith("places")) return "cam-ban-do";
+  if (man === "plan" || man.startsWith("outings")) return "ghi-lai";
+  return "gop-y";
+}
+
 export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   const { phieu } = useNep();
   const { colors } = useRudiTheme();
@@ -54,7 +65,6 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
   return (
     <Sheet accessibilityLabel="Nếp" onClose={onClose} open={open} testID="nep-bang">
       <View style={styles.dau}>
-        <Nep gap="trang" pose="gop-y" size={48} />
         <View style={styles.dauChu}>
           <Text style={[typography.title, { color: colors.ink }]}>Nếp</Text>
           <Text style={[typography.caption, { color: colors.inkSoft }]}>
@@ -63,16 +73,23 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
         </View>
       </View>
 
-      <View style={[styles.the, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
-        {/* `aiInk` is ink ON the solid ai colour (white in light mode); on `aiSoft`
-            it vanished. `ai` reads on `aiSoft` in both themes. */}
-        <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
-        <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
-          {cauNguCanh(phieu)}
-        </Text>
-        <Text style={[typography.caption, { color: colors.inkSoft }]} testID="nep-phien-di-kem">
-          {cauPhienDiKem(soLuotDiKem)}
-        </Text>
+      {/* Nếp says what it sees, in a speech bubble, holding what fits the
+          screen it was opened from (ADR-0037 D1, D5): a map on Khám phá, a
+          sheet in the two-person notebook. */}
+      <View style={styles.noi}>
+        <Nep gap="trang" pose={tuTheTheoMan(phieu?.man)} size={96} />
+        <View style={[styles.the, styles.bongNoi, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]}>
+          <View style={[styles.duoiNoi, { backgroundColor: colors.aiSoft, borderColor: colors.ai }]} />
+          {/* `aiInk` is ink ON the solid ai colour (white in light mode); on `aiSoft`
+              it vanished. `ai` reads on `aiSoft` in both themes. */}
+          <Text style={[typography.label, { color: colors.ai }]}>Mình đang thấy</Text>
+          <Text style={[typography.body, { color: colors.ink }]} testID="nep-ngu-canh">
+            {cauNguCanh(phieu)}
+          </Text>
+          <Text style={[typography.caption, { color: colors.inkSoft }]} testID="nep-phien-di-kem">
+            {cauPhienDiKem(soLuotDiKem)}
+          </Text>
+        </View>
       </View>
 
       {goiY.length > 0 ? (
@@ -215,7 +232,11 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
 }
 
 const styles = StyleSheet.create({
-  dau: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
+  dau: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 },
+  noi: { flexDirection: "row", alignItems: "flex-end", gap: 10 },
+  bongNoi: { flex: 1 },
+  // The bubble's tail, pointing at Nếp: a rotated square half under the bubble.
+  duoiNoi: { position: "absolute", left: -7, bottom: 22, width: 12, height: 12, borderLeftWidth: 1, borderBottomWidth: 1, transform: [{ rotate: "45deg" }] },
   dauChu: { flex: 1 },
   the: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 12, gap: 4 },
   goiY: { gap: 8, paddingVertical: 12 },

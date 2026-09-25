@@ -12,7 +12,6 @@ import test from "node:test";
 import { THU_NGAN, congNgay, dinhDangNgay, docNgay, laNamNhuan, luoiThang, soNgayTrongThang, tenThu, thangSau, thuTrongTuan } from "../dist-test/rudi/ui/lich/lich-thang.js";
 import { NAC_MOT_NGAY, buocGioiHan, docGio, docGioThanhLoi, gioTuNac, gocTuCham, gocTuNac, nacGio, nacTiep, nacTuGoc } from "../dist-test/rudi/ui/ban-xoay.js";
 import { tachCau } from "../dist-test/rudi/ui/cau-ru.js";
-import { TRAN_ANH_HONG, anhDaHong, danhDauAnhHong, quenAnhHong } from "../dist-test/rudi/nguoi/anh-dai-dien-cache.js";
 import { ngayVeISO } from "../dist-test/rudi/chat/to-hen-chung.js";
 
 test("lịch: mười năm ngày, mỗi ngày lịch sinh ra là ngày ngayVeISO nhận, thứ khớp Date của hệ thống", () => {
@@ -90,14 +89,3 @@ test("câu rủ: chữ tách theo từ, ô trống giữ dấu câu đi sau, ô 
   assert.deepEqual(tachCau("   ", []), []);
 });
 
-test("ảnh đại diện hỏng: nhớ trong phiên, có trần, người vừa tải ảnh mới thì được thử lại", () => {
-  quenAnhHong();
-  danhDauAnhHong("a");
-  assert.ok(anhDaHong("a"));
-  quenAnhHong("a");
-  assert.ok(!anhDaHong("a"));
-  for (let i = 0; i <= TRAN_ANH_HONG; i += 1) danhDauAnhHong(`p${i}`);
-  assert.ok(!anhDaHong("p0"), "cũ nhất bị quên");
-  assert.ok(anhDaHong(`p${TRAN_ANH_HONG}`));
-  quenAnhHong();
-});

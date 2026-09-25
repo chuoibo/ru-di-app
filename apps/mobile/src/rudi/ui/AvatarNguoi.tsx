@@ -25,5 +25,7 @@ export function AvatarNguoi({ personId, ...rest }: AvatarNguoiProps) {
   const actorId = phien?.person_id ?? null;
   const source = nguonAvatar(personId, actorId);
   const onError = source && personId && actorId ? () => baoAnhHong(personId, actorId) : undefined;
-  return <Avatar {...rest} onError={onError} source={source} />;
+  // The person's own ink rides along (ADR-0037 D6): until 25/09 the id stopped
+  // here, so every live avatar kept the screen's tone.
+  return <Avatar {...rest} onError={onError} personId={personId} source={source} />;
 }

@@ -29,6 +29,7 @@ import {
 } from "../../nguoi/ho-so-nguoi";
 import { attemptFor, type Attempt } from "../../../api";
 import { docHoSoToi, ganDanhSachNhom } from "../../../phien";
+import { guiLoiMoi } from "../../../screens/ca-nhan/ban-be";
 import { nguonAnhBai } from "../../nguoi/anh-ca-nhan";
 import { CHINH_SACH, datChinhSachBinhLuan, laChinhSach, type ChinhSachBinhLuan } from "../../nguoi/chinh-sach-tuong";
 import { ghepVaoDanhSach, moNhanRieng } from "../../nhan-rieng/nhan-rieng";
@@ -100,6 +101,21 @@ export function HoSoNguoiScreen() {
       setLoiChinhSach(loiRaChu(error));
     } finally {
       setDangDoiChinhSach(false);
+    }
+  };
+
+  const [ketBan, setKetBan] = useState<"chua" | "dang-gui" | "da-gui">("chua");
+  const [loiKetBan, setLoiKetBan] = useState<string | null>(null);
+  const guiKetBan = async () => {
+    if (phien === null || personId === "" || ketBan !== "chua") return;
+    setKetBan("dang-gui");
+    setLoiKetBan(null);
+    try {
+      await guiLoiMoi(personId, phien.person_id, attemptFor(attempts.current, `ket-ban:${personId}`));
+      setKetBan("da-gui");
+    } catch (error) {
+      setKetBan("chua");
+      setLoiKetBan(loiRaChu(error));
     }
   };
 
@@ -269,6 +285,19 @@ export function HoSoNguoiScreen() {
                   variant="ghost"
                 />
                 <Text style={[typography.caption, { color: colors.inkFaint }]}>Kết bạn để nhắn riêng.</Text>
+                {/* B3 (QC 24/09): the sentence said «make friends» with nothing
+                    to press; adding somebody from the same group meant knowing
+                    their number. Not offered to a person just blocked here. */}
+                {!daChan ? (
+                  ketBan === "da-gui" ? (
+                    <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.inkSoft }]} testID="ho-so-da-gui-ket-ban">
+                      Đã gửi lời mời kết bạn. Khi {hoSo.hoSo.display_name} đồng ý, hai bạn nhắn riêng được.
+                    </Text>
+                  ) : (
+                    <RudiButton icon="person-add-outline" label="Kết bạn" loading={ketBan === "dang-gui"} onPress={() => void guiKetBan()} variant="outline" />
+                  )
+                ) : null}
+                {loiKetBan ? <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.warn }]}>{loiKetBan}</Text> : null}
               </View>
             ) : null}
             {hoSo.hoSo.relation !== "self" ? (
