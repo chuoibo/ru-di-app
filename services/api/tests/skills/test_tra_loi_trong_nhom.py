@@ -424,3 +424,92 @@ def test_runner_builds_payloads_and_stops_before_the_model_without_a_key(
     assert set(sent) == set(CASES)
     assert not (run / "bang-diem.md").exists()
     assert "không phải một lượt xanh" in capsys.readouterr().err
+
+
+# --- budget, evidence store, statistics (lát 2, thiết kế 06 §5, §7) --------
+
+from tests.skills import tra_loi_trong_nhom as harness  # noqa: E402
+
+
+def _no_model(monkeypatch: pytest.MonkeyPatch) -> list[int]:
+    calls: list[int] = []
+
+    def refuse(payload):  # pragma: no cover - reaching here is the failure
+        calls.append(1)
+        raise AssertionError("gọi model khi không được phép")
+
+    monkeypatch.setattr(harness, "call_brain", refuse)
+    return calls
+
+
+def test_du_toan_in_tran_va_khong_goi_gi(tmp_path, monkeypatch, capsys):
+    calls = _no_model(monkeypatch)
+    assert harness.main(["--out", str(tmp_path), "--lap", "5", "--du-toan"]) == 0
+    assert "= 80 lời gọi" in capsys.readouterr().out
+    assert calls == [] and list(tmp_path.iterdir()) == []
+
+
+def test_luot_that_thieu_tran_goi_bi_tu_choi(tmp_path, monkeypatch, capsys):
+    calls = _no_model(monkeypatch)
+    monkeypatch.setenv("GEMINI_API_KEY", "synthetic-not-a-key")
+    assert harness.main(["--out", str(tmp_path), "--lap", "5"]) == 2
+    assert "--tran-goi" in capsys.readouterr().err
+    assert calls == []
+
+
+def test_du_toan_vuot_tran_duyet_bi_tu_choi_truoc_loi_goi_dau(
+    tmp_path, monkeypatch, capsys
+):
+    calls = _no_model(monkeypatch)
+    monkeypatch.setenv("GEMINI_API_KEY", "synthetic-not-a-key")
+    assert harness.main(["--out", str(tmp_path), "--lap", "5", "--tran-goi", "79"]) == 2
+    assert "vượt trần" in capsys.readouterr().err
+    assert calls == []
+
+
+def test_out_trong_repo_bi_tu_choi(monkeypatch, capsys):
+    _no_model(monkeypatch)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    assert harness.main(["--out", str(harness.REPO_ROOT / "services")]) == 2
+    assert "worktree git" in capsys.readouterr().err
+
+
+def test_khoang_tin_cay_lay_mau_theo_ca_khong_theo_luot():
+    # Eight cases pass all five runs, eight fail all five: 80 runs, 16 cases.
+    rows = []
+    for i in range(16):
+        verdict = "dat" if i < 8 else "truot"
+        for _ in range(5):
+            rows.append({"case_id": f"c{i}", "cham": [{"ket_qua": verdict}]})
+    tong = harness.tong_hop(rows, 5)
+    assert tong["so_ca"] == 16 and tong["so_luot"] == 80
+    assert tong["pass_at_1"] == 0.5
+    assert tong["ca_vung"] == 8 and tong["it_nhat"] == 4 and tong["pass_mu_k"] == 8
+    # Resampling 16 cases, not 80 runs: the interval is wide, as it should be.
+    assert tong["ci95"][1] - tong["ci95"][0] >= 0.4, tong["ci95"]
+
+
+def test_luot_tron_voi_brain_gia_ghi_manifest_khong_noi_dung(
+    tmp_path, monkeypatch, capsys
+):
+    monkeypatch.setenv("GEMINI_API_KEY", "synthetic-not-a-key")
+    calls: list[int] = []
+
+    def fake(payload):
+        calls.append(1)
+        return 200, {
+            "kind": "text",
+            "payload": {"text": "Cả nhóm muốn đi đâu tối nay?"},
+        }
+
+    monkeypatch.setattr(harness, "call_brain", fake)
+    assert harness.main(["--out", str(tmp_path), "--lap", "2", "--tran-goi", "32"]) == 0
+    assert len(calls) == 32
+    (run,) = tmp_path.iterdir()
+    manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["loi_goi"] == {"du_toan": 32, "tran_duyet": 32, "da_dung": 32}
+    assert manifest["chi_so"]["nhom_plan"]["so_luot"] == 32
+    assert "Cả nhóm" not in (run / "manifest.json").read_text(encoding="utf-8")
+    out = capsys.readouterr().out
+    assert re.search(r"^Eval-Run: \S+ lap=2 goi=32/32 model=", out, re.M)
+    assert re.search(r"^Eval-Nhom-Plan: vung \d+/16 \(>=2/2\) pass@1 ", out, re.M)
