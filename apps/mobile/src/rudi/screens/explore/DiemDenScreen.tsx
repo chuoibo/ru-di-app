@@ -13,7 +13,6 @@
  * UI v2: rows on the paper with a hairline between them, the chosen city
  * marked by a check as well as by colour; loading is the list's own shape.
  */
-import { Ionicons } from "@expo/vector-icons";
 import { Canh } from "../../ui/art/Canh";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -27,7 +26,10 @@ import {
   luuDiemDen,
   type DiemDen,
 } from "../../kham-pha/diem-den";
-import { typography, useRudiTheme } from "../../theme";
+import { KHUNG_THANH_PHO, hinhThanhPho } from "../../art/thanh-pho";
+import { bongGiay, typography, useRudiTheme } from "../../theme";
+import { VeLop } from "../../ui/art/VeLop";
+import { DauLon } from "../../ui/DauLon";
 import { RudiScreen, SearchField, TopBar } from "../../ui";
 import { EmptyState } from "../../ui/EmptyState";
 import { ErrorState } from "../../ui/ErrorState";
@@ -44,7 +46,8 @@ function khongDau(s: string): string {
 
 export function DiemDenScreen() {
   const router = useRouter();
-  const { colors } = useRudiTheme();
+  const { colors, dark } = useRudiTheme();
+  const [rongLuoi, setRongLuoi] = useState(0);
   const [trang, setTrang] = useState<Trang>({ pha: "dang-doc" });
   const [tim, setTim] = useState("");
   const [dangChon, setDangChon] = useState<string | null>(null);
@@ -109,9 +112,12 @@ export function DiemDenScreen() {
         />
       ) : null}
       {loc.length > 0 ? (
-        <View>
+        // Postcards, two a row (ADR-0037 D1, plan S4): each city its own sketch,
+        // the one you are in postmarked «Đang ở» -- a stamp as well as a colour.
+        <View onLayout={(e) => setRongLuoi(Math.round(e.nativeEvent.layout.width))} style={styles.luoi}>
           {loc.map((d) => {
             const chonRoi = dangChon === d.id;
+            const rongThe = rongLuoi > 0 ? Math.floor((rongLuoi - KHE) / 2) : 0;
             return (
               <Pressable
                 accessibilityLabel={`Chọn ${d.name}`}
@@ -119,19 +125,26 @@ export function DiemDenScreen() {
                 accessibilityState={{ selected: chonRoi }}
                 key={d.id}
                 onPress={() => void chon(d)}
-                style={({ pressed }) => [styles.hang, { borderBottomColor: colors.line }, pressed && styles.bam]}
+                style={({ pressed }) => [
+                  styles.the,
+                  { width: rongThe > 0 ? rongThe : undefined, backgroundColor: colors.card, borderColor: chonRoi ? colors.ink : colors.lineStrong, borderWidth: chonRoi ? 2 : 1 },
+                  bongGiay(1, dark),
+                  pressed && styles.bam,
+                ]}
               >
-                <View style={styles.hangChu}>
-                  <Text style={[typography.title, { color: chonRoi ? colors.accent : colors.ink }]}>{d.name}</Text>
-                  <Text style={[typography.caption, { color: colors.inkFaint }]}>{dongPhuDiemDen(d)}</Text>
+                {rongThe > 0 ? (
+                  <VeLop height={Math.round(((rongThe - 16) * KHUNG_THANH_PHO.h) / KHUNG_THANH_PHO.w)} khungH={KHUNG_THANH_PHO.h} khungW={KHUNG_THANH_PHO.w} lop={hinhThanhPho(d.id)} width={rongThe - 16} />
+                ) : null}
+                <View style={styles.theChu}>
+                  <Text style={[typography.title, { color: colors.ink }]}>{d.name}</Text>
+                  <Text numberOfLines={1} style={[typography.caption, { color: colors.inkSoft }]}>{dongPhuDiemDen(d)}</Text>
                   {d.blurb === null ? null : (
                     <Text numberOfLines={2} style={[typography.caption, { color: colors.inkSoft }]}>
                       {d.blurb}
                     </Text>
                   )}
                 </View>
-                {/* Chosen is a check as well as a colour. */}
-                {chonRoi ? <Ionicons color={colors.accent} name="checkmark-circle" size={22} /> : <Ionicons color={colors.inkFaint} name="chevron-forward" size={18} />}
+                {chonRoi ? <DauLon co="nho" nhan="Đang ở" style={styles.dauBuuDien} tilt={-8} tone="ink" /> : null}
               </Pressable>
             );
           })}
@@ -141,8 +154,13 @@ export function DiemDenScreen() {
   );
 }
 
+const KHE = 10;
+
 const styles = StyleSheet.create({
-  hang: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  hangChu: { flex: 1, gap: 3 },
+  luoi: { flexDirection: "row", flexWrap: "wrap", gap: KHE },
+  the: { borderRadius: 4, padding: 8, gap: 8, minHeight: 64 },
+  theChu: { gap: 2, paddingHorizontal: 2, paddingBottom: 2 },
+  // The postmark sits over the card's top corner, clear of the name.
+  dauBuuDien: { position: "absolute", top: 6, right: 6, alignSelf: "auto" },
   bam: { opacity: 0.7 },
 });

@@ -35,6 +35,9 @@ không lạc.
    - Flow 21, 22, 24, 27 (S3: lời mời là phong bì, nhóm mới là bìa sổ, kèo mới là câu rủ có lá
      lịch và đĩa giờ chặng). Chữ và nhãn flow bấm giữ nguyên; «Ô ngày đi»/«Ô ngày về» của Kèo
      mới nay là lá lịch, không flow nào gõ vào hai ô này.
+   - Flow 26 và 35 (S4: Khám phá có sân khấu thành phố ở đầu, gập đi khi đang lọc/tìm; Đi đâu
+     là lưới bưu thiếp). Flow 26 cuộn tới «Tiệm Nướng Xóm Lào» bằng scrollUntilVisible nên vẫn
+     tới; cần xem «1 kết quả» còn trong màn khi lọc (sân khấu đã gập lúc đó).
    - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&

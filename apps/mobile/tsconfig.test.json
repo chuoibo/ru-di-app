@@ -441,6 +441,7 @@
     "src/rudi/art/san-khau.ts",
     "src/rudi/art/giay.ts",
     "src/rudi/art/vat-ban.ts",
+    "src/rudi/art/thanh-pho.ts",
     "src/rudi/san-khau/dong-hoc.ts",
     "src/rudi/san-khau/kich-thuoc.ts",
     // The paper puppet (S0.4): the still figure's sheet and face on a rig of

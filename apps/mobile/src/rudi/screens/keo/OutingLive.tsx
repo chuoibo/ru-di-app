@@ -16,6 +16,7 @@
  * are `Money` at their own size and wrap when the window is narrow; nothing
  * shrinks a sum to fit a row.
  */
+import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -55,7 +56,9 @@ import { Chip, IconButton, RudiButton, RudiScreen, SectionHeader, TopBar } from 
 import { ErrorState } from "../../ui/ErrorState";
 import { Money } from "../../ui/Money";
 import { BanXoay } from "../../ui/BanXoay";
+import { HoaDonGiay } from "../../ui/HoaDonGiay";
 import { NepDien } from "../../ui/NepDien";
+import { PressScale } from "../../ui/PressScale";
 import { ONhapMuc } from "../../ui/ONhapMuc";
 import { StampButton } from "../../ui/StampButton";
 import { ReorderList } from "../../ui/ReorderList";
@@ -420,15 +423,21 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
             {/* The bill of this outing belongs to the outing's own context --
                 a pair's plan is split in the pair, never in whichever group
                 happens to be current (QA 23/09). */}
-            <RudiButton
-              compact
-              full={false}
-              icon="receipt-outline"
-              label="Chia bill buổi này"
+            {/* A blank receipt to tear off: the bill of this evening starts here
+                (ADR-0037 D1, plan S4). */}
+            <PressScale
+              accessibilityLabel="Chia bill buổi này"
+              accessibilityRole="button"
               onPress={() => router.push(`/smart-split/${trang.keo.id}/review?ctx=${trang.keo.context_id}&dip=${encodeURIComponent(trang.keo.title)}` as never)}
-              tone="split"
-              variant="outline"
-            />
+              style={styles.nutHoaDon}
+            >
+              <HoaDonGiay>
+                <View style={styles.hoaDonChu}>
+                  <Ionicons color={colors.split} name="receipt-outline" size={20} />
+                  <Text style={[typography.label, { color: colors.ink }]}>Chia bill buổi này</Text>
+                </View>
+              </HoaDonGiay>
+            </PressScale>
           </View>
           <SectionHeader
             action={draft ? undefined : moThem ? "Đóng" : "Thêm chặng"}
@@ -509,6 +518,8 @@ export function OutingLiveScreen({ phien }: { phien: Phien }) {
 }
 
 const styles = StyleSheet.create({
+  nutHoaDon: { alignSelf: "flex-start", transform: [{ rotate: "-1deg" }] },
+  hoaDonChu: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10 },
   hangChang: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 14 },
   dauVuaTao: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   flex1: { flex: 1 },

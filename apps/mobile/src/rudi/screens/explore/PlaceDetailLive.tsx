@@ -60,6 +60,9 @@ import { SkeletonCard, SkeletonGroup, SkeletonLines } from "../../ui/Skeleton";
 import { Stamp } from "../../ui/Stamp";
 import { PlaceGlyph } from "./HangDiaDiem";
 import { KyHoa } from "../../ui/art/KyHoa";
+import { SanKhau } from "../../ui/SanKhau";
+import { StampButton } from "../../ui/StampButton";
+import { sanKhauKyHoa } from "../../art/san-khau";
 import { laPair, tenCuocTroChuyen } from "../../nhan-rieng/nhan-rieng";
 
 type Trang = { pha: "dang-doc" } | { pha: "xong"; place: PlaceDetail } | { pha: "hong"; loi: string };
@@ -245,6 +248,7 @@ function ThanChiTiet({
   onRu: (contextId: string) => void;
 }) {
   const { colors } = useRudiTheme();
+  const [rongSan, setRongSan] = useState(0);
   const hop = matchLabel(place.match);
   const coMatch = place.match !== null && place.match.source === "ai";
   const facts = chiTietNgan(place).filter((muc) => muc.icon !== "time-outline" && muc.icon !== "location-outline");
@@ -263,7 +267,11 @@ function ThanChiTiet({
         <View style={styles.dauGon}>
           {/* The sketch of the kind of place (category only: live carries no
               tags), then the seal on its own row (review 11/09 A1). */}
-          <KyHoa loai={place.category} tags={[]} />
+          {/* The same sketch, lifted into its three depths as a pop-up stage
+              that stands up once (ADR-0037 D1, plan S4). */}
+          <View onLayout={(e) => setRongSan(Math.round(e.nativeEvent.layout.width))} style={styles.sanCho}>
+            {rongSan > 0 ? <SanKhau coMoTa san={sanKhauKyHoa(place.category, [])} width={Math.min(rongSan, 520)} /> : <KyHoa loai={place.category} tags={[]} />}
+          </View>
           {hop !== null && hop.real ? <Stamp label={hop.text} style={styles.dauGonDau} tone="ai" /> : null}
         </View>
       ) : (
@@ -316,7 +324,13 @@ function ThanChiTiet({
           them opens with this place as the main stop (QA 23/09: a place page
           had no way to become an evening for a couple). */}
       {doi.map((d) => (
-        <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
+        // One notebook: its invitation is the stamp. Several: three coral
+        // stamps shouted over each other on the live capture, so they are lines.
+        doi.length === 1 ? (
+          <StampButton key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} size="vua" tilt={-1} />
+        ) : (
+          <RudiButton icon="mail-outline" key={d.id} label={`Rủ ${d.ten} tới đây`} onPress={() => onRu(d.id)} variant="outline" />
+        )
       ))}
       {place.description ? <Text style={[typography.body, { color: colors.ink }]}>{place.description}</Text> : null}
       <View style={styles.suKien}>
@@ -463,6 +477,7 @@ function DaiAnhNhom({ anh, personId }: { anh: AnhNhom[]; personId: string }) {
 }
 
 const styles = StyleSheet.create({
+  sanCho: { alignSelf: "stretch", alignItems: "center" },
   dai: { gap: 12, paddingRight: 8 },
   oAnh: { width: 280, gap: 6 },
   flex: { flex: 1 },
