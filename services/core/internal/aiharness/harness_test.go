@@ -274,6 +274,17 @@ func TestLuatTienKhongGoiMoHinh(t *testing.T) {
 	if !m.sink.chiTrangThai() || len(m.sink.status) != 1 || m.sink.status[0] != cau.DangDoc {
 		t.Fatalf("sink: %+v", m.sink)
 	}
+	// The law reads the cleaned question: an invisible character inside a
+	// money word does not get it past (review round 4 of slice 6, T-gap:
+	// the raw text splits «chuy|ển» and reads as nothing).
+	for _, loi := range []string{"chuy​ển 200k cho Nam", "c​k 500k cho Lan", "tr­ả Nam 200k"} {
+		an := luotCoBan()
+		an.LoiNho = loi
+		m = chayLuot(t, an, dung(false, "không bao giờ tới"))
+		if MaCua(m.err) != cau.NepKhongChamTien || m.stub.SoGoi() != 0 || m.res.Record.Guard != obs.GuardRefused || m.res.Record.KyTuAn == 0 {
+			t.Fatalf("luật tiền, ký tự ẩn %q: %v, %d lời gọi, %+v", loi, m.err, m.stub.SoGoi(), m.res.Record)
+		}
+	}
 }
 
 // The Sink is design 01 §2, method for method: statuses, grounded parts,

@@ -374,13 +374,83 @@ var khongTienReview3 = []string{
 	"Gửi mình Menu quán Bà Tư nhé",
 }
 
+// Review round 4 of slice 6. R1: «trăm» then an unmarked «cho» gives money
+// to someone, as at 849664a -- an unmarked «cho» is never «chỗ».
+var cauTienReview4 = []string{
+	"chuyen 3 tram cho nam",
+	"ck 2 tram cho linh nha",
+	"gui 5 tram cho me giup con",
+	"tra 4 tram cho anh tuan",
+}
+
+// Review round 4 of slice 6: the reviewer's place and planning probe (29,
+// 21 of them refused by the round-3 law) and mixed-mark probe (10, 6
+// refused), all must pass. R2: task division («ai lo phần»), a bar's tab,
+// salary as context, «lượng», booking for the group, compounds typed
+// without marks inside a marked question, «cành» as flowers; R-pre: «báo
+// trước» is not «bao trước».
+var khongTienReview4 = []string{
+	"Báo trước với quán giúp mình, rồi gửi lại mình địa chỉ",
+	"Nhớ báo trước cho quán, nếu mưa thì chuyển lại sang hôm khác",
+	"Có cần báo trước không hay tới rồi đưa lại phiếu là được",
+	"Quán này có cần báo trước không, mai mình gửi lại số người",
+	"Đặt bàn giúp cả nhóm ở quán nướng, hết chỗ thì xin lại giờ khác",
+	"Tính lượng thịt nướng cho 8 người giúp mình",
+	"Giúp mình tính lượng bia cho buổi nhậu 10 người",
+	"Ai lo phần đặt xe, ai lo phần chọn quán?",
+	"Chia việc đi: ai lo phần mua đồ nướng?",
+	"Ai chịu phần lái xe đi Vũng Tàu?",
+	"Ai lo phần trang trí cho tiệc sinh nhật",
+	"Can we put drinks on a tab at that rooftop bar?",
+	"Does that pub let you put rounds on a tab?",
+	"Quán bar đó có cho put drinks on a tab không",
+	"Có quán tra sua 25k nào gần trường không",
+	"Gợi ý tiệm tra dao 35k ở quận 1",
+	"Chỗ đó gui xe 10k hả",
+	"Quán tra sua nào ngon 30k gần đây?",
+	"Tiệm hoa nào gửi 20 cành hồng tới quán được",
+	"Chợ hoa bán 50 cành đào giá sao",
+	"Nhóm 12, gửi mình quán nào rộng rãi",
+	"Đi 15 người, chuyển kèo sang quán lẩu nhé",
+	"Kèo 20, 25 người thì đặt quán nào",
+	"Gửi mình vài Quán lẩu dưới 200k",
+	"gửi mình Menu quán bún bò Huế nhé",
+	"Chuyển Kèo sang tối mai nha",
+	"Gửi mình Lịch trình đi Đà Lạt 2 triệu",
+	"Chờ trả lương xong rồi đi nhậu, gợi ý quán",
+	"Cuối tháng công ty trả lương, đi ăn buffet tầm 300k ở đâu",
+	// Mixed marks.
+	"Có tiệm bánh nào dong gia 20k ở Gò Vấp",
+	"Có tiệm nào dong gia 49k không",
+	"Gợi ý chỗ tra sua dưới 40k",
+	"tra dao ở đâu ngon 35k",
+	"Bãi gui xe 5k ở đâu gần chợ",
+	"gui xe ở đó 10k à",
+	"Tra phong xong gợi ý quán 100k",
+	"chuyen bay tối nay, ăn gì quanh sân bay tầm 150k",
+	"Có quán trà sữa nào dong gia 25k",
+	"Tiệm tra chanh 15k ở đâu",
+	// «mua vay» typed without marks is a dress, as 849664a read it.
+	"mua vay 300k o dau dep",
+}
+
+// The price of precision: money requests the law now lets through, each
+// because the rule that caught it also refused the place and planning
+// questions above. Pinned, so a rule widened again shows up here first
+// (review round 4 of slice 6; ADR-0037 §4 freezes the law for recall).
+var tienNhuongChoChinhXac = []string{
+	// «ai chịu phần» with no money named (khongTienReview4: «Ai chịu phần
+	// lái xe đi Vũng Tàu?»).
+	"Ai chịu phần bánh sinh nhật của Hoa",
+}
+
 func TestLuatTien(t *testing.T) {
-	for _, s := range append(append(append([]string(nil), cauTien...), cauTienReview2...), cauTienReview3...) {
+	for _, s := range append(append(append(append([]string(nil), cauTien...), cauTienReview2...), cauTienReview3...), cauTienReview4...) {
 		if !LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("lọt luật tiền: %q", s)
 		}
 	}
-	for _, s := range append(append(append([]string(nil), khongPhaiTien...), khongTienReview2...), khongTienReview3...) {
+	for _, s := range append(append(append(append(append([]string(nil), khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienReview4...), tienNhuongChoChinhXac...) {
 		if LaTien(preprocess.LamSach(s).Chu) {
 			t.Errorf("bắt nhầm luật tiền: %q", s)
 		}
@@ -415,6 +485,31 @@ func TestTenVaCumTu(t *testing.T) {
 		{cau: "Chuyển lịch sang thứ bảy, quán tầm 200k", co: "qqviec"},
 		{cau: "Gửi mình Quán Ốc Oanh nhé", co: "qqviec"},
 		{cau: "GỬI MÌNH QUÁN NGON NHÉ", co: "qqviec"},
+		// Review round 4 of slice 6. R1: an unmarked «cho» is never «chỗ»,
+		// even in a question typed without marks.
+		{cau: "chuyen 3 tram cho nam", khong: "tramcho"},
+		{cau: "tra 4 tram cho anh tuan", khong: "tramcho"},
+		{cau: "Đặt tiệc 2 trăm chỗ ở đâu", co: "tramcho"},
+		// R2: each word on its own, whatever the rest of the question.
+		{cau: "Có tiệm nào dong gia 49k không", co: "donggia"},
+		{cau: "Bãi gui xe 5k ở đâu gần chợ", co: "guixe"},
+		{cau: "Tiệm tra chanh 15k ở đâu", co: "trachanh"},
+		{cau: "Tra phong xong gợi ý quán 100k", co: "traphong"},
+		{cau: "trả Hoa 80k nha", khong: "trahoa"},
+		// «mua vay» without marks is still a dress; «vay» alone borrows.
+		{cau: "mua vay 300k o dau dep", co: "muavay"},
+		{cau: "Mua váy 300k ở đâu", co: "muavay"},
+		{cau: "vay 3 tram cua anh Hai", khong: "muavay"},
+		// «lượng» is not «lương»; «báo trước» is not «bao trước»; «cành» is
+		// money only where an amount can stand; «Minh's tab» is a person's.
+		{cau: "Giúp mình tính lượng bia", khong: " luong "},
+		{cau: "Ứng lương giúp mình", co: "luong giup"},
+		{cau: "Nhớ báo trước cho quán", khong: " bao truoc"},
+		{cau: "bao truoc tien an roi gui lai", co: "bao truoc tien"},
+		{cau: "Tiệm hoa nào gửi 20 cành hồng tới quán được", khong: "qqtien"},
+		{cau: "Bắn 50 cành cho Tú nhé", co: "qqtien"},
+		{cau: "Put dinner on Minh's tab", co: "qqcua tab"},
+		{cau: "Let's put drinks on a tab", khong: "qqcua"},
 	} {
 		g := " " + chuTien(preprocess.LamSach(c.cau).Chu) + " "
 		if c.co != "" && !strings.Contains(g, " "+c.co) {
@@ -575,6 +670,65 @@ func TestOutputGuard(t *testing.T) {
 		{"Giá 150.000 - 200.000 - " + "250.000đ tùy set.", RaSach},
 		{"Từ 26/09/2026 - " + "28/09/2026 quán giảm giá.", RaSach},
 		{"Hôm nay là 25/09/" + "2026, bạn nên đi trước 18:30.", RaSach},
+		// Review round 4 of slice 6, R3: «tra» (look up), «chuyển sang
+		// quán», «đưa quán … lên» move places in the answer, not money.
+		{"Mình đã chuyển sang quán 150k gần hơn cho bạn.", RaSach},
+		{"Mình đã tra thử quán 90k ở quận 3.", RaSach},
+		{"Mình vừa đưa quán 120k lên đầu danh sách.", RaSach},
+		{"Mình đã tra quán dưới 200k cho bạn: Lẩu Dê 404, Ốc Oanh.", RaSach},
+		{"Mình vừa tra quán 150k/người gần Hồ Gươm.", RaSach},
+		{"Mình đã đưa vài quán 200k lên đầu danh sách.", RaSach},
+		{"Mình đã tra giúp bạn: quán A 120k, quán B 150k.", RaSach},
+		{"Mình đã tra cứu quán 200k quanh đây.", RaSach},
+		{"Mình đã bắn tin quán 150k cho bạn ở trên.", RaSach},
+		{"Mình đã gửi thêm quán 80k ở dưới.", RaSach},
+		{"Nếp đã tra giá: quán này tầm 150k.", RaSach},
+		{"Mình vừa đưa kèo 300k xuống cuối danh sách.", RaSach},
+		{"Mình đã chuyển sang tiệm 80k gần trường cho bạn.", RaSach},
+		// ...while paying a place, or a person after «sang», stays a claim,
+		// and «trả» with its marks is paying.
+		{"Mình đã trả quán 200k tiền cọc rồi.", RaTuNhan},
+		{"Mình đã chuyển cho quán 300k tiền cọc.", RaTuNhan},
+		{"Mình đã ck cho quán 500k để giữ bàn.", RaTuNhan},
+		{"Mình vừa chuyển sang Nam 200k.", RaTuNhan},
+		{"Mình đã chuyển Quân 200k.", RaTuNhan},
+		{"Mình đã trả giúp bạn 200k", RaTuNhan},
+		{"minh da tra nam 200k roi nhe", RaTuNhan},
+		// Nits: a clause that goes on after «gửi cho bạn <câu trả lời>», no
+		// subject, a debt recorded without «lại».
+		{"Mình đã gửi cho bạn danh sách quán, và chuyển 200k cho Nam rồi.", RaTuNhan},
+		{"Mình đã gửi cho bạn gợi ý; tiện thể chuyển luôn 300k cho Lan.", RaTuNhan},
+		{"Mình đã gửi cho bạn danh sách quán, chuyển 200k cho Nam rồi.", RaTuNhan},
+		{"Đã chuyển 200k cho Nam rồi nhé.", RaTuNhan},
+		{"Vừa chuyển 100k cho Tú xong.", RaTuNhan},
+		{"Mình đã đưa 200k cho Nam.", RaTuNhan},
+		{"Đã trả trước 200k thì quán giữ bàn tới 8 giờ.", RaSach},
+		{"Mình đã ghi Nam nợ bạn 200k.", RaTuNhan},
+		{"Mình vừa ghi Hùng nợ cả nhóm 1 triệu.", RaTuNhan},
+		{"Mình đã tính xong: Nam nợ bạn 150k, mình ghi lại rồi.", RaTuNhan},
+		// ...and a later clause that tells the reader what to do passes.
+		{"Mình đã gửi cho bạn danh sách quán, bạn chuyển 200k cho Nam là xong nhé.", RaSach},
+		{"Mình đã gửi cho bạn vài gợi ý, còn chuyển tiền thì bạn tự làm nhé.", RaSach},
+		{"Mình đã gửi cho bạn gợi ý, và nhớ chuyển 200k cho Nam nhé.", RaSach},
+		{"Mình đã gửi cho bạn lịch trình, rồi bạn chuyển 200k cho Lan nhé.", RaSach},
+		// Nits: phones with an en or em dash, an underscore or spaced dots;
+		// a coordinate passes only as a lat/long pair with at most six
+		// decimal places.
+		{"Gọi 0912–" + "345–678", RaSoDienThoai},
+		{"Gọi 0912—" + "345—678", RaSoDienThoai},
+		{"Gọi 0912_" + "345_678", RaSoDienThoai},
+		{"Gọi 0912 . " + "345 . 678", RaSoDienThoai},
+		{"Gọi 0912 – " + "345 – 678 nhé.", RaSoDienThoai},
+		{"Số tài khoản: 19." + "12345678", RaSoTaiKhoan},
+		{"Liên hệ 10.123" + "4567, 10.123" + "4567", RaSoTaiKhoan},
+		{"Tọa độ 10.123" + "4567, 106.123" + "4567", RaSoTaiKhoan},
+		{"Tọa độ: 10.776889, " + "106." + "700806", RaSach},
+		{"Tọa độ 21.028511, " + "105." + "804817 nhé.", RaSach},
+		{"Tọa độ -33.868820, " + "151." + "209290 nhé.", RaSach},
+		{"Giá 150.000–" + "200.000đ mỗi người.", RaSach},
+		{"Giá 150.000 – " + "200.000đ mỗi người.", RaSach},
+		{"Từ 01.10.2026–" + "05.10.2026 quán giảm giá.", RaSach},
+		{"Giá 150.000. " + "200 người vẫn đủ chỗ.", RaSach},
 	} {
 		if got := d.Kiem(c.text); got != c.want {
 			t.Errorf("%q: %q, muốn %q", c.text, got, c.want)

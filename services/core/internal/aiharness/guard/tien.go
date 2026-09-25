@@ -35,8 +35,12 @@ import (
 // This law is layer 0 of that stack: it saves the model call and answers
 // with a fixed sentence. The flag MOBILE_AI_ENGINE_NEP may not be set to go
 // until, on a sealed corpus its author never read, of at least 220 sentences
-// per class, the lower 95% bound of the law's recall is ≥ 0.95 and the upper
-// 95% bound of its false refusals is ≤ 0.02 (ADR-0037 proposal §4).
+// per class, the upper 95% bound of this law's false refusals is ≤ 0.02 on
+// its own, and the lower 95% bound of the recall of this law together with
+// the Understand step's classifier is ≥ 0.95 (ADR-0037 proposal §4, as
+// amended 2026-09-25). The law is frozen for recall: a change may only take
+// a false refusal away or undo a regression, never add a pattern to catch
+// more (review round 4 of slice 6).
 //
 // People ask for money in any word order («chuyển 200k cho Nam», «200K cho
 // Lan, chuyển giúp mình»), in any amount form (200k, 1tr2, 1.200.000đ, «hai
@@ -123,6 +127,8 @@ var dauTien = map[string][]string{
 	"lay":  {"lấy"},
 	"bung": {"bùng"},
 	"bu":   {"bù"},
+	// «lương» is a wage; «lượng» an amount of something («tính lượng bia»).
+	"luong": {"lương"},
 }
 
 // cumTu is a fixed compound whose words are also money words, spelled as it
@@ -136,7 +142,12 @@ var dauTien = map[string][]string{
 // Đô» is not «gửi đồ», «Chuyển Bảy» is not «chuyến bay», and «Trả Gia»,
 // «Bắn Bi», «Trả Phong» pay Gia, Bi and Phong (review round 3 of slice 6,
 // B2). A compound that is itself a proper name («Tiền Giang», «Đồng Nai»)
-// is written with capitals, so ten lets it glue whatever the case.
+// is written with capitals, so ten lets it glue whatever the case. Each
+// word is judged on its own, whatever marks the rest of the question has
+// («Có tiệm nào dong gia 49k không», «Bãi gui xe 5k ở đâu»), with one
+// exception (khopChu): «cho», «thu», «chi», «vay» typed without marks are
+// the money word, never a marked compound word -- so the unmarked spellings
+// of the «váy» compounds are listed as their own.
 type cumTu struct {
 	chu   string
 	thanh string
@@ -161,8 +172,10 @@ var ghep = []cumTu{
 	{chu: "đông người"}, {chu: "đông khách"}, {chu: "đông vui"}, {chu: "đông đúc"}, {chu: "đồng ý"},
 	{chu: "đồng hồ"}, {chu: "đồng phục"}, {chu: "đồng bọn"}, {chu: "đồng hành"}, {chu: "đồng nghiệp"},
 	{chu: "đồng nai", ten: true}, {chu: "đồng tháp", ten: true}, {chu: "đồng xuân", ten: true}, {chu: "đống đa", ten: true},
-	// «váy», «ứng dụng», «bắn cung» and the like.
+	// «váy», «ứng dụng», «bắn cung» and the like. «mua vay» typed without
+	// marks is a dress too (849664a glued it): nobody borrows by «mua vay».
 	{chu: "mua váy"}, {chu: "đầm váy"}, {chu: "chân váy"},
+	{chu: "mua vay"}, {chu: "dam vay"}, {chu: "chan vay"},
 	{chu: "ứng dụng"}, {chu: "ứng viên"}, {chu: "ứng xử"},
 	{chu: "bắn cung"}, {chu: "bắn súng"}, {chu: "bắn pháo hoa"}, {chu: "bắn bi"},
 	{chu: "ting ting"}, {chu: "bồi thường"},
@@ -336,6 +349,9 @@ const (
 	daQua = `\b(?:hom qua|toi qua|trua qua|sang qua|dem qua|hom truoc|bua truoc|tuan truoc|thang truoc|vua roi|vua qua|roi|ca nhom|nhom minh|tui minh|bon minh|chung minh|tuan nay|thang nay)\b`
 	// Each person, each one.
 	moiNguoi = `(?:moi|1|mot) (?:nguoi|ng|dua|dua_|ban|ban_|thang|dau nguoi)`
+	// What may follow «thu lại», «đòi lại» after buying for the group:
+	// money, when, from whom, or the small words that close a request.
+	sauThuLai = `(?:tien|qqtien|qqso|sau|giup|gium|dum|ho|nha|nhe|nhen|di|luon|tung|moi|tu|cua|ca|het)`
 )
 
 var luatTiens = []luatTien{
@@ -355,13 +371,20 @@ var luatTiens = []luatTien{
 		// Lending and borrowing: «lend me 200k», «Can I borrow 500k», «I
 		// lent Nam 100k», «spot me 50k»; «borrow a bike for 100k» is not.
 		`|\b(?:lend|lends|lending|lent|loan|loans|loaned)(?: \S+){0,2} (?:qqtien|qqso|money|cash)\b|\bborrow(?:s|ed|ing)?(?: \S+)? (?:qqtien|qqso|money|cash)\b|\b(?:front|spot) (?:me|us|him|her|them|you)(?: \S+)? (?:qqtien|qqso|money|cash)\b` +
-		// A tab: «Put 300k on Hai's tab», «add 150k to Linh's tab».
-		`|\b(?:put|add|charge|stick)\b(?: \S+){0,4} (?:on|to)(?: \S+)? tab\b`)},
+		// A person's tab, or an amount put on a tab: «Put dinner on Minh's
+		// tab», «add 150k to my tab», «Put 300k on the tab». «Can we put
+		// drinks on a tab at that bar» asks about the bar (review round 4 of
+		// slice 6, R2). qqcua is a word typed with «'s» right before «tab»
+		// (chuTien). At most four words between the verb and «on», as before.
+		`|\b(?:put|add|charge|stick)\b(?: \S+){0,4} (?:on|to) (?:my|his|her|our|their|your|qqcua) tab\b` +
+		`|\b(?:put|add|charge|stick)(?:(?: \S+){0,3} ` + so + `|(?: \S+){0,2} ` + so + ` \S+|(?: \S+)? ` + so + `(?: \S+){2}| ` + so + `(?: \S+){3}) (?:on|to)(?: \S+)? tab\b`)},
 	// Split: «chia» a sum or a bill, or what each person pays.
 	{"chia", regexp.MustCompile(`\bchia` + w(2) + `(?:tien|bill|hoa don|khoan|chi phi)\b` +
 		`|\b` + moiNguoi + `(?: (?:phai|can|nen))? (?:tra|gop|dong|chiu|chuyen|no|chia|ck|bu|gui|dua|nop|bo ra|chung|ung)(?: (?:lai|them|truoc|het|cho))*(?: \S+){0,2} (?:bao nhieu|bn|may tien|nhieu)\b` +
 		// Whose share it is: «phần tiền của nó ai chịu», «ai chịu tiền taxi».
-		`|\b(?:phan (?:tien|cua)|tien(?: \S+)? cua|khoan)(?: \S+){0,3} ai (?:chiu|tra|bu|lo|gop|bao)\b|\bai (?:se |phai )?(?:chiu|lo|bu|gop) (?:phan|tien|khoan|bill|hoa don)\b|\btien(?: \S+){1,3} ai (?:chiu|bu|lo|bao)\b` +
+		// «ai lo phần …» needs money after «phần»: «ai lo phần mua đồ nướng»
+		// divides the work (review round 4 of slice 6, R2).
+		`|\b(?:phan (?:tien|cua)|tien(?: \S+)? cua|khoan)(?: \S+){0,3} ai (?:chiu|tra|bu|lo|gop|bao)\b|\bai (?:se |phai )?(?:chiu|lo|bu|gop) (?:phan )?(?:tien|khoan|bill|hoa don)\b|\btien(?: \S+){1,3} ai (?:chiu|bu|lo|bao)\b` +
 		`|\b(?:chia|split|bill|hoa don|aa|het qqtien|tong (?:cong )?(?:qqtien|bill|hoa don|tien|chi))\b.*\b` + moiNguoi + `(?: \S+)? (?:bao nhieu|bn)\b` +
 		`|\b(?:tong|het) (?:tien|qqtien|bill|hoa don)\b.*\bchia\b` +
 		`|^tien \S+(?: \S+){0,3} ` + moiNguoi + ` (?:bao nhieu|bn)\b` +
@@ -376,8 +399,11 @@ var luatTiens = []luatTien{
 		// «ai thiếu ai (bao nhiêu)», «còn thiếu Phương bao nhiêu»; «còn
 		// thiếu ai chưa tới», «thiếu bao nhiêu người» are a head count.
 		`|\bai(?: \S+)? thieu ai\b|\bthieu ai (?:bao nhieu|bn|tien|qqtien|qqso)\b|\bthieu (?:\S+ ){1,2}(?:bao nhieu|bn)(?: (?:tien|nua|vay_?|the|nhi|a|ha|nhe|nha|roi|day|do|ne|z|v|het|ca|chua|khong|ko))*$` +
-		// Wages: «trả lương cho bạn làm thêm 1 triệu 5», «ứng lương».
-		`|\b(?:tra|chuyen|gui|ung|phat|dua|ck|bank|tinh) luong\b` +
+		// Wages paid to someone or of an amount: «trả lương cho bạn làm thêm
+		// 1 triệu 5», «ứng lương giúp mình». «Chờ trả lương xong rồi đi nhậu»
+		// only dates the outing, and «tính lượng bia» is not «lương» (dauTien;
+		// review round 4 of slice 6, R2).
+		`|\b(?:tra|chuyen|gui|ung|phat|dua|ck|bank|tinh) luong(?: thang \S+)? (?:cho|giup|gium|ho|dum|truoc|them|qqtien|qqso)\b` +
 		// Who holds whose money: «ai đang giữ tiền của ai».
 		`|\bai (?:dang |con |van )?giu tien(?: cua| quy| nhom| chung)\b|\btien cua ai\b` +
 		// Passing on that one has paid: «nhắn Hạnh là mình chuyển rồi».
@@ -388,8 +414,12 @@ var luatTiens = []luatTien{
 		`|\b(?:da|chua|vua) (?:tra|ck|chuyen) (?:minh|toi|tao|to|tui|em|t|anh|chi_|ban_|lai)\b|\b(?:da|chua|vua) (?:tra|ck|chuyen|gop|dong) (?:du_?|du tien|thieu|het tien|het no)\b|\b(?:tra|ck|chuyen) (?:minh|toi|tao|to|tui|em|t|anh|chi_|ban_) (?:chua|roi|het|du)\b` +
 		// Paid first, or bought for the group, to be paid back later: «mình
 		// trả trước cho cả nhóm rồi thu lại sau», «mua giùm cả nhóm, thu lại».
+		// «Báo trước», «bảo trước» tell ahead and never read as «bao»
+		// (chuTien). What is gathered back after buying for the group is
+		// money, or nothing named: «đặt bàn giúp cả nhóm, hết chỗ thì xin lại
+		// giờ khác» books a table (review round 4 of slice 6, R2).
 		`|\b(?:bao|ung|tra|chi)(?: tien)? truoc\b.*\b(?:gui|tra|chuyen|ck|dua|thu|doi|xin|gom) lai\b` +
-		`|\b(?:mua|dat|tra|bao|ung|chi)(?: \S+){0,2} (?:gium|ho|giup|dum|truoc)(?: cho)? (?:ca nhom|nhom|moi nguoi|tui minh|ca lop|ca bon|tat ca)\b.*\b(?:thu|doi|xin|gom) lai\b`)},
+		`|\b(?:mua|dat|tra|bao|ung|chi)(?: \S+){0,2} (?:gium|ho|giup|dum|truoc)(?: cho)? (?:ca nhom|nhom|moi nguoi|tui minh|ca lop|ca bon|tat ca)\b.*\b(?:(?:thu|doi) lai(?: ` + sauThuLai + `)?$|(?:thu|doi) lai ` + sauThuLai + `\b|(?:xin|gom) lai (?:tien|qqtien|qqso)\b)`)},
 	// Collect: chase, gather or pay in.
 	{"thu", regexp.MustCompile(`\b(?:dong|gop|doi|thu|nop|xin)(?: lai)? (?:tien|quy|no)\b|\b(?:gop|dong|tra|chuyen|ck|chiu|bo ra)(?: (?:lai|them|truoc|het))? (?:bao nhieu|bn)\b|\b(?:gop|dong|thu|nop) ` + moiNguoi + ` (?:qqtien|qqso|\d+)\b|\bdu (?:bao nhieu|bn) tien\b|\bxin(?: lai)? qqtien\b`)},
 	// A QR code or an account to pay with.
@@ -411,7 +441,11 @@ type tu struct {
 	dau  bool   // starts a sentence
 	ten  bool   // a name: capitalized mid-sentence, on its own
 	ngat bool   // a clause break follows it
+	cua  bool   // typed with a possessive «'s» («Minh's»)
 }
+
+// laRutGon: «it's», «let's», «what's»... end in «'s» without owning anything.
+var laRutGon = map[string]bool{"it": true, "let": true, "what": true, "that": true, "there": true, "here": true, "he": true, "she": true, "who": true, "where": true, "how": true}
 
 // tachTu splits the question into words, and reads their capitals: a word
 // capitalized on its own in mid-sentence is a name («Chuyển Lịch 100k»,
@@ -422,20 +456,24 @@ func tachTu(s string) []tu {
 	raw := []rune(norm.NFC.String(homoglyph.Replace(norm.NFKC.String(s))))
 	var toks []tu
 	var cur []rune
-	dauCau := true
+	dauCau, cua := true, false
 	flush := func() {
 		if len(cur) == 0 {
 			return
 		}
 		goc := strings.ToLower(string(cur))
-		toks = append(toks, tu{goc: goc, gap: promptsafety.Fold(goc), hoa: unicode.IsUpper(cur[0]), dau: dauCau})
-		dauCau = false
+		toks = append(toks, tu{goc: goc, gap: promptsafety.Fold(goc), hoa: unicode.IsUpper(cur[0]), dau: dauCau, cua: cua})
+		dauCau, cua = false, false
 		cur = cur[:0]
 	}
 	for i, r := range raw {
 		switch {
 		case r == '\'' || r == '’' || r == '`':
-			// hasn't -> hasnt
+			// hasn't -> hasnt; «Minh's» -> minhs, owning what follows.
+			if len(cur) > 0 && i+1 < len(raw) && (raw[i+1] == 's' || raw[i+1] == 'S') &&
+				(i+2 == len(raw) || !unicode.IsLetter(raw[i+2])) && !laRutGon[strings.ToLower(string(cur))] {
+				cua = true
+			}
 		case unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.Is(unicode.Mn, r) || r == '$':
 			cur = append(cur, r)
 		case (r == '.' || r == ',') && i > 0 && i+1 < len(raw) && unicode.IsDigit(raw[i-1]) && unicode.IsDigit(raw[i+1]):
@@ -479,26 +517,37 @@ func tachTu(s string) []tu {
 }
 
 // khopChu says whether a word, as typed, is the compound word sp: spelled
-// exactly so, or, in a question typed entirely without marks, its folded
-// form -- and not a name, unless the compound is itself a proper name. In a
-// question typed with marks an unmarked «cho» is «cho», not «chỗ».
-func khopChu(t tu, sp string, laTen, khongDau bool) bool {
+// exactly so, or typed without marks and folding onto it -- and not a name,
+// unless the compound is itself a proper name. Each word is judged on its
+// own, not by the marks of the rest of the question (review round 4 of
+// slice 6, R2). A money word whose only money spelling is the unmarked one
+// (an empty dauTien list: «cho», «thu», «chi», «vay») is that money word
+// when typed without marks, never a marked compound word: «chuyen 3 tram
+// cho nam» gives 300 to Nam, it is not «trăm chỗ» (R1).
+func khopChu(t tu, sp string, laTen bool) bool {
 	if t.ten && !laTen {
 		return false
 	}
-	return t.goc == sp || (khongDau && promptsafety.Fold(sp) == t.goc)
+	if t.goc == sp {
+		return true
+	}
+	if t.goc != t.gap || promptsafety.Fold(sp) != t.goc {
+		return false
+	}
+	dung, laTien := dauTien[t.goc]
+	return !laTien || len(dung) > 0
 }
 
 // ghepTai glues the compound that starts at toks[i], if any, and says how
 // many words it took.
-func ghepTai(toks []tu, i int, khongDau bool) (string, int) {
+func ghepTai(toks []tu, i int) (string, int) {
 	for _, c := range ghepTheoDau[toks[i].gap] {
 		if i+len(c.tu) > len(toks) {
 			continue
 		}
 		khop := true
 		for j, sp := range c.tu {
-			if !khopChu(toks[i+j], sp, c.ten, khongDau) {
+			if !khopChu(toks[i+j], sp, c.ten) {
 				khop = false
 				break
 			}
@@ -520,12 +569,8 @@ func laSoTran(s string) bool {
 // or qqso, and the place readings taken out.
 func chuTien(s string) string {
 	toks := tachTu(s)
-	khongDau := true
 	for i := range toks {
 		t := &toks[i]
-		if t.goc != t.gap {
-			khongDau = false
-		}
 		f := t.gap
 		if dung, ok := dauTien[f]; ok && f != t.goc && !slices.Contains(dung, t.goc) {
 			f += "_"
@@ -534,9 +579,17 @@ func chuTien(s string) string {
 		case t.goc == "tự":
 			// «tự trả»: paying for oneself (tuTraRe).
 			f = "qqtu"
-		case t.goc == "cành" && i > 0 && laSoTran(toks[i-1].goc):
-			// «50 cành» is 50k.
+		case t.goc == "cành" && i > 0 && laSoTran(toks[i-1].goc) && soDungDuoc(toks, i):
+			// «50 cành» is 50k where an amount can stand («bắn 50 cành cho
+			// Trinh»); «gửi 20 cành hồng» is flowers (review round 4, R2).
 			f = "k"
+		case (t.goc == "báo" || t.goc == "bảo") && i+1 < len(toks) && toks[i+1].gap == "truoc":
+			// «báo trước», «bảo trước» tell ahead; only «bao trước» pays
+			// ahead (review round 4 of slice 6, R-pre).
+			f = "bao_"
+		case t.cua && i+1 < len(toks) && toks[i+1].gap == "tab":
+			// «Minh's tab»: a person's tab (tieng_anh).
+			f = "qqcua"
 		}
 		// A place word typed with other marks or as a name is not the place
 		// («Chuyển Quân 150k», «Chuyển Lịch 100k»); a name is not the word
@@ -574,7 +627,7 @@ func chuTien(s string) string {
 			i++
 			continue
 		}
-		if c, n := ghepTai(toks, i, khongDau); n > 0 {
+		if c, n := ghepTai(toks, i); n > 0 {
 			chu = append(chu, c)
 			i += n - 1
 			continue
@@ -613,6 +666,17 @@ func chuTien(s string) string {
 	g = veRe.ReplaceAllString(g, "qqgia")
 	g = uocRe.ReplaceAllString(g, "qquoc")
 	return strings.Join(strings.Fields(g), " ")
+}
+
+// soDungDuoc says whether an amount can stand at toks[i], by what follows
+// it, as soTran judges a bare number: last, before a clause break, or
+// before one of sauSo or «hôm» naming a past day.
+func soDungDuoc(toks []tu, i int) bool {
+	if i+1 == len(toks) || toks[i].ngat {
+		return true
+	}
+	sau := toks[i+1].gap
+	return sauSo[sau] || (sau == "hom" && i+2 < len(toks) && homSau[toks[i+2].gap])
 }
 
 // soTran marks a bare number as qqso where an amount can stand, and takes

@@ -170,8 +170,8 @@ func TestMoiLuatTienDeuCoCau(t *testing.T) {
 			khong = append(khong, c.Cau)
 		}
 	}
-	tien = append(append(append(append(tien, cauTien...), cauTienReview2...), cauTienReview3...), cauTienTuViet...)
-	khong = append(append(append(append(khong, khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienTuViet...)
+	tien = append(append(append(append(append(tien, cauTien...), cauTienReview2...), cauTienReview3...), cauTienReview4...), cauTienTuViet...)
+	khong = append(append(append(append(append(khong, khongPhaiTien...), khongTienReview2...), khongTienReview3...), khongTienReview4...), khongTienTuViet...)
 	// Read each sentence once; every rule then runs on the same reading.
 	doc := func(ss []string) []string {
 		out := make([]string, len(ss))

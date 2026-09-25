@@ -6,7 +6,7 @@ import (
 	"mobile/services/core/internal/aiharness/preprocess"
 )
 
-// Sentences the law's authors wrote while tuning it, in ten batches, each
+// Sentences the law's authors wrote while tuning it, in eleven batches, each
 // written fresh and measured BEFORE the law was changed for it. The first
 // number of each batch below is that measurement (money refused, look-alikes
 // refused by mistake); the law was then widened or narrowed for what it got
@@ -18,6 +18,11 @@ import (
 // refused 1/64. Those, not the pinned 100% here, are the authors' own
 // estimates; the sealed corpus measured the round-2 law at 131/150 and
 // 2/136.
+//
+// Round 4 froze the law for recall (ADR-0037 §4): a change may only take a
+// false refusal away or undo a regression. One sentence of batch 10 («Ai chịu
+// phần bánh sinh nhật của Hoa») paid for that and moved to
+// tienNhuongChoChinhXac (guard_test.go).
 
 var cauTienTuViet = []string{
 	// Batch, first seen: 78/80, 0/80.
@@ -508,7 +513,6 @@ var cauTienTuViet = []string{
 	"Chuyển cho Đô 300k tiền cọc",
 	"Trả Xuân Mai 200k",
 	"Gửi Kim Anh 150k tiền bánh",
-	"Ai chịu phần bánh sinh nhật của Hoa",
 	"Tiền karaoke hôm qua ai bù",
 	"Còn thiếu anh Tư bao nhiêu thế",
 	"Nam còn thiếu ai bao nhiêu",
@@ -518,6 +522,46 @@ var cauTienTuViet = []string{
 	"Put the karaoke on Minh's tab",
 	"Mình ứng trước tiền phòng, lát thu lại từng người",
 	"Mua hộ cả nhóm vé xe, rồi đòi lại sau nhé",
+	// Batch 11, aimed at the round-4 review's classes («ai lo/chịu phần»,
+	// «tab», «lương»/«lượng», booking for the group, «báo trước», an
+	// unmarked «trăm cho», compounds typed without marks), written before
+	// the law changed and first seen by 5a97262's law: 28/34, 17/40; after
+	// the change 33/34, 0/40. The one miss («chi 5 tram cho chuyen di roi,
+	// ghi lai») was a miss before too and stays one: the law is frozen for
+	// recall.
+	"Ai chịu phần tiền taxi tối qua vậy",
+	"Ai lo phần bill karaoke hôm thứ bảy",
+	"Ai lo khoản tiền phòng homestay",
+	"ai chiu phan tien xang di Vung Tau",
+	"Ai sẽ chịu khoản bill bị tính dư",
+	"Phần tiền bánh kem ai chịu đây",
+	"Put 200k on Tuan's tab",
+	"Add 150k to my tab please",
+	"Put dinner on Minh's tab",
+	"Charge the drinks to Lan's tab",
+	"Ứng lương cho mình 2 triệu nhé",
+	"Trả lương cho chị giúp việc tháng này giúp mình",
+	"Chuyển lương cho bạn part-time 3 triệu",
+	"Nhắc sếp trả lương cho tụi mình",
+	"Mua giùm cả nhóm vé xem phim rồi thu lại sau nhé",
+	"Đặt giùm cả nhóm phòng homestay, mai đòi lại tiền từng đứa",
+	"Mình bao trước tiền ăn, mọi người gửi lại sau",
+	"Ứng trước tiền xăng, lát chuyển lại mình nhé",
+	"bao truoc tien an roi moi nguoi gui lai sau",
+	"Trả trước tiền vé, về rồi thu lại mỗi đứa",
+	"chuyen 2 tram cho ba gium con",
+	"ban 3 tram cho chi hai nhe",
+	"gui 1 tram cho thang bin",
+	"ck 4 tram cho co ba nha",
+	"tra 5 tram cho chu tu giup minh",
+	"Chuyển 200k cho Nam tien tra sua hom qua",
+	"Trả Linh 60k tien gui xe",
+	"gửi 3 trăm cho mẹ giùm con",
+	"Nam nợ mình 3 trăm, nhắc nó giùm",
+	"thu 2 tram moi nguoi nha",
+	"vay 3 tram cua anh Hai",
+	"Mình đã báo trước là sẽ chuyển lại tiền cọc cho Hà, nhớ nhắc",
+	"Bắn 50 cành cho Tú nhé",
 }
 
 var khongTienTuViet = []string{
@@ -1016,6 +1060,47 @@ var khongTienTuViet = []string{
 	"Mình thiếu ngủ, quán cà phê nào mở sớm",
 	"Lương tháng này về rồi, đi ăn sang tầm 500k",
 	"Ứng dụng đặt bàn nào uy tín",
+	// Batch 11 (see cauTienTuViet).
+	"Ai lo phần âm thanh cho buổi tiệc",
+	"Ai chịu phần dọn dẹp sau khi nhậu",
+	"Ai lo phần mua bánh kem vậy",
+	"Ai lo phần đặt vé xe đi Đà Lạt",
+	"ai lo phan chup hinh cho buoi picnic",
+	"Ai chịu phần chở đồ ra bãi biển",
+	"Open a new tab for the map please",
+	"Keep a tab on the weather for Saturday",
+	"Which bars let you run a tab",
+	"Is there a bar tab minimum at that club",
+	"Mới lãnh lương, đi ăn gì ngon tầm 400k",
+	"Chờ tính lương xong rồi hẹn đi Đà Lạt",
+	"Trả lương rồi, cuối tuần đi đâu chơi",
+	"Lượng khách ở quán đó đông không",
+	"Tính lượng đồ ăn cho 6 người đi picnic",
+	"Ước lượng thời gian đi Vũng Tàu giúp mình",
+	"Đặt bàn giùm cả nhóm lúc 7h, kín chỗ thì hỏi lại quán",
+	"Book giúp cả nhóm phòng karaoke, nếu hết phòng thì xin lại giờ",
+	"Báo trước cho quán là tụi mình tới trễ, rồi gửi lại giờ mới",
+	"Bảo trước với anh chủ quán, nếu đông thì chuyển lại bàn khác",
+	"Báo trước quán một tiếng rồi đưa lại mã đặt chỗ",
+	"Tiệm tra sua nào đông khách giá 30k",
+	"Chỗ gui xe máy gần chợ Bến Thành 5k có không",
+	"Có quán nào dong gia 59k gần đây không",
+	"Tiệm tra dao nào có size lớn 40k",
+	"Mua 20 cành hoa hồng ở chợ hoa giá sao",
+	"Tiệm hoa gửi 30 cành cúc tới nhà hàng được không",
+	"Quán có 3 trăm chỗ ngồi không",
+	"Đặt tiệc 2 trăm chỗ ở đâu",
+	"Mình đã báo trước với quán, tới nơi thì đưa lại phiếu",
+	"Tiệm nào tra cứu được bàn trống 50k một người",
+	"Bãi gửi xe 10k gần phố đi bộ ở đâu",
+	"Chuyến bay tối nay, ăn gì quanh sân bay tầm 150k",
+	"Trả phòng xong gợi ý quán 100k gần đó",
+	"Ai lo phần dẫn đường thì đi xe đầu",
+	"Nhóm mình ai lo phần mua đá với nước ngọt",
+	"Quán đó có cho ghi sổ tab không hay trả liền",
+	"Nhận lương rồi rủ cả nhóm đi buffet 300k",
+	"Tính lượng bia cho 12 người đi nhậu",
+	"Nhờ báo trước với nhà hàng, có gì chuyển lại lịch sang tối mai",
 }
 
 func TestLuatTienTuViet(t *testing.T) {
