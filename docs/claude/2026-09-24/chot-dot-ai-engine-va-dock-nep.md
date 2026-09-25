@@ -58,3 +58,26 @@ Số đo từng PR nằm trong commit message của chính nó.
   `dock-1233/` (ngoài repo, máy của leader).
 - Native: log `native-a*.log`, `do-mep-5.log` cùng thư mục.
 - Chất lượng AI: `649-nen/`, `649-sau/`, `649-sau2/` (payload + thẻ thô + bảng điểm).
+
+## 6. Bổ sung 25-09: ba việc tiếp theo của ADR-0036 đã vào `main`
+
+| Commit | Nội dung |
+|---|---|
+| `2a602bad` | #650 xoá v1 tận gốc: `ai-turn` Go + Python, nhánh companion và `chia_bill` trong `POST /messages`, `PlanTurn`/`plan_turn`, brain `companion-plan`, hai limiter; bất biến «mã từ chối có câu tiếng Việt» chuyển sang `cau-chu-goi-ai.test.mjs` (bắt được `thuLaiAi` truyền `{}` thay vì bảng câu) |
+| `ee890ed6` | #651 `command=chia_bill` trên engine: thẻ `kind:"text"` «đề xuất, chưa ghi vào sổ», bản nháp ở cột `result`, không chạm sổ tiền |
+| `fbf83ad8` | #652 não chữ Nếp: `/me/nep/ai-invocations`, kết quả kín về đúng người hỏi, câm ở màn tiền, phiên chỉ trong bộ nhớ; action brain `nep-reply` là phần Python duy nhất |
+
+Hệ quả cần biết: stack `dev` (8099) không còn AI nhóm (engine chỉ bật ở prod, `ai-turn`
+là đường AI duy nhất ở dev). Gemini thêm 5 lời gọi thử Nếp (user duyệt): không ca nào
+bịa quán, lộ khoá hay đụng tiền; xưng hô chưa cố định.
+
+Còn mở thêm:
+- `result` của `chia_bill` chưa lộ ra phản hồi công khai; client chưa có luồng «xác nhận
+  khoản chi» từ bản nháp.
+- Job ruff đỏ ở `service.py` trên #650: file lệch format sẵn từ `820e56a7`, và format cả
+  file làm cổng python-touch đỏ. Hai cổng cần một cơ chế miễn trừ cho file lệch sẵn.
+- Main đỏ job «client sends the headers the API demands» từ `a2d9948a` (phiên-web):
+  `check_cors_contract.py` chỉ truy trong cùng file, còn `headerChiBearer` được import
+  từ `danh-tinh.ts`. Việc của phiên đó.
+- Parity lệch `created_at` f0/f6 hai lần trong ngày 24-09 (outings, friend requests),
+  chạy lại thì xanh.
