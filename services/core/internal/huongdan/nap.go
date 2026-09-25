@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"path"
 	"regexp"
@@ -304,6 +305,63 @@ var (
 	reTrich = regexp.MustCompile(`«([^«»]*)»`)
 )
 
+// tenKhoaDau are the only spellings a front-matter key may have: the five
+// keys of dauTrang and the two of a di_toi entry.
+var tenKhoaDau = map[string]bool{"man": true, "tieu_de": true, "nhanUI": true, "di_toi": true, "tien": true, "nhan": true}
+
+// kiemKhoaDau walks the tokens of front matter that already decoded and
+// refuses a key that appears twice in one object, or one spelled other than
+// as the field it fills. encoding/json does neither: it keeps the last of two
+// keys and matches a key to a field ignoring case, so a second «nhanUI» (or
+// an «NhanUI» after it) would silently replace the list every rule reads.
+func kiemKhoaDau(fm string) error {
+	type khung struct {
+		khoa    map[string]bool // keys seen so far; nil for an array
+		choKhoa bool            // the next string token is a key
+	}
+	var ngan []*khung
+	xongGiaTri := func() {
+		if n := len(ngan); n > 0 && ngan[n-1].khoa != nil {
+			ngan[n-1].choKhoa = true
+		}
+	}
+	dec := json.NewDecoder(strings.NewReader(fm))
+	for {
+		tok, err := dec.Token()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("front matter không đọc được: %w", err)
+		}
+		if d, ok := tok.(json.Delim); ok {
+			switch d {
+			case '{':
+				ngan = append(ngan, &khung{khoa: map[string]bool{}, choKhoa: true})
+			case '[':
+				ngan = append(ngan, &khung{})
+			default:
+				ngan = ngan[:len(ngan)-1]
+				xongGiaTri()
+			}
+			continue
+		}
+		if n := len(ngan); n > 0 && ngan[n-1].choKhoa {
+			k, _ := tok.(string)
+			if ngan[n-1].khoa[k] {
+				return fmt.Errorf("front matter có khoá trùng «%s»", k)
+			}
+			if !tenKhoaDau[k] {
+				return fmt.Errorf("front matter: khoá «%s» phải viết đúng hoa thường như tên khoá", k)
+			}
+			ngan[n-1].khoa[k] = true
+			ngan[n-1].choKhoa = false
+			continue
+		}
+		xongGiaTri()
+	}
+}
+
 // docTrang parses one manual file and checks every rule that file can check
 // alone.
 func docTrang(ten, noiDung string) (*trang, error) {
@@ -329,6 +387,9 @@ func docTrang(ten, noiDung string) (*trang, error) {
 	}
 	if dec.More() {
 		return nil, errors.New("front matter có dữ liệu thừa")
+	}
+	if err := kiemKhoaDau(strings.Join(dong[1:het], "\n")); err != nil {
+		return nil, err
 	}
 	switch {
 	case dau.Man == nil || *dau.Man == "":
@@ -457,7 +518,11 @@ func docTrang(ten, noiDung string) (*trang, error) {
 // kiemManTien holds a money screen's manual to navigation only (design 04
 // §4b, «Màn tiền chỉ có đoạn điều hướng»). It must have exactly one section,
 // headed tieuDeManTien; every non-blank line of that section must be a step;
-// and every step must quote at least one door of this screen.
+// and every step must quote at least one door of this screen and nothing but
+// doors. «At least one» alone let a step quote the payment button next to a
+// door («…bấm «Đánh dấu đã trả», rồi bấm «Xem quyết toán».», review 13
+// round 2); a section heading printed on the screen («Chi theo nhóm») is not
+// a door either, so a step names it in plain words.
 //
 // A door is a way in or out that the code itself shows:
 //   - a label this manual's di_toi uses to leave, which must be a labelled
@@ -471,8 +536,10 @@ func docTrang(ten, noiDung string) (*trang, error) {
 // A declared way that is not a labelled edge refuses the whole manual: the
 // payment button declared as a way out («Đánh dấu đã trả», which leads
 // nowhere) is exactly that. A step that names no door («Bấm «Tiền đã về» khi
-// đã nhận») is how-to-pay text and refuses it too. Digits were already
-// refused in docTrang.
+// đã nhận») is how-to-pay text and refuses it too, and so does a step that
+// quotes any label besides its doors. Digits were already refused in
+// docTrang. What no rule here can see is how-to-pay prose with no «…» on a
+// line that also names a door.
 func kiemManTien(t *trang, tatCa []*trang, bd *banDoRut) error {
 	if len(t.doan) != 1 {
 		return fmt.Errorf("màn tiền chỉ được có một mục chỉ đường, đang có %d", len(t.doan))
@@ -510,15 +577,19 @@ func kiemManTien(t *trang, tatCa []*trang, bd *banDoRut) error {
 		if m == nil {
 			return fmt.Errorf("màn tiền: dòng không phải bước chỉ đường: %q", l)
 		}
-		coCua := false
+		coCua, ngoai := false, ""
 		for _, q := range reTrich.FindAllStringSubmatch(m[1], -1) {
 			if cua[q[1]] {
 				coCua = true
-				break
+			} else if ngoai == "" {
+				ngoai = q[1]
 			}
 		}
 		if !coCua {
 			return fmt.Errorf("màn tiền: bước không chỉ lối vào hay lối ra nào: %q", m[1])
+		}
+		if ngoai != "" {
+			return fmt.Errorf("màn tiền: bước trích «%s», không phải lối vào hay lối ra nào: %q", ngoai, m[1])
 		}
 	}
 	return nil

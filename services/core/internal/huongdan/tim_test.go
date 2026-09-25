@@ -60,10 +60,10 @@ func TestTheoManTraMucTheoThuTuTep(t *testing.T) {
 // section headed tieuDeManTien, no digit anywhere in its body, no line in
 // that section that is not a step, every declared way in or out is a button
 // of the code that leads there (a labelled edge of _rut.json), and every step
-// quotes one of those doors (kiemManTien; the refusals, with the bypass of
-// review 13, are in nap_test.go). What that cannot tell apart is a step that
-// names a door AND says how to pay in the same line; a person reviewing the
-// prose is what covers that.
+// quotes one of those doors and no other label (kiemManTien; the refusals,
+// with the bypasses of review 13, are in nap_test.go). What that cannot tell
+// apart is a step that names a door AND says how to pay in plain words, with
+// no «…», in the same line; a person reviewing the prose is what covers that.
 func TestManTienChiCoMotMucChiDuong(t *testing.T) {
 	want := map[string][]string{
 		"finance":                 {"tai-chinh/toi-man-nay-va-di-tiep"},
@@ -130,22 +130,29 @@ func manNepLui(t *testing.T) map[string]bool {
 }
 
 // Sections of the screen the person is on come first when they score at
-// least tyLeGhim of the best matching score; every other section keeps its
+// least tyLeGhim of the best MATCHING score; every other section keeps its
 // place in the ranking with no screen. The cases hold both sides: a current
-// screen section pinned, and one that matched but was not.
+// screen section pinned, and one that matched but was not; and a question
+// whose best score overall belongs to a section that does not match, so
+// measuring the share against that score instead unpins a section.
 func TestTimGhimTheoTyLe(t *testing.T) {
 	ctx := context.Background()
-	daGhim, khongGhim := 0, 0
+	daGhim, khongGhim, nhoKhop := 0, 0, 0
 	for _, c := range []struct{ cau, man string }{
 		{"tạo kèo", "outings/new"},
 		{"xem lại các buổi đã đi", "plan"},
 		{"gửi ảnh cho cả nhóm xem", "plan"},
 		{"mình lỡ vote nhầm, đổi lại được không", "groups/[id]/chat"},
+		// «ở đâu» puts kham-pha/doi-diem-den first on question words alone.
+		{"tạo ở đâu", "create"},
 	} {
 		amTiet := soTay.chuanHoi(xephang.AmTiet(c.cau))
 		noiDung := thuatNoiDung(amTiet)
-		diem, cao := map[string]float64{}, -1.0
+		diem, cao, caoMoiMuc := map[string]float64{}, -1.0, -1.0
 		for _, kq := range soTay.chiMuc.Tim(strings.Join(amTiet, " "), soTay.chiMuc.Len()) {
+			if caoMoiMuc < 0 {
+				caoMoiMuc = kq.Diem
+			}
 			if soTay.khop(soTay.theoID[kq.ID], noiDung) {
 				diem[kq.ID] = kq.Diem
 				if cao < 0 {
@@ -161,6 +168,9 @@ func TestTimGhimTheoTyLe(t *testing.T) {
 			case laMan && diem[id] >= tyLeGhim*cao:
 				ghim = append(ghim, id)
 				daGhim++
+				if diem[id] < tyLeGhim*caoMoiMuc {
+					nhoKhop++
+				}
 			case laMan:
 				con = append(con, id)
 				khongGhim++
@@ -176,8 +186,9 @@ func TestTimGhimTheoTyLe(t *testing.T) {
 			t.Errorf("%q: as walked %v, as declared %v", c.cau, walked, co)
 		}
 	}
-	if daGhim < 2 || khongGhim < 2 {
-		t.Fatalf("pinned %d, left in place %d: the cases no longer hold both sides", daGhim, khongGhim)
+	if daGhim < 2 || khongGhim < 2 || nhoKhop < 1 {
+		t.Fatalf("pinned %d, left in place %d, pinned only because the share is of the best matching score %d: the cases no longer hold every side",
+			daGhim, khongGhim, nhoKhop)
 	}
 	// What the share is for. Asked on plan, «nhóm» matches the plan sections
 	// that mention a group; they no longer go ahead of the chat sections.
@@ -187,6 +198,11 @@ func TestTimGhimTheoTyLe(t *testing.T) {
 	// And what it keeps: asked where the answer is, the answer comes first.
 	if got := idCua(Tim(ctx, Hoi{Cau: "tạo kèo", Man: "outings/new", K: 4})); len(got) == 0 || !strings.HasPrefix(got[0], "tao-keo/") {
 		t.Errorf("tạo kèo on outings/new: %v", got)
+	}
+	// Even when a section that shares only «ở đâu» with the question scores
+	// highest: it does not match, so it sets no bar for pinning.
+	if got := idCua(Tim(ctx, Hoi{Cau: "tạo ở đâu", Man: "create", K: 4})); len(got) == 0 || got[0] != "tao-moi/chon-viec-muon-tao" {
+		t.Errorf("tạo ở đâu on create: %v", got)
 	}
 }
 
@@ -312,9 +328,15 @@ func TestTimCtxDaHuy(t *testing.T) {
 // Results are copies: a caller that edits one cannot edit the manual.
 func TestTimVaTheoManTraBanSao(t *testing.T) {
 	a := Tim(context.Background(), Hoi{Cau: "bỏ phiếu", K: 1})
+	if len(a) == 0 || len(a[0].Buoc) == 0 || len(a[0].Nhan) == 0 {
+		t.Fatalf("Tim(bỏ phiếu) = %+v: nothing to edit", a)
+	}
 	a[0].Buoc[0] = "đã bị sửa"
 	a[0].Nhan[0] = "đã bị sửa"
 	b := TheoMan("groups/[id]/chat")
+	if len(b) < 3 || len(b[2].Buoc) < 2 {
+		t.Fatalf("TheoMan(chat) = %+v: nothing to edit", b)
+	}
 	b[2].Buoc[1] = "đã bị sửa"
 	for _, d := range soTay.doan {
 		for _, s := range append(append([]string{}, d.Buoc...), d.Nhan...) {

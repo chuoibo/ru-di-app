@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -87,6 +88,29 @@ func TestNapMauDung(t *testing.T) {
 	}
 }
 
+// A heading is read like a step: a label it quotes is one of the section's
+// labels (Doan.Nhan), ahead of the body's, in order of first use, even when
+// the body never quotes it.
+func TestTieuDeTrichNhanVaoDoanNhan(t *testing.T) {
+	m := mauDung()
+	m["data/a.md"] = strings.Replace(m["data/a.md"], "## Mở màn tiền", "## Mở màn tiền, không phải «Nút B»", 1)
+	s, err := napTu(m)
+	if err != nil {
+		t.Fatalf("identity: a heading quoting a declared label must load: %v", err)
+	}
+	a := s.theoMan("a")
+	if len(a) != 2 || a[1].ID != "a/mo-man-tien-khong-phai-nut-b" {
+		t.Fatalf("sections of a: %+v", a)
+	}
+	if got := a[1].Nhan; !reflect.DeepEqual(got, []string{"Nút B", "Mở tiền"}) {
+		t.Fatalf("labels of %s: %q, want the heading's «Nút B» first", a[1].ID, got)
+	}
+	// The section above it quotes «Nút B» in its body only, and keeps it.
+	if got := a[0].Nhan; !reflect.DeepEqual(got, []string{"Nút B"}) {
+		t.Fatalf("labels of %s: %q", a[0].ID, got)
+	}
+}
+
 func TestNapTuChoiMoiLoi(t *testing.T) {
 	type sua func(m map[string]string)
 	thay := func(tep, cu, moi string) sua {
@@ -154,6 +178,25 @@ func TestNapTuChoiMoiLoi(t *testing.T) {
 			thay("data/tien.md", "- Xong thì bấm «Về A».", "- Xong thì bấm «Về A».\n- Nhận được tiền thì bấm «Tiền đã về».")(m)
 		}, "màn tiền: bước không chỉ lối vào hay lối ra nào"},
 		{"màn tiền có văn xuôi", thay("data/tien.md", "- Xong thì bấm «Về A».", "- Xong thì bấm «Về A».\nChuyển khoản cho người ứng."), "màn tiền: dòng không phải bước chỉ đường"},
+		// A door on the step does not carry another label with it: the payment
+		// button beside «Về A» is how-to-pay text (review 13 round 2, P9).
+		{"màn tiền: bước nêu cửa kèm nút trả tiền", func(m map[string]string) {
+			thay("data/tien.md", `"nhanUI":["Về A","Mở tiền"]`, `"nhanUI":["Về A","Mở tiền","Đánh dấu đã trả"]`)(m)
+			thay("data/tien.md", "- Xong thì bấm «Về A».", "- Chuyển khoản xong thì bấm «Đánh dấu đã trả», rồi bấm «Về A».")(m)
+		}, "tien.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào"},
+		// The same with the door first: every quote is read, not only those
+		// before the first door.
+		{"màn tiền: bước nêu cửa trước, nút trả tiền sau", func(m map[string]string) {
+			thay("data/tien.md", `"nhanUI":["Về A","Mở tiền"]`, `"nhanUI":["Về A","Mở tiền","Đánh dấu đã trả"]`)(m)
+			thay("data/tien.md", "- Xong thì bấm «Về A».", "- Bấm «Về A» sau khi đã bấm «Đánh dấu đã trả».")(m)
+		}, "tien.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào"},
+		// Keys: encoding/json keeps the last of two and ignores case, so each
+		// of these would load as a different manual than the one reviewed.
+		{"khoá trùng", thay("data/a.md", `"tien":false}`, `"tien":false,"tien":false}`), "a.md: front matter có khoá trùng «tien»"},
+		{"khoá trùng trong di_toi", thay("data/a.md", `{"nhan":"Nút B","man":"b"}`, `{"nhan":"Nút B","man":"welcome","man":"b"}`), "a.md: front matter có khoá trùng «man»"},
+		{"nhanUI thứ hai trên màn tiền", thay("data/tien.md", `"tien":true}`, `"tien":true,"nhanUI":["Về A","Mở tiền","Đánh dấu đã trả"]}`), "tien.md: front matter có khoá trùng «nhanUI»"},
+		{"khoá sai hoa thường", thay("data/tien.md", `"nhanUI":["Về A","Mở tiền"]`, `"NhanUI":["Về A","Mở tiền"]`), "tien.md: front matter: khoá «NhanUI» phải viết đúng hoa thường"},
+		{"khoá sai hoa thường trong di_toi", thay("data/a.md", `{"nhan":"Nút B","man":"b"}`, `{"Nhan":"Nút B","man":"b"}`), "a.md: front matter: khoá «Nhan» phải viết đúng hoa thường"},
 		// _rut.json.
 		{"_rut.json khoá lạ", thay("data/_rut.json", `{"routes":[`, `{"extra":1,"routes":[`), `_rut.json: json: unknown field "extra"`},
 		{"_rut.json cạnh tới route lạ", thay("data/_rut.json", `"di_toi":["b","finance"],"man":"a"`, `"di_toi":["zzz","finance"],"man":"a"`), "«a» đi tới «zzz» không có trong cây route"},
@@ -175,6 +218,27 @@ func TestNapTuChoiMoiLoi(t *testing.T) {
 				t.Fatalf("error %q; want it to contain %q", err, c.loi)
 			}
 		})
+	}
+}
+
+// kiemKhoaDau on its own: a key is recognised after every kind of value,
+// including a nested array or object, so a duplicate is found wherever it
+// sits, and text inside a string is never structure.
+func TestKiemKhoaDau(t *testing.T) {
+	for _, c := range []struct{ fm, loi string }{
+		{`{"man":"a","tieu_de":"{\"nhanUI\": [\"x\"]}","nhanUI":["{","}"],"di_toi":[{"nhan":"x","man":"b"},{"nhan":"y","man":"c"}],"tien":false}`, ""},
+		{`{"nhanUI":[],"tien":true,"tien":false}`, "front matter có khoá trùng «tien»"},
+		{`{"di_toi":[{"nhan":"x","man":"b"}],"man":"a","man":"b"}`, "front matter có khoá trùng «man»"},
+		{`{"di_toi":[{"nhan":"x","man":"b","nhan":"y"}]}`, "front matter có khoá trùng «nhan»"},
+		{`{"man":"a","Tien":true}`, "front matter: khoá «Tien» phải viết đúng hoa thường như tên khoá"},
+	} {
+		got := ""
+		if err := kiemKhoaDau(c.fm); err != nil {
+			got = err.Error()
+		}
+		if got != c.loi {
+			t.Errorf("kiemKhoaDau(%s) = %q, want %q", c.fm, got, c.loi)
+		}
 	}
 }
 
@@ -226,10 +290,14 @@ func TestDuLieuThatBiSuaBiTuChoi(t *testing.T) {
 	// copy of tai-chinh.md: the payment button «Đánh dấu đã trả» (a real
 	// label, Bill.tsx) added to nhanUI, declared as a di_toi back to finance
 	// itself, and a step telling the person to transfer and press it.
-	nhanTra := sua{"data/tai-chinh.md", `"nhanUI": ["Tài chính của tôi", "Cá nhân", "Chi theo nhóm", "Xem quyết toán"]`,
-		`"nhanUI": ["Tài chính của tôi", "Cá nhân", "Chi theo nhóm", "Xem quyết toán", "Đánh dấu đã trả"]`}
-	buocTra := sua{"data/tai-chinh.md", "- Ở mục «Chi theo nhóm», bấm «Xem quyết toán» để mở màn quyết toán của nhóm.",
-		"- Ở mục «Chi theo nhóm», bấm «Xem quyết toán» để mở màn quyết toán của nhóm.\n- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả»."}
+	const nhanTC = `"nhanUI": ["Tài chính của tôi", "Cá nhân", "Xem quyết toán"]`
+	const buoc2TC = "- Ở mục chi theo nhóm, bấm «Xem quyết toán» để mở màn quyết toán của nhóm."
+	themNhan := func(n string) sua {
+		return sua{"data/tai-chinh.md", nhanTC, strings.TrimSuffix(nhanTC, "]") + `, "` + n + `"]`}
+	}
+	themBuoc := func(b string) sua { return sua{"data/tai-chinh.md", buoc2TC, buoc2TC + "\n" + b} }
+	nhanTra := themNhan("Đánh dấu đã trả")
+	buocTra := themBuoc("- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả».")
 	diToiTra := func(den string) sua {
 		return sua{"data/tai-chinh.md", `{"nhan": "Xem quyết toán", "man": "settlements/[id]"}`,
 			`{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Đánh dấu đã trả", "man": "` + den + `"}`}
@@ -241,7 +309,28 @@ func TestDuLieuThatBiSuaBiTuChoi(t *testing.T) {
 	}{
 		{"man của chat-nhom", []sua{{"data/chat-nhom.md", `"man": "groups/[id]/chat"`, `"man": "groups/[id]/khong-co"`}}, "chat-nhom.md: màn «groups/[id]/khong-co» không có trong _rut.json"},
 		{"di_toi của keo", []sua{{"data/keo.md", `{"nhan": "Chặng …", "man": "places/[id]"}`, `{"nhan": "Chặng …", "man": "places/[id]/khong-co"}`}}, "keo.md: di_toi «Chặng …» tới «places/[id]/khong-co» không có trong _rut.json"},
-		{"bước trả tiền không nêu cửa", []sua{{"data/tai-chinh.md", "- Mở tab «Cá nhân», bấm «Tài chính của tôi».", "- Mở tab «Cá nhân», bấm «Tài chính của tôi».\n- Đọc số ở «Chi theo nhóm» rồi chuyển khoản."}}, "tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào"},
+		{"bước trả tiền không nêu cửa", []sua{themBuoc("- Đọc số trên màn rồi chuyển khoản cho người ứng.")}, "tai-chinh.md: màn tiền: bước không chỉ lối vào hay lối ra nào"},
+		// Review 13 round 2, P9 exactly: the payment button quoted on a line
+		// that also names the door «Xem quyết toán».
+		{"nút trả tiền cạnh một cửa", []sua{nhanTra, themBuoc("- Chuyển khoản cho người ứng xong thì bấm «Đánh dấu đã trả», rồi bấm «Xem quyết toán».")},
+			"tai-chinh.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào"},
+		{"cửa trước, nút trả tiền sau", []sua{nhanTra, themBuoc("- Bấm «Xem quyết toán», chuyển khoản xong thì bấm «Đánh dấu đã trả».")},
+			"tai-chinh.md: màn tiền: bước trích «Đánh dấu đã trả», không phải lối vào hay lối ra nào"},
+		// The line as it stood before this rule: «Chi theo nhóm» is the heading
+		// the button sits under, printed on the screen, and not a door.
+		{"tiêu đề mục trên màn không phải cửa", []sua{themNhan("Chi theo nhóm"), {"data/tai-chinh.md", buoc2TC, "- Ở mục «Chi theo nhóm», bấm «Xem quyết toán» để mở màn quyết toán của nhóm."}},
+			"tai-chinh.md: màn tiền: bước trích «Chi theo nhóm», không phải lối vào hay lối ra nào"},
+		// Review 13 round 2, P5b: the heading declared as a way out. The
+		// extractor pairs onAction with action only, so no button labelled
+		// «Chi theo nhóm» leads to settlements/[id] in _rut.json any more.
+		{"tiêu đề mục khai làm lối ra", []sua{themNhan("Chi theo nhóm"),
+			{"data/tai-chinh.md", `{"nhan": "Xem quyết toán", "man": "settlements/[id]"}`, `{"nhan": "Xem quyết toán", "man": "settlements/[id]"}, {"nhan": "Chi theo nhóm", "man": "settlements/[id]"}`},
+			themBuoc("- Đọc số ở «Chi theo nhóm» rồi chuyển khoản cho người ứng.")},
+			"tai-chinh.md: màn tiền: lối ra «Chi theo nhóm» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó"},
+		// Review 13 round 2, N7: a second nhanUI key, which encoding/json let
+		// win over the first.
+		{"nhanUI thứ hai", []sua{{"data/tai-chinh.md", `"tien": true`, `"tien": true,` + "\n  " + strings.TrimSuffix(nhanTC, "]") + `, "Đánh dấu đã trả"]`}},
+			"tai-chinh.md: front matter có khoá trùng «nhanUI»"},
 		{"khoá nut", []sua{{"data/ca-nhan.md", "---json\n{", "---json\n{\n  \"nut\": [],"}}, `ca-nhan.md: front matter không đọc được: json: unknown field "nut"`},
 		{"lách của review 13, đúng nguyên bản", []sua{nhanTra, diToiTra("finance"), buocTra}, "tai-chinh.md: di_toi «Đánh dấu đã trả» về chính màn «finance»"},
 		{"lách qua một cạnh thật của mã", []sua{nhanTra, diToiTra("settlements/[id]"), buocTra}, "tai-chinh.md: màn tiền: lối ra «Đánh dấu đã trả» tới «settlements/[id]» không phải nút nào của «finance» dẫn tới đó"},

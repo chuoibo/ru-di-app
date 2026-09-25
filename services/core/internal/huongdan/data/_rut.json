@@ -28,10 +28,6 @@
         },
         {
           "den": "settlements/[id]",
-          "nhan": "Chi theo nhóm"
-        },
-        {
-          "den": "settlements/[id]",
           "nhan": "Xem quyết toán"
         },
         {
@@ -450,10 +446,6 @@
         {
           "den": "settings",
           "nhan": "Cài đặt"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Chi theo nhóm"
         },
         {
           "den": "settlements/[id]",
@@ -1858,10 +1850,6 @@
         {
           "den": "settings",
           "nhan": "Cài đặt"
-        },
-        {
-          "den": "settlements/[id]",
-          "nhan": "Chi theo nhóm"
         },
         {
           "den": "settlements/[id]",

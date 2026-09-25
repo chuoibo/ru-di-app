@@ -2,7 +2,7 @@
 {
   "man": "finance",
   "tieu_de": "Tài chính của tôi",
-  "nhanUI": ["Tài chính của tôi", "Cá nhân", "Chi theo nhóm", "Xem quyết toán"],
+  "nhanUI": ["Tài chính của tôi", "Cá nhân", "Xem quyết toán"],
   "di_toi": [
     {"nhan": "Xem quyết toán", "man": "settlements/[id]"}
   ],
@@ -14,4 +14,4 @@ Màn «Tài chính của tôi» thuộc phần tiền. Nếp chỉ chỉ đườ
 ## Tới màn này và đi tiếp
 
 - Mở tab «Cá nhân», bấm «Tài chính của tôi».
-- Ở mục «Chi theo nhóm», bấm «Xem quyết toán» để mở màn quyết toán của nhóm.
+- Ở mục chi theo nhóm, bấm «Xem quyết toán» để mở màn quyết toán của nhóm.

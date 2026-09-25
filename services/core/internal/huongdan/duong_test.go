@@ -240,6 +240,19 @@ func TestDuongToiTranhManTien(t *testing.T) {
 	if got, _ := s.duongToi("a", "z"); !reflect.DeepEqual(buoc(got), []string{"c[]", "e[]", "z[]"}) {
 		t.Fatalf("a -> z = %v: passed through finance", buoc(got))
 	}
+	// The fewest, not the most: from c one way on passes through
+	// settlements/[id] and one does not, so c costs nothing and beats b,
+	// whose only way on is through finance (review 13 round 2, N3). No label
+	// anywhere, so neither the label rule nor the smaller id (b < c) decides.
+	// The clean neighbour of c is named once before settlements/[id] (e) and
+	// once after it (w), so neither the first nor the last neighbour of c is
+	// always the cheap one.
+	for _, sach := range []string{"e", "w"} {
+		s = doThiGia("a>b", "a>c", "b>finance", "finance>z", "c>settlements/[id]", "settlements/[id]>z", "c>"+sach, sach+">z")
+		if got, _ := s.duongToi("a", "z"); !reflect.DeepEqual(buoc(got), []string{"c[]", sach + "[]", "z[]"}) {
+			t.Fatalf("a -> z = %v: not the way with the fewest money screens", buoc(got))
+		}
+	}
 	// When every shortest way passes through one, it is taken; a longer way
 	// is never preferred to it.
 	s = doThiGia("a>settlements/[id]", "settlements/[id]>z", "a>c", "c>e", "e>z")

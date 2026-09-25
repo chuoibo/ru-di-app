@@ -191,7 +191,8 @@ năm khoá `man` (đúng route id của `PhieuNguCanh.man`), `tieu_de`, `nhanUI[
 (không phải `nut[]`/`di_toi[{nut, man}]` như bản đầu); mỗi mục H2 là một việc («Thêm một chặng») và là một đoạn.
 `huongdan.BanDung()` = 12 hex đầu sha256 của `_rut.json` nhúng; phiếu v2 mang hash bản build của client, lệch thì
 gắn cờ `ban_app_khac` và câu trả lời nói có thể khác bản app. Màn tiền chỉ có đoạn điều hướng: một mục, tiêu đề cố
-định, không chữ số, mỗi bước trích một cửa là cạnh có nhãn của mã (`_rut.json` `canh`). «Làm sao tới X»: BFS trên
+định, không chữ số, mỗi bước trích ít nhất một cửa và chỉ trích cửa, cửa là cạnh có nhãn của mã (`_rut.json` `canh`: nút
+mang đúng nhãn đó, nhãn gọi tên đúng cú bấm đó). «Làm sao tới X»: BFS trên
 đồ thị cạnh của mã + thanh tab + `di_toi` của sổ tay, trả các bước tất định, tránh đi qua màn tiền khi có đường
 cùng độ dài. **Luật ghim đã dựng** (thay «đoạn của màn hiện tại luôn được ghim»): trong `Tim`, mục của màn hiện tại
 chỉ lên trước khi điểm ≥ 1/2 điểm cao nhất; `explain_screen` vẫn đưa trọn màn hiện tại qua `TheoMan`.

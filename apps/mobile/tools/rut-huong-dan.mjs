@@ -32,14 +32,17 @@
  *     keeps its path with a leading `/`, so it stays visible instead of
  *     silently dropping out.
  *   - labelled edges (`canh`): a label and a navigation that belong to ONE
- *     thing a person taps. Either one JSX tag whose label attribute and whose
- *     `on…` handler (or `href`) sit on the same tag (`<RudiButton
- *     label="Xem quyết toán" onPress={() => router.replace(…)} />`), or one
- *     object literal whose `title`/`label` sits next to its `href` or an
- *     `on…` handler that navigates (a menu written as data, `action={{ label,
- *     onPress }}`). This is what lets the manual's money doors be held to a
- *     button that really leads there, not merely to a word printed somewhere
- *     on the screen. The label of such an object is a label too.
+ *     thing a person taps. Either one JSX tag whose tap and the label that
+ *     names THAT tap sit on the same tag (`<RudiButton label="Xem quyết toán"
+ *     onPress={() => router.replace(…)} />`), or one object literal whose
+ *     `title`/`label` sits next to its `href` or its `onPress` (a menu written
+ *     as data, `action={{ label, onPress }}`). Each tap is paired with its own
+ *     labels only (`NHAN_CUA_CHAM`): a heading that carries a button,
+ *     `<SectionHeader title="Chi theo nhóm" action="Xem quyết toán"
+ *     onAction={…} />`, records «Xem quyết toán» and never the heading. This
+ *     is what lets the manual's money doors be held to a button that really
+ *     leads there, not merely to a word printed somewhere on the screen. The
+ *     label of such an object is a label too.
  *
  * Parsing is TypeScript's own parser (already a dev dependency), not regex:
  * comments are trivia rather than nodes, so a label mentioned only in a
@@ -76,6 +79,20 @@ const THU_MUC_SRC = join(GOC_MOBILE, "src");
 const THUOC_TINH_NHAN = new Set(["label", "accessibilityLabel", "title", "placeholder", "action"]);
 /** Properties of an object literal that name the thing it describes. */
 const KHOA_NHAN = new Set(["title", "label"]);
+/**
+ * Which labels name which tap, on one JSX tag or one object literal. `onPress`
+ * and `href` are the tap of the thing itself, so its `label`,
+ * `accessibilityLabel` or `title` names it (a row or a button tapped as a
+ * whole is named by its title). `onAction` is a second button a tag carries,
+ * named by `action` alone: the tag's `title` is then a heading, not a button.
+ * A handler not listed (`onClosed`, `onChangeText`, `onLongPress`, …) lends
+ * its navigation to no label, and `placeholder` names no tap.
+ */
+const NHAN_CUA_CHAM = new Map([
+  ["onPress", ["label", "accessibilityLabel", "title"]],
+  ["href", ["label", "accessibilityLabel", "title"]],
+  ["onAction", ["action"]],
+]);
 /** How a `${...}` inside a template is written in labels and manuals. */
 export const CHO_TRONG = "…";
 /** Placeholder for a dynamic piece of a navigation target, before matching. */
@@ -296,49 +313,55 @@ function tenThuocTinh(p) {
 
 /**
  * Labelled edges of one file, as [label, raw target] pairs: see the file
- * header. Only a handler named `on…` counts as the tap, so a tag's other
- * props (an `action={{ … }}` object, a render prop) never lend their
- * navigation to the tag's own label; that object is read on its own.
+ * header. Each tap in `NHAN_CUA_CHAM` is paired with the labels that name it
+ * and nothing else, so a tag's other props (its heading `title` beside an
+ * `onAction`, an `action={{ … }}` object, a render prop) never lend a
+ * navigation to the wrong words; that object is read on its own.
  */
 function canhTrongTep(sf) {
   const ra = [];
-  const ghep = (nhan, dich) => {
-    for (const n of nhan) {
-      const g = gon(n);
-      if (!g || !coChu(g)) continue;
-      for (const d of dich) ra.push([g, d]);
+  // nhan: label prop -> the strings it can hold; cham: tap -> raw targets.
+  const ghep = (nhan, cham) => {
+    for (const [tenCham, dich] of cham) {
+      for (const tenNhan of NHAN_CUA_CHAM.get(tenCham)) {
+        for (const n of nhan.get(tenNhan) ?? []) {
+          const g = gon(n);
+          if (!g || !coChu(g)) continue;
+          for (const d of dich) ra.push([g, d]);
+        }
+      }
     }
   };
   const di = (node) => {
     if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
-      const nhan = [];
-      const dich = [];
+      const nhan = new Map();
+      const cham = new Map();
       for (const p of node.attributes.properties) {
         if (!ts.isJsxAttribute(p) || !ts.isIdentifier(p.name)) continue;
         const ten = p.name.text;
         const v = p.initializer;
         if (THUOC_TINH_NHAN.has(ten)) {
-          if (v && ts.isStringLiteral(v)) nhan.push(v.text);
-          else if (v && ts.isJsxExpression(v)) nhan.push(...chuCuaBieuThuc(v.expression));
+          if (v && ts.isStringLiteral(v)) nhan.set(ten, [v.text]);
+          else if (v && ts.isJsxExpression(v)) nhan.set(ten, chuCuaBieuThuc(v.expression));
         } else if (ten === "href") {
-          if (v && ts.isStringLiteral(v)) dich.push(v.text);
-          else if (v && ts.isJsxExpression(v)) dich.push(...(dichCuaBieuThuc(v.expression) ?? []));
-        } else if (/^on[A-Z]/.test(ten) && v && ts.isJsxExpression(v) && v.expression) {
-          dich.push(...dichTrongNut(v.expression));
+          if (v && ts.isStringLiteral(v)) cham.set(ten, [v.text]);
+          else if (v && ts.isJsxExpression(v)) cham.set(ten, dichCuaBieuThuc(v.expression) ?? []);
+        } else if (NHAN_CUA_CHAM.has(ten) && v && ts.isJsxExpression(v) && v.expression) {
+          cham.set(ten, dichTrongNut(v.expression));
         }
       }
-      ghep(nhan, dich);
+      ghep(nhan, cham);
     } else if (ts.isObjectLiteralExpression(node)) {
-      const nhan = [];
-      const dich = [];
+      const nhan = new Map();
+      const cham = new Map();
       for (const p of node.properties) {
         if (!ts.isPropertyAssignment(p)) continue;
         const ten = tenThuocTinh(p);
-        if (ten !== null && KHOA_NHAN.has(ten)) nhan.push(...chuCuaBieuThuc(p.initializer));
-        else if (ten === "href") dich.push(...(dichCuaBieuThuc(p.initializer) ?? []));
-        else if (ten !== null && /^on[A-Z]/.test(ten)) dich.push(...dichTrongNut(p.initializer));
+        if (ten !== null && KHOA_NHAN.has(ten)) nhan.set(ten, chuCuaBieuThuc(p.initializer));
+        else if (ten === "href") cham.set(ten, dichCuaBieuThuc(p.initializer) ?? []);
+        else if (ten !== null && NHAN_CUA_CHAM.has(ten)) cham.set(ten, dichTrongNut(p.initializer));
       }
-      ghep(nhan, dich);
+      ghep(nhan, cham);
     }
     ts.forEachChild(node, di);
   };

@@ -98,13 +98,17 @@ bị thay, vì gu vẫn bị cấm.
   Bản thiết kế ban đầu (mỗi luồng một mục, front matter `{id, man[], buoc[], hanhDong[], loTrinh[], nhanUI[]}`)
   không được dựng. Dựng: **mỗi màn một file**, front matter là JSON giữa dòng `---json` và dòng `---`, đúng
   năm khoá `{man, tieu_de, nhanUI[], di_toi[{nhan, man}], tien}`; khoá lạ bị từ chối, kể cả tên cũ `nut`,
-  `buoc`, `hanhDong`. `man` là route id đúng như `PhieuNguCanh.man`. Mỗi mục `## ` là một việc và một đoạn
+  `buoc`, `hanhDong`; khoá trùng trong một object hay viết sai hoa thường cũng bị từ chối (JSON của Go và JS
+  giữ khoá sau cùng và im lặng, Go còn khớp khoá không phân biệt hoa thường; sửa theo review lát 13 vòng 2).
+  `man` là route id đúng như `PhieuNguCanh.man`. Mỗi mục `## ` là một việc và một đoạn
   truy hồi, 1–5 bước; id mục = `<tệp>/<slug tiêu đề>`. Luật nạp (`huongdan.nap`, phaiNap panic lúc init):
   mọi `man`/`di_toi[].man` có trong `_rut.json`; không `di_toi` nào về chính màn đó; mọi `di_toi` là một
   cạnh của mã (`_rut.json` `di_toi`, thanh tab, hoặc ngoại lệ có tên `canhNgoaiRut` kèm lý do — hiện chỉ
   `plan → create`, nút «Tạo mới» của `RudiTabBar`); mọi «…», kể cả trong tiêu đề mục và tổng quan, khai trong
   `nhanUI`; `tien` phải đúng theo route (`manTienDau` = `MAN_NEP_LUI`). Màn tiền: một mục duy nhất, tiêu đề
-  cố định «Tới màn này và đi tiếp», không chữ số, mọi dòng là bước, mỗi bước trích một «cửa»; cửa là nhãn của
+  cố định «Tới màn này và đi tiếp», không chữ số, mọi dòng là bước, mỗi bước trích ít nhất một «cửa» và **chỉ
+  trích cửa** (tiêu đề mục in trên màn như «Chi theo nhóm», hay nút trả tiền đứng cạnh một cửa, đều không được
+  trích; nhắc tới tiêu đề mục thì viết chữ thường, không «…»); cửa là nhãn của
   một lối vào/ra đã khai mà **là cạnh có nhãn của mã** (`_rut.json` `canh`: nút mang đúng nhãn đó và điều
   hướng tới đúng màn đó), hoặc tiêu đề của một màn không phải màn tiền có lối vào, in trên màn đó. Người
   review viết văn; model soạn nháp chỉ khi Lead duyệt số lời gọi.
@@ -117,8 +121,11 @@ bị thay, vì gu vẫn bị cấm.
   riêng» kèm lý do; mọi id trong `buocMuc` tồn tại và thuộc đúng màn.
 - `apps/mobile/tools/rut-huong-dan.mjs` rút ra `data/_rut.json`: route (cây expo-router), nhãn (literal
   JSX), cạnh điều hướng (`router.push/replace` literal), và cạnh có nhãn `canh` (nhãn và điều hướng nằm trên
-  cùng một thứ người ta bấm: một thẻ JSX với handler `on…`/`href` của chính nó, hoặc một object menu
-  `{title|label, href|on…}`; thêm theo review lát 13). Cổng tươi: CI chạy lại, diff phải rỗng. `banBuild`
+  cùng một thứ người ta bấm, và nhãn là tên của đúng cú bấm đó: trên một thẻ JSX, `onPress`/`href` ghép với
+  `label`, `accessibilityLabel` hay `title`, `onAction` chỉ ghép với `action`, handler khác không ghép với nhãn
+  nào; hoặc một object menu `{title|label, href|onPress}`. Thêm theo review lát 13; vòng 2 bỏ ghép `title` với
+  `onAction`, vì `<SectionHeader title="Chi theo nhóm" action="Xem quyết toán" onAction>` là một tiêu đề mang
+  một nút, không phải nút «Chi theo nhóm»). Cổng tươi: CI chạy lại, diff phải rỗng. `banBuild`
   = 12 hex đầu sha256 của `_rut.json`, client nhúng qua `nep/huong-dan-ban.ts` (sửa theo phản biện) [P2-6].
 - **API (theo bản dựng):** `TheoMan(man)` trả các mục của một màn theo thứ tự tệp (nhận route khai hoặc
   route đi). `Tim(ctx, Hoi{Cau, Man, K})`, K mặc định 4: chỉ đọc 2000 rune đầu của câu (`MaxRuneCau`, bằng
