@@ -363,6 +363,8 @@
     // really emits: the claim is that the input carries NO native hint and the
     // sentence is a text node of its own, which only the rendered output shows.
     "src/rudi/ui/Field.tsx",
+    // UI v3 S0.5: the field written on a ruled line instead of a box.
+    "src/rudi/ui/ONhapMuc.tsx",
     // L2 (ADR-0021 §2.5): the direct-message door and how a pair is named.
     "src/rudi/nhan-rieng/nhan-rieng.ts",
     // L3 (ADR-0022): a post's comments and reactions, personal photos, and the
@@ -429,6 +431,13 @@
     // still figure; see tests/nep-roi.test.mjs.
     "src/rudi/art/nep-roi.ts",
     "src/rudi/art/nep-dien.ts",
-    "src/rudi/khoanh-khac.ts"
+    "src/rudi/khoanh-khac.ts",
+    // S0.5 primitives' arithmetic: the month grid a tear-off calendar leafs
+    // through, the dial's quarter hours, the sentence with blanks, and the
+    // avatars that failed this session.
+    "src/rudi/ui/lich/lich-thang.ts",
+    "src/rudi/ui/ban-xoay.ts",
+    "src/rudi/ui/cau-ru.ts",
+    "src/rudi/nguoi/anh-dai-dien-cache.ts"
   ]
 }

@@ -171,3 +171,29 @@ export function hinhPhongBi(w: number, h: number, mo = 0): { than: string; nap: 
   const nep = netGay([[0, yThan + h], [w / 2, yThan + h * 0.45], [w, yThan + h]]);
   return { than, nap, nep, yThan, cao: yThan + h };
 }
+
+/**
+ * A dashed line as one path of short strokes (`M ... L ...` per dash): the
+ * perforation of a ticket, the dotted cut of a receipt. The dashes are fitted
+ * so both ends of the line are ink, never a gap.
+ */
+export function duongDut(a: Diem, b: Diem, gach = 4, ho = 3): string {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const dai = Math.hypot(dx, dy);
+  if (dai === 0) return duong("M", a[0], a[1], "L", b[0], b[1]);
+  const so = Math.max(1, Math.round((dai + ho) / (gach + ho)));
+  const buoc = (dai + ho) / so;
+  // The dash stretches or shrinks a little so the last one ends ON the far
+  // end: with `so` dashes and `so - 1` gaps, dash = step - gap exactly.
+  const g = buoc - ho > 0 ? buoc - ho : dai;
+  const ux = dx / dai;
+  const uy = dy / dai;
+  const phan: string[] = [];
+  for (let i = 0; i < so; i += 1) {
+    const t0 = i * buoc;
+    const t1 = Math.min(dai, t0 + g);
+    phan.push(duong("M", a[0] + ux * t0, a[1] + uy * t0, "L", a[0] + ux * t1, a[1] + uy * t1));
+  }
+  return phan.join(" ");
+}

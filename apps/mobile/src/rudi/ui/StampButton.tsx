@@ -16,6 +16,13 @@ export interface StampButtonProps {
   tilt?: -3 | -2 | -1.5 | -1 | 0 | 1 | 1.5 | 2 | 3;
   /** `lon` is the cover's ask; `vua` is the same seal on a form. */
   size?: "lon" | "vua";
+  /**
+   * The seal's ink: coral for the ask (default), teal for a decision about
+   * money (ADR-0037 D14: «Ghi vào sổ», «Phát đợt thu»). The lettering stays
+   * the static dark ink on both: 5.41:1 on coral, 5.33:1 on teal. There is no
+   * violet seal -- the dark ink reads 3.34:1 on it.
+   */
+  tone?: "accent" | "split";
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -38,8 +45,9 @@ const CO = {
  * (`mauSang.ink`, 5.41:1 on coral in either scheme). The same seal, one size
  * down, is the primary action on Login, so the ask has one language.
  */
-export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", style, testID }: StampButtonProps) {
+export function StampButton({ label, onPress, disabled, loading, tilt = 0, size = "lon", tone = "accent", style, testID }: StampButtonProps) {
   const { brand } = useRudiTheme();
+  const mauDau = tone === "split" ? brand.teal : brand.coral;
   // Static dark ink: the seal is coral in both schemes, so its lettering never
   // follows the scheme (the dark scheme's light ink on coral read 2.4:1).
   const muc = mauSang.ink;
@@ -68,12 +76,12 @@ export function StampButton({ label, onPress, disabled, loading, tilt = 0, size 
           styles.body,
           { minHeight: co.minHeight, paddingHorizontal: co.paddingHorizontal, borderRadius: co.radius },
           // Until the first layout the rim has no size; plain coral for that one frame, never a hole.
-          box.w === 0 && { backgroundColor: brand.coral },
+          box.w === 0 && { backgroundColor: mauDau },
         ]}
       >
         {box.w > 0 ? (
           <Svg height={box.h} pointerEvents="none" style={StyleSheet.absoluteFill} viewBox={`0 0 ${box.w} ${box.h}`} width={box.w}>
-            <Path d={duongVienDau(box.w, box.h, co.radius)} fill={brand.coral} stroke={phuMau(muc, 0.88)} strokeWidth={2} />
+            <Path d={duongVienDau(box.w, box.h, co.radius)} fill={mauDau} stroke={phuMau(muc, 0.88)} strokeWidth={2} />
           </Svg>
         ) : null}
         {/* Ink, not paper: the sparse paper tile measured flat on coral (stddev 2); this one lands at ~8 levels at 1x, like the cloth. Clipped a hair inside the rim so it never shows past a broken edge. */}

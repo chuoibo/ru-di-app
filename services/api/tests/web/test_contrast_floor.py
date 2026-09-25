@@ -130,6 +130,7 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
     # The RuDi shell's primitives (App B's Kit.tsx left with App B, 2026-09-04).
     button = kit_component("RudiButton")
     field = kit_component("Field")
+    o_nhap_muc = kit_component("ONhapMuc")
     chip = kit_component("Chip")
     cover_button = kit_component("CoverButton")
     return [
@@ -166,6 +167,18 @@ def interactive_boundaries() -> list[tuple[str, str, str]]:
             # style literal). Rest is the state a person has to find the box in.
             kit_border_token(r"const mauVien = [^;]*:\s*colors\.(\w+);", field),
             "card",
+        ),
+        # UI v3 (ADR-0037): the field written on the page has no box; its ink
+        # rule is the whole boundary, on a paper object (card) or on the page.
+        (
+            "app: ô nhập ONhapMuc, gạch mực trên thẻ",
+            kit_border_token(r"const mauGach = [^;]*:\s*colors\.(\w+);", o_nhap_muc),
+            "card",
+        ),
+        (
+            "app: ô nhập ONhapMuc, gạch mực trên nền trang",
+            kit_border_token(r"const mauGach = [^;]*:\s*colors\.(\w+);", o_nhap_muc),
+            "ground",
         ),
         (
             "app: chip Chip chưa chọn, viền trên thẻ",

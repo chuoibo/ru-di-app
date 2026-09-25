@@ -155,6 +155,20 @@ export function toneSoftColor(palette: RudiPalette, tone: RudiTone) {
 // this file stays a leaf.
 export { bongCao, mauSanKhau, type BongCao, type CaoGiay, type MauSanKhau } from "./san-khau/token";
 export { mucNguoi } from "./nguoi/muc-nguoi";
+import { bongCao as bongCaoGiay, type CaoGiay as CaoGiayTheme } from "./san-khau/token";
+
+/**
+ * A paper object's drop shadow at paper height `cao` (ADR-0037 D2) as a
+ * style: none when printed (0), the pasted sheet's at 1, the standing layer's
+ * at 2 (shrinking with `goc`), the lifted sheet's at 3. One light from above,
+ * so the shadow only ever falls down; `boxShadow` is what the new architecture
+ * and the web both draw.
+ */
+export function bongGiay(cao: CaoGiayTheme, dark: boolean, goc = 0): ViewStyle {
+  const b = bongCaoGiay(cao, dark, goc);
+  if (!b) return {};
+  return { boxShadow: `0px ${Math.round(b.dy * 10) / 10}px ${b.blur}px ${phuMau(b.mau, Math.round(b.alpha * 1000) / 1000)}` };
+}
 
 // ---- Colours that are not scheme tokens --------------------------------------
 // `tests/rudi-khong-hex.test.mjs` lets only this file spell a colour. What follows

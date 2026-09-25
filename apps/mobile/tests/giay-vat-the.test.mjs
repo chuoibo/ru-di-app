@@ -141,3 +141,19 @@ test("tất định: cùng cỡ ra cùng đường", () => {
     assert.deepEqual(hinhPhongBi(w, 96, 0.5), hinhPhongBi(w, 96, 0.5));
   }
 });
+
+test("đường đục: hai đầu là mực, các gạch đều nhau, ngữ pháp Java nhận", async () => {
+  const { duongDut } = await import("../dist-test/rudi/art/giay.js");
+  const d = duongDut([10, 5], [10, 95], 4, 3);
+  const lenh = phanTich(d);
+  assert.ok(lenh.every(({ c }) => c === "M" || c === "L"));
+  const doan = [];
+  for (let i = 0; i < lenh.length; i += 2) doan.push([lenh[i].args, lenh[i + 1].args]);
+  assert.deepEqual(doan[0][0], [10, 5], "đầu đường là mực");
+  assert.ok(Math.abs(doan.at(-1)[1][1] - 95) < 0.02, "cuối đường là mực");
+  const dai = doan.map(([p, q]) => Math.hypot(q[0] - p[0], q[1] - p[1]));
+  for (const l of dai) assert.ok(Math.abs(l - dai[0]) < 0.03, `gạch lệch ${l} với ${dai[0]}`);
+  assert.ok(doan.length >= 12, `chỉ ${doan.length} gạch cho 90dp`);
+  kiemLop("đường đục", [{ d, mau: "muc", net: 1 }], 20, 100, 0.01);
+  assert.equal(duongDut([0, 0], [0, 0]), "M 0 0 L 0 0");
+});

@@ -71,3 +71,21 @@ test("màu sân khấu và mực người nằm ngoài color.*: 25 khoá guest.c
     }
   }
 });
+
+test("dấu teal cho quyết định tiền: mực tĩnh đọc được trên cả cam lẫn teal; tím thì không, nên không có dấu tím (D14)", () => {
+  const lum = (h) => {
+    const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const tuongPhan = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+  const muc = tokens.color.light.ink;
+  assert.ok(tuongPhan(muc, tokens.brand.coral) >= 4.5, "chữ trên dấu cam");
+  assert.ok(tuongPhan(muc, tokens.brand.teal) >= 4.5, `chữ trên dấu teal: ${tuongPhan(muc, tokens.brand.teal).toFixed(2)}`);
+  assert.ok(tuongPhan(muc, tokens.brand.violet) < 4.5, "nếu tím đọc được thì luật «không dấu tím» phải xét lại");
+  const nguon = readFileSync(new URL("../src/rudi/ui/StampButton.tsx", import.meta.url), "utf8");
+  assert.match(nguon, /const muc = mauSang\.ink;/, "chữ trên dấu phải là mực tĩnh, không theo scheme");
+  assert.match(nguon, /tone === "split" \? brand\.teal : brand\.coral/);
+});
