@@ -17,7 +17,10 @@ import (
 
 type work struct {
 	id, conversation, person, member, prompt, lease, command string
-	digest                                                   []byte
+	// `group` or `me`. A personal job has no room and no membership, so
+	// conversation and member are empty for it.
+	scope  string
+	digest []byte
 	// The context the caller handed over, exactly as it was stored. Nil when the
 	// caller sent none, which is still the shape an older client produces.
 	goi []byte
@@ -59,13 +62,19 @@ func (h *Handler) claim(ctx context.Context) (work, bool, error) {
 	if err != nil {
 		return work{}, false, err
 	}
+	// A sealed personal answer is delivered, not kept: it goes when the sharing
+	// window it was produced under closes (ADR-0036 §2.8).
+	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET result=NULL,updated_at=clock_timestamp() WHERE scope='me' AND result IS NOT NULL AND share_expires_at<=clock_timestamp()`)
+	if err != nil {
+		return work{}, false, err
+	}
 	_, err = tx.Exec(ctx, `UPDATE chat_ai_invocations SET status='failed',code='worker_interrupted',lease_id=NULL,lease_until=NULL,updated_at=clock_timestamp() WHERE status='running' AND lease_until<clock_timestamp() AND attempts>=3`)
 	if err != nil {
 		return work{}, false, err
 	}
 	var j work
 	j.lease = newID()
-	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.context_id,j.person_id,j.membership_id,j.session_digest,j.prompt,j.boi_canh,j.command`, j.lease).Scan(&j.id, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command)
+	err = tx.QueryRow(ctx, `WITH candidate AS (SELECT id FROM chat_ai_invocations WHERE (status='queued' OR (status='running' AND lease_until<clock_timestamp())) AND attempts<3 AND share_expires_at>clock_timestamp() ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE chat_ai_invocations j SET status='running',attempts=attempts+1,lease_id=$1,lease_until=clock_timestamp()+interval '75 seconds',updated_at=clock_timestamp() FROM candidate c WHERE j.id=c.id RETURNING j.id,j.scope,COALESCE(j.context_id::text,''),j.person_id,COALESCE(j.membership_id::text,''),j.session_digest,j.prompt,j.boi_canh,j.command`, j.lease).Scan(&j.id, &j.scope, &j.conversation, &j.person, &j.member, &j.digest, &j.prompt, &j.goi, &j.command)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return work{}, false, tx.Commit(ctx)
 	}
@@ -82,6 +91,11 @@ func (h *Handler) ProcessOne(ctx context.Context) (bool, error) {
 	j, ok, err := h.claim(ctx)
 	if err != nil || !ok {
 		return ok, err
+	}
+	// Before prepare: a personal job has no room, and nothing the server owns
+	// about a room is laid on top of it (ADR-0036 §4).
+	if j.scope == scopeMe {
+		return true, h.processNep(ctx, j)
 	}
 	dap, err := h.prepare(ctx, j)
 	if err != nil {

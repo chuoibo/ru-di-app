@@ -56,6 +56,9 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h.mux.HandleFunc("GET /contexts/{context}/shared-drafts/{id}", h.draftGet)
 	h.mux.HandleFunc("PATCH /contexts/{context}/shared-drafts/{id}", h.draftPatch)
 	h.mux.HandleFunc("POST /contexts/{context}/shared-drafts/{id}/discard", h.draftDiscard)
+	// Nếp's own questions (ADR-0036 §2.7, §2.8): same queue, sealed result.
+	h.mux.HandleFunc("POST /me/nep/ai-invocations", h.nepCreate)
+	h.mux.HandleFunc("GET /me/nep/ai-invocations/{id}", h.nepGet)
 	return h
 }
 
@@ -63,8 +66,14 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 // stored message for the model without anyone handing it over. The old
 // automatic turn (`ai-turn`) is not sealed here: it is deleted in both
 // backends (ADR-0036 §2.1), so it falls through to Python's 404.
+//
+// `/me/nep/ai-invocations` is Go-only and sits beside `/me/nep/media`, which
+// Python still serves; only the exact `ai-invocations` segment is taken here.
 func Matches(path string) bool {
 	p := strings.Split(strings.Trim(path, "/"), "/")
+	if len(p) >= 3 && p[0] == "me" && p[1] == "nep" && p[2] == "ai-invocations" {
+		return true
+	}
 	return len(p) >= 3 && p[0] == "contexts" && (p[2] == "chat-capabilities" || p[2] == "ai-invocations" || p[2] == "plan-promotions" || p[2] == "shared-drafts" || (len(p) == 5 && p[2] == "messages" && p[4] == "expense-draft"))
 }
 
@@ -136,26 +145,8 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 	if !chatv2.ValidID(conversation) {
 		return g, invalid("invalid_context")
 	}
-	err := tx.QueryRow(ctx, `SELECT person_id FROM account_sessions WHERE token_digest=$1`, digest).Scan(&g.person)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
-		return g, err
-	}
-	var exists string
-	err = tx.QueryRow(ctx, `SELECT id FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE`, g.person).Scan(&exists)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
-		return g, err
-	}
-	err = tx.QueryRow(ctx, `SELECT id FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`, digest, g.person).Scan(&exists)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return g, &denied{401, "authentication_required"}
-	}
-	if err != nil {
+	var err error
+	if g.person, err = phien(ctx, tx, digest); err != nil {
 		return g, err
 	}
 	err = tx.QueryRow(ctx, `SELECT id FROM memberships WHERE context_id=$1 AND person_id=$2 AND state='active' AND left_at IS NULL FOR SHARE`, conversation, g.person).Scan(&g.member)
@@ -184,6 +175,36 @@ func authority(ctx context.Context, tx pgx.Tx, conversation string, digest []byt
 		}
 	}
 	return g, nil
+}
+
+// phien resolves a bearer session to the person behind it, locking person then
+// session in the order every caller in this package uses. It is the whole of
+// what a personal (`/me/nep`) invocation may learn about its caller: no room,
+// no membership, no name.
+func phien(ctx context.Context, tx pgx.Tx, digest []byte) (string, error) {
+	var person, exists string
+	err := tx.QueryRow(ctx, `SELECT person_id FROM account_sessions WHERE token_digest=$1`, digest).Scan(&person)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM people WHERE id=$1 AND deleted_at IS NULL FOR SHARE`, person).Scan(&exists)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM account_sessions WHERE token_digest=$1 AND person_id=$2 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`, digest, person).Scan(&exists)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", &denied{401, "authentication_required"}
+	}
+	if err != nil {
+		return "", err
+	}
+	return person, nil
 }
 
 func (h *Handler) begin(r *http.Request) (pgx.Tx, grant, error) {

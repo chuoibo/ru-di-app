@@ -179,3 +179,43 @@ khoá, một lần dò).
 - Còn mở: `result` chưa lộ ra phản hồi công khai của job, và client chưa có
   luồng «xác nhận khoản chi» từ bản nháp chat (thẻ `expense_draft` cũ cũng chỉ
   chỉ sang mục Chia bill). Nối hai thứ đó là việc riêng.
+
+## Checkpoint 24-09-2026 — não chữ cho Nếp: `scope='me'` trên engine (ADR-0036 §2.6–§2.8, §4)
+
+Ô hỏi của bảng Nếp thôi in «Mình chưa trả lời bằng chữ được». Câu hỏi đi đúng
+hàng đợi của `/plan` và `/chia-bill`, dưới `scope='me'`, `command='hoi'`,
+`context_id`/`membership_id` NULL (schema v3 đã có sẵn ràng buộc và index
+`chat_ai_me_logical`; không migration mới).
+
+- Hai route, chỉ Go: `POST /me/nep/ai-invocations`, `GET /me/nep/ai-invocations/{id}`.
+  `chatassist.Matches` nhận đúng đoạn `ai-invocations`; `/me/nep/media` vẫn là
+  của Python. Như các route engine khác, hai route này **không có trong
+  `routes.json`** (manifest dựng từ app Python); `check_route_ownership.py` xanh.
+- Thân: `logical_id`, `prompt`, `phieu` (phiếu ngữ cảnh đã qua `donPhieu`, máy
+  chủ kiểm lại bằng cùng danh sách đóng, lệch là 400), `luot` (các lượt hỏi đáp
+  của phiên bảng đang mở, `vai` ∈ {`toi`,`nep`}). Giới hạn 24 lượt, 2000 chữ mỗi
+  lượt và câu hỏi, tổng 16000 chữ (đếm code point), từ chối chứ không cắt.
+  Digest `hoi + prompt + gói`; trần 8 lượt/phút **chung** với nhóm.
+- Luật tiền: `phieu.man` là màn tiền (`MAN_NEP_LUI`, so nguyên đoạn đầu) thì
+  403 `nep_lui_man_tien` **trước** mọi kiểm khác, trước giao dịch và trước khi
+  dò nhà cung cấp; không hàng nào được ghi, không lời gọi mô hình nào.
+  `nep_test.go` đọc `phieu.ts` và đỏ khi hai danh sách lệch.
+- Worker rẽ nhánh `scope='me'` **trước** `prepare`: không roster, gu, ngân sách,
+  catalogue. Gọi brain `nep-reply` với đúng `{slip, turns, prompt}`, giữ chữ trả
+  lời vào `result`, không đăng thẻ, không ghi phòng nào. Xong hay hỏng đều xoá
+  `prompt` và `boi_canh` ngay (Nếp không có route thử lại). Câu trả lời kín
+  (`result`) bị xoá khi hết cửa sổ chia sẻ 15 phút.
+- Cổng quét nguồn `nep_khong_doc_test.go`: đi đồ thị gọi (AST, tách method/hàm)
+  từ `nepCreate`, `nepGet`, `processNep`, gom mọi chuỗi SQL, chỉ cho phép
+  `chat_ai_invocations`, `account_sessions`, `people`; cấm `display_name`,
+  `body`, gu, ngân sách; cấm gọi `prepare`/`roster`/`authority`/`publish`.
+- Python: đúng **một** action `nep-reply` (`routes/brain.py`) + `nep_gemini.py`
+  (mặc định `gemini-3.5-flash-lite`, `MOBILE_GEMINI_MODEL` ghi đè). Không logic
+  nghiệp vụ.
+- Client: `nep/hoi.ts` (`goiNep`, `docNep`, `LOI_NEP`), `nep/useNepHoi.ts` giữ
+  phiên trong `useState`, xoá khi đóng bảng, không xuống đĩa. «Mình đang thấy»
+  thêm dòng «Kèm N lượt hỏi đáp…», N đếm từ đúng danh sách sẽ gửi.
+  `cau-chu-goi-ai.test.mjs` gác cả `LOI_NEP` theo cặp phương thức + đường dẫn.
+- Còn mở: chưa chạy mô hình thật (cần user duyệt chi phí); tầng PostgreSQL
+  (`nep_postgres_test.go`, 5 ca) chưa chạy trên máy này, CI chạy; chưa có ảnh
+  chụp bảng Nếp đang trả lời trên máy thật.
