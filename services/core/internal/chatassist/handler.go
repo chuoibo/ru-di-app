@@ -20,13 +20,14 @@ import (
 	"mobile/services/core/internal/auth"
 	"mobile/services/core/internal/brain"
 	"mobile/services/core/internal/chatv2"
+	"mobile/services/core/internal/featureroute"
 	"mobile/services/core/internal/pyjson"
 )
 
 type Handler struct {
 	pool  *pgxpool.Pool
 	brain *brain.Client
-	mux   *http.ServeMux
+	mux   *featureroute.Mux
 }
 
 // Invocation excludes inputs and session digests from every public response.
@@ -43,7 +44,7 @@ type Invocation struct {
 const columns = `id,command,status,code,message_id,created_at,updated_at`
 
 func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
-	h := &Handler{pool: pool, brain: client, mux: http.NewServeMux()}
+	h := &Handler{pool: pool, brain: client, mux: featureroute.NewMux()}
 	h.mux.HandleFunc("GET /contexts/{context}/chat-capabilities", h.capabilities)
 	h.mux.HandleFunc("POST /contexts/{context}/ai-invocations", h.create)
 	h.mux.HandleFunc("GET /contexts/{context}/ai-invocations", h.list)
@@ -61,6 +62,10 @@ func New(pool *pgxpool.Pool, client *brain.Client) *Handler {
 	h.mux.HandleFunc("GET /me/nep/ai-invocations/{id}", h.nepGet)
 	return h
 }
+
+// Routes lists the patterns New registers, in order. The ownership manifest's
+// `features` block must name exactly these (cmd/core features --json).
+func Routes() []string { return New(nil, nil).mux.Patterns() }
 
 // Matches also seals the per-message expense-draft entry point, which reads a
 // stored message for the model without anyone handing it over. The old

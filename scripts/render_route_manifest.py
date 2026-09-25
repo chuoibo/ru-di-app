@@ -55,6 +55,7 @@ MIXED_ROUTES = {
 }
 IN_MEMORY_SUFFIXES = ("_limit", "_limiter", "reason_writer")
 CARRIED_FIELDS = ("owner", "python", "state", "evidence")
+FEATURE_KEYS = ("id", "method", "path", "package", "state", "evidence")
 
 
 def _state_names(path: Path) -> dict[str, set[str]]:
@@ -207,7 +208,16 @@ def build(previous: dict | None, prune: bool) -> dict:
         for field in CARRIED_FIELDS:
             if field in carried:
                 row[field] = carried[field]
-    return {"schema": 1, "routes": [_ordered(row) for row in rows]}
+    rendered = {"schema": 1, "routes": [_ordered(row) for row in rows]}
+    # Go-only feature routes (internal/featureroute) are not in the Python app,
+    # so this script cannot render them. They are carried over verbatim; the
+    # ownership gate checks them against `core features --json` instead.
+    features = (previous or {}).get("features")
+    if features:
+        rendered["features"] = [
+            {key: row[key] for key in FEATURE_KEYS if key in row} for row in features
+        ]
+    return rendered
 
 
 def main() -> int:

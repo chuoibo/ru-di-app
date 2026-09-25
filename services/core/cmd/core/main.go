@@ -53,7 +53,7 @@ func main() {
 
 func run(args []string, getenv func(string) string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | migrate-chat")
+		fmt.Fprintln(stderr, "usage: core serve | healthcheck | routes --json | features --json | migrate-chat")
 		return 2
 	}
 	switch args[0] {
@@ -63,6 +63,8 @@ func run(args []string, getenv func(string) string, stdout, stderr io.Writer) in
 		return healthcheck(getenv, stderr)
 	case "routes":
 		return listRoutes(args[1:], stdout, stderr)
+	case "features":
+		return listFeatures(args[1:], stdout, stderr)
 	case "migrate-chat", "migrate-chat-candidate":
 		return migrateChat(getenv, stdout, stderr)
 	default:
@@ -374,6 +376,47 @@ func listRoutes(args []string, stdout, stderr io.Writer) int {
 	encoder := json.NewEncoder(stdout)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(views); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+type featureView struct {
+	ID      string `json:"id"`
+	Package string `json:"package"`
+}
+
+// featureRoutes lists every Go-only route the feature handlers register, read
+// from the handlers' own muxes, in the manifest's package order. These routes
+// never appear in `core routes --json`: that list is what the parity harness
+// treats as Go-served manifest routes, and parity runs with the features off.
+func featureRoutes() []featureView {
+	byPackage := map[string][]string{
+		"chatassist":       chatassist.Routes(),
+		"chatlegacychange": chatlegacychange.Routes(),
+		"avatarfeed":       avatarfeed.Routes(),
+		"websession":       websession.Routes(),
+	}
+	var out []featureView
+	for _, pkg := range ownership.FeaturePackages {
+		for _, id := range byPackage[pkg] {
+			out = append(out, featureView{ID: id, Package: pkg})
+		}
+	}
+	return out
+}
+
+// listFeatures prints featureRoutes, so scripts/check_route_ownership.py can
+// compare the manifest's `features` block with what the binary registers.
+func listFeatures(args []string, stdout, stderr io.Writer) int {
+	if len(args) != 1 || args[0] != "--json" {
+		fmt.Fprintln(stderr, "usage: core features --json")
+		return 2
+	}
+	encoder := json.NewEncoder(stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(featureRoutes()); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}

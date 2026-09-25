@@ -36,6 +36,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
+	"mobile/services/core/internal/featureroute"
 )
 
 const (
@@ -89,7 +90,7 @@ func (s Store) Lookup(ctx context.Context, token string) (Session, error) {
 }
 
 type Handler struct {
-	mux     *http.ServeMux
+	mux     *featureroute.Mux
 	Backend Backend
 	// Origins is MOBILE_CORS_ALLOW_ORIGINS split on commas; empty means the
 	// loopback-only default the rest of the API uses. "*" is never honoured
@@ -99,7 +100,7 @@ type Handler struct {
 }
 
 func New(backend Backend, origins []string) *Handler {
-	h := &Handler{mux: http.NewServeMux(), Backend: backend, Origins: origins, Now: time.Now}
+	h := &Handler{mux: featureroute.NewMux(), Backend: backend, Origins: origins, Now: time.Now}
 	// Registered by method and path so scripts/check_api_contract.py reads
 	// these routes out of this file, as it does for the chat handlers.
 	h.mux.HandleFunc("POST /sessions/web", h.set)
@@ -107,6 +108,10 @@ func New(backend Backend, origins []string) *Handler {
 	h.mux.HandleFunc("POST /sessions/web/clear", h.clear)
 	return h
 }
+
+// Routes lists the patterns New registers, in order. The ownership manifest's
+// `features` block must name exactly these (cmd/core features --json).
+func Routes() []string { return New(nil, nil).mux.Patterns() }
 
 // Matches the three paths, and nothing under /sessions/{session_id}.
 func Matches(path string) bool {

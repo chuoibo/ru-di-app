@@ -173,3 +173,43 @@ func TestOnlyTheNamedFrameworkRowMayMoveToGo(t *testing.T) {
 		t.Fatalf("MOUNT /statics is not the named row; err = %v", err)
 	}
 }
+
+func feature(method, path, pkg string) Feature {
+	return Feature{ID: method + " " + path, Method: method, Path: path, Package: pkg, State: StateGoOnly,
+		Evidence: "services/core/internal/chatassist/postgres_test.go"}
+}
+
+func TestFeatureRowsValidate(t *testing.T) {
+	a := row(0, "GET", "/a", "g1")
+	good := feature("POST", "/contexts/{context}/ai-invocations", "chatassist")
+	encodeWith := func(features ...Feature) []byte {
+		data, err := json.Marshal(Manifest{Schema: 1, Routes: []Route{a}, Features: features})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+	if _, err := Parse(encodeWith(good)); err != nil {
+		t.Fatalf("good feature refused: %v", err)
+	}
+	cases := map[string]struct {
+		f    Feature
+		want string
+	}{
+		"id mismatch":     {func() Feature { f := good; f.ID = "POST /x"; return f }(), "id must be"},
+		"bad method":      {func() Feature { f := good; f.Method = "HEAD"; f.ID = "HEAD " + f.Path; return f }(), "id must be"},
+		"unknown package": {func() Feature { f := good; f.Package = "payments"; return f }(), "unknown package"},
+		"wrong state":     {func() Feature { f := good; f.State = "LIVE-GO"; return f }(), "state"},
+		"no evidence":     {func() Feature { f := good; f.Evidence = ""; return f }(), "without evidence"},
+		"collides route":  {feature("GET", "/a", "chatassist"), "duplicate"},
+	}
+	for name, c := range cases {
+		_, err := Parse(encodeWith(c.f))
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: got %v, want error containing %q", name, err, c.want)
+		}
+	}
+	if _, err := Parse(encodeWith(good, good)); err == nil || !strings.Contains(err.Error(), "duplicate") {
+		t.Errorf("duplicate feature: got %v", err)
+	}
+}

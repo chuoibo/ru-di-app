@@ -2096,5 +2096,183 @@
       "state": "LIVE-GO",
       "evidence": "docs/migration/live-go-25-route-wai.md"
     }
+  ],
+  "features": [
+    {
+      "id": "GET /contexts/{context}/chat-capabilities",
+      "method": "GET",
+      "path": "/contexts/{context}/chat-capabilities",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/ai-invocations",
+      "method": "POST",
+      "path": "/contexts/{context}/ai-invocations",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{context}/ai-invocations",
+      "method": "GET",
+      "path": "/contexts/{context}/ai-invocations",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{context}/ai-invocations/{id}",
+      "method": "GET",
+      "path": "/contexts/{context}/ai-invocations/{id}",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/ai-invocations/{id}/retry",
+      "method": "POST",
+      "path": "/contexts/{context}/ai-invocations/{id}/retry",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/ai-invocations/{id}/cancel",
+      "method": "POST",
+      "path": "/contexts/{context}/ai-invocations/{id}/cancel",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/plan-promotions",
+      "method": "POST",
+      "path": "/contexts/{context}/plan-promotions",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{context}/plan-promotions/{id}",
+      "method": "GET",
+      "path": "/contexts/{context}/plan-promotions/{id}",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/shared-drafts",
+      "method": "POST",
+      "path": "/contexts/{context}/shared-drafts",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{context}/shared-drafts/{id}",
+      "method": "GET",
+      "path": "/contexts/{context}/shared-drafts/{id}",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "PATCH /contexts/{context}/shared-drafts/{id}",
+      "method": "PATCH",
+      "path": "/contexts/{context}/shared-drafts/{id}",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{context}/shared-drafts/{id}/discard",
+      "method": "POST",
+      "path": "/contexts/{context}/shared-drafts/{id}/discard",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "POST /me/nep/ai-invocations",
+      "method": "POST",
+      "path": "/me/nep/ai-invocations",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /me/nep/ai-invocations/{id}",
+      "method": "GET",
+      "path": "/me/nep/ai-invocations/{id}",
+      "package": "chatassist",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatassist/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{room}/changes",
+      "method": "GET",
+      "path": "/contexts/{room}/changes",
+      "package": "chatlegacychange",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatlegacychange/postgres_test.go"
+    },
+    {
+      "id": "POST /contexts/{room}/changes/snapshot",
+      "method": "POST",
+      "path": "/contexts/{room}/changes/snapshot",
+      "package": "chatlegacychange",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatlegacychange/postgres_test.go"
+    },
+    {
+      "id": "GET /contexts/{room}/changes/stream",
+      "method": "GET",
+      "path": "/contexts/{room}/changes/stream",
+      "package": "chatlegacychange",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/chatlegacychange/postgres_test.go"
+    },
+    {
+      "id": "GET /people/avatars",
+      "method": "GET",
+      "path": "/people/avatars",
+      "package": "avatarfeed",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/avatarfeed/postgres_test.go"
+    },
+    {
+      "id": "GET /people/avatars/stream",
+      "method": "GET",
+      "path": "/people/avatars/stream",
+      "package": "avatarfeed",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/avatarfeed/postgres_test.go"
+    },
+    {
+      "id": "POST /sessions/web",
+      "method": "POST",
+      "path": "/sessions/web",
+      "package": "websession",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/websession/postgres_test.go"
+    },
+    {
+      "id": "POST /sessions/web/resume",
+      "method": "POST",
+      "path": "/sessions/web/resume",
+      "package": "websession",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/websession/postgres_test.go"
+    },
+    {
+      "id": "POST /sessions/web/clear",
+      "method": "POST",
+      "path": "/sessions/web/clear",
+      "package": "websession",
+      "state": "GO-ONLY",
+      "evidence": "services/core/internal/websession/postgres_test.go"
+    }
   ]
 }

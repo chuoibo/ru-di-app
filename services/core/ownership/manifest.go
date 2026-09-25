@@ -50,10 +50,31 @@ type Route struct {
 	Evidence string   `json:"evidence,omitempty"`
 }
 
+// Feature is one Go-only route served ahead of the manifest router
+// (internal/featureroute): the chat change feed, the group AI engine, the
+// avatar feed, the web session cookie. Python never served it, so it has no
+// registration order, no Python state and no migration to track; it has the
+// package that registers it and the evidence that tests it.
+type Feature struct {
+	ID       string `json:"id"`
+	Method   string `json:"method"`
+	Path     string `json:"path"`
+	Package  string `json:"package"`
+	State    string `json:"state"`
+	Evidence string `json:"evidence"`
+}
+
+// StateGoOnly is the one state a feature row may hold.
+const StateGoOnly = "GO-ONLY"
+
+// FeaturePackages are the packages that register feature routes.
+var FeaturePackages = []string{"chatassist", "chatlegacychange", "avatarfeed", "websession"}
+
 // Manifest is the parsed, validated file.
 type Manifest struct {
-	Schema int     `json:"schema"`
-	Routes []Route `json:"routes"`
+	Schema   int       `json:"schema"`
+	Routes   []Route   `json:"routes"`
+	Features []Feature `json:"features,omitempty"`
 }
 
 // Load parses the embedded manifest.
@@ -127,6 +148,33 @@ func (m *Manifest) validate() error {
 			}
 			limiterOwner[name] = r.Owner
 			limiterFirst[name] = r.ID
+		}
+	}
+	return m.validateFeatures(ids)
+}
+
+var featureMethods = set("GET", "POST", "PUT", "PATCH", "DELETE")
+
+func (m *Manifest) validateFeatures(routeIDs map[string]bool) error {
+	packages := set(FeaturePackages...)
+	seen := map[string]bool{}
+	for index, f := range m.Features {
+		where := fmt.Sprintf("features[%d] %q", index, f.ID)
+		if want := f.Method + " " + f.Path; f.ID != want || !featureMethods[f.Method] || !strings.HasPrefix(f.Path, "/") {
+			return fmt.Errorf("%s: id must be METHOD /path, got method %q path %q", where, f.Method, f.Path)
+		}
+		if seen[f.ID] || routeIDs[f.ID] {
+			return fmt.Errorf("%s: duplicate id", where)
+		}
+		seen[f.ID] = true
+		if !packages[f.Package] {
+			return fmt.Errorf("%s: unknown package %q", where, f.Package)
+		}
+		if f.State != StateGoOnly {
+			return fmt.Errorf("%s: state = %q, want %q", where, f.State, StateGoOnly)
+		}
+		if f.Evidence == "" {
+			return fmt.Errorf("%s: Go-only route without evidence", where)
 		}
 	}
 	return nil

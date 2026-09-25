@@ -16,6 +16,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 	"github.com/jackc/pgx/v5"
+	"mobile/services/core/internal/featureroute"
 )
 
 // CandidateEnv switches the change feed and the group AI engine
@@ -30,7 +31,7 @@ type Handler struct {
 	Context           context.Context
 	ReconcileInterval time.Duration
 	AuthTimeout       time.Duration
-	mux               *http.ServeMux
+	mux               *featureroute.Mux
 	mu                sync.Mutex
 	subscribers       map[string]map[chan struct{}]struct{}
 	pending           chan struct{}
@@ -42,12 +43,16 @@ func New(store Store, ctx context.Context, origins []string) *Handler {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	h := &Handler{Store: store, Context: ctx, Origins: origins, ReconcileInterval: time.Second, AuthTimeout: 5 * time.Second, mux: http.NewServeMux(), subscribers: map[string]map[chan struct{}]struct{}{}, pending: make(chan struct{}, 64), slots: make(chan struct{}, 1000), actors: map[string]int{}}
+	h := &Handler{Store: store, Context: ctx, Origins: origins, ReconcileInterval: time.Second, AuthTimeout: 5 * time.Second, mux: featureroute.NewMux(), subscribers: map[string]map[chan struct{}]struct{}{}, pending: make(chan struct{}, 64), slots: make(chan struct{}, 1000), actors: map[string]int{}}
 	h.mux.HandleFunc("GET /contexts/{room}/changes", h.changes)
 	h.mux.HandleFunc("POST /contexts/{room}/changes/snapshot", h.snapshot)
 	h.mux.HandleFunc("GET /contexts/{room}/changes/stream", h.stream)
 	return h
 }
+
+// Routes lists the patterns New registers, in order. The ownership manifest's
+// `features` block must name exactly these (cmd/core features --json).
+func Routes() []string { return New(Store{}, nil, nil).mux.Patterns() }
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	h.mux.ServeHTTP(w, r)

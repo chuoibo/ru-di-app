@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"mobile/services/core/internal/auth"
+	"mobile/services/core/internal/featureroute"
 )
 
 // MaxIDs bounds one versions request: a roster, not a directory.
@@ -47,7 +48,7 @@ type Handler struct {
 	AuthTimeout  time.Duration
 	Revalidate   time.Duration
 	PingInterval time.Duration
-	mux          *http.ServeMux
+	mux          *featureroute.Mux
 	mu           sync.Mutex
 	conns        map[string]map[chan Event]struct{}
 	slots        chan struct{}
@@ -58,12 +59,16 @@ func New(backend Backend, pool *pgxpool.Pool, ctx context.Context, origins []str
 		ctx = context.Background()
 	}
 	h := &Handler{Backend: backend, Pool: pool, Context: ctx, Origins: origins, AuthTimeout: 5 * time.Second,
-		Revalidate: time.Minute, PingInterval: 30 * time.Second, mux: http.NewServeMux(),
+		Revalidate: time.Minute, PingInterval: 30 * time.Second, mux: featureroute.NewMux(),
 		conns: map[string]map[chan Event]struct{}{}, slots: make(chan struct{}, 2000)}
 	h.mux.HandleFunc("GET /people/avatars", h.versions)
 	h.mux.HandleFunc("GET /people/avatars/stream", h.stream)
 	return h
 }
+
+// Routes lists the patterns New registers, in order. The ownership manifest's
+// `features` block must name exactly these (cmd/core features --json).
+func Routes() []string { return New(nil, nil, nil, nil).mux.Patterns() }
 
 // Matches routes these two Go-only paths ahead of the ownership manifest,
 // which is rendered from the Python app and has no row for them. Neither
