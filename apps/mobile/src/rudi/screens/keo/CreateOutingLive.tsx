@@ -26,7 +26,6 @@ import { kiemTraTaoBuoiDi, nhanKhoangNgay } from "../../../screens/len-plan/buoi
 import { homNayIso, taoKeo, kiemTraChangMoi } from "../../keo/keo";
 import { typography, useRudiTheme } from "../../theme";
 import { Field, Heading, RudiButton, RudiScreen, TopBar } from "../../ui";
-import { CauRu } from "../../ui/CauRu";
 import { ChonNgayLich } from "../../ui/ChonNgayLich";
 import { ChuThichLe } from "../../ui/ChuThichLe";
 import { ONhapMuc } from "../../ui/ONhapMuc";
@@ -188,26 +187,21 @@ export function CreateOutingLiveScreen({ phien, sourceMessageId }: { phien: Phie
           how much (plan S3). The words are the labels; each blank is its own field. */}
       <View style={[styles.thiep, { backgroundColor: colors.card, borderColor: colors.lineStrong, borderRadius: radius.small }]}>
         <Washi style={styles.washi} />
-        <CauRu
+        {/* The name goes on its own pen line under «Rủ … đi»: inside a wrapping
+            sentence, a wide window put the field beside the words and lifted
+            it under the tape (sweep at 768 and 1280, S7). */}
+        <Text style={[typography.h2, { color: colors.ink }]} testID="cau-ru-keo">
+          Rủ {nhom.ten} đi
+        </Text>
+        <ONhapMuc
+          accessibilityLabel="Ô tên kèo"
           co="lon"
-          mau={`Rủ ${nhom.ten} đi {ten}`}
-          moTa={`Rủ ${nhom.ten} đi …`}
-          o={{
-            ten: (
-              <ONhapMuc
-                accessibilityLabel="Ô tên kèo"
-                co="lon"
-                khungStyle={styles.oTen}
-                onChangeText={(t) => {
-                  setTitle(t);
-                  if (loi !== null) setLoi(null);
-                }}
-                placeholder="Đà Lạt cuối tuần"
-                value={title}
-              />
-            ),
+          onChangeText={(t) => {
+            setTitle(t);
+            if (loi !== null) setLoi(null);
           }}
-          testID="cau-ru-keo"
+          placeholder="Đà Lạt cuối tuần"
+          value={title}
         />
         <View style={styles.hangLich}>
           <Text style={[typography.h2, { color: colors.ink }]}>từ</Text>
@@ -298,7 +292,6 @@ const styles = StyleSheet.create({
   // The invitation card: a sheet of the coral paper's card, taped at the top.
   thiep: { borderWidth: 1, padding: 16, paddingTop: 22, gap: 12 },
   washi: { position: "absolute", top: -10, alignSelf: "center", width: 96 },
-  oTen: { minWidth: 180, flexGrow: 1 },
   hangLich: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 10 },
   hangSo: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 },
   nutSo: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center" },
@@ -306,7 +299,7 @@ const styles = StyleSheet.create({
   giua: { textAlign: "center" },
   hangPhongBi: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   // An envelope per budget: thicker as the amount grows.
-  phongBi: { flexGrow: 1, flexBasis: 72, minHeight: 64, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
+  phongBi: { flexGrow: 1, flexBasis: 60, minHeight: 64, borderRadius: 4, alignItems: "center", justifyContent: "flex-end", paddingBottom: 14, paddingTop: 20, overflow: "hidden" },
   napPhongBi: { position: "absolute", top: -14, width: 40, height: 28, borderWidth: 1, transform: [{ rotate: "45deg" }] },
   dayPhongBi: { position: "absolute", bottom: 0, left: 0, right: 0, opacity: 0.5 },
 });

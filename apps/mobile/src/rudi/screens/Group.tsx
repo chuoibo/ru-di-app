@@ -36,6 +36,7 @@ import {
 import { Avatar } from "../ui/Avatar";
 import { Money } from "../ui/Money";
 import { HangChang } from "./keo/HangChang";
+import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 
 function ChatBubble({
   person,
@@ -136,7 +137,7 @@ export function GroupChatScreen({ embeddedInTabs = false, contextId }: { embedde
           placeholder={laCapDemo ? `Nhắn ${so.tenNguoiKia}...` : "Nhắn Team Đà Lạt..."}
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
-          style={[typography.body, styles.oNhap, { color: colors.ink }]}
+          style={[typography.body, styles.oNhap, { color: colors.ink }, KHONG_VIEN_WEB]}
           value={draft}
         />
         <IconButton

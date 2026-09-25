@@ -19,6 +19,7 @@ import { useAdaptiveLayout } from "./ui/useAdaptiveLayout";
 import { Wordmark } from "./ui/Wordmark";
 import { CuonContext } from "./ui/cuon";
 import { gridFor, tabBarHeight } from "./adaptive";
+import { KHONG_VIEN_WEB } from "./ui/khong-vien-web";
 
 export type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -661,7 +662,7 @@ export function OtpBoxes({
         keyboardType="number-pad"
         maxLength={length}
         onChangeText={(text) => onChange(text.replace(/\D/g, "").slice(0, length))}
-        style={styles.otpInput}
+        style={[styles.otpInput, KHONG_VIEN_WEB]}
         testID="otp-input"
         textContentType="oneTimeCode"
         value={value}

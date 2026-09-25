@@ -116,9 +116,13 @@ export function WelcomeScreen() {
     setTimeout(() => router.push("/login"), ms);
   };
 
+  // The cover opens like the notebook's own (ADR-0037 D1, plan S7): it swings
+  // round its spine on the left and shows the paper page under it -- the
+  // colour Login is drawn on, so the push lands on the page just revealed.
+  // Under Reduce Motion `motion.timing` is instant and the page simply changes.
   const coverStyle = useAnimatedStyle(() => ({
-    opacity: 1 - lift.value * 0.35,
-    transform: [{ translateY: -lift.value * 48 }],
+    opacity: 1 - lift.value * 0.25,
+    transform: [{ perspective: 1400 }, { rotateY: `${-lift.value * 84}deg` }],
   }));
   const routeStyle = useAnimatedStyle(() => ({
     opacity: routeIn.value,
@@ -130,10 +134,10 @@ export function WelcomeScreen() {
   const markHeight = short ? 64 : compact ? 100 : 136;
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.cover }]} testID="welcome-screen">
+    <View style={[styles.root, { backgroundColor: colors.paper }]} testID="welcome-screen">
       <StatusBar style="light" />
-      <Grain material="vaiBia" opacity={0.3} />
-      <Animated.View style={[styles.flex, coverStyle]}>
+      <Animated.View style={[styles.flex, styles.bia, { backgroundColor: colors.cover, transformOrigin: "left center" }, coverStyle]}>
+        <Grain material="vaiBia" opacity={0.3} />
         {/* A scroll view with a growing content box: at font scale 1.0 the route
             absorbs the slack and nothing moves; at 2.0 the words and the seal
             keep their size and the cover scrolls. */}
@@ -227,6 +231,7 @@ export function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bia: { backfaceVisibility: "hidden" },
   flex: { flex: 1 },
   cover: { flexGrow: 1, paddingHorizontal: 20 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 28 },

@@ -73,6 +73,7 @@ import { useToHenChung } from "../../chat/useToHenChung";
 import { docKhoiNhap } from "../../chat/to-hen-chung";
 import { Nep } from "../../ui/art/Nep";
 import { useNepNguCanh } from "../../nep/NepProvider";
+import { KHONG_VIEN_WEB } from "../../ui/khong-vien-web";
 
 const LENH = [
   { nhan: "/plan", goiY: "/plan tối nay đi đâu?", moTa: "Rủ Đi AI phác lịch trình" },
@@ -970,7 +971,7 @@ export function GroupChatLiveScreen({ contextId }: { contextId: string }) {
             placeholder={nhanRieng ? `Nhắn cho ${tenNhom}` : "Nhắn cho hội…"}
             placeholderTextColor={colors.inkSoft}
             selectionColor={colors.accentSoft}
-            style={[typography.body, styles.oNhap, { color: colors.ink }]}
+            style={[typography.body, styles.oNhap, { color: colors.ink }, KHONG_VIEN_WEB]}
             value={nhap}
           />
           <IconButton

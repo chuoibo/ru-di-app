@@ -338,16 +338,53 @@ phẩm đúng».
 
 ## Overview
 
-> **Đang chuyển sang v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24).** Kế hoạch:
-> `docs/architecture/04-ui-v3-san-khau-giay.md`. Trong lúc chiến dịch chạy, các luật sau
-> **đã được ADR-0037 thay** và thắng mọi câu cũ bên dưới: «Nếp Đứng Xa Tiền» → «Nếp Không Chạm Số»
-> (Nếp diễn tám khoảnh khắc, kể cả khoảnh khắc tiền, trong vùng riêng, cách con số ≥ 16dp, không ở
-> lỗi/xung đột); «Trong Trang / Trên Trang» → «Độ Cao Giấy» 0–3 (`tokens.json` → `sanKhau.cao`);
-> avatar mang **mực người** (`tokens.json` → `mucNguoi`) thay tông của màn; `celebrate` phủ các cú dập
-> dấu cộng tám khoảnh khắc, một lần mỗi khoá sự kiện; ngân sách ghép `motion.sanKhau` (bật dựng
-> ≤ 420ms, tiết mục ≤ 1400ms). Nền `paper` ở theme tối **không phải mặt chữ** (cổng
-> `tests/chu-tren-giay.test.mjs`). Documenter viết lại toàn file ở lát cuối (S7).
+## v3 «Sân khấu giấy» (ADR-0037, Lead 2026-09-24, làm xong 2026-09-25)
 
+Mục này là hợp đồng hiện hành và **thắng mọi câu cũ bên dưới** ở chỗ hai bên nói khác nhau.
+Phần còn lại của file vẫn đúng ở chỗ mục này không nói tới: màu, chữ, tương phản, washi,
+con dấu. Kế hoạch và nhật ký: `docs/architecture/04-ui-v3-san-khau-giay.md`,
+`docs/claude/2026-09-25/san-khau-giay/README.md`.
+
+**Mỗi việc là một vật giấy, không phải một tờ điền chữ.** Bảng dưới là primitive cho mỗi việc;
+màn mới phải dùng primitive có sẵn trước khi tự vẽ (`tests/suc-song-man-tao.test.mjs` gác):
+
+| Việc | Vật | Primitive |
+|---|---|---|
+| Khay «Tạo mới», khay công cụ chat | vật ký hoạ trên bàn | `art/vat-ban.ts` + `ui/art/VeLop` |
+| Kèo | thiệp dán washi, xem trước là vé | `ChonNgayLich`, `TheVe`, `StampButton` |
+| Chia bill | hoá đơn nhiệt, bàn pop-up, cuống phiếu | `HoaDonGiay`, `BanGanMon`, `CuongPhieu` |
+| Sổ, đợt thu, tài chính | trang sổ kẻ dòng | `TrangSo` / `DongSo`, `DaiTienDo` |
+| Quyết toán | mũi tên mực tự vẽ, không mang số | `SoDoChuyen` |
+| Sổ hai người | bìa sổ, giao kèo có chữ ký, tờ bút chì | `SoBia`, `ChuKy`, `ToGiay`, `LaLich`, `BanXoay` |
+| Nhóm mới, nhóm trên kệ | bìa sổ, gáy sổ theo màu chat | `SoBia` (`nhan`), `bangMauChat` |
+| Mời, lời mời | phong bì | `PhongBi` |
+| Kết bạn | danh thiếp, người là hình nhân | `HinhNhan` |
+| Khám phá, Đi đâu | sân khấu thành phố, bưu thiếp | `art/thanh-pho.ts`, `SanKhau` |
+| Lên plan | vé; kèo đã qua là cuống | `TheVe`, `CuongPhieu` |
+| Tường, khoảnh khắc | ảnh in nghiêng có washi, instax | `KhungAnh` + `nghiengAnh`, `Washi` |
+| Thành tích | tờ tem | `Tem` |
+| Hồ sơ | trang hộ chiếu | `DauLon co="nho"` |
+| Ô nhập | dòng mực, không hộp | `ONhapMuc` (`Field` chỉ còn ở màn chưa làm lại) |
+
+**Luật đã thay luật v2:**
+- «Nếp Đứng Xa Tiền» → **«Nếp Không Chạm Số»**. Nếp diễn đúng tám khoảnh khắc (M1 khay tạo, M2
+  chụp bill, M3 ghi sổ, M4 tiền về, M5 tạo kèo, M6 sổ đôi mở, M7 gửi tờ, M8 huy hiệu mới), mỗi khoá
+  sự kiện một lần, trong vùng riêng của bố cục (`NepDien` giữ chỗ 128/112/88/0dp). Nếp cách số
+  tiền ≥ 16dp, không bao giờ ở lỗi hay xung đột; dock nhường chỗ khi Nếp trong trang hiện. Khung cuối
+  của mọi tiết mục nằm trong hộp (`nep-roi.test.mjs`, kể cả `buoc-di`).
+- «Trong / Trên Trang» → **Độ Cao Giấy 0–3** (`tokens.json` → `sanKhau.cao`, `bongGiay(level)`).
+- Avatar mang **mực người** (`mucNguoi`, tám màu, FNV-1a theo person id). `AvatarNguoi` chuyền
+  `personId` xuống, nên mọi avatar sống và tên người (chat, thành viên, bạn bè) cùng một mực.
+- Chuyển động: bật dựng ≤ 420ms, tiết mục ≤ 1400ms, lật trang 300ms. Giảm chuyển động thì khung
+  cuối tĩnh, cắt thẳng, không 3D. Control không xoay 3D.
+- **Nền `paper` ở theme tối không phải mặt chữ** cho accent/warn/faint (khoảng 4:1). Vật mang chữ
+  lỗi hay nút ghost dùng nền `card` (`chu-tren-giay.test.mjs`, nợ còn 2 ở ManHinhHanhTrinh).
+- Ô nhập trên web tắt viền trình duyệt (`ui/khong-vien-web.ts`, `khong-vien-web.test.mjs`).
+- Cảnh ký hoạ: mỗi cảnh đúng **một lớp cam** làm nguồn sáng; mặt giấy vẽ trước viền mực
+  (`thanh-pho.test.mjs`, `giay-vat-the.test.mjs`).
+
+**Vẫn cấm:** confetti và hạt bay, toast, modal lỗi, hero metric, thẻ lồng thẻ, nút lồng nút, animation
+lặp vô hạn ngoài Skeleton. Chỉ một vật bay một lần (thư M7).
 
 **Creative North Star: "Nhật ký chuyến đi sau giờ làm"**
 

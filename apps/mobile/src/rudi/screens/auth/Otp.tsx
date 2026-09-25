@@ -40,6 +40,7 @@ import { typography, useRudiTheme } from "../../theme";
 import { OtpBoxes, RudiButton, RudiScreen } from "../../ui";
 import { CoverBand } from "../../ui/CoverBand";
 import { useAdaptiveLayout } from "../../ui/useAdaptiveLayout";
+import { HoaDonGiay } from "../../ui/HoaDonGiay";
 
 type Trang =
   | { pha: "nhap" }
@@ -147,7 +148,14 @@ export function OtpScreen() {
           </Pressable>
         </View>
         <View style={styles.form}>
-          <OtpBoxes disabled={ban} length={DO_DAI_MA} onChange={doiMa} value={ma} />
+          {/* The code is the ticket in (ADR-0037 D1, plan S7): six boxes on a
+              slip torn at both ends. «Ô nhập mã» is unchanged inside it. */}
+          <HoaDonGiay rangTren>
+            <View style={styles.veVao}>
+              <Text style={[typography.stamp, { color: colors.inkSoft }]}>Vé vào Rủ Đi</Text>
+              <OtpBoxes disabled={ban} length={DO_DAI_MA} onChange={doiMa} value={ma} />
+            </View>
+          </HoaDonGiay>
           {trang.pha === "dang-xac-minh" ? (
             <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.inkSoft }]}>Đang kiểm mã...</Text>
           ) : null}
@@ -186,5 +194,6 @@ const styles = StyleSheet.create({
   doiSo: { minHeight: 48, justifyContent: "center", paddingHorizontal: 6 },
   pressed: { opacity: 0.68 },
   form: { gap: 16 },
+  veVao: { gap: 10, alignItems: "center", paddingHorizontal: 12, paddingVertical: 14 },
   demNguoc: { textAlign: "center" },
 });

@@ -27,6 +27,7 @@ import { useState, type ReactNode } from "react";
 import { StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, type ViewStyle } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
+import { KHONG_VIEN_WEB } from "./khong-vien-web";
 
 export type FieldCoreProps = TextInputProps & {
   label?: string;
@@ -135,7 +136,7 @@ export function Field({ label, leading, trailing, multiline, numberOfLines, styl
             }}
             placeholder={placeholderNha ? undefined : placeholder}
             placeholderTextColor={colors.inkFaint}
-            style={[kieu.nhap, typography.body, { color: colors.ink }, style]}
+            style={[kieu.nhap, typography.body, { color: colors.ink }, KHONG_VIEN_WEB, style]}
           />
           {placeholderNha && rong ? (
             <View importantForAccessibility="no-hide-descendants" pointerEvents="none" style={styles.fieldPlaceholder}>

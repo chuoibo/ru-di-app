@@ -25,6 +25,7 @@ import { useState, type ReactNode } from "react";
 import { Platform, StyleSheet, Text, TextInput, View, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from "react-native";
 
 import { typography, useRudiTheme } from "../theme";
+import { KHONG_VIEN_WEB } from "./khong-vien-web";
 
 export type ONhapMucProps = TextInputProps & {
   label?: string;
@@ -65,7 +66,6 @@ export function kieuGach({ day = 1, multiline = false, numberOfLines, dongCao }:
 }
 
 /** The browser's own focus box, off: the rule shows focus in the product's shape (B7). */
-const KHONG_VIEN_WEB = (Platform.OS === "web" ? { outlineStyle: "none", outlineWidth: 0 } : {}) as TextStyle;
 
 export function ONhapMuc({ label, helper, error, leading, trailing, co = "vua", multiline, numberOfLines, placeholder, style, khungStyle, ...inputProps }: ONhapMucProps) {
   const { colors } = useRudiTheme();

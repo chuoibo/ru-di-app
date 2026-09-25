@@ -43,6 +43,9 @@ không lạc.
      trên giấy kẻ, hồ sơ người cùng nhóm có «Kết bạn»). Nhãn và chữ flow bấm giữ nguyên.
    - Flow 11, 24, 32, 33 (S6: tường là ảnh in nghiêng có băng dính, thả khoảnh khắc là tấm
      instax, hồ sơ là trang hộ chiếu, thành tích là tờ tem). Nhãn giữ nguyên.
+   - Flow 01, 21, 22, 23 (S7: bìa Welcome mở quanh gáy, Login viết số trên dòng mực, OTP là vé).
+     «Ô số điện thoại», «Gửi mã», «Ô nhập mã», «Rủ Đi thôi!» giữ nguyên.
+4. **Cỡ chữ lớn** (1.3 và 2.0) chỉ đo được trên máy thật: web headless luôn ra 1.0.
    - Vị trí các chữ flow bấm đã đo trên web 412×915, nhưng «thấy được» của Maestro trên máy mới là
      bằng chứng.
 3. **Dựng lại dev client có Skia** trước khi chạy các flow trên: `npx expo prebuild --clean &&

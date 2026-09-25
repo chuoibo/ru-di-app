@@ -13,6 +13,7 @@ import { cauNguCanh } from "./phieu";
 import { useNep } from "./NepProvider";
 import { useNepAnh } from "./useNepAnh";
 import { useNepHoi } from "./useNepHoi";
+import { KHONG_VIEN_WEB } from "../ui/khong-vien-web";
 
 /**
  * The panel Nếp talks in.
@@ -187,7 +188,7 @@ export function NepBang({ open, onClose }: { open: boolean; onClose(): void }) {
           placeholder="Hỏi Nếp một câu"
           placeholderTextColor={colors.inkFaint}
           returnKeyType="send"
-          style={[typography.body, styles.o, { color: colors.ink }]}
+          style={[typography.body, styles.o, { color: colors.ink }, KHONG_VIEN_WEB]}
           testID="nep-o-nhap"
           value={nhap}
         />
